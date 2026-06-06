@@ -28,3 +28,30 @@
 
 Subordinate to Eternal Laws, RR-1…RR-10, Megaphase 151–160, and all prior
 immutable invariants across Phases 1–150.
+
+---
+
+## P1-F Appendix — Parent Authorization Completion
+
+Following the P1-F sprint, the 10 constitutional questions remain at
+**10/10 PASS**, and the parent authorization lifecycle is now complete.
+See:
+
+- `docs/asb/parent-authorization-model.md` — authority model.
+- `docs/asb/parent-authorization-verification.md` — 13/13 hostile PASS.
+- `docs/asb/minor-recruiting-ratification.md` — 8/8 PASS.
+- `docs/asb/minor-governance-completion.md` — 10/10 YES.
+- `docs/asb/baseball-launch-reratification.md` — public launch YES.
+
+Key constitutional facts now in production:
+
+- `parent_authorized` is writable **only** by an authorizing parent;
+  trigger `enforce_parent_authorization_authority` raises `42501`
+  otherwise (defence-in-depth alongside RLS).
+- `parent_athlete_links` is the single source of truth for who may
+  authorize for whom.
+- Athletes cannot self-authorize; coaches/recruiters/scouts/admins
+  cannot authorize.
+- Revocation is supported, lineage-complete, and ASB-emitted with
+  `change_type='revoke'`.
+- Aging-out is automatic via age-derived `is_minor()`.
