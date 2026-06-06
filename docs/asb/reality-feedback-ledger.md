@@ -108,3 +108,26 @@ See `docs/asb/athlete-development-intelligence-audit.md` and `docs/asb/athlete-d
 **Intelligence ceiling map (Section H):** Today ~20% · Minimum spine 35% · Recommended spine 70% · Elite spine 95%.
 
 See `docs/asb/athlete-context-spine-constitution.md` and `docs/asb/athlete-context-spine-gap-analysis.md`.
+
+
+## RFL closures & openings — Athlete Context Spine Implementation (P0-1) & Consumer Activation (P0-2) (2026-06-06)
+
+| ID | Status | Closure / observation evidence |
+|---|---|---|
+| RFL-023 | CLOSED | `athlete_context` + `athlete_equipment_context` + `athlete_development_history_events` + `get_athlete_context_envelope()` RPC live; `athleteContext.ts` projects 16 spine vars with lineage. |
+| RFL-025 | PARTIAL CLOSE | Spine envelope wired through `useHammerAthleteContext`; daily-plan + chat + onboarding consume 9–14 spine vars; deep biomechanical/load fields still unread — tracked under RFL-029…031. |
+| RFL-026 | IMPLEMENTED | Constitution ratified + persistence layer live + projection envelope active. |
+| RFL-027 | IMPLEMENTED | `athlete_equipment_context.scope` precedence (session > temporary > persistent > inferred) with TTL; resolver in `src/lib/hammer/context/equipment.ts`. |
+| RFL-028 | IMPLEMENTED | `athlete_development_history_events` append-only event store live; 30-day form half-life in projection views; re-evaluation triggers wired. |
+
+### P0-2 openings
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| RFL-029 | `useWorkoutRecommendations`, `useDrillRecommendations`, `pieV2/recommendDrills` do not import the athlete-context envelope. Recommendation outputs do not vary on lifting age, lifecycle band, equipment, season phase, or development priorities. Spine exists; recommendation consumers ignore it. | P0 | Open |
+| RFL-030 | Speed surfaces (`useSpeedSession*`, `runningAggregator.ts`, `sprint_analyses` readers, `softballStealAnalytics.ts`) consume zero spine variables. Acceleration / top-speed / stride / asymmetry / workload / freshness projections exist but no prescriptive consumer reads them. | P0 | Open |
+| RFL-031 | Roadmap surfaces do not consume `goal_summary`, `goal_horizon`, `lifecycle_band`, `season_phase`, or `development_priorities`. `athlete_roadmap_progress` is written but no generator reads spine to produce per-athlete milestones. | P0 | Open |
+
+**Intelligence estimate:** 35% → **~42%** after P0-2 (daily-plan, chat, onboarding consume spine; ecosystem still inactive).
+
+See `docs/asb/athlete-context-spine-consumer-activation-ratification.md`.
