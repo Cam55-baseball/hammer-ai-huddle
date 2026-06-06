@@ -48,6 +48,20 @@ export function FoundationsShelf({ showWhenIdle = false }: Props) {
         trigger_keys: r.matchedTriggers,
       })),
     );
+    // RFL-009 — canonical foundation.recommendation.shown (UTC-day bucketed per video).
+    fresh.forEach(r => {
+      void emitObservability({
+        topic: 'foundation.recommendation.shown',
+        athleteId: user.id,
+        actorId: user.id,
+        actorRole: 'athlete',
+        payload: {
+          recommendation_id: r.video.id,
+          surface: 'foundations_shelf',
+          triggers: r.matchedTriggers,
+        },
+      });
+    });
   }, [results, user]);
 
   if (loading) {
