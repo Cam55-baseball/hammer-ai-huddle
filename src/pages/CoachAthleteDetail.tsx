@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,14 +6,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { ConfidencePill } from "@/components/command/ConfidencePill";
 import { MissingnessChip } from "@/components/command/MissingnessChip";
 import { ReplayDrilldownCTA } from "@/components/coach-console/ReplayDrilldownCTA";
 import { PieV2CoachPanel } from "@/components/coach/PieV2CoachPanel";
 import { PieV2HammerBriefPanel } from "@/components/coach/PieV2HammerBriefPanel";
 import { PieV2RecruitingCard } from "@/components/recruiting/PieV2RecruitingCard";
+import { HittingRecruitingCard } from "@/components/recruiting/HittingRecruitingCard";
+import { RecruitingVisibilityGate } from "@/components/recruiting/RecruitingVisibilityGate";
 import { HittingDoctrineBlock } from "@/components/hitting/HittingDoctrineBlock";
 import { UhrcReportCard } from "@/components/report-card/UhrcReportCard";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
@@ -30,7 +29,6 @@ const COLS =
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
   const { user } = useAuth();
-  const [recruitingOptIn, setRecruitingOptIn] = useState(false);
 
   // P0-REC-3 — roster membership guard. A coach may only drill into an
   // athlete present in their accepted scout_follows roster. Prevents
@@ -196,26 +194,43 @@ export default function CoachAthleteDetail() {
         </Card>
 
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between text-base">
-              <span>Recruiting snapshot (RR-9 gated)</span>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="rr9" className="text-xs text-muted-foreground">Opt in</Label>
-                <Switch id="rr9" checked={recruitingOptIn} onCheckedChange={setRecruitingOptIn} />
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recruitingOptIn && pieV2Latest ? (
-              <PieV2RecruitingCard aggregate={pieV2Latest} trajectories={pieV2Trajectories} optIn />
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Visibility off. Toggle requires explicit opt-in per RR-9 exposure ethics.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {/* RR-9 / RR-10 — recruiting surfaces gated by athlete-owned consent + minor protection.
+            Authority lives in `athlete_recruiting_consent`; this surface only projects. */}
+        {athleteId && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <span>Recruiting snapshot</span>
+                <Badge variant="outline" className="text-[10px]">RR-9 athlete-controlled</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <RecruitingVisibilityGate
+                athleteId={athleteId}
+                fallback={
+                  <p className="text-xs text-muted-foreground">
+                    Hidden. Visibility is controlled by the athlete (and parent, for minors)
+                    per RR-9 / RR-10. Recruiting intelligence is unavailable until the athlete
+                    enables visibility in their privacy settings.
+                  </p>
+                }
+              >
+                <div className="space-y-3">
+                  {pieV2Latest && (
+                    <PieV2RecruitingCard
+                      aggregate={pieV2Latest}
+                      trajectories={pieV2Trajectories}
+                      optIn
+                    />
+                  )}
+                  <HittingRecruitingCard
+                    doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
+                  />
+                </div>
+              </RecruitingVisibilityGate>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="pb-3">

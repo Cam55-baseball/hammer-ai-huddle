@@ -1119,6 +1119,75 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_recruiting_consent: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          engine_version: string
+          last_changed_at: string
+          last_changed_by: string
+          parent_authorized: boolean
+          updated_at: string
+          visibility_enabled: boolean
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          engine_version?: string
+          last_changed_at?: string
+          last_changed_by: string
+          parent_authorized?: boolean
+          updated_at?: string
+          visibility_enabled?: boolean
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          engine_version?: string
+          last_changed_at?: string
+          last_changed_by?: string
+          parent_authorized?: boolean
+          updated_at?: string
+          visibility_enabled?: boolean
+        }
+        Relationships: []
+      }
+      athlete_recruiting_consent_audit: {
+        Row: {
+          actor_role: string
+          athlete_id: string
+          changed_at: string
+          changed_by: string
+          engine_version: string
+          id: string
+          new_state: Json
+          previous_state: Json | null
+          reason: string | null
+        }
+        Insert: {
+          actor_role?: string
+          athlete_id: string
+          changed_at?: string
+          changed_by: string
+          engine_version?: string
+          id?: string
+          new_state: Json
+          previous_state?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          actor_role?: string
+          athlete_id?: string
+          changed_at?: string
+          changed_by?: string
+          engine_version?: string
+          id?: string
+          new_state?: Json
+          previous_state?: Json | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       athlete_roadmap_progress: {
         Row: {
           blocked_reason: string | null
@@ -12151,6 +12220,7 @@ export type Database = {
         Args: { p_coach_id: string; p_player_id: string }
         Returns: boolean
       }
+      is_minor: { Args: { _user_id: string }; Returns: boolean }
       is_org_coach_or_owner: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -12186,6 +12256,10 @@ export type Database = {
           p_video_type?: string
         }
         Returns: string
+      }
+      resolve_recruiting_visibility: {
+        Args: { _athlete_id: string }
+        Returns: boolean
       }
       shift_workouts_forward: {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
