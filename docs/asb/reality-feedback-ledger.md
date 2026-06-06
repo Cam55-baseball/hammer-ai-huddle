@@ -84,3 +84,14 @@ See `docs/asb/coach-hammer-runtime-ratification.md` for the full runtime ratific
 **Production reality scorecard:** Adoption 0% · Utilization 0% · Completion 0% · Guidance 0% · Conversation 0% → Overall **0/100**.
 
 **Verdict:** Coach Hammer architectural GO is unchanged; production-reality **NO-GO**. Workstream **OPEN**. See `docs/asb/coach-hammer-production-reality-validation.md`.
+
+
+## RFL openings — Athlete Development Intelligence Architecture Audit (2026-06-06)
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| RFL-023 | Athlete-context persistence spine missing — `athleteContext.ts:96` and `knowledgeGaps.ts` reference 9 `profiles` columns that do not exist (`goal_summary`, `equipment_access`, `weekly_availability`, `lifting_age_years`, `training_focus`, `development_priorities`, `school_grade`, `weight_lbs`, `sport`). Hammer asks but cannot remember; every downstream intelligence layer is starved. | P0 | Open |
+| RFL-024 | Athlete-development intelligence overall completeness = **20%** (Context 28% · Lifecycle 20% · Training-age 20% · Equipment 0% · Speed 0% wired · Fascial 13% · Sport-specialization 35% · Six-week 50% · Longitudinal 17%). Elite individualization structurally impossible until P0 closed. | P0 | Open |
+| RFL-025 | Rich athlete-context tables (`sprint_analyses`, `athlete_load_tracking`, `physio_health_profiles`, `user_injury_progress`, `hammer_state_snapshots`) populated by capture pipelines but **completely unread** by any prescription / Hammer / roadmap surface — capture / projection gap is the second-largest blocker after RFL-023. | P0 | Open |
+
+See `docs/asb/athlete-development-intelligence-audit.md` and `docs/asb/athlete-development-intelligence-roadmap.md`.
