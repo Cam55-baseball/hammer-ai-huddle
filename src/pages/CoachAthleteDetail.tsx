@@ -21,7 +21,9 @@ import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
+
 
 const COLS =
   "event_id, athlete_id, topic_id, actor_role, actor_id, occurred_at, ingested_at, effective_at, valid_from, valid_to, payload, engine_version, idempotency_key, causality_refs, lineage_refs";
