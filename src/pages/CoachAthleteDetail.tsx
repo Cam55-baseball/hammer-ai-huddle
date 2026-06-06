@@ -163,6 +163,20 @@ export default function CoachAthleteDetail() {
         {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
         {pieV2Latest && <PieV2HammerBriefPanel aggregate={pieV2Latest} />}
 
+        {/* Hitting doctrine (P1-P4) — same JSON as athlete surface */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Hitting doctrine (P1-P4)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HittingDoctrineBlock
+              doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
+              title="Athlete's hitting focus"
+            />
+          </CardContent>
+        </Card>
+
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between text-base">
