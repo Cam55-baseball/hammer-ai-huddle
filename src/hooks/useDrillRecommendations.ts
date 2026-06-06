@@ -160,6 +160,7 @@ export function useDrillRecommendations(options: UseDrillRecommendationsOptions)
         position,
         detectedIssues,
         usageStats: usageQuery.data ?? [],
+        athleteContext: athleteProjection,
       })
     : null;
 
