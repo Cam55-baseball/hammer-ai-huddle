@@ -1,16 +1,16 @@
 /**
- * Hammer Athlete Context — canonical inventory hook.
+ * Hammer Athlete Context — canonical envelope projection.
  *
- * Single read-only projection that every Hammer surface (next-step,
- * onboarding, daily plan, chat) uses to know:
- *   what we know · how confident we are · what is missing.
+ * Sprint: Athlete Context Spine Implementation (P0-1).
  *
- * Sprint: Coach Hammer Authority Consolidation (Section C).
+ * Reads the canonical `get_athlete_context_envelope(user_id)` RPC plus
+ * existing live signals (HIE, MPI, day-state, command rows) and projects a
+ * uniform `{ value, source, confidence, missing, lastUpdated, lineage }`
+ * envelope for every consumer (Coach Hammer, dailyPlan, workouts, speed,
+ * roadmap, recommendations).
  *
- * Pure read layer — does not author organism truth. Replay-safe: every value
- * is sourced from canonical ASB projections, profile columns, or HIE snapshot.
- * Missingness is preserved, never imputed. (Megaphase 60–61 confidence /
- * missingness continuity invariants apply.)
+ * Pure read layer — does not author organism truth. Missingness is preserved,
+ * never imputed. Phase 60–61 confidence / missingness continuity applies.
  */
 import { useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,13 +19,23 @@ import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { useDayState } from "@/hooks/useDayState";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchAthleteContextEnvelope,
+  type AthleteContextEnvelope,
+  type EnvelopeEntry,
+} from "@/lib/hammer/context/envelope";
 import {
   latestByTopicPrefix,
   projectLatest,
 } from "@/lib/command/projections";
 
 export type ContextConfidence = "high" | "medium" | "low" | "missing";
+
+export interface ContextLineage {
+  readonly owner: string;
+  readonly source: string;
+  readonly rawConfidence: string;
+}
 
 export interface ContextVariable<T = unknown> {
   readonly key: string;
@@ -39,25 +49,70 @@ export interface ContextVariable<T = unknown> {
     | "goals"
     | "injury"
     | "development"
-    | "plan";
+    | "plan"
+    | "lifecycle";
   readonly value: T | null;
   readonly source: string;
   readonly confidence: ContextConfidence;
   readonly missing: boolean;
   readonly lastUpdated: string | null;
+  readonly lineage: ContextLineage;
 }
 
 export interface HammerAthleteContext {
   readonly variables: ReadonlyArray<ContextVariable>;
   readonly missing: ReadonlyArray<ContextVariable>;
   readonly isLoading: boolean;
-  /** Number of variables Hammer still needs to ask about. */
   readonly missingCount: number;
-  /** Look up a single variable. */
+  readonly envelope: AthleteContextEnvelope | null;
   get<T = unknown>(key: string): ContextVariable<T> | undefined;
 }
 
-function mk<T>(
+function normalizeConfidence(raw: string | undefined | null): ContextConfidence {
+  if (!raw) return "missing";
+  switch (raw) {
+    case "high":
+    case "corroborated":
+    case "derived":
+      return "high";
+    case "self_report":
+    case "medium":
+      return "medium";
+    case "low":
+      return "low";
+    case "missing":
+    default:
+      return raw === "missing" ? "missing" : "low";
+  }
+}
+
+function fromEnvelope<T>(
+  envelope: AthleteContextEnvelope | null,
+  key: string,
+  label: string,
+  domain: ContextVariable["domain"],
+): ContextVariable<T> {
+  const e: EnvelopeEntry | undefined = envelope?.[key];
+  const value = (e?.value ?? null) as T | null;
+  const missing = e?.missing ?? value === null || value === undefined;
+  return {
+    key,
+    label,
+    domain,
+    value: missing ? null : value,
+    source: e?.source ?? `envelope.${key}`,
+    confidence: normalizeConfidence(e?.confidence as string | undefined),
+    missing,
+    lastUpdated: (e?.last_updated as string | null) ?? null,
+    lineage: {
+      owner: (e?.owner as string) ?? "unknown",
+      source: e?.source ?? `envelope.${key}`,
+      rawConfidence: (e?.confidence as string) ?? "missing",
+    },
+  };
+}
+
+function mkLive<T>(
   key: string,
   label: string,
   domain: ContextVariable["domain"],
@@ -75,6 +130,7 @@ function mk<T>(
     confidence: missing ? "missing" : "high",
     missing,
     lastUpdated,
+    lineage: { owner: "system", source, rawConfidence: missing ? "missing" : "high" },
   };
 }
 
@@ -85,25 +141,15 @@ export function useHammerAthleteContext(): HammerAthleteContext {
   const { dayType } = useDayState();
   const { data: mpi } = useMPIScores();
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ["hammer-context-profile", user?.id],
+  const { data: envelope, isLoading: envLoading } = useQuery({
+    queryKey: ["hammer-context-envelope", user?.id],
     enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "first_name,last_name,date_of_birth,sport,position,experience_level,height_inches,weight_lbs,school_grade,training_focus,goal_summary,equipment_access,weekly_availability,lifting_age_years,injury_history,development_priorities",
-        )
-        .eq("id", user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data ?? {};
-    },
+    staleTime: 60 * 1000,
+    queryFn: () => fetchAthleteContextEnvelope(user!.id),
   });
 
   return useMemo<HammerAthleteContext>(() => {
-    const p = (profile ?? {}) as Record<string, unknown>;
+    const env = envelope ?? null;
     const readinessEv = rows ? latestByTopicPrefix(rows, "behavioral.readiness") : null;
     const sleepEv = rows ? latestByTopicPrefix(rows, "behavioral.sleep") : null;
     const planEv = rows ? latestByTopicPrefix(rows, "athlete.plan.today") : null;
@@ -112,25 +158,63 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       : null;
 
     const vars: ContextVariable[] = [
-      mk("first_name", "Name", "identity", p.first_name, "profiles.first_name"),
-      mk("date_of_birth", "Age", "identity", p.date_of_birth, "profiles.date_of_birth"),
-      mk("sport", "Sport", "identity", p.sport, "profiles.sport"),
-      mk("position", "Position", "identity", p.position, "profiles.position"),
-      mk("experience_level", "Experience", "development", p.experience_level, "profiles.experience_level"),
-      mk("school_grade", "School year", "identity", p.school_grade, "profiles.school_grade"),
-      mk("training_focus", "Training focus", "goals", p.training_focus, "profiles.training_focus"),
-      mk("goal_summary", "Primary goal", "goals", p.goal_summary, "profiles.goal_summary"),
-      mk("development_priorities", "Development priorities", "development", p.development_priorities, "profiles.development_priorities"),
-      mk("equipment_access", "Equipment access", "equipment", p.equipment_access, "profiles.equipment_access"),
-      mk("weekly_availability", "Weekly availability", "schedule", p.weekly_availability, "profiles.weekly_availability"),
-      mk("lifting_age_years", "Lifting age", "development", p.lifting_age_years, "profiles.lifting_age_years"),
-      mk("injury_history", "Injury constraints", "injury", p.injury_history, "profiles.injury_history"),
-      mk("season_phase", "Season phase", "season", dayType ?? null, "useDayState.dayType"),
-      mk("readiness", "Readiness", "physiology", readinessEv ? projectLatest(readinessEv).value : null, "asb:behavioral.readiness", readinessEv?.occurred_at ?? null),
-      mk("sleep", "Sleep", "physiology", sleepEv ? projectLatest(sleepEv).value : null, "asb:behavioral.sleep", sleepEv?.occurred_at ?? null),
-      mk("mpi", "MPI", "development", mpi?.adjusted_global_score ?? null, "mpi_scores.adjusted_global_score"),
-      mk("plan_today", "Today's plan", "plan", planP, "asb:athlete.plan.today", planEv?.occurred_at ?? null),
-      mk("hie_snapshot", "Weakness focus", "development", snapshot?.prescriptive_actions?.[0]?.weakness_area ?? null, "hie_snapshots"),
+      // Spine variables (envelope)
+      fromEnvelope(env, "sport_primary", "Sport", "identity"),
+      fromEnvelope(env, "goal_summary", "Primary goal", "goals"),
+      fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
+      fromEnvelope(env, "weekly_availability_days", "Days per week", "schedule"),
+      fromEnvelope(env, "weekly_availability_hours", "Hours per week", "schedule"),
+      fromEnvelope(env, "typical_session_length_min", "Session length (min)", "schedule"),
+      fromEnvelope(env, "training_focus", "Training focus", "goals"),
+      fromEnvelope(env, "development_priorities", "Development priorities", "development"),
+      fromEnvelope(env, "lifting_age_years", "Lifting age", "development"),
+      fromEnvelope(env, "years_in_sport", "Years in sport", "development"),
+      fromEnvelope(env, "school_grade", "School year", "identity"),
+      fromEnvelope(env, "season_phase", "Season phase", "season"),
+      fromEnvelope(env, "injury_history", "Injury constraints", "injury"),
+      fromEnvelope(env, "equipment_effective", "Equipment (effective)", "equipment"),
+      fromEnvelope(env, "lifecycle_band", "Lifecycle band", "lifecycle"),
+      fromEnvelope(env, "safeguarding_minor", "Safeguarding (minor)", "identity"),
+      // Live signals (existing)
+      mkLive("season_phase_runtime", "Season phase (runtime)", "season", dayType ?? null, "useDayState.dayType"),
+      mkLive(
+        "readiness",
+        "Readiness",
+        "physiology",
+        readinessEv ? projectLatest(readinessEv).value : null,
+        "asb:behavioral.readiness",
+        readinessEv?.occurred_at ?? null,
+      ),
+      mkLive(
+        "sleep",
+        "Sleep",
+        "physiology",
+        sleepEv ? projectLatest(sleepEv).value : null,
+        "asb:behavioral.sleep",
+        sleepEv?.occurred_at ?? null,
+      ),
+      mkLive(
+        "mpi",
+        "MPI",
+        "development",
+        mpi?.adjusted_global_score ?? null,
+        "mpi_scores.adjusted_global_score",
+      ),
+      mkLive(
+        "plan_today",
+        "Today's plan",
+        "plan",
+        planP,
+        "asb:athlete.plan.today",
+        planEv?.occurred_at ?? null,
+      ),
+      mkLive(
+        "hie_snapshot",
+        "Weakness focus",
+        "development",
+        snapshot?.prescriptive_actions?.[0]?.weakness_area ?? null,
+        "hie_snapshots",
+      ),
     ];
 
     const missing = vars.filter((v) => v.missing);
@@ -138,10 +222,11 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       variables: vars,
       missing,
       missingCount: missing.length,
-      isLoading: profileLoading,
+      isLoading: envLoading,
+      envelope: env,
       get<T>(key: string) {
         return vars.find((v) => v.key === key) as ContextVariable<T> | undefined;
       },
     };
-  }, [profile, profileLoading, rows, dayType, mpi, snapshot]);
+  }, [envelope, envLoading, rows, dayType, mpi, snapshot]);
 }
