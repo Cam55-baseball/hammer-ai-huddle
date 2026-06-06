@@ -8,6 +8,7 @@ import { useFoundationVideos } from '@/hooks/useFoundationVideos';
 import { FOUNDATION_LABELS, TRIGGER_REASONS, type FoundationTrigger } from '@/lib/foundationVideos';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { emitObservability } from '@/hooks/useEmitObservability';
 
 interface Props {
   /** When false, hide the shelf if there are no active triggers (avoid permanent clutter). */
