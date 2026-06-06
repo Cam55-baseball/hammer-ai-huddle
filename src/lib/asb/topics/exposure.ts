@@ -10,9 +10,14 @@ import { emitAsbEvent } from "@/lib/asb/emit";
 
 const ENGINE_VERSION = "rr9-1.0.0";
 
+type ConsentActorRole = "athlete" | "parent";
+type ConsentChangeType = "grant" | "revoke" | "toggle";
+
 interface ConsentChangeInput {
   athleteId: string;
   actorId: string;
+  actorRole?: ConsentActorRole;
+  changeType?: ConsentChangeType;
   previous: { visibility_enabled: boolean; parent_authorized: boolean } | null;
   next: { visibility_enabled: boolean; parent_authorized: boolean };
 }
@@ -20,11 +25,12 @@ interface ConsentChangeInput {
 export async function emitExposureConsentChanged(input: ConsentChangeInput) {
   const event_id = crypto.randomUUID();
   const now = new Date().toISOString();
+  const actorRole: ConsentActorRole = input.actorRole ?? "athlete";
   await emitAsbEvent({
     event_id,
     athlete_id: input.athleteId,
     topic_id: "relational.exposure.consent_changed",
-    actor_role: "athlete",
+    actor_role: actorRole,
     actor_id: input.actorId,
     occurred_at: now,
     ingested_at: now,
@@ -33,6 +39,8 @@ export async function emitExposureConsentChanged(input: ConsentChangeInput) {
     payload: {
       previous: input.previous,
       next: input.next,
+      actor_role: actorRole,
+      change_type: input.changeType ?? "toggle",
       engine_version: ENGINE_VERSION,
     },
     engine_version: ENGINE_VERSION,
