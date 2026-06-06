@@ -1,79 +1,27 @@
 
-# Coach Hammer Production Reality Validation
+# Athlete Development Intelligence Architecture Audit & Constitution
 
-This sprint is **measurement-only**. No features, no architecture, no doctrine. It interrogates runtime telemetry (`asb_events`, `asb_event_lineage`, `asb_topic_registry`, route/profile state) to determine whether the unified Coach Hammer system is actually being adopted, used, and effective in production — then issues a final workstream verdict.
+Constitutional audit sprint. **No code, no UI, no schema changes, no recommendations.** Three documents produced. All claims sourced from live `profiles` columns, `asb_topic_registry`, `asb_events`, and existing `src/lib/**` / `src/data/**` modules. Subordinate to Eternal Laws, RR-1…RR-10, RW-1…RW-10, EI-1…EI-10, and all sealed phases. Hammer remains interpretive — audit may never author `organism_truth`, `athlete_intent`, `authority_override`, `hard_stop`, `rehabilitation_state`.
 
-## Approach
+## Method
 
-All evidence is sourced from live tables via `supabase--read_query`. No code is changed. Output is a single ratification document plus ledger entries.
-
-### Section A — Adoption Funnel
-Query `asb_events` for the 9 funnel stages:
-- `hammer.surfaced`, `hammer.viewed`, `onboarding.started`, `onboarding.knowledge_gap_resolved` (terminal = completed), `intelligence.next_step.resolved` (opened), `prescription.daily.opened`, `hammer.chat.message`, `prescription.daily.modality.*` (started), modality completion events.
-Compute distinct-user counts per stage → funnel %, stage-to-stage drop-off %, largest abandonment point.
-
-### Section B — Guidance Utilization
-For Hammer Now / Plan / Chat surfaces, count distinct athletes and per-athlete event frequency over the live window: viewed → opened → acted (route navigation event lineage) → completed (modality/next-step completion event). Return utilization rates as %.
-
-### Section C — Next Step Effectiveness
-Group `intelligence.next_step.resolved` events by `payload->>title` (or topic):
-- opened (resolved fired)
-- ignored (resolved with no follow-on route nav within session)
-- completed (followed by matching modality completion)
-- replaced (subsequent resolved with different title same session)
-- abandoned (route opened, no completion)
-Rank top/bottom 5.
-
-### Section D — Onboarding Effectiveness
-From `onboarding.knowledge_gap_resolved` payloads, tally per gap_id: answered, skipped (resolved with skip flag), still-missing (registered gaps minus answered, derived from `profiles` columns). Return acquisition % and remaining blind spots.
-
-### Section E — Daily Plan Modality Utilization
-From `prescription.daily.modality.{warmup|speed|strength|hitting|throwing|defense|baserunning|fueling|recovery}` events, count opens & completions per modality. Identify most-used, least-used, never-used.
-
-### Section F — Chat Effectiveness
-From `hammer.chat.message` payloads:
-- Cluster athlete questions (keyword buckets)
-- Count Hammer response categories
-- Conversation abandonment (session with athlete msg, no follow-up within N min)
-- Repeat questions (same athlete, similar normalized text within 7d)
-- Unanswered (response flagged uncertain / empty)
-Return largest conversational weakness.
-
-### Section G — Confusion Detection
-From route navigation events / `asb_events` topic lineage:
-- Surfaces opened ≥3× per athlete per session
-- Navigation loops (A→B→A within 60s)
-- Repeated next-step replacements
-Rank top confusion sources.
-
-### Section H — Reality Scorecard
-Compute:
-- Adoption %  = onboarding_completed / surfaced
-- Utilization % = weekly active hammer users / total active athletes
-- Completion % = modality_completed / modality_opened
-- Guidance effectiveness % = next_step_completed / next_step_resolved
-- Conversation effectiveness % = chat_resolved / chat_started
-- Confusion score = confusion events / total sessions (inverted)
-- **Overall Hammer Reality Score** = weighted mean (0.25 adoption, 0.20 utilization, 0.15 completion, 0.20 guidance, 0.10 conversation, 0.10 (1 − confusion)).
-
-### Section I — Final Closure
-GO / NO-GO + Workstream CLOSED / OPEN, with stated highest-value next concern.
-
-## Constitutional Subordination
-Read-only measurement only. Hammer remains interpretive — no `organism_truth`/`athlete_intent`/`authority_override`/`hard_stop` writes. All evidence cites canonical `asb_events` lineage at pinned engine_version + reasoning_version. Safeguarding supersedes any visibility surface. Conforms to RR-1…RR-10, RW-1…RW-10, EI-1…EI-10, all sealed phases.
+1. Query live DB for `profiles` columns, `asb_topic_registry` entries, recent `asb_events` topics, and any athlete-context tables (`athlete_*`, `hammer_state_snapshots`, `user_engine_profile`, `physio_*`, `training_*`, `speed_*`, `sprint_analyses`, `running_*`, `block_*`, `performance_sessions`, `athlete_load_tracking`, `hie_snapshots`, `mpi_scores`).
+2. Read `src/lib/hammer/context/athleteContext.ts`, `src/lib/hammer/prescription/dailyPlan.ts`, `src/lib/hammer/onboarding/knowledgeGaps.ts`, `src/lib/runtime/projections/developmentalState.ts`, `src/lib/runtime/modulators/**`, `src/lib/pieV2/**`, `src/lib/engine/EngineInputContractV2.ts`, `src/data/ENGINE_CONTRACT.ts`, `src/data/fatigueThresholds.ts`, `src/data/ageCurves.ts`, sport-specific data dirs, `useUserProfile`, `useSportConfig`.
+3. For each Section A–I domain: record present / partial / absent, source, authority owner, confidence, update path, accessibility to Hammer / workouts / roadmap / recommendation surfaces.
+4. Attempt hostile generation of a six-week plan in prose (Section H) using only currently available context — list every assumption made.
+5. Compute per-domain completeness % as `(verifiable_fields_with_active_update_path / required_fields_for_elite_individualization)`. Overall = unweighted mean across J's nine sub-scores (declared, not invented).
+6. Classify gaps P0/P1/P2 in the roadmap. No solutions designed.
 
 ## Deliverables
-- `docs/asb/coach-hammer-production-reality-validation.md` — sections A–I with SQL evidence, counts, percentages, rankings, scorecard, and final verdict.
-- `docs/asb/reality-feedback-ledger.md` — append RFL-020 (production reality validation) with outcome.
-- `.lovable/plan.md` — append sprint summary.
 
-## Out of Scope
-- New features, new topics, new surfaces.
-- Doctrine, scoring, governance, recruiting, safeguarding audits.
-- Any UI/route changes (even if confusion sources surface — those become roadmap items, not edits).
-- Recomputing guidance completeness % (held at 92% from prior ratification).
+- `docs/asb/athlete-development-intelligence-audit.md` — Sections A–J with evidence tables and completeness scores.
+- `docs/asb/athlete-development-intelligence-roadmap.md` — Section K gap classification (P0/P1/P2) only.
+- `docs/asb/reality-feedback-ledger.md` — append RFL-023 (audit opened), RFL-024 (completeness verdict), RFL-025 (P0 gap inventory).
 
-## Exit Criteria
-- All nine sections answered with live-query evidence.
-- Hammer Reality Score computed.
-- GO/NO-GO and CLOSED/OPEN verdict issued with highest-value next concern named.
+## Out of scope
+
+New tables, new columns, new topics, new surfaces, new prompts, new workouts, new recommendation logic, design changes, prescription algorithm changes, any modification to `engineVersion` / `reasoningVersion` pins. All identified gaps become roadmap items only.
+
+## Exit criteria
+
+All ten domains (A–J) have evidence-backed completeness scores; overall athlete-development intelligence % is published; P0/P1/P2 roadmap is classified; three docs committed; RFL entries closed.
