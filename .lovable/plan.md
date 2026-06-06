@@ -1,148 +1,83 @@
-## Organism Wiring Sprint
+# Organism Wiring Completion Sprint — Plan
 
-Goal: convert PIE V2 + HIE from working engines into reachable production systems. No new doctrine, no UHRC, no AI Hammer, no recommendation work. Pure wiring + projection completion + 10-question ratification.
+Goal: reach **10/10 PASS** on the ratification matrix in
+`docs/asb/launch-closure/organism-wiring-ratification.md`, then run the
+Pre-UHRC audit. No new doctrine, no UHRC, no AI Hammer, no recommendation
+resolution. Only complete the already-approved organism.
 
----
+## Verified starting state (from this turn's exploration)
 
-### Forensic anchors (verified before planning)
+- `PieV2FrameTagger` exists at `src/components/micro-layer/PieV2FrameTagger.tsx:36` but is **not mounted** in `src/pages/AnalyzeVideo.tsx` (988 lines, no reference).
+- Edge-runtime hitting doctrine lives at `supabase/functions/_shared/hittingCausalChains.ts` (`PHASE_CAUSAL_CHAINS`) and `_shared/hittingPhases.ts` (`attributePhaseFromSymptoms`, `prioritizePhasesForRoadmap`). `hie-analyze/index.ts` does **not** import either — snapshot built at line ~1933 / upserted at ~1955 with no `hitting_doctrine` key.
+- `HittingCausalChainCard` (`src/components/hitting/HittingCausalChainCard.tsx:22`) and `HittingRoadmapLadder` (`src/components/hitting/HittingRoadmapLadder.tsx:17`) exist but have **zero production call sites**.
+- `hie_snapshots.hitting_doctrine jsonb` column already exists (migration applied; visible in `src/integrations/supabase/types.ts:4520`).
+- `performance_sessions.pie_v2_signals` is written by `persistPieV2Session` but **no reader** consumes it on trends or coach surface.
 
-- `PitchingV2MicroInput` (`src/components/micro-layer/PitchingV2MicroInput.tsx`) — zero production call sites.
-- `PieV2FrameTagger` (`src/components/micro-layer/PieV2FrameTagger.tsx`) — zero production call sites.
-- `MicroLayerInput` (`src/components/micro-layer/MicroLayerInput.tsx`) — also unmounted in pages; only `PracticeHub.tsx` runs a `pitching` session via `usePerformanceSession.createSession`.
-- `finalizePieV2Session` (`src/lib/pieV2/finalizeSession.ts`) — exists, tested, never invoked by capture surfaces.
-- `performance_sessions.pie_v2_signals` + `athlete_foundation_state.pie_v2_caution_state` columns exist (migration `20260604200642`); **no writer in the codebase** (rg confirms only type defs reference them).
-- `supabase/functions/hie-analyze/index.ts` (1,982 lines) — no import of `_shared/hittingPhases.ts` or `_shared/hittingCausalChains.ts` (only `ai-chat` and `analyze-video` import them). No `violated_phases` / `causal_chains` / `priority_phase` keys produced anywhere.
-- `HittingCausalChainCard` / `HittingRoadmapLadder` — only referenced from each other; zero page mounts.
+## Section F — Video-derived pitching path
 
-This plan only fills those gaps. It does not invent new engines.
+1. In `src/pages/AnalyzeVideo.tsx`, after a successful baseball-pitching analysis returns (`hie-analyze`/`analyze-video` response), render `<PieV2FrameTagger />` gated on `sport === 'baseball' && module === 'pitching'` and on the presence of `videoId` + `parentVideoEventId` from the analysis result.
+2. Tagger emits `pie_v2_rep_score` events via existing `emitPieV2RepScore`. On tagger completion (or session-close callback), invoke `finalizePieV2Session({ persist: true })` against the same `athleteId` / `sessionId` so video-tagged reps land in the **same** `performance_sessions.pie_v2_signals` + `athlete_foundation_state.pie_v2_caution_state` projections. No parallel storage, no special-case writer.
+3. Evidence: file:line of mount, emitted event sample, projection row example, coach surface citation.
 
----
+## Section G — Hitting doctrine in `hie-analyze`
 
-### Section A — Capture surface wiring
+In `supabase/functions/hie-analyze/index.ts`:
 
-A1. **Pitching session capture (`PracticeHub.tsx`, `build_session` step).**
-- Add a baseball-only Advanced Mechanics panel: mount `PitchingV2MicroInput` inside the build-session view when `sessionType === 'pitching'` and `sport === 'baseball'`.
-- Hold its value in local state alongside `drill_blocks`. On session save, store the rep-style payload on `data.micro_layer_data.pie_v2` (existing JSONB field) so nothing in the legacy save shape changes.
+1. Add imports: `attributePhaseFromSymptoms`, `prioritizePhasesForRoadmap`, `HittingPhaseId` from `../_shared/hittingPhases.ts`; `PHASE_CAUSAL_CHAINS`, `PHASE_ROADMAPS` from `../_shared/hittingCausalChains.ts`.
+2. Add a pure helper `deriveHittingDoctrineAttribution(weaknessClusters, signalDepth)` that:
+   - Maps weakness clusters → symptom tokens → `attributePhaseFromSymptoms`.
+   - Returns `{ violated_phases, priority_phase, causal_chains, roadmap, confidence, missingness }`.
+   - When `signalDepth` < doctrine threshold OR no symptoms map: returns `confidence: 0`, empty arrays, explicit `missingness: { reason: 'insufficient_reps' | 'unmapped_symptoms', missing_signals: [...] }`. **No imputation, no defaults, no fabricated priority.**
+3. Attach result as `hitting_doctrine` on the snapshot object built before the `.upsert()` at line ~1955 (additive — does not mutate existing fields).
+4. Engine-version stamp: include `engine_version: 'hie-doctrine-v1.0.0'` inside `hitting_doctrine` for replay pinning.
 
-A2. **Session finalization hook.**
-- In `usePerformanceSession.createSession`, after the `performance_sessions` insert and immediately before the `calculate-session` invoke, if `micro_layer_data.pie_v2` reps are present, call `finalizePieV2Session({ session_id, athlete_id: user.id, reps })`.
-- Capture the returned `aggregate` + `caution` for the projection writer in Section B. Failures are logged and swallowed (additive only — never break legacy save).
+## Section H — Hitting surfaces
 
-A3. **Video-derived capture (`AnalyzeVideo.tsx`).**
-- After a successful pitching analysis response (`module === 'pitching' && sport === 'baseball'` and `currentVideoId` set), render `PieV2FrameTagger` with `athleteId=user.id`, `sessionId=currentVideoId` (video-session bridge), `videoId=currentVideoId`, `parentVideoEventId` left undefined for now.
-- Tagger already calls `emitPieV2RepScore` directly — no new emission code required.
+Athlete + coach must read the **same** `hie_snapshots.hitting_doctrine` JSON — single source of truth.
 
-A4. **Evidence file:** `docs/asb/launch-closure/organism-wiring-ratification.md` Section A — file:line table for every mount and the runtime chain capture → score → aggregate → emit → safeguard → persist.
+1. **Athlete surface:** in `src/components/hie/WeaknessClusterCard.tsx` (consumed by `ProgressDashboard`), append a doctrine block reading `snapshot.hitting_doctrine`. Render `<HittingCausalChainCard chain={causal_chains[priority_phase]} />` and `<HittingRoadmapLadder roadmap={roadmap} />`. When `confidence === 0`: render existing empty-state copy ("Not enough hitting reps yet — keep logging swings").
+2. **Coach surface:** in `src/pages/CoachAthleteDetail.tsx` hitting tab, mount the identical pair of components reading from the same snapshot row (selected by `athlete_id`). No coach-only computation.
+3. Evidence: athlete route, coach route, file:line refs for both mounts.
 
----
+## Section I — Trends + coach reader for `pie_v2_signals` (closes Q4 + strengthens Q5)
 
-### Section B — Projection writer completion
+1. **Trends:** add a reader in the existing pitching trends surface (locate in `src/components/...` near `PieV2CoachPanel` usage) that selects `performance_sessions.pie_v2_signals` for the athlete and renders aggregate trajectory. Read-only; no new table.
+2. **Coach panel:** extend `PieV2CoachPanel` (mounted at `src/pages/CoachAthleteDetail.tsx:144`) to additionally surface the latest `pie_v2_signals` row alongside its existing ledger view.
 
-Single canonical writer: `src/lib/pieV2/persistSession.ts`.
+## Section J — Fixtures and tests
 
-```text
-persistPieV2Session({ session_id, athlete_id, aggregate, caution }) → void
-  ├─ update performance_sessions.pie_v2_signals  = { aggregate, engine_version, computed_at }
-  └─ upsert athlete_foundation_state.pie_v2_caution_state
-       = { level, contributing_factors, athlete_reported_pain,
-           recommended_action, session_id, engine_version, computed_at }
-       (only when caution.level !== 'none'; clears row to null when 'none')
-```
+1. Four Deno fixtures under `supabase/functions/hie-analyze/__tests__/doctrineFixtures.ts` covering P1, P2, P3, P4 violations. Each asserts `priority_phase` matches expected.
+2. Extend `src/lib/pieV2/__tests__/endToEnd.test.ts` with a `persist: true` path against a mocked supabase client (vitest mock) verifying `performance_sessions.pie_v2_signals` update + `athlete_foundation_state.pie_v2_caution_state` upsert.
 
-Rules:
-- Pure function; no business logic — just deterministic projection of the aggregate.
-- `engine_version` stamped from `PIE_V2_ENGINE_VERSION`.
-- Idempotent: re-running with the same aggregate is a no-op (`updated_at` may bump, payload identical).
-- Replay-safe: derived strictly from the event-ledger aggregate produced by `emitPieV2SessionAggregate`. Never authors organism truth.
-- Called from `finalizePieV2Session` after emit, behind a `persist?: boolean` flag (default true) so the existing unit tests keep running pure.
+## Section K — Re-run forensic matrix + Pre-UHRC audit
 
-Evidence: insert one real session via PracticeHub in build mode, read back both rows, then re-run `finalizePieV2Session` from the same reps and assert the projection is byte-identical.
+Rewrite `docs/asb/launch-closure/organism-wiring-ratification.md` with:
 
----
+- 10-row PASS/FAIL matrix with file:line evidence per row (target: 10/10).
+- New "Pre-UHRC Readiness Audit" section answering the 10 questions from Section J of the sprint brief: organism connectivity, action→state reach, analysis→coach reach, caution→safeguarding reach, remaining P0 blockers for UHRC / AI Hammer / recommendation resolution, verified launch-readiness %, baseball verdict (NO-GO / SOFT-LAUNCH / PUBLIC-LAUNCH), enumerated blockers.
 
-### Section C — Hitting doctrine connection (`hie-analyze`)
+## Files
 
-C1. Add imports at the top of `supabase/functions/hie-analyze/index.ts`:
-```ts
-import { HITTING_PHASES, type HittingPhaseId } from "../_shared/hittingPhases.ts";
-import { PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS } from "../_shared/hittingCausalChains.ts";
-```
+**New**
+- `supabase/functions/hie-analyze/__tests__/doctrineFixtures.ts`
+- (possibly) `supabase/functions/_shared/deriveHittingDoctrine.ts` if the helper warrants its own module
 
-C2. New pure helper `deriveHittingDoctrineAttribution(hieSnapshot)` co-located in the function:
-- Input: the snapshot/weakness signals hie-analyze already computes for hitting.
-- Output:
-  ```ts
-  {
-    violated_phases: HittingPhaseId[];          // P1..P4 ordered by severity
-    priority_phase: HittingPhaseId | null;      // first non-negotiable violator, else worst
-    causal_chains: CausalChain[];               // PHASE_CAUSAL_CHAINS[priority_phase] + adjacent
-    roadmap: RoadmapStep[];                     // PHASE_ROADMAPS[priority_phase]
-    confidence: number;                         // 0..100 from sample depth + signal agreement
-  }
-  ```
-- Maps existing hitting weakness metrics → phases per `_shared/hittingPhases.ts` (e.g. chase/whiff → P1 Stabilize, contact_quality vs velocity → P2 Hand Load, exit_direction pull-side leak → P3 Back Hip, timing/decision → P4 Hitter's Move).
-- No placeholder values, no stub logic. If signal depth < doctrine threshold, returns `confidence: 0` with empty arrays and an explicit `missingness` reason — never imputes.
+**Edited**
+- `src/pages/AnalyzeVideo.tsx` (mount tagger + finalize call)
+- `supabase/functions/hie-analyze/index.ts` (imports + helper + snapshot field)
+- `src/components/hie/WeaknessClusterCard.tsx` (athlete doctrine block)
+- `src/pages/CoachAthleteDetail.tsx` (coach doctrine block + extended pie_v2_signals reader)
+- `src/components/pie/PieV2CoachPanel.tsx` (or equivalent — read `pie_v2_signals`)
+- Trends surface file (TBD on locate — single addition, no rewrite)
+- `src/lib/pieV2/__tests__/endToEnd.test.ts`
+- `docs/asb/launch-closure/organism-wiring-ratification.md`
 
-C3. Attach the result to the hitting snapshot payload as `hitting_doctrine: { ... }` (additive field on the existing `hie_snapshots` row JSONB). Persist via the existing snapshot writer — no new table.
+**Out of scope (explicit)**
+- UHRC, AI Hammer standardization, recommendation resolution, onboarding redesign, softball parity, new doctrine, new scoring systems.
 
-C4. Evidence: 4 sample fixture athletes (one weakness per phase P1..P4) — committed under `supabase/functions/hie-analyze/__tests__/hittingDoctrine.fixtures.ts` with assertions that each fixture produces the correct `priority_phase`, non-empty `causal_chains`, and non-empty `roadmap`.
+## Exit criteria
 
----
-
-### Section D — Hitting surface activation
-
-D1. **Athlete view.** On the hitter-facing analysis surface (currently `AnalyzeVideo.tsx` when `module === 'hitting'`, plus the HIE summary on `AthleteCommand`/`ProgressDashboard` — exact file confirmed during implementation by tracing where `hie_snapshots` is read), mount:
-- `<HittingCausalChainCard chain={chain} />` for each `causal_chains[*]`
-- `<HittingRoadmapLadder roadmap={roadmap} />` once
-
-Both feed from `hie_snapshots.hitting_doctrine` written in C3.
-
-D2. **Coach view.** In `CoachAthleteDetail.tsx` hitting tab, mount the same two components reading the same field so coach + athlete see identical chains. Coach surface uses default `showCoach` state so the "Coach's notes" toggle is available.
-
-D3. Empty state: when `hitting_doctrine.confidence === 0`, render a single muted "Not enough hitting reps yet" line — never fake a chain.
-
-D4. Evidence: file:line refs for both mounts plus a manual run (hitter upload → analysis → both cards render → coach sees identical chain).
-
----
-
-### Section E — End-to-end ratification
-
-Create `docs/asb/launch-closure/organism-wiring-ratification.md`. Body = 10-question PASS/FAIL matrix with one piece of evidence per row (file:line, query result, or screenshot path). No narrative. Questions:
-
-1. Can a pitcher create a session?
-2. Does that session create a PIE V2 aggregate event?
-3. Does the aggregate persist to `performance_sessions.pie_v2_signals`?
-4. Does it appear in trends (longitudinal read path)?
-5. Does it appear for coaches (`CoachAthleteDetail` / `CoachConsole`)?
-6. Does it update `athlete_foundation_state.pie_v2_caution_state`?
-7. Can a hitter generate phase analysis (`hitting_doctrine` populated)?
-8. Does `HittingRoadmapLadder` render?
-9. Does `HittingCausalChainCard` render?
-10. Can coach view hitting analysis (identical chain)?
-
-Sprint exits only when all ten = PASS. Output includes: matrix, remaining blockers (if any), and a launch-readiness % computed strictly as `PASS / 10`.
-
----
-
-### Technical details
-
-- New files:
-  - `src/lib/pieV2/persistSession.ts`
-  - `supabase/functions/hie-analyze/__tests__/hittingDoctrine.fixtures.ts`
-  - `docs/asb/launch-closure/organism-wiring-ratification.md`
-- Edited files (expected):
-  - `src/components/micro-layer/MicroLayerInput.tsx` or new wrapper to host `PitchingV2MicroInput` cleanly inside the existing build-session card on `PracticeHub.tsx`.
-  - `src/pages/PracticeHub.tsx` — mount + state + pass-through.
-  - `src/hooks/usePerformanceSession.ts` — call `finalizePieV2Session` + `persistPieV2Session` post-insert.
-  - `src/pages/AnalyzeVideo.tsx` — mount `PieV2FrameTagger` on baseball-pitching success.
-  - `supabase/functions/hie-analyze/index.ts` — doctrine imports + attribution helper + snapshot field.
-  - Hitting-view page(s) — mount the two cards.
-  - `src/pages/CoachAthleteDetail.tsx` — mount the same two cards in hitting tab.
-- DB: no schema changes (columns + JSONB already exist).
-- Tests:
-  - Reuse `src/lib/pieV2/__tests__/endToEnd.test.ts` — extend with a `persist=true` path against a mocked supabase client.
-  - New deno test in `hie-analyze` for doctrine fixtures P1..P4.
-
-### Out of scope (do not start)
-
-UHRC, AI Hammer standardization, recommendation resolution, softball parity, onboarding polish, design changes. These remain blocked until the 10-question matrix is fully PASS.
+- 10/10 PASS with file:line evidence.
+- Athlete and coach render identical doctrine output from the same JSON.
+- Video-derived and session-derived pitching paths write to the same projections.
+- Pre-UHRC audit completed with verdict + launch-readiness %.

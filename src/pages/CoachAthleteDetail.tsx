@@ -15,6 +15,7 @@ import { ReplayDrilldownCTA } from "@/components/coach-console/ReplayDrilldownCT
 import { PieV2CoachPanel } from "@/components/coach/PieV2CoachPanel";
 import { PieV2HammerBriefPanel } from "@/components/coach/PieV2HammerBriefPanel";
 import { PieV2RecruitingCard } from "@/components/recruiting/PieV2RecruitingCard";
+import { HittingDoctrineBlock } from "@/components/hitting/HittingDoctrineBlock";
 import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
@@ -47,6 +48,24 @@ export default function CoachAthleteDetail() {
         .maybeSingle();
       if (error) return false;
       return !!data;
+    },
+  });
+
+  // ── HITTING DOCTRINE (single source of truth — same JSON read by athlete) ──
+  const { data: hittingDoctrineSnap } = useQuery({
+    queryKey: ["coach-hie-doctrine", athleteId],
+    enabled: !!athleteId && rosterAccess === true,
+    queryFn: async () => {
+      if (!athleteId) return null;
+      const { data, error } = await supabase
+        .from("hie_snapshots")
+        .select("hitting_doctrine, computed_at, sport")
+        .eq("user_id", athleteId)
+        .order("computed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any) ?? null;
     },
   });
 
@@ -143,6 +162,20 @@ export default function CoachAthleteDetail() {
 
         {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
         {pieV2Latest && <PieV2HammerBriefPanel aggregate={pieV2Latest} />}
+
+        {/* Hitting doctrine (P1-P4) — same JSON as athlete surface */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Hitting doctrine (P1-P4)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HittingDoctrineBlock
+              doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
+              title="Athlete's hitting focus"
+            />
+          </CardContent>
+        </Card>
+
 
         <Card>
           <CardHeader className="pb-3">

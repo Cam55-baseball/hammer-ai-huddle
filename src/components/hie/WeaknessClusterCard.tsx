@@ -4,6 +4,7 @@ import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { AlertTriangle } from 'lucide-react';
 import { VideoSuggestionsPanel } from '@/components/video-suggestions/VideoSuggestionsPanel';
 import { mapHIEAreaToMovement } from '@/lib/analysisToTaxonomy';
+import { HittingDoctrineBlock } from '@/components/hitting/HittingDoctrineBlock';
 
 const IMPACT_COLORS = {
   high: 'bg-destructive/10 text-destructive border-destructive/30',
@@ -14,7 +15,10 @@ const IMPACT_COLORS = {
 export function WeaknessClusterCard() {
   const { snapshot } = useHIESnapshot();
 
-  if (!snapshot || snapshot.weakness_clusters.length === 0) return null;
+  if (!snapshot) return null;
+  const hasClusters = snapshot.weakness_clusters.length > 0;
+  const hasDoctrine = !!snapshot.hitting_doctrine;
+  if (!hasClusters && !hasDoctrine) return null;
 
   return (
     <Card>
@@ -58,6 +62,12 @@ export function WeaknessClusterCard() {
             />
           );
         })()}
+
+        {hasDoctrine && (
+          <div className="pt-2 border-t">
+            <HittingDoctrineBlock doctrine={snapshot.hitting_doctrine ?? null} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
