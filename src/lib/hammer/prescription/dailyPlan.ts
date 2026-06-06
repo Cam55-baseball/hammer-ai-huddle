@@ -57,15 +57,32 @@ interface BuilderArgs {
 
 function builder({ modality, ctx }: BuilderArgs): PrescribedBlock {
   const pos = ctx.get<string>("position")?.value ?? null;
-  const equipment = ctx.get<string>("equipment_access")?.value ?? null;
+  // P0-2: prefer canonical `equipment_effective` (spine envelope, scope-resolved);
+  // fall back to legacy `equipment_access` for transitional compatibility.
+  const equipmentEff = ctx.get<unknown>("equipment_effective")?.value ?? null;
+  const equipment =
+    (equipmentEff as { equipment?: string } | null)?.equipment ??
+    (typeof equipmentEff === "string" ? equipmentEff : null) ??
+    (ctx.get<string>("equipment_access")?.value ?? null);
   const liftingAge = ctx.get<number>("lifting_age_years")?.value ?? null;
   const seasonPhase = ctx.get<string>("season_phase")?.value ?? null;
   const injury = ctx.get<string>("injury_history")?.value ?? null;
   const readiness = ctx.get<{ score?: number }>("readiness")?.value ?? null;
+  // P0-2: spine read-paths now active for daily-plan differentiation.
+  const lifecycleBand = ctx.get<string>("lifecycle_band")?.value ?? null;
+  const availDays = ctx.get<number>("weekly_availability_days")?.value ?? null;
+  const devPriorities =
+    (ctx.get<string[]>("development_priorities")?.value as string[] | null) ?? null;
+  const goalSummary = ctx.get<string>("goal_summary")?.value ?? null;
 
   const recoverDay =
     typeof (readiness as { score?: number })?.score === "number" &&
     (readiness as { score: number }).score < 0.4;
+  // Lifecycle-aware strength volume scaling (additive, non-breaking).
+  const youthScale =
+    lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
+  // Low-availability athletes get tighter prescriptions.
+  const lowAvail = typeof availDays === "number" && availDays <= 2;
 
   switch (modality) {
     case "warmup":
@@ -118,17 +135,28 @@ function builder({ modality, ctx }: BuilderArgs): PrescribedBlock {
       }
       return {
         modality,
-        title: "Strength",
+        title: youthScale ? "Strength — youth template" : "Strength",
         why: recoverDay
           ? "Deload day — preserve quality, drop volume."
-          : "Drive force production and structural strength.",
-        steps: [
-          "Main: trap-bar deadlift or squat — 3×5",
-          "Push: bench or DB press — 3×6",
-          "Pull: row or chin-up — 3×8",
-          "Posterior chain accessory — 2×10",
-        ],
-        durationMin: recoverDay ? 30 : 50,
+          : youthScale
+            ? "Movement-quality bias for developing athletes; no max-effort loading."
+            : devPriorities?.includes("strength")
+              ? "Development priority — drive force production and structural strength."
+              : "Drive force production and structural strength.",
+        steps: youthScale
+          ? [
+              "Bodyweight squat / lunge — 2×8 quality reps",
+              "Push-up progression — 2×6",
+              "Row variation — 2×8",
+              "Core + posture finisher — 2×30s",
+            ]
+          : [
+              "Main: trap-bar deadlift or squat — 3×5",
+              "Push: bench or DB press — 3×6",
+              "Pull: row or chin-up — 3×8",
+              "Posterior chain accessory — 2×10",
+            ],
+        durationMin: recoverDay ? 30 : youthScale ? 25 : lowAvail ? 40 : 50,
         route: "/training-block",
         ctaLabel: "Open lift",
         status: "ready",
@@ -292,6 +320,8 @@ export interface HammerDailyPlanResult {
 
 export function buildHammerDailyPlan(ctx: HammerAthleteContext): HammerDailyPlanResult {
   const blocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx }));
+  // Suppress signal voids: log a single observability line per build, never silently.
+  // (Lineage continuity per FC-1: ctx.envelope drives every modality decision.)
   return {
     blocks,
     seasonPhase: (ctx.get<string>("season_phase")?.value as string) ?? null,
