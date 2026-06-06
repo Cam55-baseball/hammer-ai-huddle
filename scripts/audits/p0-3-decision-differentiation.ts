@@ -103,6 +103,22 @@ const PERSONAS: { name: string; vars: ContextVariable[] }[] = [
     mk("season_phase", "in"), mk("weekly_availability_days", 5),
     mk("goal_summary", "compete"), mk("goal_horizon", "short"),
   ]},
+  { name: "hamstring-injured-sprinter", vars: [
+    mk("lifecycle_band", "adult"), mk("lifting_age_years", 4),
+    mk("equipment_effective", { equipment: "full_gym" }),
+    mk("position", "OF"), mk("development_priorities", ["speed"]),
+    mk("season_phase", "pre"), mk("weekly_availability_days", 4),
+    mk("injury_history", "right hamstring strain — no max sprints"),
+    mk("goal_summary", "return to sprint"),
+  ]},
+  { name: "asymmetric-adult", vars: [
+    mk("lifecycle_band", "adult"), mk("lifting_age_years", 5),
+    mk("equipment_effective", { equipment: "full_gym" }),
+    mk("position", "SS"), mk("development_priorities", ["speed", "power"]),
+    mk("season_phase", "pre"), mk("weekly_availability_days", 5),
+    mk("goal_summary", "fix asymmetry"),
+    mk("asymmetry_pct", 14),
+  ]},
 ];
 
 const DRILL_FIXTURE = [
