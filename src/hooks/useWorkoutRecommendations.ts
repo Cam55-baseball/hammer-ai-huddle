@@ -9,6 +9,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { filterExercisesForPain } from '@/utils/painExerciseFilter';
+import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
+import { projectEnvelope, toEdgeFunctionPayload } from '@/lib/hammer/context/decisionFilters';
 
 export interface RecoveryWarning {
   show: boolean;
@@ -147,6 +149,8 @@ export function useWorkoutRecommendations(): UseWorkoutRecommendationsResult {
   const [recoveryContext, setRecoveryContext] = useState<RecoveryContext | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // P0-3 (RFL-029): spine envelope forwarded to edge function for context-aware filtering/rerank.
+  const athleteCtx = useHammerAthleteContext();
 
   const generateRecommendations = useCallback(async () => {
     setIsLoading(true);
@@ -193,11 +197,13 @@ export function useWorkoutRecommendations(): UseWorkoutRecommendationsResult {
 
       setRecoveryContext(recoveryCtx);
 
-      // Call edge function with recovery context
+      // Call edge function with recovery context + athlete spine projection
+      const athletePayload = toEdgeFunctionPayload(projectEnvelope(athleteCtx));
       const { data, error: functionError } = await supabase.functions.invoke('recommend-workout', {
         body: { 
           activityLogs: activityLogsResult.data || [],
           recoveryContext: recoveryCtx,
+          athleteContext: athletePayload,
         },
       });
 
@@ -254,7 +260,7 @@ export function useWorkoutRecommendations(): UseWorkoutRecommendationsResult {
     } finally {
       setIsLoading(false);
     }
-  }, [t, toast]);
+  }, [t, toast, athleteCtx]);
 
   const clearRecommendations = useCallback(() => {
     setRecommendations([]);

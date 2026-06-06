@@ -1,9 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
+import {
+  projectEnvelope,
+  orderRoadmapMilestones,
+  type RoadmapMilestoneView,
+  type OrderedMilestone,
+} from '@/lib/hammer/context/decisionFilters';
 
 export function useRoadmapProgress(sport?: string, module?: string) {
   const { user } = useAuth();
+  // P0-3 (RFL-031): spine-driven roadmap ordering.
+  const athleteCtx = useHammerAthleteContext();
 
   const milestones = useQuery({
     queryKey: ['roadmap-milestones', sport, module],
@@ -31,5 +41,19 @@ export function useRoadmapProgress(sport?: string, module?: string) {
     enabled: !!user,
   });
 
-  return { milestones, progress };
+  // Spine-ordered milestones — additive view, original `milestones.data` untouched.
+  const orderedMilestones: ReadonlyArray<OrderedMilestone<RoadmapMilestoneView>> = useMemo(() => {
+    const proj = projectEnvelope(athleteCtx);
+    const items: RoadmapMilestoneView[] = (milestones.data ?? []).map((m: any) => ({
+      id: m.id,
+      module: m.module ?? null,
+      title: m.title ?? m.name ?? null,
+      tags: [m.module, m.skill_target, ...(m.tags ?? [])].filter(Boolean) as string[],
+      lifecycleBands: m.lifecycle_bands ?? undefined,
+      milestoneOrder: m.milestone_order ?? null,
+    }));
+    return orderRoadmapMilestones(items, proj);
+  }, [milestones.data, athleteCtx]);
+
+  return { milestones, progress, orderedMilestones };
 }

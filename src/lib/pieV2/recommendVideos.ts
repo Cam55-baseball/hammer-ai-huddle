@@ -6,6 +6,7 @@
  */
 import { PIE_V2_VIDEO_CATALOG, type PieV2VideoEntry } from "@/data/baseball/pieV2VideoCatalog";
 import type { PieV2SessionAggregate, PieV2SeverityTier } from "./types";
+import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilters";
 
 export interface PieV2VideoRecommendation {
   video: PieV2VideoEntry;
@@ -20,9 +21,34 @@ const TIER_RANK: Record<PieV2SeverityTier, number> = {
   clean: 1,
 };
 
+function videoContextBoost(
+  v: PieV2VideoEntry,
+  ctx: AthleteContextProjection | undefined,
+): { delta: number; suffix: string } {
+  if (!ctx) return { delta: 0, suffix: "" };
+  const hay = `${v.signal_id} ${v.video_type}`.toLowerCase();
+  let delta = 0;
+  const parts: string[] = [];
+  for (const p of ctx.developmentPriorities) {
+    if (hay.includes(p.toLowerCase())) {
+      delta += 6;
+      parts.push(`+priority:${p}`);
+    }
+  }
+  if (ctx.injuryRegions.length > 0 && v.video_type === "advanced") {
+    delta -= 8;
+    parts.push("injury-deprioritize-advanced");
+  }
+  if (ctx.lifecycleBand && ["u10", "u12", "u14"].includes(ctx.lifecycleBand) && v.video_type === "advanced") {
+    delta -= 10;
+    parts.push("youth-deprioritize-advanced");
+  }
+  return { delta, suffix: parts.length ? ` [${parts.join(",")}]` : "" };
+}
+
 export function recommendVideos(
   agg: PieV2SessionAggregate,
-  opts: { maxRecommendations?: number } = {},
+  opts: { maxRecommendations?: number; athleteContext?: AthleteContextProjection } = {},
 ): PieV2VideoRecommendation[] {
   const max = opts.maxRecommendations ?? 8;
   const recs: PieV2VideoRecommendation[] = [];
@@ -34,7 +60,8 @@ export function recommendVideos(
           (v) => v.signal_id === s.signal_id && v.video_type === "education",
         );
         if (educ) {
-          recs.push({ video: educ, rank_score: 55, rationale: `tracked-signal variance for ${s.signal_id}` });
+          const { delta, suffix } = videoContextBoost(educ, opts.athleteContext);
+          recs.push({ video: educ, rank_score: 55 + delta, rationale: `tracked-signal variance for ${s.signal_id}${suffix}` });
         }
       }
       continue;
@@ -50,10 +77,11 @@ export function recommendVideos(
         v.video_type === "education" ? 8 :
         v.video_type === "demonstration" ? 6 :
         v.video_type === "advanced" ? 3 : 1;
+      const { delta, suffix } = videoContextBoost(v, opts.athleteContext);
       recs.push({
         video: v,
-        rank_score: base + typeBoost,
-        rationale: `${s.signal_id} at tier ${s.tier}`,
+        rank_score: base + typeBoost + delta,
+        rationale: `${s.signal_id} at tier ${s.tier}${suffix}`,
       });
     }
   }

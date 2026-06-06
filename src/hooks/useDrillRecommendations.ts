@@ -9,6 +9,8 @@ import {
   type RecommendationOutput,
   type DrillUsageStats,
 } from '@/utils/drillRecommendationEngine';
+import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
+import { projectEnvelope } from '@/lib/hammer/context/decisionFilters';
 
 interface UseDrillRecommendationsOptions {
   sport: string;
@@ -23,6 +25,9 @@ export function useDrillRecommendations(options: UseDrillRecommendationsOptions)
   const { user } = useAuth();
   const { modules: subscribedModules } = useSubscription();
   const userHasPremium = subscribedModules.length > 0;
+  // P0-3 (RFL-029): consume athlete context spine for legality + rerank.
+  const athleteCtx = useHammerAthleteContext();
+  const athleteProjection = projectEnvelope(athleteCtx);
 
   const { sport, weaknesses = [], position, detectedIssues = [], excludeDrillIds = [], enabled = true } = options;
 
@@ -155,6 +160,7 @@ export function useDrillRecommendations(options: UseDrillRecommendationsOptions)
         position,
         detectedIssues,
         usageStats: usageQuery.data ?? [],
+        athleteContext: athleteProjection,
       })
     : null;
 
