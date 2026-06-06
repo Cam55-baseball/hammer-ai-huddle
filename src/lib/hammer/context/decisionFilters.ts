@@ -110,7 +110,7 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
     const ageYears = ageMs / (365.25 * 24 * 3600 * 1000);
     isMinor = Number.isFinite(ageYears) ? ageYears < 18 : null;
   }
-  const parentLink = ctx.get<{ status?: string } | string>("parent_link_active")?.value;
+  const parentLink = ctx.get<unknown>("parent_link_active")?.value as unknown;
   const parentSupremacyActive =
     (typeof parentLink === "object" && parentLink !== null && (parentLink as { status?: string }).status === "active") ||
     parentLink === "active" ||
