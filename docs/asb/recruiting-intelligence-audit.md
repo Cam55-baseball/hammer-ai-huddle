@@ -49,3 +49,22 @@ card is not yet mounted. Not a baseball soft-launch blocker because:
 
 **Pitcher recruiting GREEN. Hitter recruiting P1 polish (non-blocking).**
 No cross-sport leakage. RR-9 and RR-10 invariants intact.
+
+---
+
+## Hostile verification appendix (2026-06-06)
+
+Cross-referenced from `docs/asb/baseball-launch-verification.md`.
+
+| Check | Verdict | Evidence |
+|---|---|---|
+| Pitcher recruiting card present | PASS | `src/components/recruiting/PieV2RecruitingCard.tsx` |
+| Hitter recruiting card present | FAIL (B-2) | no `HittingRecruitingCard` in repo |
+| Scout evaluation isolated from organism truth | PASS | `ScoutEvaluationForm.tsx:42` writes only to `scout_evaluations` |
+| Cross-discipline leakage (pitcher → hitter signals) | PASS | `PieV2RecruitingCard` only consumes `PieV2SessionAggregate` |
+| RR-9 gate structurally exists | PASS | `PieV2RecruitingCard.tsx:23` early return on `!optIn` |
+| RR-9 gate controlled by athlete consent | **FAIL (B-1)** | `CoachAthleteDetail.tsx:204-211` — gate toggled by viewing scout, no persisted athlete consent row |
+| RR-10 minor protection at recruiting render | **FAIL (B-3)** | no `is_minor` check before render |
+| Athlete-facing recruiting consent surface | **FAIL (B-4)** | no such surface in `src/pages/` |
+
+**Recruiting verdict:** downgraded from 90% to 60% under hostile re-evaluation. Public launch blocked by B-1 / B-3 / B-4. Soft launch acceptable only if recruiting card is hidden for the cohort.
