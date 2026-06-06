@@ -131,3 +131,24 @@ See `docs/asb/athlete-context-spine-constitution.md` and `docs/asb/athlete-conte
 **Intelligence estimate:** 35% → **~42%** after P0-2 (daily-plan, chat, onboarding consume spine; ecosystem still inactive).
 
 See `docs/asb/athlete-context-spine-consumer-activation-ratification.md`.
+
+
+## RFL closures — P0-3 Decision Activation Completion & Context Workstream Closure (2026-06-06)
+
+| ID | Status | Closure evidence |
+|---|---|---|
+| RFL-029 | CLOSED | `src/hooks/useDrillRecommendations.ts`, `src/hooks/useWorkoutRecommendations.ts`, `src/lib/pieV2/recommendDrills.ts`, `src/lib/pieV2/recommendVideos.ts`, `src/utils/drillRecommendationEngine.ts` all consume the spine envelope via `projectEnvelope` + `applyContextFilter`. Differentiation: `uniqueDrillLegalSets: 4` across 9 personas (`scripts/audits/evidence/p0-3-differentiation.json`). |
+| RFL-030 | CLOSED | `src/hooks/useSpeedProgress.ts` consumes the spine via `selectSpeedFocus`; exposes `speedFocus`, `contextSessionFocus`, `maxEffortAllowed`, `recommendedReps`, `contextSuppressions`, `speedProjection`. Acceleration / top speed / asymmetry / workload / freshness / season phase all influence outputs. Differentiation: `uniqueSpeedFoci: 5`. |
+| RFL-031 | CLOSED | `src/hooks/useRoadmapProgress.ts::orderedMilestones` + `src/lib/pieV2/recommendDrills.ts` + `src/lib/pieV2/recommendVideos.ts` consume `orderRoadmapMilestones` / `applyContextFilter`. Differentiation: `uniqueRoadmapTops: 8/9`. |
+
+**Daily-plan differentiation:** 9/9 unique fingerprints (`src/lib/hammer/prescription/dailyPlan.ts` now passes `projectEnvelope` + `selectSpeedFocus` into every modality builder).
+
+**Utilization score:** ~92% overall (availability 100% · consumption 100% · differentiation 87%).
+
+**Intelligence estimate:** 42% → **~65%**.
+
+**P0 athlete-context workstream:** **CLOSED**.
+
+**Public release verdict:** **GO WITH KNOWN LIMITATIONS** (non-blocking: Elite-tier consumers `P`, biomechanical fusion, multi-week periodization).
+
+See `docs/asb/p0-3-decision-activation-ratification.md`.
