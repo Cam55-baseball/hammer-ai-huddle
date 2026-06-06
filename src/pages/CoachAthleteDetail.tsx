@@ -53,6 +53,25 @@ export default function CoachAthleteDetail() {
     },
   });
 
+  // RFL-005 — emit canonical coach.review.opened once per (coach, athlete) per day.
+  // Gated on roster access so unauthorized opens never emit.
+  useEmitOnce(
+    user?.id && athleteId && rosterAccess === true && user.id !== athleteId
+      ? `coach_review:${user.id}:${athleteId}`
+      : null,
+    user?.id && athleteId && rosterAccess === true && user.id !== athleteId
+      ? {
+          topic: "coach.review.opened",
+          athleteId,
+          actorId: user.id,
+          actorRole: "coach",
+          payload: { surface: "coach_athlete_detail" },
+        }
+      : null,
+  );
+
+
+
   // ── HITTING DOCTRINE (single source of truth — same JSON read by athlete) ──
   const { data: hittingDoctrineSnap } = useQuery({
     queryKey: ["coach-hie-doctrine", athleteId],

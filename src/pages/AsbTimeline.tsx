@@ -2,9 +2,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { EventTimeline } from "@/components/asb/EventTimeline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
 
 export default function AsbTimeline() {
   const { user, loading } = useAuth();
+
+  // RFL-007 — emit canonical intelligence.trend.viewed once per athlete per day
+  // for the timeline trend surface.
+  useEmitOnce(
+    user?.id ? `trend_timeline:${user.id}` : null,
+    user?.id
+      ? {
+          topic: "intelligence.trend.viewed",
+          athleteId: user.id,
+          actorId: user.id,
+          actorRole: "athlete",
+          payload: { surface: "asb_timeline" },
+        }
+      : null,
+  );
+
 
   return (
     <DashboardLayout>
