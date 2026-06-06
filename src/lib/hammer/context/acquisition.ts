@@ -81,9 +81,9 @@ export async function persistContextAnswer(
     last_authored_by: userId,
   };
 
-  const { error } = await supabase
-    .from("athlete_context")
-    .upsert(payload, { onConflict: "user_id" });
+  const { error } = await (supabase.from("athlete_context") as unknown as {
+    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+  }).upsert(payload, { onConflict: "user_id" });
   if (error) throw new Error(`persistContextAnswer(${key}): ${error.message}`);
 }
 
