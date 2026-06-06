@@ -12,9 +12,9 @@
  */
 import { useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
+import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import {
   HAMMER_KNOWLEDGE_GAPS,
   type KnowledgeGap,
@@ -47,17 +47,25 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
       if (!user) return;
       const gap = HAMMER_KNOWLEDGE_GAPS.find((g) => g.id === gapId);
       if (!gap) return;
-      // Persist to profile column.
-      const { error } = await supabase
-        .from("profiles")
-        .update({ [gap.persistTo]: value })
-        .eq("id", user.id);
-      if (error) {
-        console.error("[hammer onboarding] resolve failed", error);
+      try {
+        // Normalize array-style spine keys from free-text input.
+        let v: unknown = value;
+        if (gap.persistTo === "training_focus" || gap.persistTo === "development_priorities") {
+          v = String(value)
+            .split(/[,;\n]+/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+        if (gap.persistTo === "injury_history") {
+          const s = String(value).trim().toLowerCase();
+          v = s === "" || s === "none" || s === "no" ? [] : [{ note: String(value), reported_at: new Date().toISOString() }];
+        }
+        await persistContextAnswer(user.id, gap.persistTo, v, "hammer_onboarding");
+      } catch (err) {
+        console.error("[hammer onboarding] resolve failed", err);
         return;
       }
-      // Re-read canonical context so missingness invariants stay intact.
-      qc.invalidateQueries({ queryKey: ["hammer-context-profile", user.id] });
+      qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
     },
     [user, qc],
   );
