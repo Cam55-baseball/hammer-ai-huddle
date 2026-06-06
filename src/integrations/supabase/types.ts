@@ -6374,6 +6374,45 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_athlete_links: {
+        Row: {
+          accepted_at: string | null
+          athlete_user_id: string
+          created_at: string
+          id: string
+          invited_at: string
+          parent_user_id: string
+          relationship: string
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          athlete_user_id: string
+          created_at?: string
+          id?: string
+          invited_at?: string
+          parent_user_id: string
+          relationship?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          athlete_user_id?: string
+          created_at?: string
+          id?: string
+          invited_at?: string
+          parent_user_id?: string
+          relationship?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       parent_invite_dispatches: {
         Row: {
           athlete_id: string
@@ -12212,6 +12251,10 @@ export type Database = {
             }
             Returns: string
           }
+      is_authorizing_parent: {
+        Args: { _athlete: string; _parent: string }
+        Returns: boolean
+      }
       is_coach_of: {
         Args: { _athlete: string; _coach: string }
         Returns: boolean

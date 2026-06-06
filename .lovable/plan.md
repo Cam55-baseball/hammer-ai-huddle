@@ -1,164 +1,79 @@
+# P1-F — Parent Authorization Completion Sprint
 
-# RR-9 / RR-10 Authority Correction Sprint — Plan
+Constitutional completion only. No new intelligence, scoring, recruiting systems, doctrine, onboarding, or softball work. Closes the RR-10 parent-governance loop so minors can publicly launch.
 
-Constitutional correction only. No features, no UHRC/Hammer/onboarding work, no softball. Scope is exactly the six blockers (B-1, B-2, B-3, B-4) plus hostile reverification and public-launch ratification.
+## Current verified state (no rework)
 
----
+- `public.athlete_recruiting_consent` (athlete-owned, RLS fail-closed) — already exists.
+- `public.athlete_recruiting_consent_audit` (append-only via `record_recruiting_consent_change` trigger) — already exists.
+- `public.resolve_recruiting_visibility(uuid)` and `public.is_minor(uuid)` — already exist.
+- `RecruitingVisibilityGate` single chokepoint, `useRecruitingConsent` hook, athlete `/athlete/recruiting-consent` page — already exist.
+- `relational.exposure.consent_changed` + `relational.exposure.gate_blocked` ASB topics — already emitted.
 
-## Section A — RR-9 athlete-owned consent authority
+**Gap:** `parent_authorized` is a column with no canonical write path. There is no `parent` role, no parent↔athlete linkage table, no parent surface. The athlete cannot self-flip it (RLS allows the athlete to update the row, but doing so would violate RR-10 — needs trigger enforcement).
 
-**New canonical table `public.athlete_recruiting_consent`** (single source of truth, replay-safe):
+## Sprint scope
 
-- `athlete_id uuid PRIMARY KEY` (FK → `profiles.id`)
-- `visibility_enabled boolean NOT NULL DEFAULT false`
-- `parent_authorized boolean NOT NULL DEFAULT false` (mandatory `true` for minors before visibility resolves to ON)
-- `last_changed_at timestamptz NOT NULL DEFAULT now()`
-- `last_changed_by uuid NOT NULL` (must equal `athlete_id` or documented override actor)
-- `engine_version text NOT NULL DEFAULT 'rr9-1.0.0'`
+### Section A — Authority model audit (doc only)
+`docs/asb/parent-authorization-model.md` documenting authority owner, source, storage, read/write paths, audit/replay lineage, failure modes, revocation, aging-out (minor → adult flip). Explicitly answers the five "who" questions with file:line + SQL evidence.
 
-**Audit lineage table `public.athlete_recruiting_consent_audit`** (append-only):
-- `id`, `athlete_id`, `previous_state jsonb`, `new_state jsonb`, `changed_at`, `changed_by`, `actor_role`, `reason text`
+### Section B — Parent linkage + write surface (DB)
 
-**RLS (fail-closed):**
-- `athlete_recruiting_consent` SELECT: `athlete_id = auth.uid()` OR (consent row resolves to ON AND viewer has `coach`/`recruiter`/`scout` role with active relationship). Write: `athlete_id = auth.uid()` only.
-- Audit table: SELECT athlete-self only; INSERT via trigger on consent updates (SECURITY DEFINER function records prev/new).
-- GRANT block per project rules; no `anon` access.
+Single migration:
 
-**ASB lineage:** every write emits `relational.exposure.consent_changed` via existing `emitAsbEvent` (RR-9 namespace). Replay reconstructs visibility deterministically from audit table at pinned `engine_version`.
+1. **Enum extension:** `ALTER TYPE app_role ADD VALUE 'parent'`.
+2. **`public.parent_athlete_links`** — canonical linkage:
+   - `parent_user_id uuid → auth.users`, `athlete_user_id uuid → auth.users`, `relationship text`, `status text` (`pending|active|revoked`), `invited_at`, `accepted_at`, `revoked_at`, unique `(parent_user_id, athlete_user_id)`. Created via existing `parent_invite_dispatches` accept flow (reuses dispatcher; no new invite UI).
+   - GRANT to `authenticated` + `service_role`. RLS: parent reads/writes own row; athlete reads own row; service_role full.
+3. **`public.is_authorizing_parent(_parent uuid, _athlete uuid)`** security-definer helper returning true when an active link exists.
+4. **Trigger `enforce_parent_authorization_authority` on `athlete_recruiting_consent`:** if `NEW.parent_authorized` differs from `OLD.parent_authorized`, require `auth.uid()` to satisfy `is_authorizing_parent(auth.uid(), NEW.athlete_id)`; otherwise `RAISE EXCEPTION 'rr10: only an authorizing parent may change parent_authorized'`. Athletes, coaches, recruiters, scouts, and admins are blocked. The trigger also stamps `actor_role='parent'` and `reason` on the audit row.
+5. **New RLS policy** on `athlete_recruiting_consent`: parent of athlete may `SELECT` and may `UPDATE` only the `parent_authorized` column (enforced via trigger above + a column-aware policy).
+6. **Aging-out:** since `is_minor()` is age-derived, no migration needed — the resolver re-evaluates on every read and `parent_authorized` becomes irrelevant once the athlete turns 18. Document this in Section A.
 
-**Read path:** new hook `useRecruitingConsent(athleteId)` → returns `{ visibility_enabled, parent_authorized, is_minor, resolved_visibility }`. `resolved_visibility = visibility_enabled && (!is_minor || parent_authorized) && !active_safeguarding_flag`.
+### Section C — Parent revocation
+Same trigger path: parent sets `parent_authorized=false`; audit row records previous→new; existing `emitExposureConsentChanged` ASB event fires (extended with `actor_role: 'parent'` + `change_type: 'revoke'`); `RecruitingVisibilityGate` re-resolves on next render (already wired via React Query invalidation on the consent key — gate also invalidates on the ASB topic).
 
-**Doc:** `docs/asb/rr9-authority-ratification.md` with the six required sections (owner, storage, read, write, audit, replay).
+### Section D — Single canonical resolver (verification only)
+Audit every caller of recruiting visibility — confirm only `resolve_recruiting_visibility` and `useRecruitingConsent` are used; document call sites in Section A doc. Remove any stray local checks if found.
 
----
+### Section E — Parent-facing surface
+- New route `/parent/athletes` (`src/pages/ParentAthletes.tsx`) — lists linked athletes via `parent_athlete_links` with status, athlete name, minor flag, current `parent_authorized` state, last-change timestamp.
+- New route `/parent/athletes/:athleteId/recruiting` (`src/pages/ParentRecruitingAuthorization.tsx`) — approve/deny/revoke toggle, consequences copy, audit history (reuses `useRecruitingConsentAudit`). Guarded by `is_authorizing_parent` check at mount.
+- New hook `src/hooks/useParentLink.ts` and `useParentRecruitingAuthorization.ts` wrapping the write path (trigger does the enforcement).
+- Wire both routes into `src/App.tsx`.
 
-## Section B — RR-10 minor protection enforcement (fail-closed gate)
+### Section F — Hostile parent governance verification
+13 scenarios in `docs/asb/parent-authorization-verification.md` with PASS/FAIL/BLOCKED + SQL evidence:
+parent approves, parent denies, parent revokes, athlete toggles consent (parent flag preserved), recruiter refresh, coach refresh, role switch, direct link bypass, cached query bypass, session replay, unauthorized parent (different family), unauthorized recruiter writing `parent_authorized`, unauthorized athlete writing `parent_authorized`.
 
-New shared gate component `RecruitingVisibilityGate` (single chokepoint):
+### Section G — Minor recruiting ratification
+`docs/asb/minor-recruiting-ratification.md` — 8 cases (minor+approved, minor+denied, minor+revoked, adult unaffected, coach/recruiter/scout visibility per case, no bypass) each PASS/FAIL with evidence.
 
-```text
-useRecruitingConsent + useIsMinor + useParentAuthorization + useActiveSafeguarding
-  → if any check missing or false → render null + emit relational.exposure.gate_blocked
-  → only if all PASS → render children
-```
+### Section H — Constitutional completion audit
+`docs/asb/minor-governance-completion.md` — 10 YES/NO questions per spec with file:line + SQL evidence. Target: 10/10 YES.
 
-- Replace the local `recruitingOptIn` React state in `src/pages/CoachAthleteDetail.tsx:204-211` with the gate. Remove the scout-controlled `Switch`.
-- Apply the gate to **every** recruiting-surface mount: `PieV2RecruitingCard` (pitcher) and new `HittingRecruitingCard` (hitter). No alternate paths.
-- Server-side RLS on `athlete_recruiting_consent` enforces the same rule — direct query, query-string, role-switch, and cache-replay bypasses all fail at the database boundary.
+### Section I — Baseball public-launch re-ratification
+`docs/asb/baseball-launch-reratification.md` recomputed from scratch (no inheritance): readiness %, P0/P1 blockers, adult/minor/overall verdicts, exact remaining work, YES/NO public launch for all athletes.
 
----
+## Files
 
-## Section C — Athlete-owned consent surface
+**Migration (1):** parent enum value, `parent_athlete_links` table + RLS + GRANTs, `is_authorizing_parent` function, `enforce_parent_authorization_authority` trigger, new column-aware RLS policy on `athlete_recruiting_consent`.
 
-New page `src/pages/RecruitingConsent.tsx` (athlete-only route `/athlete/recruiting-consent`):
+**New code:**
+- `src/hooks/useParentLink.ts`
+- `src/hooks/useParentRecruitingAuthorization.ts`
+- `src/pages/ParentAthletes.tsx`
+- `src/pages/ParentRecruitingAuthorization.tsx`
+- `src/lib/asb/topics/exposure.ts` — extend payload with `actor_role` + `change_type` (additive).
 
-- Toggle: enable / disable visibility
-- Read-only panels: current resolved status, minor/parent status, parent-authorization status, active recruiter relationships, audit history (last 20 from `athlete_recruiting_consent_audit`)
-- Consequences copy (RR-9 compliant — observational, non-coercive)
-- Write path: `useRecruitingConsent().setVisibility(next)` → upserts row, trigger writes audit row, ASB event emitted
-- Route guarded so only `auth.uid() === athleteId` reaches it; no coach/scout/recruiter route exists.
+**Edited:**
+- `src/App.tsx` — two routes.
+- `src/hooks/useRecruitingConsent.ts` — surface `is_parent` for the consent page banner (read-only).
 
-Add entry point from `AthleteCommand.tsx` settings area.
+**Docs (6 new):** parent-authorization-model, parent-authorization-verification, minor-recruiting-ratification, minor-governance-completion, baseball-launch-reratification; updated appendix on recruiting-constitutional-compliance.
 
----
-
-## Section D — Hitter recruiting parity (projection only)
-
-New `src/components/recruiting/HittingRecruitingCard.tsx`:
-
-- Consumes canonical hitter intelligence already in repo: `useHIESnapshot` + `useHittingDoctrine` + `buildUhrcReport({ disciplines: ['hitting'] })`.
-- Mirrors `PieV2RecruitingCard` structure (signal tile + trajectory arrow + confidence/missingness).
-- Zero new scoring, ranking, or recruiting logic.
-- Mounted in `CoachAthleteDetail` behind the same `RecruitingVisibilityGate`.
-- Cross-discipline leakage check: pitcher card ignores hitting signals and vice versa (already enforced; verify in tests).
-
----
-
-## Section E — Hostile recruiting reverification
-
-Scenario matrix executed against live preview + `supabase--read_query`:
-
-| # | Scenario | Expected |
-|---|---|---|
-| 1 | Athlete consent ON, adult | render |
-| 2 | Athlete consent OFF | hidden + gate_blocked event |
-| 3 | Minor, parent_authorized=false | hidden |
-| 4 | Minor, parent_authorized=true, consent ON | render |
-| 5 | Scout direct link with consent OFF | hidden (RLS denies) |
-| 6 | Coach direct link with consent OFF | hidden |
-| 7 | Role-switch (scout→coach mid-session) | hidden |
-| 8 | Revoked consent (ON→OFF) | next paint hidden, audit row written |
-| 9 | Stale React Query cache after revoke | invalidated on consent_changed event |
-| 10 | Replay reconstruction at prior engine_version | deterministic resolved_visibility |
-| 11 | Unauthorized API access (anon) | RLS denied |
-| 12 | Recruiter discovery + profile access without active RR-4 | hidden |
-
-Each row: PASS/FAIL/BLOCKED + evidence (file:line, SQL result, screenshot).
-
----
-
-## Section F — Constitutional compliance audit
-
-`docs/asb/recruiting-constitutional-compliance.md` answers the 10 RR-9/RR-10 questions YES/NO with evidence pointers (file:line, table, RLS policy name, ASB topic).
-
----
-
-## Section G — Public launch ratification
-
-`docs/asb/baseball-public-launch-ratification.md` — recompute from scratch (no inheritance of the 88% number):
-
-1. Readiness % (weighted from fresh per-gate PASS/FAIL)
-2. Remaining P0 / P1 blockers
-3. Soft-launch verdict
-4. Public-launch verdict
-5. Exact remaining work list
-6. YES/NO public-launch eligibility today
-
-Update `docs/asb/pre-publication-audit.md` and `docs/asb/recruiting-intelligence-audit.md` hostile appendices to reflect the closed B-1/B-3/B-4 and (newly closed) B-2.
-
----
-
-## Technical change list
-
-**Migration (single file):**
-- `athlete_recruiting_consent` table + GRANTs + RLS + policies
-- `athlete_recruiting_consent_audit` table + GRANTs + RLS + policies
-- `record_recruiting_consent_change()` SECURITY DEFINER trigger function + trigger
-- `is_minor(uuid)` helper (SECURITY DEFINER) reading `profiles.date_of_birth` if present, else `profiles.is_minor`
-
-**New files:**
-- `src/hooks/useRecruitingConsent.ts`
-- `src/hooks/useIsMinor.ts`
-- `src/components/recruiting/RecruitingVisibilityGate.tsx`
-- `src/components/recruiting/HittingRecruitingCard.tsx`
-- `src/pages/RecruitingConsent.tsx` + route registration
-- `src/lib/asb/topics/exposure.ts` (consent_changed + gate_blocked emitters; thin wrappers on `emitAsbEvent`)
-- Tests under `src/components/recruiting/__tests__/` and `src/hooks/__tests__/`
-
-**Edited files:**
-- `src/pages/CoachAthleteDetail.tsx` — remove local `recruitingOptIn` state and scout Switch; wrap pitcher + hitter cards in `RecruitingVisibilityGate`
-- `src/pages/AthleteCommand.tsx` — link to consent surface
-- `src/App.tsx` (or router file) — add `/athlete/recruiting-consent` route
-
-**Docs (new):**
-- `docs/asb/rr9-authority-ratification.md`
-- `docs/asb/recruiting-constitutional-compliance.md`
-- `docs/asb/baseball-public-launch-ratification.md`
-
-**Docs (updated appendices):**
-- `docs/asb/pre-publication-audit.md`
-- `docs/asb/recruiting-intelligence-audit.md`
-
-**Out of scope (explicit):** UHRC changes, Hammer brief changes, onboarding redesign, softball pipelines, new scoring engines, new pillars, copy polish on non-recruiting surfaces.
-
----
+## Out of scope
+Parent onboarding/invite UX redesign (reuses existing `parent_invite_dispatches`), softball, UHRC, Hammer, coach surfaces, scoring, new pillars, copy polish.
 
 ## Return on completion
-
-1. Constitutional audit (Section F)
-2. Hostile verification matrix (Section E)
-3. Launch readiness % (Section G, recomputed)
-4. Remaining blockers (fresh classification)
-5. Soft-launch verdict
-6. Public-launch verdict
-7. Recommended next sprint
+Parent governance audit, hostile verification matrix, launch readiness %, remaining blockers, adult / minor / baseball public launch verdicts, recommended next sprint.

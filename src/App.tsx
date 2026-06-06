@@ -78,6 +78,10 @@ const AsbTimeline = lazyWithRetry(() => import("./pages/AsbTimeline"));
 const AsbReplay = lazyWithRetry(() => import("./pages/AsbReplay"));
 const AthleteCommand = lazyWithRetry(() => import("./pages/AthleteCommand"));
 const RecruitingConsent = lazyWithRetry(() => import("./pages/RecruitingConsent"));
+const ParentAthletes = lazyWithRetry(() => import("./pages/ParentAthletes"));
+const ParentRecruitingAuthorization = lazyWithRetry(
+  () => import("./pages/ParentRecruitingAuthorization"),
+);
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
@@ -218,6 +222,11 @@ const App = () => {
               <Route path="/replay/:eventId" element={<AsbReplay />} />
               <Route path="/command" element={<AthleteCommand />} />
               <Route path="/athlete/recruiting-consent" element={<RecruitingConsent />} />
+              <Route path="/parent/athletes" element={<ParentAthletes />} />
+              <Route
+                path="/parent/athletes/:athleteId/recruiting"
+                element={<ParentRecruitingAuthorization />}
+              />
               <Route path="/today" element={<Today />} />
               <Route path="/today/session/:id" element={<TodaySession />} />
               <Route
