@@ -461,7 +461,7 @@ export function computeDrillRecommendations(
     const finalBreakdown: ScoreBreakdown = { ...item.breakdown, variety: varietyBonus };
     const drillSportMod = item.drill.sport_modifier ?? 1.0;
     const moduleMod = getSportModuleModifier(sport, item.drill.module);
-    const rawScore = sumBreakdown(finalBreakdown);
+    const rawScore = sumBreakdown(finalBreakdown) + contextBoost(item.drill);
     const finalScore = Math.max(0, Math.round(rawScore * drillSportMod * moduleMod));
 
     scored.push({
