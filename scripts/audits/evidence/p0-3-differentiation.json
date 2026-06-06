@@ -1,7 +1,7 @@
 {
   "summary": {
     "personas": 7,
-    "uniqueDailyPlans": 6,
+    "uniqueDailyPlans": 7,
     "uniqueSpeedFoci": 3,
     "uniqueDrillLegalSets": 4,
     "uniqueRoadmapTops": 7
@@ -142,7 +142,7 @@
         "speedFreshness": null,
         "missing": []
       },
-      "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:25:Speed — max velocity|strength:ready:50:Strength — pre-season strength|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — SS|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
+      "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:25:Speed — max velocity|strength:ready:50:Strength — pre-season strength · priority:strength|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — SS|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
       "speedFocus": {
         "focus": "max_velocity",
         "rationale": "development priority: speed/power",
@@ -251,7 +251,7 @@
         "speedFreshness": null,
         "missing": []
       },
-      "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:55:Strength — off-season volume|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — P (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
+      "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:55:Strength — off-season volume · priority:strength|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — P (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
       "speedFocus": {
         "focus": "offseason_volume",
         "rationale": "off-season — volume + base",
@@ -360,7 +360,7 @@
         "speedFreshness": null,
         "missing": []
       },
-      "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:35:Strength — in-season potentiation|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — arm-protected|defense:ready:15:Defense — P (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — injury-aware",
+      "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:35:Strength — in-season potentiation · priority:recovery|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — arm-protected|defense:ready:15:Defense — P (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — injury-aware",
       "speedFocus": {
         "focus": "inseason_freshness",
         "rationale": "in-season — preserve freshness",
@@ -471,7 +471,7 @@
         "speedFreshness": null,
         "missing": []
       },
-      "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:25:Strength — bodyweight (bodyweight)|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — in-season maintain|defense:ready:15:Defense — OF (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — in-season",
+      "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:25:Strength — bodyweight (bodyweight) · priority:maintenance|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — in-season maintain|defense:ready:15:Defense — OF (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — in-season",
       "speedFocus": {
         "focus": "inseason_freshness",
         "rationale": "in-season — preserve freshness",
@@ -584,7 +584,7 @@
         "speedFreshness": null,
         "missing": []
       },
-      "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:55:Strength — off-season volume|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — P (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
+      "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:55:Strength — off-season volume · priority:power|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — P (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
       "speedFocus": {
         "focus": "offseason_volume",
         "rationale": "off-season — volume + base",
@@ -693,7 +693,7 @@
         "speedFreshness": null,
         "missing": []
       },
-      "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:35:Strength — in-season potentiation|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — in-season maintain|defense:ready:15:Defense — P (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — in-season",
+      "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:35:Strength — in-season potentiation · priority:power|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — in-season maintain|defense:ready:15:Defense — P (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — in-season",
       "speedFocus": {
         "focus": "inseason_freshness",
         "rationale": "in-season — preserve freshness",
