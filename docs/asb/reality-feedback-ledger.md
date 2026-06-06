@@ -17,16 +17,17 @@
 
 | id | observed_behavior | evidence | frequency | severity | recommended_future_action | status |
 |---|---|---|---|---|---|---|
-| RFL-001 | Athlete signup not emitted as ASB topic | `docs/asb/post-launch-observability.md` row 1; `src/contexts/AuthContext.tsx` | every signup | warn | Emit `athlete.lifecycle.signup` on profile insert | observed |
-| RFL-002 | Onboarding completion has no canonical topic | StartHereRunner.tsx end step | every onboarding | warn | Emit `athlete.onboarding.completed` on final step | observed |
-| RFL-003 | UHRC views unobservable | `src/lib/uhrc/*` surfaces | per UHRC open | warn | Emit `intelligence.uhrc.viewed` on surface impression | observed |
-| RFL-004 | Hammer views unobservable | `src/lib/hammer/identity.ts` surfaces | per Hammer open | warn | Emit `intelligence.hammer.viewed` | observed |
-| RFL-005 | Coach review has no canonical topic | `src/pages/CoachAthleteDetail.tsx` open | per review | warn | Emit `coach.review.opened` with athlete_id | observed |
-| RFL-006 | Recruiter positive-review path has no canonical topic | recruiter pages; only gate_blocked emitted | per recruiter session | warn | Emit `recruiter.review.opened` with athlete_id | observed |
-| RFL-007 | Trend / timeline views unobservable | `src/pages/AsbTimeline.tsx`, `AthleteDigest.tsx` | per timeline open | info | Emit `intelligence.trend.viewed` | observed |
+| RFL-001 | Athlete signup not emitted as ASB topic | CLOSED — producer `src/contexts/AuthContext.tsx:79`; topic `athlete.lifecycle.signup`; consumer `funnels.ts:51` | every signup | warn | (done) | CLOSED |
+| RFL-002 | Onboarding completion has no canonical topic | CLOSED — producer `src/pages/OnboardingFlow.tsx:84`; topic `athlete.onboarding.completed`; consumer `funnels.ts:52` | every onboarding | warn | (done) | CLOSED |
+| RFL-003 | UHRC views unobservable | CLOSED — producer `src/components/report-card/UhrcAthleteSection.tsx:44`; topic `intelligence.uhrc.viewed`; consumer `intelligenceUtilization.ts:26` | per UHRC open | warn | (done) | CLOSED |
+| RFL-004 | Hammer views unobservable | CLOSED — producer `src/components/coach/PieV2HammerBriefPanel.tsx:32`; topic `intelligence.hammer.viewed`; consumer `intelligenceUtilization.ts:28` | per Hammer open | warn | (done) | CLOSED |
+| RFL-005 | Coach review has no canonical topic | CLOSED — producer `src/pages/CoachAthleteDetail.tsx:55`; topic `coach.review.opened`; consumer `funnels.ts:67` + `intelligenceUtilization.ts:30` | per review | warn | (done) | CLOSED |
+| RFL-006 | Recruiter positive-review path has no canonical topic | CLOSED — producer `src/pages/ScoutDashboard.tsx:598`; topic `recruiter.review.opened`; consumer `funnels.ts:78` + `intelligenceUtilization.ts:29` | per recruiter session | warn | (done) | CLOSED |
+| RFL-007 | Trend / timeline views unobservable | CLOSED — producers `src/pages/AsbTimeline.tsx:13` + `src/pages/AthleteDigest.tsx:36`; topic `intelligence.trend.viewed`; consumer `intelligenceUtilization.ts:31` | per timeline open | info | (done) | CLOSED |
 | RFL-008 | Drill assignment / completion only table-derived (no ASB topic) | `drill_assignments`, `foundation_video_outcomes` | per assignment | info | Emit `prescription.drill.assigned` and `.completed` | observed |
 | RFL-009 | Recommendation lifecycle partially trace-derived; no canonical ASB topic | `foundation_recommendation_traces` | per recommendation | info | Emit `foundation.recommendation.shown/opened` | observed |
 | RFL-010 | Coach acknowledgement of recommendation has no canonical channel | implicit in `coach_notifications` | per coach action | info | Emit `foundation.recommendation.coach_ack` | observed |
+
 
 ## Append-only policy
 
