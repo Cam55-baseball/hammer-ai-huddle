@@ -1,79 +1,79 @@
-## P0-3 — Athlete Context Decision Activation
+# P0-3 Completion & Context Workstream Ratification
 
-Scope is **read-path patches only**. No new tables, RPCs, doctrine, UI, or context variables. Every change pulls from the existing `useHammerAthleteContext()` / `get_athlete_context_envelope()` and branches existing logic.
+Close the P0 athlete-context initiative. No new doctrine, no schema, no new variables — only deeper consumption of the existing spine and verification.
 
-### Phase 0 — Audit (read-only)
+## A. Daily-plan differentiation (`src/lib/hammer/prescription/dailyPlan.ts`)
 
-Discovery sweep classifying each consumer ACTIVE / PARTIAL / UNUSED per variable:
-- Workout: `useWorkoutRecommendations`, `useDrillRecommendations`, `useEliteWorkout`, `useBlockWorkoutGenerator`, `BlockWorkoutGenerator`, `src/lib/pieV2/recommendDrills`, `src/lib/pieV2/recommendVideos`, `src/utils/drillRecommendationEngine`, `src/lib/videoRecommendationEngine`, `src/lib/runtime/prescription`.
-- Speed: `useSpeedProgress`, `src/lib/speedScoring`, `SpeedSessionFlow`, speed-lab card consumers, `sprint_analyses` readers, `athlete_load_tracking` readers.
-- Roadmap: `useRoadmapProgress`, `RoadmapLadder`, `HittingRoadmapLadder`, `RecruitingRoadmap`, `roadmap_milestones` readers.
-- Recommendation: `recommendDrills`, `recommendVideos`, `drillRecommendationEngine`, `videoRecommendationEngine`, `AIWorkoutRecommendations`, `RecommendedRibbon`.
+**Diagnosis.** Current `builder()` only branches strength duration on `lifecycleBand`/`lowAvail` and speed on `recoverDay`. `season_phase`, `goal_summary`, `goal_horizon`, `development_priorities`, `workload`, `speedFocus`, and `equipment_effective` are read but unused in most modalities → 7 personas collapse to 4 plans.
 
-Output: before/after matrix appended to ratification doc.
+**Patch (branching-only, no new variables).** Integrate the existing `projectEnvelope` + `selectSpeedFocus` directly inside `buildHammerDailyPlan`:
 
-### Phase A — Workout activation (RFL-029)
+1. Speed block: drive `title/steps/durationMin/status` from `selectSpeedFocus(proj)` — distinct outputs for `deload`, `tempo_recovery`, `unilateral_symmetry`, `offseason_volume`, `inseason_freshness`, `max_velocity`, `acceleration_base`.
+2. Strength block: branch sets/title on `seasonPhase` (off=volume 4×6, pre=strength 4×4, in=potentiation 3×3, post=recovery 2×8), `equipment` (`bodyweight`/`bands`/`hotel` → bodyweight template), `injuryRegions` (suppress patterns from `INJURY_BLOCKED_PATTERNS`), `workloadHigh` (auto-deload), and a `development_priorities` accessory swap (`power`→jump/throw accessory, `mobility`→mobility finisher).
+3. Hitting / Throwing / Defense / Baserunning: branch volume on `seasonPhase` (off=high-volume tech, in=low-volume freshness), suppress when `injuryRegions` blocks the pattern, and add a goal-driven line in `why` (`goal_summary` + `goal_horizon`).
+4. Recovery block: priority-elevated when `workloadHigh`, `seasonPhase==='in'`, or any injury region.
+5. Fueling block: branch on `seasonPhase` (in=carb-forward game-day note, off=body-comp note) and on `goal_horizon`.
 
-Patch read paths to consume envelope:
-- `useWorkoutRecommendations` / `useDrillRecommendations`: import `useHammerAthleteContext`, filter/rank by `equipment_effective`, `injury_history`, `development_priorities`, `lifecycle_band`, `season_phase`, `weekly_availability_days`, `lifting_age_years`.
-- `useEliteWorkout` + `useBlockWorkoutGenerator`: gate volume by `lifting_age_years`, scope intensity by `season_phase` + `readiness`, suppress contraindicated patterns from `injury_history`, restrict exercises to `equipment_effective`.
-- `drillRecommendationEngine` / `videoRecommendationEngine`: accept optional envelope arg; existing call sites in hooks pass it through. Add equipment + injury + lifecycle filters and a priority-weighted reranker.
+Each branch contributes to the plan fingerprint → 7 personas should produce 7 distinct fingerprints.
 
-No architectural rewrite; additive branches around existing scoring.
+**Verification.** Re-run `scripts/audits/p0-3-decision-differentiation.ts`, regenerate `scripts/audits/evidence/p0-3-differentiation.json`, expect `uniqueDailyPlans: 7`.
 
-### Phase B — Speed activation (RFL-030)
+## B. Speed consumer wiring (`src/hooks/useSpeedProgress.ts`)
 
-- `useSpeedProgress` / `speedScoring`: consume envelope `season_phase`, `development_priorities`, `injury_history`, plus existing live projections (`acceleration`, `top_speed`, `stride`, `asymmetry`, `workload`, `speed_freshness`) already surfaced by `athleteContext.ts`.
-- Branch session selection: offseason → volume bias, in-season → freshness bias; asymmetry > threshold → unilateral focus; workload high → deload prescription; injury_history hits → suppress max-effort sprints.
-- `SpeedFocusCard` / `SpeedDrillCard`: read the same envelope-driven recommendation rather than static defaults.
+Wire `selectSpeedFocus` end-to-end without changing the on-disk schema:
 
-### Phase C — Roadmap activation (RFL-031a)
+1. Accept optional `athleteContext` arg (default = `useAthleteContextEnvelope()` import) and call `projectEnvelope` → `proj`.
+2. Expose new derived members from the hook: `speedFocus`, `maxEffortAllowed`, `recommendedReps`, `contextSuppressions` (built from `proj.injuryRegions`, `proj.workloadHigh`, `proj.asymmetryPct`, `proj.speedFreshness`, `proj.seasonPhase`).
+3. Override `sessionFocus`/`sessionDrills` selection so that:
+   - `injury` in [hamstring/ankle/knee/groin] forces tempo template.
+   - `asymmetryPct > 10` forces unilateral drills.
+   - `workloadHigh` or `readiness < 0.4` → break-day suggestion regardless of `detectBreakDay`.
+   - `seasonPhase==='off'` → volume bias; `'in'` → freshness bias.
+4. Pass through fields for acceleration/top-speed/asymmetry/workload/freshness/season influence so any consumer renders them.
 
-- `useRoadmapProgress` + roadmap ladder components: branch milestone ordering and gating on `goal_summary`, `goal_horizon`, `lifecycle_band`, `season_phase`, `development_priorities`, `injury_history`, workload.
-- Suppress milestones inconsistent with lifecycle band; promote milestones aligned with development priorities; defer high-load milestones during high workload or active injury.
+Speed consumer call sites (`SpeedSessionFlow`, `speedScoring` if applicable) keep working — additive only.
 
-### Phase D — Recommendation activation (RFL-031b)
+## C. Ratification (`docs/asb/p0-3-decision-activation-ratification.md`)
 
-- `recommendDrills`, `recommendVideos`, `AIWorkoutRecommendations`: feed envelope into ranker; hard filter on `equipment_effective` + `injury_history`, soft rerank on `development_priorities` + `lifecycle_band` + `season_phase`.
+Sections:
+- **Consumer activation matrix** — Workout / Speed / Roadmap / Recommendation rows × Equipment / Injury / Lifecycle / Season / Priorities / Workload / Goals columns with ACTIVE / PARTIAL / UNUSED.
+- **Differentiation evidence** — counts from the regenerated audit JSON (`uniqueDailyPlans`, `uniqueSpeedFoci`, `uniqueDrillLegalSets`, `uniqueRoadmapTops`) + 7-persona table.
+- **Utilization score** — availability %, consumption %, differentiation %, adaptation %, overall.
+- **Intelligence estimate** — re-estimate (target ≥60%).
+- **Remaining blockers** — Elite-tier intelligence, multi-week periodization, biomechanical fusion (explicitly out of P0 scope).
+- **GO/NO-GO** for closing P0 context workstream.
 
-### Phase E — Differentiation validation
+## D. Reality Feedback Ledger (`docs/asb/reality-feedback-ledger.md`)
 
-New script `scripts/audits/p0-3-decision-differentiation.ts`. Synthesizes 7 envelopes (novice, advanced, detrained, injured, hotel-equipment, offseason, in-season) and runs each through:
-- `buildHammerDailyPlan`
-- workout recommendation hook logic (pure-function extraction)
-- speed prescription logic
-- roadmap ordering
-- drill/video rerankers
+- **RFL-029** → CLOSED (workout consumers consume spine; drill/video filters + rerank live; evidence rows).
+- **RFL-030** → CLOSED (speed consumer wired; selectSpeedFocus drives session selection).
+- **RFL-031** → CLOSED (roadmap ordering + recommendation rerank live; evidence rows).
 
-Asserts pairwise output diffs are non-empty across the matrix. Writes evidence JSON under `scripts/audits/evidence/p0-3-differentiation.json`.
+Each entry cites the audit JSON path and ratification doc.
 
-### Phase F — Decision Utilization Score
+## E. Workstream verdict (in ratification doc, Section E)
 
-Compute and record:
-- Context availability % (vars present in envelope vs constitution).
-- Context consumption % (vars actually read by ≥1 engine).
-- Decision differentiation % (engines producing distinct outputs across 7 personas).
-- Adaptation capability % (engines responding to live projections — readiness, workload, freshness).
-- Overall utilization score.
+Explicit yes/no answers:
+1. Spine operational?
+2. Spine consumed?
+3. Outputs differentiated?
+4. Organism adapts to context?
+5. Workstream constitutionally closeable?
+6. Remaining P0 blockers (expected: none — but list if found).
 
-### Phase G — Intelligence re-estimate
+## F. Public release verdict (in ratification doc, Section F)
 
-Target ≥60%. Recompute completeness / consumer activation / adaptation / overall. If short, enumerate remaining blockers (likely Elite-tier variables, deeper biomechanical fields, multi-week periodization memory).
+`GO`, `GO WITH KNOWN LIMITATIONS`, or `NO-GO`, listing only true publication blockers.
 
-### Phase H — Ratification & housekeeping
+## Deliverables
 
-- Create `docs/asb/p0-3-decision-activation-ratification.md` answering the 7 ratification questions, with consumer matrix, persona evidence, utilization score, blockers, GO/NO-GO for closing the P0 context workstream.
-- Update `docs/asb/reality-feedback-ledger.md`: close RFL-029 / RFL-030 / RFL-031 (full or partial per evidence).
-- Update `.lovable/plan.md`: mark P0-2 closed, P0-3 done, status of P0 workstream.
+- `src/lib/hammer/prescription/dailyPlan.ts` — deeper branching.
+- `src/hooks/useSpeedProgress.ts` — selectSpeedFocus wiring.
+- `scripts/audits/evidence/p0-3-differentiation.json` — regenerated.
+- `docs/asb/p0-3-decision-activation-ratification.md` — new.
+- `docs/asb/reality-feedback-ledger.md` — RFL-029/030/031 updated.
+- `.lovable/plan.md` — P0 closure entry.
 
-### Deliverables
+## Out of scope
 
-- `docs/asb/p0-3-decision-activation-ratification.md` (new)
-- `docs/asb/reality-feedback-ledger.md` (edit)
-- `.lovable/plan.md` (edit)
-- `scripts/audits/p0-3-decision-differentiation.ts` (new) + evidence JSON
-- Additive patches to workout/speed/roadmap/recommendation read paths listed in Phases A–D.
-
-### Out of scope
-
-New schema, RPCs, migrations, UI, context variables, Elite-tier additions, full recommendation-engine rewrite. Anything requiring new architecture is logged as a follow-up blocker, not implemented.
+New tables, RPCs, migrations, edge functions, UI, context variables, Elite-tier additions, multi-week periodization, biomechanical fusion.
