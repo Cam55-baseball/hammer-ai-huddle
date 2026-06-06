@@ -48,8 +48,8 @@ export const FUNNEL_DEFS: FunnelDef[] = [
     name: "athlete",
     cohort: "athlete",
     stages: [
-      { stage: "signup", predicate: { topic: null } },
-      { stage: "onboarding", predicate: { topic: null } },
+      { stage: "signup", predicate: { topic: "athlete.lifecycle.signup" } },
+      { stage: "onboarding", predicate: { topic: "athlete.onboarding.completed" } },
       { stage: "first_session", predicate: { topic: "session.block.modified" } },
       { stage: "first_analysis", predicate: { topic: "athlete.readiness" } },
       { stage: "first_recommendation", predicate: { topic: null } },
@@ -61,22 +61,22 @@ export const FUNNEL_DEFS: FunnelDef[] = [
     name: "coach",
     cohort: "coach",
     stages: [
-      { stage: "signup", predicate: { topic: null } },
+      { stage: "signup", predicate: { topic: "athlete.lifecycle.signup" } },
       { stage: "roster", predicate: { topic: "relational.relationship.confirmed" } },
-      { stage: "athlete_review", predicate: { topic: null } },
+      { stage: "athlete_review", predicate: { topic: "coach.review.opened" } },
       { stage: "drill_assignment", predicate: { topic: null } },
-      { stage: "repeat_usage", predicate: { topic: null } },
+      { stage: "repeat_usage", predicate: { topic: "coach.review.opened" } },
     ],
   },
   {
     name: "recruiter",
     cohort: "recruiter",
     stages: [
-      { stage: "signup", predicate: { topic: null } },
+      { stage: "signup", predicate: { topic: "athlete.lifecycle.signup" } },
       { stage: "athlete_discovery", predicate: { topic: "relational.exposure" } },
-      { stage: "athlete_review", predicate: { topic: null } },
+      { stage: "athlete_review", predicate: { topic: "recruiter.review.opened" } },
       { stage: "evaluation", predicate: { topic: null } },
-      { stage: "repeat_usage", predicate: { topic: null } },
+      { stage: "repeat_usage", predicate: { topic: "recruiter.review.opened" } },
     ],
   },
   {
@@ -102,6 +102,7 @@ export const FUNNEL_DEFS: FunnelDef[] = [
     ],
   },
 ];
+
 
 function median(nums: number[]): number | null {
   if (!nums.length) return null;

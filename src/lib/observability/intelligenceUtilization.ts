@@ -23,14 +23,15 @@ export interface SurfaceDef {
 }
 
 export const SURFACE_DEFS: SurfaceDef[] = [
-  { surface: "uhrc", topic: null },
+  { surface: "uhrc", topic: "intelligence.uhrc.viewed" },
   { surface: "detailed_analysis", topic: null },
-  { surface: "hammer", topic: null },
+  { surface: "hammer", topic: "intelligence.hammer.viewed" },
   { surface: "roadmap", topic: null }, // partial via athlete_roadmap_progress
-  { surface: "recruiting", topic: "relational.exposure" },
-  { surface: "coach_intelligence", topic: null },
-  { surface: "trends", topic: null },
+  { surface: "recruiting", topic: "recruiter.review.opened" },
+  { surface: "coach_intelligence", topic: "coach.review.opened" },
+  { surface: "trends", topic: "intelligence.trend.viewed" },
 ];
+
 
 export interface SurfaceUtilization {
   surface: IntelligenceSurface;
