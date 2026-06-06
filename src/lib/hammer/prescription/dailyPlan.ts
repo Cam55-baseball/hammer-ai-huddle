@@ -57,15 +57,32 @@ interface BuilderArgs {
 
 function builder({ modality, ctx }: BuilderArgs): PrescribedBlock {
   const pos = ctx.get<string>("position")?.value ?? null;
-  const equipment = ctx.get<string>("equipment_access")?.value ?? null;
+  // P0-2: prefer canonical `equipment_effective` (spine envelope, scope-resolved);
+  // fall back to legacy `equipment_access` for transitional compatibility.
+  const equipmentEff = ctx.get<unknown>("equipment_effective")?.value ?? null;
+  const equipment =
+    (equipmentEff as { equipment?: string } | null)?.equipment ??
+    (typeof equipmentEff === "string" ? equipmentEff : null) ??
+    (ctx.get<string>("equipment_access")?.value ?? null);
   const liftingAge = ctx.get<number>("lifting_age_years")?.value ?? null;
   const seasonPhase = ctx.get<string>("season_phase")?.value ?? null;
   const injury = ctx.get<string>("injury_history")?.value ?? null;
   const readiness = ctx.get<{ score?: number }>("readiness")?.value ?? null;
+  // P0-2: spine read-paths now active for daily-plan differentiation.
+  const lifecycleBand = ctx.get<string>("lifecycle_band")?.value ?? null;
+  const availDays = ctx.get<number>("weekly_availability_days")?.value ?? null;
+  const devPriorities =
+    (ctx.get<string[]>("development_priorities")?.value as string[] | null) ?? null;
+  const goalSummary = ctx.get<string>("goal_summary")?.value ?? null;
 
   const recoverDay =
     typeof (readiness as { score?: number })?.score === "number" &&
     (readiness as { score: number }).score < 0.4;
+  // Lifecycle-aware strength volume scaling (additive, non-breaking).
+  const youthScale =
+    lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
+  // Low-availability athletes get tighter prescriptions.
+  const lowAvail = typeof availDays === "number" && availDays <= 2;
 
   switch (modality) {
     case "warmup":
