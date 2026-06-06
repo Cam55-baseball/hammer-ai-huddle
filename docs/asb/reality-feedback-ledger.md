@@ -61,3 +61,14 @@ See `docs/asb/coach-hammer-authority-audit.md` and `docs/asb/coach-hammer-roadma
 | RFL-016 | CLOSED | `supabase/functions/hammer-chat/index.ts` + `src/hooks/useHammerChat.ts` + `src/components/hammer/HammerChat.tsx` — unified Ask-Coach surface with single identity + context + canonical next step. |
 
 See `docs/asb/coach-hammer-final-ratification.md` for the full ratification.
+
+## RFL closures — Coach Hammer Completion & Runtime Ratification Sprint (2026-06-06)
+
+| ID | Status | Closure evidence |
+|---|---|---|
+| RFL-017 | CLOSED | `asb_topic_registry` — 12 canonical Hammer topics registered (`intelligence.next_step.resolved`, `onboarding.knowledge_gap_resolved`, `hammer.chat.message`, `prescription.daily.modality.{warmup|speed|strength|hitting|throwing|defense|baserunning|fueling|recovery}`); prior enum mismatch resolved by mapping onto canonical `ai_proposal` / `athlete_intent` / `observability` / `training_prescription` classes. |
+| RFL-018 | CLOSED | `src/pages/AthleteCommand.tsx` — `<HammerOnboardingChat/>` (L54), `<HammerDailyPlan/>` (L62), `<HammerChat/>` (L64) mounted into the canonical `/command` route. |
+| RFL-019 | CLOSED | `src/lib/hammer/prescription/dailyPlan.ts` — daily-plan dead-end routes patched: `/speed` → `/speed-lab`, `/baserunning` → `/baserunning-iq`. |
+
+See `docs/asb/coach-hammer-runtime-ratification.md` for the full runtime ratification.
+

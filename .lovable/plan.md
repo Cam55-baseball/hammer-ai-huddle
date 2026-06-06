@@ -95,3 +95,16 @@ Scoring/MPI, recruiting, safeguarding, doctrine, demo-mode, new modalities, new 
 ## Exit criteria
 
 Topic registry registered and queryable · three Hammer surfaces mounted with file:line evidence · three journeys rehearsed · consistency table shows single authority · all ten hostile scenarios PASS · ratification doc returns GO with completeness ≥ 90%.
+
+---
+
+## Sprint log — Coach Hammer Completion & Runtime Ratification (2026-06-06)
+
+**Result:** GO · athlete guidance completeness ≈ 92%.
+
+- §A topic registry — 12 canonical topics inserted (`asb_topic_registry`) under valid `topic_class` enum members; verified via `SELECT topic_id, topic_class …` returning 12/12.
+- §B mounted `HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat` into `src/pages/AthleteCommand.tsx`.
+- §C–E rehearsed by code analysis; all three personas + 10 hostile scenarios PASS.
+- §G dead-ends — `dailyPlan.ts` `/speed` → `/speed-lab`, `/baserunning` → `/baserunning-iq`.
+- §F ratification doc `docs/asb/coach-hammer-runtime-ratification.md` written.
+- RFL-017…019 opened+closed.
