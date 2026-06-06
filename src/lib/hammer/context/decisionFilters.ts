@@ -433,6 +433,11 @@ export function orderRoadmapMilestones<T extends RoadmapMilestoneView>(
         suppressed = true;
         reasons.push("injury-defer");
       }
+      // RFL-034 — minor + parent concern defers high-load milestones.
+      if (proj.isMinor === true && proj.parentConcerns.length > 0 && /max|heavy|sprint_max|throw_max/.test(hay)) {
+        suppressed = true;
+        reasons.push("minor-parent-defer");
+      }
       // High workload defers max-effort
       if (proj.workloadHigh && /max|heavy/.test(hay)) {
         score -= 50;
@@ -487,6 +492,9 @@ export function toEdgeFunctionPayload(proj: AthleteContextProjection) {
     workload_high: proj.workloadHigh,
     asymmetry_pct: proj.asymmetryPct,
     speed_freshness: proj.speedFreshness,
+    is_minor: proj.isMinor,
+    parent_supremacy_active: proj.parentSupremacyActive,
+    parent_concerns: proj.parentConcerns,
     missing: proj.missing,
   };
 }
