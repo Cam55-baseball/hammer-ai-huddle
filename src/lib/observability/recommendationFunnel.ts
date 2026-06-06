@@ -149,3 +149,113 @@ export function flagIgnored(
   if (r.completion_rate >= 0.5) return "completed";
   return "neutral";
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wave-2 — canonical event-derived projection (RFL-008/009/010 closure).
+//
+// Replaces table-derived inputs with canonical `asb_events` rows. Same
+// measurement-only posture (RR-9). Every stage now carries replay-safe lineage
+// via (topic_id, athlete_id, payload.recommendation_id, occurred_at,
+// engine_version, idempotency_key) on the source event row.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AsbEventLike {
+  topic_id: string;
+  athlete_id: string;
+  actor_id: string | null;
+  actor_role: string;
+  occurred_at: string;
+  payload: Record<string, unknown> | null;
+}
+
+const REC_TOPICS = {
+  shown: "foundation.recommendation.shown",
+  opened: "foundation.recommendation.opened",
+  completed: "foundation.recommendation.completed",
+  coach_ack: "foundation.recommendation.coach_ack",
+  drill_assigned: "foundation.drill.assigned",
+  drill_started: "foundation.drill.started",
+  drill_completed: "foundation.drill.completed",
+} as const;
+
+function recIdOf(e: AsbEventLike): string | null {
+  const p = e.payload ?? {};
+  const id = (p as { recommendation_id?: unknown }).recommendation_id;
+  return typeof id === "string" ? id : null;
+}
+
+/**
+ * Pure projection from canonical ASB events to recommendation effectiveness.
+ * Consumer of Wave-2 topics. No table reads, no derived-view authority.
+ */
+export function computeRecommendationEffectivenessFromEvents(
+  events: AsbEventLike[],
+): RecommendationEffectiveness[] {
+  const groups = new Map<string, AsbEventLike[]>();
+  for (const e of events) {
+    const id = recIdOf(e);
+    if (!id) continue;
+    const arr = groups.get(id) ?? [];
+    arr.push(e);
+    groups.set(id, arr);
+  }
+
+  const results: RecommendationEffectiveness[] = [];
+  for (const [recId, evs] of groups.entries()) {
+    const byTopic = (topic: string) => evs.filter((e) => e.topic_id === topic);
+    const shown = byTopic(REC_TOPICS.shown).length;
+    const opened = byTopic(REC_TOPICS.opened).length;
+    const drill_started = byTopic(REC_TOPICS.drill_started).length;
+    const drill_completed = byTopic(REC_TOPICS.drill_completed).length;
+    const rec_completed = byTopic(REC_TOPICS.completed).length;
+    const coach_ack_count = byTopic(REC_TOPICS.coach_ack).length;
+
+    // Repeat: same athlete completed the same recommendation twice within 14d.
+    const completionsByAthlete = new Map<string, number[]>();
+    for (const e of [
+      ...byTopic(REC_TOPICS.completed),
+      ...byTopic(REC_TOPICS.drill_completed),
+    ]) {
+      const arr = completionsByAthlete.get(e.athlete_id) ?? [];
+      arr.push(Date.parse(e.occurred_at));
+      completionsByAthlete.set(e.athlete_id, arr);
+    }
+    let repeat = 0;
+    for (const times of completionsByAthlete.values()) {
+      const sorted = times.sort((a, b) => a - b);
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] - sorted[i - 1] <= REPEAT_WINDOW_MS) {
+          repeat += 1;
+          break;
+        }
+      }
+    }
+
+    const terminal = Math.max(drill_completed, rec_completed);
+
+    results.push({
+      recommendation_id: recId,
+      shown,
+      opened,
+      drill_started,
+      drill_completed: terminal,
+      // Watch-duration sub-channel still table-derived; canonical event for
+      // video terminal completion deferred — surfaced via missingness flag.
+      video_watched: 0,
+      repeat,
+      open_rate: shown ? +(opened / shown).toFixed(3) : 0,
+      completion_rate: opened ? +(terminal / opened).toFixed(3) : 0,
+      repeat_rate: terminal ? +(repeat / terminal).toFixed(3) : 0,
+      coach_ack_count,
+      missingness: {
+        opened: opened === 0,
+        drill_started: drill_started === 0,
+        drill_completed: terminal === 0,
+        video_watched: true,
+        coach_ack: coach_ack_count === 0,
+      },
+    });
+  }
+
+  return results.sort((a, b) => b.shown - a.shown);
+}
