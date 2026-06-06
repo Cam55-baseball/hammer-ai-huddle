@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { PARENT_INVITE_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
+import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown } from "lucide-react";
 import { HammerParentVoice } from "@/components/parent/HammerParentVoice";
 
