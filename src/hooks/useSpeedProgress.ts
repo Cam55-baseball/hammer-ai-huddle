@@ -19,6 +19,13 @@ import {
   calculateReadiness,
   getBestTime,
 } from '@/data/speedLabProgram';
+// P0-3 RFL-030: spine projection drives speed prescription.
+import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
+import {
+  projectEnvelope,
+  selectSpeedFocus,
+  type SpeedFocusDecision,
+} from '@/lib/hammer/context/decisionFilters';
 
 export interface SpeedSession {
   id: string;
@@ -150,6 +157,58 @@ export function useSpeedProgress(sport: SportType) {
   const distances = useMemo(() => getDistancesForSport(sport), [sport]);
   const sessionFocus = useMemo(() => getSessionFocus(nextSessionNumber), [nextSessionNumber]);
   const sessionDrills = useMemo(() => generateSessionDrills(nextSessionNumber), [nextSessionNumber]);
+
+  // ─── P0-3 RFL-030: spine-driven speed prescription ──────────────────
+  const athleteCtx = useHammerAthleteContext();
+  const speedProjection = useMemo(() => projectEnvelope(athleteCtx), [athleteCtx]);
+  const speedFocusDecision: SpeedFocusDecision = useMemo(
+    () => selectSpeedFocus(speedProjection),
+    [speedProjection],
+  );
+
+  const contextSuppressions = useMemo(() => {
+    const out: string[] = [];
+    const legBlocked = speedProjection.injuryRegions.some((r) =>
+      ['hamstring', 'ankle', 'knee', 'groin'].includes(r),
+    );
+    if (legBlocked) out.push(`injury:${speedProjection.injuryRegions.join(',')}`);
+    if (speedProjection.workloadHigh) out.push('workload-high');
+    if (speedProjection.asymmetryPct !== null && speedProjection.asymmetryPct > 10) {
+      out.push(`asymmetry:${speedProjection.asymmetryPct.toFixed(1)}%`);
+    }
+    if (speedProjection.speedFreshness !== null && speedProjection.speedFreshness < 0.5) {
+      out.push(`low-freshness:${speedProjection.speedFreshness.toFixed(2)}`);
+    }
+    if (speedProjection.readinessScore !== null && speedProjection.readinessScore < 0.4) {
+      out.push(`readiness:${speedProjection.readinessScore.toFixed(2)}`);
+    }
+    if (speedProjection.seasonPhase) out.push(`season:${speedProjection.seasonPhase}`);
+    return out;
+  }, [speedProjection]);
+
+  // Spine-overridden session focus: injury/workload force tempo or break.
+  const contextSessionFocus = useMemo<SessionFocus>(() => {
+    const f = speedFocusDecision.focus;
+    if (f === 'tempo_recovery' || f === 'deload') {
+      return { ...sessionFocus, focus: 'tempo', emoji: '🌊', name: 'Tempo Recovery' } as SessionFocus;
+    }
+    if (f === 'unilateral_symmetry') {
+      return { ...sessionFocus, focus: 'symmetry', emoji: '⚖️', name: 'Unilateral Symmetry' } as SessionFocus;
+    }
+    if (f === 'max_velocity') {
+      return { ...sessionFocus, focus: 'max_velocity', emoji: '⚡', name: 'Max Velocity' } as SessionFocus;
+    }
+    if (f === 'offseason_volume') {
+      return { ...sessionFocus, focus: 'volume', emoji: '📈', name: 'Off-Season Volume' } as SessionFocus;
+    }
+    if (f === 'inseason_freshness') {
+      return { ...sessionFocus, focus: 'freshness', emoji: '🎯', name: 'In-Season Freshness' } as SessionFocus;
+    }
+    return sessionFocus;
+  }, [sessionFocus, speedFocusDecision]);
+
+  const maxEffortAllowed = speedFocusDecision.maxEffortAllowed;
+  const recommendedReps = speedFocusDecision.recommendedReps;
 
   // ─── Break Day Detection ────────────────────────────────────────────
 
@@ -514,6 +573,14 @@ export function useSpeedProgress(sport: SportType) {
     isPlateaued,
     streakData,
     strideAnalytics,
+
+    // P0-3 RFL-030: spine-derived speed prescription
+    speedFocus: speedFocusDecision,
+    contextSessionFocus,
+    maxEffortAllowed,
+    recommendedReps,
+    contextSuppressions,
+    speedProjection,
 
     // Actions
     initializeJourney,
