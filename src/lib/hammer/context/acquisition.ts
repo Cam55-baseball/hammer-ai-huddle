@@ -104,7 +104,9 @@ export async function appendDevelopmentHistoryEvent(
   source: string,
   confidence: string = "self_report",
 ): Promise<void> {
-  const { error } = await supabase.from("athlete_development_history_events").insert({
+  const { error } = await (supabase.from("athlete_development_history_events") as unknown as {
+    insert: (v: unknown) => Promise<{ error: { message: string } | null }>;
+  }).insert({
     user_id: userId,
     event_type: eventType,
     event_date: eventDate,
