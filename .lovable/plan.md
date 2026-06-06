@@ -1,113 +1,97 @@
-# Coach Hammer Authority Consolidation & Athlete Guidance Execution Sprint
+# Coach Hammer Completion & Runtime Ratification Sprint — Plan
 
-## Mission
+Finish the execution work left open by the Authority Consolidation sprint and produce evidence that Coach Hammer is actually operating inside the athlete experience. No new features, no doctrine, no new architecture.
 
-Make Coach Hammer the single source of "what to do next, why, how, and what's after" for every athlete. One authority. One identity. One memory. Zero dead ends.
+## A — Topic Registry Completion
 
-## Section A — Next Step Authority Consolidation
+1. Read live `topic_class` enum values from Postgres (`pg_enum` join `pg_type`) and inspect existing rows in `asb_topic_registry` to learn the legal class vocabulary already in use.
+2. Re-author the failed migration with corrected `topic_class` values for the four Hammer topic families:
+   - `intelligence.next_step.resolved`
+   - `onboarding.knowledge_gap_resolved`
+   - `hammer.chat.message`
+   - `prescription.daily.modality.warmup|speed|strength|hitting|throwing|defense|baserunning|fueling|recovery`
+3. Re-run the migration via the migration tool.
+4. Verify with `SELECT topic, topic_class FROM asb_topic_registry WHERE topic LIKE 'hammer.%' OR topic LIKE 'intelligence.next_step.%' OR topic LIKE 'onboarding.%' OR topic LIKE 'prescription.daily.modality.%'`.
+5. Record evidence + PASS/FAIL in `docs/asb/coach-hammer-runtime-ratification.md` §A.
 
-Collapse `useCoachHammerNextStep` and `useNextAction` into one canonical hook.
+## B — Athlete Experience Mount Verification
 
-- Create `src/hooks/useHammerNextStep.ts` as the **sole** next-step authority.
-  - Internal arbitration: AI-derived step (`coach-hammer-next-step` edge fn) is primary; falls back to deterministic time-of-day/readiness heuristic (current `useNextAction` logic) when AI unavailable, loading, or low-confidence.
-  - Output shape unifies both: `{ tier, title, why, instruction, route, ctaLabel, moduleHint, source: 'ai' | 'heuristic', lineageHandle }`.
-  - Emits canonical `intelligence.next_step.resolved` ASB event (lineage-complete, replay-safe).
-- Replace all call sites:
-  - `TodayCommandBar`, `TodayGuidanceSlots`, `Dashboard`, `AthleteCommand`/`CommandCenterSection`, `PieV2HammerBriefPanel`, `PrescriptiveActionsCard`, any recommendation surfaces.
-- Mark `useNextAction` and `useCoachHammerNextStep` as deprecated re-exports of `useHammerNextStep` for one cycle, then remove from new code paths.
+Wire the three Hammer surfaces into the canonical athlete surface and record `file:line` evidence:
 
-## Section B — Hammer Onboarding Engine
+- `src/pages/AthleteCommand.tsx` — mount, in order under `<UhrcAthleteSection />`:
+  - `<HammerOnboardingChat />` (only renders when `useHammerOnboardingDirector().nextGap !== null`)
+  - `<CommandCenterSection />` (unchanged)
+  - `<HammerDailyPlan />` (always; internally lawful-silence safe)
+  - `<HammerChat />` (always, collapsible)
+- `src/components/command/CommandCenterSection.tsx` — append a "Coach Hammer" zone after the readiness grid that renders `<HammerDailyPlan compact />` so Today (`/today`) inherits it automatically (Today already embeds `CommandCenterSection`).
+- Confirm Dashboard entry path: read `src/pages/Dashboard.tsx` (or equivalent) and link/CTA into `/command` via the existing `useHammerNextStep` consumer — no duplicate mount, just verify reachability.
 
-Promote `HammerOnboardingPresence` from passive renderer to conversational acquisition engine.
+Each mount documented with `file:line` + render condition + visibility rule in §B.
 
-- New `src/lib/hammer/onboarding/knowledgeGaps.ts`: declares required knowledge domains (goals, season phase, position, experience, equipment access, lifting age, schedule availability, injury constraints, development priorities) with source table/column + missingness predicate.
-- New `useHammerOnboardingDirector` hook: scans athlete context, returns ordered list of gaps + next question.
-- New `HammerOnboardingChat` component: conversational acquisition UI (one question at a time, skippable, persists answers to `profiles` + emits `onboarding.knowledge_gap_resolved` ASB events).
-- Wire into `/onboarding/athlete` and into a persistent "Hammer needs N answers" chip on Today/Command Center until gaps closed.
+## C — Runtime Journey Rehearsal
 
-## Section C — Athlete Context Model
+Use `supabase--read_query` against seed/test athletes for three personas and record observed behavior:
 
-Canonical context inventory consumed by every Hammer surface.
+- New athlete (empty `profiles` coaching columns, no events).
+- Existing athlete (partial gaps, some events).
+- Returning athlete (full gaps resolved, recent events).
 
-- New `src/lib/hammer/context/athleteContext.ts` exporting `useHammerAthleteContext()` returning typed `{ variable, value, source, confidence, missing, lastUpdated, consumer[] }` for every domain in Section B + readiness, fatigue, soreness, sleep, MPI, plan, roadmap progress.
-- Single hook all Hammer surfaces read from. `useCoachHammerNextStep`'s ad-hoc snapshot construction is replaced by this.
-- Doc: `docs/asb/coach-hammer-context-inventory.md` — variable × source × consumer matrix.
+For each: confirm Hammer appears, asks gaps, stops at zero gaps, surfaces a next step, renders daily plan, accepts chat, routes to a real registered route. Capture observations + PASS/FAIL in §C. (Test data only — no schema writes.)
 
-## Section D — Daily Prescription Engine
+## D — Guidance Consistency Audit
 
-Extend `buildDailyPrescription` (and `useBlockWorkoutGenerator`/`useWarmupGenerator`) to cover all 9 modalities.
+Trace every "next step" / priority surface back to `useHammerNextStep`:
 
-- Add generators for the missing 4: **hitting**, **defense**, **baserunning**, **fueling** (plus ensure warm-up, speed, strength, throwing, recovery remain).
-- New `src/lib/hammer/prescription/dailyPlan.ts` orchestrator: pulls `useHammerAthleteContext`, season phase, roadmap, equipment, schedule, readiness, injury constraints → returns ordered `PrescribedBlock[]`, each with `{ modality, title, why, steps[], duration, route, ctaLabel, lineageHandle }`.
-- Render on Today + Command Center via a single `<HammerDailyPlan />` component. Each block is actionable (start CTA → real route).
+- `Dashboard` next-step CTA
+- `Today` (`TodayGuidanceSlots` / `TodayCommandBar`)
+- `CommandCenterSection`
+- `HammerChat` system prompt
+- `HammerDailyPlan` header
 
-## Section E — Command Center Authority
+Grep for residual direct uses of `useNextAction` / `useCoachHammerNextStep` outside the canonical hook. Record consumer table + PASS/FAIL in §D. Patch any stragglers to consume `useHammerNextStep` only.
 
-Designate Command Center as **Hammer's workspace / athlete operating system**.
+## E — Hostile Athlete Test
 
-- `AthleteCommand.tsx` + `CommandCenterSection` restructured to three zones:
-  1. **Hammer Now** — current next step (from §A) + ability to start/skip/ask.
-  2. **Hammer Plan** — today's full prescription (from §D).
-  3. **Hammer Chat** — unified Ask Coach (from §F).
-- Dashboard becomes a thin window onto Command Center (single "Open with Hammer" CTA + Hammer Now preview). No duplicated arbitration.
+Walk the 10 hostile scenarios (empty / partial profile, new, injured, in-season, off-season, no equipment, no roadmap, no readiness, no recent activity) against `useHammerNextStep` + `dailyPlan.ts` logic by reading the source — for each, confirm a non-null `{title, instruction, route}` is produced and the route exists in `App.tsx`. Document any scenario that returns silence and patch the heuristic fallback in `useHammerNextStep` to guarantee a lawful answer. Record in §E.
 
-## Section F — Ask Coach Unification
+## F — Final Coach Hammer Ratification
 
-Single conversational Hammer.
+Create `docs/asb/coach-hammer-runtime-ratification.md` with:
 
-- Audit + collapse: `CommunicationAI`, any "Ask Coach" surfaces, dashboard AI, today AI, `pieV2/aiHammerTalkingPoints` → one `useHammerChat()` hook backed by one edge function `hammer-chat` that receives full `useHammerAthleteContext` + last next-step + recent prescription lineage as system context.
-- One identity (`getHammerIdentity()`), one persistent thread per athlete (stored as ASB events `hammer.chat.message`), one memory.
-- New `<HammerChat />` component reused everywhere (Command Center primary, Dashboard collapsed, Today collapsed).
+- §A topic-registry evidence
+- §B mount evidence (file:line)
+- §C journey rehearsals
+- §D consistency table
+- §E hostile-test table
+- §F verdict block answering all nine ratification questions, recomputed athlete-guidance completeness %, GO/NO-GO, remaining roadmap items
+- Close RFL entries opened by the prior sprint that are now resolved; leave any genuinely unresolved item open with a note.
 
-## Section G — Dead End Elimination
+## Files
 
-- Fix `PrescriptiveActionsCard.tsx`: route `/practice-hub` → `/practice` (and `tex-vision` route verified).
-- Sweep every coaching CTA in `src/components/{hie,today,command,hammer,coach}` and `src/pages` for routes not present in `App.tsx`'s route table; replace or remove.
-- Add a test (`src/test/coachingCtaRoutes.test.ts`) that statically asserts every Hammer-surface CTA route resolves to a real route.
+**Migration (re-run)**
+- `asb_topic_registry` insert with corrected `topic_class` values (no schema change unless enum is missing a needed value; in that case, `ALTER TYPE ... ADD VALUE` in the same migration).
 
-## Section H — Guidance Completeness Re-audit
+**Edits**
+- `src/pages/AthleteCommand.tsx` — mount three Hammer components.
+- `src/components/command/CommandCenterSection.tsx` — embed `<HammerDailyPlan compact />`.
+- Any consumer found in §D still using `useNextAction` / `useCoachHammerNextStep` directly → switch to `useHammerNextStep`.
+- `src/hooks/useHammerNextStep.ts` — only if §E proves a hostile scenario returns silence; tighten heuristic fallback so a lawful next step is always produced.
 
-Re-run the 8 binary capabilities from the prior audit against the new code.
+**New docs**
+- `docs/asb/coach-hammer-runtime-ratification.md`
 
-- Produce `docs/asb/coach-hammer-authority-audit-v2.md` with PASS/FAIL per capability + new completeness %.
-- Append RFL closure rows: RFL-011…RFL-016 → CLOSED with evidence links.
+**Edited docs**
+- `docs/asb/reality-feedback-ledger.md` — close resolved RFL entries, open new ones for any §E patch.
+- `.lovable/plan.md` — sprint log entry.
 
-## Section I — Final Ratification
+## Constitutional subordination
 
-- Create `docs/asb/coach-hammer-final-ratification.md` answering all I-section questions, with GO / NO-GO and any P0/P1/P2 remainders.
-- Update `.lovable/plan.md` with sprint closure.
+All new events ride `emitAsbEvent` / `asb_events` / `asb_event_lineage`. Hammer remains interpretive — never authors `organism_truth`, `athlete_intent`, `authority_override`, `hard_stop`, or `rehabilitation_state`. Safeguarding supersedes. Demo↔prod firewall preserved. No RLS changes beyond GRANTs implied by the topic registry insert (none expected).
 
-## Technical Details
+## Out of scope
 
-**New files**
-- `src/hooks/useHammerNextStep.ts`
-- `src/hooks/useHammerOnboardingDirector.ts`
-- `src/hooks/useHammerChat.ts`
-- `src/lib/hammer/context/athleteContext.ts`
-- `src/lib/hammer/onboarding/knowledgeGaps.ts`
-- `src/lib/hammer/prescription/dailyPlan.ts` (+ modality generators: `hitting.ts`, `defense.ts`, `baserunning.ts`, `fueling.ts`)
-- `src/components/hammer/HammerOnboardingChat.tsx`
-- `src/components/hammer/HammerDailyPlan.tsx`
-- `src/components/hammer/HammerChat.tsx`
-- `supabase/functions/hammer-chat/index.ts`
-- `src/test/coachingCtaRoutes.test.ts`
-- `docs/asb/coach-hammer-context-inventory.md`
-- `docs/asb/coach-hammer-authority-audit-v2.md`
-- `docs/asb/coach-hammer-final-ratification.md`
+Scoring/MPI, recruiting, safeguarding, doctrine, demo-mode, new modalities, new routes, UX redesigns.
 
-**Edited**
-- `useNextAction.ts`, `useCoachHammerNextStep.ts` → deprecated thin wrappers.
-- `TodayCommandBar`, `TodayGuidanceSlots`, `CommandCenterSection`, `AthleteCommand`, `Dashboard`, `Today`, `PieV2HammerBriefPanel`, `PrescriptiveActionsCard`, `HammerOnboardingPresence`.
-- `buildDailyPrescription` extended.
-- `asb_topic_registry` migration: register `intelligence.next_step.resolved`, `onboarding.knowledge_gap_resolved`, `hammer.chat.message`, `prescription.daily.modality.*`.
-- `docs/asb/reality-feedback-ledger.md` (close RFL-011…RFL-016).
+## Exit criteria
 
-**Constitutional subordination**
-- All new events ride `emitAsbEvent` / `buildAsbRow` / `asb_events` + `asb_event_lineage`. Zero parallel storage. Hammer remains **interpretive** — never authors `organism_truth`, `athlete_intent`, `authority_override`, `hard_stop`, or `rehabilitation_state`. Safeguarding still supersedes. Minor-athlete parent supremacy preserved.
-
-**Out of scope**
-- No scoring/MPI changes. No recruiting/safeguarding changes. No doctrine changes. No demo-mode changes. No RLS posture changes beyond GRANTs for any new topic-registry rows.
-
-## Exit Criteria
-
-One next-step authority, Dashboard/Today/Command Center agree, Hammer-driven onboarding live, 9/9 daily modalities, unified Ask Coach, zero dead ends, completeness ≥ 85%, ratification doc GO.
+Topic registry registered and queryable · three Hammer surfaces mounted with file:line evidence · three journeys rehearsed · consistency table shows single authority · all ten hostile scenarios PASS · ratification doc returns GO with completeness ≥ 90%.
