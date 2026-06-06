@@ -119,6 +119,25 @@ const PERSONAS: { name: string; vars: ContextVariable[] }[] = [
     mk("goal_summary", "fix asymmetry"),
     mk("asymmetry_pct", 14),
   ]},
+  // RFL-034 — minor-athlete supremacy fixtures.
+  { name: "minor-u16-no-concerns", vars: [
+    mk("lifecycle_band", "u16"), mk("lifting_age_years", 1),
+    mk("equipment_effective", { equipment: "home_gym" }),
+    mk("position", "OF"), mk("development_priorities", ["skill", "speed"]),
+    mk("season_phase", "pre"), mk("weekly_availability_days", 4),
+    mk("goal_summary", "varsity tryout"), mk("goal_horizon", "short"),
+    mk("parent_link_active", { status: "active" }),
+    mk("parent_concerns", []),
+  ]},
+  { name: "minor-u16-parent-concerns", vars: [
+    mk("lifecycle_band", "u16"), mk("lifting_age_years", 1),
+    mk("equipment_effective", { equipment: "home_gym" }),
+    mk("position", "P"), mk("development_priorities", ["speed", "power"]),
+    mk("season_phase", "pre"), mk("weekly_availability_days", 4),
+    mk("goal_summary", "varsity tryout"), mk("goal_horizon", "short"),
+    mk("parent_link_active", { status: "active" }),
+    mk("parent_concerns", ["arm_load", "speed_max", "heavy_lift"]),
+  ]},
 ];
 
 const DRILL_FIXTURE = [

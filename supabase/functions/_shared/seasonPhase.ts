@@ -140,9 +140,6 @@ export function buildPhasePromptBlock(resolution: SeasonResolution): string {
   ].join('\n');
 }
 
-export function getSeasonProfile(phase: SeasonPhase): SeasonProgrammingProfile {
-  return SEASON_PROFILES[phase] ?? SEASON_PROFILES.off_season;
-}
 
 // ---------- Pure helpers shared with regression tests ----------
 // These mirror the contracts used by:

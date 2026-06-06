@@ -1,10 +1,10 @@
 {
   "summary": {
-    "personas": 9,
-    "uniqueDailyPlans": 9,
+    "personas": 11,
+    "uniqueDailyPlans": 11,
     "uniqueSpeedFoci": 5,
-    "uniqueDrillLegalSets": 4,
-    "uniqueRoadmapTops": 8
+    "uniqueDrillLegalSets": 3,
+    "uniqueRoadmapTops": 10
   },
   "evidence": [
     {
@@ -28,6 +28,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": true,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:25:Strength — youth template|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — OF (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
@@ -56,7 +59,8 @@
           "id": "d-bench-max",
           "boost": 0,
           "reasons": [
-            "lifecycle:u12"
+            "lifecycle:u12",
+            "minor:high-risk"
           ]
         },
         {
@@ -68,14 +72,16 @@
           "id": "d-max-throw",
           "boost": 0,
           "reasons": [
-            "lifecycle:u12"
+            "lifecycle:u12",
+            "minor:high-risk"
           ]
         },
         {
           "id": "d-depth-jump-max",
           "boost": 0,
           "reasons": [
-            "lifecycle:u12"
+            "lifecycle:u12",
+            "minor:high-risk"
           ]
         },
         {
@@ -140,6 +146,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": true,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:25:Speed — max velocity|strength:ready:50:Strength — pre-season strength · priority:strength|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — SS|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
@@ -151,10 +160,7 @@
       },
       "drillsLegal": [
         "d-bw-squat",
-        "d-bench-max",
         "d-band-row",
-        "d-max-throw",
-        "d-depth-jump-max",
         "d-tempo-run",
         "d-trap-bar"
       ],
@@ -167,7 +173,9 @@
         {
           "id": "d-bench-max",
           "boost": 0,
-          "reasons": []
+          "reasons": [
+            "minor:high-risk"
+          ]
         },
         {
           "id": "d-band-row",
@@ -178,6 +186,7 @@
           "id": "d-max-throw",
           "boost": 10,
           "reasons": [
+            "minor:high-risk",
             "priority+power"
           ]
         },
@@ -185,6 +194,7 @@
           "id": "d-depth-jump-max",
           "boost": 10,
           "reasons": [
+            "minor:high-risk",
             "priority+power"
           ]
         },
@@ -249,6 +259,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": false,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:55:Strength — off-season volume · priority:strength|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — P (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
@@ -358,6 +371,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": true,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:35:Strength — in-season potentiation · priority:recovery|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — arm-protected|defense:ready:15:Defense — P (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — injury-aware",
@@ -369,9 +385,7 @@
       },
       "drillsLegal": [
         "d-bw-squat",
-        "d-bench-max",
         "d-band-row",
-        "d-depth-jump-max",
         "d-tempo-run",
         "d-trap-bar"
       ],
@@ -385,6 +399,7 @@
           "id": "d-bench-max",
           "boost": -5,
           "reasons": [
+            "minor:high-risk",
             "inseason-deintensify"
           ]
         },
@@ -398,6 +413,7 @@
           "boost": -5,
           "reasons": [
             "injury:ucl",
+            "minor:high-risk",
             "inseason-deintensify"
           ]
         },
@@ -405,6 +421,7 @@
           "id": "d-depth-jump-max",
           "boost": -5,
           "reasons": [
+            "minor:high-risk",
             "inseason-deintensify"
           ]
         },
@@ -469,6 +486,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": false,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:25:Strength — bodyweight (bodyweight) · priority:maintenance|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — in-season maintain|defense:ready:15:Defense — OF (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — in-season",
@@ -582,6 +602,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": false,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:18:Dynamic warm-up — extended|speed:ready:30:Speed — off-season volume|strength:ready:55:Strength — off-season volume · priority:power|hitting:ready:45:Hitting — off-season build|throwing:ready:40:Throwing — off-season build|defense:ready:35:Defense — P (volume)|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling — body-composition aware|recovery:ready:20:Recovery",
@@ -691,6 +714,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": false,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:8:Dynamic warm-up — game-ready|speed:ready:15:Speed — in-season freshness|strength:ready:35:Strength — in-season potentiation · priority:power|hitting:ready:20:Hitting — in-season quality|throwing:ready:15:Throwing — in-season maintain|defense:ready:15:Defense — P (game-rep)|baserunning:ready:10:Baserunning — game scenarios|fueling:ready:n:Fueling — game-day carb-forward|recovery:ready:30:Recovery — in-season",
@@ -804,6 +830,9 @@
         "workloadHigh": false,
         "asymmetryPct": null,
         "speedFreshness": null,
+        "isMinor": false,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:18:Speed — tempo recovery|strength:ready:50:Strength — injury-modified · priority:speed|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — OF|baserunning:ready:10:Baserunning — IQ only (leg-protected)|fueling:ready:n:Fueling|recovery:ready:30:Recovery — injury-aware",
@@ -908,6 +937,9 @@
         "workloadHigh": false,
         "asymmetryPct": 14,
         "speedFreshness": null,
+        "isMinor": false,
+        "parentSupremacyActive": false,
+        "parentConcerns": [],
         "missing": []
       },
       "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:22:Speed — unilateral symmetry|strength:ready:50:Strength — pre-season strength · priority:speed|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — SS|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
@@ -991,6 +1023,234 @@
         {
           "id": "m-youth-skill",
           "score": -2,
+          "suppressed": true
+        }
+      ]
+    },
+    {
+      "name": "minor-u16-no-concerns",
+      "projection": {
+        "equipment": "home_gym",
+        "equipmentScope": null,
+        "injury": null,
+        "injuryRegions": [],
+        "liftingAgeYears": 1,
+        "lifecycleBand": "u16",
+        "seasonPhase": "pre",
+        "developmentPriorities": [
+          "skill",
+          "speed"
+        ],
+        "weeklyAvailabilityDays": 4,
+        "goalSummary": "varsity tryout",
+        "goalHorizon": "short",
+        "readinessScore": null,
+        "workloadHigh": false,
+        "asymmetryPct": null,
+        "speedFreshness": null,
+        "isMinor": true,
+        "parentSupremacyActive": true,
+        "parentConcerns": [],
+        "missing": []
+      },
+      "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:25:Speed — max velocity|strength:ready:50:Strength — pre-season strength · priority:skill|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — OF|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
+      "speedFocus": {
+        "focus": "max_velocity",
+        "rationale": "development priority: speed/power",
+        "maxEffortAllowed": true,
+        "recommendedReps": 5
+      },
+      "drillsLegal": [
+        "d-bw-squat",
+        "d-band-row",
+        "d-tempo-run",
+        "d-trap-bar"
+      ],
+      "drillsRanked": [
+        {
+          "id": "d-bw-squat",
+          "boost": 10,
+          "reasons": [
+            "priority+skill"
+          ]
+        },
+        {
+          "id": "d-bench-max",
+          "boost": 0,
+          "reasons": [
+            "minor:high-risk"
+          ]
+        },
+        {
+          "id": "d-band-row",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-max-throw",
+          "boost": 0,
+          "reasons": [
+            "minor:high-risk"
+          ]
+        },
+        {
+          "id": "d-depth-jump-max",
+          "boost": 0,
+          "reasons": [
+            "minor:high-risk"
+          ]
+        },
+        {
+          "id": "d-tempo-run",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-trap-bar",
+          "boost": 0,
+          "reasons": []
+        }
+      ],
+      "roadmapTop": [
+        {
+          "id": "m-base",
+          "score": 18,
+          "suppressed": false
+        },
+        {
+          "id": "m-recover",
+          "score": 14,
+          "suppressed": false
+        },
+        {
+          "id": "m-max",
+          "score": 10,
+          "suppressed": false
+        },
+        {
+          "id": "m-throw-max",
+          "score": 8,
+          "suppressed": false
+        },
+        {
+          "id": "m-youth-skill",
+          "score": 46,
+          "suppressed": true
+        }
+      ]
+    },
+    {
+      "name": "minor-u16-parent-concerns",
+      "projection": {
+        "equipment": "home_gym",
+        "equipmentScope": null,
+        "injury": null,
+        "injuryRegions": [],
+        "liftingAgeYears": 1,
+        "lifecycleBand": "u16",
+        "seasonPhase": "pre",
+        "developmentPriorities": [
+          "speed",
+          "power"
+        ],
+        "weeklyAvailabilityDays": 4,
+        "goalSummary": "varsity tryout",
+        "goalHorizon": "short",
+        "readinessScore": null,
+        "workloadHigh": false,
+        "asymmetryPct": null,
+        "speedFreshness": null,
+        "isMinor": true,
+        "parentSupremacyActive": true,
+        "parentConcerns": [
+          "arm_load",
+          "speed_max",
+          "heavy_lift"
+        ],
+        "missing": []
+      },
+      "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:awaiting-input:18:Speed — tempo recovery|strength:awaiting-input:50:Strength — pre-season strength · priority:speed|hitting:ready:35:Hitting|throwing:awaiting-input:25:Throwing|defense:ready:25:Defense — P|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
+      "speedFocus": {
+        "focus": "tempo_recovery",
+        "rationale": "minor + parent concern (speed_max) — max-effort sprints suppressed",
+        "maxEffortAllowed": false,
+        "recommendedReps": 4
+      },
+      "drillsLegal": [
+        "d-bw-squat",
+        "d-band-row",
+        "d-tempo-run",
+        "d-trap-bar"
+      ],
+      "drillsRanked": [
+        {
+          "id": "d-bw-squat",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-bench-max",
+          "boost": 0,
+          "reasons": [
+            "minor:high-risk"
+          ]
+        },
+        {
+          "id": "d-band-row",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-max-throw",
+          "boost": 10,
+          "reasons": [
+            "minor:high-risk",
+            "priority+power"
+          ]
+        },
+        {
+          "id": "d-depth-jump-max",
+          "boost": 10,
+          "reasons": [
+            "minor:high-risk",
+            "priority+power"
+          ]
+        },
+        {
+          "id": "d-tempo-run",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-trap-bar",
+          "boost": 0,
+          "reasons": []
+        }
+      ],
+      "roadmapTop": [
+        {
+          "id": "m-base",
+          "score": 18,
+          "suppressed": false
+        },
+        {
+          "id": "m-recover",
+          "score": 14,
+          "suppressed": false
+        },
+        {
+          "id": "m-throw-max",
+          "score": 38,
+          "suppressed": true
+        },
+        {
+          "id": "m-youth-skill",
+          "score": 16,
+          "suppressed": true
+        },
+        {
+          "id": "m-max",
+          "score": 10,
           "suppressed": true
         }
       ]

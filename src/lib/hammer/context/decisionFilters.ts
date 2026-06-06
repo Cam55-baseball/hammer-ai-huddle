@@ -38,8 +38,16 @@ export interface AthleteContextProjection {
   readonly workloadHigh: boolean;
   readonly asymmetryPct: number | null;
   readonly speedFreshness: number | null; // 0..1
+  // RFL-034 — minor-athlete supremacy (interpretive, read-only).
+  // Derived strictly from spine projections; never authored here.
+  readonly isMinor: boolean | null; // null when both lifecycle_band and dob missing
+  readonly parentSupremacyActive: boolean; // active parent_link projected on spine
+  readonly parentConcerns: ReadonlyArray<string>; // ["arm_load","speed_max","heavy_lift",…]
   readonly missing: ReadonlyArray<string>;
 }
+
+const MINOR_BANDS = new Set(["u10", "u12", "u14", "u16", "u18"]);
+
 
 const KNOWN_INJURY_REGIONS = [
   "shoulder", "ucl", "elbow", "wrist", "hand",
@@ -91,13 +99,32 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
 
   const missing = ctx.missing.map((v) => v.key);
 
+  const lifecycleBand = (ctx.get<string>("lifecycle_band")?.value as string | null) ?? null;
+  // RFL-034 — minor inference. lifecycle_band is canonical; dob is fallback.
+  const dob = ctx.get<string>("date_of_birth")?.value as string | null | undefined;
+  let isMinor: boolean | null = null;
+  if (lifecycleBand) {
+    isMinor = MINOR_BANDS.has(lifecycleBand);
+  } else if (dob) {
+    const ageMs = Date.now() - new Date(dob).getTime();
+    const ageYears = ageMs / (365.25 * 24 * 3600 * 1000);
+    isMinor = Number.isFinite(ageYears) ? ageYears < 18 : null;
+  }
+  const parentLink = ctx.get<unknown>("parent_link_active")?.value as unknown;
+  const parentSupremacyActive =
+    (typeof parentLink === "object" && parentLink !== null && (parentLink as { status?: string }).status === "active") ||
+    parentLink === "active" ||
+    parentLink === true;
+  const parentConcerns =
+    (ctx.get<string[]>("parent_concerns")?.value as string[] | null) ?? [];
+
   return {
     equipment,
     equipmentScope,
     injury,
     injuryRegions,
     liftingAgeYears: (ctx.get<number>("lifting_age_years")?.value as number | null) ?? null,
-    lifecycleBand: (ctx.get<string>("lifecycle_band")?.value as string | null) ?? null,
+    lifecycleBand,
     seasonPhase: (ctx.get<string>("season_phase")?.value as string | null) ?? null,
     developmentPriorities: devPriorities,
     weeklyAvailabilityDays:
@@ -108,9 +135,13 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
     workloadHigh,
     asymmetryPct: asymVal ?? null,
     speedFreshness: freshnessVal ?? null,
+    isMinor,
+    parentSupremacyActive: !!parentSupremacyActive,
+    parentConcerns,
     missing,
   };
 }
+
 
 /* ── Equipment legality ──────────────────────────────────────────────────── */
 
@@ -176,6 +207,48 @@ export function isLifecycleLegal(
   return !YOUTH_BLOCKED.some((p) => haystack.includes(p));
 }
 
+/* ── Minor-athlete + parent-supremacy legality (RFL-034) ─────────────────── */
+
+// High-risk patterns for any minor, regardless of parent concerns.
+const MINOR_HIGH_RISK = [
+  "max_load", "1rm", "weighted_ball_max", "depth_jump_max", "pull_down",
+  "max_throw", "heavy_squat", "back_squat_max", "deadlift_max",
+];
+
+// Parent-concern token → blocked drill patterns.
+const PARENT_CONCERN_PATTERNS: Record<string, ReadonlyArray<string>> = {
+  arm_load: ["max_throw", "weighted_ball", "long_toss_max", "pull_down"],
+  speed_max: ["sprint_max", "max_velocity"],
+  heavy_lift: ["max_load", "1rm", "heavy_squat", "deadlift_max", "back_squat_max"],
+  jump_load: ["depth_jump", "depth_jump_max", "max_jump"],
+  contact: ["collision", "contact"],
+};
+
+export function isMinorParentLegal(
+  drillTagsOrName: ReadonlyArray<string>,
+  proj: Pick<AthleteContextProjection, "isMinor" | "parentConcerns" | "parentSupremacyActive">,
+): { legal: boolean; reasons: ReadonlyArray<string> } {
+  const reasons: string[] = [];
+  // Missingness-permissive: unknown minor status → adult prescription.
+  if (proj.isMinor !== true) return { legal: true, reasons };
+
+  const hay = drillTagsOrName.join(" ").toLowerCase();
+  // Baseline minor protection — superset of YOUTH_BLOCKED, applies to all minors.
+  if (MINOR_HIGH_RISK.some((p) => hay.includes(p))) {
+    reasons.push("minor:high-risk");
+    return { legal: false, reasons };
+  }
+  // Parent-flagged concerns add additional patterns.
+  for (const concern of proj.parentConcerns) {
+    const pats = PARENT_CONCERN_PATTERNS[concern] ?? [];
+    if (pats.some((p) => hay.includes(p))) {
+      reasons.push(`minor:parent-concern:${concern}`);
+      return { legal: false, reasons };
+    }
+  }
+  return { legal: true, reasons };
+}
+
 /* ── Composite legality + priority rerank ────────────────────────────────── */
 
 export interface ContextFilterDecision<T> {
@@ -207,6 +280,12 @@ export function applyContextFilter<T extends ItemContextView>(
     if (!isLifecycleLegal(it.tags, proj)) {
       legal = false;
       reasons.push(`lifecycle:${proj.lifecycleBand}`);
+    }
+    // RFL-034 — minor + parent-supremacy gate.
+    const mp = isMinorParentLegal(it.tags, proj);
+    if (!mp.legal) {
+      legal = false;
+      for (const r of mp.reasons) reasons.push(r);
     }
     let boost = 0;
     const hay = it.tags.join(" ").toLowerCase();
@@ -247,6 +326,15 @@ export interface SpeedFocusDecision {
 }
 
 export function selectSpeedFocus(proj: AthleteContextProjection): SpeedFocusDecision {
+  // RFL-034 — minor + parent-concern supremacy (precedes injury per minor-supremacy doctrine).
+  if (proj.isMinor === true && proj.parentConcerns.includes("speed_max")) {
+    return {
+      focus: "tempo_recovery",
+      rationale: "minor + parent concern (speed_max) — max-effort sprints suppressed",
+      maxEffortAllowed: false,
+      recommendedReps: 4,
+    };
+  }
   // Injury supremacy — RR-6 doctrine.
   if (proj.injuryRegions.some((r) => ["hamstring", "ankle", "knee", "groin"].includes(r))) {
     return {
@@ -345,6 +433,11 @@ export function orderRoadmapMilestones<T extends RoadmapMilestoneView>(
         suppressed = true;
         reasons.push("injury-defer");
       }
+      // RFL-034 — minor + parent concern defers high-load milestones.
+      if (proj.isMinor === true && proj.parentConcerns.length > 0 && /max|heavy|sprint_max|throw_max/.test(hay)) {
+        suppressed = true;
+        reasons.push("minor-parent-defer");
+      }
       // High workload defers max-effort
       if (proj.workloadHigh && /max|heavy/.test(hay)) {
         score -= 50;
@@ -399,6 +492,9 @@ export function toEdgeFunctionPayload(proj: AthleteContextProjection) {
     workload_high: proj.workloadHigh,
     asymmetry_pct: proj.asymmetryPct,
     speed_freshness: proj.speedFreshness,
+    is_minor: proj.isMinor,
+    parent_supremacy_active: proj.parentSupremacyActive,
+    parent_concerns: proj.parentConcerns,
     missing: proj.missing,
   };
 }

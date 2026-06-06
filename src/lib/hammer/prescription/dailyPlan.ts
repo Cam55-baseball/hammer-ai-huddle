@@ -663,10 +663,54 @@ export interface HammerDailyPlanResult {
   readonly speedFocus: SpeedFocusDecision;
 }
 
+/**
+ * RFL-034 — minor + parent-concern post-processor.
+ *
+ * Interpretive-only overlay (no template authoring): when the spine projects an
+ * active minor with parent-flagged concerns, mark affected blocks (strength,
+ * throwing, speed) as `awaiting-input` and append a parent-concern note to
+ * `why`. Preserves missingness, never invents new prescription content.
+ */
+const MINOR_CONCERN_AFFECTED: Record<string, ReadonlyArray<ModalityKey>> = {
+  arm_load: ["throwing"],
+  speed_max: ["speed"],
+  heavy_lift: ["strength"],
+  jump_load: ["speed", "strength"],
+  contact: ["baserunning", "defense"],
+};
+
+function applyMinorParentSupremacy(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  proj: AthleteContextProjection,
+): ReadonlyArray<PrescribedBlock> {
+  if (proj.isMinor !== true || proj.parentConcerns.length === 0) return blocks;
+  const affected = new Map<ModalityKey, string[]>();
+  for (const concern of proj.parentConcerns) {
+    for (const m of MINOR_CONCERN_AFFECTED[concern] ?? []) {
+      const list = affected.get(m) ?? [];
+      list.push(concern);
+      affected.set(m, list);
+    }
+  }
+  if (affected.size === 0) return blocks;
+  return blocks.map((b) => {
+    const concerns = affected.get(b.modality);
+    if (!concerns) return b;
+    const note = `Parent supremacy: deferred pending guardian review (concerns: ${concerns.join(", ")}).`;
+    return {
+      ...b,
+      status: "awaiting-input" as BlockStatus,
+      why: `${b.why} ${note}`,
+      missing: [...b.missing, ...concerns.map((c) => `parent-concern:${c}`)],
+    };
+  });
+}
+
 export function buildHammerDailyPlan(ctx: HammerAthleteContext): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
-  const blocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
+  const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
+  const blocks = applyMinorParentSupremacy(rawBlocks, proj);
   return {
     blocks,
     seasonPhase: proj.seasonPhase,
@@ -674,3 +718,4 @@ export function buildHammerDailyPlan(ctx: HammerAthleteContext): HammerDailyPlan
     speedFocus: speed,
   };
 }
+
