@@ -94,7 +94,7 @@ function fromEnvelope<T>(
 ): ContextVariable<T> {
   const e: EnvelopeEntry | undefined = envelope?.[key];
   const value = (e?.value ?? null) as T | null;
-  const missing = e?.missing ?? value === null || value === undefined;
+  const missing = e?.missing ?? (value === null || value === undefined);
   return {
     key,
     label,
