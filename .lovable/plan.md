@@ -1,43 +1,43 @@
-# Final Hostile Launch Forensic Audit — Plan
+# Coach Hammer Authority, Onboarding & Athlete Guidance Audit — Plan
 
-**Nature:** Read-only forensic verification. No code changes, no schema changes, no doctrine work, no optimization. Output is **evidence-backed documentation** plus two new ratification artifacts. Trust nothing prior — re-verify against the codebase and database.
+## Nature
+Read-only forensic verification. Mirrors prior hostile-audit method: re-derive every claim from `src/`, `supabase/`, `docs/asb/*` and live DB queries. Attempt to **disprove** that Coach Hammer is the athlete's primary developmental coach. No code, schema, doctrine, copy, or routing changes. Defects are **reported**, not fixed.
 
-## Method
+## Core question (binary verdict)
+When an athlete opens Hammers Modality, can the system answer **"What should I do next?"** — without fragmentation, dead ends, or contradictory guidance? → PASS / FAIL with evidence chain.
 
-For every section (A–I), the audit will:
-1. **Re-derive evidence directly** from `src/`, `supabase/`, `docs/asb/*`, and live DB queries (`asb_events`, `asb_event_lineage`, `user_roles`, `parent_athlete_links`, `safeguarding_notifications`, `foundation_*`, `drill_*`, RLS policies via `supabase--linter` + `pg_policies`).
-2. **Attempt to disprove** the prior PASS verdicts before confirming them.
-3. Record **PASS / FAIL / BLOCKED** with file:line or `event_id` / policy-name evidence — never narrative.
-4. Any finding that cannot be evidenced is recorded as **UNVERIFIED** (not PASS).
+## Investigation passes (parallelized; evidence-only verdicts)
 
-## Investigation passes (parallelized)
+**A · Hammer Authority Map.** Inventory every surface that can issue next-step guidance: `useNextAction`, `useCoachHammerNextStep`, `TodayGuidanceSlots`, `CommandCenterSection`, `CommunicationAI`, `PrescriptionCard`, `HammerSetbackGuidance`, `PrescriptiveActionsCard`, `useBlockWorkoutGenerator`, `useWarmupGenerator`, `RoadmapLadder`/`HittingRoadmapLadder`, `BounceBackBay`, `Dashboard.tsx`, `Today.tsx`, `AthleteCommand.tsx`, Foundations shelf, `useQuickActionExecutor`, `generateHammerBrief`, `pieV2/aiHammerTalkingPoints`, `useDrillAssignments`, `useNNSuggestions`, `useTrainingBlock`. For each: can-issue / can-plan / can-assign / can-answer-questions / can-redirect / can-contradict. Verdict: who is the **canonical owner** and is it Hammer? PASS/FAIL.
 
-| Pass | Sources interrogated | Disproof attempted |
-|---|---|---|
-| **A. Organism authority** | `src/lib/asb/emit.ts`, `emitRuntimeEvent.ts`, `overrideAuthority.ts`, all `supabase.from(...).insert/update` sites for organism-truth tables, RLS on `asb_events` / `asb_authority_overrides` / `asb_state_snapshots` | grep for non-ASB writers to organism-truth tables; UI components mutating state without lineage; bypass of `emitAuthorizedRuntimeEvent` |
-| **B. Orphan intelligence** | UHRC, Hammer brief, AsbTimeline, AthleteDigest, PieV2, Foundations, recommendation surfaces — match each producer → persistence → consumer → display → observability topic | any output produced but never read; any reducer with no UI; any UI with no reducer |
-| **C. Orphan signals** | Every `asb_topic_registry` entry + every `emitObservability` / `emitAsbEvent` call site → trace to a reducer in `src/lib/observability/*` and a consumer | topics emitted but never reduced; signals captured but unobservable |
-| **D. Authority boundary attack** | `roleMatrix.ts`, `requireRole.tsx`, `overrideAuthority.ts`, RLS policies on parent/recruiter/coach/minor surfaces, `RecruitingVisibilityGate`, `resolve_recruiting_visibility`, demo↔prod firewall in `prepareRows` | simulate each override class against RLS + governance wrapper; check cache/replay/stale-projection/visibility-scope attacks |
-| **E. Observability forensics** | `funnels.ts`, `intelligenceUtilization.ts`, `recommendationFunnel.ts`, `safeguarding.ts` reducers vs. registry vs. instrumentation sites | producer with no consumer; consumer with no producer; blind spot per critical behavior |
-| **F. Production journey audit** | Trace 10 journeys via code paths only (athlete/parent/coach/recruiter/pitcher/hitter/safeguarding/recruiting/recommendation/drill completion) — confirm zero manual ops outside the already-documented scout-application review | any path requiring undocumented operator action |
-| **G. Technical debt** | grep TODO/FIXME/HACK/XXX/deferred; `.lovable/backlog.md`; deprecated functions (e.g. table-derived recommendation fallback, foundation video terminal-watch gap) | classify each: launch-blocking YES/NO |
+**B · Onboarding Audit.** Trace `AthleteOnboarding.tsx`, `OnboardingFlow.tsx`, `HammerOnboardingPresence`, `resolveOnboardingPresence`, `AcceptParentInvite`, scout/coach onboarding paths. Per persona (new/existing/returning athlete · coach · parent · recruiter): does Hammer initiate / establish context / identify missing info / ask / fill / produce initial plan? Evidence = file:line + emitted topics.
 
-## Deliverables (only two new files)
+**C · Knowledge-Gap Acquisition.** Inventory critical coaching variables (age, level, position, goals, season status, lifting age, equipment access, schedule, injury history, recovery capacity, sport, throws/bats, school year). For each: collection site (table+column / event topic), trigger, Hammer discovery path, update path, missingness propagation (`buildDailyPrescription`, `useHIESnapshot`, `useReadinessState`, `useDayState`). Identify blind spots — variables never collected or never reaching Hammer.
 
-1. **`docs/asb/final-launch-risk-register.md`** — table of every remaining risk with probability (L/M/H), impact (L/M/H), mitigation, owner, launch-blocking? Plus invariant-violation watchlist.
-2. **`docs/asb/final-public-release-ratification.md`** — sectioned PASS/FAIL verdict mirroring Sections A–I with evidence citations, final public-launch readiness %, GO/NO-GO, and the next highest-value post-launch activity derived from evidence (not assumption).
+**D · Daily Coaching Audit.** Can Hammer produce a full "today should look like" plan (warm-up · speed · strength · hitting · throwing · defense · baserunning · fueling · recovery) using season phase, athlete state, roadmap, equipment, time, goals, recovery? Re-derive from `buildDailyPrescription`, `useBlockWorkoutGenerator`, `useWarmupGenerator`, `useCoachHammerNextStep`, `coach-hammer-next-step` edge function, `seasonPhase.ts`. Mark each modality present/absent/partial with evidence.
 
-No other files will be created or edited. The existing `reality-feedback-ledger.md` will only be updated if the audit uncovers a new gap requiring an RFL row — and only then.
+**E · Command Center Audit.** Define purpose, audience, and authority of `CommandCenterSection`/`AthleteCommand`. Can a first-time athlete read it? Does it answer next-step? Does Hammer live in it or compete with it? Should Hammer authority originate there? Evidence from component tree + emitted topics.
+
+**F · Dead-End Detection.** Trace user flows from each guidance surface (Ask Coach / Dashboard / Hammer brief / Recommendations / Roadmaps / Recovery / Workout Generator / Schedule Builder / Foundations) to terminal action. Flag: redirect loops, empty states, surfaces promising help without producing action, route handoffs to unimplemented pages, `ComingSoon` landings, CTAs that no-op.
+
+**G · Athlete Guidance Completeness.** Composite scoring (8 binary capabilities × evidence) → completeness %. Identify single biggest athlete-experience weakness with file:line evidence.
+
+**H · Hammer Roadmap.** For every gap from A–G, classify P0 (launch-critical) / P1 (athlete guidance) / P2 (optimization). Design-only — no implementation steps written as instructions to build.
+
+## Deliverables (two new files, zero edits to code)
+1. **`docs/asb/coach-hammer-authority-audit.md`** — Sections A–G with evidence citations (file:line, event topics, table names), authority map table, dead-end report, completeness %, biggest weakness, PASS/FAIL per section + overall verdict on the core question.
+2. **`docs/asb/coach-hammer-roadmap.md`** — Section H. Prioritized gap list (P0/P1/P2), per-gap evidence link back into audit doc, launch-impact assessment, and recommendation on whether any gap downgrades the existing GO verdict.
+
+Reality Feedback Ledger (`docs/asb/reality-feedback-ledger.md`) will be appended with any new RFL rows discovered (audit-only entries, not closures).
 
 ## Exit criteria
-
-The sprint exits only when:
-- Every Section A–G claim carries file:line / policy-name / `event_id` evidence or is marked UNVERIFIED.
-- Every authority-attack vector in Section D has a BLOCKED verdict with the blocking mechanism named.
-- The risk register enumerates every residual risk, including those rated low.
-- The ratification states GO or NO-GO with the evidence chain. If any UNVERIFIED items remain in a launch-critical path, verdict defaults to **NO-GO**.
-- Recommended post-launch activity is derived from the highest-severity register row or the highest-severity observability gap — never from assumption.
+- Every Section A–G claim carries evidence or is marked UNVERIFIED.
+- Every guidance surface in Section A has an authority verdict.
+- Every persona in Section B has a per-question verdict.
+- Every variable in Section C has collection + missingness evidence.
+- Dead-end report enumerates every traced flow.
+- Completeness % is derived from binary capability evidence, not narrative.
+- Launch-impact assessment explicitly states whether the prior GO holds or downgrades.
 
 ## Out of scope
-
-Any code change, schema migration, RLS edit, doctrine extension, scoring change, intelligence change, UI change, or "optimization." If the audit finds a defect, it is **reported** in the risk register and ratification — not fixed in this sprint.
+Any code, schema, RLS, doctrine, copy, routing, scoring, or UI change. No new instrumentation. No "quick fixes." Findings are reported only.
