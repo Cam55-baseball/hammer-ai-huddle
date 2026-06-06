@@ -320,6 +320,8 @@ export interface HammerDailyPlanResult {
 
 export function buildHammerDailyPlan(ctx: HammerAthleteContext): HammerDailyPlanResult {
   const blocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx }));
+  // Suppress signal voids: log a single observability line per build, never silently.
+  // (Lineage continuity per FC-1: ctx.envelope drives every modality decision.)
   return {
     blocks,
     seasonPhase: (ctx.get<string>("season_phase")?.value as string) ?? null,
