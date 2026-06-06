@@ -96,7 +96,7 @@ function builder({ modality, ctx }: BuilderArgs): PrescribedBlock {
           ? ["Light tempo runs only — no max effort."]
           : ["A-skips · build-ups", "3–5 sprints @ 90–100% with full recovery", "Optional resisted starts"],
         durationMin: recoverDay ? 0 : 20,
-        route: "/speed",
+        route: recoverDay ? "/bounce-back-bay" : "/speed-lab",
         ctaLabel: recoverDay ? "Recover instead" : "Start speed work",
         status: recoverDay ? "suppressed" : "ready",
         missing: [],
@@ -239,7 +239,7 @@ function builder({ modality, ctx }: BuilderArgs): PrescribedBlock {
           "First-to-third / tag-up scenarios × 5",
         ],
         durationMin: 15,
-        route: "/baserunning",
+        route: "/baserunning-iq",
         ctaLabel: "Open baserunning",
         status: "ready",
         missing: [],
