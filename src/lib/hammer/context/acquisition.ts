@@ -1,0 +1,116 @@
+/**
+ * Athlete Context Acquisition — Minimum Context Set and persistence helpers.
+ *
+ * Sprint: Athlete Context Spine Implementation (P0-1).
+ *
+ * Implements:
+ *   - MINIMUM_CONTEXT_SET — the P0 keys per Section H of the constitution.
+ *   - persistContextAnswer — writes onto `athlete_context` with confidence + lineage.
+ *   - acquisition trigger sources for development-history events.
+ *
+ * Pure interpretive layer; never authors organism truth. Missingness is
+ * preserved, never imputed.
+ */
+import { supabase } from "@/integrations/supabase/client";
+
+export const MINIMUM_CONTEXT_SET = [
+  "sport_primary",
+  "goal_summary",
+  "weekly_availability_days",
+  "weekly_availability_hours",
+  "training_focus",
+  "development_priorities",
+  "lifting_age_years",
+  "school_grade",
+  "season_phase",
+  "injury_history",
+] as const;
+
+export type MinimumContextKey = (typeof MINIMUM_CONTEXT_SET)[number];
+
+// Map a spine key to a `athlete_context` column.
+const COLUMN_BY_KEY: Record<string, string> = {
+  sport_primary: "sport_primary",
+  goal_summary: "goal_summary",
+  goal_horizon: "goal_horizon",
+  weekly_availability_days: "weekly_availability_days",
+  weekly_availability_hours: "weekly_availability_hours",
+  typical_session_length_min: "typical_session_length_min",
+  training_focus: "training_focus",
+  development_priorities: "development_priorities",
+  lifting_age_years: "lifting_age_years",
+  years_in_sport: "years_in_sport",
+  school_grade: "school_grade",
+  season_phase: "season_phase",
+  injury_history: "injury_history",
+};
+
+type AnyValue = string | number | string[] | unknown;
+
+/**
+ * Persist a single athlete-context answer with confidence + lineage envelope.
+ * Upserts onto `athlete_context` (one row per user).
+ */
+export async function persistContextAnswer(
+  userId: string,
+  key: string,
+  value: AnyValue,
+  source: string,
+  confidence: "self_report" | "corroborated" | "high" | "medium" | "low" = "self_report",
+): Promise<void> {
+  const column = COLUMN_BY_KEY[key];
+  if (!column) throw new Error(`Unknown context key: ${key}`);
+
+  // Read existing confidence map so we can merge.
+  const { data: existing } = await supabase
+    .from("athlete_context")
+    .select("confidence")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const confMap = {
+    ...(((existing?.confidence as Record<string, string> | null) ?? {}) as Record<string, string>),
+    [key]: confidence,
+  };
+
+  const payload: Record<string, unknown> = {
+    user_id: userId,
+    [column]: value,
+    confidence: confMap,
+    last_authored_at: new Date().toISOString(),
+    last_authored_by: userId,
+  };
+
+  const { error } = await supabase
+    .from("athlete_context")
+    .upsert(payload, { onConflict: "user_id" });
+  if (error) throw new Error(`persistContextAnswer(${key}): ${error.message}`);
+}
+
+/** Append a development-history event (lifting/training age, detraining, injury, etc.). */
+export async function appendDevelopmentHistoryEvent(
+  userId: string,
+  eventType:
+    | "lifting_age_attestation"
+    | "training_age_attestation"
+    | "detraining_period"
+    | "injury_interruption"
+    | "sport_transition"
+    | "coaching_change"
+    | "growth_spurt"
+    | "developmental_milestone",
+  eventDate: string,
+  payload: Record<string, unknown>,
+  source: string,
+  confidence: string = "self_report",
+): Promise<void> {
+  const { error } = await supabase.from("athlete_development_history_events").insert({
+    user_id: userId,
+    event_type: eventType,
+    event_date: eventDate,
+    payload,
+    source,
+    confidence,
+  });
+  if (error) throw new Error(`appendDevelopmentHistoryEvent: ${error.message}`);
+}
