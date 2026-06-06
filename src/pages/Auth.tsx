@@ -88,7 +88,7 @@ const Auth = () => {
         } else if (data.user) {
           // Multi-factor onboarding check
           
-          const [profileCheck, subscriptionCheck, rolesCheck, scoutAppCheck] = await Promise.all([
+          const [profileCheck, subscriptionCheck, rolesCheck, scoutAppCheck, asbEventCheck] = await Promise.all([
             // Check if user has a profile with essential data
             supabase
               .from('profiles')
@@ -115,7 +115,15 @@ const Auth = () => {
             .from('scout_applications')
             .select('status')
             .eq('user_id', data.user.id)
-            .maybeSingle()
+            .maybeSingle(),
+
+          // RFL-032 — canonical onboarding authority: ≥1 ledger event ever.
+          // Mirrors useAthleteOnboardingState.hasFirstEvent. Profile/subscription
+          // existence is NOT proof of onboarding; only a real canonical event is.
+          supabase
+            .from('asb_events')
+            .select('event_id', { count: 'exact', head: true })
+            .eq('athlete_id', data.user.id)
         ]);
 
           // User is onboarded if they have profile data, subscription, or role
@@ -127,6 +135,8 @@ const Auth = () => {
         const hasSubscription = subscriptionCheck.data && subscriptionCheck.data.length > 0;
         const hasRole = rolesCheck.data && rolesCheck.data.length > 0;
         const hasPendingScoutApp = scoutAppCheck.data?.status === 'pending';
+        // RFL-032 — ledger-truth gate.
+        const hasFirstEvent = (asbEventCheck.count ?? 0) > 0;
 
         const hasCompletedOnboarding = hasProfile || hasSubscription || hasRole;
 
@@ -136,6 +146,7 @@ const Auth = () => {
           hasSubscription,
           hasRole,
           hasPendingScoutApp,
+          hasFirstEvent,
           hasCompletedOnboarding
         });
 
@@ -145,11 +156,10 @@ const Auth = () => {
           });
           
           // Route based on onboarding status and role
+          const isScout = rolesCheck.data?.some((r: any) => r.role === 'scout');
+          const redirectTarget = state?.returnTo || (state as any)?.from;
+
           if (hasCompletedOnboarding) {
-            // Check if user is a scout
-            const isScout = rolesCheck.data?.some((r: any) => r.role === 'scout');
-            
-            const redirectTarget = state?.returnTo || (state as any)?.from;
             if (redirectTarget) {
               setTimeout(() => {
                 navigate(redirectTarget, { replace: true });
@@ -158,6 +168,14 @@ const Auth = () => {
               // Scouts go to scout dashboard
               setTimeout(() => {
                 navigate("/scout-dashboard", { replace: true });
+              }, 0);
+            } else if (!hasFirstEvent && !hasRole) {
+              // RFL-032 — athlete cohort that completed profile-setup but never
+              // emitted the first canonical event. Route through the canonical
+              // onboarding surface (AthleteOnboarding) which short-circuits to
+              // /command once hasFirstEvent flips true.
+              setTimeout(() => {
+                navigate("/onboarding/athlete", { replace: true });
               }, 0);
             } else {
               // Players/others go to regular dashboard
@@ -172,6 +190,7 @@ const Auth = () => {
             }, 0);
           }
         }
+
       } else {
         const validated = signUpSchema.parse({ email, password, fullName });
         const { error } = await signUp(validated.email, validated.password, validated.fullName);
