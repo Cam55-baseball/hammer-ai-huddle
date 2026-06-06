@@ -260,7 +260,7 @@ export function useWorkoutRecommendations(): UseWorkoutRecommendationsResult {
     } finally {
       setIsLoading(false);
     }
-  }, [t, toast]);
+  }, [t, toast, athleteCtx]);
 
   const clearRecommendations = useCallback(() => {
     setRecommendations([]);
