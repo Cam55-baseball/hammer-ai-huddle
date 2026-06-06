@@ -1,49 +1,43 @@
+# Final Hostile Launch Forensic Audit — Plan
 
-# Recommendation Lifecycle Canonical Emission Sprint — Plan
+**Nature:** Read-only forensic verification. No code changes, no schema changes, no doctrine work, no optimization. Output is **evidence-backed documentation** plus two new ratification artifacts. Trust nothing prior — re-verify against the codebase and database.
 
-Observation-only. No doctrine, scoring, ranking, recommendation logic, UI redesign, or schema changes. All emission goes through the existing `emitObservability` / `useEmitOnce` infra (Wave-1) using `engine_version = asb-1.0.0` and deterministic `idempotency_key = sha256(athlete_id|topic|occurred_at|payload)`. Topics are interpretive observability events — never author `organism_truth`, `athlete_intent`, `authority_override`, `hard_stop`, or `rehabilitation_state`.
+## Method
 
-## Canonical Event Registry (Wave-2)
+For every section (A–I), the audit will:
+1. **Re-derive evidence directly** from `src/`, `supabase/`, `docs/asb/*`, and live DB queries (`asb_events`, `asb_event_lineage`, `user_roles`, `parent_athlete_links`, `safeguarding_notifications`, `foundation_*`, `drill_*`, RLS policies via `supabase--linter` + `pg_policies`).
+2. **Attempt to disprove** the prior PASS verdicts before confirming them.
+3. Record **PASS / FAIL / BLOCKED** with file:line or `event_id` / policy-name evidence — never narrative.
+4. Any finding that cannot be evidenced is recorded as **UNVERIFIED** (not PASS).
 
-| Topic | Producer (file:line site) | Bucket | Actor | Closes |
-|---|---|---|---|---|
-| `foundation.recommendation.shown` | `FoundationsShelf.tsx` — existing `useEffect` that records `foundation_video_outcomes` insert | per `(athlete_id, video_id, UTC-day)` | athlete | RFL-009 |
-| `foundation.recommendation.opened` | `FoundationsShelf.tsx` — `open(videoId)` handler (existing `clicked_at` update) | per `(athlete_id, video_id, UTC-day)` | athlete | RFL-009 |
-| `foundation.recommendation.completed` | `useFoundationVideoOutcomes` / video player completion path that writes `foundation_video_outcomes.completed_at` | per `(athlete_id, video_id, UTC-day)` | athlete | RFL-009 |
-| `foundation.drill.assigned` | `useAssignDrill` mutation in `src/hooks/useDrillAssignments.ts` | per `(athlete_id, drill_id, UTC-day)` | coach | RFL-008 |
-| `foundation.drill.started` | `useCompleteAssignment` first-touch / `drill_prescriptions` start path | per `(athlete_id, drill_id, UTC-day)` | athlete | RFL-008 |
-| `foundation.drill.completed` | `useCompleteAssignment` success branch | per `(athlete_id, drill_id, UTC-day)` | athlete | RFL-008 |
-| `foundation.recommendation.coach_ack` | Coach hammer brief panel — explicit "Acknowledge" affordance (minimal addition to existing `PieV2HammerBriefPanel.tsx` review surface) | per `(athlete_id, recommendation_id, coach_id)` lifetime | coach | RFL-010 |
+## Investigation passes (parallelized)
 
-Coach ack is an **intentional** signal only. The existing mount-time `intelligence.hammer.viewed` (RFL-004) stays as the view event; ack is a separate explicit action.
+| Pass | Sources interrogated | Disproof attempted |
+|---|---|---|
+| **A. Organism authority** | `src/lib/asb/emit.ts`, `emitRuntimeEvent.ts`, `overrideAuthority.ts`, all `supabase.from(...).insert/update` sites for organism-truth tables, RLS on `asb_events` / `asb_authority_overrides` / `asb_state_snapshots` | grep for non-ASB writers to organism-truth tables; UI components mutating state without lineage; bypass of `emitAuthorizedRuntimeEvent` |
+| **B. Orphan intelligence** | UHRC, Hammer brief, AsbTimeline, AthleteDigest, PieV2, Foundations, recommendation surfaces — match each producer → persistence → consumer → display → observability topic | any output produced but never read; any reducer with no UI; any UI with no reducer |
+| **C. Orphan signals** | Every `asb_topic_registry` entry + every `emitObservability` / `emitAsbEvent` call site → trace to a reducer in `src/lib/observability/*` and a consumer | topics emitted but never reduced; signals captured but unobservable |
+| **D. Authority boundary attack** | `roleMatrix.ts`, `requireRole.tsx`, `overrideAuthority.ts`, RLS policies on parent/recruiter/coach/minor surfaces, `RecruitingVisibilityGate`, `resolve_recruiting_visibility`, demo↔prod firewall in `prepareRows` | simulate each override class against RLS + governance wrapper; check cache/replay/stale-projection/visibility-scope attacks |
+| **E. Observability forensics** | `funnels.ts`, `intelligenceUtilization.ts`, `recommendationFunnel.ts`, `safeguarding.ts` reducers vs. registry vs. instrumentation sites | producer with no consumer; consumer with no producer; blind spot per critical behavior |
+| **F. Production journey audit** | Trace 10 journeys via code paths only (athlete/parent/coach/recruiter/pitcher/hitter/safeguarding/recruiting/recommendation/drill completion) — confirm zero manual ops outside the already-documented scout-application review | any path requiring undocumented operator action |
+| **G. Technical debt** | grep TODO/FIXME/HACK/XXX/deferred; `.lovable/backlog.md`; deprecated functions (e.g. table-derived recommendation fallback, foundation video terminal-watch gap) | classify each: launch-blocking YES/NO |
 
-## Implementation Steps
+## Deliverables (only two new files)
 
-1. **Producer wiring** — add `emitObservability` calls alongside (not replacing) existing DB writes at the 7 sites above. Each call is `await`-free, never throws (per `src/lib/asb/emit.ts` contract).
-2. **Ack affordance** — add a single "Acknowledge recommendation" button to `PieV2HammerBriefPanel.tsx` for coach role; clicking emits `foundation.recommendation.coach_ack` with `{recommendation_id, athlete_id, coach_id}`. No new doctrine, no notification side effects.
-3. **Reducer extension** — extend `src/lib/observability/recommendationFunnel.ts` with a new `computeRecommendationEffectivenessFromEvents(events)` projection that derives every stage (shown / opened / drill_started / drill_completed / coach_ack) from `asb_events` topic rows, replacing table-derived inputs. Existing table-derived function kept as fallback for back-compat but marked deprecated in comments.
-4. **No schema, no migration, no RLS, no edge function changes.** No edits to `client.ts`, `types.ts`, `.env`, `config.toml`, or any intelligence engine.
+1. **`docs/asb/final-launch-risk-register.md`** — table of every remaining risk with probability (L/M/H), impact (L/M/H), mitigation, owner, launch-blocking? Plus invariant-violation watchlist.
+2. **`docs/asb/final-public-release-ratification.md`** — sectioned PASS/FAIL verdict mirroring Sections A–I with evidence citations, final public-launch readiness %, GO/NO-GO, and the next highest-value post-launch activity derived from evidence (not assumption).
 
-## Documentation Deliverables
+No other files will be created or edited. The existing `reality-feedback-ledger.md` will only be updated if the audit uncovers a new gap requiring an RFL row — and only then.
 
-- `docs/asb/recommendation-event-governance.md` — full registry: producer, consumer, payload schema, idempotency strategy, replay strategy, lineage path, with `file:line` evidence for each topic.
-- `docs/asb/recommendation-lineage-audit.md` — end-to-end PASS/FAIL trace `Generated → Shown → Opened → Drill Assigned → Started → Completed → Coach Ack → Improvement Correlation` with sample `asb_events` row evidence and reducer-output snippet per stage.
-- `docs/asb/organism-feedback-loop-ratification.md` — answers all 8 ratification questions (exposure, engagement, drill assigned/started/completed, coach ack, outcome correlation, blind spots) with evidence, plus feedback-loop completeness % and verdict.
-- `docs/asb/reality-feedback-ledger.md` — update RFL-008, RFL-009, RFL-010 to `CLOSED` with producer `file:line` + consumer `file:line` evidence per existing Wave-1 format. Append-only; no row deletions.
+## Exit criteria
 
-## Verification
+The sprint exits only when:
+- Every Section A–G claim carries file:line / policy-name / `event_id` evidence or is marked UNVERIFIED.
+- Every authority-attack vector in Section D has a BLOCKED verdict with the blocking mechanism named.
+- The risk register enumerates every residual risk, including those rated low.
+- The ratification states GO or NO-GO with the evidence chain. If any UNVERIFIED items remain in a launch-critical path, verdict defaults to **NO-GO**.
+- Recommended post-launch activity is derived from the highest-severity register row or the highest-severity observability gap — never from assumption.
 
-- Sample `asb_events` row per topic via `supabase--read_query` after first emission.
-- Refresh / multi-device determinism check: same `(athlete_id, topic, occurred_at-bucket, payload)` produces same `idempotency_key` and hits 23505 dedupe path (already proven in Wave-1 ratification).
-- Reducer-output snippet showing all stages populated from canonical events.
+## Out of scope
 
-## Out of Scope
-
-- Recommendation ranking, scoring, ordering, or content changes.
-- Hammer / onboarding / recruiting / athlete-state / drill catalog mutations.
-- New tables, columns, RLS policies, edge functions, or AI calls.
-- RFL-001…RFL-007 (already CLOSED).
-
-## Final Return
-
-Recommendation Event Registry · Closed-gap report (RFL-008/009/010 CLOSED with evidence) · Recommendation lineage audit (PASS/FAIL per stage) · Feedback-loop completeness % · Remaining observability gaps (expected: none) · Recommended next reality-driven optimization sprint, selected from highest-severity row in the post-emission ledger (likely the first real Day-1 drop-off pattern observed once events flow).
+Any code change, schema migration, RLS edit, doctrine extension, scoring change, intelligence change, UI change, or "optimization." If the audit finds a defect, it is **reported** in the risk register and ratification — not fixed in this sprint.
