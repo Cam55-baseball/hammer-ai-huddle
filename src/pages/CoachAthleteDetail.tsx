@@ -194,26 +194,43 @@ export default function CoachAthleteDetail() {
         </Card>
 
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between text-base">
-              <span>Recruiting snapshot (RR-9 gated)</span>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="rr9" className="text-xs text-muted-foreground">Opt in</Label>
-                <Switch id="rr9" checked={recruitingOptIn} onCheckedChange={setRecruitingOptIn} />
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recruitingOptIn && pieV2Latest ? (
-              <PieV2RecruitingCard aggregate={pieV2Latest} trajectories={pieV2Trajectories} optIn />
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Visibility off. Toggle requires explicit opt-in per RR-9 exposure ethics.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {/* RR-9 / RR-10 — recruiting surfaces gated by athlete-owned consent + minor protection.
+            Authority lives in `athlete_recruiting_consent`; this surface only projects. */}
+        {athleteId && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <span>Recruiting snapshot</span>
+                <Badge variant="outline" className="text-[10px]">RR-9 athlete-controlled</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <RecruitingVisibilityGate
+                athleteId={athleteId}
+                fallback={
+                  <p className="text-xs text-muted-foreground">
+                    Hidden. Visibility is controlled by the athlete (and parent, for minors)
+                    per RR-9 / RR-10. Recruiting intelligence is unavailable until the athlete
+                    enables visibility in their privacy settings.
+                  </p>
+                }
+              >
+                <div className="space-y-3">
+                  {pieV2Latest && (
+                    <PieV2RecruitingCard
+                      aggregate={pieV2Latest}
+                      trajectories={pieV2Trajectories}
+                      optIn
+                    />
+                  )}
+                  <HittingRecruitingCard
+                    doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
+                  />
+                </div>
+              </RecruitingVisibilityGate>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="pb-3">
