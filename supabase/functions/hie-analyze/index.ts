@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
+import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctrine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1923,6 +1924,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── HITTING DOCTRINE ATTRIBUTION (P1..P4) ──
+    // Pure / deterministic / confidence-bounded / missingness-visible.
+    // Never fabricates a priority phase: empty clusters or unmapped metrics
+    // yield confidence=0 with explicit missingness reason.
+    const hittingDoctrine = deriveHittingDoctrineAttribution(
+      weaknessClusters as any,
+      // Use micro-rep count when available so low-depth sessions cannot
+      // produce a falsely confident priority phase.
+      { signalDepth: (microReps as any[] | undefined)?.length ?? undefined },
+    );
+
     // ── UPSERT SNAPSHOT ──
     const snapshot = {
       user_id,
@@ -1949,6 +1961,7 @@ Deno.serve(async (req) => {
       season_phase: seasonResolution.phase,
       season_phase_source: seasonResolution.source,
       season_phase_label: seasonProfile.label,
+      hitting_doctrine: hittingDoctrine,
     };
 
     const { error: upsertError } = await supabase
