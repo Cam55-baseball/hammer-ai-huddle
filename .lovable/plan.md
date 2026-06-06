@@ -56,3 +56,39 @@ P0 reserved for: data loss, security exposure, broken auth, decision contradicti
 ## Exit criteria
 
 7 journeys audited with citations, blockers classified without inflation, GO/NO-GO issued with rationale, RFL updated, plan.md updated.
+
+
+# Launch Readiness Hostile Audit — VERDICT: NO-GO (2026-06-06)
+
+Hostile audit completed. Prior P0-3 "GO WITH KNOWN LIMITATIONS" verdict is **withdrawn**.
+
+## Findings (full report: `docs/asb/launch-readiness-hostile-audit.md`)
+
+### P0 — true launch blockers (3)
+
+- **RFL-032** — Onboarding bypass: `src/pages/Auth.tsx:128-167` routes the majority of returning users straight to `/dashboard`, skipping `/onboarding/athlete` and `HammerOnboardingChat` entirely. First canonical event is never emitted for these athletes.
+- **RFL-033** — `compute-hammer-state` edge function: `BootFailure: Identifier 'getSeasonProfile' has already been declared` at `supabase/functions/_shared/seasonPhase.ts:161`. Has never booted.
+- **RFL-034** — Minor-athlete supremacy not enforced in `src/lib/hammer/context/decisionFilters.ts` (zero parent/minor/guardian branches). Parent-flagged load concerns do not branch prescription. Violates Megaphase 151–160 cross-primitive doctrine.
+
+### P1 — disclosed launch debt (9)
+
+RFL-035 (chat ↔ plan grounding) · RFL-036 (drill bucket collapse 4/9) · RFL-037 (empty-state triplet gaps) · RFL-038 (staleness invisible) · RFL-039 (pain → suppression latency) · RFL-040 (RTP gate absent) · RFL-041 (nav pollution 100+ routes) · RFL-042 (auth routing race) · RFL-043 (parent-invite 200-event cap).
+
+### P2 — post-launch backlog
+
+HammerOnboardingChat silent null-render · "Needs input" label undefined for first-time users · No streak / progression visibility · Recruiting athletes undifferentiated.
+
+## Shortest path to launch
+
+1. Fix RFL-033 (~10 min — dedup `getSeasonProfile`).
+2. Fix RFL-032 (~1 hr — gate `/dashboard` on `useAthleteOnboardingState.hasFirstEvent` at Auth.tsx:128-167).
+3. Fix RFL-034 (~2 hr — add parent_concerns / minor_flag branches in `decisionFilters.ts`).
+4. Re-issue launch verdict.
+
+Estimated end-to-end: **~half a day of focused work**.
+
+## Verdict
+
+**NO-GO** until RFL-032, RFL-033, RFL-034 closed.
+
+After P0 remediation: expected **GO WITH KNOWN LIMITATIONS** (P1s as disclosed debt).
