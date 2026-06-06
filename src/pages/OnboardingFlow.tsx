@@ -9,6 +9,8 @@ import {
   type LifeContextCheckinOptionId,
 } from "@/lib/relational/copy";
 import { emitRuntimeEvent } from "@/lib/runtime/emitRuntimeEvent";
+import { emitObservability } from "@/hooks/useEmitObservability";
+
 import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { emitLifeContextDisclosure } from "@/lib/runtime/relational/lifeContextEmitters";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +79,24 @@ export default function OnboardingFlow() {
       console.warn("[relational] onboarding bootstrap deferred", e);
     });
   }, [user]);
+
+  // RFL-002 — emit canonical athlete.onboarding.completed exactly once
+  // per athlete (lifetime), only when every required step is marked complete.
+  // Idempotency-key-based dedupe via emit fabric guarantees refresh + replay safety.
+  const completedEmittedRef = useRef(false);
+  useEffect(() => {
+    if (!user || !done || completedEmittedRef.current) return;
+    completedEmittedRef.current = true;
+    void emitObservability({
+      topic: "athlete.onboarding.completed",
+      athleteId: user.id,
+      actorId: user.id,
+      actorRole: "athlete",
+      payload: { steps: STEPS.map((s) => s.id) },
+      lifetime: true,
+    });
+  }, [user, done]);
+
 
   async function markStepComplete(stepId: string) {
     if (!user) return;

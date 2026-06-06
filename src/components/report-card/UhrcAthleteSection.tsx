@@ -10,6 +10,8 @@ import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { UhrcReportCard } from "./UhrcReportCard";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
+
 
 interface Props {
   disciplines?: Array<"pitching" | "hitting">;
