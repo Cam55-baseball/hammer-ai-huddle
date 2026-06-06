@@ -52,6 +52,25 @@ export interface HIESnapshot {
   transfer_score: number | null;
   decision_speed_index: number | null;
   movement_efficiency_score: number | null;
+  /**
+   * Hitting 1-2-3-4 doctrine attribution (additive). Populated by
+   * `hie-analyze` via `deriveHittingDoctrineAttribution`. May be `null`
+   * for legacy snapshots written before the doctrine column existed.
+   * `confidence === 0` means missingness — render empty state.
+   */
+  hitting_doctrine?: {
+    violated_phases: Array<'P1' | 'P2' | 'P3' | 'P4'>;
+    priority_phase: 'P1' | 'P2' | 'P3' | 'P4' | null;
+    causal_chains: Partial<Record<'P1' | 'P2' | 'P3' | 'P4', any>>;
+    roadmap: any[];
+    confidence: number;
+    missingness: {
+      reason: string;
+      missing_signals: string[];
+      mapped_symptom_count: number;
+    };
+    engine_version: string;
+  } | null;
 }
 
 export function useHIESnapshot() {
@@ -80,6 +99,7 @@ export function useHIESnapshot() {
         smart_week_plan: (data.smart_week_plan as any) ?? [],
         before_after_trends: (data.before_after_trends as any) ?? [],
         drill_effectiveness: (data.drill_effectiveness as any) ?? [],
+        hitting_doctrine: ((data as any).hitting_doctrine as any) ?? null,
       } as HIESnapshot;
     },
     enabled: !!user,
