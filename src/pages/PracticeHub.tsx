@@ -107,6 +107,9 @@ export default function PracticeHub() {
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
 
+  // PIE V2 — Advanced Mechanics panel state (baseball pitching only).
+  const [pieV2MicroInput, setPieV2MicroInput] = useState<PitchingV2MicroInputValue>({});
+
   // Live rep broadcast for linked sessions
   const { partnerReps, broadcastRep, broadcastRemoveRep } = useLiveRepBroadcast({
     linkCode: sessionConfig?.link_code,
@@ -378,6 +381,10 @@ export default function PracticeHub() {
         },
         link_code: sessionConfig.link_code,
         micro_layer_data: reps.length > 0 ? reps : undefined,
+        pie_v2_micro_input:
+          sportKey === 'baseball' && activeModule === 'pitching'
+            ? pieV2MicroInput
+            : undefined,
       });
 
       // Attach session to link state machine (handles bidirectional linking atomically)
