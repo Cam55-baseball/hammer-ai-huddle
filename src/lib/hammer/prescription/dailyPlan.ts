@@ -135,17 +135,28 @@ function builder({ modality, ctx }: BuilderArgs): PrescribedBlock {
       }
       return {
         modality,
-        title: "Strength",
+        title: youthScale ? "Strength — youth template" : "Strength",
         why: recoverDay
           ? "Deload day — preserve quality, drop volume."
-          : "Drive force production and structural strength.",
-        steps: [
-          "Main: trap-bar deadlift or squat — 3×5",
-          "Push: bench or DB press — 3×6",
-          "Pull: row or chin-up — 3×8",
-          "Posterior chain accessory — 2×10",
-        ],
-        durationMin: recoverDay ? 30 : 50,
+          : youthScale
+            ? "Movement-quality bias for developing athletes; no max-effort loading."
+            : devPriorities?.includes("strength")
+              ? "Development priority — drive force production and structural strength."
+              : "Drive force production and structural strength.",
+        steps: youthScale
+          ? [
+              "Bodyweight squat / lunge — 2×8 quality reps",
+              "Push-up progression — 2×6",
+              "Row variation — 2×8",
+              "Core + posture finisher — 2×30s",
+            ]
+          : [
+              "Main: trap-bar deadlift or squat — 3×5",
+              "Push: bench or DB press — 3×6",
+              "Pull: row or chin-up — 3×8",
+              "Posterior chain accessory — 2×10",
+            ],
+        durationMin: recoverDay ? 30 : youthScale ? 25 : lowAvail ? 40 : 50,
         route: "/training-block",
         ctaLabel: "Open lift",
         status: "ready",
