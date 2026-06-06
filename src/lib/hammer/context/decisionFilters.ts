@@ -38,8 +38,16 @@ export interface AthleteContextProjection {
   readonly workloadHigh: boolean;
   readonly asymmetryPct: number | null;
   readonly speedFreshness: number | null; // 0..1
+  // RFL-034 — minor-athlete supremacy (interpretive, read-only).
+  // Derived strictly from spine projections; never authored here.
+  readonly isMinor: boolean | null; // null when both lifecycle_band and dob missing
+  readonly parentSupremacyActive: boolean; // active parent_link projected on spine
+  readonly parentConcerns: ReadonlyArray<string>; // ["arm_load","speed_max","heavy_lift",…]
   readonly missing: ReadonlyArray<string>;
 }
+
+const MINOR_BANDS = new Set(["u10", "u12", "u14", "u16", "u18"]);
+
 
 const KNOWN_INJURY_REGIONS = [
   "shoulder", "ucl", "elbow", "wrist", "hand",
@@ -91,13 +99,32 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
 
   const missing = ctx.missing.map((v) => v.key);
 
+  const lifecycleBand = (ctx.get<string>("lifecycle_band")?.value as string | null) ?? null;
+  // RFL-034 — minor inference. lifecycle_band is canonical; dob is fallback.
+  const dob = ctx.get<string>("date_of_birth")?.value as string | null | undefined;
+  let isMinor: boolean | null = null;
+  if (lifecycleBand) {
+    isMinor = MINOR_BANDS.has(lifecycleBand);
+  } else if (dob) {
+    const ageMs = Date.now() - new Date(dob).getTime();
+    const ageYears = ageMs / (365.25 * 24 * 3600 * 1000);
+    isMinor = Number.isFinite(ageYears) ? ageYears < 18 : null;
+  }
+  const parentLink = ctx.get<{ status?: string } | string>("parent_link_active")?.value;
+  const parentSupremacyActive =
+    (typeof parentLink === "object" && parentLink !== null && (parentLink as { status?: string }).status === "active") ||
+    parentLink === "active" ||
+    parentLink === true;
+  const parentConcerns =
+    (ctx.get<string[]>("parent_concerns")?.value as string[] | null) ?? [];
+
   return {
     equipment,
     equipmentScope,
     injury,
     injuryRegions,
     liftingAgeYears: (ctx.get<number>("lifting_age_years")?.value as number | null) ?? null,
-    lifecycleBand: (ctx.get<string>("lifecycle_band")?.value as string | null) ?? null,
+    lifecycleBand,
     seasonPhase: (ctx.get<string>("season_phase")?.value as string | null) ?? null,
     developmentPriorities: devPriorities,
     weeklyAvailabilityDays:
@@ -108,9 +135,13 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
     workloadHigh,
     asymmetryPct: asymVal ?? null,
     speedFreshness: freshnessVal ?? null,
+    isMinor,
+    parentSupremacyActive: !!parentSupremacyActive,
+    parentConcerns,
     missing,
   };
 }
+
 
 /* ── Equipment legality ──────────────────────────────────────────────────── */
 
