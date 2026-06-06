@@ -29,6 +29,7 @@ import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
+import { PieV2FrameTagger } from "@/components/micro-layer/PieV2FrameTagger";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -953,7 +954,21 @@ export default function AnalyzeVideo() {
                     </p>
                   </div>
 
+                  {/* PIE V2 frame tagger — baseball pitching only.
+                      Video-derived reps land in the SAME canonical event ledger
+                      as session-derived reps (no parallel storage). */}
+                  {sport === 'baseball' && module === 'pitching' && user && currentVideoId && (
+                    <div className="pt-4 border-t">
+                      <PieV2FrameTagger
+                        athleteId={user.id}
+                        sessionId={`video-${currentVideoId}`}
+                        videoId={currentVideoId}
+                      />
+                    </div>
+                  )}
+
                   <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
+
                     <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
                       <BookMarked className="h-4 w-4 sm:mr-2" />
                       <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
