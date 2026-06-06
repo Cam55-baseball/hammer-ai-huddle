@@ -90,6 +90,14 @@ export function FoundationsShelf({ showWhenIdle = false }: Props) {
         .eq('user_id', user.id)
         .eq('video_id', videoId)
         .is('clicked_at', null);
+      // RFL-009 — canonical foundation.recommendation.opened (UTC-day bucketed).
+      void emitObservability({
+        topic: 'foundation.recommendation.opened',
+        athleteId: user.id,
+        actorId: user.id,
+        actorRole: 'athlete',
+        payload: { recommendation_id: videoId, surface: 'foundations_shelf' },
+      });
       try {
         new BroadcastChannel('data-sync').postMessage({ type: 'foundation_outcome' });
       } catch { /* noop */ }
