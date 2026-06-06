@@ -765,6 +765,78 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_context: {
+        Row: {
+          confidence: Json
+          created_at: string
+          development_priorities: string[] | null
+          goal_horizon: string | null
+          goal_priority_rank: number | null
+          goal_summary: string | null
+          injury_history: Json | null
+          last_authored_at: string | null
+          last_authored_by: string | null
+          lifting_age_years: number | null
+          school_grade: string | null
+          season_phase: string | null
+          sport_primary: string | null
+          sport_secondary: string[] | null
+          training_focus: string[] | null
+          typical_session_length_min: number | null
+          updated_at: string
+          user_id: string
+          weekly_availability_days: number | null
+          weekly_availability_hours: number | null
+          years_in_sport: number | null
+        }
+        Insert: {
+          confidence?: Json
+          created_at?: string
+          development_priorities?: string[] | null
+          goal_horizon?: string | null
+          goal_priority_rank?: number | null
+          goal_summary?: string | null
+          injury_history?: Json | null
+          last_authored_at?: string | null
+          last_authored_by?: string | null
+          lifting_age_years?: number | null
+          school_grade?: string | null
+          season_phase?: string | null
+          sport_primary?: string | null
+          sport_secondary?: string[] | null
+          training_focus?: string[] | null
+          typical_session_length_min?: number | null
+          updated_at?: string
+          user_id: string
+          weekly_availability_days?: number | null
+          weekly_availability_hours?: number | null
+          years_in_sport?: number | null
+        }
+        Update: {
+          confidence?: Json
+          created_at?: string
+          development_priorities?: string[] | null
+          goal_horizon?: string | null
+          goal_priority_rank?: number | null
+          goal_summary?: string | null
+          injury_history?: Json | null
+          last_authored_at?: string | null
+          last_authored_by?: string | null
+          lifting_age_years?: number | null
+          school_grade?: string | null
+          season_phase?: string | null
+          sport_primary?: string | null
+          sport_secondary?: string[] | null
+          training_focus?: string[] | null
+          typical_session_length_min?: number | null
+          updated_at?: string
+          user_id?: string
+          weekly_availability_days?: number | null
+          weekly_availability_hours?: number | null
+          years_in_sport?: number | null
+        }
+        Relationships: []
+      }
       athlete_daily_log: {
         Row: {
           cns_load_actual: number | null
@@ -816,6 +888,75 @@ export type Database = {
           rest_reason?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      athlete_development_history_events: {
+        Row: {
+          confidence: string
+          created_at: string
+          event_date: string
+          event_type: string
+          id: string
+          payload: Json
+          source: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: string
+          created_at?: string
+          event_date: string
+          event_type: string
+          id?: string
+          payload?: Json
+          source: string
+          user_id: string
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      athlete_equipment_context: {
+        Row: {
+          confidence: string
+          created_at: string
+          equipment: string[]
+          id: string
+          scope: string
+          source: string
+          user_id: string
+          valid_until: string | null
+          venue: string | null
+        }
+        Insert: {
+          confidence?: string
+          created_at?: string
+          equipment?: string[]
+          id?: string
+          scope: string
+          source: string
+          user_id: string
+          valid_until?: string | null
+          venue?: string | null
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          equipment?: string[]
+          id?: string
+          scope?: string
+          source?: string
+          user_id?: string
+          valid_until?: string | null
+          venue?: string | null
         }
         Relationships: []
       }
@@ -12200,6 +12341,7 @@ export type Database = {
         Args: { p_coach_id: string; p_folder_id: string }
         Returns: boolean
       }
+      get_athlete_context_envelope: { Args: { p_user: string }; Returns: Json }
       has_any_checked: { Args: { cb: Json }; Returns: boolean }
       has_role: {
         Args: {
