@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { emitObservability } from '@/hooks/useEmitObservability';
+
 
 interface AuthContextType {
   user: User | null;
@@ -69,8 +71,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: { full_name: fullName },
       },
     });
+    // RFL-001 — canonical lifecycle topic. Lifetime-deduped per (athlete_id, topic, payload),
+    // so failed signup never emits and refresh / replay never double-counts.
+    if (!error && data?.user?.id) {
+      const userId = data.user.id;
+      void emitObservability({
+        topic: 'athlete.lifecycle.signup',
+        athleteId: userId,
+        actorId: userId,
+        actorRole: 'athlete',
+        payload: { source: 'auth_page' },
+        lifetime: true,
+      });
+    }
     return { data, error };
   };
+
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });

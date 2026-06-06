@@ -10,6 +10,8 @@ import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { UhrcReportCard } from "./UhrcReportCard";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
+
 
 interface Props {
   disciplines?: Array<"pitching" | "hitting">;
@@ -40,6 +42,25 @@ export function UhrcAthleteSection({ disciplines }: Props) {
     });
   }, [user?.id, snapshot, trends, disciplines]);
 
+  // RFL-003 — emit canonical intelligence.uhrc.viewed once per athlete per session/day.
+  // Idempotency-key + day-bucket guarantees one ledger row per day even across remounts.
+  useEmitOnce(
+    user?.id && report ? `uhrc:${user.id}` : null,
+    user?.id && report
+      ? {
+          topic: "intelligence.uhrc.viewed",
+          athleteId: user.id,
+          actorId: user.id,
+          actorRole: "athlete",
+          payload: {
+            surface: "athlete_section",
+            disciplines: disciplines ?? ["pitching", "hitting"],
+          },
+        }
+      : null,
+  );
+
   if (!report) return null;
   return <UhrcReportCard report={report} />;
 }
+

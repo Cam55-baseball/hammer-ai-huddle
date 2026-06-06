@@ -21,7 +21,9 @@ import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
+
 
 const COLS =
   "event_id, athlete_id, topic_id, actor_role, actor_id, occurred_at, ingested_at, effective_at, valid_from, valid_to, payload, engine_version, idempotency_key, causality_refs, lineage_refs";
@@ -50,6 +52,25 @@ export default function CoachAthleteDetail() {
       return !!data;
     },
   });
+
+  // RFL-005 — emit canonical coach.review.opened once per (coach, athlete) per day.
+  // Gated on roster access so unauthorized opens never emit.
+  useEmitOnce(
+    user?.id && athleteId && rosterAccess === true && user.id !== athleteId
+      ? `coach_review:${user.id}:${athleteId}`
+      : null,
+    user?.id && athleteId && rosterAccess === true && user.id !== athleteId
+      ? {
+          topic: "coach.review.opened",
+          athleteId,
+          actorId: user.id,
+          actorRole: "coach",
+          payload: { surface: "coach_athlete_detail" },
+        }
+      : null,
+  );
+
+
 
   // ── HITTING DOCTRINE (single source of truth — same JSON read by athlete) ──
   const { data: hittingDoctrineSnap } = useQuery({

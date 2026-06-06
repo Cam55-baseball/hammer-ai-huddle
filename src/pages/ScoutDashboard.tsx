@@ -13,6 +13,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
+import { emitObservability } from '@/hooks/useEmitObservability';
+
 import { ProfileCardSkeleton } from '@/components/skeletons/ProfileCardSkeleton';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
 import { FollowerReportsInbox } from '@/components/follower-reports/FollowerReportsInbox';
@@ -595,7 +597,20 @@ export default function ScoutDashboard() {
 
                       <div className="flex flex-wrap gap-2 items-center">
                         <Button
-                          onClick={() => navigate(`/profile?userId=${player.id}`)}
+                          onClick={() => {
+                            // RFL-006 — emit canonical recruiter.review.opened
+                            // once per (recruiter, athlete) per day.
+                            if (user?.id) {
+                              void emitObservability({
+                                topic: 'recruiter.review.opened',
+                                athleteId: player.id,
+                                actorId: user.id,
+                                actorRole: 'org',
+                                payload: { surface: 'scout_view_profile' },
+                              });
+                            }
+                            navigate(`/profile?userId=${player.id}`);
+                          }}
                           size="sm"
                           variant="outline"
                           className="flex-shrink-0"
@@ -603,6 +618,7 @@ export default function ScoutDashboard() {
                           <User className="h-4 w-4 sm:mr-2" />
                           <span className="hidden sm:inline">{t('scout.viewProfile')}</span>
                         </Button>
+
                         
                         {player.followStatus === 'accepted' && (
                           <Button

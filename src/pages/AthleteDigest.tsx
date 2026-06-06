@@ -24,10 +24,27 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useDigestProjection } from "@/hooks/digest/useDigestProjection";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
 
 export default function AthleteDigest() {
   const { user, loading, isAuthStable } = useAuth();
   const navigate = useNavigate();
+
+  // RFL-007 — emit canonical intelligence.trend.viewed once per athlete per day
+  // for the weekly digest trend surface.
+  useEmitOnce(
+    user?.id ? `trend_digest:${user.id}` : null,
+    user?.id
+      ? {
+          topic: "intelligence.trend.viewed",
+          athleteId: user.id,
+          actorId: user.id,
+          actorRole: "athlete",
+          payload: { surface: "athlete_digest" },
+        }
+      : null,
+  );
+
   const { projection, isLoading, rows } = useDigestProjection();
   const [simplify, setSimplify] = useExplainSimply();
   const [showDetails, setShowDetails] = useState(false);
