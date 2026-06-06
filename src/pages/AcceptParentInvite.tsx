@@ -76,6 +76,18 @@ export default function AcceptParentInvite() {
         parentUserId: user.id,
         createdEventId,
       });
+      // Best-effort dispatch correlation. Canonical activation is the DB
+      // trigger `project_relationship_to_parent_link` on asb_events; this
+      // update is purely operational hygiene for the dispatch log and must
+      // never block the success path.
+      try {
+        await supabase
+          .from("parent_invite_dispatches")
+          .update({ status: "accepted" })
+          .eq("relationship_id", decoded.relationship_id);
+      } catch (dispatchErr) {
+        console.info("[accept-parent-invite] dispatch update skipped", dispatchErr);
+      }
       toast.success(PARENT_INVITE_VOICE.successToast);
       navigate("/");
     } catch (e) {
