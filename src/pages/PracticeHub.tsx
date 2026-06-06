@@ -24,6 +24,8 @@ import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSe
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
+import { PitchingV2MicroInput } from '@/components/micro-layer/PitchingV2MicroInput';
+import type { PitchingV2MicroInputValue } from '@/lib/pieV2/buildSessionReps';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Loader2, Video, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
