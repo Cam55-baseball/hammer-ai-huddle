@@ -152,3 +152,27 @@ See `docs/asb/athlete-context-spine-consumer-activation-ratification.md`.
 **Public release verdict:** **GO WITH KNOWN LIMITATIONS** (non-blocking: Elite-tier consumers `P`, biomechanical fusion, multi-week periodization).
 
 See `docs/asb/p0-3-decision-activation-ratification.md`.
+
+
+## RFL openings — Launch Readiness Hostile Audit (2026-06-06)
+
+Hostile audit withdrew the P0-3 "GO WITH KNOWN LIMITATIONS" verdict. New launch blockers identified.
+
+| ID | Finding | Severity | Status | Surface | Harm |
+|---|---|---|---|---|---|
+| RFL-032 | Brand-new athlete onboarding is bypassed at `src/pages/Auth.tsx:128-167` whenever the profile has any non-null name/role/subscription. `/onboarding/athlete` and therefore `HammerOnboardingChat` are unreachable for the majority of post-signup logins. First canonical event is never emitted; downstream spine consumers degrade to defaults. | P0 | Open | Auth → Dashboard | onboarding completion, trust, recommendation quality |
+| RFL-033 | `compute-hammer-state` edge function has never booted in production — `BootFailure: Identifier 'getSeasonProfile' has already been declared at _shared/seasonPhase.ts:161`. Any server-derived Hammer state is silently absent. | P0 | Open | edge function `compute-hammer-state`; `_shared/seasonPhase.ts:161` | recommendation quality, observability, trust |
+| RFL-034 | Minor-athlete supremacy (per Megaphase 151–160 cross-primitive doctrine + RR-doctrine) not enforced at the prescription layer. `src/lib/hammer/context/decisionFilters.ts` has zero `parent | minor | guardian | age` branches. Parent-flagged load concerns do not influence the daily plan. | P0 | Open | `decisionFilters.ts`; `dailyPlan.ts` | parent trust, safeguarding |
+| RFL-035 | HammerChat is not grounded by the spine envelope (`projectEnvelope`); architecturally can contradict HammerDailyPlan. Same-session authority divergence risk. | P1 | Open | `useHammerChat` vs `buildHammerDailyPlan` | trust, authority coherence |
+| RFL-036 | Drill recommendations collapse into 4 legality sets across 9 personas (5 personas share a bucket). Repetition risk. | P1 | Open | `useDrillRecommendations`, `recommendDrills.ts` | recommendation quality, retention |
+| RFL-037 | Empty / partial / stale states across Dashboard, Workout/Drill recommendation surfaces, and Roadmap lack the canonical (explanation + next action + recovery) triplet. Only `HammerDailyPlan` blocks reliably exhibit it. | P1 | Open | Dashboard, rec hooks, roadmap | trust, retention |
+| RFL-038 | Returning-athlete staleness is invisible. Spine confidence/missingness degrades behind the scenes per FC global continuity, but no UI surface signals degraded confidence. | P1 | Open | All athlete surfaces | trust |
+| RFL-039 | Injured-athlete pain-self-report → next-plan suppression latency is unbounded. No real-time hand-off between pain capture and prescription gating. | P1 | Open | injury capture → `decisionFilters.ts` | safeguarding (RR-6 spirit) |
+| RFL-040 | No RTP-authorization surface. RR-6 requires explicit human authorization for return-to-play; current UI does not surface or block on it. | P1 | Open | (absence) | safeguarding |
+| RFL-041 | Athlete navigation is polluted by 100+ routes including `/admin`, `/owner/*`, `/ops/*`, `/runtime/*`. Cognitive overload + accidental engineering-surface navigation. | P1 | Open | `src/App.tsx:207-330` | usability, trust |
+| RFL-042 | `src/pages/Auth.tsx:90-167` post-login routing decided by a 4-table parallel query with no abort logic. Race-prone on slow networks. | P1 | Open | `Auth.tsx` | reliability |
+| RFL-043 | Parent-invite resolution at `src/pages/AcceptParentInvite.tsx:46-55` caps athlete-timeline lookup at 200 events. Silent failure for deep timelines. | P1 | Open | `AcceptParentInvite.tsx` | parent activation |
+
+**Launch verdict:** **NO-GO** until RFL-032 / RFL-033 / RFL-034 closed. After P0 remediation, expected to revert to **GO WITH KNOWN LIMITATIONS** (P1s as disclosed launch debt).
+
+See `docs/asb/launch-readiness-hostile-audit.md` for full evidence and rebuttals.
