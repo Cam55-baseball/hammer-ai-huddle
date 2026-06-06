@@ -574,6 +574,14 @@ export function useSpeedProgress(sport: SportType) {
     streakData,
     strideAnalytics,
 
+    // P0-3 RFL-030: spine-derived speed prescription
+    speedFocus: speedFocusDecision,
+    contextSessionFocus,
+    maxEffortAllowed,
+    recommendedReps,
+    contextSuppressions,
+    speedProjection,
+
     // Actions
     initializeJourney,
     startProgram,
