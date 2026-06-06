@@ -130,6 +130,37 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
             </div>
           );
         })}
+        {/* RFL-010 — explicit coach acknowledgement. Intentional action only, never page-render. */}
+        {!isSelf && user?.id && (
+          <div className="flex items-center justify-between border-t pt-2">
+            <span className="text-[10px] text-muted-foreground">
+              Acknowledge after reviewing this brief.
+            </span>
+            <Button
+              size="sm"
+              variant={acked ? "secondary" : "default"}
+              disabled={acked}
+              onClick={() => {
+                setAcked(true);
+                void emitObservability({
+                  topic: "foundation.recommendation.coach_ack",
+                  athleteId: aggregate.athlete_id,
+                  actorId: user.id,
+                  actorRole: "coach",
+                  lifetime: true,
+                  payload: {
+                    recommendation_kind: "hammer_brief",
+                    recommendation_id: brief.priority_fix.source_signal_id ?? "hammer_brief",
+                    coach_id: user.id,
+                    engine_version: brief.engine_version,
+                  },
+                });
+              }}
+            >
+              {acked ? "Acknowledged" : "Acknowledge brief"}
+            </Button>
+          </div>
+        )}
         <div className="text-[10px] text-muted-foreground border-t pt-1">
           engine_version {aggregate.engine_version} · RR-5 deterministic envelope · UHRC {brief.engine_version}
         </div>
