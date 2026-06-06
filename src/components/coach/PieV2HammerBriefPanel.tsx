@@ -29,6 +29,7 @@ interface Props {
 
 export function PieV2HammerBriefPanel({ aggregate }: Props) {
   const { user } = useAuth();
+  const [acked, setAcked] = useState(false);
   const isSelf = user?.id && aggregate.athlete_id === user.id;
   // RFL-004 — emit canonical intelligence.hammer.viewed once per
   // (actor, athlete) per day. Surface-level mount fires after the brief is computed.
