@@ -315,6 +315,7 @@ export function computeDrillRecommendations(
     detectedIssues = [],
     usageStats = [],
     userLevel,
+    athleteContext,
   } = input;
 
   if (!drills || drills.length === 0) {
@@ -324,8 +325,67 @@ export function computeDrillRecommendations(
   const excludeSet = new Set(excludeDrillIds);
   const usageMap = new Map(usageStats.map(u => [u.drillId, u]));
 
+  // P0-3: spine-driven legality filter. Pure / additive.
+  const contextLegal = (d: DrillInput): boolean => {
+    if (!athleteContext) return true;
+    const tags = [d.name, d.module, d.skill_target ?? "", ...(d.tags ?? [])];
+    // Inline imports avoided to prevent cycles — use predicate helpers.
+    const proj = athleteContext;
+    // Equipment
+    const eq = proj.equipment;
+    if (eq) {
+      const block: Record<string, ReadonlyArray<string>> = {
+        bodyweight: ["barbell", "trap_bar", "deadlift", "back_squat", "bench_press", "rack_pull", "kettlebell", "dumbbell"],
+        bands: ["barbell", "trap_bar", "deadlift", "back_squat", "bench_press"],
+        hotel: ["barbell", "trap_bar", "deadlift", "back_squat", "bench_press", "rack"],
+        home_gym: ["specialty_bar", "platform_drop"],
+        full_gym: [],
+      };
+      const blk = block[eq] ?? [];
+      const hay = tags.join(" ").toLowerCase();
+      if (blk.some((p) => hay.includes(p))) return false;
+    }
+    // Injury
+    if (proj.injuryRegions.length > 0) {
+      const blocked: Record<string, ReadonlyArray<string>> = {
+        shoulder: ["overhead_press", "snatch", "jerk", "max_throw"],
+        ucl: ["max_throw", "long_toss_max", "pull_down"],
+        elbow: ["max_throw", "weighted_ball_max"],
+        knee: ["max_jump", "depth_jump", "heavy_squat", "lunge_jump"],
+        ankle: ["sprint_max", "depth_jump", "lateral_bound_max"],
+        hamstring: ["sprint_max", "deadlift_max", "rdl_max"],
+        groin: ["lateral_bound_max", "lateral_lunge_heavy"],
+        back: ["deadlift_max", "good_morning_heavy", "back_squat_max"],
+        lumbar: ["deadlift_max", "good_morning_heavy"],
+      };
+      const hay = tags.join(" ").toLowerCase();
+      for (const r of proj.injuryRegions) {
+        const blk = blocked[r] ?? [];
+        if (blk.some((p) => hay.includes(p))) return false;
+      }
+    }
+    // Lifecycle (youth)
+    if (proj.lifecycleBand && ["u10", "u12", "u14"].includes(proj.lifecycleBand)) {
+      const blk = ["max_load", "1rm", "weighted_ball_max", "depth_jump_max", "pull_down"];
+      const hay = tags.join(" ").toLowerCase();
+      if (blk.some((p) => hay.includes(p))) return false;
+    }
+    return true;
+  };
+
+  const contextBoost = (d: DrillInput): number => {
+    if (!athleteContext) return 0;
+    const proj = athleteContext;
+    const hay = [d.name, d.module, d.skill_target ?? "", ...(d.tags ?? [])].join(" ").toLowerCase();
+    let b = 0;
+    for (const p of proj.developmentPriorities) if (hay.includes(p.toLowerCase())) b += 10;
+    if (proj.seasonPhase === "in" && hay.includes("max")) b -= 5;
+    if (proj.seasonPhase === "off" && hay.includes("volume")) b += 3;
+    return b;
+  };
+
   const eligible = drills.filter(
-    (d) => d.is_active && d.sport === sport && !excludeSet.has(d.id),
+    (d) => d.is_active && d.sport === sport && !excludeSet.has(d.id) && contextLegal(d),
   );
 
   if (eligible.length === 0) {
