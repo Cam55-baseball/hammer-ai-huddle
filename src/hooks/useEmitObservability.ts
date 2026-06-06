@@ -23,13 +23,22 @@ import {
 } from "@/lib/asb/engineVersion";
 
 export type ObservabilityTopic =
+  // Wave-1 (RFL-001…RFL-007 — sealed)
   | "athlete.lifecycle.signup"
   | "athlete.onboarding.completed"
   | "intelligence.uhrc.viewed"
   | "intelligence.hammer.viewed"
   | "intelligence.trend.viewed"
   | "coach.review.opened"
-  | "recruiter.review.opened";
+  | "recruiter.review.opened"
+  // Wave-2 — Recommendation Lifecycle (RFL-008/009/010)
+  | "foundation.recommendation.shown"
+  | "foundation.recommendation.opened"
+  | "foundation.recommendation.completed"
+  | "foundation.recommendation.coach_ack"
+  | "foundation.drill.assigned"
+  | "foundation.drill.started"
+  | "foundation.drill.completed";
 
 export type EmitActorRole = AsbEmitRow["actor_role"];
 

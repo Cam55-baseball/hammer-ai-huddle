@@ -8,6 +8,7 @@ import { useFoundationVideos } from '@/hooks/useFoundationVideos';
 import { FOUNDATION_LABELS, TRIGGER_REASONS, type FoundationTrigger } from '@/lib/foundationVideos';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { emitObservability } from '@/hooks/useEmitObservability';
 
 interface Props {
   /** When false, hide the shelf if there are no active triggers (avoid permanent clutter). */
@@ -47,6 +48,20 @@ export function FoundationsShelf({ showWhenIdle = false }: Props) {
         trigger_keys: r.matchedTriggers,
       })),
     );
+    // RFL-009 — canonical foundation.recommendation.shown (UTC-day bucketed per video).
+    fresh.forEach(r => {
+      void emitObservability({
+        topic: 'foundation.recommendation.shown',
+        athleteId: user.id,
+        actorId: user.id,
+        actorRole: 'athlete',
+        payload: {
+          recommendation_id: r.video.id,
+          surface: 'foundations_shelf',
+          triggers: r.matchedTriggers,
+        },
+      });
+    });
   }, [results, user]);
 
   if (loading) {
@@ -75,6 +90,14 @@ export function FoundationsShelf({ showWhenIdle = false }: Props) {
         .eq('user_id', user.id)
         .eq('video_id', videoId)
         .is('clicked_at', null);
+      // RFL-009 — canonical foundation.recommendation.opened (UTC-day bucketed).
+      void emitObservability({
+        topic: 'foundation.recommendation.opened',
+        athleteId: user.id,
+        actorId: user.id,
+        actorRole: 'athlete',
+        payload: { recommendation_id: videoId, surface: 'foundations_shelf' },
+      });
       try {
         new BroadcastChannel('data-sync').postMessage({ type: 'foundation_outcome' });
       } catch { /* noop */ }

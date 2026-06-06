@@ -7,8 +7,10 @@
  * detail). Hammer remains a translator, not an analyst — every field
  * carries lineage back to a source signal id.
  */
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { talkingPointsForSession } from "@/lib/pieV2/aiHammerTalkingPoints";
 import { PIE_V2_SIGNALS } from "@/data/baseball/pieV2Signals";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
@@ -17,7 +19,7 @@ import { recommendVideos } from "@/lib/pieV2/recommendVideos";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { generateHammerBrief } from "@/lib/uhrc/generateHammerBrief";
 import { useAuth } from "@/hooks/useAuth";
-import { useEmitOnce } from "@/hooks/useEmitObservability";
+import { useEmitOnce, emitObservability } from "@/hooks/useEmitObservability";
 import type { PieV2SessionAggregate } from "@/lib/pieV2/types";
 
 
@@ -27,6 +29,7 @@ interface Props {
 
 export function PieV2HammerBriefPanel({ aggregate }: Props) {
   const { user } = useAuth();
+  const [acked, setAcked] = useState(false);
   const isSelf = user?.id && aggregate.athlete_id === user.id;
   // RFL-004 — emit canonical intelligence.hammer.viewed once per
   // (actor, athlete) per day. Surface-level mount fires after the brief is computed.
@@ -127,6 +130,37 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
             </div>
           );
         })}
+        {/* RFL-010 — explicit coach acknowledgement. Intentional action only, never page-render. */}
+        {!isSelf && user?.id && (
+          <div className="flex items-center justify-between border-t pt-2">
+            <span className="text-[10px] text-muted-foreground">
+              Acknowledge after reviewing this brief.
+            </span>
+            <Button
+              size="sm"
+              variant={acked ? "secondary" : "default"}
+              disabled={acked}
+              onClick={() => {
+                setAcked(true);
+                void emitObservability({
+                  topic: "foundation.recommendation.coach_ack",
+                  athleteId: aggregate.athlete_id,
+                  actorId: user.id,
+                  actorRole: "coach",
+                  lifetime: true,
+                  payload: {
+                    recommendation_kind: "hammer_brief",
+                    recommendation_id: brief.priority_fix.source_signal_id ?? "hammer_brief",
+                    coach_id: user.id,
+                    engine_version: brief.engine_version,
+                  },
+                });
+              }}
+            >
+              {acked ? "Acknowledged" : "Acknowledge brief"}
+            </Button>
+          </div>
+        )}
         <div className="text-[10px] text-muted-foreground border-t pt-1">
           engine_version {aggregate.engine_version} · RR-5 deterministic envelope · UHRC {brief.engine_version}
         </div>

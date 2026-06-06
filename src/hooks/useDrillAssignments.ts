@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { emitObservability } from '@/hooks/useEmitObservability';
 
 export interface DrillAssignment {
   id: string;
@@ -117,6 +118,15 @@ export function useAssignDrill() {
         notes: notes || null,
       });
       if (error) throw error;
+
+      // RFL-008 — canonical foundation.drill.assigned (coach actor, athlete subject).
+      void emitObservability({
+        topic: 'foundation.drill.assigned',
+        athleteId: playerId,
+        actorId: user.id,
+        actorRole: 'coach',
+        payload: { drill_id: drillId, recommendation_id: drillId, has_notes: !!notes },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drill-assignments-coach'] });
@@ -129,11 +139,61 @@ export function useCompleteAssignment() {
 
   return useMutation({
     mutationFn: async (assignmentId: string) => {
+      // Fetch assignment context for canonical lineage (drill_id + player_id).
+      const { data: assignment } = await supabase
+        .from('drill_assignments')
+        .select('drill_id, player_id')
+        .eq('id', assignmentId)
+        .maybeSingle();
+
+      // RFL-008 — coarse foundation.drill.started signal at first-touch of completion mutation.
+      // Granularity is bounded by available UI surface (single-tap complete); documented as such.
+      if (assignment) {
+        void emitObservability({
+          topic: 'foundation.drill.started',
+          athleteId: assignment.player_id,
+          actorId: assignment.player_id,
+          actorRole: 'athlete',
+          payload: {
+            drill_id: assignment.drill_id,
+            recommendation_id: assignment.drill_id,
+            assignment_id: assignmentId,
+          },
+        });
+      }
+
       const { error } = await supabase
         .from('drill_assignments')
         .update({ completed: true, completed_at: new Date().toISOString() })
         .eq('id', assignmentId);
       if (error) throw error;
+
+      // RFL-008 — canonical foundation.drill.completed.
+      // RFL-009 — also emits foundation.recommendation.completed (drill sub-channel).
+      if (assignment) {
+        void emitObservability({
+          topic: 'foundation.drill.completed',
+          athleteId: assignment.player_id,
+          actorId: assignment.player_id,
+          actorRole: 'athlete',
+          payload: {
+            drill_id: assignment.drill_id,
+            recommendation_id: assignment.drill_id,
+            assignment_id: assignmentId,
+          },
+        });
+        void emitObservability({
+          topic: 'foundation.recommendation.completed',
+          athleteId: assignment.player_id,
+          actorId: assignment.player_id,
+          actorRole: 'athlete',
+          payload: {
+            recommendation_id: assignment.drill_id,
+            source: 'drill_assignment',
+            assignment_id: assignmentId,
+          },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drill-assignments-player'] });
