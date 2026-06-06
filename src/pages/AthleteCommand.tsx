@@ -8,13 +8,24 @@ import { NotificationBell } from "@/components/command/NotificationBell";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { RecentEventsPreview } from "@/components/command/cards/RecentEventsPreview";
 import { UhrcAthleteSection } from "@/components/report-card/UhrcAthleteSection";
+import { HammerOnboardingChat } from "@/components/hammer/HammerOnboardingChat";
+import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
+import { HammerChat } from "@/components/hammer/HammerChat";
 
 /**
- * Athlete Command Center deep-link route. Renders the same canonical
- * CommandCenterSection used inside /today (so spacing, TrustFooter, chip
- * styling and state semantics stay identical), plus the Recent activity
- * tail. Reads exclusively from the canonical ASB ledger via the shared
- * react-query cache key — no double network call.
+ * Athlete Command Center deep-link route. Canonical Coach Hammer surface.
+ *
+ * Mount order (Sprint: Coach Hammer Completion & Runtime Ratification §B):
+ *   1. HammerOnboardingChat      — self-hides when zero knowledge gaps remain
+ *   2. UhrcAthleteSection        — UHRC report card
+ *   3. CommandCenterSection      — organism readiness/fatigue/workload grid
+ *   4. HammerDailyPlan           — 9-modality daily prescription
+ *   5. HammerChat                — unified Ask-Coach surface
+ *   6. RecentEventsPreview       — replay tail
+ *
+ * All Hammer surfaces consume the single authority hooks
+ * (`useHammerNextStep`, `useHammerAthleteContext`,
+ * `useHammerOnboardingDirector`, `useHammerChat`) — no parallel arbitration.
  */
 export default function AthleteCommand() {
   const { user, loading: authLoading, isAuthStable } = useAuth();
@@ -34,16 +45,22 @@ export default function AthleteCommand() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6 space-y-4">
         <div className="flex items-center justify-end pt-4">
           <NotificationBell />
         </div>
+
+        <HammerOnboardingChat />
 
         <div className="mt-4">
           <UhrcAthleteSection />
         </div>
 
         <CommandCenterSection defaultSignalsOpen />
+
+        <HammerDailyPlan />
+
+        <HammerChat />
 
         <section className="mt-6">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
