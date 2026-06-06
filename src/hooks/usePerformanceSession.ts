@@ -134,6 +134,31 @@ export function usePerformanceSession() {
 
       if (error) throw error;
 
+      // PIE V2 — Advanced Mechanics capture (baseball pitching only).
+      // Drives capture → score → aggregate → emit → safeguard → persist
+      // via finalizePieV2Session. Additive; failures never break save.
+      if (
+        data.sport === 'baseball' &&
+        data.module === 'pitching' &&
+        hasAnyPieV2Field(data.pie_v2_micro_input)
+      ) {
+        try {
+          const reps = buildSessionRepsFromMicroInput({
+            session_id: session.id,
+            athlete_id: user.id,
+            value: data.pie_v2_micro_input!,
+          });
+          await finalizePieV2Session({
+            session_id: session.id,
+            athlete_id: user.id,
+            reps,
+          });
+        } catch (pieErr) {
+          console.error('[pieV2] finalize_failed', pieErr);
+        }
+      }
+
+
       // Smart daily log write
       const isGame = ['game', 'live_scrimmage'].includes(data.session_type);
       const cnsLoad = data.drill_blocks.reduce((sum: number, db: DrillBlock) => {
