@@ -1,10 +1,10 @@
 {
   "summary": {
-    "personas": 7,
-    "uniqueDailyPlans": 7,
-    "uniqueSpeedFoci": 3,
+    "personas": 9,
+    "uniqueDailyPlans": 9,
+    "uniqueSpeedFoci": 5,
     "uniqueDrillLegalSets": 4,
-    "uniqueRoadmapTops": 7
+    "uniqueRoadmapTops": 8
   },
   "evidence": [
     {
@@ -778,6 +778,219 @@
         {
           "id": "m-youth-skill",
           "score": 16,
+          "suppressed": true
+        }
+      ]
+    },
+    {
+      "name": "hamstring-injured-sprinter",
+      "projection": {
+        "equipment": "full_gym",
+        "equipmentScope": null,
+        "injury": "right hamstring strain — no max sprints",
+        "injuryRegions": [
+          "hamstring"
+        ],
+        "liftingAgeYears": 4,
+        "lifecycleBand": "adult",
+        "seasonPhase": "pre",
+        "developmentPriorities": [
+          "speed"
+        ],
+        "weeklyAvailabilityDays": 4,
+        "goalSummary": "return to sprint",
+        "goalHorizon": null,
+        "readinessScore": null,
+        "workloadHigh": false,
+        "asymmetryPct": null,
+        "speedFreshness": null,
+        "missing": []
+      },
+      "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:18:Speed — tempo recovery|strength:ready:50:Strength — injury-modified · priority:speed|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — OF|baserunning:ready:10:Baserunning — IQ only (leg-protected)|fueling:ready:n:Fueling|recovery:ready:30:Recovery — injury-aware",
+      "speedFocus": {
+        "focus": "tempo_recovery",
+        "rationale": "injury (hamstring) — max-effort sprints suppressed",
+        "maxEffortAllowed": false,
+        "recommendedReps": 4
+      },
+      "drillsLegal": [
+        "d-bw-squat",
+        "d-bench-max",
+        "d-band-row",
+        "d-max-throw",
+        "d-depth-jump-max",
+        "d-tempo-run",
+        "d-trap-bar"
+      ],
+      "drillsRanked": [
+        {
+          "id": "d-bw-squat",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-bench-max",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-band-row",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-max-throw",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-depth-jump-max",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-tempo-run",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-trap-bar",
+          "boost": 0,
+          "reasons": []
+        }
+      ],
+      "roadmapTop": [
+        {
+          "id": "m-base",
+          "score": -1,
+          "suppressed": false
+        },
+        {
+          "id": "m-recover",
+          "score": -3,
+          "suppressed": false
+        },
+        {
+          "id": "m-youth-skill",
+          "score": -2,
+          "suppressed": true
+        },
+        {
+          "id": "m-max",
+          "score": -5,
+          "suppressed": true
+        },
+        {
+          "id": "m-throw-max",
+          "score": -6,
+          "suppressed": true
+        }
+      ]
+    },
+    {
+      "name": "asymmetric-adult",
+      "projection": {
+        "equipment": "full_gym",
+        "equipmentScope": null,
+        "injury": null,
+        "injuryRegions": [],
+        "liftingAgeYears": 5,
+        "lifecycleBand": "adult",
+        "seasonPhase": "pre",
+        "developmentPriorities": [
+          "speed",
+          "power"
+        ],
+        "weeklyAvailabilityDays": 5,
+        "goalSummary": "fix asymmetry",
+        "goalHorizon": null,
+        "readinessScore": null,
+        "workloadHigh": false,
+        "asymmetryPct": 14,
+        "speedFreshness": null,
+        "missing": []
+      },
+      "dailyPlanFingerprint": "warmup:ready:12:Dynamic warm-up|speed:ready:22:Speed — unilateral symmetry|strength:ready:50:Strength — pre-season strength · priority:speed|hitting:ready:35:Hitting|throwing:ready:25:Throwing|defense:ready:25:Defense — SS|baserunning:ready:15:Baserunning IQ|fueling:ready:n:Fueling|recovery:ready:20:Recovery",
+      "speedFocus": {
+        "focus": "unilateral_symmetry",
+        "rationale": "asymmetry 14.0% > 10% — unilateral focus",
+        "maxEffortAllowed": true,
+        "recommendedReps": 6
+      },
+      "drillsLegal": [
+        "d-bw-squat",
+        "d-bench-max",
+        "d-band-row",
+        "d-max-throw",
+        "d-depth-jump-max",
+        "d-tempo-run",
+        "d-trap-bar"
+      ],
+      "drillsRanked": [
+        {
+          "id": "d-bw-squat",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-bench-max",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-band-row",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-max-throw",
+          "boost": 10,
+          "reasons": [
+            "priority+power"
+          ]
+        },
+        {
+          "id": "d-depth-jump-max",
+          "boost": 10,
+          "reasons": [
+            "priority+power"
+          ]
+        },
+        {
+          "id": "d-tempo-run",
+          "boost": 0,
+          "reasons": []
+        },
+        {
+          "id": "d-trap-bar",
+          "boost": 0,
+          "reasons": []
+        }
+      ],
+      "roadmapTop": [
+        {
+          "id": "m-throw-max",
+          "score": 24,
+          "suppressed": false
+        },
+        {
+          "id": "m-base",
+          "score": -1,
+          "suppressed": false
+        },
+        {
+          "id": "m-recover",
+          "score": -3,
+          "suppressed": false
+        },
+        {
+          "id": "m-max",
+          "score": -5,
+          "suppressed": false
+        },
+        {
+          "id": "m-youth-skill",
+          "score": -2,
           "suppressed": true
         }
       ]
