@@ -19,6 +19,13 @@ import {
   calculateReadiness,
   getBestTime,
 } from '@/data/speedLabProgram';
+// P0-3 RFL-030: spine projection drives speed prescription.
+import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
+import {
+  projectEnvelope,
+  selectSpeedFocus,
+  type SpeedFocusDecision,
+} from '@/lib/hammer/context/decisionFilters';
 
 export interface SpeedSession {
   id: string;
