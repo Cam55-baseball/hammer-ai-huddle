@@ -207,6 +207,48 @@ export function isLifecycleLegal(
   return !YOUTH_BLOCKED.some((p) => haystack.includes(p));
 }
 
+/* ── Minor-athlete + parent-supremacy legality (RFL-034) ─────────────────── */
+
+// High-risk patterns for any minor, regardless of parent concerns.
+const MINOR_HIGH_RISK = [
+  "max_load", "1rm", "weighted_ball_max", "depth_jump_max", "pull_down",
+  "max_throw", "heavy_squat", "back_squat_max", "deadlift_max",
+];
+
+// Parent-concern token → blocked drill patterns.
+const PARENT_CONCERN_PATTERNS: Record<string, ReadonlyArray<string>> = {
+  arm_load: ["max_throw", "weighted_ball", "long_toss_max", "pull_down"],
+  speed_max: ["sprint_max", "max_velocity"],
+  heavy_lift: ["max_load", "1rm", "heavy_squat", "deadlift_max", "back_squat_max"],
+  jump_load: ["depth_jump", "depth_jump_max", "max_jump"],
+  contact: ["collision", "contact"],
+};
+
+export function isMinorParentLegal(
+  drillTagsOrName: ReadonlyArray<string>,
+  proj: Pick<AthleteContextProjection, "isMinor" | "parentConcerns" | "parentSupremacyActive">,
+): { legal: boolean; reasons: ReadonlyArray<string> } {
+  const reasons: string[] = [];
+  // Missingness-permissive: unknown minor status → adult prescription.
+  if (proj.isMinor !== true) return { legal: true, reasons };
+
+  const hay = drillTagsOrName.join(" ").toLowerCase();
+  // Baseline minor protection — superset of YOUTH_BLOCKED, applies to all minors.
+  if (MINOR_HIGH_RISK.some((p) => hay.includes(p))) {
+    reasons.push("minor:high-risk");
+    return { legal: false, reasons };
+  }
+  // Parent-flagged concerns add additional patterns.
+  for (const concern of proj.parentConcerns) {
+    const pats = PARENT_CONCERN_PATTERNS[concern] ?? [];
+    if (pats.some((p) => hay.includes(p))) {
+      reasons.push(`minor:parent-concern:${concern}`);
+      return { legal: false, reasons };
+    }
+  }
+  return { legal: true, reasons };
+}
+
 /* ── Composite legality + priority rerank ────────────────────────────────── */
 
 export interface ContextFilterDecision<T> {
