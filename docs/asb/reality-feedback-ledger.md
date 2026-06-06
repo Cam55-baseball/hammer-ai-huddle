@@ -72,3 +72,15 @@ See `docs/asb/coach-hammer-final-ratification.md` for the full ratification.
 
 See `docs/asb/coach-hammer-runtime-ratification.md` for the full runtime ratification.
 
+
+## RFL openings — Coach Hammer Production Reality Validation Sprint (2026-06-06)
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| RFL-020 | Prior sprint never added the 9 coaching columns to `profiles`; onboarding answers have nowhere to persist. | H | Open |
+| RFL-021 | Mounted Hammer surfaces emit zero events against the 16 registered Hammer topics — 0 hammer/onboarding/next_step/prescription events ever recorded. | H | Open |
+| RFL-022 | Hammer surfaces emit no route-transition events; Section G confusion detection is structurally unmeasurable. | M | Open |
+
+**Production reality scorecard:** Adoption 0% · Utilization 0% · Completion 0% · Guidance 0% · Conversation 0% → Overall **0/100**.
+
+**Verdict:** Coach Hammer architectural GO is unchanged; production-reality **NO-GO**. Workstream **OPEN**. See `docs/asb/coach-hammer-production-reality-validation.md`.
