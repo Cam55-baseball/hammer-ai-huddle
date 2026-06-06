@@ -3,6 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { finalizePieV2Session } from '@/lib/pieV2/finalizeSession';
+import {
+  buildSessionRepsFromMicroInput,
+  hasAnyPieV2Field,
+  type PitchingV2MicroInputValue,
+} from '@/lib/pieV2/buildSessionReps';
 
 export interface DrillBlock {
   id: string;
@@ -81,6 +87,13 @@ export function usePerformanceSession() {
     fatigue_state?: any;
     micro_layer_data?: any;
     link_code?: string;
+    /**
+     * Optional PIE V2 Advanced Mechanics panel value (baseball pitching only).
+     * When present, drives the PIE V2 capture → score → aggregate → emit →
+     * safeguard → persist chain via `finalizePieV2Session`. Replay-safe;
+     * additive; failures never break legacy save.
+     */
+    pie_v2_micro_input?: PitchingV2MicroInputValue;
   }) => {
     setSaving(true);
     try {
@@ -120,6 +133,31 @@ export function usePerformanceSession() {
         .single();
 
       if (error) throw error;
+
+      // PIE V2 — Advanced Mechanics capture (baseball pitching only).
+      // Drives capture → score → aggregate → emit → safeguard → persist
+      // via finalizePieV2Session. Additive; failures never break save.
+      if (
+        data.sport === 'baseball' &&
+        data.module === 'pitching' &&
+        hasAnyPieV2Field(data.pie_v2_micro_input)
+      ) {
+        try {
+          const reps = buildSessionRepsFromMicroInput({
+            session_id: session.id,
+            athlete_id: user.id,
+            value: data.pie_v2_micro_input!,
+          });
+          await finalizePieV2Session({
+            session_id: session.id,
+            athlete_id: user.id,
+            reps,
+          });
+        } catch (pieErr) {
+          console.error('[pieV2] finalize_failed', pieErr);
+        }
+      }
+
 
       // Smart daily log write
       const isGame = ['game', 'live_scrimmage'].includes(data.session_type);

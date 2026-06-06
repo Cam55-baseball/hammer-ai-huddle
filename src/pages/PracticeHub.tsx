@@ -24,6 +24,8 @@ import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSe
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
+import { PitchingV2MicroInput } from '@/components/micro-layer/PitchingV2MicroInput';
+import type { PitchingV2MicroInputValue } from '@/lib/pieV2/buildSessionReps';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Loader2, Video, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -104,6 +106,9 @@ export default function PracticeHub() {
 
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
+
+  // PIE V2 — Advanced Mechanics panel state (baseball pitching only).
+  const [pieV2MicroInput, setPieV2MicroInput] = useState<PitchingV2MicroInputValue>({});
 
   // Live rep broadcast for linked sessions
   const { partnerReps, broadcastRep, broadcastRemoveRep } = useLiveRepBroadcast({
@@ -269,7 +274,8 @@ export default function PracticeHub() {
     setSessionType(null);
     setSessionConfig(null);
     setReps([]);
-    
+    setPieV2MicroInput({});
+
     setNotes('');
     setSavedSessionId(null);
     setLinkAttachError(null);
@@ -376,6 +382,10 @@ export default function PracticeHub() {
         },
         link_code: sessionConfig.link_code,
         micro_layer_data: reps.length > 0 ? reps : undefined,
+        pie_v2_micro_input:
+          sportKey === 'baseball' && activeModule === 'pitching'
+            ? pieV2MicroInput
+            : undefined,
       });
 
       // Attach session to link state machine (handles bidirectional linking atomically)
@@ -585,6 +595,14 @@ export default function PracticeHub() {
                       reps={reps}
                       onRepsChange={handleRepsChange}
                       sessionConfig={sessionConfig}
+                    />
+                  )}
+
+                  {/* PIE V2 — Advanced Mechanics (baseball pitching only). */}
+                  {sportKey === 'baseball' && activeModule === 'pitching' && (
+                    <PitchingV2MicroInput
+                      value={pieV2MicroInput}
+                      onChange={setPieV2MicroInput}
                     />
                   )}
 

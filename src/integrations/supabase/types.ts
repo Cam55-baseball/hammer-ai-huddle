@@ -4517,6 +4517,7 @@ export type Database = {
           development_confidence: number | null
           development_status: string
           drill_effectiveness: Json | null
+          hitting_doctrine: Json | null
           id: string
           movement_efficiency_score: number | null
           mpi_score: number | null
@@ -4547,6 +4548,7 @@ export type Database = {
           development_confidence?: number | null
           development_status?: string
           drill_effectiveness?: Json | null
+          hitting_doctrine?: Json | null
           id?: string
           movement_efficiency_score?: number | null
           mpi_score?: number | null
@@ -4577,6 +4579,7 @@ export type Database = {
           development_confidence?: number | null
           development_status?: string
           drill_effectiveness?: Json | null
+          hitting_doctrine?: Json | null
           id?: string
           movement_efficiency_score?: number | null
           mpi_score?: number | null

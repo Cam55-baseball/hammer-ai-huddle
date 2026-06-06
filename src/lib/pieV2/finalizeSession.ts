@@ -20,6 +20,7 @@
 import { aggregateSession } from "./aggregate";
 import { emitPieV2SessionAggregate, emitPieV2ArmHealthCaution } from "./emit";
 import { deriveInjuryCaution } from "./injuryDetection";
+import { persistPieV2Session } from "./persistSession";
 import type { PieV2RepInput, PieV2SessionAggregate } from "./types";
 import type { PieV2InjuryCaution } from "./injuryDetection";
 
@@ -31,12 +32,22 @@ export interface FinalizeSessionInput {
   recent_aggregates?: PieV2SessionAggregate[];
   computed_at?: string;
   parent_aggregate_event_id?: string;
+  /**
+   * When true (default), project the aggregate + caution onto the read-side
+   * columns. Tests pass `false` to keep the function pure.
+   */
+  persist?: boolean;
 }
 
 export interface FinalizeSessionResult {
   aggregate: PieV2SessionAggregate;
   caution: PieV2InjuryCaution;
   caution_emitted: boolean;
+  persisted?: {
+    signals_written: boolean;
+    caution_written: boolean;
+    caution_cleared: boolean;
+  };
 }
 
 export async function finalizePieV2Session(
@@ -72,5 +83,16 @@ export async function finalizePieV2Session(
     caution_emitted = true;
   }
 
-  return { aggregate, caution, caution_emitted };
+  // 3) Replay-safe projection onto read-side columns.
+  let persisted: FinalizeSessionResult["persisted"];
+  if (input.persist !== false) {
+    persisted = await persistPieV2Session({
+      session_id: input.session_id,
+      athlete_id: input.athlete_id,
+      aggregate,
+      caution,
+    });
+  }
+
+  return { aggregate, caution, caution_emitted, persisted };
 }

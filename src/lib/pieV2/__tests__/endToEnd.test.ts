@@ -102,6 +102,7 @@ describe("PIE V2 runtime end-to-end (Section 2.1 / 2.3 / 2.4)", () => {
       reps,
       recent_aggregates: [],
       computed_at: "2026-06-04T12:30:00.000Z",
+      persist: false,
     });
 
     // Aggregate has populated signals + composite.
@@ -134,6 +135,7 @@ describe("PIE V2 runtime end-to-end (Section 2.1 / 2.3 / 2.4)", () => {
       athlete_id: "ath-pain-1",
       reps,
       computed_at: "2026-06-04T13:00:00.000Z",
+      persist: false,
     });
 
     expect(result.caution.level).toBe("watch");
@@ -190,6 +192,7 @@ describe("PIE V2 runtime end-to-end (Section 2.1 / 2.3 / 2.4)", () => {
       athlete_id: "ath-elev-1",
       reps,
       computed_at: "2026-06-04T14:00:00.000Z",
+      persist: false,
     });
 
     expect(result.caution.level).toBe("elevated");
@@ -209,6 +212,7 @@ describe("PIE V2 runtime end-to-end (Section 2.1 / 2.3 / 2.4)", () => {
       athlete_id: "ath-replay",
       reps,
       computed_at: "2026-06-04T15:00:00.000Z",
+      persist: false,
     });
     const firstRun = captured.slice();
     captured.length = 0;
@@ -218,6 +222,7 @@ describe("PIE V2 runtime end-to-end (Section 2.1 / 2.3 / 2.4)", () => {
       athlete_id: "ath-replay",
       reps,
       computed_at: "2026-06-04T15:00:00.000Z",
+      persist: false,
     });
     const secondRun = captured.slice();
 
