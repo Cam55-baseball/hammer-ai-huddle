@@ -85,20 +85,20 @@ export async function writeSessionEquipment(
   const endOfDay = new Date();
   endOfDay.setUTCHours(23, 59, 59, 999);
   // Upsert via unique (user_id, scope) for session.
-  const { error } = await supabase
-    .from("athlete_equipment_context")
-    .upsert(
-      {
-        user_id: userId,
-        scope: "session",
-        equipment,
-        venue,
-        valid_until: endOfDay.toISOString(),
-        source,
-        confidence: "self_report",
-      },
-      { onConflict: "user_id,scope" },
-    );
+  const { error } = await (supabase.from("athlete_equipment_context") as unknown as {
+    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+  }).upsert(
+    {
+      user_id: userId,
+      scope: "session",
+      equipment,
+      venue,
+      valid_until: endOfDay.toISOString(),
+      source,
+      confidence: "self_report",
+    },
+    { onConflict: "user_id,scope" },
+  );
   if (error) throw new Error(error.message);
 }
 
@@ -109,19 +109,19 @@ export async function writePersistentEquipment(
   venue: Venue | string | null,
   source: string,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("athlete_equipment_context")
-    .upsert(
-      {
-        user_id: userId,
-        scope: "persistent",
-        equipment,
-        venue,
-        valid_until: null,
-        source,
-        confidence: "self_report",
-      },
-      { onConflict: "user_id,scope" },
-    );
+  const { error } = await (supabase.from("athlete_equipment_context") as unknown as {
+    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+  }).upsert(
+    {
+      user_id: userId,
+      scope: "persistent",
+      equipment,
+      venue,
+      valid_until: null,
+      source,
+      confidence: "self_report",
+    },
+    { onConflict: "user_id,scope" },
+  );
   if (error) throw new Error(error.message);
 }
