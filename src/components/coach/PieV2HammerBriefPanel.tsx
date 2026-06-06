@@ -16,14 +16,39 @@ import { recommendDrills } from "@/lib/pieV2/recommendDrills";
 import { recommendVideos } from "@/lib/pieV2/recommendVideos";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { generateHammerBrief } from "@/lib/uhrc/generateHammerBrief";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmitOnce } from "@/hooks/useEmitObservability";
 import type { PieV2SessionAggregate } from "@/lib/pieV2/types";
+
 
 interface Props {
   aggregate: PieV2SessionAggregate;
 }
 
 export function PieV2HammerBriefPanel({ aggregate }: Props) {
-  // Canonical UHRC-derived brief.
+  const { user } = useAuth();
+  const isSelf = user?.id && aggregate.athlete_id === user.id;
+  // RFL-004 — emit canonical intelligence.hammer.viewed once per
+  // (actor, athlete) per day. Surface-level mount fires after the brief is computed.
+  useEmitOnce(
+    user?.id
+      ? `hammer:${user.id}:${aggregate.athlete_id}`
+      : null,
+    user?.id
+      ? {
+          topic: "intelligence.hammer.viewed",
+          athleteId: aggregate.athlete_id,
+          actorId: user.id,
+          actorRole: isSelf ? "athlete" : "coach",
+          payload: {
+            surface: "pie_v2_hammer_brief",
+            engine_version: aggregate.engine_version,
+          },
+        }
+      : null,
+  );
+
+
   const uhrc = buildUhrcReport({
     athlete_id: aggregate.athlete_id,
     disciplines: ["pitching"],
