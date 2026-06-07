@@ -1,109 +1,89 @@
-# Onboarding Authority & Context Acquisition Optimization — Plan
+# Command Center Authority & Closed-Loop Intelligence Audit
 
-Pure documentation/analysis sprint. No code, schema, events, or doctrine changes. Builds directly on RFL-051…RFL-060 produced by the prior remediation sprint.
+Pure documentation/audit sprint. **No** runtime code, schema, doctrine, UI, or component changes. Findings only.
 
-## Scope discipline
+## Scope (route `/command` → `src/pages/AthleteCommand.tsx`)
 
-- No new onboarding questions added.
-- No removal of existing onboarding questions.
-- No schema or spine mutation.
-- No HammerOnboardingChat / OnboardingFlow / ProgressiveDisclosureStepper changes.
-- Output is a canonical authority-classification model used to govern future V1.x onboarding proposals.
+Surfaces mounted, in order:
+1. `NotificationBell`
+2. `HammerOnboardingChat`
+3. `UhrcAthleteSection` (Universal Hammer Report Card)
+4. `CommandCenterSection` (Readiness, Fatigue, Recovery, Workload, Behavioral Regulation, Scheduling Load, Trend Shifts, Escalation Flags)
+5. `HammerDailyPlan` (9-modality daily prescription)
+6. `HammerChat` (Ask-Coach)
+7. `RecentEventsPreview` (replay tail)
 
 ## Deliverables
 
-1. **`docs/asb/onboarding-authority-optimization.md`** (new) — canonical context authority model.
-2. **`docs/asb/reality-feedback-ledger.md`** — append RFL entries for any newly-surfaced authority/activation tradeoffs identified during analysis (no re-opening of closed RFLs).
-3. **`.lovable/plan.md`** — append execution note recording sprint completion, scope, and that no runtime artifacts changed.
+1. **`docs/asb/command-center-authority-audit.md`** (new) — sections A–I below.
+2. **`docs/asb/reality-feedback-ledger.md`** — append findings as RFL entries (P0 broken loops / P1 traceability gaps / P2 IA + zero-knowledge clarifications). Ratification entry for the audit itself as CLOSED-as-doctrine-reference.
+3. **`.lovable/plan.md`** — execution note + exit-criteria mapping.
 
-## Source material (read-only)
+## Audit document structure
 
-- `docs/asb/onboarding-reality-validation-remediation.md` — Sections C–G gap analysis, RFL-053…RFL-060.
-- `docs/asb/athlete-context-spine-constitution.md` and gap-analysis — canonical spine.
-- `docs/asb/onboarding-production-audit.md` — current onboarding shape.
-- `src/pages/OnboardingFlow.tsx`, `src/components/onboarding/*`, `src/components/hammer/HammerOnboardingChat.tsx`, `src/hooks/useHammerOnboardingDirector.ts`, `src/lib/hammer/context/*` — for current acquisition surface + duration audit.
-- `src/lib/runtime/relational/onboardingBootstrap.ts` — relational primitive entry.
+### Section A — Card inventory
+Table with one row per Command Center card (all `src/components/command/cards/*` + Hammer surfaces + UHRC + Onboarding chat + Recent events). Columns:
+- Purpose
+- Authority source (hook / ASB topic / projection)
+- Intended athlete action
+- Destination (route / surface)
+- Completion path
+- Feedback path (event emission, `asb_events` topic)
+- Organism update path (which projections refresh)
+- **Loop status**: COMPLETE / PARTIAL / BROKEN
 
-No mutations to any of these files.
+### Section B — Answer Hammer audit
+Trace every actionable affordance in `HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat`, `EscalationBanner`, card CTAs, `LineageDrilldownButton`, `NotificationBell`. For each:
+- click handler present
+- routing target valid
+- state update fired
+- persistence path (Supabase / event)
+- feedback recorded
+List **dead actions** (clicks with no response) as P0.
 
-## Structure of `onboarding-authority-optimization.md`
+### Section C — Recommendation traceability
+For each recommendation source (daily plan modalities, readiness pill, fatigue/recovery cards, behavioral regulation, escalation flags, UHRC grade) document:
+- source signals (ledger topics)
+- decision logic (file:line)
+- confidence source
+- timing rationale
+- Athlete-legible **Why this / Why now / Why me** — present, partial, or absent.
 
-### Section A — Context Inventory
-Enumerate every field currently collected during onboarding (spine + supplemental). For each field, record:
-- Current acquisition point (step / chat turn / deferred)
-- Constitutional authority class (organism truth / interpretive / personalization seasoning)
-- Consumer dependency (daily plan, first recommendation, first roadmap, longitudinal only)
-- Classification: **Required Before First Daily Plan / Required Before First Recommendation / Required Before First Roadmap / Post-Onboarding / Inferable**
+### Section D — Action completion loops
+Per recommendation: Recommendation → Destination → Execution surface → Result logging → Organism update. List broken loops, prioritize P0/P1/P2 by athlete impact.
 
-Cross-reference RFL-053…RFL-060 candidate fields (primary/secondary position, competition level, development stage, training experience, training continuity, anthropometrics, other sports).
+### Section E — Schedule authority
+Audit whether `calendar_events`, `games`, `scheduled_practice_sessions`, `game_plan_*` tables flow into Command Center recommendations. Document gap + list recommendations operating without schedule awareness.
 
-### Section B — Position Authority
-Evaluate `primary_position` and `secondary_positions` against:
-- Recommendation dependency (does Hammer's first recommendation degrade meaningfully without it?)
-- Workload dependency (does workload calibration require position?)
-- Roadmap dependency (does roadmap path branch on position?)
+### Section F — Personalization authority
+For each surface: position-aware? sport-aware? development-stage-aware? competition-level-aware? Classify **GENERIC** vs **ORGANISM-SPECIFIC**.
 
-Classify each as **Required / Deferred / Inferable** with explicit authority justification. Expectation: primary = Required (Tier 1); secondary = Deferred (Tier 2).
+### Section G — UHRC authority
+Audit `UhrcAthleteSection` / `UhrcReportCard`:
+- which athlete it represents
+- signals consumed
+- should branch by sport? by position?
+- recommendation (keep universal / branch / hybrid)
 
-### Section C — Competition Level Authority
-Evaluate `{ recreational, travel, high_school, varsity, college, professional }`. Determine whether competition level is needed before first prescription or whether a safe organism default (development-stage-derived) suffices. Expectation: Deferred (Tier 2), inferable from development_stage + age signal.
+### Section H — Information architecture
+Evaluate canonical home for Weekly Digest, Forecast, Body Status: Command Center vs Progress Dashboard. Recommend placement + rationale (cross-reference current mount points).
 
-### Section D — Training History Authority
-Evaluate training age, detraining history, current consistency. Establish **minimum viable acquisition model** — which single field, if collected, unlocks the most prescription legality at lowest activation cost. Expectation: current consistency = Tier 1 lightweight signal; training age = Tier 2; detraining history = Tier 3 (longitudinal observation supersedes self-report).
+### Section I — Zero-knowledge athlete test
+For each card answer 5 questions (knows what / why matters / what to do / where to go / how to complete). Flag ambiguity as P1/P2 RFL entries with recommended copy/affordance fix (documented only, not applied).
 
-### Section E — Anthropometric Authority
-Review height, weight, wingspan, limb lengths, body composition. Classify by:
-- Required (none for first prescription)
-- Useful (height, weight — Tier 2)
-- Trust-gated (wingspan, limb lengths, body composition — Tier 3/4, post-trust)
+## Exit-criteria mapping
 
-Document that anthropometrics never block activation.
+| Exit criterion | Covered by |
+|---|---|
+| Every card has documented authority source | Section A |
+| Every action has completion loop | Sections A, B, D |
+| Every recommendation has traceability | Section C |
+| Navigation dead ends identified | Section B |
+| Personalization gaps identified | Sections F, G |
+| Validated for zero-knowledge athletes | Section I |
 
-### Section F — Onboarding Length Audit
-Measure current onboarding duration (step count, estimated time-on-task from existing flow). Estimate marginal cost per RFL-053…RFL-060 candidate. Identify the **activation risk ceiling** — the point at which added context degrades completion more than it improves personalization.
+## Constraints
 
-### Section G — Recommended Acquisition Strategy
-Four-tier canonical model:
-- **Tier 1 — Required before activation**: sport (already), primary position, current consistency signal, injury baseline (already), development stage (lightweight).
-- **Tier 2 — First-week acquisition**: secondary positions, competition level, training age, height/weight.
-- **Tier 3 — Longitudinal acquisition**: detraining history, other sports, training continuity refinement.
-- **Tier 4 — Advanced organism profiling**: wingspan, limb lengths, body composition — trust-gated, opt-in.
-
-Each tier entry cites the authority justification and the consumer it unlocks.
-
-### Section H — Governance Rule
-State the canonical rule: **no onboarding expansion may occur without (a) demonstrated authority value for a named consumer, (b) tier classification, (c) activation-cost estimate, (d) RFL link.**
-
-## RFL updates
-
-Append to `docs/asb/reality-feedback-ledger.md`:
-- **RFL-061** — Canonical onboarding authority model ratified (this sprint). Status: CLOSED-as-doctrine-reference.
-- Any new authority/activation tradeoff observations surfaced during the length audit (e.g., if HammerOnboardingChat already collects a Tier 3+ field that should be deferred). OPEN, P2.
-
-No re-opening of RFL-051/052 (resolved) or RFL-053…RFL-060 (each gets a tier assignment cross-reference added).
-
-## `.lovable/plan.md`
-
-Append a short execution note: sprint name, deliverable paths, scope (documentation-only, no runtime artifacts), and confirmation that exit criteria are met.
-
-## Exit criteria mapping
-
-- Canonical onboarding context model exists → `onboarding-authority-optimization.md` Sections A + G.
-- No onboarding expansion without demonstrated authority value → Section H governance rule.
-- Activation protected → Section F length audit + Tier 1 minimality.
-- Personalization capability increases → Tier 2–4 acquisition roadmap.
-
----
-
-## Execution note — 2026-06-07
-
-**Sprint:** Onboarding Authority & Context Acquisition Optimization — completed.
-
-**Deliverables shipped:**
-- `docs/asb/onboarding-authority-optimization.md` — canonical four-tier authority model (Sections A–H).
-- `docs/asb/reality-feedback-ledger.md` — RFL-061 (model ratified, CLOSED-as-reference), RFL-062 (school_grade replacement note, Open P0), RFL-063 (chat ordering re-prioritization, Open P2), plus tier-classification mapping table for RFL-053…RFL-060.
-- `.lovable/plan.md` — this note.
-
-**Scope:** Documentation only. Zero runtime artifacts modified — no code, schema, ASB topics, spine, event fabric, doctrine, or UI changes. `HAMMER_KNOWLEDGE_GAPS`, `ONBOARDING_VOICE`, `OnboardingFlow`, `HammerOnboardingChat`, and the Athlete Context Spine are untouched.
-
-**Exit criteria:** All four met — canonical model exists (Sections A + G); governance rule against unjustified expansion established (Section H); activation protected via Tier 1 +30s ceiling rule (Section F); personalization roadmap defined for Tiers 2–4.
+- Documentation only. No code, schema, event, doctrine, or copy changes.
+- All findings routed through RFL with priority + recommended-but-deferred fixes.
+- Subordinate to all sealed Eternal Laws and prior invariants — audit is interpretive, never authoritative over organism truth.
