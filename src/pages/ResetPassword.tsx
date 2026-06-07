@@ -44,7 +44,8 @@ const ResetPassword = () => {
           title: t('resetPassword.success.title'),
           description: t('resetPassword.success.description'),
         });
-        navigate("/dashboard", { replace: true });
+        // RFL-053 — canonical athlete home is /command.
+        navigate("/command", { replace: true });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
