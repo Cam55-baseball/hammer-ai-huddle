@@ -82,12 +82,12 @@ export default function DrillLibraryPlayer() {
 
   return (
     <DashboardLayout>
-      <SubscriptionGate requiredAccess="any" featureName="Drill Library" featureDescription="Browse defensive drills tailored to your position and skill level.">
+      <SubscriptionGate requiredAccess="any" featureName="Defensive Drill Library" featureDescription="Browse defensive drills tailored to your position and skill level.">
         <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
             <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Drill Library</h1>
+            <h1 className="text-2xl font-bold text-foreground">Defensive Drill Library</h1>
           </div>
 
           {/* Filters bar */}
