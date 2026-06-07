@@ -1,24 +1,38 @@
 # Plan — Hammers Modality
 
-## Current status (2026-06-07, post RFL-053)
+## Current status (2026-06-07, post Final Production Release Verification)
 
-**Launch verdict: GO WITH LIMITATIONS**
+**Launch verdict: RELEASE AUTHORIZED** — Hammers Modality V1 is ratified for public athlete use.
 
-P0 launch blockers — all closed:
-- RFL-032 (onboarding bypass) — closed by ledger-truth gate in `Auth.tsx`.
-- RFL-033 (`compute-hammer-state` boot failure) — closed by deduping `getSeasonProfile` in `_shared/seasonPhase.ts`.
-- RFL-034 (minor-athlete supremacy not enforced) — closed in `decisionFilters.ts` + `dailyPlan.ts`.
-- RFL-053 (athlete-home duality) — closed by routing all post-login / post-onboarding / post-reset flows to `/command`. `/dashboard` retained as module catalog only.
+See:
+- `docs/asb/final-production-release-verification.md` — disproof attempt + verdict
+- `docs/asb/hammers-modality-v1-ratification.md` — V1 ratification, constitutional completion, V2 inventory
 
-Canonical athlete home: **`/command`** (`src/pages/AthleteCommand.tsx`). Sole surface mounting `HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat`, `UhrcAthleteSection`, `CommandCenterSection`, `RecentEventsPreview`.
+### Closed P0 blockers
+- RFL-032 (onboarding bypass) — `Auth.tsx` ledger-truth gate
+- RFL-033 (`compute-hammer-state` boot failure) — `_shared/seasonPhase.ts` dedupe
+- RFL-034 (minor-athlete supremacy) — `decisionFilters.ts` + `dailyPlan.ts`
+- RFL-053 (athlete-home duality) — `/command` is single canonical home
 
-## Disclosed launch debt (P1/P2, not blocking)
+### Canonical surfaces
+- Athlete home: **`/command`** (`src/pages/AthleteCommand.tsx`)
+- Module catalog: `/dashboard` (non-authoritative)
+- Onboarding: `/onboarding/athlete`
 
-Carried in `docs/asb/reality-feedback-ledger.md`:
-- Hammer / spine: RFL-035 (HammerChat grounding), RFL-036 (drill bucket collapse), RFL-037 (empty-state triplets), RFL-038 (staleness invisible), RFL-039 (pain → suppression latency), RFL-040 (no RTP surface).
-- Routing / reliability: RFL-041 (nav pollution), RFL-042 (Auth race), RFL-043 (parent-invite cap).
-- Experience: RFL-044 (daily-plan hierarchy), RFL-045 (ProgressDashboard density), RFL-046 (paywall adjacency), RFL-047/050/051/057/058 (delight/D1 hooks), RFL-048 (`/today` vs `/command` duality — recommend deprecating `/today` next), RFL-049 (trajectory delta), RFL-052 (D7/D30 hooks), RFL-054 (hidden routes), RFL-055/056 (drill/MPI lineage exposure).
+## Accepted launch debt (disclosed)
 
-## Suggested next sprint (not started)
+**V1.x (next sprints):** RFL-036, 037, 038, 041, 042, 044, 045, 048, 049, 052, 054, 055, 056.
+**V2:** RFL-035, 039, 040, 043, 046, 047, 050, 051, 057, 058.
 
-`/today` deprecation or merge into `/command` to remove the secondary "do this now" duality flagged in RFL-048. Smallest-possible follow-up to keep the single-authority property intact long-term.
+Full table in `docs/asb/final-production-release-verification.md` §G.
+
+## V2 workstreams (post-launch)
+
+1. `/today` deprecation into `/command` (RFL-048)
+2. Trust-lineage expansion on recommendation surfaces (RFL-055/056/038)
+3. Retention hooks D7/D30 (RFL-052/057/058)
+4. Daily-plan & progress hierarchy/density polish (RFL-036/037/044/045)
+5. RR-5…RR-10 implementation per `post-mastery-expansion-roadmap.md`
+6. Commercial/operational layer (RFL-046/043)
+7. Intelligence deepening (RFL-035/039/040)
+8. Routing cleanup (RFL-041/054)
