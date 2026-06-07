@@ -5,13 +5,21 @@
  * one-click drill-down into its contributions. No new intelligence,
  * no re-scoring. Source event ids surface so the lineage handle is
  * reachable per Phase 33/46/47 observability supremacy.
+ *
+ * Command Center Authority Restoration §B / §E (RFL-069):
+ *   - Adds "Work on this in today's plan" remediation CTA that anchors
+ *     into HammerDailyPlan so the report card is no longer a dead end.
+ *   - Mounts the canonical LineageDrilldownButton when a source event
+ *     id is available.
  */
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LineageDrilldownButton } from "@/components/command/LineageDrilldownButton";
 import type { UhrcReport } from "@/lib/uhrc/types";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronRight } from "lucide-react";
 
 interface Props {
   report: UhrcReport;
@@ -19,6 +27,8 @@ interface Props {
   showDetailedToggle?: boolean;
   /** When parent owns detailed-view state. */
   onToggleDetailed?: (open: boolean) => void;
+  /** Lineage handle for the LineageDrilldownButton. */
+  sourceEventId?: string | null;
 }
 
 function tierBadge(tier: string | null) {
@@ -32,7 +42,12 @@ function tierBadge(tier: string | null) {
   );
 }
 
-export function UhrcReportCard({ report, showDetailedToggle = true, onToggleDetailed }: Props) {
+export function UhrcReportCard({
+  report,
+  showDetailedToggle = true,
+  onToggleDetailed,
+  sourceEventId = null,
+}: Props) {
   const [open, setOpen] = useState(false);
   const toggle = () => {
     const next = !open;
@@ -55,6 +70,7 @@ export function UhrcReportCard({ report, showDetailedToggle = true, onToggleDeta
             <Badge variant="outline" className="text-[10px]">
               {report.engine_version}
             </Badge>
+            <LineageDrilldownButton sourceEventId={sourceEventId} />
           </div>
         </CardTitle>
       </CardHeader>
@@ -97,6 +113,13 @@ export function UhrcReportCard({ report, showDetailedToggle = true, onToggleDeta
             </>
           )}
         </div>
+
+        <Button asChild variant="outline" size="sm" className="w-full justify-between">
+          <Link to="/command#hammer-plan" aria-label="Work on this in today's plan">
+            <span>Work on this in today's plan</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
 
         {showDetailedToggle && (
           <Button variant="ghost" size="sm" className="text-xs" onClick={toggle}>
