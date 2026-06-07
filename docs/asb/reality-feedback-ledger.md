@@ -278,3 +278,20 @@ cohort report that promoted it.
 
 | Date | Surface | Pattern | Athletes | Expectation confirmed | Source report |
 |------|---------|---------|----------|-----------------------|---------------|
+
+## Onboarding Reality Validation Remediation Sprint (2026-06-07)
+
+See `docs/asb/onboarding-reality-validation-remediation.md`.
+
+| ID | Finding | Severity | Status | Closure / next-action evidence |
+|---|---|---|---|---|
+| RFL-051 | Onboarding crash on injury answer (`injury.toLowerCase is not a function`, minified `n.toLowerCase`) — projectEnvelope assumed `injury_history` was a string but spine writers emit array-of-objects / string-array / string | P0 | CLOSED | `src/lib/hammer/context/decisionFilters.ts` — `normalizeInjuryToText` coerces all spine shapes; preserves missingness |
+| RFL-052 | "Save & Next" appeared frozen after injury answer | P0 | CLOSED | Downstream symptom of RFL-051; resolved by same fix |
+| RFL-053 | Onboarding does not acquire `primary_position` / `secondary_positions` | high | Open — V1.x P0 | Section D — replace redundant sport question |
+| RFL-054 | Onboarding does not acquire constitutional `development_stage` (uses `school_grade` proxy) | high | Open — V1.x P0 | Section E — enum replacement |
+| RFL-055 | `lifting_age_years` conflates experience with current continuity (returning-from-layoff invisible) | high | Open — V1.x P0 | Section F — split into experience + continuity |
+| RFL-056 | Onboarding does not acquire `competition_level` | med | Open — V1.x P1 | Section C |
+| RFL-057 | Onboarding does not acquire anthropometrics (height, weight) | med | Open — V1.x P1 | Section G |
+| RFL-058 | Multi-sport / `other_sports` profile absent | med | Open — V1.x P1 | Section D |
+| RFL-059 | Detraining-event capture absent | low | Open — V1.x P2 | Sections C, F |
+| RFL-060 | Body composition / limb / wingspan measurement event absent | low | Open — V1.x P2 | Section G |
