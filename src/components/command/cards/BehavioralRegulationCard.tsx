@@ -25,6 +25,7 @@ export function BehavioralRegulationCard({ rows, loading }: Props) {
       projection={p}
       loading={loading}
       emptyMessage="Unlocks once behavioral events accumulate (auto-emitted from your activity)."
+      action={{ label: "Open today's recovery block", href: "/command#hammer-plan-recovery" }}
     >
       <div className="flex items-end gap-2">
         <span className="font-mono text-xl">{stateLabel ?? "—"}</span>

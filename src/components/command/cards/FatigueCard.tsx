@@ -17,6 +17,7 @@ export function FatigueCard({ rows, loading }: Props) {
       projection={p}
       loading={loading}
       emptyMessage="Fatigue appears after your first completed session."
+      action={{ label: "See recovery block", href: "/command#hammer-plan-recovery" }}
     >
       <div className="flex items-end gap-2">
         <span className="text-3xl font-semibold tabular-nums">

@@ -40,6 +40,7 @@ export function SchedulingLoadCard({ rows, loading }: Props) {
       projection={p}
       loading={loading}
       emptyMessage="No days scheduled yet"
+      action={{ label: "Plan today's strength", href: "/command#hammer-plan-strength" }}
     >
       {items.length === 0 ? (
         <span className="text-sm text-muted-foreground">—</span>

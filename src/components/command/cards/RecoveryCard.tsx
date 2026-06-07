@@ -19,6 +19,7 @@ export function RecoveryCard({ rows, loading }: Props) {
       projection={p}
       loading={loading}
       emptyMessage="Recovery requires at least one completed session plus a next-day check-in."
+      action={{ label: "Open today's recovery block", href: "/command#hammer-plan-recovery" }}
     >
       <div className="flex items-end gap-2">
         <span className="text-3xl font-semibold tabular-nums">

@@ -1,9 +1,19 @@
 import { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 import { ConfidencePill } from "./ConfidencePill";
 import { MissingnessChip } from "./MissingnessChip";
 import { LineageDrilldownButton } from "./LineageDrilldownButton";
 import type { CardProjection } from "@/lib/command/projections";
+
+export interface CardAction {
+  /** Athlete-legible CTA copy. */
+  label: string;
+  /** Internal route or anchor (e.g. "/command#hammer-plan-strength"). */
+  href: string;
+}
 
 interface Props {
   title: string;
@@ -13,6 +23,12 @@ interface Props {
   loading?: boolean;
   emptyMessage?: string;
   destructive?: boolean;
+  /**
+   * Optional "What now?" affordance. Card observation surfaces own this slot
+   * so the athlete always has a path back into the action surface (the daily
+   * plan). RFL-068 / Command Center Authority Restoration Sprint §A.
+   */
+  action?: CardAction | null;
   children?: ReactNode;
 }
 
@@ -24,6 +40,7 @@ export function IntelligenceCardShell({
   loading,
   emptyMessage = "No source event yet",
   destructive,
+  action,
   children,
 }: Props) {
   const hasEvent = !!projection.sourceEventId;
@@ -60,6 +77,20 @@ export function IntelligenceCardShell({
             </div>
           )}
         </div>
+
+        {action && hasEvent && (
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="w-full justify-between"
+          >
+            <Link to={action.href} aria-label={action.label}>
+              <span>{action.label}</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
 
         <div
           className="flex min-h-11 flex-wrap items-center gap-2 border-t pt-3"

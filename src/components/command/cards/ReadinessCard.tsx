@@ -17,6 +17,7 @@ export function ReadinessCard({ rows, loading }: Props) {
       projection={p}
       loading={loading}
       emptyMessage="Log today's day type and one training session to unlock readiness."
+      action={{ label: "Start today's warm-up", href: "/command#hammer-plan-warmup" }}
     >
       <div className="flex items-end gap-2">
         <span className="text-3xl font-semibold tabular-nums">
