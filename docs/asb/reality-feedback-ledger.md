@@ -213,3 +213,12 @@ Audit-only sweep of onboarding, daily use, progression, retention, navigation, t
 
 **Athlete-experience launch verdict:** **NO-GO** on a single P0 (RFL-053). After resolution, expected **GO WITH LIMITATIONS** with P1s (RFL-035…RFL-058) as disclosed launch debt.
 
+
+
+## RFL closures — RFL-053 Athlete Home Authority Remediation Sprint (2026-06-07)
+
+| ID | Status | Evidence |
+|---|---|---|
+| RFL-053 | **CLOSED** | Canonical athlete home set to `/command`. Three edits: `src/pages/Auth.tsx:182-188` (post-login), `src/pages/ProfileSetup.tsx:295` (post-onboarding), `src/pages/ResetPassword.tsx:47-48` (post-reset) all now `navigate("/command", { replace: true })`. `/dashboard` retained as module-discovery catalog (still mounted at `App.tsx:220`, still target of per-module back-buttons). Onboarding gate (RFL-032), edge-function fix (RFL-033), minor-supremacy (RFL-034), and P0-3 differentiation all verified intact. See `docs/asb/rfl-053-athlete-home-remediation-ratification.md`. |
+
+**Launch verdict (post-RFL-053):** **GO WITH LIMITATIONS.** P1/P2s (RFL-035…RFL-052, RFL-054…RFL-058) carried forward as disclosed launch debt.
