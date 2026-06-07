@@ -92,3 +92,18 @@ Append a short execution note: sprint name, deliverable paths, scope (documentat
 - No onboarding expansion without demonstrated authority value → Section H governance rule.
 - Activation protected → Section F length audit + Tier 1 minimality.
 - Personalization capability increases → Tier 2–4 acquisition roadmap.
+
+---
+
+## Execution note — 2026-06-07
+
+**Sprint:** Onboarding Authority & Context Acquisition Optimization — completed.
+
+**Deliverables shipped:**
+- `docs/asb/onboarding-authority-optimization.md` — canonical four-tier authority model (Sections A–H).
+- `docs/asb/reality-feedback-ledger.md` — RFL-061 (model ratified, CLOSED-as-reference), RFL-062 (school_grade replacement note, Open P0), RFL-063 (chat ordering re-prioritization, Open P2), plus tier-classification mapping table for RFL-053…RFL-060.
+- `.lovable/plan.md` — this note.
+
+**Scope:** Documentation only. Zero runtime artifacts modified — no code, schema, ASB topics, spine, event fabric, doctrine, or UI changes. `HAMMER_KNOWLEDGE_GAPS`, `ONBOARDING_VOICE`, `OnboardingFlow`, `HammerOnboardingChat`, and the Athlete Context Spine are untouched.
+
+**Exit criteria:** All four met — canonical model exists (Sections A + G); governance rule against unjustified expansion established (Section H); activation protected via Tier 1 +30s ceiling rule (Section F); personalization roadmap defined for Tiers 2–4.
