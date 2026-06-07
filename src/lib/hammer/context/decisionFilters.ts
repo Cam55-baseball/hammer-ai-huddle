@@ -55,6 +55,44 @@ const KNOWN_INJURY_REGIONS = [
   "hamstring", "quad", "groin", "calf", "achilles",
 ];
 
+/**
+ * Coerce the canonical `injury_history` spine value to a normalized
+ * lowercased text blob suitable for region-keyword matching.
+ *
+ * Accepts every shape currently emitted across the codebase plus malformed
+ * inputs. Returns `null` when the input carries no usable text — missingness
+ * is preserved, never fabricated (FC global continuity).
+ */
+function normalizeInjuryToText(raw: unknown): string | null {
+  if (raw == null) return null;
+  if (typeof raw === "string") {
+    const s = raw.trim().toLowerCase();
+    return s === "" ? null : s;
+  }
+  if (Array.isArray(raw)) {
+    const parts = raw
+      .map((entry) => {
+        if (entry == null) return "";
+        if (typeof entry === "string") return entry;
+        if (typeof entry === "object" && "note" in (entry as object)) {
+          const note = (entry as { note?: unknown }).note;
+          return typeof note === "string" ? note : "";
+        }
+        return "";
+      })
+      .filter((s) => s.length > 0);
+    if (parts.length === 0) return null;
+    return parts.join(" ").toLowerCase();
+  }
+  if (typeof raw === "object") {
+    const note = (raw as { note?: unknown }).note;
+    if (typeof note === "string" && note.trim() !== "") {
+      return note.toLowerCase();
+    }
+  }
+  return null;
+}
+
 export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjection {
   const eq = ctx.get<unknown>("equipment_effective")?.value as
     | { equipment?: string; scope?: string }
@@ -69,9 +107,14 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
       ? ((eq as { scope?: string }).scope ?? null)
       : null;
 
-  const injury = (ctx.get<string>("injury_history")?.value as string | null) ?? null;
+  // RFL: spine `injury_history` is heterogeneous across producers:
+  //   - useHammerOnboardingDirector → [] | [{ note, reported_at }]
+  //   - PhysioHealthIntakeDialog    → string[]
+  //   - legacy/free-text            → string
+  // Normalize defensively. Missingness is preserved (null), never fabricated.
+  const injury = normalizeInjuryToText(ctx.get<unknown>("injury_history")?.value);
   const injuryRegions = injury
-    ? KNOWN_INJURY_REGIONS.filter((r) => injury.toLowerCase().includes(r))
+    ? KNOWN_INJURY_REGIONS.filter((r) => injury.includes(r))
     : [];
 
   const readinessRaw = ctx.get<{ score?: number }>("readiness")?.value as
