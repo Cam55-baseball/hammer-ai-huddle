@@ -342,3 +342,17 @@ bound and not inflated.
 | RFL-070 | Replay surface `/replay/:eventId` is the convergence destination for all three escalation surfaces (Bell, Banner, FlagsCard) but is technical and not athlete-legible at zero-knowledge level. | low | Open — V1.x P2 | Out-of-scope for Command Center; tracked for replay-surface athlete-translation work. Constitutional replay legality preserved; this is athlete-facing copy only. |
 | RFL-071 | Escalation surfaces appear in 3 places (Bell, EscalationBanner, EscalationFlagsCard) but ack authority lives only on the Bell. Athletes clicking Banner or Card link reach replay; bell badge does not decrement until they return and click the bell entry. | low | Open — V1.x P2 | Audit Sections A, B. Either consolidate ack authority across surfaces or visibly note where ack lives. |
 | RFL-072 | Per-modality Daily Plan CTA routes (specifically `defense` and `warmup`) require V1.x smoke verification to confirm destination surface presence and event emission. | med | Open — V1.x P1 | Audit Section D. Smoke each modality route → verify route resolves + downstream session event emitted. |
+
+## Command Center Authority Restoration Sprint (2026-06-07)
+
+See `docs/asb/command-center-authority-restoration.md`. Runtime + documentation
+sprint. Closes RFL-065, RFL-068, RFL-069, RFL-071; partially closes RFL-064;
+RFL-066 / RFL-067 / RFL-070 / RFL-072 remain deferred.
+
+| ID | Status | Closure / next-action evidence |
+|---|---|---|
+| RFL-064 | Partial CLOSED | `src/hooks/command/useScheduleWindow.ts` reads `games` + `scheduled_practice_sessions` for `[today, +7d]`; consumed by `src/components/hammer/HammerDailyPlan.tsx` (header context line) and `src/components/command/cards/WorkloadCard.tsx` (7-day density + competition chip). `calendar_events` / `game_plan_*` antecedent ingestion and strength-builder taper branching remain open. |
+| RFL-065 | CLOSED | `src/components/report-card/UhrcAthleteSection.tsx` reads `sport_primary` from `useHammerAthleteContext`; supported projector set = {baseball, softball}; non-supported sports render a visible "waiting on projector" missingness card rather than a fabricated baseball-shaped report. `sport` propagated into `buildUhrcReport`. |
+| RFL-068 | CLOSED | `src/components/command/IntelligenceCardShell.tsx` adds `action?: { label, href }` slot; all 7 observation cards (Readiness/Fatigue/Recovery/Workload/BehavioralRegulation/SchedulingLoad/TrendShifts) now deep-link to the matching `HammerDailyPlan` modality anchor (`/command#hammer-plan-{modality}`). `HammerDailyPlan` exposes stable `id="hammer-plan"` and per-block `id="hammer-plan-{modality}"` with `scroll-mt-24`. |
+| RFL-069 | CLOSED | `src/components/report-card/UhrcReportCard.tsx` adds full-width "Work on this in today's plan" CTA → `/command#hammer-plan`, plus mounts `LineageDrilldownButton` in the header when an HIE snapshot id is present. |
+| RFL-071 | CLOSED | `src/components/command/EscalationBanner.tsx` and `src/components/command/cards/EscalationFlagsCard.tsx` invoke `useAcknowledgeEscalation` before navigating to `/replay/:id`, so the bell badge decrements regardless of entry surface. Bell remains canonical ack writer; banner/card participate via the same hook (no parallel ack authority). |

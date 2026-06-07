@@ -108,3 +108,21 @@ Verification gates: no console errors, every CTA resolves, no 404, ack consolida
 - Ack works from Bell, Banner, and FlagsCard.
 - Six athlete archetypes pass manual smoke with zero dead actions and zero navigation failures.
 - RFL updated; restoration report committed; subordinate to Eternal Laws and all sealed phases.
+
+---
+
+## Execution note — 2026-06-07
+
+Sprint executed. Runtime changes shipped:
+- `IntelligenceCardShell` action slot + 7 card deep-links (RFL-068).
+- `useScheduleWindow` hook + `HammerDailyPlan` context line + `WorkloadCard` density (RFL-064 partial).
+- `EscalationBanner` + `EscalationFlagsCard` ack-on-click (RFL-071).
+- `UhrcAthleteSection` sport branching with missingness card (RFL-065).
+- `UhrcReportCard` remediation CTA + lineage button (RFL-069).
+- `HammerDailyPlan` exposes `#hammer-plan` and per-modality anchors.
+
+Exit criteria satisfied: no BROKEN loops remain in scope, ack works from all three
+escalation surfaces, recommendations expose upcoming schedule context, UHRC is
+no longer baseball-locked at the section level, all CTAs resolve. Deferred:
+RFL-066 (position branching — needs envelope key), RFL-067, RFL-070, RFL-072.
+See `docs/asb/command-center-authority-restoration.md`.
