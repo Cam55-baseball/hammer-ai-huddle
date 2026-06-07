@@ -1,86 +1,83 @@
-# V1 Launch Operations & Reality Feedback System — Plan
+# V1 Reality Validation Protocol — Plan
 
-Documentation-only sprint. No code, no schema, no features. The organism is ratified (RELEASE AUTHORIZED); this sprint establishes the post-launch observability and feedback loop so reality can govern V1.x.
+Documentation-only sprint. No code, schema, features, or RFL severity changes. Reality becomes the governing authority; this plan defines how the first three athlete cohorts are observed, measured, and converted into RFLs or positive reality evidence.
 
 ## Deliverables
 
-1. **Create `docs/asb/v1-launch-operations-plan.md`** — the operating runbook.
-2. **Update `docs/asb/reality-feedback-ledger.md`** — append a "Launch Operations Layer" section recording the operational doctrine and the V1.x prioritization snapshot.
-3. **Update `.lovable/plan.md`** — add a "Post-launch operations" block pointing to the runbook, the daily-check ritual, and the V1.x ordered backlog.
+1. **`docs/asb/v1-reality-validation-protocol.md`** (new) — the full protocol.
+2. **`docs/asb/reality-validation-cohort-template.md`** (new) — blank report template reused for each cohort review.
+3. **`docs/asb/reality-feedback-ledger.md`** (append) — short "Reality Validation Protocol active" note + intake binding to RFL pipeline already defined in v1-launch-operations-plan.md.
+4. **`.lovable/plan.md`** (append) — Reality Validation Protocol active, cohort gates, exit criteria.
 
-No other files are touched.
+No new tables. No new edge functions. No new instrumentation. All measurements sourced from existing surfaces already enumerated in `docs/asb/v1-launch-operations-plan.md` (asb_events, profiles, performance_sessions, hammer_state_snapshots, foundation_recommendation_traces, athlete_events, auth.users).
 
-## Document structure — `v1-launch-operations-plan.md`
+## Structure of `v1-reality-validation-protocol.md`
 
-### Section A — Canonical Athlete Funnel
-Eleven-stage funnel (Account Created → D30 Return). For each stage: ledger/event source (table + event_type or auth signal), current instrumentation status (instrumented / partial / gap), and the remediation owner (V1.x vs V2). Sourced from existing tables (`profiles`, `asb_events`, `athlete_events`, `auth.users`) and existing instrumentation docs (`funnel-instrumentation.md`, `dropoff-detection.md`).
+### Section 0 — Doctrine
+- Reality is now the governing authority over the V1 organism.
+- Constitutional expectations are hypotheses until cohort behavior confirms or disproves them.
+- No constitutional rewrites mid-cohort; observations route to RFLs, RFLs route to V1.x prioritization board.
 
-### Section B — Reality Feedback Dashboard (Launch Command Center) spec
-Read-only operational spec (no build). Lists the seven metric families (signups, onboarding completion, first-value, retention D1/D7/D30, recommendation engagement, workout completion, roadmap engagement, command usage), the source query shape for each (against existing tables — no new schema), the cadence (hourly / daily), and the intended consumer (leadership daily check / weekly review).
+### Section A — Cohorts
+| Cohort | Size | Gate to next | Review artifact |
+|---|---|---|---|
+| C1 | 10 athletes | C1 report issued | Reality Validation Report C1 |
+| C2 | 25 athletes (cumulative or incremental — declared at C1 close) | C2 report issued | Reality Validation Report C2 |
+| C3 | 50 athletes | C3 report issued | Reality Validation Report C3 / V1.x re-baseline |
 
-### Section C — Drop-off Detection
-For each of the 11 funnel stages: success event, failure event, abandonment signal (time-since-last-event threshold). Concludes with **Top 5 athlete-loss locations** ranked by likelihood × impact, grounded in current code:
-1. Profile setup → first event (onboarding chat abandon)
-2. First `/command` visit → first daily-plan engagement
-3. First recommendation surfaced → first drill/workout consumed
-4. D1 return (24–48h gap)
-5. D7 return (weekly digest absence — RFL-052)
+Cohort identity = `profiles.id` tagged by signup window. No new tag column required; cohort assignment maintained in the report doc.
 
-### Section D — Release Health Scoreboard
-Six launch-health metrics with explicit Healthy / Warning / Critical thresholds:
-- Activation rate (signup → first event)
-- Onboarding completion (profile → `/command` first visit)
-- D1 retention
-- D7 retention
-- Workout completion rate (per active athlete)
-- Recommendation engagement rate
+### Section B — Activation metrics (per cohort)
+For each athlete:
+- signup (auth.users.created_at)
+- profile completion (profiles.onboarding_completed / profile_complete fields already present)
+- first event (earliest asb_events / athlete_events / performance_sessions row)
+- first `/command` visit (earliest hammer_state_snapshots or asb_event with command surface)
+- first daily-plan engagement (udl_daily_plans / foundation_recommendation_traces interaction)
 
-Thresholds are stated as ranges anchored to the existing organism (e.g. activation Healthy ≥60% / Warning 40–60% / Critical <40%) with explicit "first-cohort calibration" caveat.
+Reported as: count, %, median time-to-event, drop-off between adjacent stages. Bands inherited from v1-launch-operations-plan.md Release Health Scoreboard.
 
-### Section E — Reality Feedback Ledger intake path
-Defines the canonical pipeline for converting athlete complaints, confusion reports, support tickets, coach feedback, parent feedback, and recruiting feedback into RFL entries. Specifies: capture channel → triage owner → RFL severity rubric (athlete impact / retention impact / trust impact) → entry format → review cadence. Reaffirms reality-as-governing-authority doctrine.
+### Section C — Retention
+- D1 / D7 / D30 return defined as ≥1 `asb_event` or `athlete_event` in the window.
+- Drop-off reasons captured qualitatively (Section D inputs + Section F triage), not inferred.
+- Cross-reference Top-5 athlete-loss locations from v1-launch-operations-plan.md §C; confirm or refute per cohort.
 
-### Section F — V1.x Prioritization Board
-Re-ranks every currently OPEN RFL (035–052, 054–058) on the three axes (athlete impact, retention impact, trust impact) — explicitly **not** by implementation effort. Produces three ordered lists: **Immediate V1.x**, **Near-term**, **V2**. Differs from the current `.lovable/plan.md` debt list, which is grouped not ordered. Expected immediate-V1.x ordering (subject to the rubric in the doc): RFL-053-class regressions (none open) → RFL-055/056 (trust lineage) → RFL-052 (D7 hook) → RFL-048 (`/today` ambiguity) → RFL-044 (daily plan hierarchy) → RFL-041 (nav pollution) → rest.
+### Section D — Trust signals
+Four buckets, captured from support / direct contact / coach / parent channels:
+- confusion (what surface, what moment)
+- recommendation skepticism (which recommendation, which trace_id if available)
+- navigation complaints (which route, what was expected)
+- Hammer feedback (state surprise, opacity, override desire)
 
-### Section G — Post-Ratification Verdict (the four answers)
-Direct answers to the four leadership questions:
-- **What metrics determine success?** — Activation, D7 retention, workout completion.
-- **What metrics indicate danger?** — Activation <40%, D1 <25%, recommendation engagement <15%, any onboarding-stage drop >50%.
-- **First thing leadership checks daily?** — Activation rate + D1 retention for the prior cohort, plus the failure-event count from Section C.
-- **First fix if adoption stalls?** — Walk Section C top-5 in order; the first stage with a >50% drop is the fix target. The most likely first fix is the onboarding → first-event gap (RFL-044 daily-plan hierarchy + RFL-057 first-plan celebration).
+Each entry: athlete_id (or pseudonym), date, surface, verbatim quote, observer.
 
-## Out of scope
+### Section E — Delight signals
+- favorite feature (open-ended)
+- most-used feature (cross-checked against event counts)
+- first moment of value (verbatim moment + surface)
 
-- No new instrumentation code, no new tables, no edge-function changes.
-- No new RFLs opened (this sprint reads and re-ranks existing ones).
-- No dashboard implementation — Section B is a spec only.
-- No changes to ratified verdicts (RELEASE AUTHORIZED stands).
+### Section F — RFL creation rules
+- **Repeated complaint** (≥2 athletes, same surface, same cohort, or ≥3 cross-cohort) → new RFL via the intake pipeline already canonical in `v1-launch-operations-plan.md` §E. No severity inflation. Severity follows the existing rubric.
+- **Repeated success** (≥2 athletes, same surface) → appended to a new `Positive Reality Evidence` subsection inside `docs/asb/reality-feedback-ledger.md` (additive, not RFL). Used to confirm constitutional expectations.
+- One-off signals: logged in the cohort report but not promoted unless they reappear.
+
+### Section G — Cohort review cadence & report
+At each gate (10 / 25 / 50), produce a Reality Validation Report containing:
+1. Cohort summary (size, window, activation funnel)
+2. Retention table (D1/D7/D30)
+3. Trust signal log
+4. Delight signal log
+5. New RFLs created this cohort
+6. New positive reality evidence
+7. Constitutional expectation matches vs misses
+8. Recommended V1.x priority changes (re-ranks the existing V1.x board from v1-launch-operations-plan.md §F; does not invent new severities)
+9. Verdict for next cohort: PROCEED / PROCEED WITH ADJUSTMENTS / HALT
+
+### Section H — Out of scope
+No instrumentation changes, no new tables, no new dashboards built, no constitutional doctrine edits, no feature work, no architecture work. Pure observation + documentation.
 
 ## Exit criteria
-
-- `v1-launch-operations-plan.md` exists with Sections A–G complete.
-- `reality-feedback-ledger.md` records the operations-layer doctrine and the V1.x ordered list.
-- `.lovable/plan.md` points operators to the runbook and the daily check.
-
-## Post-launch operations (2026-06-07)
-
-Runbook: **`docs/asb/v1-launch-operations-plan.md`**.
-
-### Daily ritual (leadership)
-1. Activation rate — prior 24h cohort (Healthy ≥60% / Warning 40–60% / Critical <40%)
-2. D1 retention — 24–48h cohort (Healthy ≥45% / Warning 25–45% / Critical <25%)
-3. Failure-event count at Section C Top-5 stages
-4. RFL inbox — any overnight capture-channel signals
-
-### V1.x ordered backlog (athlete/retention/trust, not effort)
-1. **RFL-055** — inline `why` on recommendation surfaces
-2. **RFL-056** — inline `why` on MPI score
-3. **RFL-052** — weekly digest / "here's what you did this week"
-4. **RFL-044** — daily-plan hierarchy ("do this first" pacing)
-
-Near-term: RFL-048, 049, 045, 037, 041, 038, 036, 042, 046.
-V2: RFL-035, 039, 040, 043, 047, 050, 051, 054, 057, 058.
-
-### First fix if adoption stalls
-Walk Section C Top-5 in order. Most likely first fix = RFL-044 + RFL-057 (Stage 5→6 onboarding-to-first-event gap). Second-most-likely = RFL-055 + RFL-056 (Stage 7→8 trust lineage).
+- Protocol document written.
+- Cohort report template written.
+- RFL ledger + plan.md reference the protocol.
+- Ready to observe Cohort 1.
