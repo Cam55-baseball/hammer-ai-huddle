@@ -295,3 +295,30 @@ See `docs/asb/onboarding-reality-validation-remediation.md`.
 | RFL-058 | Multi-sport / `other_sports` profile absent | med | Open — V1.x P1 | Section D |
 | RFL-059 | Detraining-event capture absent | low | Open — V1.x P2 | Sections C, F |
 | RFL-060 | Body composition / limb / wingspan measurement event absent | low | Open — V1.x P2 | Section G |
+
+## Onboarding Authority & Context Acquisition Optimization Sprint (2026-06-07)
+
+See `docs/asb/onboarding-authority-optimization.md`. This sprint produced
+the canonical four-tier authority model. RFL-053…RFL-060 are now
+tier-classified; no re-opening of RFL-051/052.
+
+| ID | Finding | Severity | Status | Closure / next-action evidence |
+|---|---|---|---|---|
+| RFL-061 | Canonical onboarding authority model ratified (Tier 1–4 acquisition strategy + Section H governance rule) | doctrine | CLOSED-as-reference | `docs/asb/onboarding-authority-optimization.md` Sections A + G + H |
+| RFL-062 | `school_grade` (priority 35) collected during Tier 1 onboarding but is a Tier 3-equivalent proxy that should be replaced by `development_stage` enum, not retained as parallel field | med | Open — V1.x P0 | Convert in same change-set as RFL-054; do not add `development_stage` alongside `school_grade` |
+| RFL-063 | `goal_summary` (priority 10) and `development_priorities` (priority 90) are classified Required-Before-First-Roadmap (Tier 2) but currently sequenced inside Tier 1 acquisition chat — eligible for deferral to reduce activation cost without losing first-prescription authority | low | Open — V1.x P2 | Re-prioritize `HAMMER_KNOWLEDGE_GAPS` ordering when adding Tier 1 RFL-053/054/055 fields |
+
+### Tier classification mapping (RFL-053…RFL-060)
+
+| RFL | Tier | Acquisition surface |
+|---|---|---|
+| RFL-053 (`primary_position`) | **Tier 1** | Onboarding chat |
+| RFL-053 (`secondary_positions`) | Tier 2 | First-week chat prompt |
+| RFL-054 (`development_stage` enum) | **Tier 1** | Onboarding chat (replaces `school_grade`) |
+| RFL-055 (`current_training_continuity_months`) | **Tier 1** | Onboarding chat |
+| RFL-055 (`training_experience_years`) | Tier 2 | First-week chat prompt |
+| RFL-056 (`competition_level`) | Tier 2 | First-week chat prompt; defaultable from development_stage |
+| RFL-057 (height, weight) | Tier 2 | First-week profile prompt |
+| RFL-058 (`other_sports[]`) | Tier 3 | Longitudinal observation + opt-in |
+| RFL-059 (detraining events) | Tier 3 | Longitudinal session-gap ledger |
+| RFL-060 (wingspan, limbs, body comp) | Tier 4 | Trust-gated opt-in after ≥14 days active |
