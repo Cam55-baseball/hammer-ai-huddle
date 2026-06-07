@@ -291,8 +291,9 @@ const ProfileSetup = () => {
 
       // New monetization funnel: route new players through the activation decision board.
       // Scouts/Coaches/Admins skip it entirely (they don't pay).
+      // RFL-053 — canonical athlete home is /command, not /dashboard.
       const goToActivate = isPlayer && dbRole !== 'admin';
-      navigate(goToActivate ? "/activate" : "/dashboard", { replace: true });
+      navigate(goToActivate ? "/activate" : "/command", { replace: true });
     } catch (error: any) {
       toast({
         title: t('profileSetup.setupFailed'),
