@@ -322,3 +322,23 @@ tier-classified; no re-opening of RFL-051/052.
 | RFL-058 (`other_sports[]`) | Tier 3 | Longitudinal observation + opt-in |
 | RFL-059 (detraining events) | Tier 3 | Longitudinal session-gap ledger |
 | RFL-060 (wingspan, limbs, body comp) | Tier 4 | Trust-gated opt-in after ≥14 days active |
+
+## Command Center Authority & Closed-Loop Intelligence Audit Sprint (2026-06-07)
+
+See `docs/asb/command-center-authority-audit.md`. Documentation-only audit
+of the `/command` route. No code, schema, doctrine, event, or copy
+changes were made. All actionable findings are filed below for V1.x
+prioritization through the standard pipeline; severities are evidence-
+bound and not inflated.
+
+| ID | Finding | Severity | Status | Closure / next-action evidence |
+|---|---|---|---|---|
+| RFL-064 | Command Center recommendations operate without schedule authority — `calendar_events` / `games` / `scheduled_practice_sessions` / `game_plan_*` not consumed by `buildHammerDailyPlan` or any card. Only self-reported `season_phase` participates. | med | Open — V1.x P1 | Audit Section E. Wire bounded schedule antecedents into daily plan + WorkloadCard with lineage + missingness preserved. |
+| RFL-065 | UHRC is implicitly baseball-locked (`disciplines: ["pitching", "hitting"]`); no sport branching. | med | Open — V1.x P1 | Audit Section G. Add `sport`-conditional discipline selection sourced from athlete context; degrade visibly when projector absent. |
+| RFL-066 | UHRC does not branch by position; all positions receive identical grade composition. | med | Open — V1.x P1 | Audit Section G. Position-conditional discipline weighting from athlete context. |
+| RFL-067 | Information-architecture canonical placement undocumented for Weekly Digest / Forecast / Body Status. | low | Open — V1.x P2 | Audit Section H. Body Status → Command Center; Weekly Digest → Progress Dashboard; Forecast → Progress Dashboard with optional confidence-bounded badge on Command Center when Phase 58 SF lands. |
+| RFL-068 | All 7 CommandCenterSection cards (Readiness/Fatigue/Recovery/Workload/BehavioralRegulation/SchedulingLoad/TrendShifts) are observation-only — no CTA, no athlete-legible "what to do" affordance. Athletes see numbers without a next action. | high | Open — V1.x P1 | Audit Sections A, B, D, I. Add "What now?" affordance per card deep-linking to matching Daily Plan modality + one-sentence projection-envelope interpretation. Doctrinally legitimate split (cards observe, plan acts) but the bridge is missing. |
+| RFL-069 | UHRC report card is a dead-end for action — emits `intelligence.uhrc.viewed` but offers no remediation route or athlete-legible interpretation. | med | Open — V1.x P1 | Audit Sections A, B, I. Add per-topic glossary + remediation CTA into Daily Plan. |
+| RFL-070 | Replay surface `/replay/:eventId` is the convergence destination for all three escalation surfaces (Bell, Banner, FlagsCard) but is technical and not athlete-legible at zero-knowledge level. | low | Open — V1.x P2 | Out-of-scope for Command Center; tracked for replay-surface athlete-translation work. Constitutional replay legality preserved; this is athlete-facing copy only. |
+| RFL-071 | Escalation surfaces appear in 3 places (Bell, EscalationBanner, EscalationFlagsCard) but ack authority lives only on the Bell. Athletes clicking Banner or Card link reach replay; bell badge does not decrement until they return and click the bell entry. | low | Open — V1.x P2 | Audit Sections A, B. Either consolidate ack authority across surfaces or visibly note where ack lives. |
+| RFL-072 | Per-modality Daily Plan CTA routes (specifically `defense` and `warmup`) require V1.x smoke verification to confirm destination surface presence and event emission. | med | Open — V1.x P1 | Audit Section D. Smoke each modality route → verify route resolves + downstream session event emitted. |
