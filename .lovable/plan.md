@@ -87,3 +87,24 @@ For each card answer 5 questions (knows what / why matters / what to do / where 
 - Documentation only. No code, schema, event, doctrine, or copy changes.
 - All findings routed through RFL with priority + recommended-but-deferred fixes.
 - Subordinate to all sealed Eternal Laws and prior invariants — audit is interpretive, never authoritative over organism truth.
+
+## Execution note — 2026-06-07
+
+Plan executed as documentation-only audit. Deliverables produced:
+
+- **`docs/asb/command-center-authority-audit.md`** (created) — Sections A–I + exit-criteria mapping. Inventories 13 Command Center surfaces with loop status (4 COMPLETE, 5 PARTIAL, 7 BROKEN-for-action observation cards). Documents schedule-authority gap (Section E), personalization split (9 of 13 surfaces GENERIC), UHRC baseball-lock (Section G), IA recommendation (Body Status → /command; Weekly Digest + Forecast → /progress), and 13 zero-knowledge ambiguity findings (Section I).
+- **`docs/asb/reality-feedback-ledger.md`** — Appended RFL-064…RFL-072 (all OPEN, V1.x P1/P2 prioritized, evidence-bound). No severity inflation. No re-opening of prior CLOSED RFLs.
+- **`.lovable/plan.md`** — this note.
+
+No code, schema, event, doctrine, copy, or UI changes were made. Audit is interpretive; cards, hooks, projections, and the daily plan builder retain canonical authority. Subordinate to Eternal Laws + all sealed phases.
+
+### Exit-criteria verification
+
+| Exit criterion | Status |
+|---|---|
+| Every Command Center card has documented authority source | ✅ Audit Section A |
+| Every action has completion loop | ✅ Sections A, B, D (gaps filed as RFL-068, RFL-069, RFL-072) |
+| Every recommendation has traceability | ✅ Section C (gaps filed under RFL-068) |
+| Navigation dead ends identified | ✅ Section B (no dead handlers; 7 view-only cards + UHRC dead-for-action, filed RFL-068/069) |
+| Personalization gaps identified | ✅ Sections F, G (filed RFL-065, RFL-066) |
+| Command Center validated for zero-knowledge athletes | ✅ Section I (filed RFL-068…RFL-071) |
