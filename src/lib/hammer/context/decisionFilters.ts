@@ -69,9 +69,14 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
       ? ((eq as { scope?: string }).scope ?? null)
       : null;
 
-  const injury = (ctx.get<string>("injury_history")?.value as string | null) ?? null;
+  // RFL: spine `injury_history` is heterogeneous across producers:
+  //   - useHammerOnboardingDirector → [] | [{ note, reported_at }]
+  //   - PhysioHealthIntakeDialog    → string[]
+  //   - legacy/free-text            → string
+  // Normalize defensively. Missingness is preserved (null), never fabricated.
+  const injury = normalizeInjuryToText(ctx.get<unknown>("injury_history")?.value);
   const injuryRegions = injury
-    ? KNOWN_INJURY_REGIONS.filter((r) => injury.toLowerCase().includes(r))
+    ? KNOWN_INJURY_REGIONS.filter((r) => injury.includes(r))
     : [];
 
   const readinessRaw = ctx.get<{ score?: number }>("readiness")?.value as
