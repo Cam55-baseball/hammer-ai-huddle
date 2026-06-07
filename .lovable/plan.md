@@ -1,33 +1,47 @@
-# Hammers Modality — Launch Status
+# RFL-053 — Athlete Home Authority Remediation
 
-## Current verdict: **NO-GO** (athlete-experience grounds)
+## Verdict on canonical home
 
-**Sole remaining launch blocker: RFL-053** — `/dashboard` vs `/command` athlete-home duality.
+**CANONICAL ATHLETE HOME = `/command`** (`src/pages/AthleteCommand.tsx`).
 
-Post-login default routes returning athletes to `/dashboard`, where the canonical Hammer surfaces (`HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat`) are not mounted. The entire P0-3 differentiation work, athlete-context spine activation, and minor-supremacy enforcement are invisible to any athlete who does not deep-link to `/command`. Architecture is sound; the surface that delivers it is bypassed.
+Evidence:
+- Mounts the full Hammer authority stack: `HammerOnboardingChat`, `UhrcAthleteSection`, `CommandCenterSection`, `HammerDailyPlan`, `HammerChat`, `RecentEventsPreview` (`src/pages/AthleteCommand.tsx:46-72`).
+- Already wired as the Hammer prescription target — every `dailyPlan` block routes to `/command` (`src/lib/hammer/prescription/dailyPlan.ts:213,340,479`).
+- Already enforces onboarding gate via `useAthleteOnboardingState` → `/onboarding/athlete` (`AthleteCommand.tsx:40-44`).
+- Decision density: 74 lines of pure authority surfaces, no marketing chrome.
+- `/dashboard` (`src/pages/Dashboard.tsx`, 613 lines) is module-discovery + tier marketing + hero imagery; it has no Hammer authority, no daily plan, no onboarding chat. Keep it as the **module library / catalog**, not the athlete home.
 
-## What is closed
+## Code changes (minimum viable)
 
-- **P0 launch blockers** (RFL-032/033/034) — CLOSED (`docs/asb/p0-launch-blocker-remediation-ratification.md`).
-- **P0 athlete-context workstream** (RFL-023/025/026/027/028/029/030/031) — CLOSED.
-- **Coach Hammer runtime ratification** — CLOSED.
-- **Architectural verdict** — GO WITH LIMITATIONS (unchanged).
+1. **`src/pages/Auth.tsx` (lines 162-191)** — In the post-login routing branch, replace the athlete `navigate("/dashboard", …)` fallback with `navigate("/command", …)`. Scout branch (`/scout-dashboard`) and onboarding-gap branch (`/onboarding/athlete`) are unchanged. `redirectTarget` short-circuit preserved.
 
-## What this audit produced
+2. **`src/pages/ProfileSetup.tsx:295`** — After profile setup completion, replace `navigate("/dashboard", …)` with `navigate("/command", …)` so onboarding-completion lands on the canonical home (the `goToActivate ? "/activate"` branch is preserved).
 
-`docs/asb/athlete-experience-retention-audit.md` — hostile audit of onboarding, daily use, progression, retention, navigation, trust, delight. 15 new RFLs opened (RFL-044…RFL-058). Zero code changes.
+3. **`src/pages/ResetPassword.tsx:47`** — Post-reset redirect: `/dashboard` → `/command`.
 
-## Fix-before-launch
+No changes to:
+- Per-module back-buttons that `navigate('/dashboard')` (SpeedLab, Nutrition, PickoffTrainer, VideoLibrary, etc.) — `/dashboard` legitimately remains the **module catalog** these features return to.
+- Owner / scout / coach routes (`/scout-dashboard`, `/coach-dashboard`, `/owner-dashboard`).
+- `AthleteCommand.tsx` itself — already correct.
+- `App.tsx` route table — `/dashboard` remains mounted as module library.
 
-- **RFL-053 (P0)** — make post-login default `/command`; demote `/dashboard` to module-discovery/marketing only, or merge canonical Hammer surfaces into `/dashboard`. Small surface change; nullifies the largest experience-side launch risk.
+## Re-verification (Section D/E)
 
-## Defer-to-V2 (disclosed launch debt)
+Journeys to re-walk via `browser--view_preview` and code reads:
+- Brand-new athlete → `/auth` → `/select-user-role` → … → `/command` (gated).
+- Returning athlete with events → `/auth` → `/command` directly.
+- Returning athlete without first event → `/auth` → `/onboarding/athlete` → `/command`.
+- Scout → `/scout-dashboard` (unchanged).
+- Recommendation/daily-plan CTA → `/command` (already wired).
 
-- Carried hostile-audit P1s: RFL-035, RFL-036, RFL-037, RFL-038, RFL-039, RFL-040, RFL-041, RFL-042, RFL-043.
-- New experience P1s: RFL-044, RFL-045, RFL-046, RFL-048, RFL-049, RFL-052, RFL-055, RFL-056.
-- All P2s: RFL-047, RFL-050, RFL-051, RFL-054, RFL-057, RFL-058.
-- D90 / career-arc surfaces remain gated by post-mastery-expansion-roadmap (RR-7 sealed, implementation deferred).
+Regression sweep: confirm RFL-032 ledger gate (`Auth.tsx:120-191`), RFL-033 edge function (unchanged), RFL-034 minor supremacy in `dailyPlan.ts` (unchanged), P0-3 differentiation script (unchanged — does not assert routes).
 
-## Expected post-fix verdict
+## Documentation deliverables
 
-**GO WITH LIMITATIONS** — with the P1/P2 list above carried as disclosed launch debt.
+- **Create `docs/asb/rfl-053-athlete-home-remediation-ratification.md`** — sections A (authority overlap matrix), B (canonical determination + evidence), C (change set diff), D (journey re-verification table), E (regression check table), F (RFL closure), G (experience verdict: GO WITH LIMITATIONS — P1 items RFL-044/045/052/055/056 carried forward).
+- **Update `docs/asb/reality-feedback-ledger.md`** — close RFL-053 with evidence pointers.
+- **Update `.lovable/plan.md`** — flip verdict NO-GO → GO WITH LIMITATIONS; record RFL-053 closure.
+
+## Out of scope
+
+No new features, intelligence, doctrine, schema, components, copy rewrites, or `/dashboard` redesign. `/dashboard` keeps its current module-library role; only its status as **post-login destination** is removed.
