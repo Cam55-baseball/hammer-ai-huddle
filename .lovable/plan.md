@@ -96,3 +96,12 @@ Write findings to `docs/asb/onboarding-reality-validation-remediation.md`:
 - "Save & Next" advances for all 7 personas.
 - Context acquisition gaps documented with intelligence impact.
 - V1.x onboarding improvements prioritized in RFL ledger.
+
+---
+
+## Execution complete — 2026-06-07
+
+- **Section A/B (P0 crash):** Fixed in `src/lib/hammer/context/decisionFilters.ts` via `normalizeInjuryToText` helper. All nine input shapes (`null`, `undefined`, `""`, `"none"`, `"shoulder"`, `["shoulder","knee"]`, `[{note:"shoulder"}]`, `{}`, `42`) yield deterministic non-throwing output. Missingness preserved.
+- **Sections C–G:** Documented as gap analysis in `docs/asb/onboarding-reality-validation-remediation.md`. No implementation.
+- **Section H:** Persona walkthrough recorded; 7/7 PASS.
+- **RFL ledger:** RFL-051 (crash) and RFL-052 (Save & Next) closed; RFL-053…RFL-060 opened and prioritized for V1.x.
