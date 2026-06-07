@@ -5,10 +5,11 @@ import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
 interface Props { rows: AsbEventRow[] | undefined; loading?: boolean }
 
-const FAMILIES: Array<[string, string]> = [
-  ["Readiness", "behavioral.readiness"],
-  ["Fatigue", "behavioral.fatigue"],
-  ["Recovery", "behavioral.recovery"],
+const FAMILIES: Array<[string, string, string]> = [
+  // [label, topic prefix, command-anchor route]
+  ["Readiness", "behavioral.readiness", "/command#hammer-plan-warmup"],
+  ["Fatigue", "behavioral.fatigue", "/command#hammer-plan-recovery"],
+  ["Recovery", "behavioral.recovery", "/command#hammer-plan-recovery"],
 ];
 
 function findTwoLatest(rows: AsbEventRow[] | undefined, prefix: string): [AsbEventRow | null, AsbEventRow | null] {
@@ -31,16 +32,22 @@ function extractScore(ev: AsbEventRow | null): number | null {
 }
 
 export function TrendShiftsCard({ rows, loading }: Props) {
-  const trends = FAMILIES.map(([label, prefix]) => {
+  const trends = FAMILIES.map(([label, prefix, href]) => {
     const [latest, prior] = findTwoLatest(rows, prefix);
     const lv = extractScore(latest);
     const pv = extractScore(prior);
     const delta = lv != null && pv != null ? lv - pv : null;
-    return { label, prefix, latest, delta };
+    return { label, prefix, latest, delta, href };
   });
 
   const newest = trends.map((t) => t.latest).filter(Boolean)[0] ?? null;
   const p = newest ? projectLatest(newest) : EMPTY_PROJECTION;
+
+  // Route to the family with the largest absolute shift; default to warmup.
+  const top = trends
+    .filter((t) => t.delta != null)
+    .sort((a, b) => Math.abs(b.delta!) - Math.abs(a.delta!))[0];
+  const actionHref = top?.href ?? "/command#hammer-plan-warmup";
 
   return (
     <IntelligenceCardShell
@@ -50,6 +57,7 @@ export function TrendShiftsCard({ rows, loading }: Props) {
       projection={p}
       loading={loading}
       emptyMessage="Not enough events to compute a shift"
+      action={{ label: "Open today's plan", href: actionHref }}
     >
       <ul className="space-y-1.5">
         {trends.map((t) => {
