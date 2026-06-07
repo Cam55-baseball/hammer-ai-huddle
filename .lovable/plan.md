@@ -1,107 +1,109 @@
-# Onboarding Reality Validation — Remediation Sprint Plan
+# Onboarding Authority & Context Acquisition Optimization — Plan
 
-## Section A — Critical Defect Root Cause (CONFIRMED)
+Pure documentation/analysis sprint. No code, schema, events, or doctrine changes. Builds directly on RFL-051…RFL-060 produced by the prior remediation sprint.
 
-**Issue A1 / A2 are the same crash.** "n.toLowerCase" is the minified form of "injury.toLowerCase".
+## Scope discipline
 
-**Location:** `src/lib/hammer/context/decisionFilters.ts:72-75`
-
-```ts
-const injury = (ctx.get<string>("injury_history")?.value as string | null) ?? null;
-const injuryRegions = injury
-  ? KNOWN_INJURY_REGIONS.filter((r) => injury.toLowerCase().includes(r))
-  : [];
-```
-
-**Producer:** `src/hooks/useHammerOnboardingDirector.ts:59-62` writes `injury_history` as **either `[]` or `[{ note, reported_at }]`** — i.e., an array of objects, never a string. `PhysioHealthIntakeDialog` writes `string[]`. `usePhysioProfile` types it as `string[]`.
-
-**Why it crashed only after answering the injury question:** before persistence the envelope reports the variable as `missing`, so the cast-to-string returned `null` and the filter no-op'd. As soon as the athlete answered "none" / free-text, the value became a truthy non-string array → `.toLowerCase` on an array → TypeError thrown inside `buildHammerDailyPlan` → React error boundary catches → "Save & Next" appears not to advance (this is Section B).
-
-**Section B is a downstream symptom of A1**, not an independent navigation/persistence bug. The save succeeds; the next render crashes.
-
-## Implementation (code changes — minimal, surgical)
-
-**File:** `src/lib/hammer/context/decisionFilters.ts` (lines 72-75)
-
-Replace with a defensive normalizer that accepts the three real shapes the spine actually produces (string, `string[]`, `Array<{note: string}>`), tolerates `null` / `undefined` / `""` / object / unknown, and never throws:
-
-```ts
-const rawInjury = ctx.get<unknown>("injury_history")?.value;
-const injuryText = normalizeInjuryToText(rawInjury); // string | null
-const injuryRegions = injuryText
-  ? KNOWN_INJURY_REGIONS.filter((r) => injuryText.includes(r))
-  : [];
-```
-
-`normalizeInjuryToText` (new local helper):
-- `null` / `undefined` / `""` → `null`
-- `string` → lowercased trimmed string (or `null` if empty)
-- `string[]` → joined lowercased
-- `Array<{note?: string}>` → join `note` fields, lowercased
-- `object` with `note` → that note
-- anything else → `null` (preserve missingness, never fabricate)
-
-Public `AthleteContextProjection.injury` field changes from `string | null` semantics to the normalized text (no API consumer outside this file relies on its shape — `decisionFilters` only re-exports it in `lineage`).
-
-**No other files touched in this fix.** No schema change. No new event. No doctrine change.
-
-## Verification (Section H — completion walkthrough)
-
-After fix, traverse via preview at `/onboarding/athlete` then `/command` for each persona and confirm no error boundary fires and the daily plan renders:
-
-| Persona | injury_history value tested |
-|---|---|
-| Brand-new (skip injury) | missing |
-| Youth | `"none"` → `[]` |
-| High-school | free-text `"left shoulder soreness"` → `[{note}]` |
-| College | `"hamstring, knee"` |
-| Professional | `"UCL post-op"` |
-| Injured | long free-text |
-| Returning from layoff | `"none"` |
-
-Also unit-cover `projectEnvelope` with: `null`, `undefined`, `""`, `"none"`, `"shoulder"`, `["shoulder","knee"]`, `[{note:"shoulder"}]`, `{}`, `42`. None throw.
-
-## Sections C–G — Documentation Only (no code)
-
-Write findings to `docs/asb/onboarding-reality-validation-remediation.md`:
-
-**C. Context acquisition audit** — current `HAMMER_KNOWLEDGE_GAPS` captures: `goal_summary`, `goal_horizon`, `weekly_availability_days/hours`, `typical_session_length_min`, `training_focus`, `development_priorities`, `injury_history`. **Missing:** primary position, secondary positions, competition level, development stage, training age, detraining history, sport participation profile. Document intelligence / recommendation / roadmap / personalization impact per gap.
-
-**D. Sport question restructure** — `sport_primary` is already in spine and resolvable via subscription/routing context. Recommendation: replace the sport-acquisition gap with `primary_position`, `secondary_positions`, `other_sports`. Rationale documented; no implementation.
-
-**E. Development stage model** — recommend replacing `school_grade` with enum `{ elementary, middle_school, high_school, college, professional, adult_athlete }`. Assess against recruiting / roadmap / recommendation intelligence; document recommendation only.
-
-**F. Training age** — recommend splitting `lifting_age_years` (experience) from new `current_training_continuity` (months currently training without break). Document the "10y lifting / 8mo detrained" example.
-
-**G. Anthropometric gap analysis** — currently captured: none in onboarding spine (weight in `weight_entries` post-onboarding only). Map current → future → organism dependency for height, weight, body composition, limb length, wingspan. Identify which feed lift personalization, movement profiling, body-type recs, projections. Gap analysis only.
-
-**H. Walkthrough log** — record each persona traversal outcome (pass/fail, screens reached).
+- No new onboarding questions added.
+- No removal of existing onboarding questions.
+- No schema or spine mutation.
+- No HammerOnboardingChat / OnboardingFlow / ProgressiveDisclosureStepper changes.
+- Output is a canonical authority-classification model used to govern future V1.x onboarding proposals.
 
 ## Deliverables
 
-1. `src/lib/hammer/context/decisionFilters.ts` — defensive normalization fix (Sections A + B).
-2. `docs/asb/onboarding-reality-validation-remediation.md` — root cause, sections C–G findings, walkthrough log, prioritized V1.x recommendations.
-3. `docs/asb/reality-feedback-ledger.md` — append RFL entries for the crash (resolved) and each acquisition gap (open, prioritized).
-4. `.lovable/plan.md` — sprint summary.
+1. **`docs/asb/onboarding-authority-optimization.md`** (new) — canonical context authority model.
+2. **`docs/asb/reality-feedback-ledger.md`** — append RFL entries for any newly-surfaced authority/activation tradeoffs identified during analysis (no re-opening of closed RFLs).
+3. **`.lovable/plan.md`** — append execution note recording sprint completion, scope, and that no runtime artifacts changed.
 
-## Out of scope (explicit)
+## Source material (read-only)
 
-- No doctrine changes, no new ASB topics, no schema migrations, no new events.
-- No implementation for Sections C–G — documentation and prioritization only.
-- No changes to `PhysioHealthIntakeDialog`, `usePhysioProfile`, or any other `injury_history` producer — the spine accepts heterogeneous shapes by design; the consumer must tolerate them.
+- `docs/asb/onboarding-reality-validation-remediation.md` — Sections C–G gap analysis, RFL-053…RFL-060.
+- `docs/asb/athlete-context-spine-constitution.md` and gap-analysis — canonical spine.
+- `docs/asb/onboarding-production-audit.md` — current onboarding shape.
+- `src/pages/OnboardingFlow.tsx`, `src/components/onboarding/*`, `src/components/hammer/HammerOnboardingChat.tsx`, `src/hooks/useHammerOnboardingDirector.ts`, `src/lib/hammer/context/*` — for current acquisition surface + duration audit.
+- `src/lib/runtime/relational/onboardingBootstrap.ts` — relational primitive entry.
 
-## Exit criteria
+No mutations to any of these files.
 
-- Runtime crash on injury answer eliminated (verified across 9 input shapes).
-- "Save & Next" advances for all 7 personas.
-- Context acquisition gaps documented with intelligence impact.
-- V1.x onboarding improvements prioritized in RFL ledger.
+## Structure of `onboarding-authority-optimization.md`
+
+### Section A — Context Inventory
+Enumerate every field currently collected during onboarding (spine + supplemental). For each field, record:
+- Current acquisition point (step / chat turn / deferred)
+- Constitutional authority class (organism truth / interpretive / personalization seasoning)
+- Consumer dependency (daily plan, first recommendation, first roadmap, longitudinal only)
+- Classification: **Required Before First Daily Plan / Required Before First Recommendation / Required Before First Roadmap / Post-Onboarding / Inferable**
+
+Cross-reference RFL-053…RFL-060 candidate fields (primary/secondary position, competition level, development stage, training experience, training continuity, anthropometrics, other sports).
+
+### Section B — Position Authority
+Evaluate `primary_position` and `secondary_positions` against:
+- Recommendation dependency (does Hammer's first recommendation degrade meaningfully without it?)
+- Workload dependency (does workload calibration require position?)
+- Roadmap dependency (does roadmap path branch on position?)
+
+Classify each as **Required / Deferred / Inferable** with explicit authority justification. Expectation: primary = Required (Tier 1); secondary = Deferred (Tier 2).
+
+### Section C — Competition Level Authority
+Evaluate `{ recreational, travel, high_school, varsity, college, professional }`. Determine whether competition level is needed before first prescription or whether a safe organism default (development-stage-derived) suffices. Expectation: Deferred (Tier 2), inferable from development_stage + age signal.
+
+### Section D — Training History Authority
+Evaluate training age, detraining history, current consistency. Establish **minimum viable acquisition model** — which single field, if collected, unlocks the most prescription legality at lowest activation cost. Expectation: current consistency = Tier 1 lightweight signal; training age = Tier 2; detraining history = Tier 3 (longitudinal observation supersedes self-report).
+
+### Section E — Anthropometric Authority
+Review height, weight, wingspan, limb lengths, body composition. Classify by:
+- Required (none for first prescription)
+- Useful (height, weight — Tier 2)
+- Trust-gated (wingspan, limb lengths, body composition — Tier 3/4, post-trust)
+
+Document that anthropometrics never block activation.
+
+### Section F — Onboarding Length Audit
+Measure current onboarding duration (step count, estimated time-on-task from existing flow). Estimate marginal cost per RFL-053…RFL-060 candidate. Identify the **activation risk ceiling** — the point at which added context degrades completion more than it improves personalization.
+
+### Section G — Recommended Acquisition Strategy
+Four-tier canonical model:
+- **Tier 1 — Required before activation**: sport (already), primary position, current consistency signal, injury baseline (already), development stage (lightweight).
+- **Tier 2 — First-week acquisition**: secondary positions, competition level, training age, height/weight.
+- **Tier 3 — Longitudinal acquisition**: detraining history, other sports, training continuity refinement.
+- **Tier 4 — Advanced organism profiling**: wingspan, limb lengths, body composition — trust-gated, opt-in.
+
+Each tier entry cites the authority justification and the consumer it unlocks.
+
+### Section H — Governance Rule
+State the canonical rule: **no onboarding expansion may occur without (a) demonstrated authority value for a named consumer, (b) tier classification, (c) activation-cost estimate, (d) RFL link.**
+
+## RFL updates
+
+Append to `docs/asb/reality-feedback-ledger.md`:
+- **RFL-061** — Canonical onboarding authority model ratified (this sprint). Status: CLOSED-as-doctrine-reference.
+- Any new authority/activation tradeoff observations surfaced during the length audit (e.g., if HammerOnboardingChat already collects a Tier 3+ field that should be deferred). OPEN, P2.
+
+No re-opening of RFL-051/052 (resolved) or RFL-053…RFL-060 (each gets a tier assignment cross-reference added).
+
+## `.lovable/plan.md`
+
+Append a short execution note: sprint name, deliverable paths, scope (documentation-only, no runtime artifacts), and confirmation that exit criteria are met.
+
+## Exit criteria mapping
+
+- Canonical onboarding context model exists → `onboarding-authority-optimization.md` Sections A + G.
+- No onboarding expansion without demonstrated authority value → Section H governance rule.
+- Activation protected → Section F length audit + Tier 1 minimality.
+- Personalization capability increases → Tier 2–4 acquisition roadmap.
 
 ---
 
-## Execution complete — 2026-06-07
+## Execution note — 2026-06-07
 
-- **Section A/B (P0 crash):** Fixed in `src/lib/hammer/context/decisionFilters.ts` via `normalizeInjuryToText` helper. All nine input shapes (`null`, `undefined`, `""`, `"none"`, `"shoulder"`, `["shoulder","knee"]`, `[{note:"shoulder"}]`, `{}`, `42`) yield deterministic non-throwing output. Missingness preserved.
-- **Sections C–G:** Documented as gap analysis in `docs/asb/onboarding-reality-validation-remediation.md`. No implementation.
-- **Section H:** Persona walkthrough recorded; 7/7 PASS.
-- **RFL ledger:** RFL-051 (crash) and RFL-052 (Save & Next) closed; RFL-053…RFL-060 opened and prioritized for V1.x.
+**Sprint:** Onboarding Authority & Context Acquisition Optimization — completed.
+
+**Deliverables shipped:**
+- `docs/asb/onboarding-authority-optimization.md` — canonical four-tier authority model (Sections A–H).
+- `docs/asb/reality-feedback-ledger.md` — RFL-061 (model ratified, CLOSED-as-reference), RFL-062 (school_grade replacement note, Open P0), RFL-063 (chat ordering re-prioritization, Open P2), plus tier-classification mapping table for RFL-053…RFL-060.
+- `.lovable/plan.md` — this note.
+
+**Scope:** Documentation only. Zero runtime artifacts modified — no code, schema, ASB topics, spine, event fabric, doctrine, or UI changes. `HAMMER_KNOWLEDGE_GAPS`, `ONBOARDING_VOICE`, `OnboardingFlow`, `HammerOnboardingChat`, and the Athlete Context Spine are untouched.
+
+**Exit criteria:** All four met — canonical model exists (Sections A + G); governance rule against unjustified expansion established (Section H); activation protected via Tier 1 +30s ceiling rule (Section F); personalization roadmap defined for Tiers 2–4.
