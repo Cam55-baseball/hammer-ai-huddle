@@ -1,58 +1,33 @@
-# Athlete Experience & Retention Audit — Plan
+# Hammers Modality — Launch Status
 
-This is an **audit-only** task. No features, no schema, no doctrine, no implementation. Three documents are produced; nothing else changes.
+## Current verdict: **NO-GO** (athlete-experience grounds)
 
-## Scope
+**Sole remaining launch blocker: RFL-053** — `/dashboard` vs `/command` athlete-home duality.
 
-Evaluate whether athletes will understand, trust, enjoy, and repeatedly use the organism — across Sections A–I of the brief. Architecture is out of scope; athlete reality is in scope.
+Post-login default routes returning athletes to `/dashboard`, where the canonical Hammer surfaces (`HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat`) are not mounted. The entire P0-3 differentiation work, athlete-context spine activation, and minor-supremacy enforcement are invisible to any athlete who does not deep-link to `/command`. Architecture is sound; the surface that delivers it is bypassed.
 
-## Investigation (read-only)
+## What is closed
 
-Cover the actual surfaces an athlete touches, with `file:line` citations:
+- **P0 launch blockers** (RFL-032/033/034) — CLOSED (`docs/asb/p0-launch-blocker-remediation-ratification.md`).
+- **P0 athlete-context workstream** (RFL-023/025/026/027/028/029/030/031) — CLOSED.
+- **Coach Hammer runtime ratification** — CLOSED.
+- **Architectural verdict** — GO WITH LIMITATIONS (unchanged).
 
-- **Entry / first 15 min:** `src/pages/Auth.tsx`, `Index.tsx`, `SelectRole.tsx`, `SelectSport.tsx`, `AthleteOnboarding.tsx`, `OnboardingFlow.tsx`, `ProfileSetup.tsx`, `components/hammer/HammerOnboardingChat.tsx`.
-- **Daily use:** `Dashboard.tsx`, `AthleteCommand.tsx`, `Today.tsx`, `TodaySession.tsx`, `components/hammer/HammerDailyPlan.tsx`, `HammerChat.tsx`, `HammerStateBadge.tsx`, `ReadinessChip.tsx`.
-- **Progression:** `ProgressDashboard.tsx`, `AthleteDigest.tsx`, `Calendar.tsx`, `Cycle.tsx`, `AsbTimeline.tsx`, roadmap surfaces in `src/lib/hammer/prescription/`.
-- **Navigation:** full `App.tsx` route inventory + which routes are reachable from athlete nav vs. orphaned/admin-exposed.
-- **Trust:** confidence / "why" rendering in `HammerDailyPlan`, `decisionFilters.ts`, empty-state copy, missing explanations flagged in prior RFLs (RFL-035, 037, 038, 041).
-- **Cross-reference** open RFLs in `docs/asb/reality-feedback-ledger.md` and the launch hostile audit so this audit extends, not duplicates.
+## What this audit produced
 
-No edits during investigation — `code--view` and `rg` only.
+`docs/asb/athlete-experience-retention-audit.md` — hostile audit of onboarding, daily use, progression, retention, navigation, trust, delight. 15 new RFLs opened (RFL-044…RFL-058). Zero code changes.
 
-## Deliverable 1 — `docs/asb/athlete-experience-retention-audit.md` (NEW)
+## Fix-before-launch
 
-Single document, structured exactly to the brief:
+- **RFL-053 (P0)** — make post-login default `/command`; demote `/dashboard` to module-discovery/marketing only, or merge canonical Hammer surfaces into `/dashboard`. Small surface change; nullifies the largest experience-side launch risk.
 
-- **Section A — First 15 Minutes:** walk the actual journey signup → role → onboarding → first Hammer → first daily plan → first roadmap → first recommendation. For each step: next-action clarity, value visibility, confusion, overwhelm, emptiness, return motivation. Cite `file:line`.
-- **Section B — Daily Use:** today's mission clarity, Hammer authority, daily-plan actionability, recommendation coherence, competing priorities, dead ends.
-- **Section C — Progression Visibility:** roadmap progress, achievements, milestones, streaks, history, completed work — is improvement tangible?
-- **Section D — Retention Loops:** D1 / D7 / D30 / D90 — can the athlete answer "what did I accomplish / what next / why return tomorrow?"
-- **Section E — Navigation Audit:** hidden functionality, click depth, confusing labels, duplicates, unnecessary depth. Ranked P0/P1/P2 without severity inflation.
-- **Section F — Trust Audit:** contradictions, unexplained recommendations / scores / priorities, confidence breaks.
-- **Section G — Delight Audit:** moments that impress / feel intelligent / personalized / motivating, plus missed opportunities.
-- **Section H — Launch Readiness Reassessment:** what harms retention / engagement / trust, fix-before-launch vs. defer-to-V2.
-- **Section I — Final Verdict:** GO / GO WITH LIMITATIONS / NO-GO, based **solely** on athlete experience.
+## Defer-to-V2 (disclosed launch debt)
 
-Every finding gets: severity, evidence (`file:line`), athlete impact, recommendation category (pre-launch fix / V2 / accept). Hostile disproof attempts included where applicable.
+- Carried hostile-audit P1s: RFL-035, RFL-036, RFL-037, RFL-038, RFL-039, RFL-040, RFL-041, RFL-042, RFL-043.
+- New experience P1s: RFL-044, RFL-045, RFL-046, RFL-048, RFL-049, RFL-052, RFL-055, RFL-056.
+- All P2s: RFL-047, RFL-050, RFL-051, RFL-054, RFL-057, RFL-058.
+- D90 / career-arc surfaces remain gated by post-mastery-expansion-roadmap (RR-7 sealed, implementation deferred).
 
-## Deliverable 2 — `docs/asb/reality-feedback-ledger.md` (APPEND)
+## Expected post-fix verdict
 
-Open new RFL entries (RFL-044 onward) for each net-new experience issue surfaced by this audit. Do not reopen closed entries; reference RFL-035/037/038/041 where the experience audit reinforces them. Each entry: id, severity, surface, evidence, athlete impact, status = OPEN.
-
-## Deliverable 3 — `.lovable/plan.md` (UPDATE)
-
-Replace current status block with the new verdict from Section I, a one-paragraph summary of athlete-experience findings, and the pre-launch vs. V2 split. Keep the existing P0-blocker-closure history intact.
-
-## Out of scope (explicit)
-
-- No edits to `src/`, `supabase/`, audit scripts, or any non-doc file.
-- No new tables, migrations, edge functions, components, routes, copy changes, or UX fixes.
-- No reopening of closed P0 RFLs (032/033/034) unless evidence shows regression.
-- No intelligence expansion, doctrine work, or roadmap features.
-
-## Exit criteria
-
-- Sections A–I authored with cited evidence.
-- New RFLs opened for net-new findings.
-- `.lovable/plan.md` reflects the new verdict.
-- One of GO / GO WITH LIMITATIONS / NO-GO issued on athlete-experience grounds alone.
+**GO WITH LIMITATIONS** — with the P1/P2 list above carried as disclosed launch debt.

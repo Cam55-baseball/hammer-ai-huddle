@@ -187,3 +187,29 @@ See `docs/asb/launch-readiness-hostile-audit.md` for full evidence and rebuttals
 | RFL-034 | **CLOSED** | `decisionFilters.ts` + `dailyPlan.ts` now consume `isMinor` / `parentSupremacyActive` / `parentConcerns` from the spine. Minor + parent-concern personas verified: speed→`tempo_recovery`, daily speed block `awaiting-input`, roadmap high-risk milestones suppressed. Evidence: `scripts/audits/evidence/p0-3-differentiation.json` (11/11 unique daily plans). See ratification doc §RFL-034. |
 
 **Launch verdict (post-remediation):** **GO WITH LIMITATIONS.** P1s (RFL-035…RFL-043) carried forward as disclosed launch debt.
+
+
+## RFL openings — Athlete Experience & Retention Audit (2026-06-07)
+
+Audit-only sweep of onboarding, daily use, progression, retention, navigation, trust, and delight. See `docs/asb/athlete-experience-retention-audit.md`. No code changed.
+
+| ID | Finding | Severity | Status | Surface | Harm |
+|---|---|---|---|---|---|
+| RFL-044 | `HammerDailyPlan` renders 9 modality blocks simultaneously on first visit with no "do these first" hierarchy → overwhelm for cold-start athletes. | P1 | Open | `src/components/hammer/HammerDailyPlan.tsx` | onboarding completion, engagement |
+| RFL-045 | `ProgressDashboard` mounts 15+ HIE cards in a single scroll → cognitive overload; athlete cannot identify the headline signal. | P1 | Open | `src/pages/ProgressDashboard.tsx` | engagement, perceived value |
+| RFL-046 | `Dashboard.tsx:262-287` interleaves module-purchase paywall CTAs with performance surfaces; new athletes see commercial CTAs adjacent to daily intelligence. | P1 | Open | `src/pages/Dashboard.tsx` | trust, commercial-survivability boundary |
+| RFL-047 | Daily plan has no explicit "tomorrow promise" / return hook beyond the implicit "plan exists." | P2 | Open | `HammerDailyPlan.tsx` | retention (D1→D2) |
+| RFL-048 | `/today` and `/command` both surface "do this now" — ambiguous primary daily destination. | P1 | Open | `src/pages/Today.tsx`, `AthleteCommand.tsx` | engagement, clarity |
+| RFL-049 | Roadmap progress surfaces "what's next" but does not headline trajectory delta ("how fast am I moving"). | P1 | Open | `useRoadmapProgress`, roadmap surfaces | perceived value, retention |
+| RFL-050 | `DualStreakDisplay` mounted only on `/progress`; not on `/command` or `/today` where daily decision happens. | P2 | Open | `src/components/dashboard/DualStreakDisplay.tsx` | engagement, delight |
+| RFL-051 | `RecentEventsPreview` lists events without weekly/period summarization ("you completed X this week"). | P2 | Open | `RecentEventsPreview` | progression visibility |
+| RFL-052 | D7/D30 retention hooks absent on athlete home: no weekly digest preview, no monthly milestone callout. Hammer never says "here's what you did this week." | P1 | Open | `/command`, `/dashboard` | D7+ retention |
+| RFL-053 | **`/dashboard` and `/command` both function as athlete-home.** Post-login default lands on `/dashboard`, where `HammerOnboardingChat` / `HammerDailyPlan` / `HammerChat` are not mounted. The entire P0-3 differentiation, spine activation, and minor-supremacy work is invisible to athletes who do not deep-link to `/command`. Disproof attempted: Auth.tsx new-athlete branch only covers the first event; subsequent logins land on `/dashboard`. Disproof fails. | **P0** | Open | `src/pages/Auth.tsx`, `Dashboard.tsx`, `AthleteCommand.tsx` | **launch-blocking experience risk** — nullifies P0-3 investment for returning athletes |
+| RFL-054 | `/digest`, `/forecast`, `/calendar`, `/cycle`, `/safety-center` exist as routes but are not surfaced from athlete home navigation → hidden functionality. | P2 | Open | nav | usability |
+| RFL-055 | Drill / workout / video recommendation cards do not consistently expose inline `why` lineage. Violates EI-1…EI-10 athlete-intelligence-delivery "lineage one interaction away" expectation outside of `HammerDailyPlan`. | P1 | Open | `useDrillRecommendations`, `useWorkoutRecommendations`, video shelves | trust, intelligence-delivery doctrine |
+| RFL-056 | MPI score rendered on `ProgressDashboard` (and elsewhere) as `N • grade` with no inline lineage path to "how was this computed?" | P1 | Open | `ProgressDashboard.tsx:39`, MPI surfaces | trust |
+| RFL-057 | Onboarding completes silently into the 9-modality plan — no "first plan generated" celebration / acknowledgement moment. | P2 | Open | onboarding → command handoff | delight, activation |
+| RFL-058 | No before/after surface after drill completion — athlete completes a drill and sees no "this changed your projection by X." | P2 | Open | post-drill surfaces | delight, perceived value |
+
+**Athlete-experience launch verdict:** **NO-GO** on a single P0 (RFL-053). After resolution, expected **GO WITH LIMITATIONS** with P1s (RFL-035…RFL-058) as disclosed launch debt.
+
