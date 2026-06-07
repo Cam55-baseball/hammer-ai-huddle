@@ -229,3 +229,32 @@ Audit-only sweep of onboarding, daily use, progression, retention, navigation, t
 All OPEN RFLs re-classified with no severity inflation in `docs/asb/final-production-release-verification.md` §F. No release blockers found. No new RFLs opened by verification.
 
 **Final launch verdict:** **RELEASE AUTHORIZED.** See `docs/asb/hammers-modality-v1-ratification.md`.
+
+
+## Launch Operations Layer (2026-06-07)
+
+Post-ratification operations doctrine established. Reality remains the organism's governing authority; the RFL is the single intake path for athlete / coach / parent / recruiter / support / operational signals. See `docs/asb/v1-launch-operations-plan.md` for the full runbook.
+
+### Intake pipeline
+
+```text
+capture channel → triage owner → 3-axis severity rubric → RFL entry → Section F board → V1.x or V2
+```
+
+Severity axes (NOT effort): athlete impact, retention impact, trust impact.
+
+### V1.x prioritization snapshot
+
+Re-ranked OPEN RFLs (full rubric in `v1-launch-operations-plan.md` §F).
+
+- **Immediate V1.x** (score ≥7): RFL-055, RFL-056, RFL-052, RFL-044
+- **Near-term V1.x** (score 5–6): RFL-048, RFL-049, RFL-045, RFL-037, RFL-041, RFL-038, RFL-036, RFL-042, RFL-046
+- **V2** (score ≤4): RFL-035, RFL-039, RFL-040, RFL-043, RFL-047, RFL-050, RFL-051, RFL-054, RFL-057, RFL-058
+
+### Daily ritual
+
+Leadership checks (in order): activation rate (prior 24h cohort), D1 retention (24–48h cohort), failure-event count at Section C Top-5 stages, RFL inbox.
+
+### Re-evaluation triggers
+
+Any RFL is re-ranked when (a) a capture-channel signal shows broader harm, (b) a Section D scoreboard breach is causally linked, or (c) a new RFL compounds an existing one.

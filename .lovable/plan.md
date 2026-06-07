@@ -62,3 +62,25 @@ Direct answers to the four leadership questions:
 - `v1-launch-operations-plan.md` exists with Sections A–G complete.
 - `reality-feedback-ledger.md` records the operations-layer doctrine and the V1.x ordered list.
 - `.lovable/plan.md` points operators to the runbook and the daily check.
+
+## Post-launch operations (2026-06-07)
+
+Runbook: **`docs/asb/v1-launch-operations-plan.md`**.
+
+### Daily ritual (leadership)
+1. Activation rate — prior 24h cohort (Healthy ≥60% / Warning 40–60% / Critical <40%)
+2. D1 retention — 24–48h cohort (Healthy ≥45% / Warning 25–45% / Critical <25%)
+3. Failure-event count at Section C Top-5 stages
+4. RFL inbox — any overnight capture-channel signals
+
+### V1.x ordered backlog (athlete/retention/trust, not effort)
+1. **RFL-055** — inline `why` on recommendation surfaces
+2. **RFL-056** — inline `why` on MPI score
+3. **RFL-052** — weekly digest / "here's what you did this week"
+4. **RFL-044** — daily-plan hierarchy ("do this first" pacing)
+
+Near-term: RFL-048, 049, 045, 037, 041, 038, 036, 042, 046.
+V2: RFL-035, 039, 040, 043, 047, 050, 051, 054, 057, 058.
+
+### First fix if adoption stalls
+Walk Section C Top-5 in order. Most likely first fix = RFL-044 + RFL-057 (Stage 5→6 onboarding-to-first-event gap). Second-most-likely = RFL-055 + RFL-056 (Stage 7→8 trust lineage).
