@@ -258,3 +258,23 @@ Leadership checks (in order): activation rate (prior 24h cohort), D1 retention (
 ### Re-evaluation triggers
 
 Any RFL is re-ranked when (a) a capture-channel signal shows broader harm, (b) a Section D scoreboard breach is causally linked, or (c) a new RFL compounds an existing one.
+
+---
+
+## Reality Validation Protocol — active
+
+`docs/asb/v1-reality-validation-protocol.md` is now active. Cohorts C1 (10),
+C2 (25), C3 (50) will produce Reality Validation Reports using
+`docs/asb/reality-validation-cohort-template.md`. RFL intake continues to
+use the pipeline defined in `v1-launch-operations-plan.md` §E with no
+severity inflation. The V1.x prioritization board in §F is re-ranked from
+cohort reality evidence, never invented inside a cohort report.
+
+## Positive Reality Evidence
+
+Repeated successes (≥2 athletes on the same surface) are appended here as
+confirmation of constitutional expectations. Not RFLs. Each entry cites the
+cohort report that promoted it.
+
+| Date | Surface | Pattern | Athletes | Expectation confirmed | Source report |
+|------|---------|---------|----------|-----------------------|---------------|
