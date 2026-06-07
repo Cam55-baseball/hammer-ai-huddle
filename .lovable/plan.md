@@ -1,110 +1,110 @@
-# Command Center Authority & Closed-Loop Intelligence Audit
+# Command Center Authority Restoration Sprint
 
-Pure documentation/audit sprint. **No** runtime code, schema, doctrine, UI, or component changes. Findings only.
+Targeted runtime remediation of the highest-priority findings from `docs/asb/command-center-authority-audit.md`. Scope is bounded — no new doctrine, no new ASB topics, no schema migrations. Reuses existing infrastructure: `LineageDrilldownButton`, `MissingnessChip`, `ConfidencePill`, `buildHammerDailyPlan`, `useAthleteCommandRows`, `buildCalendarEvents`, athlete context spine.
 
-## Scope (route `/command` → `src/pages/AthleteCommand.tsx`)
+## Section A — Close BROKEN card loops (RFL-068)
 
-Surfaces mounted, in order:
-1. `NotificationBell`
-2. `HammerOnboardingChat`
-3. `UhrcAthleteSection` (Universal Hammer Report Card)
-4. `CommandCenterSection` (Readiness, Fatigue, Recovery, Workload, Behavioral Regulation, Scheduling Load, Trend Shifts, Escalation Flags)
-5. `HammerDailyPlan` (9-modality daily prescription)
-6. `HammerChat` (Ask-Coach)
-7. `RecentEventsPreview` (replay tail)
+The 7 observation-only cards (Readiness, Fatigue, Recovery, Workload, BehavioralRegulation, SchedulingLoad, TrendShifts) currently terminate at a number with no affordance. Add a uniform "What now?" footer to each card that:
 
-## Deliverables
+1. Deep-links to the matching `HammerDailyPlan` modality block on `/command` (anchor scroll: `#hammer-plan-{modality}`), with fallback route per modality.
+2. Renders a one-sentence projection-envelope interpretation (`b.why`-equivalent), pulled from existing projection data — no new copy doctrine, just surfacing what the envelope already carries.
+3. Mounts the existing `<LineageDrilldownButton>` so Why-this / Why-now / Why-me is one tap away.
 
-1. **`docs/asb/command-center-authority-audit.md`** (new) — sections A–I below.
-2. **`docs/asb/reality-feedback-ledger.md`** — append findings as RFL entries (P0 broken loops / P1 traceability gaps / P2 IA + zero-knowledge clarifications). Ratification entry for the audit itself as CLOSED-as-doctrine-reference.
-3. **`.lovable/plan.md`** — execution note + exit-criteria mapping.
+Card → modality mapping:
+- Readiness → `warmup` + `speed`
+- Fatigue → `recovery`
+- Recovery → `recovery`
+- Workload → `strength`
+- BehavioralRegulation → `recovery` (regulation lives on the recovery block)
+- SchedulingLoad → `strength`
+- TrendShifts → top-shifted family's matching modality
 
-## Audit document structure
+Emit a lightweight `intelligence.card.action_taken` event (reusing the `observability` ASB class already registered) when the footer CTA is tapped, so the loop closes through the canonical ledger.
 
-### Section A — Card inventory
-Table with one row per Command Center card (all `src/components/command/cards/*` + Hammer surfaces + UHRC + Onboarding chat + Recent events). Columns:
-- Purpose
-- Authority source (hook / ASB topic / projection)
-- Intended athlete action
-- Destination (route / surface)
-- Completion path
-- Feedback path (event emission, `asb_events` topic)
-- Organism update path (which projections refresh)
-- **Loop status**: COMPLETE / PARTIAL / BROKEN
+## Section B — Answer Hammer dead-end repair (RFL-069, RFL-071)
 
-### Section B — Answer Hammer audit
-Trace every actionable affordance in `HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat`, `EscalationBanner`, card CTAs, `LineageDrilldownButton`, `NotificationBell`. For each:
-- click handler present
-- routing target valid
-- state update fired
-- persistence path (Supabase / event)
-- feedback recorded
-List **dead actions** (clicks with no response) as P0.
+- **UHRC remediation CTA** (`UhrcReportCard`): add a footer button "Work on this in today's plan" that scrolls to `#hammer-plan`. Adds per-topic tooltip pulled from existing topic registry labels — no new copy authority.
+- **Escalation ack consolidation** (RFL-071): wire `EscalationBanner` and `EscalationFlagsCard` item clicks to call the same `useAcknowledgeEscalation` mutation the Bell uses, before navigating to `/replay/:id`. Bell badge decrements regardless of entry surface.
+- Verify every existing handler still resolves; document closure in RFL.
 
-### Section C — Recommendation traceability
-For each recommendation source (daily plan modalities, readiness pill, fatigue/recovery cards, behavioral regulation, escalation flags, UHRC grade) document:
-- source signals (ledger topics)
-- decision logic (file:line)
-- confidence source
-- timing rationale
-- Athlete-legible **Why this / Why now / Why me** — present, partial, or absent.
+## Section C — Schedule authority integration (RFL-064)
 
-### Section D — Action completion loops
-Per recommendation: Recommendation → Destination → Execution surface → Result logging → Organism update. List broken loops, prioritize P0/P1/P2 by athlete impact.
+Wire existing `src/lib/calendar/buildCalendarEvents.ts` into `buildHammerDailyPlan` as a bounded antecedent:
 
-### Section E — Schedule authority
-Audit whether `calendar_events`, `games`, `scheduled_practice_sessions`, `game_plan_*` tables flow into Command Center recommendations. Document gap + list recommendations operating without schedule awareness.
+1. New helper `src/lib/hammer/context/scheduleWindow.ts` reads `calendar_events`, `games`, `scheduled_practice_sessions` for the athlete in `[today-1d, today+7d]`.
+2. Returns a typed `ScheduleWindow { yesterday, today, tomorrow, upcomingCompetition }` with explicit `missingness` when no rows.
+3. `buildHammerDailyPlan` consumes the window to:
+   - Taper strength when `upcomingCompetition.daysUntil ≤ 2`.
+   - Inject a `why` clause referencing the upcoming game/practice.
+   - Suppress redundant warm-up volume on back-to-back practice days.
+4. `WorkloadCard` adds a "Next 7 days" line showing competition density when present.
 
-### Section F — Personalization authority
-For each surface: position-aware? sport-aware? development-stage-aware? competition-level-aware? Classify **GENERIC** vs **ORGANISM-SPECIFIC**.
+All branching is additive; missingness preserved per Eternal Laws (no fabricated schedule).
 
-### Section G — UHRC authority
-Audit `UhrcAthleteSection` / `UhrcReportCard`:
-- which athlete it represents
-- signals consumed
-- should branch by sport? by position?
-- recommendation (keep universal / branch / hybrid)
+## Section D — Organism-specific UHRC (RFL-065, RFL-066)
 
-### Section H — Information architecture
-Evaluate canonical home for Weekly Digest, Forecast, Body Status: Command Center vs Progress Dashboard. Recommend placement + rationale (cross-reference current mount points).
+`UhrcAthleteSection` + `buildUhrcReport`:
 
-### Section I — Zero-knowledge athlete test
-For each card answer 5 questions (knows what / why matters / what to do / where to go / how to complete). Flag ambiguity as P1/P2 RFL entries with recommended copy/affordance fix (documented only, not applied).
+- Read `sport` and `primary_position` from `useHammerAthleteContext()`.
+- Introduce a sport→disciplines map (baseball stays `["pitching","hitting"]`; other sports degrade to a single discipline + visible `MissingnessChip` "No projector for {sport} yet").
+- Position-conditional weighting: pitcher emphasizes `pitching`, catcher/infield emphasizes `defense` (placeholder weight 0 when projector absent — visible, not hidden).
+- No new ASB topics. UHRC remains interpretive — does not author organism truth.
 
-## Exit-criteria mapping
+Other GENERIC surfaces (Bell labels, TodayOverviewHeader, RecentEventsPreview) are deferred — documented in updated audit table as "deferred to next sprint" with the required organism inputs listed.
 
-| Exit criterion | Covered by |
+## Section E — Trust surfaces (Why this / Why now / Why me)
+
+Mount `<LineageDrilldownButton>` (already implemented) on:
+- All 7 CommandCenterSection cards (footer row alongside the "What now?" CTA from Section A).
+- `UhrcReportCard` (header right).
+
+No new component required — this is wiring an existing affordance into surfaces that lack it.
+
+## Section F — Validation matrix
+
+Manual smoke (browser preview) across six athlete archetypes by toggling athlete_context values via existing onboarding chat:
+
+| Archetype | Verification |
 |---|---|
-| Every card has documented authority source | Section A |
-| Every action has completion loop | Sections A, B, D |
-| Every recommendation has traceability | Section C |
-| Navigation dead ends identified | Section B |
-| Personalization gaps identified | Sections F, G |
-| Validated for zero-knowledge athletes | Section I |
+| Youth | Cards link to plan; no professional-only copy leaks |
+| High-school | Schedule window includes practices |
+| College | Competition taper triggers when game ≤2d |
+| Professional | UHRC sport branching renders |
+| Injured | Missingness chip on disciplines without projector; no dead actions |
+| Return-from-layoff | Continuity context propagates; no orphan CTAs |
 
-## Constraints
+Verification gates: no console errors, every CTA resolves, no 404, ack consolidation works from all 3 escalation surfaces.
 
-- Documentation only. No code, schema, event, doctrine, or copy changes.
-- All findings routed through RFL with priority + recommended-but-deferred fixes.
-- Subordinate to all sealed Eternal Laws and prior invariants — audit is interpretive, never authoritative over organism truth.
+## Section G — Deliverables
 
-## Execution note — 2026-06-07
+1. **Runtime code**:
+   - `src/components/command/cards/*.tsx` — uniform action footer (7 files).
+   - `src/components/command/EscalationBanner.tsx`, `…/EscalationFlagsCard.tsx` — ack-on-click.
+   - `src/components/report-card/UhrcReportCard.tsx`, `UhrcAthleteSection.tsx` — CTA + sport/position branching.
+   - `src/lib/uhrc/buildUhrcReport.ts` (or current location) — sport/position-conditional disciplines.
+   - `src/lib/hammer/context/scheduleWindow.ts` — NEW bounded window reader.
+   - `src/lib/hammer/prescription/dailyPlan.ts` — consume ScheduleWindow with missingness preserved.
+   - `src/components/command/cards/WorkloadCard.tsx` — surface 7-day competition density.
+   - `src/components/hammer/HammerDailyPlan.tsx` — add anchor id per modality block for deep-linking.
 
-Plan executed as documentation-only audit. Deliverables produced:
+2. **Docs**:
+   - `docs/asb/command-center-authority-restoration.md` — NEW restoration report (what shipped, what deferred, archetype validation table).
+   - `docs/asb/reality-feedback-ledger.md` — close RFL-064, RFL-065, RFL-066, RFL-068, RFL-069, RFL-071 with file:line evidence; keep RFL-067 (IA), RFL-070 (replay translation), RFL-072 (modality smoke) open as deferred.
+   - `.lovable/plan.md` — execution note.
 
-- **`docs/asb/command-center-authority-audit.md`** (created) — Sections A–I + exit-criteria mapping. Inventories 13 Command Center surfaces with loop status (4 COMPLETE, 5 PARTIAL, 7 BROKEN-for-action observation cards). Documents schedule-authority gap (Section E), personalization split (9 of 13 surfaces GENERIC), UHRC baseball-lock (Section G), IA recommendation (Body Status → /command; Weekly Digest + Forecast → /progress), and 13 zero-knowledge ambiguity findings (Section I).
-- **`docs/asb/reality-feedback-ledger.md`** — Appended RFL-064…RFL-072 (all OPEN, V1.x P1/P2 prioritized, evidence-bound). No severity inflation. No re-opening of prior CLOSED RFLs.
-- **`.lovable/plan.md`** — this note.
+## Out of scope (deferred, documented)
 
-No code, schema, event, doctrine, copy, or UI changes were made. Audit is interpretive; cards, hooks, projections, and the daily plan builder retain canonical authority. Subordinate to Eternal Laws + all sealed phases.
+- No new ASB topic creation beyond reusing `observability` class for card-action emission.
+- No replay-surface athlete translation (RFL-070).
+- No Forecast surface (Phase 58 SF deferred).
+- No full personalization of Bell/Header/RecentEvents (organism inputs documented, transition deferred).
+- No schema migrations.
 
-### Exit-criteria verification
+## Exit criteria
 
-| Exit criterion | Status |
-|---|---|
-| Every Command Center card has documented authority source | ✅ Audit Section A |
-| Every action has completion loop | ✅ Sections A, B, D (gaps filed as RFL-068, RFL-069, RFL-072) |
-| Every recommendation has traceability | ✅ Section C (gaps filed under RFL-068) |
-| Navigation dead ends identified | ✅ Section B (no dead handlers; 7 view-only cards + UHRC dead-for-action, filed RFL-068/069) |
-| Personalization gaps identified | ✅ Sections F, G (filed RFL-065, RFL-066) |
-| Command Center validated for zero-knowledge athletes | ✅ Section I (filed RFL-068…RFL-071) |
+- All 7 BROKEN cards now expose CTA + lineage button + interpretation line → loop closed.
+- UHRC has remediation CTA and is sport/position-aware with visible missingness.
+- Daily Plan consumes schedule antecedents; WorkloadCard shows upcoming competition density.
+- Ack works from Bell, Banner, and FlagsCard.
+- Six athlete archetypes pass manual smoke with zero dead actions and zero navigation failures.
+- RFL updated; restoration report committed; subordinate to Eternal Laws and all sealed phases.
