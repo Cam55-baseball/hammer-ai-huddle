@@ -178,9 +178,11 @@ const Auth = () => {
                 navigate("/onboarding/athlete", { replace: true });
               }, 0);
             } else {
-              // Players/others go to regular dashboard
+              // RFL-053 — canonical athlete home is /command (AthleteCommand).
+              // /dashboard remains as module-discovery catalog but is no longer
+              // the post-login athlete authority surface.
               setTimeout(() => {
-                navigate("/dashboard", { replace: true });
+                navigate("/command", { replace: true });
               }, 0);
             }
           } else {
