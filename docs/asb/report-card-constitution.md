@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
 > **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.4
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.2 — Constitutional Synthesis & Ambiguity Collapse)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> Version: v0.5
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.3 — Constitutional Decision Packet)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities** routed through the CDR; the remaining 31 are constitutionally closed by inherited doctrine per §0.16.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis and packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities**; Phase 0.3 bundles those 17 into **6 closure bundles** ratifiable in **2 owner responses** per §0.21.
 
 ---
 
