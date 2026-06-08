@@ -1500,6 +1500,8 @@ All 9 blocks are **required** for every category. Empty blocks render as visible
 
 The constitution flips `STATUS: DRAFT → STATUS: RATIFIED` only when every question below is answered. Until then, Phase 1 (implementation planning) is constitutionally blocked.
 
+> **Phase 0.8 §16 Compression Stamp (see §0.26):** 38 of 43 V1-applicable items have been auto-resolved by reference to ratified §0 doctrine + CDRs (15 A + 23 B). Only **B2, C1, C3** remain as true owner decisions for V1. **B4, B5, K7** are out of V1 scope per CDR-15. Each item below carries its §0.26 classification stamp; see §0.26 §F for the residual owner questionnaire.
+
 ### A — Philosophy & primacy
 - **A1.** Confirm the Report Card is the *primary* artifact on every analysis-result surface, and the existing PIE V2 / hitting causal pages become secondary click-throughs.
 - **A2.** Is the Report Card a *per-session* artifact, a *rolling* artifact (auto-updated as new sessions land), or *both* with explicit toggling?
