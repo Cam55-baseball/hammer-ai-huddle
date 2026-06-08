@@ -638,6 +638,10 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
 
 ##### CDR-14 — Softball Hitting Variance / Slap (origin: Z19, merged with §16 B5)
 
+##### CDR-14 — Softball Hitting Variance / Slap (origin: Z19, merged with §16 B5) — **CLOSED — AUTO-RESOLVED (Phase 0.5)**
+
+> **Phase 0.5 ruling:** Option **C (Defer)** is the only option consistent with current launch doctrine. **Source:** `docs/asb/baseball-public-launch-ratification.md` P1-E classifies softball parity (including Slap) as "**defer or run softball sprint**"; until a softball sprint is authorized, Slap has no surface to render on. **Owner input not required.** See §0.22 audit table.
+
 - **Constitutional impact:** Defines whether Softball Slap hitting is a full alternate card variant or a P4 modifier on the standard card. Binds §16 B5.
 - **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (INFLUENCES) · Parent Surface (INFLUENCES) · Recruiter Surface (NONE per AE1).
 - **Doctrine constraints (non-violable):** §0.7, §3 Law 10 (additive only), AH3 (new disciplines/variants must pass §0.11-style audit).
@@ -645,16 +649,18 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **A — Full Slap-card variant (separate constitutional card alongside standard softball hitting).** *Consequence:* maximum fidelity to slap mechanics; doubles §17 schema for softball hitting; requires its own §0.11 audit per AH3.
   - **B — P4-modifier on standard softball-hitting card.** *Consequence:* one card; P4 elements (CDR-4) gain a slap-conditional variant; lighter schema; risks compressing genuinely distinct mechanics.
   - **C — Defer.** Ship V1 with standard softball hitting only; Slap added in a later phase with its own audit. *Consequence:* clean V1; explicit gap in §0.6 missingness vocabulary for slap-discipline athletes.
-- **Recommended Default:** **no default — pure owner choice.** Doctrine is neutral; this is an athlete-population-coverage decision the owner alone can make.
+- **Recommended Default:** **C** — **AUTO-RESOLVED per §0.22** (forced by P1-E launch doctrine).
 
-##### CDR-15 — V1 Discipline Scope Set (origin: AH1)
+##### CDR-15 — V1 Discipline Scope Set (origin: AH1) — **CLOSED — AUTO-RESOLVED (Phase 0.5)**
+
+> **Phase 0.5 ruling:** Doctrine resolves all 8 toggles. **Sources:** `docs/asb/baseball-public-launch-ratification.md` §1–§7 ratifies Baseball Pitching + Baseball Hitting as the live launch scope; Softball = P1-E (deferred per CDR-14); Throwing / Catching / Defense / Baserunning are absent from every launch ratification document — i.e., not in V1 by silence. **Resolved scope: BP=Y, BH=Y, SP=N, SH=N, TH=N, CA=N, DE=N, BR=N.** Owner may broaden post-V1 additively per AH3 + §3 Law 10. **Owner input not required for V1.** See §0.22 audit table.
 
 - **Constitutional impact:** Defines which disciplines have a constitutionally-ratified Report Card surface in V1. Binds Phase 1 implementation scope.
 - **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (deferred per AE1).
 - **Doctrine constraints (non-violable):** §3 Law 10 (additive), AH2 (§3 universal; §0.7 hitting-scoped), AH3 (each new discipline must pass its own §0.11 audit before opening its surface).
 - **Options:** Per-discipline yes/no across the eight candidates:
   - Baseball Pitching · Baseball Hitting · Softball Pitching · Softball Hitting · Throwing · Catching · Defense · Baserunning.
-- **Recommended Default:** **no default — pure owner choice.** Doctrine permits any subset (AH3 makes scope-expansion additive-safe). The owner alone defines V1 athlete coverage.
+- **Recommended Default:** **BP=Y, BH=Y, all others=N** — **AUTO-RESOLVED per §0.22** (inherited from `baseball-public-launch-ratification.md`).
 
 ##### CDR-16 — Interview Cadence Discipline (origin: Z20)
 
