@@ -1,25 +1,95 @@
-# Phase 0.2 — Report Card Constitutional Synthesis & Ambiguity Collapse
+## Phase 0.3 — Constitutional Decision Packet (§0.18)
 
-**Status:** Active. §0.15 Derivation Rule ratified, §0.16 Ambiguity Ledger published, §0.17 Constitutional Decision Register opened, §0.12 gate bounded by CDR. Implementation remains constitutionally blocked.
+**Scope:** Documentation-only. No code, schema, or UI changes. Implementation remains constitutionally blocked. No new audits, no new discovery series, no new gap analyses. Converts the 17 open CDR items from §0.17 into a single owner-facing decision document with bounded options.
 
-## What landed
-- `docs/asb/report-card-constitution.md` bumped to **v0.4**.
-- **§0.15 Constitutional Derivation Rule:** no owner question may be opened for a doctrine-answerable item; must classify A/B/C against ratified corpus first.
-- **§0.16 Ambiguity Ledger:** all 48 open Q-Series Z/AA–AI questions re-classified — 13 Class A (already answered), 18 Class B (derivable), 17 Class C (true ambiguity). 31 constitutionally closed by inherited doctrine.
-- **§0.17 Constitutional Decision Register (CDR-1…CDR-17):** five domains. D1 Scoring Meaning (4), D2 Coach Hammer Behavior (fully derived), D3 Parent/Recruiter Visibility (fully derived), D4 Celebration & Progress (4), D5 Athlete Journey Experience (9).
-- **§0.12 revised:** conditions (1)+(2) now bounded by §0.16/§0.17 closure rather than open-ended interview fanout. Gate strictness unchanged.
-- **§0.14 revised:** ~75–110 questions across 25–35 waves → **17 CDR decisions across 3 owner waves** (65% reduction).
-- `docs/asb/reality-feedback-ledger.md` appended with RFL-083.
+### Files to edit
 
-## What stays blocked
-UI work, UHRC removal, hitting taxonomy migration, throwing signal registry, correction-cache table, edge functions, new routes/tabs/components, athlete/parent/recruiter/technical views, score displays, category naming, weights, formats, drill/video/roadmap picks, AI tone authorship — all blocked until §0.12 gate is satisfied (all CDR items resolved + §0.11 audit clean + owner ratifies §0).
+1. **`docs/asb/report-card-constitution.md`** — bump to `v0.5 (DRAFT — UNRATIFIED)`; append §0.18, §0.19, §0.20, §0.21. Revise §0.14 work estimate to reflect closure-recommendation bundling. No edits to §0.1–§0.17 content (sealed by Phase 0.2).
+2. **`docs/asb/reality-feedback-ledger.md`** — append **RFL-084** documenting the Decision Packet emission, the §0.15 derivation rule re-application (no new questions opened), and the closure-bundling recommendation.
+3. **`.lovable/plan.md`** — replace Phase 0.2 status with Phase 0.3 status; implementation still blocked.
 
-## Next action
-Owner answers, in any order:
-- **D1 — Scoring Meaning:** CDR-1 (score frame), CDR-2 (absolute vs athlete-relative), CDR-3 (P3 sub-criteria), CDR-4 (P4 decomposition).
-- **D4 — Celebration & Progress:** CDR-5 (celebration threshold), CDR-6 (per-session vs rolling), CDR-7 (improvement time horizon), CDR-8 (celebration trigger set).
-- **D5 — Athlete Journey Experience:** CDR-9 (conflict-mode rendering), CDR-10 (ENCOURAGED enforcement), CDR-11 (palette permissions), CDR-12 (highest-priority composite), CDR-13 (disclosure pattern), CDR-14 (softball variance — merged w/ §16 B5), CDR-15 (V1 discipline scope), CDR-16 (interview cadence), CDR-17 (RFL granularity).
+### §0.18 — Constitutional Decision Packet (structure)
 
-D2 and D3 require no owner input — fully derived from RR-5/7/8/9/10, §1, §3 Law 5, Presentation Mode Lock, and Missingness Doctrine.
+Single owner-facing document. Per-item schema, applied uniformly to all 17 CDR items:
 
-§0.11 audit is re-run after each CDR-domain closure; rows flip Partially/Absent → Defined as CDR items resolve.
+```text
+CDR-N  [domain: D1|D4|D5]   inherits: Z?/AA?/AB?/AF?/AH?
+─────────────────────────────────────────────────────────
+Constitutional impact:   one paragraph — what this decision binds
+Downstream systems:      Report Card | Analysis Engine | Correction Engine |
+                         Roadmap | Coach Hammer | Parent Surface | Recruiter Surface
+Doctrine constraints
+that cannot be violated: list of clauses (§0.x, RR-n, RW-n, Eternal Law n, §3 Law n, §16 Bn)
+Options:
+  A) <option>  — consequence chain across affected systems
+  B) <option>  — consequence chain
+  C) <option>  — consequence chain
+  D) <option>  — (only when a 4th constitutionally distinct path exists)
+Recommended Default:     A|B|C|D — derived from inherited doctrine where one
+                         option is materially more aligned. NOT auto-ratified.
+                         Marked "no default — pure owner choice" if doctrine is
+                         neutral across all options.
+```
+
+Grouped under the three live domains:
+
+- **D1 — Scoring Meaning** (CDR-1, CDR-2, CDR-3, CDR-4)
+- **D4 — Celebration & Progress** (CDR-5, CDR-6, CDR-7, CDR-8)
+- **D5 — Athlete Journey Experience** (CDR-9, CDR-10, CDR-11, CDR-12, CDR-13, CDR-14, CDR-15, CDR-16, CDR-17)
+
+D2 (Coach Hammer) and D3 (Parent/Recruiter) explicitly carried forward as **"Closed-by-Derivation per §0.16 — not reopened in Phase 0.3."**
+
+For each item, options will be drawn directly from the existing §0.16 ledger language so no new ambiguity is introduced. Doctrine-constraint rows will cite the actual clause IDs (e.g., CDR-2 constrained by §0.4 development-first, §3 Law 5 confidence-bounded, RW-7, AR-1; CDR-11 constrained by §0.3 "ENCOURAGED, never judged", §0.6 missingness visibility; CDR-15 constrained by Eternal Law of additive-only scope, RW-1, §0.5).
+
+### §0.19 — Constitutional Dependency Map
+
+Single table, one row per CDR item, one column per downstream system. Each cell records `BINDS` / `INFLUENCES` / `NONE`. Used to identify which decisions cascade into multiple engines vs. which are presentation-local.
+
+```text
+CDR | ReportCard | AnalysisEng | CorrectionEng | Roadmap | CoachHammer | ParentSurf | RecruiterSurf
+```
+
+Example expected pattern (to be filled in per item):
+- CDR-1, CDR-2 → BINDS all seven columns (scoring frame propagates everywhere).
+- CDR-9, CDR-11, CDR-13 → BINDS Report Card + Parent Surface only.
+- CDR-16, CDR-17 → BINDS none (process-only, no implementation surface).
+
+### §0.20 — Ratification Forecast
+
+Three buckets:
+
+- **MUST-ANSWER-BEFORE-IMPLEMENTATION** — decisions that bind schema, scoring math, or rendering contracts (expected: CDR-1, CDR-2, CDR-3, CDR-4, CDR-6, CDR-7, CDR-11, CDR-12, CDR-15).
+- **MAY-DEFER-TO-POST-V1** — decisions that affect later surfaces or can ship behind a feature flag with a constitutional default (expected: CDR-5, CDR-8, CDR-9, CDR-10, CDR-13, CDR-14).
+- **NO-IMPLEMENTATION-IMPACT** — process/governance decisions (expected: CDR-16 cadence, CDR-17 RFL granularity).
+
+Each bucket annotated with the precise reason an item lands there, citing doctrine.
+
+### §0.21 — Closure Recommendation
+
+Bundling proposal that collapses 17 independent decisions into a small set of **constitutional choice bundles** the owner can ratify atomically:
+
+- **Bundle 1 — "Scoring Spine"** (CDR-1 + CDR-2 + CDR-3 + CDR-4): one coherent scoring philosophy; the four are not independently coherent.
+- **Bundle 2 — "Progress Signal"** (CDR-5 + CDR-6 + CDR-7 + CDR-8): celebration/progress mechanics derive from one signal definition.
+- **Bundle 3 — "Athlete Surface Grammar"** (CDR-9 + CDR-10 + CDR-11 + CDR-13): rendering grammar for §0.3 ENCOURAGED enforcement; tightly coupled.
+- **Bundle 4 — "Priority & Scope"** (CDR-12 + CDR-15): what gets surfaced as priority, across which V1 disciplines.
+- **Bundle 5 — "Variance"** (CDR-14): single Softball-Hitting decision.
+- **Bundle 6 — "Process"** (CDR-16 + CDR-17): governance cadence; can ratify with stated default.
+
+Target: **two owner responses** close all 17 — Response 1 covers Bundles 1–3 (the spine that unblocks implementation); Response 2 covers Bundles 4–6.
+
+### §0.14 update
+
+Revise the work estimate row from "3 owner waves (D1/D4/D5)" to **"2 owner responses across 6 bundles per §0.21 closure recommendation."** No other §0.14 row changes.
+
+### RFL-084 (Reality Feedback Ledger)
+
+Record: Phase 0.3 emitted, §0.18–§0.21 added, no new questions opened (Phase 0.2 synthesis honored), 17 CDR items packaged with options + defaults + dependency map + forecast + bundled closure path, implementation gate unchanged.
+
+### What this plan explicitly does NOT do
+
+- Does not auto-ratify any Recommended Default.
+- Does not reopen Q-Series Z, AA, AB, AC, AD, AE, AF, AG, AH, AI.
+- Does not reopen D2 or D3 (closed-by-derivation).
+- Does not produce any new owner-facing questions beyond the 17 already-registered CDR items.
+- Does not touch source code, migrations, RLS, edge functions, UI, or `src/`.
+- Does not lift the implementation gate.
