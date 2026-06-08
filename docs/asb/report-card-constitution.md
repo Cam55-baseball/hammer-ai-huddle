@@ -496,7 +496,9 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **C — Single P3 score with two sub-criteria visible in click-expansion (§0.6 "Why" + "How to improve" blocks).** *Consequence:* headline simplicity of A; lineage of B; Correction Engine still gets sub-criterion granularity from the expansion; closest match to CDR-1D + CDR-2C surface grammar.
 - **Recommended Default:** **C** — **AUTO-RESOLVED per §0.22**. Preserved entry for §3 Law 10 lineage.
 
-##### CDR-4 — P4 Four-Element Decomposition (origin: Z18)
+##### CDR-4 — P4 Four-Element Decomposition (origin: Z18) — **CLOSED — AUTO-RESOLVED (Phase 0.5)**
+
+> **Phase 0.5 ruling:** Option **C** is the only constitutionally legal render. **Sources:** same chain as CDR-3 plus §0.1 symmetry — Report Card grammar cannot use one structure for P3 and a different one for P4. The pre-existing Recommended Default rationale explicitly cited "forced by symmetry with CDR-3," confirming the doctrinal lock. **Owner input not required.** See §0.22 audit table.
 
 - **Constitutional impact:** Same structural question as CDR-3 for P4 (knob stability / elbow direction / barrel delivery / closing the gap). Binds §0.7 P4 and §17 schema.
 - **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (INFLUENCES) · Parent Surface (INFLUENCES) · Recruiter Surface (NONE per AE1).
@@ -505,7 +507,7 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **A — Aggregated holistic.** One P4 score. *Consequence:* loses lineage to four owner-ratified elements; risks violating §0.7.
   - **B — Four independently scored elements.** *Consequence:* maximum lineage; quadruples §17 schema rows for P4; Correction Engine gets element-level targeting.
   - **C — Single P4 score with four elements visible in click-expansion.** *Consequence:* matches CDR-3C grammar; preserves §0.7 truth at the lineage layer.
-- **Recommended Default:** **C (single header + four elements in click-expansion).** Forced by symmetry with CDR-3 — Report Card grammar cannot use one structure for P3 and a different one for P4 without violating §0.1 (athlete understanding through consistency).
+- **Recommended Default:** **C** — **AUTO-RESOLVED per §0.22** (forced by symmetry with CDR-3). Preserved entry for §3 Law 10 lineage.
 
 ---
 
