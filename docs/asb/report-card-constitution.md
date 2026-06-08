@@ -1,10 +1,11 @@
 # Hammers Report Card Constitution
 
 > **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.1
-> Opened: 2026-06-08
-> Lineage: ASB RFL-080 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> Version: v0.2
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Section 0 inserted)
+> Lineage: ASB RFL-080, RFL-081 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification (Q-Series Z).
 
 ---
 
