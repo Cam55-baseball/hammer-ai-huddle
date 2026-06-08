@@ -1503,72 +1503,72 @@ The constitution flips `STATUS: DRAFT → STATUS: RATIFIED` only when every ques
 > **Phase 0.8 §16 Compression Stamp (see §0.26):** 38 of 43 V1-applicable items have been auto-resolved by reference to ratified §0 doctrine + CDRs (15 A + 23 B). Only **B2, C1, C3** remain as true owner decisions for V1. **B4, B5, K7** are out of V1 scope per CDR-15. Each item below carries its §0.26 classification stamp; see §0.26 §F for the residual owner questionnaire.
 
 ### A — Philosophy & primacy
-- **A1.** Confirm the Report Card is the *primary* artifact on every analysis-result surface, and the existing PIE V2 / hitting causal pages become secondary click-throughs.
-- **A2.** Is the Report Card a *per-session* artifact, a *rolling* artifact (auto-updated as new sessions land), or *both* with explicit toggling?
-- **A3.** Is the Report Card shareable outside the app at v1 (parent link, coach link, recruiter link), or in-app only?
+- **A1.** [§0.26 = A — RESOLVED] Confirm the Report Card is the *primary* artifact on every analysis-result surface, and the existing PIE V2 / hitting causal pages become secondary click-throughs.
+- **A2.** [§0.26 = B — DERIVED] Is the Report Card a *per-session* artifact, a *rolling* artifact (auto-updated as new sessions land), or *both* with explicit toggling?
+- **A3.** [§0.26 = B — DERIVED] Is the Report Card shareable outside the app at v1 (parent link, coach link, recruiter link), or in-app only?
 
 ### B — Categories & naming
-- **B1.** For each of the 5 cards, do categories use **engine names verbatim** ("Energy Angle", "Hip/Shoulder Separation") or **athlete-friendly renames** ("Coil", "Stay Closed")?
-- **B2.** Pitching: does "Posture" map to `head_stability`, `hip_alignment`, or a composite of both? Stride Length + Stride Consistency: one card or two?
-- **B3.** Hitting: P1/P2/P3/P4 ship under canonical names (Hip Load · Hand Load · Stride/Landing · Hitter's Move) or athlete renames?
-- **B4.** Throwing: one universal card v1, or branch per position (Pitcher · Catcher · Infielder · Outfielder)?
-- **B5.** Softball Hitting Slap: full Slap card variant, or modifier on the standard card?
-- **B6.** Are there report-card categories **not currently measurable by the engine** that you nonetheless want graded (Effort, Composure, Routine, Mound Presence, At-bat Quality)? If yes, name them — they need measurement work before they can ship.
+- **B1.** [§0.26 = B — DERIVED] For each of the 5 cards, do categories use **engine names verbatim** ("Energy Angle", "Hip/Shoulder Separation") or **athlete-friendly renames** ("Coil", "Stay Closed")?
+- **B2.** [§0.26 = C — OWNER DECISION REQUIRED] Pitching: does "Posture" map to `head_stability`, `hip_alignment`, or a composite of both? Stride Length + Stride Consistency: one card or two?
+- **B3.** [§0.26 = B — DERIVED] Hitting: P1/P2/P3/P4 ship under canonical names (Hip Load · Hand Load · Stride/Landing · Hitter's Move) or athlete renames?
+- **B4.** [§0.26 — OUT OF V1 SCOPE per CDR-15] Throwing: one universal card v1, or branch per position (Pitcher · Catcher · Infielder · Outfielder)?
+- **B5.** [§0.26 — OUT OF V1 SCOPE per CDR-15] Softball Hitting Slap: full Slap card variant, or modifier on the standard card?
+- **B6.** [§0.26 = A — RESOLVED] Are there report-card categories **not currently measurable by the engine** that you nonetheless want graded (Effort, Composure, Routine, Mound Presence, At-bat Quality)? — V1 ships only engine-measurable categories.
 
 ### C — Hierarchy & weighting
-- **C1.** Pitching: ratify or override engine weights (Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7).
-- **C2.** Which categories are **Non-Negotiable** (failing caps the entire card)? Hitting has P1 + P4 as candidates. Pitching has none today.
-- **C3.** Which categories are **Developmental** (under-weighted for U10/U12/U14) and which are **Advanced** (only visible once foundation is clean)? Give age cut-offs.
-- **C4.** Rank 1 and Rank 2 most important per discipline.
+- **C1.** [§0.26 = C — OWNER DECISION REQUIRED] Pitching: ratify or override engine weights (Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7).
+- **C2.** [§0.26 = A — RESOLVED] Which categories are **Non-Negotiable**? Hitting = P1 + P4; Pitching = none.
+- **C3.** [§0.26 = C — OWNER DECISION REQUIRED] Which categories are **Developmental** and which are **Advanced**? Give age cut-offs.
+- **C4.** [§0.26 = B — DERIVED] Rank 1 and Rank 2 most important per discipline.
 
 ### D — Scoring formats
-- **D1.** Default continuous category format: 0–100, 1–10, letter, or band ("Elite / Strong / Developing / Needs Work")?
-- **D2.** Boolean-derived (Eyes On Target, Separation, Hip Alignment, Front Side): Pass/Fail chip or numeric score?
-- **D3.** Tracked-only signals (Extension Consistency, Arm Slot Consistency): always shown, only when variance elevated, or hidden from athlete view?
-- **D4.** Composite hero number: 0–100, 1–10, letter, or band-only? Or no hero number?
-- **D5.** Raw measurements (1.02 s, 104% body height, 8°): always visible to athlete, or only inside click-expansion?
-- **D6.** Failure-band wording: keep Clean / Minor / Major / Critical, or athlete-facing alternatives (Elite / Strong / Developing / Needs Work)?
+- **D1.** [§0.26 = A — RESOLVED via CDR-1=D] Default continuous category format: 0–100, 1–10, letter, or band?
+- **D2.** [§0.26 = B — DERIVED] Boolean-derived (Eyes On Target, Separation, Hip Alignment, Front Side): Pass/Fail chip or numeric score?
+- **D3.** [§0.26 = B — DERIVED] Tracked-only signals (Extension Consistency, Arm Slot Consistency): always shown, only when variance elevated, or hidden from athlete view?
+- **D4.** [§0.26 = B — DERIVED] Composite hero number: 0–100, 1–10, letter, or band-only? Or no hero number?
+- **D5.** [§0.26 = B — DERIVED] Raw measurements (1.02 s, 104% body height, 8°): always visible to athlete, or only inside click-expansion?
+- **D6.** [§0.26 = A — RESOLVED via CDR-1=D] Failure-band wording: keep Clean / Minor / Major / Critical, or athlete-facing alternatives?
 
 ### E — Category expansion content (§15)
-- **E1.** Confirm the 9-block contract; add/remove blocks now.
-- **E2.** "What good looks like" / "What bad looks like" — always video, or sometimes text + still frame? Who tags reference clips and how?
-- **E3.** "How to improve" — paragraph, numbered list, or mini-progression (L1→L2→L3→L4)?
-- **E4.** "Roadmap next step" — single named drill, phase progression, or calendar commitment ("3 sessions in 10 days")?
+- **E1.** [§0.26 = A — RESOLVED] Confirm the 9-block contract; add/remove blocks now.
+- **E2.** [§0.26 = B — DERIVED] "What good looks like" / "What bad looks like" — always video, or sometimes text + still frame? Who tags reference clips and how?
+- **E3.** [§0.26 = A — RESOLVED] "How to improve" — paragraph, numbered list, or mini-progression?
+- **E4.** [§0.26 = B — DERIVED] "Roadmap next step" — single named drill, phase progression, or calendar commitment?
 
 ### F — Drill integration
-- **F1.** One deficiency → ordered drill list (deterministic) vs weighted/probabilistic — confirm deterministic.
-- **F2.** Canonical deficiency catalog source: may I seed from existing `common_deficiencies` in `pieV2Signals.ts` + hitting `failureSymptoms` as a starting list, with you to add/cut?
-- **F3.** Can one drill serve multiple deficiencies, or is the mapping strictly one-to-many in the other direction?
+- **F1.** [§0.26 = A — RESOLVED] One deficiency → ordered drill list (deterministic) vs weighted/probabilistic — confirm deterministic.
+- **F2.** [§0.26 = A — RESOLVED] Canonical deficiency catalog source: seed from `common_deficiencies` in `pieV2Signals.ts` + hitting `failureSymptoms`.
+- **F3.** [§0.26 = B — DERIVED] Can one drill serve multiple deficiencies, or is the mapping strictly one-to-many in the other direction?
 
 ### G — Video integration
-- **G1.** Confirm video tag set: `reference_good`, `reference_bad`, `corrective`, `teaching`, `roadmap_step`. Add/cut.
-- **G2.** Per-category minimum (e.g. every category must have ≥1 `reference_good` + ≥1 `corrective`)? When nothing exists yet — visible missingness chip, or hide block?
+- **G1.** [§0.26 = B — DERIVED] Confirm video tag set: `reference_good`, `reference_bad`, `corrective`, `teaching`, `roadmap_step`.
+- **G2.** [§0.26 = B — DERIVED] Per-category minimum? When nothing exists yet — visible missingness chip, or hide block?
 
 ### H — Roadmap integration
-- **H1.** Is a "roadmap step" a property of the **deficiency** (same step for every athlete with this deficiency) or a property of the **athlete's current level** (same deficiency → different step depending on history)?
-- **H2.** Does the Report Card surface only the **next** step, or the **next N** in sequence?
+- **H1.** [§0.26 = B — DERIVED] Is a "roadmap step" a property of the **deficiency** or a property of the **athlete's current level**?
+- **H2.** [§0.26 = B — DERIVED] Does the Report Card surface only the **next** step, or the **next N** in sequence?
 
 ### I — Coach Hammer
-- **I1.** One voice across all five cards, or per-discipline voices?
-- **I2.** Does Coach Hammer's copy change per audience (athlete / parent / coach), or only the layout?
-- **I3.** Forbidden tones — confirm: scolding, marketing, school-grade, ALL-CAPS shouting, sarcasm, emoji-heavy, military metaphors, destiny framing.
-- **I4.** Coach Hammer is **delivery only** (rewrites a hand-authored motivational paragraph) — never authors deficiencies, drills, videos, scores, or roadmap steps. Confirm.
+- **I1.** [§0.26 = A — RESOLVED] One voice across all five cards, or per-discipline voices?
+- **I2.** [§0.26 = B — DERIVED] Does Coach Hammer's copy change per audience (athlete / parent / coach), or only the layout?
+- **I3.** [§0.26 = A — RESOLVED] Forbidden tones — confirm.
+- **I4.** [§0.26 = A — RESOLVED] Coach Hammer is **delivery only** — never authors deficiencies, drills, videos, scores, or roadmap steps.
 
 ### J — Progress, parent, recruiting
-- **J1.** Progress view: show change since last session **by default** with arrows, or only on explicit "compare" click?
-- **J2.** Parent view: identical copy with different layout, or simplified copy?
-- **J3.** Parent view: does it ever show a numeric score, or only bands + bullets?
-- **J4.** Recruiting view: subset of Report Card, separate summary card, or per-discipline highlight reel? What is the minor-athlete gate (RR-9 / RR-10) for what a recruiter may even see?
-- **J5.** Recruiting view: shareable by link with expiration, or only viewable inside a recruiter account?
+- **J1.** [§0.26 = B — DERIVED] Progress view: show change since last session **by default** with arrows, or only on explicit "compare" click?
+- **J2.** [§0.26 = B — DERIVED] Parent view: identical copy with different layout, or simplified copy?
+- **J3.** [§0.26 = B — DERIVED] Parent view: does it ever show a numeric score, or only bands + bullets?
+- **J4.** [§0.26 = B — DERIVED] Recruiting view: subset of Report Card, separate summary card, or per-discipline highlight reel? Minor-athlete gate per RR-9 / RR-10.
+- **J5.** [§0.26 = B — DERIVED] Recruiting view: shareable by link with expiration, or only viewable inside a recruiter account?
 
 ### K — Confidence, missingness, scope
-- **K1.** When a session cannot be scored for a category, render as "Not measured — confidence pending" card, or hide the category for that session?
-- **K2.** When confidence is low (single rep, manual entry), show the score with an "Estimate" chip, or suppress the score and show "Needs more data"?
-- **K3.** Athlete-reported pain in a session — does it appear on the Report Card itself, or on a side channel only? With what visibility to coach / parent / recruiter?
-- **K4.** Does this constitution govern **only the per-session Report Card**, or **also the longitudinal Report Card** (multi-session trend)?
-- **K5.** Coach view of an athlete's Report Card — same document, or a separate later constitution?
-- **K6.** Removal of UHRC — happens as a side-effect of ratifying this constitution, or as a separately planned later phase?
-- **K7.** Throwing standards #6 and #7 — paste the full verbatim text. The audit transcript truncated them, and §6 cannot close without all 7.
+- **K1.** [§0.26 = A — RESOLVED] When a session cannot be scored for a category, render as "Not measured — confidence pending" card.
+- **K2.** [§0.26 = A — RESOLVED] When confidence is low, show the score with an "Estimate" chip.
+- **K3.** [§0.26 = B — DERIVED] Athlete-reported pain in a session — safeguarding side channel only at V1.
+- **K4.** [§0.26 = A — RESOLVED via CDR-7=D] Governs both per-session and longitudinal Report Card.
+- **K5.** [§0.26 = B — DERIVED] Coach view = separate later constitution.
+- **K6.** [§0.26 = B — DERIVED] UHRC removal = separately planned later phase.
+- **K7.** [§0.26 — OUT OF V1 BLOCKING STATUS] Throwing standards #6 and #7 — verbatim text required before §6 Throwing closes, but **does not block V1 §18 ratification** (V1 = BP + BH per CDR-15).
 
 ---
 
