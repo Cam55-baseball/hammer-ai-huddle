@@ -483,7 +483,9 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **C — Hybrid with declared line.** Absolute reference exists at the *measurement* layer (raw kinematics, timing, % of body height); athlete-relative interpretation at the *score* layer (band placement and progress signal). *Consequence:* lineage one click away (§3 Law 1) lets a curious user reach the absolute number; the headline they see is calibrated; satisfies both organism-truth and development-first doctrine.
 - **Recommended Default:** **C (Hybrid with declared line — absolute at measurement, relative at score).** Required to coexist with CDR-1D; preserves §3 Law 5 (never fabricate the absolute) while honoring §0.4 (development-first) and RR-7 (no identity locking) at the surface layer.
 
-##### CDR-3 — P3 Sub-Criteria Decomposition (origin: Z17)
+##### CDR-3 — P3 Sub-Criteria Decomposition (origin: Z17) — **CLOSED — AUTO-RESOLVED (Phase 0.5)**
+
+> **Phase 0.5 ruling:** Option **C** is the only constitutionally legal render. **Sources:** §3 Law 1 (lineage one click away), §0.6 (9 mandatory explanation blocks include "Why" + "How to improve"), §0.1 (consistency-of-grammar). Option A collapses lineage (violates Law 1); Option B inflates §17 schema without doctrinal justification and breaks §0.1 symmetry with CDR-4. **Owner input not required.** See §0.22 audit table.
 
 - **Constitutional impact:** Determines whether the hitting P3 non-negotiable ("back hip → pitcher release" AND "foot down without shoulder rotation") is a single pass/fail or two independently-scored elements. Binds §0.7 hitting non-negotiables surfacing and §17 category schema for P3.
 - **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (INFLUENCES) · Parent Surface (INFLUENCES) · Recruiter Surface (NONE per AE1).
@@ -492,7 +494,7 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **A — Combined pass/fail.** One P3 category, one score. *Consequence:* simplest render; loses the ability for Correction Engine to surface "back hip is fine, shoulder rotation is the issue" as separate corrections; violates §3 Law 1 spirit (lineage compressed).
   - **B — Two independently scored sub-criteria under one P3 header.** *Consequence:* preserves §3 Law 1 lineage; Correction Engine can target the failing sub-criterion specifically; doubles the §17 schema rows for P3 but does not violate §3 Law 10 (additive).
   - **C — Single P3 score with two sub-criteria visible in click-expansion (§0.6 "Why" + "How to improve" blocks).** *Consequence:* headline simplicity of A; lineage of B; Correction Engine still gets sub-criterion granularity from the expansion; closest match to CDR-1D + CDR-2C surface grammar.
-- **Recommended Default:** **C (Single header + sub-criteria in click-expansion).** Matches the broader hybrid surface grammar; preserves §0.7 truth without inflating the headline count beyond P1–P4.
+- **Recommended Default:** **C** — **AUTO-RESOLVED per §0.22**. Preserved entry for §3 Law 10 lineage.
 
 ##### CDR-4 — P4 Four-Element Decomposition (origin: Z18)
 
