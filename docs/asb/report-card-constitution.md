@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
-> **STATUS: §0 RATIFIED — §16 COMPRESSED (3 owner items remain) / §17 OPEN**
-> Version: v0.10
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.8 — §16 Compression Pass)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088, RFL-089 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> **STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN (BP+BH schema fill)**
+> Version: v0.11
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.9 — §16 Final Closure)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088, RFL-089, RFL-090 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K were constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, bounded by the §0.17 CDR per Phase 0.2, packaged by §0.18 per Phase 0.3, narrowed by §0.22 per Phase 0.5, doctrine-confirmed by §0.24 per Phase 0.6, closed by §0.25 (Phase 0.7), and **compressed by §0.26 (Phase 0.8)** which auto-resolved 38 of 43 V1-applicable §16 items by reference to ratified §0 doctrine + CDRs, leaving exactly **3 true owner decisions** (B2, C1, C3). K7 (verbatim throwing standards) is explicitly removed from V1 blocking status and deferred with §6 Throwing. Implementation remains blocked until §16 (3 residual items) and §17 (BP+BH schema fill) close.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K were constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, bounded by the §0.17 CDR per Phase 0.2, packaged by §0.18 per Phase 0.3, narrowed by §0.22 per Phase 0.5, doctrine-confirmed by §0.24 per Phase 0.6, closed by §0.25 (Phase 0.7), compressed by §0.26 (Phase 0.8), and **finally closed by §0.27 (Phase 0.9)** with owner resolution of the 3 residual items (B2a=iii, B2b=ii, C1=i RATIFY, C3=DEFER). V1 §16 is now fully resolved (43/43 V1-applicable items: 15 A + 25 B + 3 C). K7 (verbatim throwing standards) remains deferred with §6 Throwing and is non-blocking for V1. §17 is generable entirely from ratified doctrine; implementation remains blocked solely pending §17 BP+BH schema draft + owner ratification of that draft.
 
 ---
 
