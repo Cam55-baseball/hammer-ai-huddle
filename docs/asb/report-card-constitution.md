@@ -444,7 +444,328 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
 
 **CDR closure procedure.** Owner answers each CDR item; each answer is recorded inline next to its CDR ID with the source domain and routing question(s); the §0.11 audit row corresponding to the answered CDR flips Partially/Absent → Defined; once all 17 are answered and §0.11 is clean, §0.12 conditions (1)+(2)+(3) are satisfied and the owner may execute condition (4) ratification.
 
+### §0.18 — Constitutional Decision Packet (Phase 0.3)
+
+> **Purpose.** Convert the 17 open CDR items from §0.17 into a single owner-facing decision document with bounded options (A/B/C/D), per-option constitutional consequences, doctrine constraints that cannot be violated, and a Recommended Default where inherited doctrine materially favors one path. No option is auto-ratified. D2 (Coach Hammer Behavior) and D3 (Parent/Recruiter Visibility) remain **closed-by-derivation per §0.16 and are not reopened in Phase 0.3**.
+
+**Per-item schema (uniform across all 17 items):**
+
+- **Constitutional impact** — what this decision binds.
+- **Downstream systems** — Report Card | Analysis Engine | Correction Engine | Roadmap | Coach Hammer | Parent Surface | Recruiter Surface (annotated `BINDS` / `INFLUENCES` / `NONE` in §0.19).
+- **Doctrine constraints (non-violable)** — clauses no option may breach.
+- **Options** — A/B/C and optional D, each with its constitutional consequence chain.
+- **Recommended Default** — A/B/C/D when doctrine favors one path; otherwise "no default — pure owner choice." Defaults are NOT ratified by emission; the owner must select.
+
 ---
+
+#### D1 — Scoring Meaning (4 decisions)
+
+##### CDR-1 — Score Frame (origin: AA1)
+
+- **Constitutional impact:** Defines what every numeric score *means* across the entire Report Card surface. Binds the §0.6 Universal Category Explanation Law "Elite" block, the §0.7 hitting non-negotiable surfacing format, and every category render in §17.
+- **Downstream systems:** Report Card · Analysis Engine · Correction Engine · Roadmap · Coach Hammer · Parent Surface · Recruiter Surface (all BINDS).
+- **Doctrine constraints (non-violable):** §0.1 (understanding-first), §0.2 (Understanding > Correction > Progress > Grading), §0.3 (never Judged/Punished), §0.4 (grade never the hero), §0.6 (visible missingness in "Elite" block), §3 Law 2 (no score without confidence state), §3 Law 5 (never fabricated), RW-7 (intelligence delivery confidence-bounded), AR-1 (organism-truth supremacy over heuristic optimization), RR-9 (no exploitative ranking).
+- **Options:**
+  - **A — % of elite reference.** Anchors every score to an authored elite benchmark. *Consequence:* Analysis Engine must publish the elite reference per category; Coach Hammer copy reads "X% of elite movement quality"; recruiter-deferred surface (per AE1) inherits the same frame. Risk: feels evaluative on low-skill sessions unless §0.3 ENCOURAGED grammar (CDR-10/11) compensates.
+  - **B — % of athlete's own ceiling.** Score = % of the athlete's own historical/projected best. *Consequence:* development-first by construction; requires longitudinal lineage from session 1 (first-session score = baseline-anchored, never "0%"); Roadmap binds to ceiling-projection logic; parent translation reads "progress toward their own ceiling."
+  - **C — Movement-quality band (Developmental / Proficient / Elite).** Categorical, no number. *Consequence:* eliminates numeric comparison risk entirely; satisfies §0.3 maximally; loses fine-grained progress signal — CDR-6 per-session deltas become band transitions only; composite hero number (pending §16 D4) becomes a band, not a number.
+  - **D — Defined hybrid.** Bands as the headline + a numeric sub-value (e.g., % of elite) inside the click-expansion per §3 Law 1. *Consequence:* headline = development-coded band; lineage to numeric reference preserved one click away; requires explicit constitutional declaration of which frame the sub-value uses.
+- **Recommended Default:** **D (Hybrid: band headline + numeric sub-value).** §0.1 + §0.3 + §0.4 favor bands as the headline; §3 Law 1 (lineage one click away) and §0.6 (Elite block) require a numeric reference exists somewhere; D is the smallest constitutional move that satisfies both.
+
+##### CDR-2 — Absolute vs Athlete-Relative (origin: AA2)
+
+- **Constitutional impact:** Determines whether the same score means the same movement quality across athletes, or is calibrated to age/level/history. Binds every cross-session, cross-athlete, and cross-discipline interpretation.
+- **Downstream systems:** Report Card · Analysis Engine · Correction Engine · Roadmap · Coach Hammer · Parent Surface · Recruiter Surface (all BINDS).
+- **Doctrine constraints (non-violable):** §0.4 (development-first), §0.5 (pillar progress ≠ composite drop), §3 Law 5 (never fabricated), RW-1 (organism truth > commercial), RR-7 (no identity locking, no career projection), RR-9 (no exploitative ranking), AR-1 (organism-truth supremacy), AE3 (no comparison in parent surface).
+- **Options:**
+  - **A — Fully absolute.** Same score = same movement quality across all athletes. *Consequence:* enables elite-reference frame (CDR-1A); creates direct comparability risk — must be neutralized by §0.3 ENCOURAGED grammar and RR-9 anti-ranking enforcement; parent/recruiter copy must explicitly disclaim ranking.
+  - **B — Fully athlete-relative.** Score calibrated to age, level, history. *Consequence:* impossible to compare two athletes; development-first by construction; requires Analysis Engine to compute and publish each athlete's calibration envelope; risks confusing parents who expect an external benchmark.
+  - **C — Hybrid with declared line.** Absolute reference exists at the *measurement* layer (raw kinematics, timing, % of body height); athlete-relative interpretation at the *score* layer (band placement and progress signal). *Consequence:* lineage one click away (§3 Law 1) lets a curious user reach the absolute number; the headline they see is calibrated; satisfies both organism-truth and development-first doctrine.
+- **Recommended Default:** **C (Hybrid with declared line — absolute at measurement, relative at score).** Required to coexist with CDR-1D; preserves §3 Law 5 (never fabricate the absolute) while honoring §0.4 (development-first) and RR-7 (no identity locking) at the surface layer.
+
+##### CDR-3 — P3 Sub-Criteria Decomposition (origin: Z17)
+
+- **Constitutional impact:** Determines whether the hitting P3 non-negotiable ("back hip → pitcher release" AND "foot down without shoulder rotation") is a single pass/fail or two independently-scored elements. Binds §0.7 hitting non-negotiables surfacing and §17 category schema for P3.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (INFLUENCES) · Parent Surface (INFLUENCES) · Recruiter Surface (NONE per AE1).
+- **Doctrine constraints (non-violable):** §0.6 (9 mandatory explanation blocks per category), §0.7 (P1–P4 are constitutional truths, never simplified), §3 Law 1 (lineage one click away), §3 Law 5 (never fabricated), §3 Law 10 (additive only).
+- **Options:**
+  - **A — Combined pass/fail.** One P3 category, one score. *Consequence:* simplest render; loses the ability for Correction Engine to surface "back hip is fine, shoulder rotation is the issue" as separate corrections; violates §3 Law 1 spirit (lineage compressed).
+  - **B — Two independently scored sub-criteria under one P3 header.** *Consequence:* preserves §3 Law 1 lineage; Correction Engine can target the failing sub-criterion specifically; doubles the §17 schema rows for P3 but does not violate §3 Law 10 (additive).
+  - **C — Single P3 score with two sub-criteria visible in click-expansion (§0.6 "Why" + "How to improve" blocks).** *Consequence:* headline simplicity of A; lineage of B; Correction Engine still gets sub-criterion granularity from the expansion; closest match to CDR-1D + CDR-2C surface grammar.
+- **Recommended Default:** **C (Single header + sub-criteria in click-expansion).** Matches the broader hybrid surface grammar; preserves §0.7 truth without inflating the headline count beyond P1–P4.
+
+##### CDR-4 — P4 Four-Element Decomposition (origin: Z18)
+
+- **Constitutional impact:** Same structural question as CDR-3 for P4 (knob stability / elbow direction / barrel delivery / closing the gap). Binds §0.7 P4 and §17 schema.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (INFLUENCES) · Parent Surface (INFLUENCES) · Recruiter Surface (NONE per AE1).
+- **Doctrine constraints (non-violable):** Same as CDR-3 plus §3 Law 10 (P4 elements never collapsible to fewer than four if owner-declared as four).
+- **Options:**
+  - **A — Aggregated holistic.** One P4 score. *Consequence:* loses lineage to four owner-ratified elements; risks violating §0.7.
+  - **B — Four independently scored elements.** *Consequence:* maximum lineage; quadruples §17 schema rows for P4; Correction Engine gets element-level targeting.
+  - **C — Single P4 score with four elements visible in click-expansion.** *Consequence:* matches CDR-3C grammar; preserves §0.7 truth at the lineage layer.
+- **Recommended Default:** **C (single header + four elements in click-expansion).** Forced by symmetry with CDR-3 — Report Card grammar cannot use one structure for P3 and a different one for P4 without violating §0.1 (athlete understanding through consistency).
+
+---
+
+#### D2 — Coach Hammer Behavior
+
+**Closed-by-derivation per §0.16 (AC1/AC2/AC3/AF2/AF3/Z9). Not reopened in Phase 0.3.** Any Coach Hammer behavior question that arises after Phase 0.3 must first pass §0.15 classification; only Class-C residue may open a new CDR slot.
+
+---
+
+#### D3 — Parent / Recruiter Visibility
+
+**Closed-by-derivation per §0.16 (AD1/AD2/AD3/AE1/AE2/AE3/AA3/Z3). Not reopened in Phase 0.3.** Same §0.15 gate applies to any future visibility question.
+
+---
+
+#### D4 — Celebration & Progress (4 decisions)
+
+##### CDR-5 — Celebrated-Pillar Trigger Threshold (origin: Z10)
+
+- **Constitutional impact:** Defines when a pillar movement constitutionally qualifies as a celebration event. Binds celebration grammar and prevents both false celebration (§0.5) and missed-celebration (§0.5 pillar-first supremacy).
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (INFLUENCES) · Correction Engine (NONE) · Roadmap (INFLUENCES) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.3 (never false praise), §0.5 (pillar-first celebration outranks composite movement), §3 Law 5 (never fabricated), AF2 (no celebration not lineage-traceable to canonical pillar movement), RR-5 (no manipulation).
+- **Options:**
+  - **A — Any positive delta.** Every upward tick celebrates. *Consequence:* maximizes encouragement frequency; risks §0.3 violation if noise-level deltas trigger praise that erodes trust.
+  - **B — Threshold delta (e.g., ≥N points or ≥N band-units, owner-defined).** *Consequence:* requires owner to set N per scoring frame (binds to CDR-1); preserves §3 Law 5 (deltas below noise floor are not "real" movement).
+  - **C — Band crossing only.** Celebrate only when an athlete crosses a band boundary (Developmental → Proficient → Elite). *Consequence:* maps cleanly onto CDR-1C/D band grammar; large gaps between celebrations on long Developmental plateaus.
+  - **D — Combination: band crossing always, plus threshold deltas within a band.** *Consequence:* highest fidelity; satisfies both within-band progress and band-transition moments; requires both N and band logic ratified.
+- **Recommended Default:** **D (Combination).** Required by §0.5 pillar-first doctrine — within-band progress is still pillar movement and must not be silenced; band crossings are categorical wins and must not be muted.
+
+##### CDR-6 — Canonical Improvement Signal (origin: Z12)
+
+- **Constitutional impact:** Defines the single canonical metric for "did the athlete improve?" Binds every progress claim across surfaces.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (INFLUENCES) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.5 (pillar-first; composite drop ≠ regression when pillars climb), §3 Law 5, AR-1 (no statistical override of organism truth), Phase 56 RE-1…RE-10 (replay equivalence).
+- **Options:**
+  - **A — Per-session deltas only.** Improvement = this session's pillar score − prior session's pillar score. *Consequence:* high responsiveness; high noise; single bad session reads as "regression" unless §0.5 context overlay applied.
+  - **B — Rolling deltas (window N sessions).** Improvement = current rolling mean − prior rolling mean. *Consequence:* noise-filtered; lags real movement; bad-session impact dampened.
+  - **C — Both, with rolling as the canonical headline and per-session visible in click-expansion.** *Consequence:* §3 Law 1 lineage preserved; headline reflects trend, not noise; aligns with CDR-7 horizon decision.
+- **Recommended Default:** **C (rolling as headline, per-session in expansion).** §0.5 + AR-1 favor noise-resistance at the headline; §3 Law 1 requires the per-session truth remain reachable.
+
+##### CDR-7 — Improvement Time Horizon (origin: AB3)
+
+- **Constitutional impact:** Defines the canonical time window over which "improvement" is measured. Binds CDR-6's rolling window length and every progress claim's frame of reference.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (INFLUENCES) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.5, RR-5 (athlete narrative revocation), RR-7 (no identity locking on past performance), Phase 56 replay equivalence.
+- **Options:**
+  - **A — Per-session.** Horizon = previous session. *Consequence:* highest noise; tightly coupled to CDR-6A.
+  - **B — Rolling N sessions (owner declares N).** *Consequence:* requires owner to ratify N; canonical noise filter for CDR-6B/C.
+  - **C — Since roadmap start.** Horizon = current roadmap milestone start. *Consequence:* couples progress narrative to roadmap arc; resets on milestone completion; aligns Coach Hammer copy with active development goal.
+  - **D — Athlete-selectable (with constitutional default).** Athlete chooses session / rolling / roadmap; default declared by owner. *Consequence:* respects RR-5/RR-7 (athlete agency over their own narrative); requires UI affordance; multiple progress framings coexist in lineage.
+- **Recommended Default:** **D (Athlete-selectable with rolling-N default).** RR-5/RR-7 favor athlete agency over their narrative frame; the rolling default preserves CDR-6C headline noise-resistance.
+
+##### CDR-8 — Celebration Trigger Set (origin: AF1)
+
+- **Constitutional impact:** Enumerates the *constitutionally permitted* celebration events. Anything not on this list cannot trigger celebration.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (INFLUENCES) · Correction Engine (NONE) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.3, §0.5, §3 Law 5, AF2 (no celebration not lineage-traceable to canonical pillar movement), RR-5, RR-9.
+- **Options:**
+  - **A — Pillar climb only.** *Consequence:* purest §0.5 reading; loses band-transition moments and roadmap milestones as distinct celebration types.
+  - **B — Pillar climb + band crossing.** *Consequence:* adds CDR-1C/D band grammar moments.
+  - **C — Pillar climb + band crossing + roadmap milestone completion.** *Consequence:* couples to Roadmap; allows Coach Hammer to celebrate development-arc moments.
+  - **D — Combination: pillar climb + band crossing + roadmap milestone + first-time category completion.** *Consequence:* covers the maximal set of constitutionally-clean events; "first-time" celebrations are AF2-compliant (lineage = first measurement); risk is celebration density — must be paced by CDR-5 threshold.
+- **Recommended Default:** **D (Combination).** All four events are lineage-traceable per AF2; suppressing any one would violate §0.5 (pillar-first doctrine cannot be partial).
+
+---
+
+#### D5 — Athlete Journey Experience (9 decisions)
+
+##### CDR-9 — Conflict-Mode Rendering (origin: Z1)
+
+- **Constitutional impact:** Defines how the UI renders the moment when grading conflicts with understanding (e.g., a low score on a category the athlete is actively improving).
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (NONE) · Correction Engine (INFLUENCES) · Roadmap (INFLUENCES) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.1, §0.2 (Understanding wins lexicographically), §0.3, §0.5, §3 Law 5 (never hide truth).
+- **Options:**
+  - **A — Hide the low score.** *Consequence:* violates §3 Law 5 (truth-hiding); rejected.
+  - **B — De-emphasize visually (smaller, lower contrast within palette permissions per CDR-11).** *Consequence:* preserves truth; reduces shock; relies on CDR-11 palette grammar.
+  - **C — "Progressing" overlay on top of the score.** *Consequence:* makes the development context the dominant signal; score remains visible; explicit §0.5 surfacing.
+  - **D — Unchanged score + mandatory context text in the §0.6 "Why" block.** *Consequence:* minimal visual change; relies entirely on copy to do the §0.3 work.
+- **Recommended Default:** **C ("Progressing" overlay).** §0.2 lexicographic supremacy of Understanding over Grading favors making the development context the dominant rendered signal while preserving the score per §3 Law 5.
+
+##### CDR-10 — "ENCOURAGED" Enforcement Mechanism (origin: Z4)
+
+- **Constitutional impact:** Defines how §0.3 ENCOURAGED is enforced at the surface layer.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (NONE) · Correction Engine (INFLUENCES) · Roadmap (NONE) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.3 (Clear/Motivated/Empowered/Directed/Hopeful; never Judged/Punished/Embarrassed/Confused/Overwhelmed), §0.1.
+- **Options:**
+  - **A — Tone-only.** ENCOURAGED enforced via Coach Hammer copy alone. *Consequence:* lightest; relies entirely on a single voice channel; if copy fails, §0.3 fails.
+  - **B — Tone + visual (palette, typography, iconography).** *Consequence:* multi-channel enforcement; couples to CDR-11.
+  - **C — Tone + visual + structural (ordering, density, disclosure pattern).** *Consequence:* full-stack enforcement; couples to CDR-11 + CDR-13; strongest §0.3 guarantee; highest design discipline required.
+- **Recommended Default:** **C (Tone + visual + structural).** §0.3 lists five intended outcomes and five forbidden outcomes; a single-channel enforcement cannot reliably cover all ten dimensions across all session types.
+
+##### CDR-11 — Palette Permissions for Failure/Red Tones (origin: Z6)
+
+- **Constitutional impact:** Defines what color grammar is constitutionally permitted on the Report Card.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (NONE) · Correction Engine (INFLUENCES) · Roadmap (NONE) · Coach Hammer (NONE) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.3, §0.6 (missingness visibility), §0.1.
+- **Options:**
+  - **A — Red/failure tones permitted.** *Consequence:* enables strong negative signaling; high §0.3 violation risk.
+  - **B — Restricted to neutral/positive/progress palette only.** *Consequence:* §0.3-aligned; loses ability to signal hard errors or safeguarding flags visually.
+  - **C — Conditional: neutral-positive-progress as default; red reserved exclusively for safeguarding/injury-context flags (RR-6) and never for grading.** *Consequence:* surface stays §0.3-aligned for grading; preserves a single semantic channel for the only legitimate use of high-alarm color (athlete safety).
+- **Recommended Default:** **C (Conditional — red reserved for safeguarding only).** §0.3 forbids judged/punished feelings; RR-6 reserves a survivability-bearing visual channel for athlete-reported pain/injury context — these two requirements together force C.
+
+##### CDR-12 — "Highest-Priority Improvement" Composite Definition (origin: Z7)
+
+- **Constitutional impact:** Defines the §0.4 entry-point order priority 1 — "highest-priority improvement opportunity." Binds the hero render on every session.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.2, §0.4, §0.5, §0.7 (non-negotiables outrank category averages), §3 Law 5.
+- **Options:**
+  - **A — Lowest score.** *Consequence:* purely numeric; ignores §0.7 non-negotiable supremacy; risks selecting trivia over the truly highest-leverage issue.
+  - **B — Highest leverage on composite.** *Consequence:* requires Analysis Engine to publish per-category leverage weights; couples Report Card priority to model internals.
+  - **C — Coach-defined non-negotiable rank.** *Consequence:* §0.7 wins by construction; deterministic; loses sensitivity to session-specific issues.
+  - **D — Furthest-from-roadmap-milestone.** *Consequence:* couples to active Roadmap arc; can ignore §0.7 if roadmap is mis-prioritized.
+  - **E — Defined hybrid: §0.7 non-negotiables checked first (any failing one wins); else highest-leverage composite; else lowest pillar score within the active roadmap milestone.** *Consequence:* layers the four signals in constitutional precedence order; deterministic given inputs; requires owner to ratify exact tier order.
+- **Recommended Default:** **E (Hybrid with §0.7 first).** §0.7 declares the non-negotiables are immutable philosophical truths — any other ordering risks demoting them below a numeric heuristic, violating §0.7.
+
+##### CDR-13 — Disclosure Pattern for the 9 Explanation Blocks (origin: Z15)
+
+- **Constitutional impact:** Defines how the §0.6 nine mandatory blocks per category are presented (What / Why / Elite / If poor / How to improve / Drill / Video / Roadmap / Coach Hammer).
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (NONE) · Correction Engine (INFLUENCES) · Roadmap (NONE) · Coach Hammer (INFLUENCES) · Parent Surface (BINDS) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.1, §0.6, §3 Law 1 (lineage one click away), §3 Law 3 (missingness-visible).
+- **Options:**
+  - **A — Always-expanded (all 9 blocks visible by default).** *Consequence:* maximum understanding density; can violate §0.1 by overwhelming (§0.3 forbidden outcome).
+  - **B — Always-collapsed (athlete clicks each block).** *Consequence:* clean surface; risks athlete never reading critical blocks (Why / If poor).
+  - **C — Progressive disclosure: §0.4 priority blocks (What / Why / How to improve) expanded by default; remainder collapsed but visibly stubbed.** *Consequence:* respects §3 Law 1 (lineage one click away); honors §0.3 (not overwhelming) and §0.6 (missingness visible — collapsed ≠ missing).
+- **Recommended Default:** **C (Progressive disclosure).** Only option that simultaneously satisfies §0.1, §0.3, §0.6, and §3 Law 1.
+
+##### CDR-14 — Softball Hitting Variance / Slap (origin: Z19, merged with §16 B5)
+
+- **Constitutional impact:** Defines whether Softball Slap hitting is a full alternate card variant or a P4 modifier on the standard card. Binds §16 B5.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (INFLUENCES) · Parent Surface (INFLUENCES) · Recruiter Surface (NONE per AE1).
+- **Doctrine constraints (non-violable):** §0.7, §3 Law 10 (additive only), AH3 (new disciplines/variants must pass §0.11-style audit).
+- **Options:**
+  - **A — Full Slap-card variant (separate constitutional card alongside standard softball hitting).** *Consequence:* maximum fidelity to slap mechanics; doubles §17 schema for softball hitting; requires its own §0.11 audit per AH3.
+  - **B — P4-modifier on standard softball-hitting card.** *Consequence:* one card; P4 elements (CDR-4) gain a slap-conditional variant; lighter schema; risks compressing genuinely distinct mechanics.
+  - **C — Defer.** Ship V1 with standard softball hitting only; Slap added in a later phase with its own audit. *Consequence:* clean V1; explicit gap in §0.6 missingness vocabulary for slap-discipline athletes.
+- **Recommended Default:** **no default — pure owner choice.** Doctrine is neutral; this is an athlete-population-coverage decision the owner alone can make.
+
+##### CDR-15 — V1 Discipline Scope Set (origin: AH1)
+
+- **Constitutional impact:** Defines which disciplines have a constitutionally-ratified Report Card surface in V1. Binds Phase 1 implementation scope.
+- **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (deferred per AE1).
+- **Doctrine constraints (non-violable):** §3 Law 10 (additive), AH2 (§3 universal; §0.7 hitting-scoped), AH3 (each new discipline must pass its own §0.11 audit before opening its surface).
+- **Options:** Per-discipline yes/no across the eight candidates:
+  - Baseball Pitching · Baseball Hitting · Softball Pitching · Softball Hitting · Throwing · Catching · Defense · Baserunning.
+- **Recommended Default:** **no default — pure owner choice.** Doctrine permits any subset (AH3 makes scope-expansion additive-safe). The owner alone defines V1 athlete coverage.
+
+##### CDR-16 — Interview Cadence Discipline (origin: Z20)
+
+- **Constitutional impact:** Process-only. Defines how subsequent owner-interview waves are paced.
+- **Downstream systems:** Report Card (NONE) · Analysis Engine (NONE) · Correction Engine (NONE) · Roadmap (NONE) · Coach Hammer (NONE) · Parent Surface (NONE) · Recruiter Surface (NONE).
+- **Doctrine constraints (non-violable):** §0.12 ratification gate.
+- **Options:**
+  - **A — Auto-advance.** Lovable proceeds to the next wave automatically after owner answers the prior one. *Consequence:* faster; less owner control over pacing.
+  - **B — Explicit per-wave approval.** Owner gates each next wave. *Consequence:* maximum owner control; slower.
+- **Recommended Default:** **B (Explicit per-wave approval).** §0.12 gate strictness and the Phase 0.1/0.2/0.3 pattern have established owner-paced cadence; defaulting B preserves that norm.
+
+##### CDR-17 — RFL Granularity (origin: Z21)
+
+- **Constitutional impact:** Process-only. Defines how Phase-0 work is recorded in the Reality Feedback Ledger.
+- **Downstream systems:** All NONE.
+- **Doctrine constraints (non-violable):** ASB RFL append-only doctrine.
+- **Options:**
+  - **A — Per-wave entry (RFL-082, RFL-083, RFL-084, …).** *Consequence:* finest auditability; already the established pattern.
+  - **B — Single RFL entry at §0 ratification.** *Consequence:* clean ledger; loses Phase-0 stepwise audit trail.
+- **Recommended Default:** **A (Per-wave entry).** Already the de facto pattern through RFL-080…RFL-084; switching now would create a retroactive ledger gap.
+
+---
+
+### §0.19 — Constitutional Dependency Map
+
+Per-CDR impact across the seven downstream systems. `B` = BINDS (constitutional shape determined), `I` = INFLUENCES (downstream behavior shaped but not bound), `—` = NONE.
+
+| CDR  | Report Card | Analysis Eng | Correction Eng | Roadmap | Coach Hammer | Parent Surf | Recruiter Surf |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| CDR-1 | B | B | B | B | B | B | B |
+| CDR-2 | B | B | B | B | B | B | B |
+| CDR-3 | B | B | B | B | I | I | — |
+| CDR-4 | B | B | B | B | I | I | — |
+| CDR-5 | B | I | — | I | B | B | — |
+| CDR-6 | B | B | I | B | B | B | — |
+| CDR-7 | B | B | I | B | B | B | — |
+| CDR-8 | B | I | — | B | B | B | — |
+| CDR-9 | B | — | I | I | B | B | — |
+| CDR-10 | B | — | I | — | B | B | — |
+| CDR-11 | B | — | I | — | — | B | — |
+| CDR-12 | B | B | B | B | B | B | — |
+| CDR-13 | B | — | I | — | I | B | — |
+| CDR-14 | B | B | B | B | I | I | — |
+| CDR-15 | B | B | B | B | B | B | — |
+| CDR-16 | — | — | — | — | — | — | — |
+| CDR-17 | — | — | — | — | — | — | — |
+
+**Read-out:**
+- **Maximum-cascade (BINDS ≥ 6 columns):** CDR-1, CDR-2, CDR-12, CDR-15 — these reach every implementing surface.
+- **Scoring-spine cluster (BINDS ≥ 4 columns):** CDR-3, CDR-4, CDR-6, CDR-7, CDR-8, CDR-14.
+- **Athlete-surface-local (BINDS Report Card + Parent only):** CDR-9, CDR-10, CDR-11, CDR-13.
+- **Process-only (zero implementation surface):** CDR-16, CDR-17.
+
+### §0.20 — Ratification Forecast
+
+Three buckets classifying each CDR by whether implementation may proceed before resolution.
+
+**MUST-ANSWER-BEFORE-IMPLEMENTATION** (binds schema, scoring math, or hard rendering contracts):
+
+| CDR | Reason |
+|---|---|
+| CDR-1 | Binds every score render; downstream code cannot be written against an unknown frame. |
+| CDR-2 | Binds the absolute-vs-relative line; Analysis Engine output schema depends on it. |
+| CDR-3 | Binds §17 schema row count for P3. |
+| CDR-4 | Binds §17 schema row count for P4. |
+| CDR-6 | Binds the canonical improvement-signal computation; every progress claim depends on it. |
+| CDR-7 | Binds rolling-window length; Analysis Engine cannot compute deltas without N. |
+| CDR-11 | Binds palette tokens (semantic CSS variables); cannot be deferred behind a flag. |
+| CDR-12 | Binds the entry-point hero (§0.4 priority 1); every session render depends on it. |
+| CDR-15 | Binds Phase 1 scope; nothing can be built without knowing which disciplines ship. |
+
+**MAY-DEFER-TO-POST-V1** (can ship with a constitutional default behind a feature flag, or affects a later surface):
+
+| CDR | Reason |
+|---|---|
+| CDR-5 | Threshold N can ship as an owner-tunable constant with a stated default; refinement does not break schema. |
+| CDR-8 | Celebration trigger set can grow additively post-V1 per §3 Law 10. |
+| CDR-9 | Conflict-mode rendering is a Report Card UI policy; ship with default `C` (per §0.20 recommendation) and refine. |
+| CDR-10 | "ENCOURAGED" enforcement strength can escalate A→B→C post-launch per §3 Law 10. |
+| CDR-13 | Disclosure pattern is presentation-layer; ship with default `C` (progressive disclosure) and refine. |
+| CDR-14 | Slap-variant decision can be deferred (option C) without blocking V1 standard softball hitting. |
+
+**NO-IMPLEMENTATION-IMPACT** (process/governance only):
+
+| CDR | Reason |
+|---|---|
+| CDR-16 | Interview cadence — governance discipline only. |
+| CDR-17 | RFL granularity — ledger discipline only. |
+
+### §0.21 — Closure Recommendation
+
+Reduces the owner's remaining workload from 17 independent decisions to **6 closure bundles**, ratifiable in **2 owner responses**.
+
+**Bundle 1 — "Scoring Spine"** (CDR-1 + CDR-2 + CDR-3 + CDR-4). The four scoring-meaning decisions are not independently coherent — the score-frame choice (CDR-1) constrains the absolute/relative line (CDR-2), and the P3/P4 sub-criteria grammar (CDR-3/CDR-4) inherits the headline-vs-expansion pattern from CDR-1. Must be ratified as a single coherent spine.
+
+**Bundle 2 — "Progress Signal"** (CDR-5 + CDR-6 + CDR-7 + CDR-8). Celebration thresholds, improvement signal, time horizon, and celebration triggers all derive from one progress definition. Internally consistent only if ratified together.
+
+**Bundle 3 — "Athlete Surface Grammar"** (CDR-9 + CDR-10 + CDR-11 + CDR-13). Conflict-mode rendering, ENCOURAGED enforcement, palette permissions, and disclosure pattern jointly define the §0.3 ENCOURAGED surface grammar. Tightly coupled — changing one without the others produces a fractured surface.
+
+**Bundle 4 — "Priority & Scope"** (CDR-12 + CDR-15). What gets surfaced as the priority-1 hero (CDR-12) only matters across the disciplines in V1 scope (CDR-15).
+
+**Bundle 5 — "Variance"** (CDR-14). Single softball-Slap decision; no doctrine-derived bundling partner.
+
+**Bundle 6 — "Process"** (CDR-16 + CDR-17). Governance cadence; ratifiable instantly with stated defaults (both Recommended-Default-strong).
+
+**Target closure path:**
+
+| Response | Bundles closed | CDR items | Unblocks |
+|---|---|---|---|
+| **Response 1** | Bundles 1, 2, 3 | CDR-1…CDR-13 (12 items) | All MUST-ANSWER-BEFORE-IMPLEMENTATION except CDR-15 |
+| **Response 2** | Bundles 4, 5, 6 | CDR-14, CDR-15, CDR-16, CDR-17 (5 items) | Full §0.12 ratification gate |
+
+After Response 2, §0.11 audit is re-run; if clean, §0.12 conditions (1)+(2)+(3) are satisfied and the owner may execute condition (4) ratification.
+
+---
+
+
 
 
 
