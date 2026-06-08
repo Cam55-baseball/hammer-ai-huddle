@@ -1,5 +1,15 @@
 # Analysis Engine, Report Card System & Correction Engine Ratification
 
+> **Execution status (2026-06-08):** Phase A complete. Audit document published at
+> `docs/asb/analysis-formula-ratification.md`. RFL-073…RFL-079 filed. Phases B–F
+> blocked on user sign-off of audit document + answers to the 5 open questions
+> (Display Format Table ratification, throwing position branching, hitting slap
+> auto-switch, motivational voice scope, hitting tag-migration confirmation).
+> No code, schema, or doctrine changes occurred this turn.
+
+---
+
+
 This sprint is **audit-first, additive, and constitutionally bounded**. Nothing about the existing analysis pipeline, subscription gating, or upload flow changes. The Report Card is added as a new tab on the analysis result page — the current technical analysis becomes the "Technical View" behind that toggle.
 
 Every decision in this plan reflects an explicit answer you gave. Where I am still uncertain, I will stop and ask before writing code.
