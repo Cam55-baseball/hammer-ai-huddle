@@ -610,7 +610,9 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **C — Conditional: neutral-positive-progress as default; red reserved exclusively for safeguarding/injury-context flags (RR-6) and never for grading.** *Consequence:* surface stays §0.3-aligned for grading; preserves a single semantic channel for the only legitimate use of high-alarm color (athlete safety).
 - **Recommended Default:** **C (Conditional — red reserved for safeguarding only).** §0.3 forbids judged/punished feelings; RR-6 reserves a survivability-bearing visual channel for athlete-reported pain/injury context — these two requirements together force C.
 
-##### CDR-12 — "Highest-Priority Improvement" Composite Definition (origin: Z7)
+##### CDR-12 — "Highest-Priority Improvement" Composite Definition (origin: Z7) — **CLOSED — AUTO-RESOLVED (Phase 0.5)**
+
+> **Phase 0.5 ruling:** Option **E (Hybrid, §0.7 first)** is the only option consistent with already-ratified Hammer Today doctrine. **Sources:** `docs/asb/hammer-today-guidance-architecture.md` §2 Slot 3 ("exactly one Next-Action per Today render"); `docs/asb/hammer-activation-architecture.md` (Megaphase 111–150 "one well-timed handoff > scattered nudges"); §0.7 (non-negotiables are immutable philosophical truths); §0.4 (priority-1 hero cascade). Options A–D each invent a competing ranking authority that Hammer Today does not recognize. **Owner input not required.** See §0.22 audit table.
 
 - **Constitutional impact:** Defines the §0.4 entry-point order priority 1 — "highest-priority improvement opportunity." Binds the hero render on every session.
 - **Downstream systems:** Report Card (BINDS) · Analysis Engine (BINDS) · Correction Engine (BINDS) · Roadmap (BINDS) · Coach Hammer (BINDS) · Parent Surface (BINDS) · Recruiter Surface (NONE).
@@ -621,7 +623,7 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
   - **C — Coach-defined non-negotiable rank.** *Consequence:* §0.7 wins by construction; deterministic; loses sensitivity to session-specific issues.
   - **D — Furthest-from-roadmap-milestone.** *Consequence:* couples to active Roadmap arc; can ignore §0.7 if roadmap is mis-prioritized.
   - **E — Defined hybrid: §0.7 non-negotiables checked first (any failing one wins); else highest-leverage composite; else lowest pillar score within the active roadmap milestone.** *Consequence:* layers the four signals in constitutional precedence order; deterministic given inputs; requires owner to ratify exact tier order.
-- **Recommended Default:** **E (Hybrid with §0.7 first).** §0.7 declares the non-negotiables are immutable philosophical truths — any other ordering risks demoting them below a numeric heuristic, violating §0.7.
+- **Recommended Default:** **E** — **AUTO-RESOLVED per §0.22**. Preserved entry for §3 Law 10 lineage.
 
 ##### CDR-13 — Disclosure Pattern for the 9 Explanation Blocks (origin: Z15)
 
