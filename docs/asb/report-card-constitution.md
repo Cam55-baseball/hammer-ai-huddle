@@ -311,9 +311,142 @@ Re-derived after the Phase 0.2 Constitutional Synthesis Pass. Replaces the prior
 | §0.11 audit re-runs | 1 per wave-batch closure | 1 per CDR-domain closure |
 | §16 Groups A–K | sealed | sealed (unchanged) |
 
-The gate (§0.12) is unchanged in strictness; only owner question load is reduced. Implementation remains constitutionally blocked.
+### §0.15 — Constitutional Derivation Rule
+
+> **Rule.** *If a question can be answered by existing ratified Hammers Modality doctrine, a new owner-interview question shall not be created. Existing doctrine must be referenced and inherited.*
+
+Every constitutional question — present or future — must first be classified against the ratified doctrine corpus (Eternal Laws; RR-1…RR-10; RW-1…RW-10; EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families; §0.1–§0.7; §1–§3; Missingness Doctrine; Closed-Loop Intelligence Doctrine; Coach Hammer Doctrine; Roadmap Doctrine; Development-First / Pillar-First philosophies; Hitting Non-Negotiables; Parent/Recruiter Protection Doctrine; Presentation Mode Lock):
+
+- **Class A — Already Answered.** Cite the ratified clause. Do not open an owner question.
+- **Class B — Derivable.** Cite source(s) + single-step reasoning. Do not open an owner question.
+- **Class C — True Constitutional Ambiguity.** Route to the §0.17 Constitutional Decision Register. Only Class C may produce an owner-facing question.
+
+Violations of §0.15 (opening an owner question for an A/B-class item) are constitutionally invalid and must be retracted. The §0.15 rule applies retroactively (Phase 0.2 audit, §0.16) and prospectively (any future Q-Series wave, sub-question, or follow-up).
+
+### §0.16 — Ambiguity Ledger (Phase 0.2)
+
+Re-audit of all 48 open questions from Q-Series Z (Z1–Z21) and Q-Series AA–AI (AA1–AI3) against the ratified doctrine corpus. Every row records: classification (A/B/C), inherited doctrine source (A/B) or CDR routing (C), and reasoning chain. Class A/B rows are constitutionally closed. Class C rows carry forward into §0.17. **No Q-Series Z or AA–AI question is reopened**; closure path is fixed here.
+
+#### Q-Series Z
+
+| Q | Class | Source / Reasoning | Owner needed? | Routed to |
+|---|---|---|---|---|
+| Z1 | **C** | No clause specifies UI-element-level conflict-resolution mode (hide / de-emphasize / overlay / context-only) when a low score lands on a category the athlete is actively improving. | Yes | CDR-9 |
+| Z2 | **B** | §0.2 veto clause: any decision "that improves grading at the expense of understanding… is constitutionally invalid." → **strict lexicographic** (Grading never wins a tie). | No | Closed |
+| Z3 | **B** | RR-relational + RR-10 (parent supremacy for minors) + RR-9 (visibility ethics) + §0 §0.2 hierarchy is unscoped to a single audience. → **Hierarchy applies to Athlete, Parent, and Recruiter surfaces; Parent/Recruiter inherit §0 via translation, not duplication.** | No | Closed |
+| Z4 | **C** | §0.3 mandates "ENCOURAGED" outcome; *enforcement mechanism* (tone-only / +visual / +structural) is not specified. | Yes | CDR-10 |
+| Z5 | **B** | §0.4 entry order priority 1 = "Highest-priority improvement opportunity" is the hero on every session, including all-poor sessions. → **Lead with highest-leverage improvement.** | No | Closed |
+| Z6 | **C** | §0.3 forbids "judged/punished" feelings but does not fix palette grammar; no clause permits or bans red/failure tones. | Yes | CDR-11 |
+| Z7 | **C** | "Highest-priority improvement" composite definition (lowest score / highest leverage / coach-defined non-negotiable / roadmap distance / hybrid) is unresolved. | Yes | CDR-12 |
+| Z8 | **B** | §0.4 places overall grade at position 8 + §1 / §0.4 axiom "the overall grade is never the hero." → **Never on entry; reachable only after development pathway.** | No | Closed |
+| Z9 | **B** | §1 + §2.7 "Coach Hammer — motivational synthesis — delivery only, never authorship." → **Synthesis layer (both summary of 1–6 and separate voice).** | No | Closed |
+| Z10 | **C** | Celebration threshold (any positive delta / ≥N points / band crossing) is unspecified. | Yes | CDR-5 |
+| Z11 | **B** | §0.5: "A composite that is flat or down while pillars are climbing is not a regression and must never be presented as one." → **Composite shown with pillar-progress overlay.** | No | Closed |
+| Z12 | **C** | Canonical improvement signal (per-session deltas vs rolling deltas) is unspecified. | Yes | CDR-6 |
+| Z13 | **B** | §3 Law 3 (missingness-visible) + §3 Law 5 (never-fabricated) + §0.6 (visible missingness). → **Visible missingness with placeholder; never AI-fabricated, never silently omitted.** | No | Closed |
+| Z14 | **B** | §1 + §3 Law 5: AI may rewrite *motivational delivery*; AI may never *author facts*. → **Hybrid: authored core fact + AI tone wrapper.** | No | Closed |
+| Z15 | **C** | Disclosure pattern for the 9 explanation blocks (always-expanded / always-collapsed / progressive) is unspecified. | Yes | CDR-13 |
+| Z16 | **B** | §3 Law 3 missingness-visible + §0.6: until owner authors a measurement source for the "pushed-forward-during-full-hand-load" P1 test, surfaced as **not-yet-measured**. (Source-of-measurement choice itself is §16 B-series, not §0.) | No | Closed |
+| Z17 | **C** | P3 sub-criteria decomposition (combined pass/fail vs two independently scored: "back hip → release" and "foot down without shoulder rotation") is unspecified. | Yes | CDR-3 |
+| Z18 | **C** | P4 four-element decomposition (knob stability / elbow direction / barrel delivery / closing the gap — aggregated vs independent) is unspecified. | Yes | CDR-4 |
+| Z19 | **C** | Softball Hitting variance (and Slap) — true owner decision. Merged with §16 B5; resolved once. | Yes | CDR-14 (merge w/ §16 B5) |
+| Z20 | **C** | Interview-cadence discipline (auto-advance vs approval-gated waves). | Yes | CDR-16 |
+| Z21 | **C** | RFL granularity (per-wave vs per-ratification). | Yes | CDR-17 |
+
+#### Q-Series AA–AI
+
+| Q | Class | Source / Reasoning | Owner needed? | Routed to |
+|---|---|---|---|---|
+| AA1 | **C** | Score *frame* (% of elite / % of ceiling / movement-quality band / raw / hybrid) is unspecified. | Yes | CDR-1 |
+| AA2 | **C** | Absolute vs athlete-relative (calibrated to age/level/history) — if hybrid, where the constitutional line sits — is unspecified. | Yes | CDR-2 |
+| AA3 | **B** | §0.4 priority 8 + §1 "overall grade is never the hero." → **Never on entry; never on parent/recruiter primary surface; click-through audit panel only.** | No | Closed |
+| AB1 | **B** | §0.5 pillar-first doctrine. → **Pillar movement is the canonical "progress" signal; composite is subordinate; roadmap-milestone movement is a derived view of pillar movement.** | No | Closed |
+| AB2 | **B** | §0.3 forbids "judged/punished" + §0.5 "composite drop ≠ regression when pillars climb." → **Regression contextualized as variance / learning moment; never presented as failure; never hidden.** | No | Closed |
+| AB3 | **C** | Canonical improvement time horizon (per-session / rolling N / since-roadmap-start / athlete-selectable) is unspecified. | Yes | CDR-7 |
+| AC1 | **A** | RR-5 (no manipulation, no destiny framing), RR-7 (no identity locking, no career projection), RR-9 (no exploitative ranking), RR-10 (no commercial pressure on minors), RW-1 (organism truth > commercial), CV/ER manipulation prohibitions, §0.3 (never Judged/Punished). → **Forbidden set fully defined: no comparisons to other athletes, no career-outcome projections, no diagnosis-like language, no punishment framing, no destiny framing, no identity-locking, no commercial pressure on minors.** | No | Closed |
+| AC2 | **A** | RR-5 athlete-revocation right; Missingness Doctrine (insufficient signal → silence); AR contradiction-state containment; SF/ES bounded-confidence silence rule; §3 Law 2 (no score without confidence state). → **Silence triggers fully defined: insufficient signal, contradiction state, low confidence below threshold, athlete opted out of narrative thread per RR-5, missing antecedents.** | No | Closed |
+| AC3 | **B** | §1 "delivery only, never authorship" + §3 Law 5 (never-fabricated). → **Hybrid: authored intent + AI tone wrapper.** Voice is identical across surfaces (Coach Hammer, celebration, parent translation). | No | Closed (inherits AF3) |
+| AD1 | **B** | RR-relational doctrine: Parent View is a translation surface, not a parallel artifact. → **Parent View inherits §0 via translation; not a separate constitutional surface.** | No | Closed |
+| AD2 | **A** | RR-8 (life context disclosure rights, athlete-controlled), RR-10 (parent supremacy for minors), relational primitives (athlete-controlled disclosure). → **Already defined: parent sees safeguarding-relevant + age-appropriate progress; athlete retains revocation right over narrative threads (RR-5); for minors, parent retains supremacy on commercial/recruiter pathways.** | No | Closed |
+| AD3 | **A** | RR-5 (no comparisons in narrative), RR-9 (no exploitative ranking), RW-1 (no commercial distortion). → **Comparison to other athletes never permitted in Parent View.** | No | Closed |
+| AE1 | **A** | Presentation Mode Lock (Released 2026-06-01) + RR-9/RR-10 sealed as doctrine, implementation deferred per `docs/asb/post-mastery-expansion-roadmap.md`. → **Recruiter View constitutionally deferred in V1.** | No | Closed |
+| AE2 | **A** | RR-10 verbatim: parents retain supremacy for minors. → **Parent is the gating authority for minors; recruiter visibility for minors requires explicit parent authorization.** | No | Closed |
+| AE3 | **A** | RR-9 (no pay-to-win, no exploitative ranking, no popularity loops) + RR-10 (commercial subordinate to safeguarding). → **Inherited verbatim: no pay-to-win visibility, no exploitative ranking, recruiters see only explicitly-authorized surfaces.** | No | Closed |
+| AF1 | **C** | Celebration trigger *set* (pillar climb / band crossing / roadmap milestone / first-time category completion / combination) is unspecified. | Yes | CDR-8 |
+| AF2 | **A** | RR-5 (no manipulation), RR-9 (no exploitative ranking), §0.5 (no false celebration), §3 Law 5 (no fabrication). → **Forbidden celebrations fully defined: another athlete's worse score, streaks that mask regression, score increases caused by skipped categories, any celebration that is not lineage-traceable to canonical pillar movement.** | No | Closed |
+| AF3 | **B** | Must inherit AC3 (single Coach Hammer voice = single tone grammar across celebration and guidance). → **Hybrid: authored intent + AI tone wrapper.** | No | Closed |
+| AG1 | **A** | Missingness Doctrine + SF/ES/AR vocabulary already canonicalize the five missingness states. → **Vocabulary already defined: (a) not-yet-measured, (b) measured-but-low-confidence, (c) measured-but-contradicted, (d) signal-dropped (sensor failure), (e) intentionally-withheld (athlete/parent disclosure right).** | No | Closed |
+| AG2 | **B** | §3 Law 3 (missingness-visible) + §3 Law 5 (never-fabricated) + §0.6. → **Copy contract is categorical, never marketing-coded: "Not yet authored for this category" / "Drill not yet assigned" / "Sensor signal dropped" / "Withheld by athlete" / "Insufficient signal to evaluate." No "coming soon" marketing language permitted.** | No | Closed |
+| AG3 | **B** | §0.6 (9 blocks mandatory) + §3 Law 7 (no silent omission). → **Missing blocks render as visible block-level missingness; the score may still render with block-level missingness exposed; the score may never claim a block exists when it does not.** | No | Closed |
+| AH1 | **C** | V1 discipline scope set (Baseball Pitching / Baseball Hitting / Softball Pitching / Softball Hitting / Throwing / Catching / Defense / Baserunning — per-discipline yes/no) is an owner decision. | Yes | CDR-15 |
+| AH2 | **A** | §3 universal laws vs §0.7 discipline-scoped Hitting Non-Negotiables. → **Already constitutional: §3 universal across all disciplines; §0.7 constitutional only within Hitting.** | No | Closed |
+| AH3 | **A** | §3 Law 10 additive-only + §0.11 audit pattern. → **Future disciplines must pass their own §0.11-style audit before opening their Report Card surface; cannot weaken prior constitutional rules.** | No | Closed |
+| AI1 | **B** | §3 Law 3 (missingness-visible) + §0.5 (pillar-first progress). → **First session: wider missingness, no longitudinal data, no progress overlay. Nth session: progress visible per AB-class closures.** | No | Closed |
+| AI2 | **A** | RR-5 narrative continuity + athlete-revocation right verbatim. → **Longitudinal narrative thread bound by RR-5; athlete may redirect or revoke any thread at any time, surfaced inside the Report Card.** | No | Closed |
+| AI3 | **A** | RR-5, RR-7 verbatim. → **Journey is not destiny, not ranking, not identity-locking, not career projection.** | No | Closed |
+
+#### Counts
+
+| Metric | Count |
+|---|---|
+| Original open questions | **48** |
+| Class A (already answered) | **13** |
+| Class B (derivable) | **18** |
+| **Eliminated (A + B)** | **31** |
+| **Remaining true ambiguities (C → CDR)** | **17** |
+| Reduction | **65%** |
+
+### §0.17 — Constitutional Decision Register (CDR)
+
+Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item carries forward exactly one Class-C question. Domains with zero residue are recorded as **"Fully derived — no owner decision required"** so the closure is auditable. No CDR item is pre-answered by Lovable.
+
+#### D1 — Scoring Meaning (4 decisions)
+
+| CDR ID | Origin | Decision required |
+|---|---|---|
+| CDR-1 | AA1 | Score frame: % of elite reference / % of athlete's own ceiling / movement-quality band (Developmental / Proficient / Elite) / raw measurement on a labelled scale / defined hybrid. |
+| CDR-2 | AA2 | Absolute (same score = same movement quality across athletes) vs athlete-relative (calibrated to age/level/history); if hybrid, where the constitutional line sits. |
+| CDR-3 | Z17 | P3 sub-criteria: combined pass/fail vs two independently scored ("back hip → pitcher release" and "foot down without shoulder rotation"). |
+| CDR-4 | Z18 | P4 four-element decomposition: aggregated holistic vs independently scored (knob stability / elbow direction / barrel delivery / closing the gap). |
+
+#### D2 — Coach Hammer Behavior
+
+**Fully derived — no owner decision required.** AC1/AC2 from RR-5/7/9/10 + Missingness Doctrine + §0.3; AC3 hybrid from §1 + §3 Law 5; AF3 inherits AC3; AF2 from RR-5/9 + §0.5 + §3 Law 5; Z9 synthesis from §1 + §2.7. No residue.
+
+#### D3 — Parent / Recruiter Visibility
+
+**Fully derived — no owner decision required.** AD1/AD2/AD3/AE1/AE2/AE3 inherited verbatim from RR-5 + RR-8 + RR-9 + RR-10 + Presentation Mode Lock; AA3 from §0.4 + §1; Z3 from RR-relational doctrine. No residue.
+
+#### D4 — Celebration & Progress (4 decisions)
+
+| CDR ID | Origin | Decision required |
+|---|---|---|
+| CDR-5 | Z10 | Celebrated-pillar trigger threshold: any positive delta / threshold delta (e.g., ≥2 points) / band crossing / combination. |
+| CDR-6 | Z12 | Canonical improvement signal: per-session deltas vs rolling deltas. |
+| CDR-7 | AB3 | Improvement time horizon: per-session / rolling N sessions / since-roadmap-start / athlete-selectable. |
+| CDR-8 | AF1 | Celebration trigger set: which events constitutionally trigger a celebration moment (pillar climb / band crossing / roadmap milestone / first-time category completion / combination). |
+
+#### D5 — Athlete Journey Experience (9 decisions)
+
+| CDR ID | Origin | Decision required |
+|---|---|---|
+| CDR-9 | Z1 | Conflict-mode rendering when grading conflicts with understanding at the UI-element level: hide / de-emphasize / "progressing" overlay / unchanged with context text. |
+| CDR-10 | Z4 | "ENCOURAGED" enforcement mechanism: tone-only / tone + visual / tone + visual + structural. |
+| CDR-11 | Z6 | Palette permissions for failure/red tones: permitted / restricted to neutral-positive-progress / conditional. |
+| CDR-12 | Z7 | "Highest-priority improvement" composite definition: lowest score / highest leverage on composite / coach-defined non-negotiable rank / furthest-from-roadmap-milestone / defined hybrid. |
+| CDR-13 | Z15 | Disclosure pattern for the 9 explanation blocks: always-expanded / always-collapsed / progressive disclosure. |
+| CDR-14 | Z19 | Softball Hitting variance — full Slap-card variant vs P4-modifier on standard card (merged with §16 B5; resolved once). |
+| CDR-15 | AH1 | V1 discipline scope set: explicit yes/no per discipline (Baseball Pitching / Baseball Hitting / Softball Pitching / Softball Hitting / Throwing / Catching / Defense / Baserunning). |
+| CDR-16 | Z20 | Interview cadence discipline: auto-advance to next wave vs explicit per-wave approval. |
+| CDR-17 | Z21 | RFL granularity: per-wave entry (RFL-082, RFL-083, …) vs single RFL entry at §0 ratification. |
+
+**Total CDR items: 17.** No question appears in two domains. Z19 is merged with §16 B5 and consumes a single CDR slot.
+
+**CDR closure procedure.** Owner answers each CDR item; each answer is recorded inline next to its CDR ID with the source domain and routing question(s); the §0.11 audit row corresponding to the answered CDR flips Partially/Absent → Defined; once all 17 are answered and §0.11 is clean, §0.12 conditions (1)+(2)+(3) are satisfied and the owner may execute condition (4) ratification.
 
 ---
+
+
 
 ## §1 — Report Card Philosophy
 
