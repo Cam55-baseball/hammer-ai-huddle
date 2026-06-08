@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
 > **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.2
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Section 0 inserted)
-> Lineage: ASB RFL-080, RFL-081 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> Version: v0.3
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.1 — Constitutional Completeness Audit + Q-Series AA–AI gating)
+> Lineage: ASB RFL-080, RFL-081, RFL-082 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification (Q-Series Z).
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12 (Q-Series Z **and** Q-Series AA–AI **and** §0.11 audit clean).
 
 ---
 
@@ -215,7 +215,102 @@ Asked in waves of ≤4 questions per turn. No assumptions filled in for unanswer
 - **Z20.** When you answer a wave, may Lovable proceed to the next wave automatically, or must each wave be explicitly approved before the next is asked?
 - **Z21.** Should each answered wave be recorded as its own RFL entry (RFL-082, RFL-083, …) or batched into a single RFL entry at §0 ratification?
 
-Additional waves will be generated only if answers expose new ambiguity. The interview ends when the owner declares §0 ratified, at which point §16 Groups A–K may open.
+Additional waves will be generated only if answers expose new ambiguity. Q-Series Z closure is **necessary but no longer sufficient** for §0 ratification — see §0.12.
+
+### §0.11 — Constitutional Completeness Audit (Phase 0.1)
+
+Before §0 may be marked RATIFIED, the constitution is audited against the Report Card's role inside the Hammers Modality organism. Each organism responsibility below is evaluated as **Defined / Partially / Absent**. Every Partially/Absent row is routed to a gated Q-Series (AA–AI). No gap is silently filled, inferred, or deferred.
+
+| # | Organism responsibility | Audit result | Where (if Defined / Partial) | Gap | Routed Q-Series |
+|---|---|---|---|---|---|
+| 1 | Athlete understanding | Partially | §0.1, §0.2, §0.6 | Defines that understanding is supreme; does not define what "understood" looks like at session N, how the athlete *journeys* across sessions, or first-session vs Nth-session differences | **AI** (Athlete Journey) |
+| 2 | Coaching translation (organism → human language) | Partially | §0.6 block 9, §1, §7 (intended) | Universal Explanation Law names the slot; constitutional rules for translation tone, compression-without-fabrication boundary, and silence conditions are absent | **AC** (Coach Hammer Communication) |
+| 3 | Correction prioritization | Partially | §0.4 (priority 3), §0.7 hitting non-negotiables | Per-discipline correction ranking, tie-breaking, and "what is *never* surfaced as a correction" are undefined | **AC**, **AG** (Missingness) |
+| 4 | Drill assignment determinism | Absent | §0.6 block 6 names the slot only | No constitutional rule for how a drill is *picked* (deterministic registry vs AI vs hybrid), what happens when no drill exists, or how drill scarcity is shown | **AG**, partial **AC** |
+| 5 | Video assignment determinism | Absent | §0.6 block 7 names the slot only | Same shape as drill: registry vs AI vs hybrid, missingness rendering, minor-safe content gating | **AG**, partial **AE** |
+| 6 | Roadmap guidance | Absent | §0.6 block 8 names the slot only | Constitutional rule for how a category maps to a roadmap step, what a "milestone" is, and how roadmap movement is celebrated | **AB** (Progress), **AF** (Celebration) |
+| 7 | Coach Hammer communication | Partially | §0.6 block 9, §1 doctrine | Voice, persona boundaries, what Coach Hammer is forbidden from saying, when to stay silent, minor-athlete language gates — all unspecified | **AC** |
+| 8 | Parent interpretation | Absent | (none in §0) | Parent view contents, framing rules, comparison prohibitions, minor-athlete parental supremacy (RR-relational doctrine) — undefined | **AD** (Parent View) |
+| 9 | Recruiter interpretation | Absent | (none in §0) | Recruiter visibility surface, opt-in pathway, RR-9/RR-10 minors-first enforcement, anti-pay-to-win, anti-ranking — undefined | **AE** (Recruiter View) |
+| 10 | Progress recognition | Partially | §0.5 pillar-first doctrine | "Progress" definition, regression handling, time horizons, win thresholds, celebration triggers — undefined beyond the worked example | **AB**, **AF** |
+| 11 | Missingness handling | Partially | §0.6 (visible missingness mandate) | Rendering grammar, "we don't know yet" copy contract, partial-category behavior, sensor-dropout vs not-yet-measured distinction — undefined | **AG** |
+| 12 | Scoring meaning | Absent | (referenced in §0.4 priority 8 and §0.5 example only) | What a numeric score *means* to an athlete, units, bands, score-visibility rules under §0.4 hero-suppression, absolute vs athlete-relative — undefined | **AA** (Score Meaning) |
+| 13 | Development meaning | Partially | §0.1, §0.5 | "Development" vs "progress" vs "improvement" — constitutional definitions and how they appear on the surface — undefined | **AB**, **AI** |
+
+**Audit rule.** Any row above is the constitutional source of truth for its routed Q-Series. A Q-Series cannot close while its source row is still Partially/Absent. The audit itself is re-run after each wave closes, and rows flip to **Defined** only when the owner has answered every question routed to them.
+
+### §0.12 — Extended Ratification Gate
+
+§0.10's standalone gate is superseded by this compound gate. §0 cannot flip to `STATUS: RATIFIED` until **all** of the following are true:
+
+1. Q-Series Z (Z1–Z21, plus any follow-up waves) is closed.
+2. Q-Series AA, AB, AC, AD, AE, AF, AG, AH, AI (and any follow-up waves) are closed.
+3. §0.11 audit shows zero rows in Partially or Absent state.
+4. The owner explicitly declares §0 ratified.
+
+Until all four conditions hold, **§16 Groups A–K remain sealed** and every implementation prohibition listed in the Preamble remains in force. No partial ratification, no provisional ratification, no "ratified except for X" mode is permitted.
+
+### §0.13 — Q-Series AA–AI (Constitutional Discovery Interview)
+
+Asked in waves of ≤4 questions per series-turn. No assumptions filled in for unanswered items. Each series is opened at Wave 1 below; subsequent waves are generated only after the prior wave's answers expose remaining ambiguity. Series may be answered in any order, but no series may be skipped.
+
+#### Q-Series AA — Score Meaning Constitution (Wave AA-1)
+- **AA1.** What does a single category score *mean* to the athlete? Choose the constitutional frame: (a) percent of elite reference, (b) percent of athlete's own ceiling, (c) movement-quality band (Developmental / Proficient / Elite), (d) raw measurement passed through a labelled scale, or (e) a defined hybrid.
+- **AA2.** Are scores **absolute** (same score = same movement quality across all athletes) or **athlete-relative** (calibrated to age/level/history)? If hybrid, where is the constitutional line?
+- **AA3.** Under §0.4's "overall grade is never the hero" rule, in what surfaces is the overall composite score *permitted* to be rendered at all (e.g., never on entry, never on parent view, never on recruiter view, only inside a click-through audit panel)?
+
+#### Q-Series AB — Progress Constitution (Wave AB-1)
+- **AB1.** What is the constitutional definition of "progress"? Pillar movement, composite movement, roadmap-milestone movement, or a defined ordered combination?
+- **AB2.** How is a *regression* (negative delta) constitutionally handled — hidden, contextualized as variance, surfaced as a learning moment, or surfaced unchanged?
+- **AB3.** What is the canonical time horizon for "improvement" — per session, rolling N sessions, since-roadmap-start, or athlete-selectable?
+
+#### Q-Series AC — Coach Hammer Communication Constitution (Wave AC-1)
+- **AC1.** What is Coach Hammer constitutionally *forbidden* from saying? (e.g., comparisons to other athletes, projections about career outcomes, anything resembling diagnosis, anything resembling punishment.)
+- **AC2.** When must Coach Hammer stay silent? (e.g., insufficient signal, contradiction state, athlete in opted-out narrative mode per RR-5.)
+- **AC3.** Is Coach Hammer's voice (a) a fixed authored persona, (b) AI-generated within a guardrail spec, or (c) hybrid (authored intent + AI tone wrapper)? This question must be answered before any Coach Hammer copy may exist.
+
+#### Q-Series AD — Parent View Constitution (Wave AD-1)
+- **AD1.** Does the Parent view exist as a constitutional surface inside the Report Card, or is it a separate artifact derived from the Report Card? (Determines whether Parent view inherits §0 directly or via translation.)
+- **AD2.** For minor athletes, what does the parent see that the athlete does *not*, and what does the athlete see that the parent does *not*? (Both directions must be explicit per RR-relational minor-athlete supremacy.)
+- **AD3.** Is comparison to other athletes ever permitted in the Parent view? If yes, under what bounded form (anonymized cohort band only / never)?
+
+#### Q-Series AE — Recruiter View Constitution (Wave AE-1)
+- **AE1.** Does the Recruiter view exist at all in V1, or is it constitutionally deferred until RR-9/RR-10 implementation prerequisites are met?
+- **AE2.** For minor athletes, what recruiter visibility is permitted, and what is the gating authority (parent, athlete, both)? Per RR-10, parents retain supremacy — how is that surfaced in the Report Card constitution itself?
+- **AE3.** What evidence surfaces (raw video, scores, narrative summaries, ranking) are recruiter-visible, and what is forbidden? Confirm "no pay-to-win visibility" and "no exploitative ranking" are inherited verbatim from RR-9/RR-10.
+
+#### Q-Series AF — Celebration Constitution (Wave AF-1)
+- **AF1.** What triggers a celebration moment on the Report Card? (Per §0.5: pillar climb ≥X, band crossing, roadmap milestone hit, first-time completion of a category — owner picks the constitutional set.)
+- **AF2.** What is the system constitutionally *forbidden* to celebrate? (e.g., another athlete's worse score, a streak that masks regression, a score increase that came from a category being skipped.)
+- **AF3.** Is celebration tone fixed authored copy, AI-generated, or hybrid — and does this answer have to match the answer to AC3 (Coach Hammer voice)?
+
+#### Q-Series AG — Missingness Constitution (Wave AG-1)
+- **AG1.** What is the canonical missingness vocabulary? Define the difference between (a) not yet measured, (b) measured but low confidence, (c) measured but contradicted, (d) measured but signal dropped (sensor failure), (e) intentionally withheld by athlete/parent.
+- **AG2.** How is a missing drill or missing video rendered? Must be visible (per §0.6) — what is the exact constitutional copy contract ("Drill coming soon" vs "No drill assigned yet" vs "Drill exists but not yet authored for this category")?
+- **AG3.** May a category be *scored* if any of its 9 explanation blocks are missing, or does any missing block invalidate the score for that category until authored?
+
+#### Q-Series AH — Cross-Discipline Expansion Constitution (Wave AH-1)
+- **AH1.** Which disciplines are in V1 scope for the Report Card constitutional surface? (Baseball Pitching, Baseball Hitting, Softball Pitching, Softball Hitting, Throwing, Catching, Defense, Baserunning — explicit yes/no per discipline.)
+- **AH2.** What rules are **shared across all disciplines** (e.g., §0.6 Universal Explanation Law, §0.4 entry order, §0.5 pillar-first) vs **discipline-specific** (e.g., §0.7 hitting non-negotiables)? Confirm: shared rules are constitutional; discipline-specific rules are constitutional only within their discipline.
+- **AH3.** May a future discipline be added only additively (cannot weaken existing constitutional rules), and must it pass its own §0.11-style audit before its Report Card surface opens?
+
+#### Q-Series AI — Athlete Journey Constitution (Wave AI-1)
+- **AI1.** What is the constitutional difference between the **first session** Report Card and the **Nth session** Report Card? (e.g., first session may have wider missingness and softer Coach Hammer copy; Nth session shows longitudinal progress per AB constitution.)
+- **AI2.** Is there a longitudinal narrative thread across sessions (bound by RR-5 narrative continuity), and if so, what is the athlete's redirect/revocation right inside the Report Card surface itself?
+- **AI3.** What is the journey constitutionally *not*? Confirm verbatim: not destiny, not ranking, not identity-locking, not a projection of career outcome (per RR-5, RR-7).
+
+### §0.14 — Remaining Constitutional Work Estimate
+
+Estimate, recorded for owner visibility. Re-derived after each wave closes. This is not a commitment.
+
+| Source | Open items | Notes |
+|---|---|---|
+| Q-Series Z | ~18 of 21 outstanding | Wave Z1 (Z1–Z3) is the only wave currently in front of the owner; Z4–Z21 are queued behind Z3 answers |
+| Q-Series AA–AI Wave 1 | 27 questions | 3 per series × 9 series |
+| Q-Series AA–AI later waves | est. 50–80 questions | Owner-answer-dependent fanout; each series expected to run 2–4 waves |
+| §0.11 audit re-runs | 1 per wave-batch closure | Audit flips Partially/Absent rows to Defined as answers land |
+| §16 Groups A–K | sealed | Cannot open until §0.12 gate is satisfied |
+| **Estimated total waves to ratification** | **25–35** | Owner-bound pace, not AI-bound |
 
 ---
 
