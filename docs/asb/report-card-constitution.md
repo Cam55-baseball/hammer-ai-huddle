@@ -885,6 +885,8 @@ Axis D — Process:
 
 Or reply **`DEFAULTS`** to ratify every Recommended Default above in one stroke.
 
+> **§0.23 STATUS: CLOSED.** Owner submitted `DEFAULTS` 2026-06-08. All 12 Axis A–D CDR items ratified verbatim per recommendations. See §0.25 and RFL-088.
+
 **Auto-resolved (no owner input required), recorded for lineage:**
 - CDR-3 = **C** · CDR-4 = **C** · CDR-12 = **E** · CDR-14 = **C (defer)** · CDR-15 = **{BP=Y, BH=Y, SP=N, SH=N, TH=N, CA=N, DE=N, BR=N}**
 
