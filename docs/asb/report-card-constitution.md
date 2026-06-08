@@ -750,32 +750,152 @@ Three buckets classifying each CDR by whether implementation may proceed before 
 | CDR-16 | Interview cadence — governance discipline only. |
 | CDR-17 | RFL granularity — ledger discipline only. |
 
-### §0.21 — Closure Recommendation
+### §0.21 — Closure Recommendation (revised Phase 0.5)
 
-Reduces the owner's remaining workload from 17 independent decisions to **6 closure bundles**, ratifiable in **2 owner responses**.
+After §0.22 False Ambiguity Audit auto-resolved 5 CDR items (CDR-3, CDR-4, CDR-12, CDR-14, CDR-15), the owner's remaining workload collapses from 17 → **12 true atomic decisions**, presentable as **4 axis-level answers in 1 owner response**, across **4 closure bundles**.
 
-**Bundle 1 — "Scoring Spine"** (CDR-1 + CDR-2 + CDR-3 + CDR-4). The four scoring-meaning decisions are not independently coherent — the score-frame choice (CDR-1) constrains the absolute/relative line (CDR-2), and the P3/P4 sub-criteria grammar (CDR-3/CDR-4) inherits the headline-vs-expansion pattern from CDR-1. Must be ratified as a single coherent spine.
+**Bundle 1 — "Scoring Spine"** (CDR-1 + CDR-2). The score-frame choice (CDR-1) constrains the absolute/relative line (CDR-2). CDR-3 and CDR-4 are removed — both auto-resolved to **C** by §3 Law 1 + §0.1 symmetry per §0.22.
 
-**Bundle 2 — "Progress Signal"** (CDR-5 + CDR-6 + CDR-7 + CDR-8). Celebration thresholds, improvement signal, time horizon, and celebration triggers all derive from one progress definition. Internally consistent only if ratified together.
+**Bundle 2 — "Progress Signal"** (CDR-5 + CDR-6 + CDR-7 + CDR-8). Unchanged — celebration thresholds, improvement signal, time horizon, and celebration triggers remain a single coherent progress definition.
 
-**Bundle 3 — "Athlete Surface Grammar"** (CDR-9 + CDR-10 + CDR-11 + CDR-13). Conflict-mode rendering, ENCOURAGED enforcement, palette permissions, and disclosure pattern jointly define the §0.3 ENCOURAGED surface grammar. Tightly coupled — changing one without the others produces a fractured surface.
+**Bundle 3 — "Athlete Surface Grammar"** (CDR-9 + CDR-10 + CDR-11 + CDR-13). Unchanged — conflict-mode rendering, ENCOURAGED enforcement, palette permissions, and disclosure pattern jointly define §0.3 ENCOURAGED surface grammar.
 
-**Bundle 4 — "Priority & Scope"** (CDR-12 + CDR-15). What gets surfaced as the priority-1 hero (CDR-12) only matters across the disciplines in V1 scope (CDR-15).
+**Bundle 4 — "Process"** (CDR-16 + CDR-17). Governance cadence; both Recommended-Default-strong. (Renumbered from prior Bundle 6; prior Bundles 4 and 5 were fully dissolved by §0.22.)
 
-**Bundle 5 — "Variance"** (CDR-14). Single softball-Slap decision; no doctrine-derived bundling partner.
-
-**Bundle 6 — "Process"** (CDR-16 + CDR-17). Governance cadence; ratifiable instantly with stated defaults (both Recommended-Default-strong).
+**Dissolved bundles:**
+- **Prior Bundle 4 ("Priority & Scope")** — DISSOLVED. CDR-12 auto-resolved to **E** by Hammer Today §2 Slot 3; CDR-15 auto-resolved to **{BP=Y, BH=Y, all others=N}** by `baseball-public-launch-ratification.md`.
+- **Prior Bundle 5 ("Variance")** — DISSOLVED. CDR-14 auto-resolved to **C (defer)** by P1-E launch doctrine.
 
 **Target closure path:**
 
 | Response | Bundles closed | CDR items | Unblocks |
 |---|---|---|---|
-| **Response 1** | Bundles 1, 2, 3 | CDR-1…CDR-13 (12 items) | All MUST-ANSWER-BEFORE-IMPLEMENTATION except CDR-15 |
-| **Response 2** | Bundles 4, 5, 6 | CDR-14, CDR-15, CDR-16, CDR-17 (5 items) | Full §0.12 ratification gate |
+| **Single owner response** | Bundles 1, 2, 3, 4 (12 atomic items, 4 axis answers) | CDR-1, CDR-2, CDR-5, CDR-6, CDR-7, CDR-8, CDR-9, CDR-10, CDR-11, CDR-13, CDR-16, CDR-17 | Full §0.12 ratification gate (combined with §0.22 auto-resolutions) |
 
-After Response 2, §0.11 audit is re-run; if clean, §0.12 conditions (1)+(2)+(3) are satisfied and the owner may execute condition (4) ratification.
+After the single owner response, §0.11 audit is re-run; if clean, §0.12 conditions (1)+(2)+(3) are satisfied and the owner may execute condition (4) ratification.
 
 ---
+
+### §0.22 — False Ambiguity Audit (Phase 0.5)
+
+> **Purpose.** Re-test every remaining CDR item against already-ratified Hammers Modality doctrine (Eternal Laws; RR-1…RR-10; RW-1…RW-10; pillar architecture per `docs/asb/uhrc-pillar-mapping-audit.md`; analysis formula per `docs/asb/analysis-formula-ratification.md`; Hammer Today guidance per `docs/asb/hammer-today-guidance-architecture.md`; Hammer activation per `docs/asb/hammer-activation-architecture.md`; launch scope per `docs/asb/baseball-public-launch-ratification.md` + `docs/asb/baseball-launch-reratification.md`; and this constitution's own §0.1, §0.6, §0.7, §3 Law 1, §3 Law 10). The objective is to eliminate false ambiguity — do not ask the owner to decide something Hammers Modality has already constitutionally decided.
+
+**Audit table:**
+
+| CDR | Phase 0.5 Status | Resolution Source | Owner Input Required? | Auto-Resolved To |
+|---|---|---|---|---|
+| CDR-1  | TRUE ambiguity | — | Y | — |
+| CDR-2  | TRUE ambiguity | — | Y | — |
+| CDR-3  | **FALSE ambiguity** | §3 Law 1 + §0.6 + §0.1 (consistency with CDR-4) | N | **C** |
+| CDR-4  | **FALSE ambiguity** | Symmetry with CDR-3 under §0.1 (explicitly cited in prior Recommended Default) | N | **C** |
+| CDR-5  | TRUE ambiguity | — | Y | — |
+| CDR-6  | TRUE ambiguity | — | Y | — |
+| CDR-7  | TRUE ambiguity | — | Y | — |
+| CDR-8  | TRUE ambiguity | — | Y | — |
+| CDR-9  | TRUE ambiguity | — | Y | — |
+| CDR-10 | TRUE ambiguity | — | Y | — |
+| CDR-11 | TRUE ambiguity (recommended default C is RR-6-aligned) | — | Y | — |
+| CDR-12 | **FALSE ambiguity** | `hammer-today-guidance-architecture.md` §2 Slot 3 ("exactly one Next-Action per Today render") + §0.7 non-negotiable supremacy + §0.4 hero cascade + Megaphase 111–150 ("one well-timed handoff > scattered nudges") | N | **E** |
+| CDR-13 | TRUE ambiguity | — | Y | — |
+| CDR-14 | **FALSE ambiguity** | `baseball-public-launch-ratification.md` P1-E ("defer or run softball sprint") | N | **C** (defer) |
+| CDR-15 | **FALSE ambiguity** | `baseball-public-launch-ratification.md` §1–§7 (BP+BH live; minors fail-closed); P1-E (softball deferred); throwing/catching/defense/baserunning absent from every launch ratification | N | **BP=Y, BH=Y, SP=N, SH=N, TH=N, CA=N, DE=N, BR=N** |
+| CDR-16 | TRUE ambiguity (process) | — | Y | — |
+| CDR-17 | TRUE ambiguity (process) | — | Y | — |
+
+**Collapse arithmetic:**
+
+```text
+Original CDR count                      17
+False-ambiguity closures (auto-resolve)  5  (CDR-3, CDR-4, CDR-12, CDR-14, CDR-15)
+Remaining TRUE owner decisions          12
+Axis-level compression target           ≤5  → met at 4 axes (§0.23)
+```
+
+**Doctrine-citation log for each closure:**
+
+- **CDR-3 → C.** §3 Law 1 forbids lineage compression below "one click away"; §0.6 mandates "Why" + "How to improve" blocks per category; collapsing P3's two sub-criteria into a single pass/fail (A) removes that lineage; opening two independent headers (B) violates §0.1 symmetry with CDR-4. C is the unique legal render.
+- **CDR-4 → C.** Identical chain to CDR-3 plus §0.1 explicit symmetry — the prior packet's Recommended Default already declared this "forced by symmetry with CDR-3."
+- **CDR-12 → E.** Hammer Today §2 Slot 3 fixes a single Next-Action; §0.7 fixes non-negotiables as immutable; §0.4 fixes the priority-1 hero cascade. Options A–D each install a competing ranking authority that conflicts with one of these three ratified surfaces; E is the only option that respects all three.
+- **CDR-14 → C.** Launch doctrine P1-E currently classifies softball parity (including Slap) as deferred. Until that defers is explicitly lifted by a softball sprint ratification, no surface exists to render Slap on.
+- **CDR-15 → {BP, BH only}.** Launch ratification names Baseball Pitching and Baseball Hitting as the live scope; everything else is either explicitly deferred (softball, via P1-E) or absent from all launch documents (throwing/catching/defense/baserunning). Owner may broaden post-V1 additively per AH3 + §3 Law 10.
+
+**Re-bundling consequence.** See §0.21 (revised): 6 bundles → 4 bundles, 2 owner responses → 1 owner response.
+
+---
+
+### §0.23 — Owner Decision Form (Axis-Level)
+
+> **Purpose.** Present the 12 remaining true CDR decisions as **4 axis-level answers** for closure in a single owner response. Each axis groups CDR items whose doctrinal coupling makes joint ratification mandatory. Recommended Defaults are inherited verbatim from §0.18; selecting `DEFAULTS` ratifies every recommended option in one stroke. Auto-resolved CDRs (§0.22) require no owner input.
+
+**Axis A — Scoring Spine** (CDR-1 + CDR-2)
+
+| CDR | Decision | Options | Recommended Default |
+|---|---|---|---|
+| CDR-1 | Score frame | A (% elite) / B (% ceiling) / C (movement-quality band) / **D (hybrid band headline + numeric sub-value)** | **D** |
+| CDR-2 | Absolute vs athlete-relative | A (fully absolute) / **B (fully athlete-relative)** / C (hybrid with declared line) | **C** *(per §0.18; the form label "B=recommended" in the plan was a transcription error — doctrine recommendation remains **C** per §0.18 line 484)* |
+
+**Axis B — Progress Signal** (CDR-5 + CDR-6 + CDR-7 + CDR-8)
+
+| CDR | Decision | Options | Recommended Default |
+|---|---|---|---|
+| CDR-5 | Celebrated-pillar trigger threshold | A / B / C / **D (combination)** | **D** |
+| CDR-6 | Canonical improvement signal | A / B / **C (rolling headline + per-session expansion)** | **C** |
+| CDR-7 | Improvement time horizon | A / B / C / **D (athlete-selectable, rolling-N default)** | **D** |
+| CDR-8 | Celebration trigger set | A / B / C / **D (pillar + band + roadmap + first-time)** | **D** |
+
+**Axis C — Athlete Surface Grammar** (CDR-9 + CDR-10 + CDR-11 + CDR-13)
+
+| CDR | Decision | Options | Recommended Default |
+|---|---|---|---|
+| CDR-9  | Conflict-mode rendering | A / B / **C ("Progressing" overlay)** / D | **C** |
+| CDR-10 | ENCOURAGED enforcement mechanism | A / B / **C (Tone + Visual + Structural)** | **C** |
+| CDR-11 | Palette permissions | A / B / **C (red reserved for safeguarding only)** | **C** |
+| CDR-13 | Disclosure pattern | A / B / **C (progressive disclosure)** | **C** |
+
+**Axis D — Process** (CDR-16 + CDR-17)
+
+| CDR | Decision | Options | Recommended Default |
+|---|---|---|---|
+| CDR-16 | Interview cadence | A (auto-advance) / **B (explicit per-wave approval)** | **B** |
+| CDR-17 | RFL granularity | **A (per-wave entry)** / B (single entry at ratification) | **A** |
+
+**Owner Response Template:**
+
+```text
+Axis A — Scoring Spine:
+  CDR-1: [A | B | C | D]
+  CDR-2: [A | B | C]
+
+Axis B — Progress Signal:
+  CDR-5: [A | B | C | D]
+  CDR-6: [A | B | C]
+  CDR-7: [A | B | C | D]
+  CDR-8: [A | B | C | D]
+
+Axis C — Surface Grammar:
+  CDR-9:  [A | B | C | D]
+  CDR-10: [A | B | C]
+  CDR-11: [A | B | C]
+  CDR-13: [A | B | C]
+
+Axis D — Process:
+  CDR-16: [A | B]
+  CDR-17: [A | B]
+```
+
+Or reply **`DEFAULTS`** to ratify every Recommended Default above in one stroke.
+
+**Auto-resolved (no owner input required), recorded for lineage:**
+- CDR-3 = **C** · CDR-4 = **C** · CDR-12 = **E** · CDR-14 = **C (defer)** · CDR-15 = **{BP=Y, BH=Y, SP=N, SH=N, TH=N, CA=N, DE=N, BR=N}**
+
+After owner submission, §0.18 entries flip to RATIFIED with the selected option recorded inline; §0.11 audit re-runs; if clean, §0.12 (1)+(2)+(3) are satisfied and the owner may execute condition (4) ratification.
+
+---
+
+
+
+
+
 
 
 
