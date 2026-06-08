@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
 > **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.7
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.5 — False Ambiguity Audit)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> Version: v0.8
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.6 — Doctrine Alignment Recommendation)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis, packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3, and narrowed by the §0.22 False Ambiguity Audit per Phase 0.5. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities**; Phase 0.3 bundled those 17 into **6 closure bundles**; Phase 0.5 closed **5 CDR items** as already-resolved by existing Hammers Modality doctrine, leaving **12 true owner decisions** presentable as **4 axis-level answers in 1 owner response** per §0.21 (revised) and §0.23.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis, packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3, narrowed by the §0.22 False Ambiguity Audit per Phase 0.5, and doctrine-confirmed by the §0.24 Doctrine Alignment Recommendation per Phase 0.6. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities**; Phase 0.3 bundled those 17 into **6 closure bundles**; Phase 0.5 closed **5 CDR items** as already-resolved, leaving **12 true owner decisions** as **4 axis-level answers in 1 owner response** per §0.21 (revised) and §0.23; Phase 0.6 confirms every §0.23 Recommended Default as the uniquely doctrine-aligned choice per §0.24.
 
 ---
 
