@@ -1607,10 +1607,10 @@ The schemas themselves are not filled in this draft. They are filled in v0.2, af
 
 This document may flip to `STATUS: RATIFIED` only when:
 
-1. Every question in §16 (A1–A3, B1–B6, C1–C4, D1–D6, E1–E4, F1–F3, G1–G2, H1–H2, I1–I4, J1–J5, K1–K7) is answered by the owner.
-2. The owner pastes verbatim text for Throwing standards #6 and #7 (K7).
-3. The schema block in §17 is filled for every category in §4 / §5 / §6 using the ratified answers.
-4. An RFL entry (RFL-080) records the ratification with date and version pin.
+1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** The owner answers the residual §0.26 §F questionnaire (B2, C1, C3). All other §16 items are auto-resolved by §0.26 (A/B classification) and require no further owner input. B4, B5, K7 are out of V1 scope.
+2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope.
+3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope.
+4. An RFL entry (RFL-080 lineage, extended by RFL-089) records the ratification with date and version pin.
 
 Until those four conditions are met:
 
