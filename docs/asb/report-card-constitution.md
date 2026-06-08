@@ -1560,9 +1560,9 @@ The constitution flips `STATUS: DRAFT → STATUS: RATIFIED` only when every ques
 - **B6.** [§0.26 = A — RESOLVED] Are there report-card categories **not currently measurable by the engine** that you nonetheless want graded (Effort, Composure, Routine, Mound Presence, At-bat Quality)? — V1 ships only engine-measurable categories.
 
 ### C — Hierarchy & weighting
-- **C1.** [§0.26 = C — OWNER DECISION REQUIRED] Pitching: ratify or override engine weights (Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7).
+- **C1.** [§0.26 = C → RATIFIED §0.27] Pitching engine weights **RATIFIED as-is**: Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7.
 - **C2.** [§0.26 = A — RESOLVED] Which categories are **Non-Negotiable**? Hitting = P1 + P4; Pitching = none.
-- **C3.** [§0.26 = C — OWNER DECISION REQUIRED] Which categories are **Developmental** and which are **Advanced**? Give age cut-offs.
+- **C3.** [§0.26 = C → RATIFIED §0.27] Developmental vs Advanced age cut-offs **DEFERRED**. V1 ships all BP/BH categories age-neutral; thresholds revisited post-V1 (non-blocking).
 - **C4.** [§0.26 = B — DERIVED] Rank 1 and Rank 2 most important per discipline.
 
 ### D — Scoring formats
