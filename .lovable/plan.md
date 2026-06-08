@@ -1,128 +1,128 @@
-# Command Center Authority Restoration Sprint
+# Analysis Engine, Report Card System & Correction Engine Ratification
 
-Targeted runtime remediation of the highest-priority findings from `docs/asb/command-center-authority-audit.md`. Scope is bounded — no new doctrine, no new ASB topics, no schema migrations. Reuses existing infrastructure: `LineageDrilldownButton`, `MissingnessChip`, `ConfidencePill`, `buildHammerDailyPlan`, `useAthleteCommandRows`, `buildCalendarEvents`, athlete context spine.
-
-## Section A — Close BROKEN card loops (RFL-068)
-
-The 7 observation-only cards (Readiness, Fatigue, Recovery, Workload, BehavioralRegulation, SchedulingLoad, TrendShifts) currently terminate at a number with no affordance. Add a uniform "What now?" footer to each card that:
-
-1. Deep-links to the matching `HammerDailyPlan` modality block on `/command` (anchor scroll: `#hammer-plan-{modality}`), with fallback route per modality.
-2. Renders a one-sentence projection-envelope interpretation (`b.why`-equivalent), pulled from existing projection data — no new copy doctrine, just surfacing what the envelope already carries.
-3. Mounts the existing `<LineageDrilldownButton>` so Why-this / Why-now / Why-me is one tap away.
-
-Card → modality mapping:
-- Readiness → `warmup` + `speed`
-- Fatigue → `recovery`
-- Recovery → `recovery`
-- Workload → `strength`
-- BehavioralRegulation → `recovery` (regulation lives on the recovery block)
-- SchedulingLoad → `strength`
-- TrendShifts → top-shifted family's matching modality
-
-Emit a lightweight `intelligence.card.action_taken` event (reusing the `observability` ASB class already registered) when the footer CTA is tapped, so the loop closes through the canonical ledger.
-
-## Section B — Answer Hammer dead-end repair (RFL-069, RFL-071)
-
-- **UHRC remediation CTA** (`UhrcReportCard`): add a footer button "Work on this in today's plan" that scrolls to `#hammer-plan`. Adds per-topic tooltip pulled from existing topic registry labels — no new copy authority.
-- **Escalation ack consolidation** (RFL-071): wire `EscalationBanner` and `EscalationFlagsCard` item clicks to call the same `useAcknowledgeEscalation` mutation the Bell uses, before navigating to `/replay/:id`. Bell badge decrements regardless of entry surface.
-- Verify every existing handler still resolves; document closure in RFL.
-
-## Section C — Schedule authority integration (RFL-064)
-
-Wire existing `src/lib/calendar/buildCalendarEvents.ts` into `buildHammerDailyPlan` as a bounded antecedent:
-
-1. New helper `src/lib/hammer/context/scheduleWindow.ts` reads `calendar_events`, `games`, `scheduled_practice_sessions` for the athlete in `[today-1d, today+7d]`.
-2. Returns a typed `ScheduleWindow { yesterday, today, tomorrow, upcomingCompetition }` with explicit `missingness` when no rows.
-3. `buildHammerDailyPlan` consumes the window to:
-   - Taper strength when `upcomingCompetition.daysUntil ≤ 2`.
-   - Inject a `why` clause referencing the upcoming game/practice.
-   - Suppress redundant warm-up volume on back-to-back practice days.
-4. `WorkloadCard` adds a "Next 7 days" line showing competition density when present.
-
-All branching is additive; missingness preserved per Eternal Laws (no fabricated schedule).
-
-## Section D — Organism-specific UHRC (RFL-065, RFL-066)
-
-`UhrcAthleteSection` + `buildUhrcReport`:
-
-- Read `sport` and `primary_position` from `useHammerAthleteContext()`.
-- Introduce a sport→disciplines map (baseball stays `["pitching","hitting"]`; other sports degrade to a single discipline + visible `MissingnessChip` "No projector for {sport} yet").
-- Position-conditional weighting: pitcher emphasizes `pitching`, catcher/infield emphasizes `defense` (placeholder weight 0 when projector absent — visible, not hidden).
-- No new ASB topics. UHRC remains interpretive — does not author organism truth.
-
-Other GENERIC surfaces (Bell labels, TodayOverviewHeader, RecentEventsPreview) are deferred — documented in updated audit table as "deferred to next sprint" with the required organism inputs listed.
-
-## Section E — Trust surfaces (Why this / Why now / Why me)
-
-Mount `<LineageDrilldownButton>` (already implemented) on:
-- All 7 CommandCenterSection cards (footer row alongside the "What now?" CTA from Section A).
-- `UhrcReportCard` (header right).
-
-No new component required — this is wiring an existing affordance into surfaces that lack it.
-
-## Section F — Validation matrix
-
-Manual smoke (browser preview) across six athlete archetypes by toggling athlete_context values via existing onboarding chat:
-
-| Archetype | Verification |
-|---|---|
-| Youth | Cards link to plan; no professional-only copy leaks |
-| High-school | Schedule window includes practices |
-| College | Competition taper triggers when game ≤2d |
-| Professional | UHRC sport branching renders |
-| Injured | Missingness chip on disciplines without projector; no dead actions |
-| Return-from-layoff | Continuity context propagates; no orphan CTAs |
-
-Verification gates: no console errors, every CTA resolves, no 404, ack consolidation works from all 3 escalation surfaces.
-
-## Section G — Deliverables
-
-1. **Runtime code**:
-   - `src/components/command/cards/*.tsx` — uniform action footer (7 files).
-   - `src/components/command/EscalationBanner.tsx`, `…/EscalationFlagsCard.tsx` — ack-on-click.
-   - `src/components/report-card/UhrcReportCard.tsx`, `UhrcAthleteSection.tsx` — CTA + sport/position branching.
-   - `src/lib/uhrc/buildUhrcReport.ts` (or current location) — sport/position-conditional disciplines.
-   - `src/lib/hammer/context/scheduleWindow.ts` — NEW bounded window reader.
-   - `src/lib/hammer/prescription/dailyPlan.ts` — consume ScheduleWindow with missingness preserved.
-   - `src/components/command/cards/WorkloadCard.tsx` — surface 7-day competition density.
-   - `src/components/hammer/HammerDailyPlan.tsx` — add anchor id per modality block for deep-linking.
-
-2. **Docs**:
-   - `docs/asb/command-center-authority-restoration.md` — NEW restoration report (what shipped, what deferred, archetype validation table).
-   - `docs/asb/reality-feedback-ledger.md` — close RFL-064, RFL-065, RFL-066, RFL-068, RFL-069, RFL-071 with file:line evidence; keep RFL-067 (IA), RFL-070 (replay translation), RFL-072 (modality smoke) open as deferred.
-   - `.lovable/plan.md` — execution note.
-
-## Out of scope (deferred, documented)
-
-- No new ASB topic creation beyond reusing `observability` class for card-action emission.
-- No replay-surface athlete translation (RFL-070).
-- No Forecast surface (Phase 58 SF deferred).
-- No full personalization of Bell/Header/RecentEvents (organism inputs documented, transition deferred).
-- No schema migrations.
-
-## Exit criteria
-
-- All 7 BROKEN cards now expose CTA + lineage button + interpretation line → loop closed.
-- UHRC has remediation CTA and is sport/position-aware with visible missingness.
-- Daily Plan consumes schedule antecedents; WorkloadCard shows upcoming competition density.
-- Ack works from Bell, Banner, and FlagsCard.
-- Six athlete archetypes pass manual smoke with zero dead actions and zero navigation failures.
-- RFL updated; restoration report committed; subordinate to Eternal Laws and all sealed phases.
+> **Execution status (2026-06-08):** Phase A complete. Audit document published at
+> `docs/asb/analysis-formula-ratification.md`. RFL-073…RFL-079 filed. Phases B–F
+> blocked on user sign-off of audit document + answers to the 5 open questions
+> (Display Format Table ratification, throwing position branching, hitting slap
+> auto-switch, motivational voice scope, hitting tag-migration confirmation).
+> No code, schema, or doctrine changes occurred this turn.
 
 ---
 
-## Execution note — 2026-06-07
 
-Sprint executed. Runtime changes shipped:
-- `IntelligenceCardShell` action slot + 7 card deep-links (RFL-068).
-- `useScheduleWindow` hook + `HammerDailyPlan` context line + `WorkloadCard` density (RFL-064 partial).
-- `EscalationBanner` + `EscalationFlagsCard` ack-on-click (RFL-071).
-- `UhrcAthleteSection` sport branching with missingness card (RFL-065).
-- `UhrcReportCard` remediation CTA + lineage button (RFL-069).
-- `HammerDailyPlan` exposes `#hammer-plan` and per-modality anchors.
+This sprint is **audit-first, additive, and constitutionally bounded**. Nothing about the existing analysis pipeline, subscription gating, or upload flow changes. The Report Card is added as a new tab on the analysis result page — the current technical analysis becomes the "Technical View" behind that toggle.
 
-Exit criteria satisfied: no BROKEN loops remain in scope, ack works from all three
-escalation surfaces, recommendations expose upcoming schedule context, UHRC is
-no longer baseball-locked at the section level, all CTAs resolve. Deferred:
-RFL-066 (position branching — needs envelope key), RFL-067, RFL-070, RFL-072.
-See `docs/asb/command-center-authority-restoration.md`.
+Every decision in this plan reflects an explicit answer you gave. Where I am still uncertain, I will stop and ask before writing code.
+
+---
+
+## 1. The audit (Deliverable: `docs/asb/analysis-formula-ratification.md`)
+
+Before any code touches the codebase, I will publish a single audit document that **proves**, file-by-file, the current state of every analysis system. Format per system:
+
+| System | Inputs | Measurements | Tags | Scoring | Recommendations | Drills | Videos | Roadmap |
+|---|---|---|---|---|---|---|---|---|
+
+Coverage:
+
+- **Baseball Pitching** — confirmed present: `src/data/baseball/pieV2Signals.ts` + `src/lib/pieV2/scoring.ts` (Energy Angle 25°/≥18°, Visual Stability, Hip/Shoulder Separation, Tempo ≤1.05s/≤1.20s, Stride Length Efficiency, Posture, Front Side, Head Direction, Shoulder Plane, Rear Foot Drag — 11 standards mapped). Drill catalog `pieV2DrillCatalog.ts`, video catalog `pieV2VideoCatalog.ts`, aggregate `aggregate.ts`, longitudinal `longitudinal.ts`. Audit will show **per-standard** which file consumes it.
+- **Baseball/Softball Hitting** — confirmed present: `src/lib/hittingPhases.ts` + `hittingCausalChains.ts` (P1 Hip Load NN / P2 Hand Load / P3 Stride+Landing / P4 Hitter's Move NN), with full athlete + coach causal chain (trigger / cause / mechanism / result / fix) and 4-step roadmaps per phase. Audit will show the conflict with `src/lib/formulaPhases.ts` (`p2_heel_plant`, `p3_launch`) used by Video Library tagging.
+- **Throwing** — confirmed gap: only phase tags exist (`THROWING_PHASES` in `formulaPhases.ts`), **no measurement standards, no formula, no per-phase scoring**.
+- **Softball Pitching** — confirmed gap: no equivalent of PIE V2 exists. Deferred (you will provide standards).
+- **UHRC** — confirmed misalignment: `src/lib/uhrc/` produces a cross-discipline pillar projection (mechanics/command/stuff/movement_quality/decision_quality/durability) over PIE V2 + HIE + foundation. Not the per-analysis report card you want. **Will be removed.**
+
+Output: one ratification document the user signs off on before any phase below executes.
+
+---
+
+## 2. Locked decisions (from your answers)
+
+1. **Hitting canonical phases:** P1 Hip Load · P2 Hand Load · P3 Stride+Landing (heel plant lives here) · P4 Hitter's Move. `formulaPhases.ts` will be migrated to match `hittingPhases.ts`. Tagged-video remap: `p2_heel_plant → p3_stride`, `p3_launch → p4_hitters_move`.
+2. **Scope this sprint:** Baseball Pitching · Baseball Hitting · Softball Hitting · Baseball Throwing · Softball Throwing report cards. Softball Pitching deferred until you provide its standards.
+3. **Throwing formula:** New registry built from the 7 standards you just gave (Eyes on Target at peak leg lift, Hips fire / shoulders closed, Stride length ≥100% height + consistency, Head stable vertical movement ≤2%, Hips in line with target, Front-side glove control within body frame, Head ≤15° off belly-button at release, Shoulders horizontal ≤10° at release). Applies to baseball + softball throwing identically until you say otherwise.
+4. **Correction engine:** Hybrid. Registry holds canonical facts (what happened / why it matters / how it affects performance / how to fix / drill ids / video ids / roadmap step). AI writes **only** the motivational paragraph, generated once per analysis, cached on the analysis row, never regenerated (replay-safe).
+5. **Routing:** Additive. Subscription + selected analysis type stays as-is. Report Card surfaces as a new **tab** on the analysis result page.
+6. **Athlete vs Technical:** Athlete View is new (parent-friendly). Technical View = the existing PIE V2 / hitting causal page rendered as-is.
+7. **UHRC:** Deleted. Surfaces that import it get removed or replaced with a link to the most recent per-analysis report card.
+8. **Display formats:** Engine proposes a per-category table in the audit doc; you ratify each row before UI is built.
+
+---
+
+## 3. Execution phases
+
+Phases A–F run **in order, gated on your sign-off** of the preceding deliverable. No phase begins until you say "proceed."
+
+### Phase A — Audit + ratification document (no code)
+- Write `docs/asb/analysis-formula-ratification.md` with the full per-system mapping table above.
+- Include the proposed Display Format Table (per category: degrees / seconds / pass-fail / % / 1–10) with checkbox column for your ratification.
+- Append a "Conflicts & Gaps" section listing the hitting phase conflict, throwing formula gap, softball pitching gap, UHRC misalignment.
+- **You sign off** before Phase B.
+
+### Phase B — Constitutional cleanup (additive deletions only)
+- Remove UHRC: `src/lib/uhrc/`, `src/components/report-card/Uhrc*.tsx`, UHRC routes, UHRC consumers on Command Center.
+- Replace consumer sites with a small "Open latest report card" affordance pointing at the per-analysis report card route (which lands in Phase E).
+- Update `mem://` and RFL ledger.
+
+### Phase C — Hitting phase migration
+- Make `hittingPhases.ts` the single source of truth.
+- Rewrite `formulaPhases.ts` HITTING_PHASES to: `p1_hip_load`, `p2_hand_load`, `p3_stride`, `p4_hitters_move`.
+- Data migration for `library_videos.formula_phases`: `p2_heel_plant → p3_stride`, `p3_launch → p4_hitters_move`. Old ids preserved in an `asb_event_lineage` migration record so replay equivalence holds.
+- Edge function mirror `supabase/functions/_shared/hittingPhases.ts` updated in lockstep.
+
+### Phase D — Throwing formula registry (new)
+- New `src/data/baseball/throwingV1Signals.ts` (shared with softball throwing) encoding the 7 standards you gave, with `target`, `acceptable`, `measurement`, `purpose`, `common_deficiencies`, `root_causes`, `teaching_progression`, `composite_weight` per signal — same shape as pitching's `PIE_V2_SIGNALS` so we get scoring/replay/lineage for free.
+- New `src/lib/throwingV1/` modeled exactly on `pieV2/` (types, scoring, aggregate, persist, finalize). Engine pinned at `THROWING_V1_ENGINE_VERSION`.
+- Drill + video catalog references reuse existing pools; gaps surface via `MissingnessChip`.
+
+### Phase E — Correction Engine extension (registry + AI motivational)
+- Extend each signal definition (pitching, hitting phases, throwing) with a `correction` block: `{ what_happened, why_it_matters, how_it_affects_performance, how_to_fix, drill_ids[], video_ids[], roadmap_step }`. All hand-written, version-pinned, replay-safe.
+- New table `analysis_correction_cache` (analysis_id, signal_id, motivational_text, model_id, prompt_hash, created_at) with RLS + GRANTs per project rules. Cache key includes `engine_version` so a re-score invalidates.
+- New edge function `generate-correction-motivation` (Lovable AI gateway, free Gemini tier). System prompt is grounded **exclusively in the registry block** for that signal — model writes the motivational paragraph only, no fact authoring. Output cached and never regenerated.
+- Replay invariant: registry facts always present even if AI is unavailable; motivational paragraph renders missingness chip when uncached.
+
+### Phase F — Report Card UI (per analysis, Athlete + Technical toggle)
+- New route segment `report-card` mounted as a **tab** on the existing analysis result page (no change to upload, subscription, or routing).
+- New component `src/components/report-card/AnalysisReportCard.tsx` with:
+  - **Athlete View** (default): elite/simple/parent-friendly. Per-category card uses the display format ratified in Phase A (raw value + 1–10 + pass/fail badge as applicable). Tap a category → drawer with What/Why/How/Fix/Drills/Videos/Roadmap + motivational paragraph.
+  - **Technical View**: renders existing PIE V2 aggregate page (pitching) or existing hitting causal chain page (hitting) untouched.
+- Per-discipline report card components: `BaseballPitchingReportCard`, `BaseballHittingReportCard`, `SoftballHittingReportCard`, `BaseballThrowingReportCard`, `SoftballThrowingReportCard` — thin variants over a shared `<ReportCardShell>` that picks signals from the right registry.
+- Every category card carries `<LineageDrilldownButton>` + `<ConfidencePill>` + `<MissingnessChip>` (existing components). Every drill/video CTA deep-links to the existing drill/video surface.
+
+---
+
+## 4. What I will NOT do without further direction
+
+- **Softball Pitching report card** — waiting on standards.
+- **Position-conditional pitcher vs catcher vs infielder report cards** for throwing — current plan ships one Throwing report card; specialization can be a follow-up.
+- **AI authoring of any fact** (what/why/how/fix/drills/videos/roadmap). AI writes the motivational paragraph only.
+- **Any change** to subscription gating, upload flow, analysis type selection, or scoring math.
+- **Any new ASB topic** beyond what each registry naturally already implies.
+
+---
+
+## 5. Open questions I still expect to ask before/during execution
+
+1. **Display Format Table review.** I will draft it in the Phase A doc and stop for your row-by-row ratification.
+2. **Throwing — pitcher-only standards vs all-positions.** Your standards mention "extension to the plate" which is pitcher-specific. Should the Throwing Report Card branch by position (pitcher vs catcher vs infielder vs outfielder), or is one universal throwing card correct for v1?
+3. **Hitting Slap vs Standard variants.** Existing `hittingPhases.ts` has slap-style variants (`SlapEliteSignals`, `evaluateSlapEliteGates`). Should the Hitting Report Card auto-switch when slap context is detected, or always show standard?
+4. **Motivational tone.** Single coaching voice across all sports, or per-sport voice (e.g. softball hitting different from baseball hitting)?
+5. **Tagged-video remap fallback.** If a video is tagged `p3_launch` and you want it on Hitter's Move, that is the safe map — but is there ANY existing video tagged `p2_heel_plant` that you intend to live on Stride (as your "stride creates foot plant" note implies)? I'll list every affected video before migrating so you can spot-correct.
+
+---
+
+## Deliverables
+
+- `docs/asb/analysis-formula-ratification.md` (Phase A — full audit + display format table)
+- `docs/asb/reality-feedback-ledger.md` (RFL entries per phase)
+- `.lovable/plan.md` (execution note)
+- Code in Phases B–F, each gated on your "proceed" between phases
+
+## Exit criteria
+
+- Every pitching, hitting, and throwing standard you have ever stated is mapped to a file with a target/acceptable band.
+- Hitting phase taxonomy is single-source-of-truth.
+- UHRC is removed.
+- Throwing has a real formula registry with replay-safe scoring.
+- Every analysis result page shows a Report Card tab with Athlete View / Technical View toggle.
+- Every category exposes lineage, confidence, missingness, and a complete correction loop (facts from registry, motivational paragraph from cached AI).
+- No silent guessing; every uncertainty surfaced as a chip or a missingness state.
