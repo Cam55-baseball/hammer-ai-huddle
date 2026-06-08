@@ -1072,7 +1072,7 @@ No residual Class-C ambiguity exists across Q-Series Z or Q-Series AA–AI.
 
    **Single next constitutional pass (owner work, not implementation):** §16 owner ratification pass, V1-scoped to Baseball Pitching + Baseball Hitting per ratified CDR-15. Each §16 question is read against the now-ratified §0 doctrine; items already constrained by ratified §0 / CDR options are ratified by reference; the residue requiring genuine owner input is collected; K7 verbatim throwing standards may be deferred along with §6 Throwing as out-of-V1. This is execution of the v0.1-era §16 list, not a new audit / discovery / governance phase.
 
-#### G. Constitutional Status — Summary
+#### G. Constitutional Status — Summary (superseded by §0.26)
 
 - **§0 (Sections 0.1–0.25): RATIFIED.**
 - **§1–§17: DRAFT — §16 OPEN, §17 EMPTY.**
@@ -1080,6 +1080,126 @@ No residual Class-C ambiguity exists across Q-Series Z or Q-Series AA–AI.
 - **Implementation: NOT AUTHORIZED.**
 
 ---
+
+### §0.26 — Phase 0.8 §16 Compression Pass (2026-06-08)
+
+Pure compression of the existing §16 list against ratified §0 doctrine + ratified CDRs. **No new audit. No new discovery. No new governance phase. No new CDRs.** Every §16 item is classified A (fully resolved by doctrine), B (derivable from doctrine — owner may override), or C (true residual owner decision).
+
+#### A. Scope filter (CDR-15 V1)
+
+V1 ships **Baseball Pitching + Baseball Hitting** only. The following §16 items are removed from V1 blocking status:
+
+- **B4** — Throwing card branching → out of V1 (Throwing not in V1).
+- **B5** — Softball Hitting Slap → out of V1 (Softball not in V1).
+- **K7** — Throwing standards #6/#7 verbatim → **explicitly removed from V1 blocking status**. Remains a §6 drafting flag for the eventual Throwing pass; **does not block §18 V1 ratification**.
+
+#### B. Counts
+
+| Bucket | Count |
+|---|---|
+| Original §16 question count | 46 |
+| Out of V1 scope (B4, B5, K7) | 3 |
+| V1-applicable items | 43 |
+| Auto-resolved A (fully resolved by doctrine) | 15 |
+| Auto-resolved B (derived defaults, owner may override) | 25 |
+| **True remaining owner decisions (C)** | **3** (B2, C1, C3) |
+
+#### C. Classification — A (fully resolved by doctrine)
+
+| Item | Auto-Answer | Doctrine source |
+|---|---|---|
+| **A1** | YES — Report Card is the primary artifact; PIE V2 / hitting causal pages become secondary click-throughs. | §0.1, §0.4, §0.5 |
+| **B6** | NO — V1 ships only engine-measurable categories. | §17 schema `Engine binding`; §3; CDR-15 |
+| **C2** | Hitting: **P1 + P4 Non-Negotiable**. Pitching: **none**. | §0.7 |
+| **D1** | **Band format** — ENCOURAGED / DEVELOPING / EARNED. | CDR-1 = D |
+| **D6** | Athlete-facing band wording per CDR-1=D. | CDR-1 = D; §0.3 |
+| **E1** | 9-block contract confirmed as-is. | §0.6 |
+| **E3** | "How to improve" = philosophy paragraph, not a recipe. | §0.6, §0.7; §17 schema |
+| **F1** | Deterministic. | §0.5; §9; CDR-17 = A |
+| **F2** | Permitted — seed from `pieV2Signals.ts common_deficiencies` + hitting `failureSymptoms`. | CDR-16 = B + CDR-17 = A |
+| **I1** | One voice across all five cards. | §10 |
+| **I3** | Forbidden tones confirmed verbatim. | §0.3; §10; RR-5/RR-9 |
+| **I4** | Coach Hammer is delivery-only. | §10; §0.9 |
+| **K1** | "Not measured — confidence pending" chip (never hide). | Q-Series AG; CDR-11 = C |
+| **K2** | Show "Estimate" chip, never suppress silently. | Q-Series AG; CDR-11 = C |
+| **K4** | Both per-session and longitudinal governed by this constitution. | CDR-7 = D |
+
+#### D. Classification — B (derived defaults; owner may override at §17 fill)
+
+| Item | Derived Answer | Derivation |
+|---|---|---|
+| **A2** | Both per-session and rolling, with explicit horizon toggle. | CDR-7 = D |
+| **A3** | In-app only at V1; out-of-app share links deferred. | RR-9 + RR-10 conservative; minor-athlete supremacy |
+| **B1** | Athlete-friendly renames; engine binding preserved in §17. | §0.3; §0.6; §17 `Engine binding` |
+| **B3** | Athlete renames for P1–P4; canonical engine IDs as binding only. | Same as B1 |
+| **C4** | BP Rank 1/2 = Hip/Shoulder Separation, Energy Angle. BH Rank 1/2 = P1 Hip Load, P4 Hitter's Move. | §0.7; engine weights |
+| **D2** | Boolean-derived signals render as Pass/Fail chip. | CDR-1 = D |
+| **D3** | Tracked-only signals always shown inside click-expansion. | CDR-13 = C |
+| **D4** | Band-only hero — no numeric hero number. | CDR-1 = D; CDR-2 = C |
+| **D5** | Raw measurements inside click-expansion only. | CDR-13 = C |
+| **E4** | Roadmap next step = single named drill at surface; phase progression in expansion. | §9 + CDR-7 = D + CDR-13 = C |
+| **F3** | Many-to-many permitted; canonical mapping = deficiency → ordered drill list. | F1 deterministic; §7 |
+| **G1** | Tag set confirmed: `reference_good`, `reference_bad`, `corrective`, `teaching`, `roadmap_step`. Additive-only. | §8 |
+| **G2** | Per-category minimum = ≥1 `reference_good` + ≥1 `corrective`. Absent → visible missingness chip. | K1/K2 + CDR-11 = C + Q-Series AG |
+| **H1** | Roadmap step = property of athlete's current level. | CDR-6 = C; §9 + §11 |
+| **H2** | Surfaces next step by default; "next N" via horizon expansion. | CDR-7 = D + CDR-13 = C |
+| **I2** | Copy adapts per audience (athlete/parent/coach); one underlying voice. | §10 + §12 + §13 |
+| **J1** | Progress shown by default with arrows since last session. | CDR-6 = C + CDR-7 = D |
+| **J2** | Parent view = simplified copy, same content. | §12 |
+| **J3** | Parent view shows bands + bullets only; no numeric score. | §12 + CDR-1 = D + D3 |
+| **J4** | Recruiter view = subset of Report Card gated by RR-9 + RR-10; for minors, parent authorization required. | §13 + RR-9 + RR-10 + minor-athlete supremacy |
+| **J5** | Recruiter access viewable inside a recruiter account only at V1; expiring share links deferred. | RR-10 conservative; A3 derivation |
+| **K3** | Pain reported in a session → safeguarding side channel only at V1, not on Report Card. Coach + parent visible; recruiter never. | RR-6; RR-9; safeguarding supremacy |
+| **K5** | Coach view of an athlete's Report Card = separate later constitution. | CDR-15 V1 scope |
+| **K6** | UHRC removal = separately planned later phase, not a side-effect of ratifying this constitution. | §18 prohibitions; additive-only |
+
+#### E. Classification — C (true residual owner decisions)
+
+| Item | Why doctrine cannot resolve |
+|---|---|
+| **B2** | Engine-binding mapping for BP "Posture" (head_stability vs hip_alignment vs composite) and Stride Length+Consistency (one card vs two) is a signal-architecture decision below the doctrine layer. |
+| **C1** | Ratifying or overriding engine weights for BP is owner prerogative; doctrine permits both ratify and override. |
+| **C3** | Developmental vs Advanced age cut-offs — no ratified doctrine specifies age bands. |
+
+#### F. Final V1 Owner Questionnaire
+
+```text
+Q1 — B2 Pitching Posture & Stride mapping
+  B2a. "Posture" category binds to:
+       (i)   head_stability only
+       (ii)  hip_alignment only
+       (iii) composite of head_stability + hip_alignment
+  B2b. Stride Length + Stride Consistency ship as:
+       (i)   one combined card
+       (ii)  two separate cards
+
+Q2 — C1 Pitching engine weights
+  Choose one:
+       (i)  RATIFY engine weights as-is
+            (Separation 14, Energy Angle 12, Tempo 10, Stride 10,
+             Hip Alignment 9, Front Side 9, Head Stability 8,
+             Head Alignment 7, Shoulder Level 7, Rear Foot Drag 7,
+             Visual Stability 7)
+       (ii) OVERRIDE — list per-category weights below
+
+Q3 — C3 Age cut-offs for Developmental vs Advanced
+  Specify thresholds for BP and BH, e.g.:
+       Developmental: U10 / U12 / U14 / other
+       Advanced:      visible at U15+ / U16+ / U18+ / other
+  Or reply DEFER to leave all categories age-neutral at V1.
+```
+
+#### G. Status After Phase 0.8
+
+- **§0:** RATIFIED.
+- **§16 (V1):** 38 of 43 items auto-resolved by §0.26. 3 residual owner decisions (B2, C1, C3) remain. K7 de-blocked for V1.
+- **§17:** EMPTY — BP + BH fill pending after Q1–Q3.
+- **§18 STATUS:RATIFIED (V1):** Requires Q1–Q3 + §17 BP+BH fill + RFL ratification entry.
+- **Implementation:** NOT AUTHORIZED.
+
+---
+
+
 
 
 
