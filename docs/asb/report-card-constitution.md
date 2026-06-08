@@ -1651,12 +1651,12 @@ The schemas themselves are not filled in this draft. They are filled in v0.2, af
 
 This document may flip to `STATUS: RATIFIED` only when:
 
-1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** The owner answers the residual §0.26 §F questionnaire (B2, C1, C3). All other §16 items are auto-resolved by §0.26 (A/B classification) and require no further owner input. B4, B5, K7 are out of V1 scope.
-2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope.
-3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope.
-4. An RFL entry (RFL-080 lineage, extended by RFL-089) records the ratification with date and version pin.
+1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** §16 is **fully closed** (43/43 V1-applicable items resolved — 15 A + 25 B + 3 C per §0.26 and §0.27). B4, B5, K7 are out of V1 scope. **— SATISFIED 2026-06-08 (§0.27).**
+2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope. — NOT REQUIRED for V1.
+3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope. **— OPEN; entirely derivable from ratified doctrine; owner ratification of the generated draft required.**
+4. An RFL entry (RFL-080 lineage, extended by RFL-089 and RFL-090) records the ratification with date and version pin. **— OPEN; filed alongside §17 ratification.**
 
-Until those four conditions are met:
+Until those conditions are met:
 
 - No code edits anywhere in the repo.
 - No removal of UHRC.
@@ -1669,4 +1669,4 @@ Until those four conditions are met:
 
 ---
 
-*End of Hammers Report Card Constitution v0.1 — STATUS: DRAFT — UNRATIFIED.*
+*End of Hammers Report Card Constitution v0.11 — STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN.*
