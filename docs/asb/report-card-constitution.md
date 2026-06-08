@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
-> **STATUS: §0 RATIFIED — §16 COMPRESSED (3 owner items remain) / §17 OPEN**
-> Version: v0.10
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.8 — §16 Compression Pass)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088, RFL-089 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> **STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN (BP+BH schema fill)**
+> Version: v0.11
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.9 — §16 Final Closure)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088, RFL-089, RFL-090 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K were constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, bounded by the §0.17 CDR per Phase 0.2, packaged by §0.18 per Phase 0.3, narrowed by §0.22 per Phase 0.5, doctrine-confirmed by §0.24 per Phase 0.6, closed by §0.25 (Phase 0.7), and **compressed by §0.26 (Phase 0.8)** which auto-resolved 38 of 43 V1-applicable §16 items by reference to ratified §0 doctrine + CDRs, leaving exactly **3 true owner decisions** (B2, C1, C3). K7 (verbatim throwing standards) is explicitly removed from V1 blocking status and deferred with §6 Throwing. Implementation remains blocked until §16 (3 residual items) and §17 (BP+BH schema fill) close.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K were constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, bounded by the §0.17 CDR per Phase 0.2, packaged by §0.18 per Phase 0.3, narrowed by §0.22 per Phase 0.5, doctrine-confirmed by §0.24 per Phase 0.6, closed by §0.25 (Phase 0.7), compressed by §0.26 (Phase 0.8), and **finally closed by §0.27 (Phase 0.9)** with owner resolution of the 3 residual items (B2a=iii, B2b=ii, C1=i RATIFY, C3=DEFER). V1 §16 is now fully resolved (43/43 V1-applicable items: 15 A + 25 B + 3 C). K7 (verbatim throwing standards) remains deferred with §6 Throwing and is non-blocking for V1. §17 is generable entirely from ratified doctrine; implementation remains blocked solely pending §17 BP+BH schema draft + owner ratification of that draft.
 
 ---
 
@@ -1189,13 +1189,57 @@ Q3 — C3 Age cut-offs for Developmental vs Advanced
   Or reply DEFER to leave all categories age-neutral at V1.
 ```
 
-#### G. Status After Phase 0.8
+#### G. Status After Phase 0.8 (superseded by §0.27 — Phase 0.9 closure)
 
 - **§0:** RATIFIED.
-- **§16 (V1):** 38 of 43 items auto-resolved by §0.26. 3 residual owner decisions (B2, C1, C3) remain. K7 de-blocked for V1.
-- **§17:** EMPTY — BP + BH fill pending after Q1–Q3.
-- **§18 STATUS:RATIFIED (V1):** Requires Q1–Q3 + §17 BP+BH fill + RFL ratification entry.
+- **§16 (V1):** 38 of 43 items auto-resolved by §0.26. 3 residual owner decisions (B2, C1, C3) remained — **closed by §0.27**.
+- **§17:** EMPTY — BP + BH fill authorized post-§0.27.
+- **§18 STATUS:RATIFIED (V1):** Requires §17 BP+BH fill + RFL ratification entry.
 - **Implementation:** NOT AUTHORIZED.
+
+---
+
+### §0.27 — Phase 0.9 §16 Final Closure (2026-06-08)
+
+Owner submitted answers to §0.26 §F Q1/Q2/Q3. The 3 residual Class-C items are now ratified. **No new audit. No new ambiguity review. No new CDRs. No new owner questionnaires.** Pure closure of §0.26 §F against owner input.
+
+#### A. Owner Resolutions
+
+| Item | §0.26 Class | Owner Answer | Citation |
+|---|---|---|---|
+| **B2a** | C | **(iii)** "Posture" binds to a **composite of `head_stability` + `hip_alignment`**. | §0.26 §E (B2); §0.27 owner submission 2026-06-08 |
+| **B2b** | C | **(ii)** Stride Length and Stride Consistency ship as **two separate categories** (not combined). | §0.26 §E (B2); §0.27 owner submission 2026-06-08 |
+| **C1** | C | **(i) RATIFY** engine weights as-is: Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7. | §0.26 §E (C1); §0.27 owner submission 2026-06-08 |
+| **C3** | C | **DEFER** — V1 ships all BP/BH categories **age-neutral**. Developmental vs Advanced age thresholds deferred post-V1; non-blocking for §18 V1 ratification. | §0.26 §E (C3); §0.27 owner submission 2026-06-08 |
+
+#### B. Recomputed Constitutional Blocker Matrix
+
+| Gate | Status |
+|---|---|
+| §0 (0.1–0.27) | **RATIFIED ✓** |
+| §16 (V1, BP+BH) | **FULLY CLOSED ✓** — 43/43 V1-applicable items resolved (15 A + 25 B + 3 C). |
+| §16 K7 (Throwing standards verbatim) | Deferred with §6 Throwing per §0.26 §A — **non-blocking for V1**. |
+| §16 B4 / B5 (Throwing / Softball) | Out of V1 scope per CDR-15 — non-blocking. |
+| §17 (BP + BH per-category schema) | **OPEN but fully derivable from ratified §0 + §16 + CDRs** — no further owner input required to generate the draft. |
+| §18 V1 STATUS:RATIFIED | Gated only on (a) §17 BP+BH schema draft, (b) owner ratification of that draft, (c) RFL ratification entry. |
+| Implementation | **NOT AUTHORIZED** — single remaining blocker is §17. |
+
+#### C. Determinations
+
+- **Remaining true owner decisions:** **0** (zero Class-C items open across §0, §16-V1).
+- **§16 fully closed?** **YES** for V1 scope (Baseball Pitching + Baseball Hitting). K7 deferred with §6 Throwing remains a Throwing-scope drafting flag and does not gate V1.
+- **§17 generable entirely from ratified doctrine?** **YES.** Every §17 input is now fixed:
+  - Category list — §4 + §5 + B2a (Posture = composite) + B2b (Stride split into two categories).
+  - Weights — C1 ratified verbatim (BP); hitting weights inherit §0.7 non-negotiables (P1 + P4).
+  - Scoring spine — CDR-1 = D (band ENCOURAGED / DEVELOPING / EARNED), CDR-2 = C.
+  - Progress signal — CDR-5/6/7/8.
+  - Surface grammar — CDR-9/10/11/13.
+  - Process — CDR-16 = B, CDR-17 = A.
+  - Age treatment — C3 DEFER → age-neutral at V1.
+  - 9-block contract — §0.6 (Universal Category Explanation Law).
+  - Missingness chips — §0.26 §C (K1/K2).
+- **Implementation authorized?** **NO.** One blocker remains: **§17 BP+BH schema draft + owner ratification of that draft**.
+- **Exact next action:** **Phase 0.10 — §17 Schema Generation Pass** (AI-drafts the BP + BH per-category schema entirely from ratified doctrine; owner ratifies the draft; RFL ratification entry filed; §18 V1 flips to RATIFIED; implementation unblocked).
 
 ---
 
@@ -1509,16 +1553,16 @@ The constitution flips `STATUS: DRAFT → STATUS: RATIFIED` only when every ques
 
 ### B — Categories & naming
 - **B1.** [§0.26 = B — DERIVED] For each of the 5 cards, do categories use **engine names verbatim** ("Energy Angle", "Hip/Shoulder Separation") or **athlete-friendly renames** ("Coil", "Stay Closed")?
-- **B2.** [§0.26 = C — OWNER DECISION REQUIRED] Pitching: does "Posture" map to `head_stability`, `hip_alignment`, or a composite of both? Stride Length + Stride Consistency: one card or two?
+- **B2.** [§0.26 = C → RATIFIED §0.27] Pitching: "Posture" = **composite of `head_stability` + `hip_alignment`** (B2a=iii). Stride Length + Stride Consistency = **two separate categories** (B2b=ii).
 - **B3.** [§0.26 = B — DERIVED] Hitting: P1/P2/P3/P4 ship under canonical names (Hip Load · Hand Load · Stride/Landing · Hitter's Move) or athlete renames?
 - **B4.** [§0.26 — OUT OF V1 SCOPE per CDR-15] Throwing: one universal card v1, or branch per position (Pitcher · Catcher · Infielder · Outfielder)?
 - **B5.** [§0.26 — OUT OF V1 SCOPE per CDR-15] Softball Hitting Slap: full Slap card variant, or modifier on the standard card?
 - **B6.** [§0.26 = A — RESOLVED] Are there report-card categories **not currently measurable by the engine** that you nonetheless want graded (Effort, Composure, Routine, Mound Presence, At-bat Quality)? — V1 ships only engine-measurable categories.
 
 ### C — Hierarchy & weighting
-- **C1.** [§0.26 = C — OWNER DECISION REQUIRED] Pitching: ratify or override engine weights (Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7).
+- **C1.** [§0.26 = C → RATIFIED §0.27] Pitching engine weights **RATIFIED as-is**: Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7.
 - **C2.** [§0.26 = A — RESOLVED] Which categories are **Non-Negotiable**? Hitting = P1 + P4; Pitching = none.
-- **C3.** [§0.26 = C — OWNER DECISION REQUIRED] Which categories are **Developmental** and which are **Advanced**? Give age cut-offs.
+- **C3.** [§0.26 = C → RATIFIED §0.27] Developmental vs Advanced age cut-offs **DEFERRED**. V1 ships all BP/BH categories age-neutral; thresholds revisited post-V1 (non-blocking).
 - **C4.** [§0.26 = B — DERIVED] Rank 1 and Rank 2 most important per discipline.
 
 ### D — Scoring formats
@@ -1607,12 +1651,12 @@ The schemas themselves are not filled in this draft. They are filled in v0.2, af
 
 This document may flip to `STATUS: RATIFIED` only when:
 
-1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** The owner answers the residual §0.26 §F questionnaire (B2, C1, C3). All other §16 items are auto-resolved by §0.26 (A/B classification) and require no further owner input. B4, B5, K7 are out of V1 scope.
-2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope.
-3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope.
-4. An RFL entry (RFL-080 lineage, extended by RFL-089) records the ratification with date and version pin.
+1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** §16 is **fully closed** (43/43 V1-applicable items resolved — 15 A + 25 B + 3 C per §0.26 and §0.27). B4, B5, K7 are out of V1 scope. **— SATISFIED 2026-06-08 (§0.27).**
+2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope. — NOT REQUIRED for V1.
+3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope. **— OPEN; entirely derivable from ratified doctrine; owner ratification of the generated draft required.**
+4. An RFL entry (RFL-080 lineage, extended by RFL-089 and RFL-090) records the ratification with date and version pin. **— OPEN; filed alongside §17 ratification.**
 
-Until those four conditions are met:
+Until those conditions are met:
 
 - No code edits anywhere in the repo.
 - No removal of UHRC.
@@ -1625,4 +1669,4 @@ Until those four conditions are met:
 
 ---
 
-*End of Hammers Report Card Constitution v0.1 — STATUS: DRAFT — UNRATIFIED.*
+*End of Hammers Report Card Constitution v0.11 — STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN.*
