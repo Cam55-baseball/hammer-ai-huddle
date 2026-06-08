@@ -239,16 +239,16 @@ Before §0 may be marked RATIFIED, the constitution is audited against the Repor
 
 **Audit rule.** Any row above is the constitutional source of truth for its routed Q-Series. A Q-Series cannot close while its source row is still Partially/Absent. The audit itself is re-run after each wave closes, and rows flip to **Defined** only when the owner has answered every question routed to them.
 
-### §0.12 — Extended Ratification Gate
+### §0.12 — Extended Ratification Gate (revised by Phase 0.2)
 
 §0.10's standalone gate is superseded by this compound gate. §0 cannot flip to `STATUS: RATIFIED` until **all** of the following are true:
 
-1. Q-Series Z (Z1–Z21, plus any follow-up waves) is closed.
-2. Q-Series AA, AB, AC, AD, AE, AF, AG, AH, AI (and any follow-up waves) are closed.
+1. Every Q-Series Z question (Z1–Z21, plus any follow-up waves) is **either Class-A/B-closed by inherited doctrine per the §0.16 Ambiguity Ledger, or Class-C-resolved through the §0.17 Constitutional Decision Register (CDR)**.
+2. Every Q-Series AA–AI question (Wave 1 plus any follow-up waves) is **either Class-A/B-closed by inherited doctrine per the §0.16 Ambiguity Ledger, or Class-C-resolved through the §0.17 CDR**.
 3. §0.11 audit shows zero rows in Partially or Absent state.
 4. The owner explicitly declares §0 ratified.
 
-Until all four conditions hold, **§16 Groups A–K remain sealed** and every implementation prohibition listed in the Preamble remains in force. No partial ratification, no provisional ratification, no "ratified except for X" mode is permitted.
+Until all four conditions hold, **§16 Groups A–K remain sealed** and every implementation prohibition listed in the Preamble remains in force. No partial ratification, no provisional ratification, no "ratified except for X" mode is permitted. Phase 0.2 does not weaken the gate; it only bounds conditions (1)+(2) by the finite CDR rather than by open-ended interview fanout.
 
 ### §0.13 — Q-Series AA–AI (Constitutional Discovery Interview)
 
