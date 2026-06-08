@@ -306,7 +306,7 @@ Re-derived after the Phase 0.2 Constitutional Synthesis Pass. Replaces the prior
 | Source | Before Phase 0.2 | After Phase 0.2 |
 |---|---|---|
 | Open questions across Q-Series Z + AA–AI | 48 outstanding (~75–110 projected with fanout) | **17 CDR decisions** (CDR-1…CDR-17) |
-| Estimated owner waves to ratification | 25–35 | **3 owner waves** (D1 Scoring Meaning, D4 Celebration & Progress, D5 Athlete Journey Experience) |
+| Estimated owner waves to ratification | 25–35 | ~~3 owner waves (D1/D4/D5)~~ → **2 owner responses across 6 bundles** per §0.21 closure recommendation |
 | Fully-derived domains (no owner input) | n/a | **D2 Coach Hammer Behavior** and **D3 Parent/Recruiter Visibility** (closed by inherited doctrine) |
 | §0.11 audit re-runs | 1 per wave-batch closure | 1 per CDR-domain closure |
 | §16 Groups A–K | sealed | sealed (unchanged) |
