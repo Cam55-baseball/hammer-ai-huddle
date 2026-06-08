@@ -1553,7 +1553,7 @@ The constitution flips `STATUS: DRAFT → STATUS: RATIFIED` only when every ques
 
 ### B — Categories & naming
 - **B1.** [§0.26 = B — DERIVED] For each of the 5 cards, do categories use **engine names verbatim** ("Energy Angle", "Hip/Shoulder Separation") or **athlete-friendly renames** ("Coil", "Stay Closed")?
-- **B2.** [§0.26 = C — OWNER DECISION REQUIRED] Pitching: does "Posture" map to `head_stability`, `hip_alignment`, or a composite of both? Stride Length + Stride Consistency: one card or two?
+- **B2.** [§0.26 = C → RATIFIED §0.27] Pitching: "Posture" = **composite of `head_stability` + `hip_alignment`** (B2a=iii). Stride Length + Stride Consistency = **two separate categories** (B2b=ii).
 - **B3.** [§0.26 = B — DERIVED] Hitting: P1/P2/P3/P4 ship under canonical names (Hip Load · Hand Load · Stride/Landing · Hitter's Move) or athlete renames?
 - **B4.** [§0.26 — OUT OF V1 SCOPE per CDR-15] Throwing: one universal card v1, or branch per position (Pitcher · Catcher · Infielder · Outfielder)?
 - **B5.** [§0.26 — OUT OF V1 SCOPE per CDR-15] Softball Hitting Slap: full Slap card variant, or modifier on the standard card?
