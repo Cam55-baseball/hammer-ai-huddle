@@ -299,18 +299,19 @@ Asked in waves of ≤4 questions per series-turn. No assumptions filled in for u
 - **AI2.** Is there a longitudinal narrative thread across sessions (bound by RR-5 narrative continuity), and if so, what is the athlete's redirect/revocation right inside the Report Card surface itself?
 - **AI3.** What is the journey constitutionally *not*? Confirm verbatim: not destiny, not ranking, not identity-locking, not a projection of career outcome (per RR-5, RR-7).
 
-### §0.14 — Remaining Constitutional Work Estimate
+### §0.14 — Remaining Constitutional Work Estimate (revised by Phase 0.2)
 
-Estimate, recorded for owner visibility. Re-derived after each wave closes. This is not a commitment.
+Re-derived after the Phase 0.2 Constitutional Synthesis Pass. Replaces the prior 25–35-wave estimate.
 
-| Source | Open items | Notes |
+| Source | Before Phase 0.2 | After Phase 0.2 |
 |---|---|---|
-| Q-Series Z | ~18 of 21 outstanding | Wave Z1 (Z1–Z3) is the only wave currently in front of the owner; Z4–Z21 are queued behind Z3 answers |
-| Q-Series AA–AI Wave 1 | 27 questions | 3 per series × 9 series |
-| Q-Series AA–AI later waves | est. 50–80 questions | Owner-answer-dependent fanout; each series expected to run 2–4 waves |
-| §0.11 audit re-runs | 1 per wave-batch closure | Audit flips Partially/Absent rows to Defined as answers land |
-| §16 Groups A–K | sealed | Cannot open until §0.12 gate is satisfied |
-| **Estimated total waves to ratification** | **25–35** | Owner-bound pace, not AI-bound |
+| Open questions across Q-Series Z + AA–AI | 48 outstanding (~75–110 projected with fanout) | **17 CDR decisions** (CDR-1…CDR-17) |
+| Estimated owner waves to ratification | 25–35 | **3 owner waves** (D1 Scoring Meaning, D4 Celebration & Progress, D5 Athlete Journey Experience) |
+| Fully-derived domains (no owner input) | n/a | **D2 Coach Hammer Behavior** and **D3 Parent/Recruiter Visibility** (closed by inherited doctrine) |
+| §0.11 audit re-runs | 1 per wave-batch closure | 1 per CDR-domain closure |
+| §16 Groups A–K | sealed | sealed (unchanged) |
+
+The gate (§0.12) is unchanged in strictness; only owner question load is reduced. Implementation remains constitutionally blocked.
 
 ---
 
