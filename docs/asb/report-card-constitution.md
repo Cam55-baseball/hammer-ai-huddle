@@ -1,10 +1,11 @@
 # Hammers Report Card Constitution
 
 > **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.1
-> Opened: 2026-06-08
-> Lineage: ASB RFL-080 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> Version: v0.2
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Section 0 inserted)
+> Lineage: ASB RFL-080, RFL-081 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification (Q-Series Z).
 
 ---
 
@@ -28,7 +29,198 @@ Every proposal below is conditional. The document flips to `STATUS: RATIFIED` on
 
 ---
 
+## §0 — Report Card Psychology & Purpose
+
+> **Doctrinal supremacy.** §0 supersedes §1–§17. Any later section that conflicts with §0 is invalid. No §16 A–K question may be answered, and no implementation phase may open, until every Q-Series Z item in §0.10 is resolved and the owner declares §0 ratified.
+
+### §0.1 — Report Card Purpose
+
+The Hammers Report Card exists to create **athlete understanding**.
+
+It is **NOT** primarily a grading system.
+It is **NOT** primarily a scorecard.
+It is **NOT** primarily an evaluation tool.
+
+It is a **coaching and development system first**.
+
+The report card exists to:
+
+1. Help athletes understand **where they currently are**.
+2. Help athletes understand **why they are there**.
+3. Help athletes understand **what is holding them back**.
+4. Help athletes understand **exactly how to improve**.
+5. Help athletes understand **what progress looks like**.
+
+> **Axiom.** *Scores exist to support coaching. Coaching does not exist to support scores.*
+
+### §0.2 — Priority Hierarchy
+
+The report card follows this strict order:
+
+1. **Understanding**
+2. **Correction**
+3. **Progress**
+4. **Grading**
+
+**Veto clause.** Any design decision — UI, scoring, copy, layout, AI tone, ranking, ordering, surfacing — that improves grading at the expense of understanding, correction, or progress is **constitutionally invalid** and must be rejected without negotiation. The same veto applies to any decision that improves correction at the expense of understanding, or improves progress at the expense of understanding or correction.
+
+### §0.3 — Athlete Emotional Outcome
+
+The intended emotional outcome of **every** report card experience is:
+
+> **ENCOURAGED**
+
+The athlete should leave feeling:
+
+- Clear
+- Motivated
+- Empowered
+- Directed
+- Hopeful
+
+The athlete should **NOT** leave feeling:
+
+- Judged
+- Punished
+- Embarrassed
+- Confused
+- Overwhelmed
+
+> **Doctrine.** *This is a developmental tool, not a school report card.*
+
+### §0.4 — Report Card Entry Point
+
+The report card is the primary artifact. The athlete first understands *"What is limiting me most right now?"* before seeing *"What is my overall score?"*
+
+Fixed display priority for the entry surface:
+
+1. Highest-priority improvement opportunity
+2. Category breakdown
+3. Corrections
+4. Drills
+5. Videos
+6. Roadmap
+7. Coach Hammer guidance
+8. Overall grade
+
+> **Axiom.** *The overall grade is never the hero. The development pathway is the hero.*
+
+### §0.5 — Pillar-First Doctrine
+
+Progress inside individual pillars is **more important** than movement in a composite score.
+
+Worked example (ratified as doctrine):
+
+| Pillar | Before | After |
+|---|---|---|
+| P1 Hip Load | 6 | 8 |
+| P2 Hand Load | 5 | 8 |
+| P3 Stride | 4 | 7 |
+| P4 Hitter's Move | 7 | 8 |
+
+Even if the composite score barely changes, this is a **major success**. Celebration logic, headline copy, progress chips, and Coach Hammer voice must reflect this. A composite that is flat or down while pillars are climbing is **not** a regression and must never be presented as one.
+
+### §0.6 — Universal Category Explanation Law
+
+Every report card category, in every discipline, exposes the **same** educational structure. This is constitutional law. §17's per-category schema is bound to and subordinate to this law.
+
+Every category must answer all nine of the following:
+
+1. **What is it?**
+2. **Why does it matter?**
+3. **What do elite athletes do?**
+4. **What happens when it is poor?**
+5. **How do I improve it?**
+6. **Which drill improves it?**
+7. **Which video teaches it?**
+8. **Which roadmap step improves it?**
+9. **What does Coach Hammer want me to understand?**
+
+No category may omit any of these blocks. Missing information must be surfaced as **visible missingness** — never silently hidden, never quietly defaulted, never AI-fabricated.
+
+### §0.7 — Hitting Non-Negotiables (Philosophical Truths)
+
+The following hitting truths are ratified as constitutional doctrine. They are **immutable** — no UI, scoring, weighting, ranking, AI, or product decision may alter them.
+
+**P1 — Hip Load**
+- The **stability** of the hip load is non-negotiable.
+- The **amount** of hip load is variable and athlete-specific.
+- An athlete must be able to complete a **full hand load without being pushed forward**.
+
+**P2 — Hand Load**
+- Non-negotiable.
+- The hand load creates the conditions for **timing, separation, and efficient movement**.
+
+**P3 — Stride & Landing**
+- Non-negotiable.
+- The **back hip** moves toward **pitcher release** to get the foot down without shoulder rotation.
+- **Landing sideways** and **maintaining direction** is essential.
+
+**P4 — Hitter's Move**
+- Non-negotiable.
+- **Knob stability**, **elbow direction**, **barrel delivery**, and **closing the gap to contact** are the core of the swing.
+
+### §0.8 — Owner Interview Requirement
+
+Before any implementation phase begins, Lovable will **actively interview** the owner.
+
+- Do not guess.
+- Do not infer.
+- Do not simplify.
+- Do not silently decide.
+- If uncertainty exists: **ask**.
+
+Questioning continues — in waves of ≤4 questions per turn — until the philosophy, scoring, display, corrections, drills, roadmap integration, and Coach Hammer behavior are fully understood. The owner has explicitly stated: *"I would rather answer 100 questions than ship a mediocre system."*
+
+### §0.9 — Precedence Clause
+
+§0 supersedes §1–§17. Where §1–§17 (including the §16 question set, §17 per-category schema, and any later-added section) contradicts §0, §0 wins and the conflicting clause is automatically invalid pending revision. §16 Groups A–K are gated: no A–K question may be raised, answered, or used to justify implementation until Q-Series Z is fully resolved and §0 is declared ratified by the owner.
+
+### §0.10 — Q-Series Z (Owner Interview Loop)
+
+Asked in waves of ≤4 questions per turn. No assumptions filled in for unanswered items. Implementation remains constitutionally blocked until every Z-item is resolved.
+
+**Wave Z1 — Purpose & hierarchy edges**
+- **Z1.** When grading and understanding conflict in a *specific* UI element (e.g., a low score on a category the athlete is actively improving), should the score be (a) hidden, (b) de-emphasized visually, (c) shown with a "progressing" overlay, or (d) shown unchanged with context text only?
+- **Z2.** Is "Understanding > Correction > Progress > Grading" a strict lexicographic order (Grading may never win a tie) or a weighted preference?
+- **Z3.** Does the Priority Hierarchy apply equally to Parent and Recruiter views, or only the Athlete view?
+
+**Wave Z2 — Emotional outcome enforcement**
+- **Z4.** Should "ENCOURAGED" be enforced by (a) tone rules in Coach Hammer copy only, (b) tone rules + color/iconography constraints, or (c) tone + visual + structural rules (e.g., never lead with a failing category)?
+- **Z5.** For a session where every category is poor, what is the constitutional behavior? Lead with the single highest-leverage improvement? Lead with the closest-to-passing category? Lead with the most-improved-from-last-session category?
+- **Z6.** Are red/failure colors permitted at all, or must the palette be restricted to neutral/positive/progress tones?
+
+**Wave Z3 — Entry point & hero**
+- **Z7.** "Highest-priority improvement opportunity" — is priority determined by (a) lowest score, (b) highest leverage on composite, (c) coach-defined non-negotiable rank, (d) furthest from athlete's roadmap milestone, or (e) a defined composite of these?
+- **Z8.** Is the overall grade ever displayed on the entry screen, or only reachable after scrolling/clicking past the development pathway?
+- **Z9.** Coach Hammer guidance sits at position 7 in the entry order — is Coach Hammer a *summary* of positions 1–6, a *separate* voice layer, or *both*?
+
+**Wave Z4 — Pillar-first celebration**
+- **Z10.** What constitutes a "celebrated" pillar improvement? Any positive delta? A threshold delta (e.g., ≥2 points)? Crossing a band boundary (e.g., Developmental → Proficient)?
+- **Z11.** If composite drops while pillars improve, is composite (a) hidden, (b) shown with a "pillar progress" overlay, or (c) shown unchanged?
+- **Z12.** Per-session deltas vs rolling deltas — which is the canonical "improvement" signal for §0.5?
+
+**Wave Z5 — Universal Explanation Law**
+- **Z13.** For categories where "elite athletes do X" is not yet authored, should the block render as (a) "Coming soon", (b) visible missingness with a placeholder, or (c) block the category from being scored at all?
+- **Z14.** "Coach Hammer wants me to understand…" — is this a fixed authored string per category, AI-generated within constitutional guardrails, or hybrid (authored core + AI tone wrapper)?
+- **Z15.** Are the 9 blocks rendered always-expanded, always-collapsed, or progressively disclosed?
+
+**Wave Z6 — Hitting non-negotiables binding**
+- **Z16.** The "pushed forward during full hand load" test for P1 — is this measured by an existing engine signal, a coach-tagged observation, an athlete self-report, or not yet measurable (and therefore surfaced as missingness)?
+- **Z17.** P3 requires "back hip moves toward pitcher release" and "foot down without shoulder rotation" — are these two independently scored sub-criteria or one combined pass/fail?
+- **Z18.** P4 lists four elements (knob stability, elbow direction, barrel delivery, closing the gap) — scored independently and aggregated, or scored as one holistic pillar?
+- **Z19.** Are these four hitting truths identical for Baseball Hitting and Softball Hitting, or does Softball Hitting (including slap) carry a variant?
+
+**Wave Z7 — Interview discipline & RFL**
+- **Z20.** When you answer a wave, may Lovable proceed to the next wave automatically, or must each wave be explicitly approved before the next is asked?
+- **Z21.** Should each answered wave be recorded as its own RFL entry (RFL-082, RFL-083, …) or batched into a single RFL entry at §0 ratification?
+
+Additional waves will be generated only if answers expose new ambiguity. The interview ends when the owner declares §0 ratified, at which point §16 Groups A–K may open.
+
+---
+
 ## §1 — Report Card Philosophy
+
 
 **The Report Card is the primary athlete artifact of the Hammers system.**
 
