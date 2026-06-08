@@ -1,5 +1,12 @@
 
-# Phase 0.8 — §16 Compression Pass
+# Phase 0.8 — §16 Compression Pass — COMPLETE (2026-06-08, RFL-089)
+
+**Status:** Constitution v0.10. §0 RATIFIED; §16 compressed from 46 → 3 V1 owner items (B2, C1, C3); K7 de-blocked for V1; §17 BP+BH schema fill pending; implementation NOT authorized.
+
+**Next gate:** Owner answers §0.26 §F Q1/Q2/Q3. Then §17 BP+BH schema fill pass. Then §18 V1 ratification.
+
+---
+
 
 No new audit. No new discovery. No new governance phase. Pure compression of the existing §16 list against already-ratified §0 doctrine + ratified CDRs.
 
