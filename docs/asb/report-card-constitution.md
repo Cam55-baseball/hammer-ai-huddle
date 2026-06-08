@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
-> **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.8
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.6 — Doctrine Alignment Recommendation)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> **STATUS: §0 RATIFIED — §16 / §17 OPEN**
+> Version: v0.9
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.7 — Constitutional Closeout)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis, packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3, narrowed by the §0.22 False Ambiguity Audit per Phase 0.5, and doctrine-confirmed by the §0.24 Doctrine Alignment Recommendation per Phase 0.6. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities**; Phase 0.3 bundled those 17 into **6 closure bundles**; Phase 0.5 closed **5 CDR items** as already-resolved, leaving **12 true owner decisions** as **4 axis-level answers in 1 owner response** per §0.21 (revised) and §0.23; Phase 0.6 confirms every §0.23 Recommended Default as the uniquely doctrine-aligned choice per §0.24.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K were constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis, packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3, narrowed by the §0.22 False Ambiguity Audit per Phase 0.5, doctrine-confirmed by the §0.24 Doctrine Alignment Recommendation per Phase 0.6, and **closed by owner ratification per §0.25 (Phase 0.7)**. Phase 0.7 records owner `DEFAULTS` submission (2026-06-08, RFL-088) ratifying all 12 Axis A–D CDR items verbatim; all 17 CDR items are now RATIFIED (12 owner + 5 auto via §0.22). §0.12 conditions (1)+(2)+(3)+(4) are satisfied → **§0 flips to RATIFIED**. §16 unseals; §17 schemas remain to be filled; §18 STATUS:RATIFIED for the full constitution requires §16 owner answers + §17 fill-in + ratification RFL entry, and implementation remains blocked until §18 closes.
 
 ---
 
@@ -402,12 +402,12 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
 
 #### D1 — Scoring Meaning (4 decisions)
 
-| CDR ID | Origin | Decision required |
-|---|---|---|
-| CDR-1 | AA1 | Score frame: % of elite reference / % of athlete's own ceiling / movement-quality band (Developmental / Proficient / Elite) / raw measurement on a labelled scale / defined hybrid. |
-| CDR-2 | AA2 | Absolute (same score = same movement quality across athletes) vs athlete-relative (calibrated to age/level/history); if hybrid, where the constitutional line sits. |
-| CDR-3 | Z17 | P3 sub-criteria: combined pass/fail vs two independently scored ("back hip → pitcher release" and "foot down without shoulder rotation"). |
-| CDR-4 | Z18 | P4 four-element decomposition: aggregated holistic vs independently scored (knob stability / elbow direction / barrel delivery / closing the gap). |
+| CDR ID | Origin | Decision required | Status |
+|---|---|---|---|
+| CDR-1 | AA1 | Score frame: % of elite reference / % of athlete's own ceiling / movement-quality band (Developmental / Proficient / Elite) / raw measurement on a labelled scale / defined hybrid. | **RATIFIED — D** (Phase 0.7) |
+| CDR-2 | AA2 | Absolute (same score = same movement quality across athletes) vs athlete-relative (calibrated to age/level/history); if hybrid, where the constitutional line sits. | **RATIFIED — C** (Phase 0.7) |
+| CDR-3 | Z17 | P3 sub-criteria: combined pass/fail vs two independently scored ("back hip → pitcher release" and "foot down without shoulder rotation"). | **RATIFIED — C** (auto, Phase 0.5) |
+| CDR-4 | Z18 | P4 four-element decomposition: aggregated holistic vs independently scored (knob stability / elbow direction / barrel delivery / closing the gap). | **RATIFIED — C** (auto, Phase 0.5) |
 
 #### D2 — Coach Hammer Behavior
 
@@ -419,26 +419,26 @@ Five-domain collapse of the 17 Class-C ambiguities from §0.16. Each CDR item ca
 
 #### D4 — Celebration & Progress (4 decisions)
 
-| CDR ID | Origin | Decision required |
-|---|---|---|
-| CDR-5 | Z10 | Celebrated-pillar trigger threshold: any positive delta / threshold delta (e.g., ≥2 points) / band crossing / combination. |
-| CDR-6 | Z12 | Canonical improvement signal: per-session deltas vs rolling deltas. |
-| CDR-7 | AB3 | Improvement time horizon: per-session / rolling N sessions / since-roadmap-start / athlete-selectable. |
-| CDR-8 | AF1 | Celebration trigger set: which events constitutionally trigger a celebration moment (pillar climb / band crossing / roadmap milestone / first-time category completion / combination). |
+| CDR ID | Origin | Decision required | Status |
+|---|---|---|---|
+| CDR-5 | Z10 | Celebrated-pillar trigger threshold: any positive delta / threshold delta (e.g., ≥2 points) / band crossing / combination. | **RATIFIED — D** (Phase 0.7) |
+| CDR-6 | Z12 | Canonical improvement signal: per-session deltas vs rolling deltas. | **RATIFIED — C** (Phase 0.7) |
+| CDR-7 | AB3 | Improvement time horizon: per-session / rolling N sessions / since-roadmap-start / athlete-selectable. | **RATIFIED — D** (Phase 0.7) |
+| CDR-8 | AF1 | Celebration trigger set: which events constitutionally trigger a celebration moment (pillar climb / band crossing / roadmap milestone / first-time category completion / combination). | **RATIFIED — D** (Phase 0.7) |
 
 #### D5 — Athlete Journey Experience (9 decisions)
 
-| CDR ID | Origin | Decision required |
-|---|---|---|
-| CDR-9 | Z1 | Conflict-mode rendering when grading conflicts with understanding at the UI-element level: hide / de-emphasize / "progressing" overlay / unchanged with context text. |
-| CDR-10 | Z4 | "ENCOURAGED" enforcement mechanism: tone-only / tone + visual / tone + visual + structural. |
-| CDR-11 | Z6 | Palette permissions for failure/red tones: permitted / restricted to neutral-positive-progress / conditional. |
-| CDR-12 | Z7 | "Highest-priority improvement" composite definition: lowest score / highest leverage on composite / coach-defined non-negotiable rank / furthest-from-roadmap-milestone / defined hybrid. |
-| CDR-13 | Z15 | Disclosure pattern for the 9 explanation blocks: always-expanded / always-collapsed / progressive disclosure. |
-| CDR-14 | Z19 | Softball Hitting variance — full Slap-card variant vs P4-modifier on standard card (merged with §16 B5; resolved once). |
-| CDR-15 | AH1 | V1 discipline scope set: explicit yes/no per discipline (Baseball Pitching / Baseball Hitting / Softball Pitching / Softball Hitting / Throwing / Catching / Defense / Baserunning). |
-| CDR-16 | Z20 | Interview cadence discipline: auto-advance to next wave vs explicit per-wave approval. |
-| CDR-17 | Z21 | RFL granularity: per-wave entry (RFL-082, RFL-083, …) vs single RFL entry at §0 ratification. |
+| CDR ID | Origin | Decision required | Status |
+|---|---|---|---|
+| CDR-9 | Z1 | Conflict-mode rendering when grading conflicts with understanding at the UI-element level: hide / de-emphasize / "progressing" overlay / unchanged with context text. | **RATIFIED — C** (Phase 0.7) |
+| CDR-10 | Z4 | "ENCOURAGED" enforcement mechanism: tone-only / tone + visual / tone + visual + structural. | **RATIFIED — C** (Phase 0.7) |
+| CDR-11 | Z6 | Palette permissions for failure/red tones: permitted / restricted to neutral-positive-progress / conditional. | **RATIFIED — C** (Phase 0.7) |
+| CDR-12 | Z7 | "Highest-priority improvement" composite definition: lowest score / highest leverage on composite / coach-defined non-negotiable rank / furthest-from-roadmap-milestone / defined hybrid. | **RATIFIED — E** (auto, Phase 0.5) |
+| CDR-13 | Z15 | Disclosure pattern for the 9 explanation blocks: always-expanded / always-collapsed / progressive disclosure. | **RATIFIED — C** (Phase 0.7) |
+| CDR-14 | Z19 | Softball Hitting variance — full Slap-card variant vs P4-modifier on standard card (merged with §16 B5; resolved once). | **RATIFIED — C (defer)** (auto, Phase 0.5) |
+| CDR-15 | AH1 | V1 discipline scope set: explicit yes/no per discipline (Baseball Pitching / Baseball Hitting / Softball Pitching / Softball Hitting / Throwing / Catching / Defense / Baserunning). | **RATIFIED — {BP=Y, BH=Y, all others=N}** (auto, Phase 0.5) |
+| CDR-16 | Z20 | Interview cadence discipline: auto-advance to next wave vs explicit per-wave approval. | **RATIFIED — B** (Phase 0.7) |
+| CDR-17 | Z21 | RFL granularity: per-wave entry (RFL-082, RFL-083, …) vs single RFL entry at §0 ratification. | **RATIFIED — A** (Phase 0.7) |
 
 **Total CDR items: 17.** No question appears in two domains. Z19 is merged with §16 B5 and consumes a single CDR slot.
 
