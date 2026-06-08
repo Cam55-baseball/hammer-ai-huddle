@@ -1189,13 +1189,57 @@ Q3 — C3 Age cut-offs for Developmental vs Advanced
   Or reply DEFER to leave all categories age-neutral at V1.
 ```
 
-#### G. Status After Phase 0.8
+#### G. Status After Phase 0.8 (superseded by §0.27 — Phase 0.9 closure)
 
 - **§0:** RATIFIED.
-- **§16 (V1):** 38 of 43 items auto-resolved by §0.26. 3 residual owner decisions (B2, C1, C3) remain. K7 de-blocked for V1.
-- **§17:** EMPTY — BP + BH fill pending after Q1–Q3.
-- **§18 STATUS:RATIFIED (V1):** Requires Q1–Q3 + §17 BP+BH fill + RFL ratification entry.
+- **§16 (V1):** 38 of 43 items auto-resolved by §0.26. 3 residual owner decisions (B2, C1, C3) remained — **closed by §0.27**.
+- **§17:** EMPTY — BP + BH fill authorized post-§0.27.
+- **§18 STATUS:RATIFIED (V1):** Requires §17 BP+BH fill + RFL ratification entry.
 - **Implementation:** NOT AUTHORIZED.
+
+---
+
+### §0.27 — Phase 0.9 §16 Final Closure (2026-06-08)
+
+Owner submitted answers to §0.26 §F Q1/Q2/Q3. The 3 residual Class-C items are now ratified. **No new audit. No new ambiguity review. No new CDRs. No new owner questionnaires.** Pure closure of §0.26 §F against owner input.
+
+#### A. Owner Resolutions
+
+| Item | §0.26 Class | Owner Answer | Citation |
+|---|---|---|---|
+| **B2a** | C | **(iii)** "Posture" binds to a **composite of `head_stability` + `hip_alignment`**. | §0.26 §E (B2); §0.27 owner submission 2026-06-08 |
+| **B2b** | C | **(ii)** Stride Length and Stride Consistency ship as **two separate categories** (not combined). | §0.26 §E (B2); §0.27 owner submission 2026-06-08 |
+| **C1** | C | **(i) RATIFY** engine weights as-is: Separation 14 · Energy Angle 12 · Tempo 10 · Stride 10 · Hip Alignment 9 · Front Side 9 · Head Stability 8 · Head Alignment 7 · Shoulder Level 7 · Rear Foot Drag 7 · Visual Stability 7. | §0.26 §E (C1); §0.27 owner submission 2026-06-08 |
+| **C3** | C | **DEFER** — V1 ships all BP/BH categories **age-neutral**. Developmental vs Advanced age thresholds deferred post-V1; non-blocking for §18 V1 ratification. | §0.26 §E (C3); §0.27 owner submission 2026-06-08 |
+
+#### B. Recomputed Constitutional Blocker Matrix
+
+| Gate | Status |
+|---|---|
+| §0 (0.1–0.27) | **RATIFIED ✓** |
+| §16 (V1, BP+BH) | **FULLY CLOSED ✓** — 43/43 V1-applicable items resolved (15 A + 25 B + 3 C). |
+| §16 K7 (Throwing standards verbatim) | Deferred with §6 Throwing per §0.26 §A — **non-blocking for V1**. |
+| §16 B4 / B5 (Throwing / Softball) | Out of V1 scope per CDR-15 — non-blocking. |
+| §17 (BP + BH per-category schema) | **OPEN but fully derivable from ratified §0 + §16 + CDRs** — no further owner input required to generate the draft. |
+| §18 V1 STATUS:RATIFIED | Gated only on (a) §17 BP+BH schema draft, (b) owner ratification of that draft, (c) RFL ratification entry. |
+| Implementation | **NOT AUTHORIZED** — single remaining blocker is §17. |
+
+#### C. Determinations
+
+- **Remaining true owner decisions:** **0** (zero Class-C items open across §0, §16-V1).
+- **§16 fully closed?** **YES** for V1 scope (Baseball Pitching + Baseball Hitting). K7 deferred with §6 Throwing remains a Throwing-scope drafting flag and does not gate V1.
+- **§17 generable entirely from ratified doctrine?** **YES.** Every §17 input is now fixed:
+  - Category list — §4 + §5 + B2a (Posture = composite) + B2b (Stride split into two categories).
+  - Weights — C1 ratified verbatim (BP); hitting weights inherit §0.7 non-negotiables (P1 + P4).
+  - Scoring spine — CDR-1 = D (band ENCOURAGED / DEVELOPING / EARNED), CDR-2 = C.
+  - Progress signal — CDR-5/6/7/8.
+  - Surface grammar — CDR-9/10/11/13.
+  - Process — CDR-16 = B, CDR-17 = A.
+  - Age treatment — C3 DEFER → age-neutral at V1.
+  - 9-block contract — §0.6 (Universal Category Explanation Law).
+  - Missingness chips — §0.26 §C (K1/K2).
+- **Implementation authorized?** **NO.** One blocker remains: **§17 BP+BH schema draft + owner ratification of that draft**.
+- **Exact next action:** **Phase 0.10 — §17 Schema Generation Pass** (AI-drafts the BP + BH per-category schema entirely from ratified doctrine; owner ratifies the draft; RFL ratification entry filed; §18 V1 flips to RATIFIED; implementation unblocked).
 
 ---
 
