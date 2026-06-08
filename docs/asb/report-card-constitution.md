@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
 > **STATUS: DRAFT — UNRATIFIED**
-> Version: v0.7
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.5 — False Ambiguity Audit)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> Version: v0.8
+> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.6 — Doctrine Alignment Recommendation)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis, packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3, and narrowed by the §0.22 False Ambiguity Audit per Phase 0.5. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities**; Phase 0.3 bundled those 17 into **6 closure bundles**; Phase 0.5 closed **5 CDR items** as already-resolved by existing Hammers Modality doctrine, leaving **12 true owner decisions** presentable as **4 axis-level answers in 1 owner response** per §0.21 (revised) and §0.23.
+> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K are constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, now bounded by the §0.17 Constitutional Decision Register (CDR) per Phase 0.2 synthesis, packaged for owner closure by the §0.18 Constitutional Decision Packet per Phase 0.3, narrowed by the §0.22 False Ambiguity Audit per Phase 0.5, and doctrine-confirmed by the §0.24 Doctrine Alignment Recommendation per Phase 0.6. Phase 0.2 reduced 48 open Q-Series Z/AA–AI questions to **17 true ambiguities**; Phase 0.3 bundled those 17 into **6 closure bundles**; Phase 0.5 closed **5 CDR items** as already-resolved, leaving **12 true owner decisions** as **4 axis-level answers in 1 owner response** per §0.21 (revised) and §0.23; Phase 0.6 confirms every §0.23 Recommended Default as the uniquely doctrine-aligned choice per §0.24.
 
 ---
 
@@ -893,12 +893,70 @@ After owner submission, §0.18 entries flip to RATIFIED with the selected option
 ---
 
 
+---
 
+### §0.24 — Doctrine Alignment Recommendation (Phase 0.6)
 
+> **Purpose.** Before owner ratification of Axes A–D, re-test each §0.23 Recommended Default against existing Hammers Modality doctrine — confirm or revise. No new options, no new CDRs, no new audits. Citations only.
 
+**Result:** every §0.23 default is the uniquely doctrine-aligned choice. **No revisions recommended.**
 
+| Axis | CDRs | Default | Citations | Tensions in non-recommended options |
+|---|---|---|---|---|
+| **A — Scoring Spine** | CDR-1 | **D** (band headline + numeric on click) | §14 format catalog (band default, numeric on click); §0.2 (Understanding > Grading); §3 Laws 1/5/8 | A (% elite) → §0.2 veto + RR-7/9; B (% ceiling) → RR-7 identity-lock + §0.5; C (band only) → §3 Law 1 lineage loss |
+| | CDR-2 | **C** (hybrid: absolute measurement, relative score) | §3 Law 5 (no fabrication of absolute); RR-7, RR-9; §3 Law 2; §0.18 line 484 | A (absolute) → RR-9 ranking + §0.3 violation; B (relative) → §3 Law 5 + §3 Law 4 replay weakness |
+| **B — Progress Signal** | CDR-5 | **D** (combination) | §0.5 pillar-first supremacy; AF2 (lineage-traceable celebrations); §3 Law 5; RR-5 | A → §3 Law 5 (celebrating noise); B/C → §0.5 partial reading forbidden |
+| | CDR-6 | **C** (rolling headline + per-session expansion) | §0.5; §3 Law 1; §3 Law 2; AR-1; Phase 56 RE-1…RE-10 | A → §0.5 (single bad session reads as regression); B → §3 Law 1 (per-session hidden) |
+| | CDR-7 | **D** (athlete-selectable, rolling-N default) | RR-5 (narrative revocation); RR-7 (no identity locking); §0.5; Phase 56 replay equivalence | A → noise + RR-5 tension; B → RR-5 (cannot revoke); C → RR-7 (no agency) |
+| | CDR-8 | **D** (pillar + band + roadmap + first-time) | §0.5; AF2; §0.3; §3 Law 5; RR-5/9 | A/B/C → §0.5 partial reading (celebration types silenced) |
+| **C — Surface Grammar** | CDR-9 | **C** ("Progressing" overlay) | §0.2 (lexicographic Understanding > Grading); §0.3; §0.5; §3 Law 5 | A → §3 Law 5 (truth-hiding); B/D → §0.2 (grading remains visually dominant) |
+| | CDR-10 | **C** (tone + visual + structural) | §0.3 (total ENCOURAGED outcome); §0.2; §2 (fixed sequence is structural enforcement); RR-5; §10 (delivery-only voice) | A → overloads §10 delivery layer; B → ignores §2 structural sequence already in doctrine |
+| | CDR-11 | **C** (red reserved for safeguarding only) | §0.3; RR-6 (safeguarding salience); RR-9/10; §3 Law 9 | A → RR-6 channel collision; B → over-restricts, defeats RR-6 max-salience need |
+| | CDR-13 | **C** (progressive disclosure) | §3 Law 1 ("one click away" *is* progressive disclosure); §0.2; §0.6 (9 blocks); §2 fixed sequence | A → buries §2 sequence; B → violates §3 Law 1 (more than one click) |
+| **D — Process** | CDR-16 | **B** (explicit per-wave approval) | §0.12 extended ratification gate; §0.18; Eternal Laws supremacy; RR-5 | A → directly contradicts §0.12 (later wave ratified without prior owner sign-off) |
+| | CDR-17 | **A** (per-wave RFL entry) | Phase 47 RP-1…RP-10; Phase 56 RE-1…RE-10; §3 Law 1; §3 Law 10 (additive-only) | B → collapses per-wave lineage into one event, contradicts RP-3 + §3 Law 10 |
 
+**Downstream consequence summary (per axis, all defaults):**
 
+| Surface | Axis A | Axis B | Axis C | Axis D |
+|---|---|---|---|---|
+| Athlete experience | Qualitative headline ("Strong for U12"), numeric on tap | Calm trend; earned celebrations; selectable horizon | Encouraging conflict-mode; structural+visual+tonal enforcement; reserved palette; clean progressive reveal | None |
+| Coach Hammer | Band-language headline; relative framing built-in | Wider celebration vocabulary, all lineage-traceable | Overlay-driven copy; tone is one of three layers; no "red" framing; copy authored per block | None |
+| Analysis Engine | Unchanged (already emits 0–100 internally); read-only binding | Emits 4 canonical celebration events; maintains both per-session + rolling views | Must emit "active-improvement" flag (sourced from Roadmap binding — no new authority) | None |
+| Roadmap | Milestone exits as band transitions w/ numeric in lineage; developmental gating becomes the relativization boundary | Milestone completion is a celebration source; "since roadmap start" is a first-class horizon | Source of "active-improvement" state → strengthens §9 coupling; "next step" lives in collapsed render | None |
+| Report Card | §17 "Display format" = band(default)+numeric(expansion); "relativization basis" line added | §11 trend chip + horizon affordance | §17 gains "active-improvement render mode"; design tokens partition `--safeguarding` from `--needs-work` | None (governance only) |
+
+**Recommendation:** ratify every §0.23 default verbatim. Owner may reply `DEFAULTS` or use the template below.
+
+**Caution (single non-blocking note):** CDR-7 = D introduces a UI horizon-selector affordance that did not exist under A/B/C. The affordance is a delivery choice, not an authority claim — it does not violate any constitutional invariant — but the owner may wish to record it as a deferred surface decision in §17 at v0.2 fill-in time rather than open a new CDR.
+
+**Final Owner Response Template — Axis A–D only:**
+
+```text
+Axis A — Scoring Spine:
+  CDR-1: D
+  CDR-2: C
+
+Axis B — Progress Signal:
+  CDR-5: D
+  CDR-6: C
+  CDR-7: D
+  CDR-8: D
+
+Axis C — Surface Grammar:
+  CDR-9:  C
+  CDR-10: C
+  CDR-11: C
+  CDR-13: C
+
+Axis D — Process:
+  CDR-16: B
+  CDR-17: A
+```
+
+Or reply **`DEFAULTS`** to ratify all four axes in one stroke (equivalent to the template above).
+
+---
 
 
 ## §1 — Report Card Philosophy
