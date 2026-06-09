@@ -18,6 +18,7 @@ import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { UhrcReportCard } from "./UhrcReportCard";
+import { BhCategoryPanels } from "./BhCategoryPanels";
 import { useEmitOnce } from "@/hooks/useEmitObservability";
 
 const SUPPORTED_SPORTS = new Set(["baseball", "softball"]);
@@ -104,5 +105,12 @@ export function UhrcAthleteSection({ disciplines }: Props) {
   }
 
   if (!report) return null;
-  return <UhrcReportCard report={report} sourceEventId={snapshot?.id ?? null} />;
+  const showHitting =
+    reportSport === "baseball" && (disciplines ?? ["pitching", "hitting"]).includes("hitting");
+  return (
+    <div className="space-y-4">
+      <UhrcReportCard report={report} sourceEventId={snapshot?.id ?? null} />
+      {showHitting && <BhCategoryPanels />}
+    </div>
+  );
 }
