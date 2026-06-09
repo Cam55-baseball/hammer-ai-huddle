@@ -1,11 +1,11 @@
 # Hammers Report Card Constitution
 
-> **STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN (BP+BH schema fill)**
-> Version: v0.11
-> Opened: 2026-06-08 · Revised: 2026-06-08 (Phase 0.9 — §16 Final Closure)
-> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088, RFL-089, RFL-090 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
+> **STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) — §17 V1 RATIFIED (BP+BH) — IMPLEMENTATION AUTHORIZED FOR V1**
+> Version: v0.13
+> Opened: 2026-06-08 · Revised: 2026-06-09 (Phase 0.11 — §17 V1 Owner Ratification)
+> Lineage: ASB RFL-080, RFL-081, RFL-082, RFL-083, RFL-084, RFL-086, RFL-087, RFL-088, RFL-089, RFL-090, RFL-091, RFL-092 · supersedes scope captured in `docs/asb/analysis-formula-ratification.md` (audit-only)
 > Subordinate to: Eternal Laws, all RR-1…RR-10, RW-1…RW-10, EI/IR/EK/SG/FC/EE/RO/AR/DG/RE/AE/SF/ES/CV/ER/SL/FI-C invariant families, and every prior immutable invariant sealed across ASB Phases 1–160.
-> **§0 Precedence:** Section 0 supersedes §1–§17. Any conflict is resolved in favor of §0. §16 Groups A–K were constitutionally gated behind §0 ratification under the **extended ratification gate** defined in §0.12, bounded by the §0.17 CDR per Phase 0.2, packaged by §0.18 per Phase 0.3, narrowed by §0.22 per Phase 0.5, doctrine-confirmed by §0.24 per Phase 0.6, closed by §0.25 (Phase 0.7), compressed by §0.26 (Phase 0.8), and **finally closed by §0.27 (Phase 0.9)** with owner resolution of the 3 residual items (B2a=iii, B2b=ii, C1=i RATIFY, C3=DEFER). V1 §16 is now fully resolved (43/43 V1-applicable items: 15 A + 25 B + 3 C). K7 (verbatim throwing standards) remains deferred with §6 Throwing and is non-blocking for V1. §17 is generable entirely from ratified doctrine; implementation remains blocked solely pending §17 BP+BH schema draft + owner ratification of that draft.
+> **§0 Precedence:** Section 0 supersedes §1–§17. §16 V1 closed (43/43) per §0.27 (Phase 0.9). §17 V1 schemas drafted per §0.28 (Phase 0.10) and **ratified by owner per §0.29 (Phase 0.11, 2026-06-09)** with zero contradictions across the four ratification criteria (direct contradictions / missing non-negotiables / Universal Category Explanation Law §0.6 / athlete-first coaching RR-5/RR-6). V1 implementation (Baseball Pitching + Baseball Hitting per CDR-15) is **AUTHORIZED**. Throwing / Catching / Defense / Baserunning / Softball remain deferred and non-blocking. Drill / Video / Roadmap / clip tagging is operational backlog, not constitutional, per §3 Law 7 visible missingness.
 
 ---
 
@@ -1306,6 +1306,54 @@ Doctrine-derived generation of the §17 per-category schema fill for V1 (Basebal
 
 ---
 
+### §0.29 — Phase 0.11 §17 V1 Owner Ratification Record (2026-06-09)
+
+> **Purpose.** Record the owner's ratification of the §17 V1 schemas drafted in §4.1 (Baseball Pitching, 11 categories) and §5.1 (Baseball Hitting, 4 phases) under Phase 0.10 / §0.28. Closeout only — no new doctrine, no new categories, no new CDRs, no new questionnaires, no reopened decisions.
+
+#### A. Four-criterion review (zero findings)
+
+| # | Criterion | Source | Finding |
+|---|---|---|---|
+| 1 | **Direct contradictions** with ratified doctrine | §0 / §0.27 / CDR-1…CDR-17 / §3 / §4 / §5 / §7–§15 | **None.** BP weights (Separation 14 + Energy Angle 12 + Tempo 10 + Stride Length 5 + Stride Consistency 5 + Posture 17 + Front Side 9 + Head Direction 7 + Shoulder Plane 7 + Rear Foot Drag 7) = **93**, matches §0.27 C1 RATIFY-as-is. BH bindings use canonical `hittingPhases.ts` per RFL-074. CDR citations (CDR-1=D, CDR-5=D, CDR-6=C, CDR-7=D, CDR-8=D) match §0.25 / §0.27. Age-neutral V1 honored per §0.27 C3 = DEFER. |
+| 2 | **Missing non-negotiables** | §0.7 (P1–P4) / §16 C2 = A | **None.** P1, P2, P3, P4 all surface in §5.1. **P1 and P4 carry the Non-Negotiable gate** per §16 C2 = A (independently scored sub-criteria preserved per CDR-3 = C, CDR-4 = C). BP `Eyes On Target` is doctrinally permitted (no §0.7 BP non-negotiable list). |
+| 3 | **Universal Category Explanation Law (§0.6)** | §0.6 nine mandatory blocks | **None.** Every §4.1 and §5.1 schema renders the nine blocks (What / Why / Elite / If poor / How to improve / Drill / Video / Roadmap / Coach Hammer). `<pending tagging>` slots for Drill IDs / Video IDs / Good clip / Bad clip / Roadmap step refinement are reaffirmed as **§3 Law 7 visible missingness** — constitutionally legal, surfaced not hidden, routed to operational tagging backlog. |
+| 4 | **Athlete-first coaching doctrine** | §0.2 priority hierarchy / §0.3 ENCOURAGED outcome / §10 Coach Hammer / RR-5 narrative / RR-6 injury | **None.** Copy is non-judgmental and developmental. "If poor" copy is observational, not punitive. "How to improve" is philosophy, not prescriptive recipes (CDR routing preserved). Coach Hammer voice envelopes cite RR-5 (no manufactured feelings / no destiny framing) and RR-6 (no diagnosis / no prescriptive RTP). Parent / Recruiter visibility unchanged per D3 derivation. |
+
+**Result: zero findings across all four criteria. §17 V1 (BP + BH) is RATIFIED.**
+
+#### B. Ratification stamps
+
+- **§4.1 — Baseball Pitching §17 schemas (11 categories): RATIFIED 2026-06-09.**
+- **§5.1 — Baseball Hitting §17 schemas (4 phases): RATIFIED 2026-06-09.**
+- **§17 V1 (BP + BH): RATIFIED 2026-06-09.**
+
+#### C. Recalculated constitutional status
+
+| Gate | Status |
+|---|---|
+| §0 (Sections 0.1–0.29) | **RATIFIED** |
+| §16 V1 (43/43 items) | **FULLY CLOSED** |
+| §17 V1 (BP + BH schemas, §4.1 + §5.1) | **RATIFIED** |
+| §18 V1 condition (1) — §16 V1 fully closed | **SATISFIED** (§0.27) |
+| §18 V1 condition (2) — full multi-discipline ratification | **NOT REQUIRED for V1** per CDR-15 |
+| §18 V1 condition (3) — §17 V1 schema fill | **SATISFIED** (§0.28 / §0.29) |
+| §18 V1 condition (4) — RFL ratification entry | **SATISFIED** (RFL-092) |
+| Drill / Video / Roadmap / clip tagging | **Operational backlog** — not constitutional |
+| Throwing / Catching / Defense / Baserunning / Softball | **Deferred, non-blocking** per CDR-15 |
+
+#### D. V1 Implementation Authorization
+
+> **AUTHORIZED 2026-06-09 — V1 SCOPE: Baseball Pitching + Baseball Hitting only.**
+
+- Implementation is unblocked for the BP + BH surfaces exclusively, bounded by **CDR-15 = {BP=Y, BH=Y, all others=N}**.
+- **Out-of-V1 (deferred, non-blocking):** Throwing, Catching, Defense, Baserunning, Softball Pitching, Softball Hitting. No implementation work on these surfaces is authorized under V1.
+- **Operational tagging backlog (non-constitutional):** Drill IDs, Video IDs, Good clip, Bad clip, Roadmap step refinement render as **§3 Law 7 visible missingness** until human tagging completes. Tagging is implementation backlog, **not** a constitutional blocker, and does not delay V1 implementation.
+- **Doctrinal supremacy preserved:** All implementation remains subordinate to Eternal Laws, RR-1…RR-10, RW-1…RW-10, every invariant family across ASB Phases 1–160, and every §0 / §16 / §17 ratified envelope. Implementation may **not** mutate organism truth, expand authority, introduce parallel surfaces, or relax any ratified ceiling.
+
+**Sole next action:** open **Phase 1.0 — V1 Implementation (BP + BH)** in `.lovable/plan.md`.
+
+---
+
 
 
 
@@ -1407,9 +1455,9 @@ Each category in §4 fills out the per-category schema in §17. Weights, hierarc
 
 ---
 
-### §4.1 — Filled BP §17 Schemas (Phase 0.10, doctrine-derived)
+### §4.1 — Filled BP §17 Schemas (Phase 0.10, doctrine-derived) — **RATIFIED 2026-06-09 (Phase 0.11 / §0.29)**
 
-All 11 categories below are filled per the §0.28 Doctrine Binding Map. Weights ratified §0.27 C1. Display = band (ENCOURAGED / DEVELOPING / EARNED) with numeric raw on click (CDR-1 = D, §14). Age-neutral at V1 (§0.27 C3 = DEFER). Drill / Video / Roadmap / clip slots render as visible missingness per §3 Law 7 until human tagging completes.
+All 11 categories below are filled per the §0.28 Doctrine Binding Map and **ratified per §0.29** with zero findings across the four ratification criteria. Weights ratified §0.27 C1 (sum = 93). Display = band (ENCOURAGED / DEVELOPING / EARNED) with numeric raw on click (CDR-1 = D, §14). Age-neutral at V1 (§0.27 C3 = DEFER). Drill / Video / Roadmap / clip slots render as visible missingness per §3 Law 7 — operational tagging backlog, non-blocking for V1 implementation.
 
 ```text
 Category: Eyes On Target
@@ -1686,9 +1734,9 @@ Each phase in §5 fills out the per-category schema in §17.
 
 ---
 
-### §5.1 — Filled BH §17 Schemas (Phase 0.10, doctrine-derived)
+### §5.1 — Filled BH §17 Schemas (Phase 0.10, doctrine-derived) — **RATIFIED 2026-06-09 (Phase 0.11 / §0.29)**
 
-All 4 phases below are filled per the §0.28 Doctrine Binding Map. Non-Negotiables P1 + P4 per §0.7 / §16 C2. Display = band (CDR-1 = D, §14). Age-neutral at V1 (§0.27 C3 = DEFER). Drill / Video / Roadmap / clip slots render as visible missingness per §3 Law 7 until human tagging completes.
+All 4 phases below are filled per the §0.28 Doctrine Binding Map and **ratified per §0.29** with zero findings across the four ratification criteria. Non-Negotiables P1 + P4 per §0.7 / §16 C2 = A (independently scored sub-criteria preserved per CDR-3 = C, CDR-4 = C). Display = band (CDR-1 = D, §14). Age-neutral at V1 (§0.27 C3 = DEFER). Drill / Video / Roadmap / clip slots render as visible missingness per §3 Law 7 — operational tagging backlog, non-blocking for V1 implementation.
 
 ```text
 Category: Hip Load (Pelvic Coil)
@@ -2074,21 +2122,16 @@ Category: <athlete-facing name>
 This document may flip to `STATUS: RATIFIED` only when:
 
 1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** §16 is **fully closed** (43/43 V1-applicable items resolved — 15 A + 25 B + 3 C per §0.26 and §0.27). B4, B5, K7 are out of V1 scope. **— SATISFIED 2026-06-08 (§0.27).**
-2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope. — NOT REQUIRED for V1.
-3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope. **— BP+BH §17 schemas DRAFTED 2026-06-09 in §4.1 / §5.1 per §0.28 (Phase 0.10). SATISFIED pending owner ratification of the generated draft.**
-4. An RFL entry (RFL-080 lineage, extended by RFL-089 and RFL-090) records the ratification with date and version pin. **— OPEN; filed alongside §17 ratification.**
+2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope. **— NOT REQUIRED for V1** per CDR-15.
+3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope. **— SATISFIED 2026-06-09 (§0.28 draft + §0.29 owner ratification, Phase 0.10 + Phase 0.11).**
+4. An RFL entry (RFL-080 lineage, extended by RFL-089, RFL-090, RFL-091) records the ratification with date and version pin. **— SATISFIED 2026-06-09 (RFL-092).**
 
-Until those conditions are met:
+**V1 STATUS: RATIFIED 2026-06-09. V1 implementation (Baseball Pitching + Baseball Hitting per CDR-15) is AUTHORIZED.**
 
-- No code edits anywhere in the repo.
-- No removal of UHRC.
-- No migration of hitting phase tags.
-- No throwing signal registry.
-- No correction-cache table.
-- No edge functions.
-- No new routes, tabs, components, or design tokens.
-- No "small" task framed as documentation-adjacent implementation.
+Out-of-V1 surfaces (Throwing / Catching / Defense / Baserunning / Softball Pitching / Softball Hitting) remain **deferred and non-blocking** for V1 and continue to be governed by §18 prohibitions until their own ratification phases open. Drill / Video / Roadmap / clip tagging is **operational backlog**, surfaced via §3 Law 7 visible missingness — not a constitutional blocker.
+
+Within V1 BP + BH only, implementation must remain subordinate to Eternal Laws, RR-1…RR-10, RW-1…RW-10, every prior immutable invariant across ASB Phases 1–160, and every §0 / §16 / §17 ratified envelope.
 
 ---
 
-*End of Hammers Report Card Constitution v0.12 — STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) — §17 V1 DRAFTED (§4.1 + §5.1), AWAITING OWNER RATIFICATION.*
+*End of Hammers Report Card Constitution v0.13 — STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) — §17 V1 RATIFIED (BP+BH) — IMPLEMENTATION AUTHORIZED FOR V1.*

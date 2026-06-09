@@ -1,31 +1,36 @@
-# Phase 0.11 Ratification — Execute Approved Edits
+# Hammers Modality — Active Plan
 
-Apply the previously approved Phase 0.11 ratification exactly. No new doctrine, no scope expansion.
+## Closed phases
 
-## Files
+- **Phase 0.1 – 0.9** — §0 ratification, §16 V1 closure (43/43). CLOSED.
+- **Phase 0.10** — §17 V1 schema generation pass (§4.1 BP + §5.1 BH from ratified doctrine per §0.28). **CLOSED 2026-06-09.**
+- **Phase 0.11** — §17 V1 owner ratification review (four-criterion review, zero findings, §0.29). **CLOSED 2026-06-09 (RFL-092).**
 
-### 1. `docs/asb/report-card-constitution.md` → v0.13
-- Add **§0.29 — Phase 0.11 Owner Ratification Record**: four-criterion review (direct contradictions, missing non-negotiables, Universal Category Explanation Law §0.6, athlete-first coaching doctrine RR-5/RR-6) — **zero findings**. BP weight sum reconfirmed (93). BH P1/P4 Non-Negotiable gates confirmed per §16 C2=A. `<pending tagging>` reaffirmed as §3 Law 7 visible missingness, non-blocking.
-- Stamp **§17 V1 RATIFIED (BP + BH)** on §4.1 and §5.1 headers.
-- Update **§18 V1 criteria**: condition (3) SATISFIED, condition (4) SATISFIED (RFL-092); condition (2) NOT REQUIRED for V1 per CDR-15.
-- Append **V1 Implementation Authorization block**: BP + BH only, CDR-15 bounded; Throwing/Catching/Defense/Baserunning/Softball deferred and non-blocking; Drill/Video/Roadmap/Clip tagging routed to implementation backlog.
-- Update document header/footer to:
-  `v0.13 — §0 RATIFIED — §16 FULLY CLOSED (V1) — §17 V1 RATIFIED (BP+BH) — IMPLEMENTATION AUTHORIZED FOR V1`
+## Constitutional status
 
-### 2. `docs/asb/reality-feedback-ledger.md`
-- Append **RFL-092**: Phase 0.11 ratification, zero contradictions across all four criteria, §17 V1 RATIFIED, §18 V1 satisfied, V1 implementation authorized (BP+BH, CDR-15 bounded), deferred categories remain deferred.
+- §0 (Sections 0.1–0.29): **RATIFIED**
+- §16 V1 (43/43): **FULLY CLOSED**
+- §17 V1 (BP + BH, §4.1 + §5.1): **RATIFIED**
+- §18 V1 conditions (1)+(3)+(4): **SATISFIED**; (2) **NOT REQUIRED for V1** per CDR-15
+- Constitution version: **v0.13**
 
-### 3. `.lovable/plan.md`
-- Close **Phase 0.10** and **Phase 0.11**.
-- Open **Phase 1.0 — V1 Implementation (BP + BH)** as the sole active phase, bounded by CDR-15.
+## Active phase
 
-## Post-execution report (in chat)
-1. Final constitutional status table.
-2. Final implementation authorization determination.
-3. Remaining V1 blockers list (expected: none constitutional; tagging backlog is operational).
-4. Explicit statement on whether constitutional work for V1 BP + BH is complete.
+### Phase 1.0 — V1 Implementation (Baseball Pitching + Baseball Hitting)
 
-## Constraints
-- No new doctrine, categories, CDRs, audits, questionnaires, or phases.
-- No reopening of ratified decisions.
-- Scope frozen to BP + BH per CDR-15.
+**Authorization:** AUTHORIZED 2026-06-09 per §0.29 / §18 V1 / RFL-092.
+
+**Scope (CDR-15 = {BP=Y, BH=Y, all others=N}):**
+- Baseball Pitching report card surfaces per §4 + §4.1.
+- Baseball Hitting report card surfaces per §5 + §5.1.
+
+**Deferred, non-blocking (out of V1):**
+- Throwing, Catching, Defense, Baserunning, Softball Pitching, Softball Hitting — governed by §18 prohibitions until their own ratification phases open.
+
+**Operational backlog (non-constitutional):**
+- Drill IDs, Video IDs, Good clip, Bad clip, Roadmap step refinement render as **§3 Law 7 visible missingness** until human tagging completes. Does not block V1 implementation.
+
+**Constraints:**
+- All work subordinate to Eternal Laws, RR-1…RR-10, RW-1…RW-10, every invariant family across ASB Phases 1–160, and every §0 / §16 / §17 ratified envelope.
+- No mutation of organism truth, no authority expansion, no parallel surfaces, no relaxation of ratified ceilings.
+- No work on deferred disciplines under V1.
