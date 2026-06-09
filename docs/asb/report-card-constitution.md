@@ -1686,6 +1686,104 @@ Each phase in §5 fills out the per-category schema in §17.
 
 ---
 
+### §5.1 — Filled BH §17 Schemas (Phase 0.10, doctrine-derived)
+
+All 4 phases below are filled per the §0.28 Doctrine Binding Map. Non-Negotiables P1 + P4 per §0.7 / §16 C2. Display = band (CDR-1 = D, §14). Age-neutral at V1 (§0.27 C3 = DEFER). Drill / Video / Roadmap / clip slots render as visible missingness per §3 Law 7 until human tagging completes.
+
+```text
+Category: Hip Load (Pelvic Coil)
+  Engine binding:        p1_hip_load (hittingPhases.ts — canonical; formulaPhases.ts is constitutionally invalid per RFL-074)
+  Display format:        Pass/Fail chip (Non-Negotiable gate per §0.7) + band on click (CDR-1=D, §14)
+  Hierarchy rank:        Non-Negotiable (§0.7 hitting philosophical truth; §16 C2 = A)
+  Weight (athlete view): n/a — gate
+  What is it:            How you coil the back hip to load the swing before anything else moves.
+  Why it matters:        Hip Load is where the swing's energy is stored. Skip it and there's nothing for the rest of the swing to spend.
+  If poor → performance: Power and exit velocity cap because the body never loaded what it's going to try to fire.
+  If poor → durability:  The arms try to make up for what the hips didn't store, loading shoulders and forearms.
+  If poor → efficiency:  The swing runs on borrowed effort instead of stored energy.
+  If poor → consistency: Without a stored coil, every swing is improvised.
+  How to improve:        Train the coil as the first event of the swing, owned by the back hip, not the hands.
+  Drill IDs:             <pending tagging — seed from hitting failureSymptoms for p1_hip_load>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Pass/Fail when load frame is engine-confident; "estimate" otherwise per CDR-5=D / CDR-7=D
+  Missingness rule:      "Not measured this session — hip-load frame unscorable" per §3 Law 7 / CDR-8=D. Never silent.
+```
+
+```text
+Category: Hand Load
+  Engine binding:        p2_hand_load (hittingPhases.ts — canonical)
+  Display format:        Band + raw on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 1
+  Weight (athlete view): high (Rank 1; specific per-phase weight inherits §0.27 doctrine-derived hierarchy — BH per-phase numeric weights not enumerated by §0.27 C1, which is BP-only)
+  What is it:            What the hands do while the hips load — the upper-body half of the load sequence.
+  Why it matters:        Hand Load sets the path the swing is going to live on. Get it wrong and the swing is fighting the bat from the first move.
+  If poor → performance: Bat path is compromised; barrel is late or out of plane.
+  If poor → durability:  Forearms and lead shoulder absorb what the load mis-sequenced.
+  If poor → efficiency:  The swing has to recover before it can attack.
+  If poor → consistency: Bat path varies pitch to pitch.
+  How to improve:        Coordinate hand load to the hip load — same start, same finish, every time.
+  Drill IDs:             <pending tagging — seed from hitting failureSymptoms for p2_hand_load>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on engine confidence; "estimate" otherwise per CDR-7=D
+  Missingness rule:      "Not measured this session — hand-load trace unresolvable" per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Stride & Landing
+  Engine binding:        p3_stride (hittingPhases.ts — canonical; not p3_launch from formulaPhases per RFL-074)
+  Display format:        Band + raw on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 1
+  Weight (athlete view): high (Rank 1)
+  What is it:            How you stride and how the front foot lands — the bridge between load and rotation.
+  Why it matters:        A swing fired off a bad landing isn't a swing, it's a guess.
+  If poor → performance: Power leaks; contact quality drops.
+  If poor → durability:  Front side absorbs uneven load; knee, hip, and low back pay it.
+  If poor → efficiency:  Energy from the load doesn't make it to rotation.
+  If poor → consistency: Contact point drifts with landing drift.
+  How to improve:        Land on time, in line, with intent. Stride is delivery, not preparation.
+  Drill IDs:             <pending tagging — seed from hitting failureSymptoms for p3_stride>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on engine confidence; "estimate" if landing frame is partial per CDR-7=D
+  Missingness rule:      "Not measured this session — landing frame unresolvable" per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Hitter's Move
+  Engine binding:        p4_hitters_move (hittingPhases.ts — canonical)
+  Display format:        Pass/Fail chip (Non-Negotiable gate per §0.7) + band on click (CDR-1=D, §14)
+  Hierarchy rank:        Non-Negotiable (§0.7 hitting philosophical truth; §16 C2 = A)
+  Weight (athlete view): n/a — gate
+  What is it:            The rotation through contact — how the body fires what the load stored, into the ball.
+  Why it matters:        The Hitter's Move is the swing's payoff. Everything before it is preparation; without this, none of it shows up at contact.
+  If poor → performance: Exit velocity, bat speed, and contact quality all collapse together.
+  If poor → durability:  The arms try to author the move the body refused to; shoulder, elbow, and lead wrist absorb it.
+  If poor → efficiency:  Stored energy is spent on rotation correction instead of contact.
+  If poor → consistency: Contact quality varies wildly even when load looks identical.
+  How to improve:        Train rotation through contact, not at it. The Hitter's Move finishes through the ball, not on it.
+  Drill IDs:             <pending tagging — seed from hitting failureSymptoms for p4_hitters_move>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Pass/Fail on engine-confident rotation frame; band on full-confidence move; else "estimate" per CDR-5=D / CDR-7=D
+  Missingness rule:      "Not measured this session — rotation-through-contact unresolvable" per §3 Law 7 / CDR-8=D. Never silent.
+```
+
+---
+
 ## §6 — Throwing Report Card Architecture (Proposal — requires ratification)
 
 **Discipline:** Baseball Throwing + Softball Throwing (shared standards at v1; position-branching per §16 B4).
