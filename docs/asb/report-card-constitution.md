@@ -2065,7 +2065,7 @@ Category: <athlete-facing name>
   Missingness rule:      <what shows when this session can't be scored>
 ```
 
-The schemas themselves are not filled in this draft. They are filled in v0.2, after §16 closes, in a single dedicated pass per discipline. Filling them before §16 closes would bake in assumptions and reproduce the failure mode that prompted this constitutional reset.
+**Phase 0.10 stamp (2026-06-09):** The V1 schemas are now filled in **§4.1** (Baseball Pitching, 11 categories) and **§5.1** (Baseball Hitting, 4 phases), generated entirely from ratified §0 / §0.27 / CDR / §3–§15 doctrine per §0.28. §6 Throwing §17 fill remains deferred with Throwing scope per CDR-15; K7 (Throwing standards verbatim) is non-blocking for V1.
 
 ---
 
