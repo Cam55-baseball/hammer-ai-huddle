@@ -1,30 +1,36 @@
-# Hammers Report Card Constitution — Phase Tracker
+# Hammers Modality — Active Plan
 
-## Phase 0.9 — §16 Final Closure — **CLOSED** (2026-06-08, RFL-090, constitution v0.11)
+## Closed phases
 
-## Phase 0.10 — §17 BP+BH Schema Generation Pass — **EXECUTED** (2026-06-09, RFL-091, constitution v0.12)
+- **Phase 0.1 – 0.9** — §0 ratification, §16 V1 closure (43/43). CLOSED.
+- **Phase 0.10** — §17 V1 schema generation pass (§4.1 BP + §5.1 BH from ratified doctrine per §0.28). **CLOSED 2026-06-09.**
+- **Phase 0.11** — §17 V1 owner ratification review (four-criterion review, zero findings, §0.29). **CLOSED 2026-06-09 (RFL-092).**
 
-- §0.28 added (Doctrine Binding Map + Validation Report + Ratification Readiness).
-- §4.1 added: 11 filled BP schemas (Eyes On Target, Hip/Shoulder Separation, Energy Angle, Tempo, Stride Length, Stride Consistency, Posture composite, Front Side Control, Head Direction, Shoulder Plane, Rear Foot Drag).
-- §5.1 added: 4 filled BH schemas (Hip Load, Hand Load, Stride & Landing, Hitter's Move).
-- §17 stamped with Phase 0.10 reference.
-- §18 condition (3) marked SATISFIED pending owner ratification; condition (4) closed by RFL-091.
-- Validation: 15/15 schemas · 18/18 fields each · 0 unresolved · 0 owner decisions · 0 new doctrine.
+## Constitutional status
 
-## Phase 0.11 — Owner Ratification of §17 V1 Draft — **OPEN, OWNER-ONLY**
+- §0 (Sections 0.1–0.29): **RATIFIED**
+- §16 V1 (43/43): **FULLY CLOSED**
+- §17 V1 (BP + BH, §4.1 + §5.1): **RATIFIED**
+- §18 V1 conditions (1)+(3)+(4): **SATISFIED**; (2) **NOT REQUIRED for V1** per CDR-15
+- Constitution version: **v0.13**
 
-Sole remaining action to reach §18 V1 RATIFICATION and unblock implementation.
+## Active phase
 
-- Owner reviews `docs/asb/report-card-constitution.md` §4.1 + §5.1.
-- Owner either ratifies as-is, or returns category-level edits that stay within ratified envelopes (must not reopen §0 / §16 / §0.27).
-- On owner ratification: §18 V1 flips to RATIFIED; an RFL ratification confirmation entry is filed; implementation prohibitions lift.
+### Phase 1.0 — V1 Implementation (Baseball Pitching + Baseball Hitting)
 
-No further AI work is required to reach this gate. No new audits, ambiguity reviews, CDRs, questionnaires, or constitutional phases are authorized.
+**Authorization:** AUTHORIZED 2026-06-09 per §0.29 / §18 V1 / RFL-092.
 
-## Out of V1 Scope (per CDR-15) — non-blocking
+**Scope (CDR-15 = {BP=Y, BH=Y, all others=N}):**
+- Baseball Pitching report card surfaces per §4 + §4.1.
+- Baseball Hitting report card surfaces per §5 + §5.1.
 
-- §6 Throwing §17 fill (deferred with Throwing scope).
-- K7 Throwing standards #6 / #7 verbatim text.
-- B4 Throwing position branching.
-- B5 Softball Hitting Slap variant.
-- Softball Pitching registry (RFL-076).
+**Deferred, non-blocking (out of V1):**
+- Throwing, Catching, Defense, Baserunning, Softball Pitching, Softball Hitting — governed by §18 prohibitions until their own ratification phases open.
+
+**Operational backlog (non-constitutional):**
+- Drill IDs, Video IDs, Good clip, Bad clip, Roadmap step refinement render as **§3 Law 7 visible missingness** until human tagging completes. Does not block V1 implementation.
+
+**Constraints:**
+- All work subordinate to Eternal Laws, RR-1…RR-10, RW-1…RW-10, every invariant family across ASB Phases 1–160, and every §0 / §16 / §17 ratified envelope.
+- No mutation of organism truth, no authority expansion, no parallel surfaces, no relaxation of ratified ceilings.
+- No work on deferred disciplines under V1.
