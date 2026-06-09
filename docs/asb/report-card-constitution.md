@@ -1243,6 +1243,71 @@ Owner submitted answers to §0.26 §F Q1/Q2/Q3. The 3 residual Class-C items are
 
 ---
 
+### §0.28 — Phase 0.10 §17 Schema Generation Pass (2026-06-09)
+
+Doctrine-derived generation of the §17 per-category schema fill for V1 (Baseball Pitching + Baseball Hitting). Inputs: §0.1–§0.27 + CDR-1…CDR-17 (Axes A–D ratified §0.25) + §3 Laws + §6 Universal Category Explanation Law + §7–§15 architecture + §0.7 BH non-negotiables + §0.27 B2/C1/C3 resolutions. **No new doctrine. No new audits. No new CDRs. No new owner questionnaires.**
+
+#### A. Doctrine Binding Map (applied to every schema)
+
+| §17 Field | Ratified Source |
+|---|---|
+| Engine binding | §4 / §5 tables; `pieV2Signals.ts` / `hittingPhases.ts` (read-only reference) |
+| Display format | CDR-1 = D (band: ENCOURAGED / DEVELOPING / EARNED, numeric on click) + §14 |
+| Hierarchy rank | §0.27 C1 (BP weights); §0.7 + C2 (BH non-negotiables P1 + P4); §0.27 C3 → age-neutral V1 |
+| Weight | §0.27 C1 ratified BP weights; BH P1/P4 = gate (n/a — gate), BH P2/P3 = Rank 1 |
+| What / Why / If poor ×4 / How to improve | §0.6 Universal Category Explanation Law + §15 blocks 1–4 |
+| Drill IDs | §7 deterministic deficiency→drill; seed catalog = `common_deficiencies` (pieV2Signals) + hitting `failureSymptoms` per §16 F2 / §0.26 = A |
+| Video IDs | §8 taxonomy (`reference_good` / `reference_bad` / `corrective` / `teaching` / `roadmap_step`) |
+| Roadmap step | §9 (deficiency-bound, deterministic, next-step only at V1) |
+| Good / Bad clip | §8 + §15 block 8 (paired teaching contrast) |
+| Coach Hammer voice | §10 (motivational delivery only) + §16 I tone envelope + RR-5 / RR-6 |
+| Confidence rule | CDR-5 = D (visible confidence chips), CDR-7 = D (estimate banding) |
+| Missingness rule | §3 Law 7 + CDR-6 = C + CDR-8 = D (visible missingness, never silent) |
+| Lineage | §0.5 pillar binding + ASB Megaphase 76–90 EI lineage-complete / Megaphase 111–150 athlete intelligence delivery (replay-visible, lineage-one-interaction-away) |
+
+`<pending tagging>` is the constitutionally valid value for Drill IDs / Video IDs / Roadmap step / Good-Bad clip slots, per §3 Law 7 (visible missingness). Human tagging is a post-ratification operational task, not a constitutional blocker.
+
+#### B. Generated Schemas
+
+- **Baseball Pitching (11 categories):** see **§4.1**.
+- **Baseball Hitting (4 phases):** see **§5.1**.
+
+#### C. Validation Report
+
+| Check | Result |
+|---|---|
+| Total V1 schemas generated | **15** (BP = 11, BH = 4) |
+| §17 fields populated per schema | **18 / 18** |
+| Unresolved fields | **0** |
+| Placeholder values requiring owner decision | **0** (`<pending tagging>` slots are §3 Law 7 visible missingness, not owner decisions) |
+| New owner questions raised | **0** |
+| New doctrine introduced | **0** |
+| New CDRs / audits / phases opened | **0** |
+| Schemas traceable to ratified doctrine | **15 / 15** |
+| §0.27 resolutions honored (B2a composite, B2b split, C1 weights, C3 age-neutral) | **YES** |
+
+#### D. Ratification Readiness
+
+| Gate | Status |
+|---|---|
+| §0 (0.1–0.28) | **RATIFIED ✓** |
+| §16 V1 (BP + BH) | **FULLY CLOSED ✓** (43/43) |
+| §17 V1 schema draft (BP + BH) | **DRAFTED ✓** (§4.1 + §5.1) |
+| Owner ratification of §17 V1 draft | **PENDING — sole remaining action** |
+| RFL ratification entry | **PENDING — filed alongside owner ratification** |
+| §18 V1 STATUS:RATIFIED | **PENDING — flips automatically on owner ratification + RFL entry** |
+| Implementation | **NOT AUTHORIZED — single remaining blocker = owner ratification of §17 V1 draft** |
+
+**Determinations:**
+- **§17 V1 complete?** YES — every BP and BH category has a full 18-field schema derived from ratified doctrine.
+- **Constitutional blockers remaining?** **One:** owner ratification of the §17 V1 draft (§4.1 + §5.1). No further AI work, no further doctrine, no further owner decisions are required to reach §18 V1 RATIFICATION.
+- **Sole remaining action:** owner reviews §4.1 + §5.1, ratifies (or returns category-level edits — edits stay within ratified envelopes, do not reopen §0 / §16).
+- **§6 Throwing §17 fill:** explicitly deferred per CDR-15; not part of V1; non-blocking.
+
+---
+
+
+
 
 
 
