@@ -9,13 +9,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { getHammerIdentity } from "@/lib/hammer/identity";
 
-interface Props {
-  readonly compact?: boolean;
+export interface HammerCategoryFocus {
+  readonly id: string;
+  readonly name: string;
+  readonly hierarchyRank: "non_negotiable" | "rank_1";
+  readonly whyItMatters: string;
+  readonly howToImprove: string;
 }
 
-export function HammerChat({ compact = false }: Props) {
+interface Props {
+  readonly compact?: boolean;
+  readonly categoryFocus?: HammerCategoryFocus | null;
+}
+
+export function HammerChat({ compact = false, categoryFocus = null }: Props) {
   const identity = getHammerIdentity();
-  const chat = useHammerChat();
+  const chat = useHammerChat({ categoryFocus });
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

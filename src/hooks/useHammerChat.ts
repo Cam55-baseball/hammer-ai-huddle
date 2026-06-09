@@ -20,6 +20,18 @@ export interface HammerChatMessage {
   ts: number;
 }
 
+export interface HammerCategoryFocusInput {
+  readonly id: string;
+  readonly name: string;
+  readonly hierarchyRank: "non_negotiable" | "rank_1";
+  readonly whyItMatters: string;
+  readonly howToImprove: string;
+}
+
+export interface HammerChatOptions {
+  readonly categoryFocus?: HammerCategoryFocusInput | null;
+}
+
 export interface HammerChatApi {
   readonly messages: ReadonlyArray<HammerChatMessage>;
   readonly isSending: boolean;
@@ -28,12 +40,13 @@ export interface HammerChatApi {
   reset(): void;
 }
 
-export function useHammerChat(): HammerChatApi {
+export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
   const ctx = useHammerAthleteContext();
   const nextStep = useHammerNextStep();
   const [messages, setMessages] = useState<HammerChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const categoryFocus = options.categoryFocus ?? null;
 
   const send = useCallback(
     async (text: string) => {
@@ -63,6 +76,7 @@ export function useHammerChat(): HammerChatApi {
               route: nextStep.route,
               source: nextStep.source,
             },
+            categoryFocus,
           },
         });
         if (invokeError) throw invokeError;
@@ -74,7 +88,7 @@ export function useHammerChat(): HammerChatApi {
         setIsSending(false);
       }
     },
-    [messages, ctx, nextStep],
+    [messages, ctx, nextStep, categoryFocus],
   );
 
   const reset = useCallback(() => {

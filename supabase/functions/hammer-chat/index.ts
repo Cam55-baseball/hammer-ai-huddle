@@ -29,11 +29,22 @@ interface RequestBody {
   messages: ChatMessage[];
   context?: Record<string, unknown> | null;
   nextStep?: Record<string, unknown> | null;
+  categoryFocus?: Record<string, unknown> | null;
 }
 
-function buildSystem(ctx: Record<string, unknown> | null | undefined, nextStep: Record<string, unknown> | null | undefined): string {
+function buildSystem(
+  ctx: Record<string, unknown> | null | undefined,
+  nextStep: Record<string, unknown> | null | undefined,
+  categoryFocus: Record<string, unknown> | null | undefined,
+): string {
   const ctxJson = ctx ? JSON.stringify(ctx).slice(0, 3000) : "{}";
   const nextJson = nextStep ? JSON.stringify(nextStep).slice(0, 800) : "{}";
+  const focusBlock = categoryFocus
+    ? `
+
+CATEGORY_FOCUS = ${JSON.stringify(categoryFocus).slice(0, 800)}
+The athlete opened this conversation from a specific report-card category. Stay focused on it. Use the same athlete-first rules. Do not invent scores, drills, or videos that are not in the athlete context.`
+    : "";
   return `You are Coach Hammer — a calm, plain-English baseball/softball developmental coach.
 You speak in first person as one consistent identity across every surface.
 
@@ -51,7 +62,7 @@ Be specific. Be brief. Use short sentences. No emojis.
 
 ATHLETE_CONTEXT = ${ctxJson}
 
-CANONICAL_NEXT_STEP = ${nextJson}`;
+CANONICAL_NEXT_STEP = ${nextJson}${focusBlock}`;
 }
 
 serve(async (req) => {
@@ -84,7 +95,14 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: buildSystem(body.context ?? null, body.nextStep ?? null) },
+          {
+            role: "system",
+            content: buildSystem(
+              body.context ?? null,
+              body.nextStep ?? null,
+              body.categoryFocus ?? null,
+            ),
+          },
           ...messages,
         ],
       }),
