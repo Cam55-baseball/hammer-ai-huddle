@@ -1,42 +1,30 @@
-# Hammers Report Card Constitution — Active Plan
+# Hammers Report Card Constitution — Phase Tracker
 
-## Status (2026-06-08)
+## Phase 0.9 — §16 Final Closure — **CLOSED** (2026-06-08, RFL-090, constitution v0.11)
 
-- **Document:** `docs/asb/report-card-constitution.md` v0.11
-- **STATUS:** §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN
-- **Owner Class-C decisions open:** 0
+## Phase 0.10 — §17 BP+BH Schema Generation Pass — **EXECUTED** (2026-06-09, RFL-091, constitution v0.12)
 
-## Phase History
+- §0.28 added (Doctrine Binding Map + Validation Report + Ratification Readiness).
+- §4.1 added: 11 filled BP schemas (Eyes On Target, Hip/Shoulder Separation, Energy Angle, Tempo, Stride Length, Stride Consistency, Posture composite, Front Side Control, Head Direction, Shoulder Plane, Rear Foot Drag).
+- §5.1 added: 4 filled BH schemas (Hip Load, Hand Load, Stride & Landing, Hitter's Move).
+- §17 stamped with Phase 0.10 reference.
+- §18 condition (3) marked SATISFIED pending owner ratification; condition (4) closed by RFL-091.
+- Validation: 15/15 schemas · 18/18 fields each · 0 unresolved · 0 owner decisions · 0 new doctrine.
 
-- Phases 0 → 0.7 — §0 ratification (sealed, RFL-080…RFL-088).
-- Phase 0.8 — §16 Compression Pass (§0.26, RFL-089) — closed.
-- **Phase 0.9 — §16 Final Closure (§0.27, RFL-090) — closed 2026-06-08.**
-  - B2a = (iii) Posture = composite (head_stability + hip_alignment).
-  - B2b = (ii) Stride Length + Stride Consistency = two separate categories.
-  - C1 = (i) RATIFY Pitching engine weights as-is.
-  - C3 = DEFER — V1 ships age-neutral.
+## Phase 0.11 — Owner Ratification of §17 V1 Draft — **OPEN, OWNER-ONLY**
 
-## Determinations
+Sole remaining action to reach §18 V1 RATIFICATION and unblock implementation.
 
-- §16 fully closed for V1 (BP + BH). K7 deferred with §6 Throwing (non-blocking).
-- §17 entirely derivable from ratified doctrine — no further owner input required to draft.
-- Implementation NOT authorized. Single remaining blocker: §17 BP+BH schema draft + owner ratification.
+- Owner reviews `docs/asb/report-card-constitution.md` §4.1 + §5.1.
+- Owner either ratifies as-is, or returns category-level edits that stay within ratified envelopes (must not reopen §0 / §16 / §0.27).
+- On owner ratification: §18 V1 flips to RATIFIED; an RFL ratification confirmation entry is filed; implementation prohibitions lift.
 
-## Next Action — Phase 0.10 (single next phase)
+No further AI work is required to reach this gate. No new audits, ambiguity reviews, CDRs, questionnaires, or constitutional phases are authorized.
 
-**§17 BP+BH Schema Generation Pass.** AI drafts the §17 per-category schema for
-all Baseball Pitching categories (§4) and all Baseball Hitting categories (§5)
-entirely from ratified doctrine (§0.1–§0.27 + ratified CDRs + §0.26 A/B
-auto-resolutions + §0.27 owner answers). Owner ratifies the draft; RFL
-ratification entry is filed; §18 V1 conditions (3) + (4) flip; §18 STATUS
-RATIFIED for V1; implementation unblocks.
+## Out of V1 Scope (per CDR-15) — non-blocking
 
-No new audits, no new ambiguity reviews, no new CDRs, no new owner
-questionnaires, no new governance phases.
-
-## Implementation Prohibitions (still in force)
-
-UHRC removal · hitting taxonomy migration · throwing signal registry ·
-`analysis_correction_cache` table · `generate-correction-motivation` edge
-function · new routes / tabs / components / design tokens · athlete / parent /
-recruiter / technical view surfaces · numeric score displays.
+- §6 Throwing §17 fill (deferred with Throwing scope).
+- K7 Throwing standards #6 / #7 verbatim text.
+- B4 Throwing position branching.
+- B5 Softball Hitting Slap variant.
+- Softball Pitching registry (RFL-076).
