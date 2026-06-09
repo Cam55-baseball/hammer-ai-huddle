@@ -2075,7 +2075,7 @@ This document may flip to `STATUS: RATIFIED` only when:
 
 1. **V1 (Baseball Pitching + Baseball Hitting per CDR-15):** §16 is **fully closed** (43/43 V1-applicable items resolved — 15 A + 25 B + 3 C per §0.26 and §0.27). B4, B5, K7 are out of V1 scope. **— SATISFIED 2026-06-08 (§0.27).**
 2. **Full multi-discipline ratification (post-V1):** The owner pastes verbatim text for Throwing standards #6 and #7 (K7), and answers B4 / B5 when Throwing / Softball enter scope. — NOT REQUIRED for V1.
-3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope. **— OPEN; entirely derivable from ratified doctrine; owner ratification of the generated draft required.**
+3. The schema block in §17 is filled for every V1 category in §4 (Pitching) / §5 (Hitting) using the ratified answers. §6 (Throwing) §17 fill is deferred with Throwing scope. **— BP+BH §17 schemas DRAFTED 2026-06-09 in §4.1 / §5.1 per §0.28 (Phase 0.10). SATISFIED pending owner ratification of the generated draft.**
 4. An RFL entry (RFL-080 lineage, extended by RFL-089 and RFL-090) records the ratification with date and version pin. **— OPEN; filed alongside §17 ratification.**
 
 Until those conditions are met:
