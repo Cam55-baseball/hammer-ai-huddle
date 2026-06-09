@@ -1407,6 +1407,265 @@ Each category in §4 fills out the per-category schema in §17. Weights, hierarc
 
 ---
 
+### §4.1 — Filled BP §17 Schemas (Phase 0.10, doctrine-derived)
+
+All 11 categories below are filled per the §0.28 Doctrine Binding Map. Weights ratified §0.27 C1. Display = band (ENCOURAGED / DEVELOPING / EARNED) with numeric raw on click (CDR-1 = D, §14). Age-neutral at V1 (§0.27 C3 = DEFER). Drill / Video / Roadmap / clip slots render as visible missingness per §3 Law 7 until human tagging completes.
+
+```text
+Category: Eyes On Target
+  Engine binding:        visual_stability (pieV2Signals)
+  Display format:        Pass/Fail chip (boolean gate per §14, CDR-1=D) + raw "eyes on target at peak leg lift" frame on click
+  Hierarchy rank:        Non-Negotiable (gate per §0.7-style philosophical truth for pitching delivery start; §16 C2 = A)
+  Weight (athlete view): n/a — gate
+  What is it:            Whether your eyes lock onto the target at peak leg lift, before any forward movement toward the plate.
+  Why it matters:        Vision leads the body. A delivery that starts without the eyes already on target leaks accuracy, command, and confidence before the front foot even moves.
+  If poor → performance: Pitches drift off-target because the body is aiming at something the eyes have not yet committed to.
+  If poor → durability:  Late visual commitment forces compensations down the chain — head, shoulders, and hips chase the target instead of moving together — which loads the arm to fix what the eyes missed.
+  If poor → efficiency:  Energy bleeds into mid-delivery corrections instead of going to the ball.
+  If poor → consistency: Command swings rep-to-rep because the visual anchor is variable.
+  How to improve:        Treat the eyes as the first rep of every pitch. Lock the target before the lift peaks; only then let the body go.
+  Drill IDs:             <pending tagging — §3 Law 7 visible missingness; seed from pieV2 common_deficiencies for visual_stability>
+  Video IDs:             <pending tagging — §8 taxonomy: ≥1 reference_good + ≥1 corrective>
+  Roadmap step:          <pending tagging — §9 deterministic next-step>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach tone variants per §10 + §16 I envelope; RR-5 (no invented feelings, no destiny framing) + RR-6 (no diagnosis) bound
+  Confidence rule:       Render Pass/Fail only when frame at peak leg lift is detectable; otherwise show "estimate" chip per CDR-5=D / CDR-7=D
+  Missingness rule:      If peak-leg-lift frame is unscorable, render "Not measured this session — eyes-on-target check needs the lift apex frame" per §3 Law 7 / CDR-6=C / CDR-8=D. Never silent.
+```
+
+```text
+Category: Hip/Shoulder Separation
+  Engine binding:        separation (pieV2Signals)
+  Display format:        Band (ENCOURAGED / DEVELOPING / EARNED) + raw degrees on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 1 (highest BP weight per §0.27 C1)
+  Weight (athlete view): 14 (ratified §0.27 C1)
+  What is it:            The gap between hip rotation and shoulder rotation as you stride toward the plate — hips fire first, shoulders stay closed.
+  Why it matters:        Separation is where pitching power comes from. Without it, the arm has to make the velocity the body refused to.
+  If poor → performance: Velocity ceiling drops; pitches lose late life.
+  If poor → durability:  Arm absorbs the load the core should have carried; shoulder and elbow stress climb.
+  If poor → efficiency:  Effort is spent in the arm instead of the kinetic chain.
+  If poor → consistency: Strike-zone command degrades as the arm compensates rep-to-rep.
+  How to improve:        Train hips to fire while shoulders stay closed — the goal is sequence, not strength.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for separation>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band rendered when separation degrees are within engine-confidence band per CDR-5=D / CDR-7=D; else "estimate"
+  Missingness rule:      If hip and shoulder frames are not co-resolvable this session, render "Not measured this session" per §3 Law 7 / CDR-8=D. Never silent.
+```
+
+```text
+Category: Energy Angle
+  Engine binding:        energy_angle (pieV2Signals)
+  Display format:        Band + raw degrees on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 1
+  Weight (athlete view): 12 (ratified §0.27 C1)
+  What is it:            The angle at which your body delivers force toward the plate — how cleanly the energy points where the ball is going.
+  Why it matters:        Misaligned energy means the body is throwing in one direction while the arm tries to throw in another.
+  If poor → performance: Pitches lose intent and finish flat or short of the target line.
+  If poor → durability:  Off-axis force routes through joints that aren't built to absorb it.
+  If poor → efficiency:  More effort produces less velocity at the plate.
+  If poor → consistency: Pitch-to-pitch shape changes as the body re-aims mid-delivery.
+  How to improve:        Aim the whole body, not just the arm. Energy angle is a posture-and-direction problem, not an arm problem.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for energy_angle>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on full-confidence engine read; else "estimate" per CDR-5=D / CDR-7=D
+  Missingness rule:      "Not measured this session" if delivery line is unresolvable; per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Tempo
+  Engine binding:        tempo (pieV2Signals)
+  Display format:        Band + raw seconds on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 2
+  Weight (athlete view): 10 (ratified §0.27 C1)
+  What is it:            The rhythm of your delivery — how the timing of leg lift, stride, and arm action holds together rep to rep.
+  Why it matters:        Tempo is the metronome that everything else syncs to. Disrupt it and every other category drifts with it.
+  If poor → performance: Command suffers because release timing varies pitch to pitch.
+  If poor → durability:  Rushing or stalling compresses or stretches the kinetic chain in ways it isn't built to absorb.
+  If poor → efficiency:  Energy delivery is mistimed; effort goes up, output goes down.
+  If poor → consistency: Stuff plays differently every outing because the clock keeps changing.
+  How to improve:        Build tempo with intent — a slow delivery isn't smooth, and a rushed one isn't quick.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for tempo>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on full-rep engine confidence; "estimate" if rep count is low per CDR-7=D
+  Missingness rule:      "Not measured this session" if timing landmarks aren't resolvable; per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Stride Length
+  Engine binding:        stride (length component, pieV2Signals)
+  Display format:        Band + raw % body height on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 2
+  Weight (athlete view): 5 (half of §0.27 C1 Stride=10; remaining 5 carried by Stride Consistency per B2b split)
+  What is it:            How far you stride toward the plate, measured as a percentage of your body height.
+  Why it matters:        A short stride leaves velocity on the table; an over-stride hijacks the rest of the delivery.
+  If poor → performance: Velocity ceiling drops or command degrades depending on direction of error.
+  If poor → durability:  Over- or under-stride forces the front side to absorb load it shouldn't.
+  If poor → efficiency:  Energy delivery is wasted on stride correction instead of pitch quality.
+  If poor → consistency: Release point shifts with stride drift.
+  How to improve:        Train stride from the back leg's intent, not by reaching with the front. Distance is a result, not a goal.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for stride>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on full-confidence engine measurement; "estimate" if landing frame is partial per CDR-7=D
+  Missingness rule:      "Not measured this session" if back-ankle-at-lift to front-ankle-at-landing trace is incomplete; per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Stride Consistency
+  Engine binding:        stride (variance component, pieV2Signals)
+  Display format:        Trend chip + variance band on click (CDR-1=D, §11 trend doctrine, §14)
+  Hierarchy rank:        Rank 2
+  Weight (athlete view): 5 (half of §0.27 C1 Stride=10 per B2b split — shipped as a separate category per §0.27)
+  What is it:            How repeatable your stride is across pitches in a session — same distance, every time.
+  Why it matters:        A consistent stride is the foundation under release point. Without it, command is rented, not owned.
+  If poor → performance: Command swings; same pitch shape lands in different places.
+  If poor → durability:  Variable stride forces variable absorption loads on the front side.
+  If poor → efficiency:  Body relitigates the delivery every rep instead of repeating it.
+  If poor → consistency: This category measures consistency directly — variance is the symptom.
+  How to improve:        Build stride as a habit, not a thought. Repetition with intent beats reach with effort.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for stride variance>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Trend chip only renders against a baseline of ≥N comparable reps per §11; else "first measurement" chip per CDR-7=D
+  Missingness rule:      "Not enough comparable reps to declare trend" per §3 Law 7 / CDR-8=D. Single-rep sessions never silently declare a trend (§11).
+```
+
+```text
+Category: Posture
+  Engine binding:        head_stability + hip_alignment (composite per §0.27 B2a)
+  Display format:        Band (composite) + raw component scores on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 2
+  Weight (athlete view): 17 (composite of §0.27 C1 Head Stability=8 + Hip Alignment=9, per §0.27 B2a)
+  What is it:            How stable your head stays and how square your hips remain through the delivery — your platform under the throw.
+  Why it matters:        Posture is the chassis. Everything else — separation, energy angle, command — gets noisy if the chassis tilts.
+  If poor → performance: Command and velocity both suffer because the body is correcting itself mid-pitch.
+  If poor → durability:  Loss of posture routes load through compensating joints, particularly low back and front shoulder.
+  If poor → efficiency:  Energy leaks into staying upright instead of into the ball.
+  If poor → consistency: Release point drifts as posture varies pitch to pitch.
+  How to improve:        Train head and hips together. Posture is a single category for a reason: they win or lose as a pair.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for head_stability + hip_alignment>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Composite band only when both components have full engine confidence; else "estimate" + which component is partial, per CDR-5=D / CDR-7=D
+  Missingness rule:      If either component is unscorable, render the present component + "other component not measured" per §3 Law 7 / CDR-8=D. Never silent.
+```
+
+```text
+Category: Front Side Control
+  Engine binding:        front_side (pieV2Signals)
+  Display format:        Pass/Fail chip at foot plant + band over the delivery + raw on click (CDR-1=D, §14)
+  Hierarchy rank:        Rank 2
+  Weight (athlete view): 9 (ratified §0.27 C1)
+  What is it:            Whether your front side stays closed and absorbs cleanly at foot plant, instead of flying open early.
+  Why it matters:        The front side is the brake the rest of the delivery accelerates against. No brake, no transfer.
+  If poor → performance: Velocity and command both bleed because energy escapes through the front shoulder.
+  If poor → durability:  Arm finishes the work the front side wouldn't, raising shoulder and elbow stress.
+  If poor → efficiency:  Force transfer is incomplete.
+  If poor → consistency: Release point drifts as front-side firmness varies.
+  How to improve:        Train the front side to be a wall, not a door. Quiet, firm, on time.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for front_side>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Pass/Fail on engine-confident foot-plant frame; band on full-delivery confidence; else "estimate" per CDR-7=D
+  Missingness rule:      "Not measured this session" if foot-plant frame is unresolvable; per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Head Direction
+  Engine binding:        head_alignment (pieV2Signals)
+  Display format:        Band + raw on click (CDR-1=D, §14)
+  Hierarchy rank:        Developmental (per §0.27 C1 weight tier; age-neutral V1 per §0.27 C3)
+  Weight (athlete view): 7 (ratified §0.27 C1)
+  What is it:            Where your head points through the delivery — toward the target, or drifting off-line.
+  Why it matters:        Head direction leads body direction. Misalignment here pulls energy angle with it.
+  If poor → performance: Command degrades because the body is aiming where the head is, not where the target is.
+  If poor → durability:  Off-line head forces compensations through neck and front shoulder.
+  If poor → efficiency:  Energy is spent re-aiming mid-delivery.
+  If poor → consistency: Release point drifts with head drift.
+  How to improve:        Eyes lead, head follows, body follows. Train the chain in that order.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for head_alignment>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on full engine confidence; "estimate" otherwise per CDR-7=D
+  Missingness rule:      "Not measured this session" if head trajectory is unresolvable; per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Shoulder Plane
+  Engine binding:        shoulder_level (pieV2Signals)
+  Display format:        Band + raw on click (CDR-1=D, §14)
+  Hierarchy rank:        Developmental
+  Weight (athlete view): 7 (ratified §0.27 C1)
+  What is it:            The tilt of your shoulders through the delivery — level, intentional, and matched to your arm slot.
+  Why it matters:        Shoulder plane shapes the pitch. A plane that doesn't match the intent of the pitch produces shape you didn't ask for.
+  If poor → performance: Pitches finish with shapes that don't match your stuff.
+  If poor → durability:  Tilt mismatches load the shoulder unevenly.
+  If poor → efficiency:  Energy is spent compensating for plane mid-pitch.
+  If poor → consistency: Pitch shape varies as plane varies.
+  How to improve:        Match shoulder plane to arm slot to pitch intent — train the three as a single system.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for shoulder_level>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on full engine confidence; "estimate" otherwise per CDR-7=D
+  Missingness rule:      "Not measured this session" if shoulder-line frame is unresolvable; per §3 Law 7 / CDR-8=D
+```
+
+```text
+Category: Rear Foot Drag
+  Engine binding:        rear_foot_drag (pieV2Signals)
+  Display format:        Band + raw on click (CDR-1=D, §14)
+  Hierarchy rank:        Developmental
+  Weight (athlete view): 7 (ratified §0.27 C1)
+  What is it:            How your back foot drags through and after release — a fingerprint of how cleanly your back side transferred force.
+  Why it matters:        The drag pattern tells you whether the back side delivered everything it had, or held back.
+  If poor → performance: Incomplete back-side transfer caps velocity and finish.
+  If poor → durability:  Energy that didn't go through the back side has to come from somewhere — usually the arm.
+  If poor → efficiency:  Incomplete transfer wastes the effort already invested in the back leg.
+  If poor → consistency: Inconsistent drag = inconsistent transfer = inconsistent pitches.
+  How to improve:        Finish through the pitch, not at it. Drag is what completion looks like.
+  Drill IDs:             <pending tagging — seed from pieV2 common_deficiencies for rear_foot_drag>
+  Video IDs:             <pending tagging — §8 taxonomy>
+  Roadmap step:          <pending tagging — §9>
+  Good-looks-like clip:  <pending tagging — §8>
+  Bad-looks-like clip:   <pending tagging — §8>
+  Coach Hammer voice:    athlete · parent · coach per §10 + §16 I; RR-5 / RR-6 bound
+  Confidence rule:       Band on full engine confidence; "estimate" otherwise per CDR-7=D
+  Missingness rule:      "Not measured this session" if rear-foot trace is unresolvable; per §3 Law 7 / CDR-8=D
+```
+
+---
+
 ## §5 — Hitting Report Card Architecture (Proposal — requires ratification)
 
 **Discipline:** Baseball Hitting + Softball Hitting (shared structure; Softball Slap is a variant per §16 B5).
