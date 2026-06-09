@@ -2091,4 +2091,4 @@ Until those conditions are met:
 
 ---
 
-*End of Hammers Report Card Constitution v0.11 — STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) / §17 OPEN.*
+*End of Hammers Report Card Constitution v0.12 — STATUS: §0 RATIFIED — §16 FULLY CLOSED (V1) — §17 V1 DRAFTED (§4.1 + §5.1), AWAITING OWNER RATIFICATION.*
