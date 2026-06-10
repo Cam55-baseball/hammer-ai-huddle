@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { ReportCardTile } from "./ReportCardTile";
 import { TileExplainerSheet } from "./TileExplainerSheet";
+import { ReportCardGradeRibbon } from "./ReportCardGradeRibbon";
+import { gradeFromTiles } from "@/lib/reportCard/grade";
 import { getReportCardSpec, type AnalysisLike, type ReportCardTileSpec } from "@/lib/reportCard";
 
 interface Props {
