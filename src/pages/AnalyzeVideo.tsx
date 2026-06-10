@@ -73,6 +73,9 @@ export default function AnalyzeVideo() {
       is_first_analysis: boolean;
       historical_scores?: number[];
     };
+    /** Hammer Report Card — structured per-tile metrics with confidence/missingness. */
+    metrics?: Record<string, unknown> | null;
+    report_card_contract_id?: string | null;
   } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
