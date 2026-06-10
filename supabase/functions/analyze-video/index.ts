@@ -1609,7 +1609,10 @@ Deno.serve(async (req) => {
     const causalSuffix = `\n\n=== UNIVERSAL CAUSE→EFFECT CONTRACT (MANDATORY) ===
 Every fault you surface in feedback/drill recommendations MUST be expressed as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step roadmap with the appropriate domain ladder. Two registers: athlete voice + a one-line "Coach's note:" with the technical mechanism. Multi-violation diagnoses stack chains in phase order. Severity model: NN hard cap 50, NN soft cap 70, standard cap 80, secondary 75/85, two-or-more 65, elite +5. Domain for this analysis: ${moduleDomain}.
 === END CONTRACT ===`;
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix;
+    // Hammer Report Card: per-discipline structured metrics block (additive).
+    const reportCardContract = getContractFor(module, sport);
+    const metricsPromptBlock = reportCardContract ? buildMetricsPromptBlock(reportCardContract) : "";
+    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock;
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
@@ -1869,8 +1872,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                     },
                     required: ["improvements", "regressions", "neutral", "overall_trend", "is_first_analysis"]
                   }
+                  ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
                 },
-                required: ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard"]
+                required: reportCardContract
+                  ? ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard", "metrics"]
+                  : ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard"]
               }
             }
           }
