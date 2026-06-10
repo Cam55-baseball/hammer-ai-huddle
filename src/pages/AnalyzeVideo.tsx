@@ -29,7 +29,8 @@ import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
-import { PieV2FrameTagger } from "@/components/micro-layer/PieV2FrameTagger";
+import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
+import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
