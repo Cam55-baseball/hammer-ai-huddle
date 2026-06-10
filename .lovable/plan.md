@@ -1,107 +1,58 @@
-# Hammer Report Card — Finish Integration + Visual Spectacle
+## Goal
+Ship the remainder of the Hammer Report Card overhaul: get the `analyze-video` edge function deploying with the structured `metrics{}` block, wire the on-demand backfill, and surface the new visual card everywhere it belongs.
 
-Building on the contracts, grade engine, and metric readers already shipped. Two tracks in parallel: (A) wire the system end-to-end so "Not detected" disappears for real captures, (B) turn the card into the most visually loved surface in the app.
+## 1. Deploy fix — `analyze-video`
+- Replace the invalid Deno object-spread used to build the dynamic tool schema with an explicit `Object.fromEntries(contract.tiles.map(...))` builder.
+- Validate the model response against the contract before persisting: drop unknown keys, coerce numbers, default `confidence` to `0.5`, force `missing:true` when value is null/NaN.
+- Persist `metrics` to `ai_analysis.metrics` and also stamp `ai_analysis.contract_version` so the client knows which contract produced it.
+- Redeploy and curl-test with one BP and one BH sample to confirm metrics come back populated.
 
----
+## 2. Backfill — `recompute-report-card`
+- New edge function: input `{ video_id }`. Loads the saved video + transcript/analysis text, re-runs the same structured-metrics extraction path used by `analyze-video` (shared helper in `_shared/extractMetrics.ts`), writes back to `ai_analysis.metrics` + `contract_version`.
+- UI: "Recompute Report Card" button on
+  - Saved video detail
+  - Library video detail
+  - CoachAthleteDetail session card
+- Button calls `supabase.functions.invoke('recompute-report-card', { body: { video_id }})`, then invalidates the report-card query.
 
-## Track A — Make it actually work everywhere
+## 3. Cross-app surfaces
+- **Library video detail**: render `HammerReportCard` when `ai_analysis.metrics` exists; otherwise show empty state with Recompute CTA.
+- **CoachAthleteDetail**: same card per athlete session, read-only.
+- **Progress Dashboard**: add `ReportCardTrendStrip` (small) using `useReportCardTrend` hook — last 5 grades as colored chips + sparkline of 0–100 score.
+- **Monthly Report / Vault Recap**: aggregate block showing
+  - Average grade
+  - Non-negotiable pass rate %
+  - Top 3 regressions (tiles whose pass-rate dropped most month-over-month)
 
-### A1. `analyze-video` returns structured `metrics{}`
-- Build the AI request schema dynamically from each discipline contract (`metricKeys[]` → JSON schema with `{value:number|null, confidence:0–1, missing?:boolean, missing_reason?:string}`).
-- Keep existing narrative prose untouched; add `metrics` as a sibling field in `Output.object`.
-- Inject per-metric prompt hints (unit, threshold, what to look for) from the contract into the system prompt so the model fills real numbers, not nulls.
-- Persist `metrics` JSON on the analysis row alongside narrative.
+## 4. Polish on the spectacle layer
+- Add Framer Motion mount stagger (ribbon → rail → tiles) — currently only count-up animates.
+- Add `prefers-reduced-motion` guard to disable foil sweep + tilt.
+- Add share-card export (html-to-image) behind a "Share" button — 9:16 PNG.
 
-### A2. Tile compute reads the new payload
-- `metricReaders.ts` already returns `{value, confidence, missing, reason}`. Wire `HammerReportCard` to compute every tile from `metrics{}` first, fall back to legacy narrative parsing only if `metrics` is absent (older rows).
-- Confidence < 0.5 → amber dot + tooltip "Low confidence — verify on replay".
-- Missing → existing "Not detected" state but now with the model's `missing_reason` (e.g. "Camera angle hid front hip").
+## 5. Out of scope
+- SB windmill / throwing / SH visual upgrades (BP + BH only this pass).
+- Real-time tile updates during analysis.
+- Any schema migration — `ai_analysis.metrics` JSON column already exists.
 
-### A3. Backfill — "Recompute Report Card" button
-- New edge fn `recompute-report-card` that re-runs analyze-video in metrics-only mode against a stored video URL and patches the row.
-- Button lives on Library/Saved-video detail and Coach view. Disabled while running, toast on success.
+## Technical notes
+```
+src/
+  components/report-card/hammer/
+    HammerReportCard.tsx          (mount stagger, share button)
+    visuals/ShareCardExport.tsx   (new)
+  hooks/useReportCardTrend.ts     (new)
+  components/progress/ReportCardTrendStrip.tsx (new)
+  components/library/...          (Recompute button + card mount)
+  pages/CoachAthleteDetail.tsx    (card mount)
+  components/recap/ReportCardRecapBlock.tsx (new)
+supabase/functions/
+  _shared/extractMetrics.ts       (new — shared by analyze-video + recompute)
+  _shared/reportCardContracts.ts  (exists)
+  analyze-video/index.ts          (deploy fix + use extractMetrics)
+  recompute-report-card/index.ts  (new)
+```
 
-### A4. Cross-app surfaces
-- **Library / Saved Video Detail** — render full `<HammerReportCard />` inline.
-- **CoachAthleteDetail** — same card per session, plus a compact "last 5 sessions" strip.
-- **Progress Dashboard** — `useReportCardTrend()` hook → per-metric pass-rate sparkline tiles for the athlete's last N sessions.
-- **Monthly / Vault Recap** — aggregate non-negotiable pass rate %, top 3 regressions, top 3 improvements; reuse grade ribbon as the hero.
-
-### A5. Cleanup
-- Remove vestigial `Uhrc*` components and `hittingV1Schema.ts` once new path is verified.
-
----
-
-## Track B — Make it a spectacle
-
-Design language: **stadium scoreboard meets premium fitness tracker meets trading-card foil**. Dark glassy base, neon team-color accents, weighty typography, animated numerics, tactile motion. Mobile-first (440px is current viewport) — card has to look incredible on a phone first, desktop second.
-
-### B1. The Grade Ribbon (hero)
-- Massive letter grade (A–F) rendered in a heavy display face (Bebas Neue or Archivo Black), 96–120px on mobile.
-- Grade letter sits inside a **holographic foil card** — animated conic-gradient shimmer behind the letter, subtle parallax tilt on device orientation (gyro) and pointer move on desktop.
-- Color tier per grade: A=emerald glow, B=cyan, C=amber, D=orange, F=red. All via HSL tokens, both light/dark mode.
-- Animated count-up of the 0–100 score on mount (spring, ~900ms).
-- Coverage chip ("8/10 measured") with a tiny radial progress.
-- Failed-non-negotiable chip pulses gently red.
-
-### B2. Tile Meters
-- Replace flat pass/fail boxes with **radial dial meters** (SVG arc, 0→threshold→max). Pointer animates from 0 on mount with spring physics.
-- Pass zone = emerald arc gradient, warning band = amber, fail band = red. The dial *itself* shows where the athlete landed against the threshold — instantly readable.
-- Tile background: subtle dark glass (`backdrop-blur` + `bg-card/60`), 1px gradient border that brightens on the pass color.
-- Tap → tile flips (3D) to reveal: raw value, threshold, confidence bar, "why this matters" microcopy from the contract, replay timestamp link.
-- Non-negotiable tiles get a small ⚡ bolt badge in the corner.
-
-### B3. Phase Rail
-- Horizontal "P1 → P2 → P3 → P4" rail above the tiles (BH) / equivalent grouping (BP).
-- Each phase node is a glowing orb sized by tile count, colored by aggregate phase pass-rate. Connecting line animates fill on mount.
-- Tap a phase → tiles below filter/highlight to that phase.
-
-### B4. Motion + polish
-- Mount sequence: ribbon foil sweep → score count-up → phase rail fill → tiles stagger-in (50ms each) with scale + fade.
-- Use Framer Motion (already in stack). Respect `prefers-reduced-motion` — fall back to instant fades.
-- Haptic-style micro-bounce on tile tap (mobile).
-- Optional **"Share Card" mode**: full-bleed 9:16 export-ready layout with athlete name, date, grade, top 3 tiles, hammer logo watermark. Renders to PNG via `html-to-image` for share-sheet/IG-story export.
-
-### B5. Sound (optional, off by default)
-- Single subtle "score lock-in" tick when grade reveals. Toggle in settings; never auto-plays.
-
-### B6. Design tokens
-- Add to `index.css`:
-  - `--grade-a/b/c/d/f` HSL pairs (color + glow).
-  - `--foil-gradient` conic.
-  - `--meter-pass / --meter-warn / --meter-fail` arcs.
-  - `--glass-card` surface.
-- All tile/ribbon/meter components consume tokens — zero hardcoded hex.
-
----
-
-## Files (Track A)
-- edit `supabase/functions/analyze-video/index.ts` (+ shared contract mirror under `supabase/functions/_shared/reportCardContracts.ts`)
-- new `supabase/functions/recompute-report-card/index.ts`
-- edit `HammerReportCard.tsx`, `ReportCardTile.tsx`, `ReportCardGradeRibbon.tsx`
-- new `src/hooks/useReportCardTrend.ts`
-- edit Library detail page, `CoachAthleteDetail.tsx`, `ProgressDashboard.tsx`, monthly/vault recap edge fn
-- delete `Uhrc*`, `hittingV1Schema.ts`
-
-## Files (Track B)
-- new `src/components/report-card/hammer/visuals/FoilGradeCard.tsx`
-- new `src/components/report-card/hammer/visuals/RadialMeter.tsx`
-- new `src/components/report-card/hammer/visuals/PhaseRail.tsx`
-- new `src/components/report-card/hammer/visuals/TileFlip.tsx`
-- new `src/components/report-card/hammer/ShareCard.tsx` (+ install `html-to-image`)
-- edit `src/index.css` — grade/foil/meter tokens
-- edit `tailwind.config.ts` — register new color tokens
-
-## Validation
-- Run real analysis → metrics populated, tiles show values not "Not detected".
-- Letter grade matches non-negotiable rules (1 fail = D cap, 2+ = F cap).
-- Backfill button patches an old row.
-- Trend strip renders across ≥2 sessions.
-- Card looks incredible at 440×782 (current viewport), still clean at desktop.
-- Reduced-motion users see static version.
-- Share Card exports a clean 1080×1920 PNG.
-
-## Out of scope
-- SB windmill-specific tiles, throwing/SH visual upgrades (same engine, but visual spectacle pass is BP+BH first).
-- Real-time tile updates during streaming analysis.
-- ML pose estimation.
+## Questions before I build
+1. **Recompute cost guard** — should I rate-limit recompute (e.g. 1/min/user, or only allow if `contract_version` is stale)? Or unlimited for now?
+2. **Trend strip placement** — Progress Dashboard top (above existing tiles) or inside the existing "Recent Analyses" section?
+3. **Share card** — include athlete name + date watermark, or keep it anonymous so they can share publicly without exposing identity?
