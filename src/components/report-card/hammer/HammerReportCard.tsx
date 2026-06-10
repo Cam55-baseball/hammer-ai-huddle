@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle } from "lucide-react";
 import { ReportCardTile } from "./ReportCardTile";
 import { TileExplainerSheet } from "./TileExplainerSheet";
-import { ReportCardGradeRibbon } from "./ReportCardGradeRibbon";
+import { FoilGradeCard } from "./visuals/FoilGradeCard";
+import { PhaseRail, type PhaseNode } from "./visuals/PhaseRail";
 import { gradeFromTiles } from "@/lib/reportCard/grade";
 import { getReportCardSpec, type AnalysisLike, type ReportCardTileSpec } from "@/lib/reportCard";
 
@@ -15,69 +15,79 @@ interface Props {
 export function HammerReportCard({ sport, module, analysis }: Props) {
   const spec = useMemo(() => getReportCardSpec(sport, module), [sport, module]);
   const [openTile, setOpenTile] = useState<ReportCardTileSpec | null>(null);
+  const [activePhase, setActivePhase] = useState<string | null>(null);
 
   if (!spec) {
     return (
       <div className="rounded-2xl border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-        Report card for this analysis type is coming soon. Use the Analysis tab for full details.
+        Report card for this analysis type is coming soon.
       </div>
     );
   }
 
   const tilesWithState = spec.tiles.map((t) => ({ spec: t, state: t.compute(analysis) }));
-
   const grade = useMemo(() => gradeFromTiles(tilesWithState), [tilesWithState]);
 
-  const nonNegFailed = tilesWithState.some(
-    (t) => t.spec.nonNegotiable && t.state.status === "fail",
-  );
+  // Build phase summary for the rail (BH only)
+  const phases: PhaseNode[] = useMemo(() => {
+    if (!spec.groupByPhase) return [];
+    const map = new Map<string, { passed: number; measured: number; total: number }>();
+    for (const t of tilesWithState) {
+      const k = t.spec.phase ?? "Other";
+      const e = map.get(k) ?? { passed: 0, measured: 0, total: 0 };
+      e.total += 1;
+      if (t.state.status !== "missing") {
+        e.measured += 1;
+        if (t.state.status === "pass") e.passed += 1;
+      }
+      map.set(k, e);
+    }
+    return Array.from(map.entries()).map(([key, v]) => ({
+      key,
+      label: key,
+      count: v.total,
+      passRate: v.measured > 0 ? v.passed / v.measured : 0,
+    }));
+  }, [tilesWithState, spec.groupByPhase]);
+
+  const visibleTiles = activePhase
+    ? tilesWithState.filter((t) => (t.spec.phase ?? "Other") === activePhase)
+    : tilesWithState;
 
   // Group by phase if requested
   const groups = spec.groupByPhase
     ? Object.entries(
-        tilesWithState.reduce<Record<string, typeof tilesWithState>>((acc, t) => {
+        visibleTiles.reduce<Record<string, typeof visibleTiles>>((acc, t) => {
           const phase = t.spec.phase ?? "Other";
           (acc[phase] ||= []).push(t);
           return acc;
         }, {}),
       )
-    : ([["", tilesWithState]] as [string, typeof tilesWithState][]);
+    : ([["", visibleTiles]] as [string, typeof visibleTiles][]);
 
   return (
     <div className="space-y-5">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-xl font-bold">Hammer Report Card</h3>
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-          {spec.disciplineLabel}
-        </span>
-      </div>
+      <FoilGradeCard grade={grade} disciplineLabel={spec.disciplineLabel} />
 
-      {nonNegFailed && (
-        <div className="flex items-start gap-3 rounded-xl border border-destructive bg-destructive/10 p-3 text-destructive">
-          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
-          <div className="text-sm">
-            <strong className="font-bold uppercase tracking-wider">Non-Negotiable Failed</strong>
-            <p className="mt-0.5 opacity-90">
-              One or more non-negotiable categories did not pass. Tap each to learn how to fix it.
-            </p>
-          </div>
-        </div>
+      {spec.groupByPhase && phases.length > 0 && (
+        <PhaseRail phases={phases} activePhase={activePhase} onSelect={setActivePhase} />
       )}
 
       {groups.map(([phase, tiles]) => (
-        <div key={phase || "all"} className="space-y-3">
+        <div key={phase || "all"} className="space-y-2.5">
           {phase && (
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
               {phase}
             </h4>
           )}
           <div className="grid grid-cols-2 gap-3">
-            {tiles.map(({ spec: tileSpec, state }) => (
+            {tiles.map(({ spec: tileSpec, state }, i) => (
               <ReportCardTile
                 key={tileSpec.key}
                 spec={tileSpec}
                 state={state}
                 onOpen={() => setOpenTile(tileSpec)}
+                index={i}
               />
             ))}
           </div>

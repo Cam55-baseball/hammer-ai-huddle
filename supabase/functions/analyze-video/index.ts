@@ -2,6 +2,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
 import { ENGINE_VERSION, sha256Hex } from "../_shared/asbEmit.ts";
+import { getContractFor, buildMetricsSchema, buildMetricsPromptBlock } from "../_shared/reportCardContracts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1608,7 +1609,10 @@ Deno.serve(async (req) => {
     const causalSuffix = `\n\n=== UNIVERSAL CAUSE→EFFECT CONTRACT (MANDATORY) ===
 Every fault you surface in feedback/drill recommendations MUST be expressed as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step roadmap with the appropriate domain ladder. Two registers: athlete voice + a one-line "Coach's note:" with the technical mechanism. Multi-violation diagnoses stack chains in phase order. Severity model: NN hard cap 50, NN soft cap 70, standard cap 80, secondary 75/85, two-or-more 65, elite +5. Domain for this analysis: ${moduleDomain}.
 === END CONTRACT ===`;
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix;
+    // Hammer Report Card: per-discipline structured metrics block (additive).
+    const reportCardContract = getContractFor(module, sport);
+    const metricsPromptBlock = reportCardContract ? buildMetricsPromptBlock(reportCardContract) : "";
+    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock;
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
@@ -1868,8 +1872,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                     },
                     required: ["improvements", "regressions", "neutral", "overall_trend", "is_first_analysis"]
                   }
+                  ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
                 },
-                required: ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard"]
+                required: reportCardContract
+                  ? ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard", "metrics"]
+                  : ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard"]
               }
             }
           }
@@ -1941,6 +1948,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let originalAiScore = 75;
     let scoreWasAdjusted = false;
     
+    let metrics: Record<string, unknown> | null = null;
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
@@ -1951,6 +1959,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
         violations = analysisArgs.violations || {};
+        if (analysisArgs.metrics && typeof analysisArgs.metrics === "object") {
+          metrics = analysisArgs.metrics;
+          console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
+        }
         
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
         // Scan feedback text for violation keywords - override AI flags if needed
@@ -2119,6 +2131,9 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       score_adjusted: scoreWasAdjusted,
       original_ai_score: originalAiScore,
       model_used: MODEL_ID,
+      // Hammer Report Card structured measurements (additive).
+      metrics: metrics ?? null,
+      report_card_contract_id: reportCardContract?.id ?? null,
       // Canonical analyzer provenance — additive, never mutated retroactively.
       engine_version: ENGINE_VERSION,
       model_id: MODEL_ID,
