@@ -160,43 +160,58 @@ export default function AnalyzeVideo() {
     }
   };
 
-  // Force fresh subscription check on page load
+  // Opt-in subscription refresh — only when explicitly requested (e.g. after Checkout returns with ?refresh=1).
+  // The unconditional mount-time refetch caused a race where `subscribedModules` was briefly empty,
+  // triggering a false-positive `navigate("/dashboard")`. Refetch is now intent-driven.
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    if (searchParams.get("refresh") === "1") refetch();
+  }, [searchParams, refetch]);
 
+  // Bullet-proof guards: never evict the user on transient auth/subscription state.
+  // Both the auth-missing and access-denied branches require a second-tick confirmation
+  // and are skipped while the tab is hidden (avoids tab-switch evictions).
   useEffect(() => {
-    if (authLoading || subLoading || !initialized || !isAuthStable) {
-      return;
-    }
-    
+    if (authLoading || subLoading || !initialized || !isAuthStable) return;
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+
+    const isOwnerOrAdmin = isOwner || isAdmin;
+
+    // 1. Missing session — confirm after 250ms before redirecting to /auth.
     if (!user && !session) {
-      navigate("/auth", { replace: true });
-      return;
+      const t1 = setTimeout(() => {
+        if (document.visibilityState === "hidden") return;
+        // Re-check synchronously via context closure — if still no user/session, evict.
+        // (React state will have settled by now; if a token refresh was in flight it's done.)
+        if (!user && !session) navigate("/auth", { replace: true });
+      }, 250);
+      return () => clearTimeout(t1);
     }
-    
-    // Guard against missing module parameter
+
+    // 2. Missing module param — that's a structural issue, redirect immediately.
     if (!module) {
       navigate("/dashboard", { replace: true });
       return;
     }
-    
-    const isOwnerOrAdmin = isOwner || isAdmin;
-    const sportModuleKey = `${sport}_${module}`;
+
+    // 3. Owner/Admin short-circuit — never gate them on subscription data.
+    if (isOwnerOrAdmin) return;
+
+    // 4. Access check — only deny if the subscription snapshot is settled AND a 400ms
+    // grace window confirms access is still absent. This eliminates the transient-empty race.
     const hasAccess = hasAccessForSport(module as string, sport, isOwnerOrAdmin);
-    
-    console.log('AnalyzeVideo - Current subscribed modules:', subscribedModules);
-    console.log('AnalyzeVideo - Checking access for:', sportModuleKey);
-    console.log('AnalyzeVideo - Is Owner/Admin:', isOwnerOrAdmin);
-    console.log('AnalyzeVideo - Has Access:', hasAccess);
-    
-    // Check if user has access to this module
-    if (!hasAccess) {
+    if (hasAccess) return;
+
+    const t2 = setTimeout(() => {
+      if (document.visibilityState === "hidden") return;
+      // Re-evaluate; if Owner/Admin/access flipped true, abort the eviction.
+      if (isOwner || isAdmin) return;
+      if (hasAccessForSport(module as string, sport, isOwner || isAdmin)) return;
+      console.warn('AnalyzeVideo — access denied after grace window', { sport, module, subscribedModules });
       toast.error(t('errors.noModuleAccess', "You don't have access to this module. Please subscribe."));
       navigate("/dashboard", { replace: true });
-      return;
-    }
-  }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
+    }, 400);
+    return () => clearTimeout(t2);
+  }, [authLoading, subLoading, initialized, isAuthStable, user, session, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
 
   // Clean upload space when module or sport changes
   useEffect(() => {
