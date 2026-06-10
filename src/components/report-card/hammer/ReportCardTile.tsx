@@ -41,7 +41,7 @@ export function ReportCardTile({ spec, state, onOpen }: Props) {
       {/* Body */}
       <div className="flex flex-1 items-center justify-center py-2">
         {isMissing ? (
-          <MissingBody />
+          <MissingBody reason={"missing_reason" in state ? state.missing_reason : undefined} />
         ) : spec.mode === "pass_fail" ? (
           <PassFailBadge pass={isPass} />
         ) : spec.mode === "raw_passed" ? (
@@ -54,19 +54,28 @@ export function ReportCardTile({ spec, state, onOpen }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="mt-3 flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-        <Lock className="h-3 w-3 opacity-60" />
-        <span>{spec.standard}</span>
+      <div className="mt-3 flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-1 truncate">
+          <Lock className="h-3 w-3 opacity-60 flex-shrink-0" />
+          <span className="truncate">{spec.standard}</span>
+        </div>
+        {!isMissing && "confidence" in state && typeof state.confidence === "number" && state.confidence < 0.5 && (
+          <span
+            title={`Low measurement confidence (${Math.round(state.confidence * 100)}%)`}
+            className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500"
+          />
+        )}
       </div>
     </button>
   );
 }
 
-function MissingBody() {
+function MissingBody({ reason }: { reason?: string }) {
   return (
-    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+    <div className="flex flex-col items-center gap-1 text-muted-foreground px-2 text-center">
       <AlertCircle className="h-6 w-6 opacity-50" />
-      <span className="text-xs">Not detected yet</span>
+      <span className="text-xs">Not detected</span>
+      {reason && <span className="text-[10px] opacity-75 line-clamp-2">{reason}</span>}
     </div>
   );
 }
