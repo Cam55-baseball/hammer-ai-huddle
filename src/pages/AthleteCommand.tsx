@@ -7,7 +7,7 @@ import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingS
 import { NotificationBell } from "@/components/command/NotificationBell";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { RecentEventsPreview } from "@/components/command/cards/RecentEventsPreview";
-import { UhrcAthleteSection } from "@/components/report-card/UhrcAthleteSection";
+// UhrcAthleteSection removed — Hammer Report Card now lives inside each video analysis result.
 import { HammerOnboardingChat } from "@/components/hammer/HammerOnboardingChat";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
 import { HammerChat } from "@/components/hammer/HammerChat";
@@ -52,9 +52,7 @@ export default function AthleteCommand() {
 
         <HammerOnboardingChat />
 
-        <div className="mt-4">
-          <UhrcAthleteSection />
-        </div>
+        {/* UHRC report card removed from Command Center — now lives per-analysis under each video result. */}
 
         <CommandCenterSection defaultSignalsOpen />
 
