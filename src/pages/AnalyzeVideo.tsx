@@ -31,6 +31,7 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
+import { RecomputeReportCardButton } from "@/components/report-card/hammer/RecomputeReportCardButton";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -73,6 +74,9 @@ export default function AnalyzeVideo() {
       is_first_analysis: boolean;
       historical_scores?: number[];
     };
+    /** Hammer Report Card — structured per-tile metrics with confidence/missingness. */
+    metrics?: Record<string, unknown> | null;
+    report_card_contract_id?: string | null;
   } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
@@ -761,7 +765,16 @@ export default function AnalyzeVideo() {
 
                 {analysisView === "report_card" ? (
                   <div className="space-y-6">
-                    <HammerReportCard sport={sport} module={module} analysis={analysis} />
+                    <HammerReportCard sport={sport} module={module} analysis={analysis as any} />
+
+                    {currentVideoId && (
+                      <RecomputeReportCardButton
+                        videoId={currentVideoId}
+                        onRecomputed={(metrics) =>
+                          setAnalysis((prev) => (prev ? { ...prev, metrics } : prev))
+                        }
+                      />
+                    )}
 
                     <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
                       <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">

@@ -1871,7 +1871,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                       }
                     },
                     required: ["improvements", "regressions", "neutral", "overall_trend", "is_first_analysis"]
-                  }
+                  },
                   ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
                 },
                 required: reportCardContract
@@ -2217,6 +2217,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         drills,
         scorecard,
         mocap_data,
+        // Hammer Report Card — surface structured metrics to the client so the
+        // grade ribbon + tiles render without an extra round-trip.
+        metrics: metrics ?? null,
+        report_card_contract_id: reportCardContract?.id ?? null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
