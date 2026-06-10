@@ -754,7 +754,29 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <Card className="p-4 sm:p-6">
-                <h3 className="text-2xl font-bold mb-6">{t('videoAnalysis.analysisResults')}</h3>
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-2xl font-bold">{t('videoAnalysis.analysisResults')}</h3>
+                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                </div>
+
+                {analysisView === "report_card" ? (
+                  <div className="space-y-6">
+                    <HammerReportCard sport={sport} module={module} analysis={analysis} />
+
+                    <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
+                      <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
+                        <BookMarked className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
+                        <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
+                      </Button>
+                      <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
+                        <Home className="h-4 w-4 xs:hidden" />
+                        <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
+                        <span className="xs:hidden">{t('navigation.dashboard')}</span>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
                 <div className="space-y-6">
                   {/* Summary - Key Findings shown first for actionable feedback */}
                   {analysis.summary && analysis.summary.length > 0 && (
