@@ -25,6 +25,7 @@ import { DailyOutcomeInlineBanner } from '@/components/identity/DailyOutcomeInli
 import { useMPIScores } from '@/hooks/useMPIScores';
 import { useAIPrompts } from '@/hooks/useAIPrompts';
 import { getGradeLabel } from '@/lib/gradeLabel';
+import { ReportCardTrendStrip } from '@/components/progress/ReportCardTrendStrip';
 import { Activity, Lightbulb, TrendingUp } from 'lucide-react';
 
 function PracticeIntelligenceCard() {
@@ -95,6 +96,7 @@ Confidence: ${snapshot.development_confidence}%
         {/* Always-visible top sections */}
         <NNSuggestionPanel />
         <PracticeIntelligenceCard />
+        <ReportCardTrendStrip module="hitting" title="Hitting report card trend" />
         <DualStreakDisplay />
         <ActivityAnalytics selectedSport={selectedSport} />
         <LoadDashboard />
