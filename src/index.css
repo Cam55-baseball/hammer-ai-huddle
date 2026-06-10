@@ -558,3 +558,10 @@ All colors MUST be HSL.
   .rc-orb-glow { animation: none !important; }
 }
 
+@media print {
+  .rc-print-card { background: white !important; color: black !important; }
+  .rc-print-card * { transform: none !important; animation: none !important; box-shadow: none !important; }
+  .rc-print-card .rc-foil { display: none !important; }
+  [data-share-export-exclude="true"] { display: none !important; }
+}
+

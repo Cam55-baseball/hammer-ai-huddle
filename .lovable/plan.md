@@ -1,58 +1,57 @@
-## Goal
-Ship the remainder of the Hammer Report Card overhaul: get the `analyze-video` edge function deploying with the structured `metrics{}` block, wire the on-demand backfill, and surface the new visual card everywhere it belongs.
+# Plan — Finish Report Card Integration + Stop Analyze Eject
 
-## 1. Deploy fix — `analyze-video`
-- Replace the invalid Deno object-spread used to build the dynamic tool schema with an explicit `Object.fromEntries(contract.tiles.map(...))` builder.
-- Validate the model response against the contract before persisting: drop unknown keys, coerce numbers, default `confidence` to `0.5`, force `missing:true` when value is null/NaN.
-- Persist `metrics` to `ai_analysis.metrics` and also stamp `ai_analysis.contract_version` so the client knows which contract produced it.
-- Redeploy and curl-test with one BP and one BH sample to confirm metrics come back populated.
+## A. Fix the Analyze eject (highest priority)
 
-## 2. Backfill — `recompute-report-card`
-- New edge function: input `{ video_id }`. Loads the saved video + transcript/analysis text, re-runs the same structured-metrics extraction path used by `analyze-video` (shared helper in `_shared/extractMetrics.ts`), writes back to `ai_analysis.metrics` + `contract_version`.
-- UI: "Recompute Report Card" button on
-  - Saved video detail
-  - Library video detail
-  - CoachAthleteDetail session card
-- Button calls `supabase.functions.invoke('recompute-report-card', { body: { video_id }})`, then invalidates the report-card query.
+Root cause is in `src/pages/AnalyzeVideo.tsx` lines 163–199:
 
-## 3. Cross-app surfaces
-- **Library video detail**: render `HammerReportCard` when `ai_analysis.metrics` exists; otherwise show empty state with Recompute CTA.
-- **CoachAthleteDetail**: same card per athlete session, read-only.
-- **Progress Dashboard**: add `ReportCardTrendStrip` (small) using `useReportCardTrend` hook — last 5 grades as colored chips + sparkline of 0–100 score.
-- **Monthly Report / Vault Recap**: aggregate block showing
-  - Average grade
-  - Non-negotiable pass rate %
-  - Top 3 regressions (tiles whose pass-rate dropped most month-over-month)
+1. `useEffect(() => { refetch(); }, [refetch])` re-runs the subscription check on every mount/focus.
+2. The access guard runs as soon as `subLoading=false && initialized=true`, but during the refetch transition `subscribedModules` can briefly be `[]`, so `hasAccessForSport(...)` returns false → `navigate("/dashboard", { replace: true })`.
+3. During the same window, `onAuthStateChange` can fire a transient null session (e.g. after `TOKEN_REFRESHED` with a stale tab), which combined with the guard sends users to `/auth`.
 
-## 4. Polish on the spectacle layer
-- Add Framer Motion mount stagger (ribbon → rail → tiles) — currently only count-up animates.
-- Add `prefers-reduced-motion` guard to disable foil sweep + tilt.
-- Add share-card export (html-to-image) behind a "Share" button — 9:16 PNG.
+Fix — keep behavior, eliminate the false-positive redirects:
 
-## 5. Out of scope
-- SB windmill / throwing / SH visual upgrades (BP + BH only this pass).
-- Real-time tile updates during analysis.
-- Any schema migration — `ai_analysis.metrics` JSON column already exists.
+- **Owner/Admin short-circuit before access check.** If `isOwner || isAdmin`, skip the `hasAccess` branch entirely (currently the value is computed but the guard still depends on `subscribedModules` arriving).
+- **Require a non-empty, settled subscription snapshot before denying.** Only call `navigate("/dashboard")` when `initialized && !subLoading && subscribedModules !== null && subscribedModules.length >= 0` AND a second-tick confirmation still shows no access (use a `useRef` "deny candidate" + 400 ms grace timer that is cleared if `hasAccess` flips true).
+- **Stop the auth bounce.** Replace `if (!user && !session) navigate("/auth")` with: only redirect when `!authLoading && isAuthStable && !session && !user` AND a 250 ms re-check still shows no session. Skip the redirect entirely while `document.visibilityState === 'hidden'` (prevents tab-switch evictions).
+- **Drop the unconditional `refetch()` on mount.** The subscription hook already initializes itself; the forced refetch is what makes the guard race. Keep refetch only on explicit user action (e.g. after returning from Checkout via a `?refresh=1` query param).
+- **Preserve scroll/upload state across the guard re-run** by gating the access useEffect on a stable dependency list (remove `refetch` and the recomputed `hasAccessForSport` identity churn — wrap the check in a `useMemo`).
 
-## Technical notes
-```
-src/
-  components/report-card/hammer/
-    HammerReportCard.tsx          (mount stagger, share button)
-    visuals/ShareCardExport.tsx   (new)
-  hooks/useReportCardTrend.ts     (new)
-  components/progress/ReportCardTrendStrip.tsx (new)
-  components/library/...          (Recompute button + card mount)
-  pages/CoachAthleteDetail.tsx    (card mount)
-  components/recap/ReportCardRecapBlock.tsx (new)
-supabase/functions/
-  _shared/extractMetrics.ts       (new — shared by analyze-video + recompute)
-  _shared/reportCardContracts.ts  (exists)
-  analyze-video/index.ts          (deploy fix + use extractMetrics)
-  recompute-report-card/index.ts  (new)
-```
+Acceptance: uploading a video, switching tabs, or letting the page idle for 60 s never navigates away. Verified by watching console (the existing `console.log('AnalyzeVideo - …')` lines stay, but no `navigate(...)` fires unless access is truly absent).
 
-## Questions before I build
-1. **Recompute cost guard** — should I rate-limit recompute (e.g. 1/min/user, or only allow if `contract_version` is stale)? Or unlimited for now?
-2. **Trend strip placement** — Progress Dashboard top (above existing tiles) or inside the existing "Recent Analyses" section?
-3. **Share card** — include athlete name + date watermark, or keep it anonymous so they can share publicly without exposing identity?
+## B. Cross-app surfaces
+
+1. **CoachAthleteDetail** — in the per-session card, when `ai_analysis.metrics` exists for a video, render `<HammerReportCard metrics={…} contractId={…} compact />` (new `compact` prop = ribbon + phase rail only, tiles collapsed behind "View tiles"). If `metrics` is null but `feedback` exists, show `<RecomputeReportCardButton />` inline.
+2. **Library** (`src/pages/Vault.tsx` video detail) — same treatment: full `HammerReportCard` when metrics present, recompute button otherwise.
+3. **ProgressDashboard** — add `ReportCardTrendStrip` (new) directly under the existing header, above "Recent Analyses". Strip = last 8 sessions as foil-grade chips (A–F) with sparkline + non-negotiable pass-rate bar. New hook `useReportCardTrend(userId, module, limit=8)` reads `ai_analysis` rows ordered by `created_at desc`.
+4. **Monthly / Vault Recap** — new `ReportCardRecapBlock` aggregating: average letter grade, NN pass-rate %, top 3 regressed tiles (lowest avg score across the period). Wired into the existing recap render path.
+
+## C. Spectacle polish
+
+1. **Mount stagger** in `HammerReportCard.tsx`: Framer-motion sequence — ribbon (0 ms) → phase rail (120 ms) → tiles (staggered 60 ms each). Use `useReducedMotion()` to collapse to instant fade for accessibility.
+2. **Reduced-motion guard** across `FoilGradeCard`, `RadialMeter`, `PhaseRail` — disable foil-sweep, tilt parallax, and count-up; render final state immediately.
+3. **Share-card PNG export** — new `src/components/report-card/hammer/visuals/ShareCardExport.tsx` using `html-to-image` (bun add). 9:16 1080×1920 PNG, athlete name + date watermark (toggleable, default ON). Triggered by a Share button beside the Recompute button. Downloads + (if `navigator.share` available) opens native share sheet.
+4. **Print stylesheet** in `src/index.css` so the card prints cleanly on one page (kills tilt transforms, forces light bg).
+
+## D. Out of scope (explicit)
+
+- SB windmill / throwing / SH visual variants (Hammer hitting only this pass).
+- Realtime tile updates during analysis stream.
+- Any DB schema changes (recompute writes existing `ai_analysis.metrics` field).
+
+## Files
+
+**New**
+- `src/hooks/useReportCardTrend.ts`
+- `src/components/progress/ReportCardTrendStrip.tsx`
+- `src/components/recap/ReportCardRecapBlock.tsx`
+- `src/components/report-card/hammer/visuals/ShareCardExport.tsx`
+
+**Edited**
+- `src/pages/AnalyzeVideo.tsx` (auth/access guard hardening — A)
+- `src/components/report-card/hammer/HammerReportCard.tsx` (compact prop, mount stagger, Share button)
+- `src/components/report-card/hammer/visuals/{FoilGradeCard,RadialMeter,PhaseRail}.tsx` (reduced-motion guard)
+- `src/pages/CoachAthleteDetail.tsx`, `src/pages/Vault.tsx`, `src/pages/ProgressDashboard.tsx` (surface integration)
+- Existing recap renderer (wire `ReportCardRecapBlock`)
+- `src/index.css` (print styles)
+
+**Dependency**: `bun add html-to-image`
