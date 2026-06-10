@@ -1,16 +1,5 @@
 import type { ReportCardSpec, ReportCardTileSpec, TileState, AnalysisLike } from "../types";
-
-/** Numeric helper: read a structured metric if present, else null. */
-function num(analysis: AnalysisLike, key: string): number | null {
-  const m = analysis.metrics?.[key];
-  return typeof m === "number" && Number.isFinite(m) ? m : null;
-}
-function bool(analysis: AnalysisLike, key: string): boolean | null {
-  const m = analysis.metrics?.[key];
-  return typeof m === "boolean" ? m : null;
-}
-
-const missing = (): TileState => ({ status: "missing" });
+import { readNumber, missingState } from "../metricReaders";
 
 const tiles: ReportCardTileSpec[] = [
   {
@@ -26,9 +15,9 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "The game is hard. Stack small wins — your delivery is a habit, not a moment.",
     },
     compute: (a) => {
-      const v = num(a, "energy_angle_deg");
-      if (v == null) return missing();
-      return { status: v >= 18 ? "pass" : "fail", value: `${Math.round(v)}°`, passedOf: undefined };
+      const m = readNumber(a, "energy_angle_deg");
+      if (!m) return missingState(a, "energy_angle_deg");
+      return { status: m.value >= 18 ? "pass" : "fail", value: `${Math.round(m.value)}°`, confidence: m.confidence };
     },
   },
   {
@@ -45,9 +34,9 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Separation is earned through patient reps. Keep the front shoulder closed and the velo finds you.",
     },
     compute: (a) => {
-      const deg = num(a, "premature_shoulder_open_deg");
-      if (deg == null) return missing();
-      return { status: deg <= 0 ? "pass" : "fail", value: `${Math.round(deg)}°` };
+      const m = readNumber(a, "premature_shoulder_open_deg");
+      if (!m) return missingState(a, "premature_shoulder_open_deg");
+      return { status: m.value <= 0 ? "pass" : "fail", value: `${Math.round(m.value)}°`, confidence: m.confidence };
     },
   },
   {
@@ -63,9 +52,9 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Tempo is a decision. Decide to go.",
     },
     compute: (a) => {
-      const v = num(a, "tempo_sec");
-      if (v == null) return missing();
-      return { status: v <= 1.05 ? "pass" : "fail", value: v.toFixed(2) };
+      const m = readNumber(a, "tempo_sec");
+      if (!m) return missingState(a, "tempo_sec");
+      return { status: m.value <= 1.05 ? "pass" : "fail", value: `${m.value.toFixed(2)}s`, confidence: m.confidence };
     },
   },
   {
@@ -81,9 +70,9 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Stretch the distance — your arm gets a free upgrade.",
     },
     compute: (a) => {
-      const v = num(a, "stride_pct_of_height");
-      if (v == null) return missing();
-      return { status: v >= 90 ? "pass" : "fail", value: `${Math.round(v)}%` };
+      const m = readNumber(a, "stride_pct_of_height");
+      if (!m) return missingState(a, "stride_pct_of_height");
+      return { status: m.value >= 90 ? "pass" : "fail", value: `${Math.round(m.value)}%`, confidence: m.confidence };
     },
   },
   {
@@ -100,9 +89,9 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Quiet head, loud strikes. Hold the line.",
     },
     compute: (a) => {
-      const v = num(a, "head_vertical_movement_pct");
-      if (v == null) return missing();
-      return { status: v <= 2 ? "pass" : "fail", value: `${v.toFixed(1)}%` };
+      const m = readNumber(a, "head_vertical_movement_pct");
+      if (!m) return missingState(a, "head_vertical_movement_pct");
+      return { status: m.value <= 2 ? "pass" : "fail", value: `${m.value.toFixed(1)}%`, confidence: m.confidence };
     },
   },
   {
@@ -118,9 +107,10 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Boring glove = elite command. Keep it inside the shoulders.",
     },
     compute: (a) => {
-      const drift = num(a, "glove_drift_outside_frame_in");
-      if (drift == null) return missing();
-      return { status: drift <= 0 ? "pass" : "fail", value: drift > 0 ? `+${drift.toFixed(1)}"` : "in frame" };
+      const m = readNumber(a, "glove_drift_outside_frame_in");
+      if (!m) return missingState(a, "glove_drift_outside_frame_in");
+      const status = m.value <= 0 ? "pass" : "fail";
+      return { status, value: m.value > 0 ? `+${m.value.toFixed(1)}"` : "in frame", confidence: m.confidence };
     },
   },
   {
@@ -136,9 +126,10 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Eyes on the mitt, ball to the mitt. Simple. Hard. Worth it.",
     },
     compute: (a) => {
-      const v = num(a, "head_at_release_deg");
-      if (v == null) return missing();
-      return { status: Math.abs(v) <= 15 ? "pass" : "fail", value: `${Math.abs(Math.round(v))}°` };
+      const m = readNumber(a, "head_at_release_deg");
+      if (!m) return missingState(a, "head_at_release_deg");
+      const abs = Math.abs(m.value);
+      return { status: abs <= 15 ? "pass" : "fail", value: `${Math.round(abs)}°`, confidence: m.confidence };
     },
   },
   {
@@ -154,9 +145,10 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Level eyes, level shoulders, level command.",
     },
     compute: (a) => {
-      const v = num(a, "shoulder_tilt_deg");
-      if (v == null) return missing();
-      return { status: Math.abs(v) <= 10 ? "pass" : "fail", value: `${Math.abs(Math.round(v))}°` };
+      const m = readNumber(a, "shoulder_tilt_deg");
+      if (!m) return missingState(a, "shoulder_tilt_deg");
+      const abs = Math.abs(m.value);
+      return { status: abs <= 10 ? "pass" : "fail", value: `${Math.round(abs)}°`, confidence: m.confidence };
     },
   },
   {
@@ -172,9 +164,9 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Push the earth backward. The ball will go forward.",
     },
     compute: (a) => {
-      const v = num(a, "lift_thrust_deg");
-      if (v == null) return missing();
-      return { status: v >= 18 ? "pass" : "fail", value: `${Math.round(v)}°` };
+      const m = readNumber(a, "lift_thrust_deg");
+      if (!m) return missingState(a, "lift_thrust_deg");
+      return { status: m.value >= 18 ? "pass" : "fail", value: `${Math.round(m.value)}°`, confidence: m.confidence };
     },
   },
 ];
