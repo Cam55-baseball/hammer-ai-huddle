@@ -1948,6 +1948,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let originalAiScore = 75;
     let scoreWasAdjusted = false;
     
+    let metrics: Record<string, unknown> | null = null;
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
@@ -1958,6 +1959,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
         violations = analysisArgs.violations || {};
+        if (analysisArgs.metrics && typeof analysisArgs.metrics === "object") {
+          metrics = analysisArgs.metrics;
+          console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
+        }
         
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
         // Scan feedback text for violation keywords - override AI flags if needed
@@ -2126,6 +2131,9 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       score_adjusted: scoreWasAdjusted,
       original_ai_score: originalAiScore,
       model_used: MODEL_ID,
+      // Hammer Report Card structured measurements (additive).
+      metrics: metrics ?? null,
+      report_card_contract_id: reportCardContract?.id ?? null,
       // Canonical analyzer provenance — additive, never mutated retroactively.
       engine_version: ENGINE_VERSION,
       model_id: MODEL_ID,
