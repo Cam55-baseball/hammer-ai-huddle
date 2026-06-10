@@ -26,6 +26,8 @@ export function HammerReportCard({ sport, module, analysis }: Props) {
 
   const tilesWithState = spec.tiles.map((t) => ({ spec: t, state: t.compute(analysis) }));
 
+  const grade = useMemo(() => gradeFromTiles(tilesWithState), [tilesWithState]);
+
   const nonNegFailed = tilesWithState.some(
     (t) => t.spec.nonNegotiable && t.state.status === "fail",
   );
