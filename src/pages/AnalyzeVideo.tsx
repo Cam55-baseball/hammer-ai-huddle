@@ -764,7 +764,16 @@ export default function AnalyzeVideo() {
 
                 {analysisView === "report_card" ? (
                   <div className="space-y-6">
-                    <HammerReportCard sport={sport} module={module} analysis={analysis} />
+                    <HammerReportCard sport={sport} module={module} analysis={analysis as any} />
+
+                    {currentVideoId && (
+                      <RecomputeReportCardButton
+                        videoId={currentVideoId}
+                        onRecomputed={(metrics) =>
+                          setAnalysis((prev) => (prev ? { ...prev, metrics } : prev))
+                        }
+                      />
+                    )}
 
                     <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
                       <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
