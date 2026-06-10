@@ -978,19 +978,6 @@ export default function AnalyzeVideo() {
                     </p>
                   </div>
 
-                  {/* PIE V2 frame tagger — baseball pitching only.
-                      Video-derived reps land in the SAME canonical event ledger
-                      as session-derived reps (no parallel storage). */}
-                  {sport === 'baseball' && module === 'pitching' && user && currentVideoId && (
-                    <div className="pt-4 border-t">
-                      <PieV2FrameTagger
-                        athleteId={user.id}
-                        sessionId={`video-${currentVideoId}`}
-                        videoId={currentVideoId}
-                      />
-                    </div>
-                  )}
-
                   <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
 
                     <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
@@ -1006,6 +993,7 @@ export default function AnalyzeVideo() {
                   </div>
 
                 </div>
+                )}
               </Card>
             )}
           </div>
