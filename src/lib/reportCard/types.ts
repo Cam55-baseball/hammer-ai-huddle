@@ -1,10 +1,12 @@
 /**
  * Hammer Report Card — universal tile spec.
  *
- * One spec drives every analysis's report card. Tiles consume the existing
- * analysis result; if a metric cannot be computed yet, the tile renders a
- * "Not detected yet" missingness state (per §3 Law 7 — never fabricate).
+ * Tiles consume the existing analysis result; if a metric cannot be measured
+ * yet, the tile renders a "Not detected yet" missingness state with the
+ * model's stated reason (per §3 Law 7 — never fabricate).
  */
+
+import type { MetricValue, MetricsRecord } from "./contracts/shared";
 
 export type TileMode =
   | "raw_passed"          // Raw measurement + "PASSED X/10" chip
@@ -18,8 +20,10 @@ export type TileState =
       value?: string;       // e.g. "0.98", "22°", "82%"
       passedOf?: string;    // e.g. "10/10"
       score10?: number;     // 0..10 for score_meter mode
+      /** 0..1 measurement confidence from the model. */
+      confidence?: number;
     }
-  | { status: "missing" };
+  | { status: "missing"; missing_reason?: string };
 
 export interface TileExplainer {
   whatWhy: string;
@@ -33,7 +37,7 @@ export interface ReportCardTileSpec {
   mode: TileMode;
   standard: string;          // e.g. "1.05s OR LESS"
   nonNegotiable?: boolean;
-  phase?: string;            // optional grouping (BH uses §5.1 phases)
+  phase?: string;            // optional grouping (BH uses P1–P4)
   explainer: TileExplainer;
   /** Map an analysis result to a tile state. Return { status: "missing" } if not measurable yet. */
   compute: (analysis: AnalysisLike) => TileState;
@@ -53,6 +57,8 @@ export interface AnalysisLike {
   positives?: string[];
   drills?: unknown[];
   scorecard?: unknown;
-  /** Future: structured per-metric measurements keyed by tile key. */
-  metrics?: Record<string, unknown>;
+  /** New: structured per-metric measurements with confidence/missingness. */
+  metrics?: MetricsRecord;
 }
+
+export type { MetricValue, MetricsRecord };
