@@ -52,9 +52,7 @@ export default function AthleteCommand() {
 
         <HammerOnboardingChat />
 
-        <div className="mt-4">
-          <UhrcAthleteSection />
-        </div>
+        {/* UHRC report card removed from Command Center — now lives per-analysis under each video result. */}
 
         <CommandCenterSection defaultSignalsOpen />
 
