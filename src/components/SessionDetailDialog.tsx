@@ -24,6 +24,8 @@ import { toast } from 'sonner';
 import { Upload, X, Download, Play, Heart } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
+import { HammerReportCard } from '@/components/report-card/hammer/HammerReportCard';
+import { RecomputeReportCardButton } from '@/components/report-card/hammer/RecomputeReportCardButton';
 
 interface SessionDetailDialogProps {
   session: any;
@@ -517,7 +519,27 @@ export function SessionDetailDialog({
           {aiAnalysis && (isOwner || analysisPublic) && (
             <div className="space-y-4">
               <h3 className="font-semibold">{t('sessionDetail.analysisResults')}</h3>
-              
+
+              {/* Hammer Report Card — replay-safe, derived from ai_analysis.metrics. */}
+              {(() => {
+                const metrics = (aiAnalysis as { metrics?: Record<string, unknown> | null })?.metrics ?? null;
+                const hasMetrics = !!metrics && Object.keys(metrics).length > 0;
+                if (hasMetrics) {
+                  return (
+                    <HammerReportCard
+                      sport={session.sport}
+                      module={session.module}
+                      analysis={{ metrics } as any}
+                      compact
+                    />
+                  );
+                }
+                if (isOwner && session.id) {
+                  return <RecomputeReportCardButton videoId={session.id} onRecomputed={() => onUpdate()} />;
+                }
+                return null;
+              })()}
+
               {aiAnalysis.feedback && (
                 <div className="space-y-2">
                   <Label>{t('sessionDetail.feedback')}</Label>
