@@ -1,98 +1,107 @@
-# Hammer Report Card — Full Integration Plan
+# Hammer Report Card — Finish Integration + Visual Spectacle
 
-## Why "Not detected yet" is rendering today
-`analyze-video` returns narrative scoring only. The BP/BH specs read numeric keys (`energy_angle_deg`, `tempo_sec`, `premature_shoulder_open_deg`, `glove_drift_outside_frame_in`, `head_vertical_movement_pct`, `bat_path_score_10`, etc.) that don't exist on the analysis payload — so every tile falls through to missingness. Fix is to make the same AI call also emit a strict `metrics{}` block with confidences.
-
-## Scope (confirmed)
-
-- **Metric source:** extend `analyze-video` to ALSO return a structured `metrics{}` block in one call.
-- **Missing-metric policy:** hybrid — soft signals always return `{value, confidence}`; only un-measurable cases (occlusion, wrong angle) return missing with a reason.
-- **Formula depth:** codify everything now — full thresholds, X/10 sub-scores, non-negotiables, phase grouping.
-- **BH tiles:** expand to 8, mapped to existing P1–P4 doctrine (`hittingPhases.ts`).
-- **Top-line:** Letter grade A–F above the tiles.
-- **Backfill:** on-demand per video via a "Recompute Report Card" button.
-- **Integration surfaces:** Library/Saved-video detail, Coach view, Progress Dashboard trend tiles, Monthly/Vault recap aggregates.
+Building on the contracts, grade engine, and metric readers already shipped. Two tracks in parallel: (A) wire the system end-to-end so "Not detected" disappears for real captures, (B) turn the card into the most visually loved surface in the app.
 
 ---
 
-## 1. Discipline metric contracts (`src/lib/reportCard/contracts/`)
+## Track A — Make it actually work everywhere
 
-One file per discipline declaring the exact metric keys, units, thresholds, weights, and non-negotiables. Single source of truth shared by both the AI prompt (server) and the tile compute (client).
+### A1. `analyze-video` returns structured `metrics{}`
+- Build the AI request schema dynamically from each discipline contract (`metricKeys[]` → JSON schema with `{value:number|null, confidence:0–1, missing?:boolean, missing_reason?:string}`).
+- Keep existing narrative prose untouched; add `metrics` as a sibling field in `Output.object`.
+- Inject per-metric prompt hints (unit, threshold, what to look for) from the contract into the system prompt so the model fills real numbers, not nulls.
+- Persist `metrics` JSON on the analysis row alongside narrative.
 
-- `bp.contract.ts` — 10 BP tiles (Energy Angle, Hip/Shoulder Sep [NN], Tempo, Stride Length, Head Stability [NN], Glove Control, Head at Release, Shoulder Tilt, Lift & Thrust, plus consistency 1–10 score for stride).
-- `bh.contract.ts` — 8 BH tiles grouped P1–P4 (P1 Hip Load [NN], P2 Hand Load, P3 Stride Direction + Heel Plant/Landing, P4 Sequencing + Bat Path + Back Elbow + Hitter's Move Quality [NN]). NN caps from `hittingPhases.ts` (P1=80, P4=50).
-- `throwing.contract.ts` — BP minus Energy Angle, Tempo, Lift & Thrust.
-- `sb-pitching.contract.ts` — same as BP for now (windmill deferred, marked in spec).
-- `sh.contract.ts` — same as BH.
+### A2. Tile compute reads the new payload
+- `metricReaders.ts` already returns `{value, confidence, missing, reason}`. Wire `HammerReportCard` to compute every tile from `metrics{}` first, fall back to legacy narrative parsing only if `metrics` is absent (older rows).
+- Confidence < 0.5 → amber dot + tooltip "Low confidence — verify on replay".
+- Missing → existing "Not detected" state but now with the model's `missing_reason` (e.g. "Camera angle hid front hip").
 
-Each contract exports: `metricKeys[]` (with `{key, unit, range, threshold, weight, nonNegotiable, confidenceRequired}`) and a `gradeFromTiles(tilesWithState[])` function returning A–F using passed-count, NN-fail caps, and missingness penalty.
+### A3. Backfill — "Recompute Report Card" button
+- New edge fn `recompute-report-card` that re-runs analyze-video in metrics-only mode against a stored video URL and patches the row.
+- Button lives on Library/Saved-video detail and Coach view. Disabled while running, toast on success.
 
-## 2. AI metric extraction in `analyze-video`
+### A4. Cross-app surfaces
+- **Library / Saved Video Detail** — render full `<HammerReportCard />` inline.
+- **CoachAthleteDetail** — same card per session, plus a compact "last 5 sessions" strip.
+- **Progress Dashboard** — `useReportCardTrend()` hook → per-metric pass-rate sparkline tiles for the athlete's last N sessions.
+- **Monthly / Vault Recap** — aggregate non-negotiable pass rate %, top 3 regressions, top 3 improvements; reuse grade ribbon as the hero.
 
-Extend the existing single edge-function call:
-- Build the structured-output schema dynamically from the active discipline's contract (`buildMetricsSchema(contract)`).
-- Use AI SDK `Output.object` so the model returns both the existing narrative AND a `metrics: { [key]: { value, confidence: 0–1, missing?: true, missing_reason?: string } }` object in one call.
-- Keep prompt prose, just append "Also return a strict `metrics` object per schema. Set `missing: true` with reason when occlusion/angle prevents measurement. Confidence reflects measurement quality, not how good the athlete is."
-- Persist on the saved analysis row (existing analysis JSON gets a new `metrics` field — additive, no schema migration).
+### A5. Cleanup
+- Remove vestigial `Uhrc*` components and `hittingV1Schema.ts` once new path is verified.
 
-## 3. Wire metrics into tile compute
+---
 
-- Update `AnalysisLike` in `src/lib/reportCard/types.ts` to type `metrics?: Record<string, { value: number|boolean; confidence: number; missing?: boolean; missing_reason?: string }>`.
-- Update each tile's `compute()` to read `{value, confidence}` and emit `TileState` with a `confidence` field. Low confidence (<0.5) renders an amber dot + tooltip; missing renders the existing "Not detected — <reason>" state.
-- Add `score10` derivation per tile from raw value + threshold band (already partially there).
+## Track B — Make it a spectacle
 
-## 4. Top-line grade
+Design language: **stadium scoreboard meets premium fitness tracker meets trading-card foil**. Dark glassy base, neon team-color accents, weighty typography, animated numerics, tactile motion. Mobile-first (440px is current viewport) — card has to look incredible on a phone first, desktop second.
 
-- New `<ReportCardGradeRibbon />` above tiles: big letter A–F, "X of Y measured" missingness chip, "1 non-negotiable failed" red sub-chip when applicable.
-- Computed from `contract.gradeFromTiles(tiles)`.
+### B1. The Grade Ribbon (hero)
+- Massive letter grade (A–F) rendered in a heavy display face (Bebas Neue or Archivo Black), 96–120px on mobile.
+- Grade letter sits inside a **holographic foil card** — animated conic-gradient shimmer behind the letter, subtle parallax tilt on device orientation (gyro) and pointer move on desktop.
+- Color tier per grade: A=emerald glow, B=cyan, C=amber, D=orange, F=red. All via HSL tokens, both light/dark mode.
+- Animated count-up of the 0–100 score on mount (spring, ~900ms).
+- Coverage chip ("8/10 measured") with a tiny radial progress.
+- Failed-non-negotiable chip pulses gently red.
 
-## 5. Cross-app integration
+### B2. Tile Meters
+- Replace flat pass/fail boxes with **radial dial meters** (SVG arc, 0→threshold→max). Pointer animates from 0 on mount with spring physics.
+- Pass zone = emerald arc gradient, warning band = amber, fail band = red. The dial *itself* shows where the athlete landed against the threshold — instantly readable.
+- Tile background: subtle dark glass (`backdrop-blur` + `bg-card/60`), 1px gradient border that brightens on the pass color.
+- Tap → tile flips (3D) to reveal: raw value, threshold, confidence bar, "why this matters" microcopy from the contract, replay timestamp link.
+- Non-negotiable tiles get a small ⚡ bolt badge in the corner.
 
-- **AnalyzeVideo (already wired):** verify report card now renders real values after AI changes.
-- **Library / saved-video detail (`AthleteVideoLibrary`, `CoachAthleteDetail`):** render `<HammerReportCard analysis={savedAnalysis} />` in a tab next to the existing narrative. Add a "Recompute Report Card" button that re-invokes `analyze-video` on stored frames for backfill of old analyses.
-- **Progress Dashboard / Athlete Command:** add a `<ReportCardTrendStrip />` showing per-metric pass-rate trend (last 5 sessions) for the athlete's primary discipline, pulled from a new `useReportCardTrend(athleteId, discipline)` hook.
-- **Coach view:** mirror the athlete report card with an extra "Coach notes" textarea persisted per-tile.
-- **Monthly report / vault recap edge functions:** include aggregated `nonNegotiablePassRate`, `tilesRegressed[]`, `topImprovement` derived from the same contracts so prose and report card never disagree.
+### B3. Phase Rail
+- Horizontal "P1 → P2 → P3 → P4" rail above the tiles (BH) / equivalent grouping (BP).
+- Each phase node is a glowing orb sized by tile count, colored by aggregate phase pass-rate. Connecting line animates fill on mount.
+- Tap a phase → tiles below filter/highlight to that phase.
 
-## 6. Backfill path
+### B4. Motion + polish
+- Mount sequence: ribbon foil sweep → score count-up → phase rail fill → tiles stagger-in (50ms each) with scale + fade.
+- Use Framer Motion (already in stack). Respect `prefers-reduced-motion` — fall back to instant fades.
+- Haptic-style micro-bounce on tile tap (mobile).
+- Optional **"Share Card" mode**: full-bleed 9:16 export-ready layout with athlete name, date, grade, top 3 tiles, hammer logo watermark. Renders to PNG via `html-to-image` for share-sheet/IG-story export.
 
-- New small edge fn `recompute-report-card`: takes `videoId`, re-extracts frames (or uses stored frame URLs if present), calls metrics-only pass, patches the saved analysis row's `metrics` field. Triggered by the "Recompute" button on Library/Coach views.
+### B5. Sound (optional, off by default)
+- Single subtle "score lock-in" tick when grade reveals. Toggle in settings; never auto-plays.
 
-## 7. Cleanup
+### B6. Design tokens
+- Add to `index.css`:
+  - `--grade-a/b/c/d/f` HSL pairs (color + glow).
+  - `--foil-gradient` conic.
+  - `--meter-pass / --meter-warn / --meter-fail` arcs.
+  - `--glass-card` surface.
+- All tile/ribbon/meter components consume tokens — zero hardcoded hex.
 
-- Remove vestigial `UhrcAthleteSection` / `UhrcReportCard` / `UhrcDetailedAnalysis` files now superseded by HammerReportCard (only after verifying no live imports).
-- Delete the obsolete `src/lib/reportCard/v1/hittingV1Schema.ts` if not referenced after migration.
+---
 
-## Out of scope (deferred)
-- SB windmill-specific pitching tiles (placeholder slot left in contract).
-- ML-driven per-frame pose estimation (still using AI vision on extracted frames).
-- Real-time tile updates during streaming analysis.
+## Files (Track A)
+- edit `supabase/functions/analyze-video/index.ts` (+ shared contract mirror under `supabase/functions/_shared/reportCardContracts.ts`)
+- new `supabase/functions/recompute-report-card/index.ts`
+- edit `HammerReportCard.tsx`, `ReportCardTile.tsx`, `ReportCardGradeRibbon.tsx`
+- new `src/hooks/useReportCardTrend.ts`
+- edit Library detail page, `CoachAthleteDetail.tsx`, `ProgressDashboard.tsx`, monthly/vault recap edge fn
+- delete `Uhrc*`, `hittingV1Schema.ts`
 
-## Technical details
-
-```text
-analyze-video (edge)
-  └─ generateText({ model, output: Output.object({ narrative, metrics }) })
-        ↑ schema built from disciplineContract.metricKeys
-  → returns { ...existingFields, metrics: {...} }
-
-client AnalyzeVideo
-  → analysis prop now carries metrics
-  → <HammerReportCard /> tiles read analysis.metrics[key]
-  → <ReportCardGradeRibbon /> computes grade from contract
-```
-
-Files touched (created/edited):
-- `src/lib/reportCard/contracts/{bp,bh,throwing,sb-pitching,sh}.contract.ts` (new)
-- `src/lib/reportCard/disciplines/{bp,bh,throwing}.ts` (rewire to contracts)
-- `src/lib/reportCard/types.ts` (add confidence + grade types)
-- `src/components/report-card/hammer/{ReportCardGradeRibbon,ReportCardTrendStrip,CoachTileNotes}.tsx` (new)
-- `src/components/report-card/hammer/{HammerReportCard,ReportCardTile}.tsx` (grade + confidence UI)
-- `supabase/functions/analyze-video/index.ts` (add structured `metrics` output)
-- `supabase/functions/recompute-report-card/index.ts` (new, backfill)
-- `supabase/functions/_shared/reportCardContracts.ts` (server mirror used to build Output schema)
-- `src/pages/{AthleteVideoLibrary,CoachAthleteDetail,ProgressDashboard,AthleteCommand}.tsx` (surface card/trend)
-- `supabase/functions/{generate-monthly-report,generate-vault-recap}/*` (consume aggregates)
+## Files (Track B)
+- new `src/components/report-card/hammer/visuals/FoilGradeCard.tsx`
+- new `src/components/report-card/hammer/visuals/RadialMeter.tsx`
+- new `src/components/report-card/hammer/visuals/PhaseRail.tsx`
+- new `src/components/report-card/hammer/visuals/TileFlip.tsx`
+- new `src/components/report-card/hammer/ShareCard.tsx` (+ install `html-to-image`)
+- edit `src/index.css` — grade/foil/meter tokens
+- edit `tailwind.config.ts` — register new color tokens
 
 ## Validation
-After build I'll: (1) run a real analysis and confirm every tile shows a value or a missing-reason — never blank; (2) verify the letter grade matches the tiles; (3) confirm Library "Recompute" backfills an old analysis; (4) check trend strip renders across ≥2 sessions.
+- Run real analysis → metrics populated, tiles show values not "Not detected".
+- Letter grade matches non-negotiable rules (1 fail = D cap, 2+ = F cap).
+- Backfill button patches an old row.
+- Trend strip renders across ≥2 sessions.
+- Card looks incredible at 440×782 (current viewport), still clean at desktop.
+- Reduced-motion users see static version.
+- Share Card exports a clean 1080×1920 PNG.
+
+## Out of scope
+- SB windmill-specific tiles, throwing/SH visual upgrades (same engine, but visual spectacle pass is BP+BH first).
+- Real-time tile updates during streaming analysis.
+- ML pose estimation.
