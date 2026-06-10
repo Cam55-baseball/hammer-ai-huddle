@@ -109,6 +109,30 @@ All colors MUST be HSL.
     --confidence-absent: 0 0% 55%;
     --surface-runtime: 0 0% 100%;
     --surface-runtime-elevated: 0 0% 98%;
+
+    /* ============= Hammer Report Card — grade & meter tokens ============= */
+    /* Letter-grade tier colors (HSL pairs: base + glow). Used by FoilGradeCard. */
+    --grade-a: 152 76% 44%;
+    --grade-a-glow: 152 90% 60%;
+    --grade-b: 190 92% 52%;
+    --grade-b-glow: 190 100% 68%;
+    --grade-c: 42 96% 56%;
+    --grade-c-glow: 42 100% 68%;
+    --grade-d: 24 95% 56%;
+    --grade-d-glow: 24 100% 68%;
+    --grade-f: 0 84% 56%;
+    --grade-f-glow: 0 100% 68%;
+
+    /* Radial meter arc colors. */
+    --meter-pass: 152 76% 44%;
+    --meter-warn: 42 96% 56%;
+    --meter-fail: 0 84% 56%;
+    --meter-track: 0 0% 88%;
+
+    /* Glassy report-card surfaces. */
+    --rc-glass: 0 0% 100%;
+    --rc-glass-border: 0 0% 0%;
+    --rc-ink: 0 0% 5%;
   }
 
   .dark {
@@ -200,6 +224,25 @@ All colors MUST be HSL.
     --confidence-absent: 0 0% 40%;
     --surface-runtime: 0 0% 10%;
     --surface-runtime-elevated: 0 0% 13%;
+
+    /* Report card — dark mode tuning. */
+    --grade-a: 152 72% 50%;
+    --grade-a-glow: 152 100% 65%;
+    --grade-b: 190 90% 60%;
+    --grade-b-glow: 190 100% 72%;
+    --grade-c: 42 96% 60%;
+    --grade-c-glow: 42 100% 72%;
+    --grade-d: 24 95% 60%;
+    --grade-d-glow: 24 100% 72%;
+    --grade-f: 0 84% 60%;
+    --grade-f-glow: 0 100% 72%;
+    --meter-pass: 152 72% 50%;
+    --meter-warn: 42 96% 60%;
+    --meter-fail: 0 84% 60%;
+    --meter-track: 0 0% 22%;
+    --rc-glass: 0 0% 8%;
+    --rc-glass-border: 0 0% 100%;
+    --rc-ink: 0 0% 98%;
   }
 
   /* ============================================
