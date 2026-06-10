@@ -1871,7 +1871,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                       }
                     },
                     required: ["improvements", "regressions", "neutral", "overall_trend", "is_first_analysis"]
-                  }
+                  },
                   ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
                 },
                 required: reportCardContract
