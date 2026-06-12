@@ -6,6 +6,7 @@
  * Implements:
  *   - MINIMUM_CONTEXT_SET — the P0 keys per Section H of the constitution.
  *   - persistContextAnswer — writes onto `athlete_context` with confidence + lineage.
+ *   - persistCoachContextAnswer / persistScoutContextAnswer — role-specific stores.
  *   - acquisition trigger sources for development-history events.
  *
  * Pure interpretive layer; never authors organism truth. Missingness is
@@ -28,7 +29,7 @@ export const MINIMUM_CONTEXT_SET = [
 
 export type MinimumContextKey = (typeof MINIMUM_CONTEXT_SET)[number];
 
-// Map a spine key to a `athlete_context` column.
+// Map a spine key to an `athlete_context` column.
 const COLUMN_BY_KEY: Record<string, string> = {
   sport_primary: "sport_primary",
   goal_summary: "goal_summary",
@@ -43,6 +44,16 @@ const COLUMN_BY_KEY: Record<string, string> = {
   school_grade: "school_grade",
   season_phase: "season_phase",
   injury_history: "injury_history",
+  // New onboarding fields (Phase: Onboarding Overhaul)
+  other_sports: "other_sports",
+  competition_level: "competition_level",
+  education_stage: "education_stage",
+  lifting_history: "lifting_history",
+  position_primary: "position_primary",
+  position_secondary: "position_secondary",
+  throws_hand: "throws_hand",
+  bats_hand: "bats_hand",
+  anthropometrics: "anthropometrics",
 };
 
 type AnyValue = string | number | string[] | unknown;
@@ -61,7 +72,6 @@ export async function persistContextAnswer(
   const column = COLUMN_BY_KEY[key];
   if (!column) throw new Error(`Unknown context key: ${key}`);
 
-  // Read existing confidence map so we can merge.
   const { data: existing } = await (supabase.from("athlete_context") as unknown as {
     select: (c: string) => {
       eq: (col: string, val: string) => {
@@ -90,6 +100,32 @@ export async function persistContextAnswer(
     upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
   }).upsert(payload, { onConflict: "user_id" });
   if (error) throw new Error(`persistContextAnswer(${key}): ${error.message}`);
+}
+
+/** Persist a coach-onboarding answer onto `coach_context`. */
+export async function persistCoachContextAnswer(
+  userId: string,
+  key: string,
+  value: AnyValue,
+): Promise<void> {
+  const payload: Record<string, unknown> = { user_id: userId, [key]: value };
+  const { error } = await (supabase.from("coach_context") as unknown as {
+    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+  }).upsert(payload, { onConflict: "user_id" });
+  if (error) throw new Error(`persistCoachContextAnswer(${key}): ${error.message}`);
+}
+
+/** Persist a scout-onboarding answer onto `scout_context`. */
+export async function persistScoutContextAnswer(
+  userId: string,
+  key: string,
+  value: AnyValue,
+): Promise<void> {
+  const payload: Record<string, unknown> = { user_id: userId, [key]: value };
+  const { error } = await (supabase.from("scout_context") as unknown as {
+    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+  }).upsert(payload, { onConflict: "user_id" });
+  if (error) throw new Error(`persistScoutContextAnswer(${key}): ${error.message}`);
 }
 
 /** Append a development-history event (lifting/training age, detraining, injury, etc.). */

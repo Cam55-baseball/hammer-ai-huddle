@@ -51,6 +51,16 @@ export const SPINE_VARIABLE_KEYS = [
   "equipment_effective",
   "lifecycle_band",
   "safeguarding_minor",
+  // Onboarding Overhaul additions
+  "other_sports",
+  "competition_level",
+  "education_stage",
+  "lifting_history",
+  "position_primary",
+  "position_secondary",
+  "throws_hand",
+  "bats_hand",
+  "anthropometrics",
 ] as const;
 
 export type SpineVariableKey = (typeof SPINE_VARIABLE_KEYS)[number];
