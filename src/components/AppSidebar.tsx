@@ -292,6 +292,7 @@ export function AppSidebar() {
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
     { title: t('navigation.profile'), url: "/profile", icon: Settings },
+    ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.myCustomActivities'), url: "/my-custom-activities", icon: LayoutGrid },
     ...(isOwner ? [
       { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
