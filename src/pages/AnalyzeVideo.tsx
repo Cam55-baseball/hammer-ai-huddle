@@ -32,6 +32,7 @@ import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { RecomputeReportCardButton } from "@/components/report-card/hammer/RecomputeReportCardButton";
+import { CameraAngleHelper } from "@/components/report-card/hammer/CameraAngleHelper";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -235,6 +236,30 @@ export default function AnalyzeVideo() {
       videoRef.current.playbackRate = parseFloat(playbackRate);
     }
   }, [playbackRate]);
+
+  // Auto-recompute report card ONCE per video when metrics are missing/sparse.
+  // Lineage-preserving: only mutates ai_analysis.metrics via the edge function.
+  const autoRecomputedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!currentVideoId || !analysis) return;
+    if (autoRecomputedRef.current.has(currentVideoId)) return;
+    const m = (analysis as any).metrics as Record<string, any> | null | undefined;
+    const present = m && typeof m === "object"
+      ? Object.values(m).filter((v: any) => v && typeof v === "object" && !(v.missing === true) && ("value" in v)).length
+      : 0;
+    const sparse = !m || Object.keys(m).length === 0 || present < 3;
+    if (!sparse) return;
+    autoRecomputedRef.current.add(currentVideoId);
+    supabase.functions.invoke("recompute-report-card", { body: { video_id: currentVideoId } })
+      .then(({ data, error }) => {
+        if (error) { console.warn("[auto-recompute]", error); return; }
+        const metrics = (data as { metrics?: Record<string, unknown> })?.metrics;
+        if (metrics && Object.keys(metrics).length > 0) {
+          setAnalysis((prev) => (prev ? { ...prev, metrics } : prev));
+        }
+      })
+      .catch((e) => console.warn("[auto-recompute] failed", e));
+  }, [currentVideoId, analysis]);
 
   const handlePlaybackRateChange = (rate: string) => {
     setPlaybackRate(rate);
@@ -557,7 +582,9 @@ export default function AnalyzeVideo() {
 
         {/* Video Upload Section */}
         {!videoPreview && (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <CameraAngleHelper module={module} />
+            <div className="grid md:grid-cols-2 gap-4">
             {/* Upload Card */}
             <Card className="p-4 sm:p-6 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
@@ -591,6 +618,7 @@ export default function AnalyzeVideo() {
 
             {/* Real-Time Playback Card */}
             <RealTimePlaybackCard module={module || ''} sport={sport} />
+            </div>
           </div>
         )}
 
