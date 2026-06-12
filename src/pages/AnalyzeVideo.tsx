@@ -21,6 +21,7 @@ import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
+import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
 import { TheScorecard } from "@/components/TheScorecard";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
@@ -780,7 +781,10 @@ export default function AnalyzeVideo() {
             )}
 
             {analyzing && (
-              <AnalysisResultSkeleton />
+              <div className="space-y-4">
+                <AnalysisProgressIndicator />
+                <AnalysisResultSkeleton />
+              </div>
             )}
 
             {analysisError && !analyzing && (

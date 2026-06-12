@@ -16,6 +16,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/** Deterministic seed from videoId — same video → same scores. */
+function stableSeed(s: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h & 0x7fffffff;
+}
+
 const BodySchema = z.object({
   video_id: z.string().uuid("Invalid video id"),
 });
@@ -145,6 +155,9 @@ ${promptBlock}`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        temperature: 0,
+        top_p: 0,
+        seed: stableSeed(video.id),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
@@ -203,6 +216,9 @@ ${buildSecondPassPromptBlock(contract, miss.missingKeys)}`;
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
+            temperature: 0,
+            top_p: 0,
+            seed: stableSeed(video.id + ":pass2"),
             messages: [
               { role: "system", content: pass2Prompt },
               { role: "user", content: userContent },
