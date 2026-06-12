@@ -237,6 +237,30 @@ export default function AnalyzeVideo() {
     }
   }, [playbackRate]);
 
+  // Auto-recompute report card ONCE per video when metrics are missing/sparse.
+  // Lineage-preserving: only mutates ai_analysis.metrics via the edge function.
+  const autoRecomputedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!currentVideoId || !analysis) return;
+    if (autoRecomputedRef.current.has(currentVideoId)) return;
+    const m = (analysis as any).metrics as Record<string, any> | null | undefined;
+    const present = m && typeof m === "object"
+      ? Object.values(m).filter((v: any) => v && typeof v === "object" && !(v.missing === true) && ("value" in v)).length
+      : 0;
+    const sparse = !m || Object.keys(m).length === 0 || present < 3;
+    if (!sparse) return;
+    autoRecomputedRef.current.add(currentVideoId);
+    supabase.functions.invoke("recompute-report-card", { body: { video_id: currentVideoId } })
+      .then(({ data, error }) => {
+        if (error) { console.warn("[auto-recompute]", error); return; }
+        const metrics = (data as { metrics?: Record<string, unknown> })?.metrics;
+        if (metrics && Object.keys(metrics).length > 0) {
+          setAnalysis((prev) => (prev ? { ...prev, metrics } : prev));
+        }
+      })
+      .catch((e) => console.warn("[auto-recompute] failed", e));
+  }, [currentVideoId, analysis]);
+
   const handlePlaybackRateChange = (rate: string) => {
     setPlaybackRate(rate);
     localStorage.setItem('videoPlaybackRate', rate);
