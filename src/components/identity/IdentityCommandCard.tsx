@@ -154,6 +154,7 @@ export function IdentityCommandCard({ className }: Props) {
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
   const { data: commandRows } = useAthleteCommandRows({ days: 30, limit: 500 });
+  const { snapshot: hieSnapshot } = useHIESnapshot();
   const todaysStandard = useMemo(
     () => deriveTodaysStandard(commandRows, dayType),
     [commandRows, dayType],
