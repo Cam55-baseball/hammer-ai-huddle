@@ -261,31 +261,53 @@ function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
       weight_lbs?: number | string;
       wingspan_in?: number | string;
       leg_length_in?: number | string;
+      forearm_in?: number | string;
+      femur_in?: number | string;
+      tibia_in?: number | string;
+      torso_in?: number | string;
+      arm_total_in?: number | string;
     };
     const set = (patch: Partial<typeof v>) => onChange({ ...v, ...patch });
+    const FIELDS: Array<{ k: keyof typeof v; label: string; hint?: string }> = [
+      { k: "height_in", label: "Height (in)" },
+      { k: "weight_lbs", label: "Weight (lbs)" },
+      { k: "wingspan_in", label: "Wingspan (in)", hint: "Arms wide, fingertip to fingertip." },
+      { k: "leg_length_in", label: "Leg length (in)", hint: "Floor to top of hip bone." },
+      { k: "femur_in", label: "Femur (in)", hint: "Hip joint to knee joint, sitting." },
+      { k: "tibia_in", label: "Tibia (in)", hint: "Knee joint to floor, sitting." },
+      { k: "torso_in", label: "Torso (in)", hint: "Top of hip bone to top of shoulder." },
+      { k: "forearm_in", label: "Forearm (in)", hint: "Inside elbow crease to wrist crease." },
+      { k: "arm_total_in", label: "Total arm (in)", hint: "Shoulder joint to wrist crease." },
+    ];
     return (
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { k: "height_in", label: "Height (in)" },
-          { k: "weight_lbs", label: "Weight (lbs)" },
-          { k: "wingspan_in", label: "Wingspan (in)" },
-          { k: "leg_length_in", label: "Leg length (in)" },
-        ].map((f) => (
-          <div key={f.k}>
-            <Label className="text-xs">{f.label}</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={(v as Record<string, unknown>)[f.k] as string | number | undefined ?? ""}
-              onChange={(e) =>
-                set({ [f.k]: e.target.value === "" ? "" : Number(e.target.value) } as Partial<typeof v>)
-              }
-            />
-          </div>
-        ))}
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          {FIELDS.map((f) => (
+            <div key={String(f.k)}>
+              <Label className="text-xs">{f.label}</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                step="0.25"
+                value={(v as Record<string, unknown>)[f.k as string] as string | number | undefined ?? ""}
+                onChange={(e) =>
+                  set({ [f.k]: e.target.value === "" ? "" : Number(e.target.value) } as Partial<typeof v>)
+                }
+              />
+              {f.hint && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">{f.hint}</p>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          The more limb measurements you give me, the more I can tailor squat vs. lunge vs. press selection
+          to your lever profile. Skip any you don't know.
+        </p>
       </div>
     );
   }
+
 
   if (gap.inputKind === "injury") {
     const v = (typeof value === "object" && value !== null ? value : {}) as {
