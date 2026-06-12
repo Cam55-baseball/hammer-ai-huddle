@@ -535,15 +535,6 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Compact summary row — pulled to the top to reduce overwhelm */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-
-            <WeeklyDigestPreview />
-            <ForecastPreview />
-          </div>
-        )}
-
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
@@ -551,8 +542,10 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
-        {/* Command Center — primary organism status surface. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommandCenterSection />}
+        {/* Hammers Today Plan — collapsible above Game Plan, populated from
+            forward-moving organism data (never random). Second home for the
+            Today Plan so users can act on it without leaving the Dashboard. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <DashboardTodayPlan />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
