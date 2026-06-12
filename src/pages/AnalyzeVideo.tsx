@@ -32,6 +32,7 @@ import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { RecomputeReportCardButton } from "@/components/report-card/hammer/RecomputeReportCardButton";
+import { CameraAngleHelper } from "@/components/report-card/hammer/CameraAngleHelper";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
