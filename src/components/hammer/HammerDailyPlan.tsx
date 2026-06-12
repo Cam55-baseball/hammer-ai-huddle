@@ -50,6 +50,7 @@ import { useHammerChat } from "@/hooks/useHammerChat";
 import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
+import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -332,6 +333,10 @@ function BlockCard({
               )}
             </div>
           )}
+
+          <DailyPlanVideoChips modality={block.modality} />
+
+
 
           <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/40">
             {block.gamePlanTemplate && (

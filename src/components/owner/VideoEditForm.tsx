@@ -7,7 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload, X, FileVideo, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Upload, X, FileVideo, Sparkles, Wand2, ChevronDown, Trophy } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState as useReactState } from "react";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { useVideoTaxonomy, groupTaxonomyByLayer } from "@/hooks/useVideoTaxonomy";
 import { supabase } from "@/integrations/supabase/client";
@@ -393,15 +395,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           </div>
         </div>
 
-        {conf.score < 90 && conf.hints.length > 0 && (
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-0.5">
-            <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-              How to reach Elite ({conf.score}/100)
-            </p>
-            <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
-              {conf.hints.slice(0, 5).map((h, i) => <li key={i}>{h}</li>)}
-            </ul>
-          </div>
+        {conf.hints.length > 0 && (
+          <HowToReachElite score={conf.score} hints={conf.hints} />
         )}
 
         {/* Foundation toggle — flips the editor between Application and Foundation tracks */}
@@ -658,3 +653,53 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     </div>
   );
 }
+
+function HowToReachElite({ score, hints }: { score: number; hints: string[] }) {
+  const [open, setOpen] = useReactState(score < 100);
+  const atElite = score >= 100;
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div
+        className={`rounded-md border ${
+          atElite
+            ? "border-emerald-500/30 bg-emerald-500/5"
+            : "border-amber-500/30 bg-amber-500/5"
+        }`}
+      >
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="w-full flex items-center gap-2 p-2 text-left"
+          >
+            <Trophy
+              className={`h-3.5 w-3.5 ${
+                atElite ? "text-emerald-600" : "text-amber-600"
+              }`}
+            />
+            <span className="text-[11px] font-semibold uppercase tracking-wide">
+              How to reach Elite
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {score}/100
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 ml-auto transition-transform ${
+                open ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <ul className="text-[11px] text-muted-foreground list-disc pl-6 pr-3 pb-2 space-y-0.5">
+            {atElite && hints.length === 0 ? (
+              <li>Elite — every dimension is at full coverage. Ship it.</li>
+            ) : (
+              hints.slice(0, 8).map((h, i) => <li key={i}>{h}</li>)
+            )}
+          </ul>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+}
+

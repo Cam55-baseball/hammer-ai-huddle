@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,16 @@ export function PostSessionVideoSuggestions({ sessionId }: Props) {
     staleTime: 30_000,
   });
 
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!session) return;
+    // Auto-scroll into view so post-session picks are unmissable.
+    const t = setTimeout(() => {
+      wrapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [session]);
+
   if (isLoading || !session) {
     return (
       <Card>
@@ -49,7 +60,7 @@ export function PostSessionVideoSuggestions({ sessionId }: Props) {
 
   if (!agg.skillDomain || (agg.movementPatterns.length + agg.resultTags.length === 0)) {
     return (
-      <Card className="border-dashed">
+      <Card className="border-dashed" ref={wrapRef as any}>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" /> Hammer Picks for You
@@ -63,13 +74,15 @@ export function PostSessionVideoSuggestions({ sessionId }: Props) {
   }
 
   return (
-    <VideoSuggestionsPanel
-      skillDomain={agg.skillDomain}
-      mode="session"
-      movementPatterns={agg.movementPatterns}
-      resultTags={agg.resultTags}
-      contextTags={agg.contextTags}
-      title="Hammer Picks for You"
-    />
+    <div ref={wrapRef} className="scroll-mt-24">
+      <VideoSuggestionsPanel
+        skillDomain={agg.skillDomain}
+        mode="session"
+        movementPatterns={agg.movementPatterns}
+        resultTags={agg.resultTags}
+        contextTags={agg.contextTags}
+        title="Hammer Picks for You"
+      />
+    </div>
   );
 }

@@ -647,15 +647,32 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               { name: "Position-specific throws", dosage: "15", cue: "footwork before arm" },
               { name: "Arm-care cooldown", dosage: "5 min" },
             ];
+      // Anthropometric throwing cues + supplemental drills (additive overlay).
+      const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
+        cues: [] as ReturnType<typeof selectThrowingAdaptations>["cues"],
+        supplemental: [] as ReturnType<typeof selectThrowingAdaptations>["supplemental"],
+        rationale: null,
+      };
+      for (const s of thrOut.supplemental) {
+        drills.push({
+          name: `Anthro supplemental · ${s.name}`,
+          dosage: s.dosage,
+          cue: s.cue,
+        });
+      }
+      const baseCues = ["Footwork before arm.", "Build distance, do not start there."];
+      const anthroCues = thrOut.cues.map((c) => c.cue);
+
       return {
         modality,
         title: inSeason ? "Throwing — in-season maintain" : offSeason ? "Throwing — off-season build" : "Throwing",
         why: (inSeason ? "Preserve arm freshness for competition." : offSeason ? "Build long-toss base and intent." : "Arm care + position-specific intent.") + (goal ? ` ${goal}` : ""),
-        roadmapReason: inSeason ? "In-season — keep arm fresh, save throws for games." : offSeason ? "Off-season — build the base now so you can spend in season." : "Default throwing block calibrated to season phase.",
+        roadmapReason: (inSeason ? "In-season — keep arm fresh, save throws for games." : offSeason ? "Off-season — build the base now so you can spend in season." : "Default throwing block calibrated to season phase.")
+          + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
         phase: inSeason ? "maintain" : offSeason ? "build" : "skill",
         steps: drillsToSteps(drills),
         drills,
-        cues: ["Footwork before arm.", "Build distance, do not start there."],
+        cues: [...baseCues, ...anthroCues],
         stopRules: ["Any elbow or shoulder pain — stop. Tell Hammer."],
         durationMin: inSeason ? 15 : offSeason ? 40 : 25,
         route: "/practice?module=throwing",

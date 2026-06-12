@@ -27,6 +27,7 @@ import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
+import { TodaysHammerPick } from "@/components/dashboard/TodaysHammerPick";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Sparkles as SparklesIcon } from "lucide-react";
@@ -90,7 +91,8 @@ function DashboardTodayPlan() {
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-          <div className="p-3 sm:p-4 border-t border-border/60">
+          <div className="p-3 sm:p-4 border-t border-border/60 space-y-3">
+            <TodaysHammerPick />
             <HammerDailyPlan />
           </div>
         </CollapsibleContent>
