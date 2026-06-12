@@ -767,9 +767,13 @@ export type Database = {
       }
       athlete_context: {
         Row: {
+          anthropometrics: Json | null
+          bats_hand: string | null
+          competition_level: string | null
           confidence: Json
           created_at: string
           development_priorities: string[] | null
+          education_stage: string | null
           goal_horizon: string | null
           goal_priority_rank: number | null
           goal_summary: string | null
@@ -777,10 +781,15 @@ export type Database = {
           last_authored_at: string | null
           last_authored_by: string | null
           lifting_age_years: number | null
+          lifting_history: Json | null
+          other_sports: string[] | null
+          position_primary: string | null
+          position_secondary: string[] | null
           school_grade: string | null
           season_phase: string | null
           sport_primary: string | null
           sport_secondary: string[] | null
+          throws_hand: string | null
           training_focus: string[] | null
           typical_session_length_min: number | null
           updated_at: string
@@ -790,9 +799,13 @@ export type Database = {
           years_in_sport: number | null
         }
         Insert: {
+          anthropometrics?: Json | null
+          bats_hand?: string | null
+          competition_level?: string | null
           confidence?: Json
           created_at?: string
           development_priorities?: string[] | null
+          education_stage?: string | null
           goal_horizon?: string | null
           goal_priority_rank?: number | null
           goal_summary?: string | null
@@ -800,10 +813,15 @@ export type Database = {
           last_authored_at?: string | null
           last_authored_by?: string | null
           lifting_age_years?: number | null
+          lifting_history?: Json | null
+          other_sports?: string[] | null
+          position_primary?: string | null
+          position_secondary?: string[] | null
           school_grade?: string | null
           season_phase?: string | null
           sport_primary?: string | null
           sport_secondary?: string[] | null
+          throws_hand?: string | null
           training_focus?: string[] | null
           typical_session_length_min?: number | null
           updated_at?: string
@@ -813,9 +831,13 @@ export type Database = {
           years_in_sport?: number | null
         }
         Update: {
+          anthropometrics?: Json | null
+          bats_hand?: string | null
+          competition_level?: string | null
           confidence?: Json
           created_at?: string
           development_priorities?: string[] | null
+          education_stage?: string | null
           goal_horizon?: string | null
           goal_priority_rank?: number | null
           goal_summary?: string | null
@@ -823,10 +845,15 @@ export type Database = {
           last_authored_at?: string | null
           last_authored_by?: string | null
           lifting_age_years?: number | null
+          lifting_history?: Json | null
+          other_sports?: string[] | null
+          position_primary?: string | null
+          position_secondary?: string[] | null
           school_grade?: string | null
           season_phase?: string | null
           sport_primary?: string | null
           sport_secondary?: string[] | null
+          throws_hand?: string | null
           training_focus?: string[] | null
           typical_session_length_min?: number | null
           updated_at?: string
@@ -1920,6 +1947,45 @@ export type Database = {
           started_at?: string
           stripe_session_id?: string | null
           tier?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_context: {
+        Row: {
+          age_groups: string[] | null
+          athlete_count: number | null
+          coaching_philosophy: string | null
+          created_at: string
+          org_name: string | null
+          primary_disciplines: string[] | null
+          program_name: string | null
+          seasons_run: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_groups?: string[] | null
+          athlete_count?: number | null
+          coaching_philosophy?: string | null
+          created_at?: string
+          org_name?: string | null
+          primary_disciplines?: string[] | null
+          program_name?: string | null
+          seasons_run?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_groups?: string[] | null
+          athlete_count?: number | null
+          coaching_philosophy?: string | null
+          created_at?: string
+          org_name?: string | null
+          primary_disciplines?: string[] | null
+          program_name?: string | null
+          seasons_run?: number | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -7942,6 +8008,42 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           video_submission_url?: string | null
+        }
+        Relationships: []
+      }
+      scout_context: {
+        Row: {
+          athlete_pool_size: number | null
+          created_at: string
+          evaluation_focus: string[] | null
+          level_focus: string[] | null
+          org_name: string | null
+          regions: string[] | null
+          sports: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          athlete_pool_size?: number | null
+          created_at?: string
+          evaluation_focus?: string[] | null
+          level_focus?: string[] | null
+          org_name?: string | null
+          regions?: string[] | null
+          sports?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          athlete_pool_size?: number | null
+          created_at?: string
+          evaluation_focus?: string[] | null
+          level_focus?: string[] | null
+          org_name?: string | null
+          regions?: string[] | null
+          sports?: string[] | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
