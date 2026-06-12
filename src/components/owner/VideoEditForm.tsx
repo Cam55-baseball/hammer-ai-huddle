@@ -7,7 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload, X, FileVideo, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Upload, X, FileVideo, Sparkles, Wand2, ChevronDown, Trophy } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState as useReactState } from "react";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { useVideoTaxonomy, groupTaxonomyByLayer } from "@/hooks/useVideoTaxonomy";
 import { supabase } from "@/integrations/supabase/client";
@@ -393,15 +395,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           </div>
         </div>
 
-        {conf.score < 90 && conf.hints.length > 0 && (
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-0.5">
-            <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-              How to reach Elite ({conf.score}/100)
-            </p>
-            <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
-              {conf.hints.slice(0, 5).map((h, i) => <li key={i}>{h}</li>)}
-            </ul>
-          </div>
+        {conf.hints.length > 0 && (
+          <HowToReachElite score={conf.score} hints={conf.hints} />
         )}
 
         {/* Foundation toggle — flips the editor between Application and Foundation tracks */}
