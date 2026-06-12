@@ -2,13 +2,13 @@ import type { ReportCardSpec, ReportCardTileSpec } from "../types";
 import { readNumber, readBool, readScore100, missingState, scoreMeterState } from "../metricReaders";
 
 /**
- * Baseball Hitting — 15-tile contract mapped to the P1–P4 doctrine.
+ * Baseball Hitting — 17-tile contract mapped to the P1–P4 doctrine.
  *
  * P1 — Hip Load Stability (non-negotiable PASS gate)
  * P2 — Hand Load · P2 Timing to Knee Lift · Eyes / Head Tracking
- * P3 — Stride Direction · Heel Plant · P3 Timing to Release
+ * P3 — Stride Direction · Heel Plant · P3 Timing to Release · Hands Outside Shoulders at Landing
  * P4 — Sequencing (NN) · Bat Path · On-Plane % · Time-to-Contact ·
- *      Bat Speed · Back Elbow at Contact · Hitter's Move (NN) · Finish & Balance
+ *      Bat Speed · Back Elbow at Contact · Hitter's Move (NN) · Shoulder Plane Steadiness · Finish & Balance
  */
 const tiles: ReportCardTileSpec[] = [
   // ============ P1 ============
@@ -24,7 +24,7 @@ const tiles: ReportCardTileSpec[] = [
       whatWhy:
         "P1 is about STABILITY. You pass by NOT drifting forward (body, head, or front foot) while the pitcher reaches knee lift. A bigger, balanced back-hip load on top of stability earns elite. Bigger load = more stored swing power.",
       howToImprove:
-        "Mirror loads. Pause at peak hip load while a partner mimics a pitcher's leg lift — your head and front foot should freeze. Catch-play with intent on hip-first timing.",
+        "Hold-the-load drills: load onto the back hip and freeze while a partner mimics a pitcher's leg lift — head, front foot, and centerline cannot drift. Tee work with eyes closed at peak load to feel a quiet centerline. Weighted-bat hip-load holds to build the position. Mirror checks at peak load before every BP round.",
       encouragement: "Stay still. Stay loaded. Let the pitcher come to you.",
     },
     compute: (a) => {
@@ -81,9 +81,10 @@ const tiles: ReportCardTileSpec[] = [
     phase: "P2 Hand Load",
     explainer: {
       whatWhy:
-        "Lateral head movement toward the pitcher is a major contact disruptor. Eyes work; head stays.",
-      howToImprove: "Tee work with eyes-on-impact cue. Slow-mo side review of head path across the swing.",
-      encouragement: "Eyes on the ball. Head on its post.",
+        "Lateral head movement toward the pitcher is a major contact disruptor. Eyes work; head stays. A loaded scap AFTER P1 is what locks the head still — the scap pulls the chin and eye line into a fixed post so the eyes can work without the head chasing them.",
+      howToImprove:
+        "Load the scap immediately after P1 so the head has a fixed post to sit on. Most pros use the 'ball-on-the-load-spot' drill: place a ball where your head sits at peak load, take the swing, then check that your head has returned to that same reference point relative to the ball. Tee work with eyes-on-impact cue. Slow-mo side review of head path across the swing.",
+      encouragement: "Scap locks the post. Eyes do the work.",
     },
     compute: (a) => {
       const m = readNumber(a, "eyes_track_score_100");
@@ -115,14 +116,15 @@ const tiles: ReportCardTileSpec[] = [
     key: "heel_plant",
     name: "Heel Plant / Landing",
     mode: "score_meter",
-    standard: "Sideways landing, both feet down, hips do NOT turn shoulders",
+    standard: "Full foot down sideways, both feet planted, hips do NOT turn shoulders",
     thresholdChip: "Acceptable 65 · Elite 88",
     phase: "P3 Stride / Landing",
     explainer: {
       whatWhy:
-        "Land SIDEWAYS, chest + shoulders square to the plate, both feet down, core max-tensioned. Turning shoulders WITH hips at landing creates a longer, more miss-prone swing.",
-      howToImprove: "Heel-plant pause drills. Mirror landings. Slow-mo side-view review.",
-      encouragement: "Land it square. Hips stay loaded. Then explode.",
+        "'Heel plant' is the moment the FULL foot is down — not just the heel — landed sideways with chest and shoulders square to the plate, core max-tensioned. The back hip is what controls the stride (a pitcher-style stride that tensions the core). If the scap stays loaded pre-stride, your stride naturally stays sideways as long as the shoulders don't begin to open — meaning you can engage all of P3 at full force without leaking. Turning shoulders WITH hips at landing creates a longer, more miss-prone swing.",
+      howToImprove:
+        "Heel-plant pause drills with the scap held loaded the whole time. Back-hip-controls-stride dry work (no bat). Mirror landings checking shoulders are still closed. Slow-mo side-view review.",
+      encouragement: "Land it square. Scap loaded. Then explode.",
     },
     compute: (a) => {
       const m = readScore100(a, "heel_plant_score_100", "heel_plant_score_10");
@@ -148,6 +150,25 @@ const tiles: ReportCardTileSpec[] = [
       return { status: m.value ? "pass" : "fail", confidence: m.confidence };
     },
   },
+  {
+    key: "hands_outside_shoulders_at_landing",
+    name: "Hands Outside Shoulders at Landing",
+    mode: "pass_fail",
+    standard: "At front-foot strike, hands sit OUTSIDE the shoulder line horizontally",
+    phase: "P3 Stride / Landing",
+    explainer: {
+      whatWhy:
+        "At landing (right before P4 begins), the hands should be horizontally OUTSIDE the shoulder line. This is the position that gives you the runway to get on plane AND stay on plane smoothly. Hands stacked inside the shoulders force a steep, short bat path.",
+      howToImprove:
+        "Pause-at-landing tee work — freeze at front-foot strike and check hand position relative to the back shoulder. Wall drills with a target outside the shoulder. Mirror reps at landing.",
+      encouragement: "Hands outside the shoulders. Plane unlocked.",
+    },
+    compute: (a) => {
+      const m = readBool(a, "hands_outside_shoulders_at_landing_pass");
+      if (!m) return missingState(a, "hands_outside_shoulders_at_landing_pass");
+      return { status: m.value ? "pass" : "fail", confidence: m.confidence };
+    },
+  },
 
   // ============ P4 ============
   {
@@ -159,9 +180,10 @@ const tiles: ReportCardTileSpec[] = [
     nonNegotiable: true,
     explainer: {
       whatWhy:
-        "Load legs → Load hands → Pause → Step / Stride → Pause → Contact. Out-of-order or rushed sequences collapse timing.",
-      howToImprove: "Pause-pause tee rounds. Front-toss with sequence call-outs.",
-      encouragement: "Two pauses, one swing. Slow is smooth, smooth is fast.",
+        "Load legs → Load hands → Pause → Step / Stride → Pause → Contact. The back hip is what drives the front foot to the ground — the step / back hip should be completely maxed out involuntarily by landing, with all VOLUNTARY hip usage spent during the stepping phase. Out-of-order or rushed sequences collapse timing.",
+      howToImprove:
+        "Pause-pause tee rounds. Back-hip-to-floor dry work — load the back hip and let it drive the step to the floor (no voluntary hip movement after landing). Front-toss with sequence call-outs.",
+      encouragement: "Two pauses, one swing. Back hip drops the foot.",
     },
     compute: (a) => {
       const m = readBool(a, "sequencing_ok");
@@ -198,8 +220,9 @@ const tiles: ReportCardTileSpec[] = [
     explainer: {
       whatWhy:
         "How long the barrel stays on the plane of the incoming pitch. Higher % = more margin for timing error.",
-      howToImprove: "Tilt-tee drills (high pitch / low pitch). Constraint band on the bat to feel plane.",
-      encouragement: "Stay on it longer. The ball finds the barrel.",
+      howToImprove:
+        "Line the hands up with the ball to 'catch' it — the knob CANNOT compromise forward ahead of the elbow on its own. The elbow is what's responsible for the forward turn to the ball; the hands stay in line and the barrel follows. Drills: knob-stays-back tee work, elbow-leads-the-turn constraint, catch-with-both-hands cue at the contact point, PVC plane reps.",
+      encouragement: "Catch the ball with your hands. Let the elbow do the turning.",
     },
     compute: (a) => {
       const m = readNumber(a, "on_plane_pct");
@@ -217,8 +240,9 @@ const tiles: ReportCardTileSpec[] = [
     explainer: {
       whatWhy:
         "How long from the moment the bat starts moving until ball-barrel contact. Faster = better commitment window.",
-      howToImprove: "Short-load tee work. Heavy-bat / light-bat alternation. React drills.",
-      encouragement: "Quick decision, quick barrel.",
+      howToImprove:
+        "No upper-body movement until the hips have cleared a path of least resistance forward. THEN the back elbow goes forward linearly, taking the barrel to contact — the knob stays back acting as a fulcrum the whole time. Drills: pause-at-launch tee, hips-clear-first dry cuts, knob-pinned-to-side reps, partner-holds-the-knob elbow-to-ball.",
+      encouragement: "Hips clear the path. Elbow takes the barrel. Knob never leaves.",
     },
     compute: (a) => {
       const m = readNumber(a, "time_to_contact_ms");
@@ -242,8 +266,9 @@ const tiles: ReportCardTileSpec[] = [
     explainer: {
       whatWhy:
         "Barrel speed AT impact, not before. Elite hitters are still accelerating through contact.",
-      howToImprove: "Overload / underload bat work. Med-ball rotational throws. Contact-point isolation drills.",
-      encouragement: "Accelerate through the ball, not at it.",
+      howToImprove:
+        "The barrel only accelerates through the ball when the knob stays back as a fulcrum and the back elbow drives forward linearly. If the knob compromises forward early, the barrel decelerates into contact. Drills: overload/underload bat work, med-ball rotational throws, contact-point isolation with knob anchored, catch-the-ball-with-both-hands cue.",
+      encouragement: "Accelerate THROUGH the ball, not at it.",
     },
     compute: (a) => {
       const m = readNumber(a, "bat_speed_contact_mph");
@@ -261,14 +286,15 @@ const tiles: ReportCardTileSpec[] = [
     key: "back_elbow_contact",
     name: "Back Elbow at Contact",
     mode: "raw_passed",
-    standard: "Past belly button, shoulders square",
+    standard: "Past belly button, shoulders square, knob still pinned back",
     thresholdChip: "Acceptable ≥0° past BB · Elite ≥20°",
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "Back elbow drives past the belly button while the chest stays square as long as possible. This unlocks rotational extension after contact and keeps your barrel in the zone longer.",
-      howToImprove: "Catch-the-ball drills with both hands. Knob-to-back-hip then meet-the-ball.",
-      encouragement: "Both hands to the ball, both hands through it.",
+        "Back elbow drives past the belly button while the chest stays square as long as possible. The knob MUST stay back / pinned in the loaded position for this to work — the elbow hunts the ball forward while the hands stay loaded behind it. This is what unlocks rotational extension after contact and keeps your barrel in the zone longer.",
+      howToImprove:
+        "Hunt the ball with the back elbow while the knob stays in the loaded position. Drills: knob-anchored tee reps, partner holds the knob while you drive the back elbow to the ball, catch-the-ball-with-both-hands at contact.",
+      encouragement: "Knob pinned, elbow hunts. The ball finds the barrel.",
     },
     compute: (a) => {
       const m = readNumber(a, "back_elbow_past_bb_deg");
@@ -286,20 +312,41 @@ const tiles: ReportCardTileSpec[] = [
     key: "hitters_move",
     name: "Hitter's Move Quality",
     mode: "score_meter",
-    standard: "Hands back, elbow leads, contact with hands, barrel last",
+    standard: "Knob back · hips clear · elbow leads · hands in line · barrel last",
     thresholdChip: "Acceptable 70 · Elite 92",
     phase: "P4 Hitter's Move",
     nonNegotiable: true,
     explainer: {
       whatWhy:
-        "Knob = fulcrum. Back elbow drives forward FIRST. Hands stay back to get in line with the ball, shoulders stay closed as long as possible, barrel catapults through last. Contact lines up with the hands; extension is a post-contact byproduct.",
-      howToImprove: "Pause-at-launch tees. Front-arm post drills. Catch-the-ball-with-both-hands cue.",
-      encouragement: "Trust the load. Let the elbow run. Catch the ball with your hands.",
+        "The Hitter's Move is a strict order: knob stays back as the fulcrum → hips clear a path of least resistance → back elbow leads linearly forward → hands stay in line with the ball to 'catch' it → barrel catapults through last. Contact lines up with the hands; extension is a post-contact byproduct.",
+      howToImprove:
+        "Pause-at-launch tees (freeze the load, then move in order). Hips-clear-first dry reps with the knob pinned. Front-arm post drills. Catch-the-ball-with-both-hands cue. Partner-holds-the-knob elbow-to-ball reps.",
+      encouragement: "Knob back, hips clear, elbow runs, hands catch, barrel last.",
     },
     compute: (a) => {
       const m = readScore100(a, "hitters_move_score_100", "hitters_move_score_10");
       if (!m) return missingState(a, "hitters_move_score_100");
       return scoreMeterState(m.value, m.confidence, 70, 92);
+    },
+  },
+  {
+    key: "shoulder_plane_steadiness",
+    name: "Shoulder Plane Steadiness",
+    mode: "score_meter",
+    standard: "Once shoulders begin to rotate in P4, the plane holds steady through contact",
+    thresholdChip: "Acceptable 70 · Elite 90",
+    phase: "P4 Hitter's Move",
+    explainer: {
+      whatWhy:
+        "When the shoulders begin to rotate in P4, the shoulder plane has to HOLD whatever plane it started on through contact. The steadier the plane, the bigger the contact window for what the eyes have already seen. A wobbling plane shrinks that window and turns barreled-up looks into mis-hits.",
+      howToImprove:
+        "PVC across the shoulders — rotate while holding the same tilt. Mirror reps watching the back shoulder track on a fixed plane. Tee work focused only on plane-holding through contact, no chasing high or low.",
+      encouragement: "Pick your plane. Hold your plane. The ball does the rest.",
+    },
+    compute: (a) => {
+      const m = readScore100(a, "shoulder_plane_steadiness_score_100", "shoulder_plane_steadiness_score_10");
+      if (!m) return missingState(a, "shoulder_plane_steadiness_score_100");
+      return scoreMeterState(m.value, m.confidence, 70, 90);
     },
   },
   {
@@ -311,9 +358,9 @@ const tiles: ReportCardTileSpec[] = [
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "A balanced finish proves the swing was rotational, not linear. Falling off line wastes power and disrupts the next pitch.",
+        "A clean, balanced two-hand finish over a stacked back leg is the PROOF that the swing was rotational and that the sequence held — the knob stayed back long enough, the elbow led, and the rotation finished its job. It also means you're already reset for the next pitch. Falling off line is hard evidence of a linear leak somewhere earlier in P4.",
       howToImprove: "Hold-the-finish tee rounds. Single-leg balance drills. Mirror finish review.",
-      encouragement: "Finish like a statue. Power stays in the swing.",
+      encouragement: "Finish like a statue. Proof the swing was right.",
     },
     compute: (a) => {
       const m = readNumber(a, "finish_balance_score_100");

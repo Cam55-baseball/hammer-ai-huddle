@@ -77,6 +77,15 @@ export const bhContract: DisciplineContract = {
       prompt:
         "TRUE if the front foot is down within roughly ±120 ms of the pitcher reaching release point. FALSE if foot is down too early (drifting) or still in flight at release (late). If pitcher release point is not visible, set missing=true with reason 'Pitcher release point not in frame'.",
     },
+    {
+      key: "hands_outside_shoulders_at_landing_pass",
+      tileKey: "hands_outside_shoulders_at_landing",
+      label: "Hands outside shoulder line at front-foot landing",
+      kind: "boolean",
+      prompt:
+        "TRUE if at the frame of FRONT-FOOT STRIKE (landing) the hands sit HORIZONTALLY OUTSIDE the line of the back shoulder (i.e., further from the centerline than the back shoulder). FALSE if hands are stacked inside the shoulders or pulled in front of the chest. If hands or back shoulder are not visible in the landing frame, set missing=true with reason 'Hands or back shoulder not visible at landing'.",
+    },
+
     // ============ P4 ============
     {
       key: "sequencing_ok",
@@ -145,6 +154,16 @@ export const bhContract: DisciplineContract = {
       range: [0, 100],
       prompt:
         "Score 0-100: hands stay back, elbow leads, no casting/early barrel flip, chest stays square, contact made with the hands, barrel catapults last. PASS at 70, ELITE at 92.",
+    },
+    {
+      key: "shoulder_plane_steadiness_score_100",
+      tileKey: "shoulder_plane_steadiness",
+      label: "Shoulder plane steadiness through P4 (0-100)",
+      kind: "number",
+      unit: "score",
+      range: [0, 100],
+      prompt:
+        "Score 0-100 for how steady the SHOULDER PLANE remains from the start of shoulder rotation through contact. PASS at 70, ELITE at 90. Worked example: shoulder line wobbles or re-tilts mid-rotation → ~50; same tilt held from rotation start through contact → ~88. Measure the angle of the line between the two shoulders across the rotation window; deduct for any change > a few degrees.",
     },
     {
       key: "finish_balance_score_100",

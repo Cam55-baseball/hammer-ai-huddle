@@ -1967,7 +1967,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         // ===== PASS 2: targeted re-extraction for missing report-card keys =====
         if (reportCardContract && (reportCardContract.id === "bp" || reportCardContract.id === "throwing" || reportCardContract.id === "bh" || reportCardContract.id === "sb-pitching")) {
           const miss = countMissing(reportCardContract, metrics);
-          if (miss.ratio > 0.4 && miss.missingKeys.length > 0) {
+          // Bread-and-butter BH metrics ALWAYS trigger a targeted second pass when missing.
+          const BREAD_AND_BUTTER_BH = ["time_to_contact_ms", "bat_speed_contact_mph"];
+          const breadMissing = (reportCardContract.id === "bh" || reportCardContract.id === "sh")
+            ? BREAD_AND_BUTTER_BH.filter((k) => miss.missingKeys.includes(k))
+            : [];
+          if ((miss.ratio > 0.4 && miss.missingKeys.length > 0) || breadMissing.length > 0) {
             console.log(`[REPORT-CARD] pass-2 triggered: ${miss.missingKeys.length}/${miss.total} missing for ${reportCardContract.id}`);
             try {
               const pass2System = `You are a ${reportCardContract.label} mechanics analyst running a TARGETED second pass over the SAME frames. Look again specifically for the landmarks listed. Do NOT invent — keep missing=true if still unmeasurable, with a sharper one-sentence reason.${buildSecondPassPromptBlock(reportCardContract, miss.missingKeys)}`;
