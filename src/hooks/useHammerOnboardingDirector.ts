@@ -87,6 +87,40 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
 
   const gapSet = useMemo(() => getKnowledgeGapsForAudience(audience), [audience]);
 
+  // Hydrate coach/scout previously-answered gaps so progress survives reload.
+  const { data: coachScoutRow } = useQuery({
+    queryKey: ["onboarding-progress", audience, user?.id],
+    enabled: !!user && (audience === "coach" || audience === "scout"),
+    staleTime: 30_000,
+    queryFn: async () => {
+      if (!user) return null;
+      if (audience === "coach") return await fetchCoachContextRow(user.id);
+      if (audience === "scout") return await fetchScoutContextRow(user.id);
+      return null;
+    },
+  });
+
+  // Seed `coachScoutResolved` from hydrated row (one-shot per row identity).
+  useEffect(() => {
+    if (audience === "athlete" || !coachScoutRow) return;
+    const seeded = new Set<string>();
+    for (const gap of gapSet) {
+      const v = (coachScoutRow as Record<string, unknown>)[gap.persistTo];
+      if (v == null) continue;
+      if (typeof v === "string" && v.trim() === "") continue;
+      if (Array.isArray(v) && v.length === 0) continue;
+      seeded.add(gap.id);
+    }
+    if (seeded.size > 0) {
+      setCoachScoutResolved((prev) => {
+        // merge — never lose session resolutions
+        const next = new Set(prev);
+        for (const id of seeded) next.add(id);
+        return next;
+      });
+    }
+  }, [audience, coachScoutRow, gapSet]);
+
   const openGaps = useMemo(() => {
     if (audience === "athlete") {
       return gapSet
@@ -96,8 +130,6 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
         })
         .sort((a, b) => a.priority - b.priority);
     }
-    // Coach/scout: gaps remain "open" until resolved this session.
-    // (A future load could hydrate from coach_context/scout_context.)
     return gapSet
       .filter((g) => !coachScoutResolved.has(g.id))
       .sort((a, b) => a.priority - b.priority);
@@ -132,18 +164,8 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
           .filter(Boolean);
       }
       if (gap.persistTo === "injury_history") {
-        // Accept structured injury payload OR free text. Empty / "none" → [].
-        if (Array.isArray(value)) {
-          v = value;
-        } else if (value && typeof value === "object") {
-          v = [{ ...(value as Record<string, unknown>), reported_at: new Date().toISOString() }];
-        } else {
-          const s = String(value ?? "").trim().toLowerCase();
-          v =
-            s === "" || s === "none" || s === "no"
-              ? []
-              : [{ note: String(value), reported_at: new Date().toISOString() }];
-        }
+        // Canonicalize via the shared normalizer so every consumer sees one shape.
+        v = canonicalizeInjuryHistory(value);
       }
 
       try {
@@ -165,6 +187,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
       // Best-effort cache refresh — never block forward progress on this.
       try {
         await qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
+        await qc.invalidateQueries({ queryKey: ["onboarding-progress", audience, user.id] });
       } catch (err) {
         console.warn("[hammer onboarding] cache invalidation failed (non-fatal)", err);
       }
@@ -194,3 +217,4 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     skip,
   };
 }
+
