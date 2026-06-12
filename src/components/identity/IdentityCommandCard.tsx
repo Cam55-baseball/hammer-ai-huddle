@@ -376,8 +376,21 @@ export function IdentityCommandCard({ className }: Props) {
                 <span>miss/7d</span>
               </span>
             )}
+            {typeof hieSnapshot?.readiness_score === 'number' && (
+              <Link
+                to="/progress#body"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground hover:bg-muted transition-colors"
+                aria-label="Open full body report"
+              >
+                <span className="text-muted-foreground">Body</span>
+                <span className="tabular-nums">{Math.round(hieSnapshot.readiness_score)}</span>
+                <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
+              </Link>
+            )}
           </div>
         </button>
+
 
 
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
