@@ -231,6 +231,15 @@ export const bhContract: DisciplineContract = {
       prompt:
         "TRUE if the front foot is down within ±120ms of the pitcher reaching release point. FALSE if foot is down too early (drifting) or still in flight at release (late). If pitcher release point not visible, set missing=true with reason 'Pitcher release point not in frame'.",
     },
+    {
+      key: "hands_outside_shoulders_at_landing_pass",
+      tileKey: "hands_outside_shoulders_at_landing",
+      label: "Hands outside shoulder line at front-foot landing",
+      kind: "boolean",
+      prompt:
+        "TRUE if at the frame of FRONT-FOOT STRIKE (landing) the hitter's hands sit HORIZONTALLY OUTSIDE the line of the back shoulder (further from the body centerline than the back shoulder). FALSE if hands are stacked inside the shoulders or pulled in front of the chest. If hands or back shoulder are not visible in the landing frame, set missing=true with reason 'Hands or back shoulder not visible at landing'.",
+    },
+
     // P4
     {
       key: "sequencing_ok",
@@ -277,7 +286,7 @@ export const bhContract: DisciplineContract = {
       unit: "ms",
       range: [80, 400],
       prompt:
-        "Milliseconds from the moment the bat first starts moving forward until ball-barrel contact. PASS ≤175ms, ELITE ≤150ms. Estimate from visible frames using stated frame rate.",
+        "Milliseconds from SWING START to BALL-BARREL CONTACT. THIS IS A BREAD-AND-BUTTER METRIC — be elite-accurate. Frame anchors: (a) SWING START = the first frame in which the knob begins forward motion AFTER the hand-load has completed AND the hips have begun to clear (do NOT use load motion or stride motion as swing start); (b) CONTACT FRAME = the first frame in which the bat barrel overlaps the ball. Compute ms = (contact_frame - start_frame) * 1000 / fps. Use the video's stated frame rate. If fps is unknown, set missing=true with reason 'fps_unknown'. If either anchor frame is ambiguous (motion blur, occluded knob, off-camera contact), set missing=true with reason naming the specific landmark you could not lock. NEVER GUESS. PASS ≤175 ms, ELITE ≤150 ms.",
     },
     {
       key: "bat_speed_contact_mph",
@@ -287,7 +296,7 @@ export const bhContract: DisciplineContract = {
       unit: "mph",
       range: [30, 110],
       prompt:
-        "Estimated barrel speed AT contact in mph. PASS ≥65, ELITE ≥75. If no sensor data and motion blur is too high to estimate, set missing=true with reason 'Frame rate too low for bat speed estimate'.",
+        "Estimated barrel speed AT contact, in mph. THIS IS A BREAD-AND-BUTTER METRIC — be elite-accurate. Method: measure peak translational speed of the BARREL TIP over a 2-frame window straddling the contact frame. Convert pixels/frame to mph using the bat length as the calibration ruler (default bat length = 33 in if unknown — note this assumption). Required visibility: full bat AND ball visible across the 2-frame window straddling contact, frame rate known. If the barrel is obscured at contact, if frame rate is unknown, or if motion blur prevents tracking the barrel tip across two consecutive frames, set missing=true with the specific reason. NEVER GUESS. PASS ≥65 mph, ELITE ≥75 mph.",
     },
     {
       key: "back_elbow_past_bb_deg",
@@ -317,6 +326,16 @@ export const bhContract: DisciplineContract = {
       unit: "score",
       range: [0, 10],
       prompt: "Legacy 1–10 hitter's move score. Prefer hitters_move_score_100.",
+    },
+    {
+      key: "shoulder_plane_steadiness_score_100",
+      tileKey: "shoulder_plane_steadiness",
+      label: "Shoulder plane steadiness through P4 (0–100)",
+      kind: "number",
+      unit: "score",
+      range: [0, 100],
+      prompt:
+        "Score 0–100 for how steady the SHOULDER PLANE remains from the start of shoulder rotation through contact. Measure the angle of the line between the two shoulders across the rotation window; the smaller the change, the higher the score. PASS at 70, ELITE at 90. Worked example: shoulder line wobbles or re-tilts mid-rotation → ~50; same tilt held from rotation start through contact → ~88.",
     },
     {
       key: "finish_balance_score_100",
