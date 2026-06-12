@@ -558,7 +558,9 @@ export default function AnalyzeVideo() {
 
         {/* Video Upload Section */}
         {!videoPreview && (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <CameraAngleHelper module={module} />
+            <div className="grid md:grid-cols-2 gap-4">
             {/* Upload Card */}
             <Card className="p-4 sm:p-6 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
