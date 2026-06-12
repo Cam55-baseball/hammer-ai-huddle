@@ -59,38 +59,16 @@ const KNOWN_INJURY_REGIONS = [
  * Coerce the canonical `injury_history` spine value to a normalized
  * lowercased text blob suitable for region-keyword matching.
  *
- * Accepts every shape currently emitted across the codebase plus malformed
- * inputs. Returns `null` when the input carries no usable text — missingness
- * is preserved, never fabricated (FC global continuity).
+ * Delegates to the canonical `injuryHistoryToText()` normalizer so every
+ * consumer agrees on shape handling. Returns `null` when the input carries
+ * no usable text — missingness is preserved, never fabricated.
  */
 function normalizeInjuryToText(raw: unknown): string | null {
-  if (raw == null) return null;
-  if (typeof raw === "string") {
-    const s = raw.trim().toLowerCase();
-    return s === "" ? null : s;
-  }
-  if (Array.isArray(raw)) {
-    const parts = raw
-      .map((entry) => {
-        if (entry == null) return "";
-        if (typeof entry === "string") return entry;
-        if (typeof entry === "object" && "note" in (entry as object)) {
-          const note = (entry as { note?: unknown }).note;
-          return typeof note === "string" ? note : "";
-        }
-        return "";
-      })
-      .filter((s) => s.length > 0);
-    if (parts.length === 0) return null;
-    return parts.join(" ").toLowerCase();
-  }
-  if (typeof raw === "object") {
-    const note = (raw as { note?: unknown }).note;
-    if (typeof note === "string" && note.trim() !== "") {
-      return note.toLowerCase();
-    }
-  }
-  return null;
+  // Lazy import to keep this module's existing surface stable.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { injuryHistoryToText } = require("./normalizers") as typeof import("./normalizers");
+  const txt = injuryHistoryToText(raw);
+  return txt === "" ? null : txt;
 }
 
 export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjection {
