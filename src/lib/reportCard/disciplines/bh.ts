@@ -368,6 +368,67 @@ const tiles: ReportCardTileSpec[] = [
       return scoreMeterState(m.value, m.confidence, 65, 88);
     },
   },
+  // ----- Shoulder-to-Shoulder Hold (P4 Pass/Fail) -----
+  {
+    key: "shoulder_to_shoulder_hold",
+    name: "Shoulder-to-Shoulder Hold",
+    mode: "pass_fail",
+    standard: "Hands-to-back-shoulder spacing held ≥50% of landing → contact; elite = held all the way to contact",
+    phase: "P4 Hitter's Move",
+    nonNegotiable: true,
+    explainer: {
+      whatWhy:
+        "At landing (end of P3) you create separation: the hands sit behind the back shoulder. Your job is to HOLD that spacing — shoulder to shoulder — as long as possible into P4, ideally all the way to contact. Holding the spacing is proof there's no hand-push at the ball: the hands stayed back so the back elbow could take the bat to the ball for maximum quickness and, if the hip-to-shoulder sequence stays intact, maximum power without manipulation. This is often misread as an 'arm bar' — it isn't. The hands' job is to LINE UP with the ball, not move forward to it. The longer you can hold the shoulder-to-shoulder spacing, the more elite the move. AUTO-FAIL: if the front shoulder flies open / leaks out of sequence before contact, the spacing move is nullified — you must know this is why, even if the rest looked good.",
+      howToImprove:
+        "Drills: pause-at-landing tee work then check that the hands stay PUT while the elbow leads the turn. Knob-pinned-to-the-side reps. Partner holds the knob through P4 while you drive the back elbow to the ball. 'Catch the ball with both hands' cue at the contact point. Front-shoulder discipline drills: PVC across the shoulders, slow turn keeping the front shoulder closed until the elbow has already led, then let the rotation finish on its own.",
+      encouragement: "Hands back. Elbow leads. Catch the ball — don't chase it.",
+    },
+    compute: (a) => {
+      const leak = readBool(a, "front_shoulder_leak_before_contact");
+      const passM = readBool(a, "shoulder_to_shoulder_hold_pass");
+      const pctM = readNumber(a, "shoulder_to_shoulder_hold_pct_to_contact");
+
+      // Auto-FAIL: front shoulder leaked out of sequence before contact —
+      // this nullifies the move regardless of spacing held. Tell the hitter why.
+      if (leak && leak.value === true) {
+        const leakPctM = readNumber(a, "front_shoulder_leak_pct_of_window");
+        const where =
+          leakPctM && Number.isFinite(leakPctM.value)
+            ? `at ~${Math.round(leakPctM.value)}% of the landing→contact window`
+            : "before contact";
+        const heldNote =
+          pctM && Number.isFinite(pctM.value)
+            ? ` (spacing held ~${Math.round(pctM.value)}% — nullified)`
+            : "";
+        const conf = Math.min(
+          leak.confidence,
+          pctM?.confidence ?? leak.confidence,
+        );
+        return {
+          status: "fail",
+          confidence: conf,
+          note: `Auto-FAIL: front shoulder leaked out of sequence ${where} — nullifies the shoulder-to-shoulder hold${heldNote}.`,
+        };
+      }
+
+      // Pass/fail derived from pct held (≥50% of window) when available;
+      // fall back to the boolean key when the model only emitted that.
+      if (pctM) {
+        const pct = Math.max(0, Math.min(100, pctM.value));
+        const pass = pct >= 50;
+        const elite = pct >= 95; // elite = held essentially all the way to contact
+        return {
+          status: elite ? "elite" : pass ? "pass" : "fail",
+          value: `${Math.round(pct)}% held`,
+          confidence: pctM.confidence,
+        };
+      }
+      if (passM) {
+        return { status: passM.value ? "pass" : "fail", confidence: passM.confidence };
+      }
+      return missingState(a, "shoulder_to_shoulder_hold_pct_to_contact");
+    },
+  },
 ];
 
 export const bhReportCard: ReportCardSpec = {
