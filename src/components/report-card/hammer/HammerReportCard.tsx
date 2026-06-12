@@ -5,7 +5,6 @@ import { TileExplainerSheet } from "./TileExplainerSheet";
 import { FoilGradeCard } from "./visuals/FoilGradeCard";
 import { PhaseRail, type PhaseNode } from "./visuals/PhaseRail";
 import { ShareCardExport } from "./visuals/ShareCardExport";
-import { gradeFromTiles } from "@/lib/reportCard/grade";
 import { getReportCardSpec, type AnalysisLike, type ReportCardTileSpec } from "@/lib/reportCard";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -45,7 +44,13 @@ export function HammerReportCard({
   }
 
   const tilesWithState = spec.tiles.map((t) => ({ spec: t, state: t.compute(analysis) }));
-  const grade = useMemo(() => gradeFromTiles(tilesWithState), [tilesWithState]);
+
+  const total = tilesWithState.length;
+  const measured = tilesWithState.filter((t) => t.state.status !== "missing").length;
+  const eliteCount = tilesWithState.filter((t) => t.state.status === "elite").length;
+  const nonNegotiableFailed = tilesWithState.filter(
+    (t) => t.spec.nonNegotiable && t.state.status === "fail",
+  ).length;
 
   // Build phase summary for the rail (BH only)
   const phases: PhaseNode[] = useMemo(() => {
@@ -57,7 +62,7 @@ export function HammerReportCard({
       e.total += 1;
       if (t.state.status !== "missing") {
         e.measured += 1;
-        if (t.state.status === "pass") e.passed += 1;
+        if (t.state.status === "pass" || t.state.status === "elite") e.passed += 1;
       }
       map.set(k, e);
     }
@@ -65,6 +70,7 @@ export function HammerReportCard({
       key,
       label: key,
       count: v.total,
+      measured: v.measured,
       passRate: v.measured > 0 ? v.passed / v.measured : 0,
     }));
   }, [tilesWithState, spec.groupByPhase]);
@@ -73,7 +79,6 @@ export function HammerReportCard({
     ? tilesWithState.filter((t) => (t.spec.phase ?? "Other") === activePhase)
     : tilesWithState;
 
-  // Group by phase if requested
   const groups = spec.groupByPhase
     ? Object.entries(
         visibleTiles.reduce<Record<string, typeof visibleTiles>>((acc, t) => {
@@ -86,13 +91,19 @@ export function HammerReportCard({
 
   return (
     <div className="space-y-5 rc-print-card" ref={cardRef}>
-      {/* Ribbon — mount immediately */}
+      {/* Ribbon — discipline + coverage + encouragement (no letter, no /100 score) */}
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <FoilGradeCard grade={grade} disciplineLabel={spec.disciplineLabel} />
+        <FoilGradeCard
+          disciplineLabel={spec.disciplineLabel}
+          measured={measured}
+          total={total}
+          eliteCount={eliteCount}
+          nonNegotiableFailed={nonNegotiableFailed}
+        />
       </motion.div>
 
       {/* Phase rail — staggered 120ms after ribbon */}
@@ -106,7 +117,6 @@ export function HammerReportCard({
         </motion.div>
       )}
 
-      {/* Compact toggle */}
       {compact && (
         <Button
           type="button"
@@ -121,7 +131,6 @@ export function HammerReportCard({
         </Button>
       )}
 
-      {/* Tiles */}
       {tilesOpen &&
         groups.map(([phase, tiles], gi) => (
           <motion.div

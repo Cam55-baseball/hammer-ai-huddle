@@ -4,9 +4,12 @@ import { cn } from "@/lib/utils";
 export interface PhaseNode {
   key: string;
   label: string;
-  /** 0..1 — pass rate */
+  /** 0..1 — pass rate among MEASURED tiles. */
   passRate: number;
+  /** Total tiles in this phase. */
   count: number;
+  /** How many tiles in this phase have been measured (non-missing). */
+  measured: number;
 }
 
 interface Props {
@@ -18,6 +21,9 @@ interface Props {
 /**
  * Glowing phase orbs connected by an animated rail. Colors per pass rate.
  * Tap an orb to filter the tiles below.
+ *
+ * When `measured === 0` for a phase, we show "—" instead of "0%" so users
+ * don't see false failure on tiles that simply weren't extracted yet.
  */
 export function PhaseRail({ phases, activePhase, onSelect }: Props) {
   const reduce = useReducedMotion();
@@ -36,16 +42,25 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
 
       <div className="relative flex items-start justify-between gap-2">
         {phases.map((p, i) => {
-          const tier =
-            p.passRate >= 0.85 ? "pass" : p.passRate >= 0.5 ? "warn" : "fail";
+          const noData = p.measured === 0;
+          const tier = noData
+            ? "missing"
+            : p.passRate >= 0.85
+              ? "pass"
+              : p.passRate >= 0.5
+                ? "warn"
+                : "fail";
           const color =
             tier === "pass"
               ? "hsl(var(--meter-pass))"
               : tier === "warn"
                 ? "hsl(var(--meter-warn))"
-                : "hsl(var(--meter-fail))";
+                : tier === "fail"
+                  ? "hsl(var(--meter-fail))"
+                  : "hsl(var(--muted-foreground))";
           const isActive = activePhase === p.key;
           const isDim = activePhase !== null && !isActive;
+          const pctLabel = noData ? "—" : `${Math.round(p.passRate * 100)}%`;
           return (
             <button
               key={p.key}
@@ -71,7 +86,7 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
                 )}
                 style={{
                   backgroundColor: color,
-                  color: color,
+                  color,
                 }}
               >
                 <span className="text-white text-xs">{p.count}</span>
@@ -80,7 +95,7 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
                 {p.label}
               </span>
               <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
-                {Math.round(p.passRate * 100)}%
+                {pctLabel}
               </span>
             </button>
           );
