@@ -122,6 +122,9 @@ export interface FoundationMeta {
   audience_levels: FoundationAudience[];
   refresher_triggers: FoundationTrigger[];
   length_tier?: LengthTier | null;
+  /** Coach-authored notes — cues, common mistakes, how this would be taught
+   *  in a private lesson. Surfaced read-only on the athlete-facing player. */
+  coach_notes?: string | null;
   version?: number;
 }
 
@@ -131,6 +134,7 @@ export const EMPTY_FOUNDATION_META: FoundationMeta = {
   audience_levels: [],
   refresher_triggers: [],
   length_tier: null,
+  coach_notes: null,
   version: FOUNDATION_META_VERSION,
 };
 
@@ -164,10 +168,16 @@ export function parseFoundationMeta(raw: unknown): FoundationMeta | null {
     ? (r.length_tier as LengthTier)
     : null;
 
+  const coach_notes =
+    typeof r.coach_notes === 'string' && r.coach_notes.trim().length > 0
+      ? r.coach_notes.slice(0, 4000)
+      : null;
+
   const version = typeof r.version === 'number' ? r.version : FOUNDATION_META_VERSION;
 
-  return { domain, scope, audience_levels, refresher_triggers, length_tier, version };
+  return { domain, scope, audience_levels, refresher_triggers, length_tier, coach_notes, version };
 }
+
 
 // ---------------- Trigger derivation ----------------
 
