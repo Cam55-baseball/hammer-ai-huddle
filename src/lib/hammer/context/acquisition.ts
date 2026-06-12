@@ -59,6 +59,61 @@ const COLUMN_BY_KEY: Record<string, string> = {
 type AnyValue = string | number | string[] | unknown;
 
 /**
+ * Canonical-shape coercion for `injury_history`.
+ *
+ * Centralised so every persistence path emits the same JSONB structure:
+ * `Array<{ note: string, reported_at?: string, region?, severity?, recovery_status? }>`
+ *
+ * Accepted inputs:
+ *   - string (legacy free-text) → `[{ note, reported_at }]` ("none" → [])
+ *   - string[]                  → list of `{ note }`
+ *   - structured object `{ status, regions, severity, note }`
+ *       - `status: "healthy"` → []  (preserves "100% healthy" intent)
+ *       - otherwise spreads region(s) into separate notes
+ *   - already-canonical array of notes → passed through with reported_at fill
+ */
+export function canonicalizeInjuryHistory(value: unknown): Array<Record<string, unknown>> {
+  const now = new Date().toISOString();
+  if (value == null) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => {
+        if (v == null) return null;
+        if (typeof v === "string") {
+          const s = v.trim();
+          return s === "" ? null : { note: s, reported_at: now };
+        }
+        if (typeof v === "object") {
+          const o = v as Record<string, unknown>;
+          if (!o.reported_at) return { ...o, reported_at: now };
+          return o;
+        }
+        return null;
+      })
+      .filter((x): x is Record<string, unknown> => x !== null);
+  }
+  if (typeof value === "object") {
+    const o = value as Record<string, unknown>;
+    if (typeof o.status === "string" && o.status === "healthy") return [];
+    const regions = Array.isArray(o.regions) ? (o.regions as string[]) : [];
+    if (regions.length === 0 && typeof o.note === "string" && o.note.trim() !== "") {
+      return [{ note: o.note, severity: o.severity, reported_at: now }];
+    }
+    return regions.map((r) => ({
+      note: typeof o.note === "string" && o.note.trim() !== "" ? o.note : r,
+      region: r,
+      severity: typeof o.severity === "string" ? o.severity : undefined,
+      reported_at: now,
+    }));
+  }
+  const s = String(value ?? "").trim();
+  if (s === "" || s.toLowerCase() === "none" || s.toLowerCase() === "no") return [];
+  return [{ note: s, reported_at: now }];
+}
+
+
+
+/**
  * Persist a single athlete-context answer with confidence + lineage envelope.
  * Upserts onto `athlete_context` (one row per user).
  */

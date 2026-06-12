@@ -1,5 +1,6 @@
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import {
   FOUNDATION_DOMAINS, FOUNDATION_SCOPES, FOUNDATION_AUDIENCES, FOUNDATION_TRIGGERS,
   FOUNDATION_LABELS, type FoundationMeta, type FoundationDomain, type FoundationScope,
@@ -17,6 +18,9 @@ interface Props {
 export function FoundationTagEditor({ value, onChange, aiDescription, onDescriptionChange }: Props) {
   const setDomain = (d: FoundationDomain) => onChange({ ...value, domain: d });
   const setScope = (s: FoundationScope) => onChange({ ...value, scope: s });
+  const setCoachNotes = (notes: string) =>
+    onChange({ ...value, coach_notes: notes.length > 0 ? notes : null });
+
 
   const toggleAudience = (a: FoundationAudience) => {
     const has = value.audience_levels.includes(a);
@@ -126,9 +130,28 @@ export function FoundationTagEditor({ value, onChange, aiDescription, onDescript
         value={aiDescription}
         onChange={onDescriptionChange}
       />
+
+      <div className="space-y-1.5 rounded-md border border-primary/20 bg-primary/5 p-3">
+        <Label className="text-xs font-semibold">Coach Notes (private-lesson voice)</Label>
+        <p className="text-[10px] text-muted-foreground -mt-0.5">
+          Cues to drill, common mistakes, how you'd teach this in a 1-on-1. Athletes see this read-only
+          under "From the Coach" on the player.
+        </p>
+        <Textarea
+          rows={4}
+          value={value.coach_notes ?? ''}
+          onChange={(e) => setCoachNotes(e.target.value.slice(0, 2000))}
+          placeholder="e.g. Almost everyone gets the back elbow too high here — feel for shoulder-over-shoulder before you swing."
+          className="text-xs"
+        />
+        <div className="text-right text-[10px] text-muted-foreground">
+          {(value.coach_notes ?? '').length}/2000
+        </div>
+      </div>
     </div>
   );
 }
+
 
 export function isFoundationMetaValid(m: FoundationMeta): boolean {
   return Boolean(m.domain) && Boolean(m.scope)

@@ -79,3 +79,40 @@ export async function fetchAthleteContextEnvelope(
   if (error) throw new Error(error.message);
   return (data ?? {}) as AthleteContextEnvelope;
 }
+
+/** Coach-onboarding hydration — reads the user's coach_context row, if any. */
+export async function fetchCoachContextRow(
+  userId: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await (supabase.from("coach_context") as unknown as {
+    select: (c: string) => {
+      eq: (col: string, val: string) => {
+        maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
+      };
+    };
+  })
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(`fetchCoachContextRow: ${error.message}`);
+  return data ?? null;
+}
+
+/** Scout-onboarding hydration — reads the user's scout_context row, if any. */
+export async function fetchScoutContextRow(
+  userId: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await (supabase.from("scout_context") as unknown as {
+    select: (c: string) => {
+      eq: (col: string, val: string) => {
+        maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
+      };
+    };
+  })
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(`fetchScoutContextRow: ${error.message}`);
+  return data ?? null;
+}
+
