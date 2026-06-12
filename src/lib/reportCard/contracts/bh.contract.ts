@@ -166,6 +166,16 @@ export const bhContract: DisciplineContract = {
         "Score 0-100 for how steady the SHOULDER PLANE remains from the start of shoulder rotation through contact. PASS at 70, ELITE at 90. Worked example: shoulder line wobbles or re-tilts mid-rotation → ~50; same tilt held from rotation start through contact → ~88. Measure the angle of the line between the two shoulders across the rotation window; deduct for any change > a few degrees.",
     },
     {
+      key: "finish_balance_score_100",
+      tileKey: "finish_balance",
+      label: "Finish & Balance (0-100)",
+      kind: "number",
+      unit: "score",
+      range: [0, 100],
+      prompt:
+        "Score 0-100 for post-contact balance, no fall-off, two-hand finish. PASS at 65, ELITE at 88.",
+    },
+    {
       key: "shoulder_to_shoulder_hold_pct_to_contact",
       tileKey: "shoulder_to_shoulder_hold",
       label: "Hands-to-back-shoulder spacing held: % of landing→contact window",
