@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -120,6 +121,37 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
       });
     },
   });
+}
+
+const TOAST_SESSION_KEY = 'hammer:newPickToast:fired';
+const TOAST_LAST_KEY = 'hammer:newPickToast:lastVideoId';
+
+/** Hook: fire a one-per-session toast when the top long-term pick changes. */
+export function useNewPickToast(
+  suggestions: RecommendResult[] | undefined,
+  mode: SuggestionMode,
+) {
+  useEffect(() => {
+    if (mode !== 'long_term' || !suggestions || suggestions.length === 0) return;
+    const top = suggestions[0];
+    if (!top || top.score < 0.75) return;
+    try {
+      if (sessionStorage.getItem(TOAST_SESSION_KEY) === '1') return;
+      const last = localStorage.getItem(TOAST_LAST_KEY);
+      if (last === top.video.id) return;
+      sessionStorage.setItem(TOAST_SESSION_KEY, '1');
+      localStorage.setItem(TOAST_LAST_KEY, top.video.id);
+      toast('New Hammer pick for you', {
+        description: top.video.title,
+        action: {
+          label: 'Watch',
+          onClick: () => window.open(top.video.video_url, '_blank'),
+        },
+      });
+    } catch {
+      /* storage may be unavailable */
+    }
+  }, [suggestions, mode]);
 }
 
 export async function trackVideoSuggestionShown(
