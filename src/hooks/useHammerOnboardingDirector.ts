@@ -8,7 +8,7 @@
  * missingness is preserved, never imputed.
  */
 import { useMemo, useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
@@ -16,12 +16,18 @@ import {
   persistContextAnswer,
   persistCoachContextAnswer,
   persistScoutContextAnswer,
+  canonicalizeInjuryHistory,
 } from "@/lib/hammer/context/acquisition";
+import {
+  fetchCoachContextRow,
+  fetchScoutContextRow,
+} from "@/lib/hammer/context/envelope";
 import {
   getKnowledgeGapsForAudience,
   type GapAudience,
   type KnowledgeGap,
 } from "@/lib/hammer/onboarding/knowledgeGaps";
+
 
 export interface HammerOnboardingDirector {
   readonly audience: GapAudience;
