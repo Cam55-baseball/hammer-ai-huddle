@@ -178,11 +178,11 @@ const Auth = () => {
                 navigate("/onboarding/athlete", { replace: true });
               }, 0);
             } else {
-              // RFL-053 — canonical athlete home is /command (AthleteCommand).
-              // /dashboard remains as module-discovery catalog but is no longer
-              // the post-login athlete authority surface.
+              // RFL-053+ — Hammers Today Plan now lives on /dashboard (collapsible
+              // above Game Plan). Onboarded athletes route to /dashboard as the
+              // post-login home. /command remains available as deep-link surface.
               setTimeout(() => {
-                navigate("/command", { replace: true });
+                navigate("/dashboard", { replace: true });
               }, 0);
             }
           } else {
