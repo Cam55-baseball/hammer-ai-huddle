@@ -1,57 +1,121 @@
-# Plan — Finish Report Card Integration + Stop Analyze Eject
+# Report Card Overhaul — Hitting Doctrine, /100 Meters, Pitching Extraction Fix
 
-## A. Fix the Analyze eject (highest priority)
+## 1. Doctrine: complete hitting philosophy as the system understands it
 
-Root cause is in `src/pages/AnalyzeVideo.tsx` lines 163–199:
+This is the locked baseline going into the rewrite. Anything you disagree with becomes a follow-up edit.
 
-1. `useEffect(() => { refetch(); }, [refetch])` re-runs the subscription check on every mount/focus.
-2. The access guard runs as soon as `subLoading=false && initialized=true`, but during the refetch transition `subscribedModules` can briefly be `[]`, so `hasAccessForSport(...)` returns false → `navigate("/dashboard", { replace: true })`.
-3. During the same window, `onAuthStateChange` can fire a transient null session (e.g. after `TOKEN_REFRESHED` with a stale tab), which combined with the guard sends users to `/auth`.
+**Phase 1 — Hip Load (stability-first; non-negotiable PASS gate)**
 
-Fix — keep behavior, eliminate the false-positive redirects:
+- Pass rule = **stability through P2**: no body, head, or front-foot drift while the pitcher reaches knee lift.
+- Elite band = bigger, balanced back-hip load (more stored power) on top of stability.
+- Hands load and stay quiet. A scap load with stability from P1 creates no momentum building/Weight stays back & Head will not drift toward the pitcher.
 
-- **Owner/Admin short-circuit before access check.** If `isOwner || isAdmin`, skip the `hasAccess` branch entirely (currently the value is computed but the guard still depends on `subscribedModules` arriving).
-- **Require a non-empty, settled subscription snapshot before denying.** Only call `navigate("/dashboard")` when `initialized && !subLoading && subscribedModules !== null && subscribedModules.length >= 0` AND a second-tick confirmation still shows no access (use a `useRef` "deny candidate" + 400 ms grace timer that is cleared if `hasAccess` flips true).
-- **Stop the auth bounce.** Replace `if (!user && !session) navigate("/auth")` with: only redirect when `!authLoading && isAuthStable && !session && !user` AND a 250 ms re-check still shows no session. Skip the redirect entirely while `document.visibilityState === 'hidden'` (prevents tab-switch evictions).
-- **Drop the unconditional `refetch()` on mount.** The subscription hook already initializes itself; the forced refetch is what makes the guard race. Keep refetch only on explicit user action (e.g. after returning from Checkout via a `?refresh=1` query param).
-- **Preserve scroll/upload state across the guard re-run** by gating the access useEffect on a stable dependency list (remove `refetch` and the recomputed `hasAccessForSport` identity churn — wrap the check in a `useMemo`).
+**Phase 2 — Hand Load (timing-anchored to pitcher's knee lift)**
 
-Acceptance: uploading a video, switching tabs, or letting the page idle for 60 s never navigates away. Verified by watching console (the existing `console.log('AnalyzeVideo - …')` lines stay, but no `navigate(...)` fires unless access is truly absent).
+- Triggered at the pitcher's peak knee lift.
+- Bat / scap / knob loads behind the head **after** P1 is stable.
+- Pass rule = hands load without dragging body, head, or front foot forward; chest stays square. Will create center line in a hitter, a stable point for head to stay and not drift forward during P3. P2 Leads to P3 becoming the X-Factor and separation, creating more leverage and a shorter step which gives the hitter a longer time to see the ball and be a hitter without worrying about power.
 
-## B. Cross-app surfaces
+**Phase 3 — Stride / Landing (timing-anchored to pitcher's release point)**
 
-1. **CoachAthleteDetail** — in the per-session card, when `ai_analysis.metrics` exists for a video, render `<HammerReportCard metrics={…} contractId={…} compact />` (new `compact` prop = ribbon + phase rail only, tiles collapsed behind "View tiles"). If `metrics` is null but `feedback` exists, show `<RecomputeReportCardButton />` inline.
-2. **Library** (`src/pages/Vault.tsx` video detail) — same treatment: full `HammerReportCard` when metrics present, recompute button otherwise.
-3. **ProgressDashboard** — add `ReportCardTrendStrip` (new) directly under the existing header, above "Recent Analyses". Strip = last 8 sessions as foil-grade chips (A–F) with sparkline + non-negotiable pass-rate bar. New hook `useReportCardTrend(userId, module, limit=8)` reads `ai_analysis` rows ordered by `created_at desc`.
-4. **Monthly / Vault Recap** — new `ReportCardRecapBlock` aggregating: average letter grade, NN pass-rate %, top 3 regressed tiles (lowest avg score across the period). Wired into the existing recap render path.
+- Begins as the pitcher reaches release.
+- Lands sideways, both feet down, chest + shoulders square to the plate, core max-tensioned.
+- Hips do NOT turn shoulders Open (Turning shoulders with hips results in a longer swing with capability for more swing and miss. Wider the shoulder turn open from the hips going into ground contact, the less elite the contact ability is). Stride direction within 15° either way of square.
 
-## C. Spectacle polish
+**Phase 4 — Hitter's Move (NN, most important)**
 
-1. **Mount stagger** in `HammerReportCard.tsx`: Framer-motion sequence — ribbon (0 ms) → phase rail (120 ms) → tiles (staggered 60 ms each). Use `useReducedMotion()` to collapse to instant fade for accessibility.
-2. **Reduced-motion guard** across `FoilGradeCard`, `RadialMeter`, `PhaseRail` — disable foil-sweep, tilt parallax, and count-up; render final state immediately.
-3. **Share-card PNG export** — new `src/components/report-card/hammer/visuals/ShareCardExport.tsx` using `html-to-image` (bun add). 9:16 1080×1920 PNG, athlete name + date watermark (toggleable, default ON). Triggered by a Share button beside the Recompute button. Downloads + (if `navigator.share` available) opens native share sheet.
-4. **Print stylesheet** in `src/index.css` so the card prints cleanly on one page (kills tilt transforms, forces light bg).
+- Knob = fulcrum. Back elbow drives forward first.
+- Hands stay back to get in line with ball creating the path, shoulders stay closed for as long as possible, barrel catapults through the ball last after making contact with the ball as being the most elite you can be.
+- Contact is lined up with the hands by the hitters as a concerted effort to get on plane with hands; extension is a post-contact byproduct of the swing.
+- Severity: hard / soft / elite (existing P4_HARD_CAP=50, SOFT=70, ELITE +5 stays — but it now only affects internal lineage and tile color, not a displayed score).
 
-## D. Out of scope (explicit)
+**Cross-phase truths**
 
-- SB windmill / throwing / SH visual variants (Hammer hitting only this pass).
-- Realtime tile updates during analysis stream.
-- Any DB schema changes (recompute writes existing `ai_analysis.metrics` field).
+- Eyes track the ball; head does not chase it.
+- Style (toe-tap, leg-kick, hover, coil, no-stride) is neutral — outcome is graded.
+- Softball slap context relaxes P2 + P3.
 
-## Files
+If any of this is wrong, we edit before code lands.
 
-**New**
-- `src/hooks/useReportCardTrend.ts`
-- `src/components/progress/ReportCardTrendStrip.tsx`
-- `src/components/recap/ReportCardRecapBlock.tsx`
-- `src/components/report-card/hammer/visuals/ShareCardExport.tsx`
+## 2. Report Card display rules (all disciplines)
 
-**Edited**
-- `src/pages/AnalyzeVideo.tsx` (auth/access guard hardening — A)
-- `src/components/report-card/hammer/HammerReportCard.tsx` (compact prop, mount stagger, Share button)
-- `src/components/report-card/hammer/visuals/{FoilGradeCard,RadialMeter,PhaseRail}.tsx` (reduced-motion guard)
-- `src/pages/CoachAthleteDetail.tsx`, `src/pages/Vault.tsx`, `src/pages/ProgressDashboard.tsx` (surface integration)
-- Existing recap renderer (wire `ReportCardRecapBlock`)
-- `src/index.css` (print styles)
+- **Remove** the big letter grade AND the /100 overall score from `FoilGradeCard`. Replace with a discipline header + coverage chip + a small encouragement strip:
+  > "You don't need elite mechanics to compete like an all-time great — chase progress, not perfection."
+- Keep the foil/holographic shell so it still feels like a spectacle.
+- Keep the existing scorecard surface where the overall grade already lives.
 
-**Dependency**: `bun add html-to-image`
+## 3. Meters: /100 with two visible bands
+
+- All `score_meter` tiles move from 0–10 → 0–100.
+- Each meter draws TWO threshold arcs on the dial:
+  - **Acceptable** (green pass band)
+  - **Elite** (gold/holographic perfection band)
+- `pass_fail` and `raw_pass_fail` tiles stay binary (geometric absolutes — stride direction, sequencing, head-at-release etc).
+- Color state: `fail` < acceptable, `pass` ≥ acceptable, `elite` ≥ elite band.
+- Tile chip line under each meter says `"Acceptable 70 · Elite 90"` so users see the line.
+- Fix the "showing 0%" bug: the chip currently reads from `score10` even when missing — guard with `state.status !== "missing"` and render "—" otherwise.
+
+## 4. Hitting tile expansion
+
+Existing 8 stay (re-thresholded to /100). New tiles added (each with measurement formula for the AI):
+
+
+| Tile                                                | Phase | Mode             | Acceptable                                                   | Elite                             |
+| --------------------------------------------------- | ----- | ---------------- | ------------------------------------------------------------ | --------------------------------- |
+| **Hip Load Stability** (replaces single "Hip Load") | P1    | score_meter /100 | 70 (no drift through P2)                                     | 90 (no drift + big balanced load) |
+| Hand Load                                           | P2    | score_meter      | 65                                                           | 88                                |
+| **P2 Timing to Knee Lift** (new)                    | P2    | pass_fail        | hand load completes within ±150 ms of pitcher peak knee lift | —                                 |
+| Stride Direction                                    | P3    | pass_fail        | ≤15° off square                                              | —                                 |
+| Heel Plant / Landing                                | P3    | score_meter      | 65                                                           | 88                                |
+| **P3 Timing to Release** (new)                      | P3    | pass_fail        | front-foot strike within ±120 ms of pitcher release          | —                                 |
+| Sequencing                                          | P4    | pass_fail        | legal order                                                  | —                                 |
+| Bat Path                                            | P4    | score_meter      | 65                                                           | 88                                |
+| **On-Plane %** (new)                                | P4    | score_meter /100 | 60 %                                                         | 85 %                              |
+| **Time-to-Contact** (new, ms)                       | P4    | raw_pass_fail    | ≤175 ms                                                      | ≤150 ms                           |
+| **Bat Speed Through Contact** (new, mph proxy)      | P4    | raw_passed       | ≥65 mph proxy                                                | ≥75 mph proxy                     |
+| Back Elbow at Contact                               | P4    | raw_passed       | ≥0° past BB                                                  | ≥20° past BB                      |
+| Hitter's Move Quality                               | P4    | score_meter      | 70                                                           | 92                                |
+| **Eyes / Head Tracking** (new)                      | cross | score_meter      | 70 (no lateral chase)                                        | 90 (rock-steady eyes on ball)     |
+| **Finish & Balance** (new)                          | cross | score_meter      | 65                                                           | 88                                |
+
+
+&nbsp;
+
+## 5. Pitching / Throwing extraction fix (critical)
+
+Root cause today: the model returns `missing: true` too aggressively, the schema is buried at the end of a 250+ field tool call, and there is no retry.
+
+Fixes:
+
+1. **Stronger prompt**: rewrite `buildMetricsPromptBlock` with one worked numeric example per metric ("e.g. plant foot at frame 4, front hip at frame 4, vertical pixels offset → ~22°"). Forbid missing unless physically not in frame for ALL frames; require a specific frame index in `missing_reason`.
+2. **Two-pass extraction**: when the first response returns `metrics` where >40 % of keys are missing, immediately fire a second dedicated AI call whose only tool is `return_metrics` (same schema, no scorecard/drills noise). Persist the merged result.
+3. **Auto-recompute on save**: in `AnalyzeVideo`, after a successful analyze where metrics still look empty, invoke the existing `recompute-report-card` function once (with a flag so it can't loop).
+4. **Camera-angle helper**: a small inline tip block above the upload area for pitching/throwing ("Side-on, full body in frame, mark landing frame for best results") — pure UI.
+
+## 6. Cross-app surfaces
+
+- `SessionDetailDialog`, `ProgressDashboard` trend strip, and the analyze page: now hide the big grade, show discipline + coverage + encouragement strip, render meters /100 with bands.
+- No DB schema changes. `ai_analysis.metrics` keys are additive — old records keep working; new keys appear as missing tiles with a "Add sensor / coming soon" reason until measured.
+
+## Technical notes
+
+Files touched (additive only):
+
+- `src/lib/reportCard/disciplines/bh.ts` — full rewrite of tile set + thresholds.
+- `src/lib/reportCard/contracts/bh.contract.ts` + `supabase/functions/_shared/reportCardContracts.ts` — add new metric keys (`hip_stability_score_100`, `p2_timing_pass`, `p3_timing_pass`, `on_plane_pct`, `time_to_contact_ms`, `bat_speed_contact_mph`, `eyes_track_score_100`, `finish_balance_score_100`; Blast/Zepp placeholders).
+- `src/lib/reportCard/grade.ts` — keep computing internal severity for lineage, but `HammerReportCard` stops rendering it.
+- `src/lib/reportCard/types.ts` — `score_meter` now consumes 0–100, add optional `elite` threshold + `eliteBand` status.
+- `src/components/report-card/hammer/visuals/RadialMeter.tsx` — render acceptable + elite arcs; add gold elite shimmer when reached.
+- `src/components/report-card/hammer/visuals/FoilGradeCard.tsx` → rename to `DisciplineRibbon`, drop letter/score.
+- `src/components/report-card/hammer/HammerReportCard.tsx` — wire new ribbon, fix missing-state percentage bug.
+- `src/components/report-card/hammer/ReportCardTile.tsx` — render `Acceptable X · Elite Y` chip; missing-state guard.
+- `supabase/functions/analyze-video/index.ts` — stronger metrics prompt with examples; two-pass extractor; merge logic.
+- `supabase/functions/recompute-report-card/index.ts` — auto-trigger hook + replay-safe idempotency flag.
+- `src/pages/AnalyzeVideo.tsx` — camera-angle helper, auto-recompute on empty metrics.
+
+No DB migrations. No edits to `client.ts` / `types.ts` / `.env`. Hitting causal chains + severity caps remain authoritative for internal lineage and roadmap routing — only the UI grade slab is removed.
+
+## Out of scope (next round)
+
+- Softball windmill-specific pitching tiles.
+- New scorecard formulas — current scorecard logic continues; we only ensure it can read the new metric keys.
