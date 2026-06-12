@@ -19,6 +19,21 @@ const requestSchema = z.object({
   landingFrameIndex: z.number().optional(),
 });
 
+/**
+ * Deterministic 32-bit seed from a string (e.g., videoId).
+ * Same input video → same seed → same model sampling path → same scores.
+ * THIS IS LOAD-BEARING for "the same video must produce the same report".
+ */
+function stableSeed(s: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  // OpenAI-compatible seed is a non-negative int; keep within int32.
+  return h & 0x7fffffff;
+}
+
 // ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
 // These keywords in feedback text indicate violations - used to override AI's violation flags
 // NOTE: For baseball pitching and throwing, "shoulders_not_aligned" has been REMOVED as a separate violation.
@@ -1731,6 +1746,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        // Determinism lock: same video → same scores. Do not relax.
+        temperature: 0,
+        top_p: 0,
+        seed: stableSeed(videoId),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent }, // Now multimodal with frames!
@@ -1976,11 +1995,20 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
             console.log(`[REPORT-CARD] pass-2 triggered: ${miss.missingKeys.length}/${miss.total} missing for ${reportCardContract.id}`);
             try {
               const pass2System = `You are a ${reportCardContract.label} mechanics analyst running a TARGETED second pass over the SAME frames. Look again specifically for the landmarks listed. Do NOT invent — keep missing=true if still unmeasurable, with a sharper one-sentence reason.${buildSecondPassPromptBlock(reportCardContract, miss.missingKeys)}`;
+              // Escalate to gemini-2.5-pro when BH bread-and-butter metrics
+              // (time-to-contact, bat speed through contact) are missing — flash
+              // routinely drops barrel tracking; pro is materially better.
+              const pass2Model = breadMissing.length > 0
+                ? "google/gemini-2.5-pro"
+                : "google/gemini-2.5-flash";
               const pass2 = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
                 method: "POST",
                 headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  model: "google/gemini-2.5-flash",
+                  model: pass2Model,
+                  temperature: 0,
+                  top_p: 0,
+                  seed: stableSeed(videoId + ":pass2"),
                   messages: [
                     { role: "system", content: pass2System },
                     { role: "user", content: userContent },
