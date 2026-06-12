@@ -10,6 +10,7 @@ import { usePhysioProfile } from '@/hooks/usePhysioProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Heart, Shield, Users, ChevronRight, Check, CalendarIcon, Info } from 'lucide-react';
+import { normalizeInjuryHistory } from '@/lib/hammer/context/normalizers';
 
 interface PhysioHealthIntakeDialogProps {
   open: boolean;
@@ -160,7 +161,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
       // Step 2
       setMedicationsText((profile.medications ?? []).join(', '));
       setConditions(profile.medical_conditions ?? []);
-      setInjuryText((profile.injury_history ?? []).join(', '));
+      setInjuryText(normalizeInjuryHistory(profile.injury_history).map(n => n.note).join(', '));
       setSupplementsText((profile.supplements ?? []).join(', '));
       // Step 3
       setBiologicalSex(profile.biological_sex ?? '');
