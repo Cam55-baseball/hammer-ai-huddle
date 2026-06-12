@@ -29,7 +29,9 @@ import { ReportCardTrendStrip } from '@/components/progress/ReportCardTrendStrip
 import { CommandCenterSection } from '@/components/command/CommandCenterSection';
 import { WeeklyDigestPreview } from '@/components/dashboard/WeeklyDigestPreview';
 import { ForecastPreview } from '@/components/dashboard/ForecastPreview';
-import { Activity, Lightbulb, TrendingUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Activity, Lightbulb, TrendingUp, ChevronDown, HeartPulse } from 'lucide-react';
+import { useState } from 'react';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
