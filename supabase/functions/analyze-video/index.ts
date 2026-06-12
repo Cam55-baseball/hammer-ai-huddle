@@ -1963,6 +1963,61 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           metrics = analysisArgs.metrics;
           console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
         }
+
+        // ===== PASS 2: targeted re-extraction for missing report-card keys =====
+        if (reportCardContract && (reportCardContract.id === "bp" || reportCardContract.id === "throwing" || reportCardContract.id === "bh" || reportCardContract.id === "sb-pitching")) {
+          const miss = countMissing(reportCardContract, metrics);
+          if (miss.ratio > 0.4 && miss.missingKeys.length > 0) {
+            console.log(`[REPORT-CARD] pass-2 triggered: ${miss.missingKeys.length}/${miss.total} missing for ${reportCardContract.id}`);
+            try {
+              const pass2System = `You are a ${reportCardContract.label} mechanics analyst running a TARGETED second pass over the SAME frames. Look again specifically for the landmarks listed. Do NOT invent — keep missing=true if still unmeasurable, with a sharper one-sentence reason.${buildSecondPassPromptBlock(reportCardContract, miss.missingKeys)}`;
+              const pass2 = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  model: "google/gemini-2.5-flash",
+                  messages: [
+                    { role: "system", content: pass2System },
+                    { role: "user", content: userContent },
+                  ],
+                  tools: [{
+                    type: "function",
+                    function: {
+                      name: "return_metrics",
+                      description: "Return ONLY the metrics object covering the missing keys.",
+                      parameters: { type: "object", properties: { metrics: buildMetricsSchema(reportCardContract) }, required: ["metrics"] },
+                    },
+                  }],
+                  tool_choice: { type: "function", function: { name: "return_metrics" } },
+                }),
+              });
+              if (pass2.ok) {
+                const d2 = await pass2.json();
+                const tc2 = d2?.choices?.[0]?.message?.tool_calls;
+                if (tc2 && tc2.length > 0) {
+                  const a2 = JSON.parse(tc2[0].function.arguments);
+                  const m2 = a2?.metrics;
+                  if (m2 && typeof m2 === "object" && metrics) {
+                    let recovered = 0;
+                    for (const k of miss.missingKeys) {
+                      const v2 = (m2 as Record<string, any>)[k];
+                      if (v2 && typeof v2 === "object") {
+                        (metrics as Record<string, any>)[k] = v2;
+                        if (!(v2.missing === true)) recovered++;
+                      }
+                    }
+                    console.log(`[REPORT-CARD] pass-2 recovered ${recovered}/${miss.missingKeys.length} keys`);
+                  }
+                }
+              } else {
+                console.warn("[REPORT-CARD] pass-2 non-OK", pass2.status);
+              }
+            } catch (e) {
+              console.warn("[REPORT-CARD] pass-2 failed", e);
+            }
+          }
+        }
+
         
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
         // Scan feedback text for violation keywords - override AI flags if needed
