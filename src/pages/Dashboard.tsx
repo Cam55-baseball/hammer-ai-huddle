@@ -51,6 +51,54 @@ function OrgBadge() {
   );
 }
 
+/**
+ * Hammers Today Plan — collapsible Dashboard mount. Persists open/closed per
+ * day in localStorage so it auto-opens once daily and respects user choice the
+ * rest of the day. Reads the same canonical organism context as /command, so
+ * Dashboard and Command Center stay in lockstep — never random.
+ */
+function DashboardTodayPlan() {
+  const dayKey = `hammer.today.dashboard.open.${new Date().toISOString().slice(0, 10)}`;
+  const [open, setOpen] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem(dayKey);
+      return v === null ? true : v === "1";
+    } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(dayKey, open ? "1" : "0"); } catch { /* ignore */ }
+  }, [open, dayKey]);
+  return (
+    <section className="rounded-2xl border-2 border-primary/30 bg-card overflow-hidden">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+            aria-expanded={open}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <SparklesIcon className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-bold leading-tight">Hammers Today Plan</div>
+                <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                  Built from your latest organism data — never random.
+                </p>
+              </div>
+            </div>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+          <div className="p-3 sm:p-4 border-t border-border/60">
+            <HammerDailyPlan />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </section>
+  );
+}
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
