@@ -1,45 +1,54 @@
 import type { DisciplineContract } from "./shared";
 
 /**
- * Baseball Hitting — 8 tile metric contract mapped to the existing
- * P1–P4 hitting doctrine (see supabase/functions/_shared/hittingPhases.ts).
- *
- * Phase | Tile                       | NN
- * ------|----------------------------|----
- * P1    | Hip Load Quality           | yes
- * P2    | Hand Load Position         | no
- * P3    | Stride Direction           | no
- * P3    | Heel Plant / Landing       | no
- * P4    | Sequencing                 | yes
- * P4    | Bat Path In/Out of Zone    | no
- * P4    | Back Elbow at Contact      | no
- * P4    | Hitter's Move Quality      | yes
+ * Baseball Hitting — 15-tile metric contract, /100 scored meters.
+ * Stable keys persist on `videos.ai_analysis.metrics`.
  */
 export const bhContract: DisciplineContract = {
   id: "bh",
   label: "Baseball Hitting",
   metrics: [
+    // ============ P1 ============
     {
-      key: "hip_load_score_10",
+      key: "hip_stability_score_100",
       tileKey: "hip_load",
-      label: "P1 Hip Load Quality (1-10)",
+      label: "P1 Hip Load Stability (0-100)",
       kind: "number",
       unit: "score",
-      range: [0, 10],
+      range: [0, 100],
       prompt:
-        "Score 1–10 for the back-hip load: balanced, controlled, BEFORE the hand load, " +
-        "timed to the pitcher's delivery, no head drift toward pitcher, weight stays back. >=7 passes.",
+        "Score 0-100 for STABILITY of the back-hip load through P2. PASS at 70 = no body/head/front-foot drift while pitcher reaches knee lift. ELITE at 90 = stable AND a big, balanced load that stores power. Worked example: if head moves 4% of body height toward pitcher during P2 → ~55. If head and front foot are still and load is balanced and clearly loaded → ~85.",
+    },
+    // ============ P2 ============
+    {
+      key: "hand_load_score_100",
+      tileKey: "hand_load",
+      label: "P2 Hand Load Position (0-100)",
+      kind: "number",
+      unit: "score",
+      range: [0, 100],
+      prompt:
+        "Score 0-100 for the bat/scap/knob load behind the head AFTER P1 is stable. PASS at 65, ELITE at 88. Worked example: hands clearly loaded behind head with scap pinch and chest square → ~85; hands stay near front shoulder with no scap load → ~45.",
     },
     {
-      key: "hand_load_score_10",
-      tileKey: "hand_load",
-      label: "P2 Hand Load Position (1-10)",
+      key: "p2_timing_pass",
+      tileKey: "p2_timing",
+      label: "P2 timing aligned to pitcher peak knee lift",
+      kind: "boolean",
+      prompt:
+        "TRUE if the hitter's hand load completes within roughly ±150 ms of the pitcher's PEAK KNEE LIFT. FALSE if early (drifts forward) or late (rushed P3). If the pitcher's knee lift is not visible in the frames, set missing=true with reason 'Pitcher knee lift not in frame'.",
+    },
+    {
+      key: "eyes_track_score_100",
+      tileKey: "eyes_tracking",
+      label: "Eyes / head tracking quality (0-100)",
       kind: "number",
       unit: "score",
-      range: [0, 10],
+      range: [0, 100],
       prompt:
-        "Score 1–10 for the bat/scap/knob load behind the head AFTER the hip load. >=6 passes.",
+        "Score 0-100 for how steady the head/eyes stay. PASS at 70, ELITE at 90. Lateral head movement TOWARD the pitcher is the biggest deduction. Worked example: head moves >4% of body height laterally → ~50; rock-steady head with eyes tracking the ball → ~92.",
     },
+    // ============ P3 ============
     {
       key: "stride_dir_deg_off_square",
       tileKey: "stride_direction",
@@ -48,38 +57,74 @@ export const bhContract: DisciplineContract = {
       unit: "degrees",
       range: [-45, 45],
       prompt:
-        "Degrees the stride deviates from a square line to the pitcher. Positive = stepping out (bucket). " +
-        "Negative = stepping in (across body). Absolute value <=15° passes.",
+        "Degrees stride deviates from a square line to the pitcher. Positive = stepping out (bucket). Negative = stepping in (across body). |value|<=15° passes.",
     },
     {
-      key: "heel_plant_score_10",
+      key: "heel_plant_score_100",
       tileKey: "heel_plant",
-      label: "P3 Heel Plant / Landing Quality (1-10)",
+      label: "P3 Heel Plant / Landing Quality (0-100)",
       kind: "number",
       unit: "score",
-      range: [0, 10],
+      range: [0, 100],
       prompt:
-        "Score 1–10 for landing sideways, chest+shoulders square to plate, both feet down, " +
-        "core max-tensioned, hips NOT turning shoulders. >=6 passes.",
+        "Score 0-100 for landing sideways, chest+shoulders square to plate, both feet down, core tensioned, hips NOT turning shoulders open. PASS at 65, ELITE at 88. Worked example: shoulders rotate WITH hips at landing → ~45; sideways landing with shoulders still closed → ~85.",
     },
+    {
+      key: "p3_timing_pass",
+      tileKey: "p3_timing",
+      label: "P3 timing aligned to pitcher release",
+      kind: "boolean",
+      prompt:
+        "TRUE if the front foot is down within roughly ±120 ms of the pitcher reaching release point. FALSE if foot is down too early (drifting) or still in flight at release (late). If pitcher release point is not visible, set missing=true with reason 'Pitcher release point not in frame'.",
+    },
+    // ============ P4 ============
     {
       key: "sequencing_ok",
       tileKey: "sequencing",
-      label: "Sequencing legal: Legs → Hands → Pause → Stride → Pause → Contact",
+      label: "Sequencing legal",
       kind: "boolean",
       prompt:
-        "TRUE if the hitter's sequence is legal: Load legs → Load hands → Pause → Step/Stride → Pause → Get to contact. " +
-        "FALSE if rushed, out of order, or pauses skipped.",
+        "TRUE if sequence is: Load legs -> Load hands -> Pause -> Stride -> Pause -> Contact. FALSE if rushed or out of order.",
     },
     {
-      key: "bat_path_score_10",
+      key: "bat_path_score_100",
       tileKey: "bat_path",
-      label: "Bat Path In/Out of Zone (1-10)",
+      label: "Bat Path In/Out of Zone (0-100)",
       kind: "number",
       unit: "score",
-      range: [0, 10],
+      range: [0, 100],
       prompt:
-        "Score 1–10 for elite bat path: enters the zone behind the ball, exits in front, long on-plane window. >=6 passes.",
+        "Score 0-100 for elite bat path: enters behind ball, exits in front, long on-plane window. PASS at 65, ELITE at 88.",
+    },
+    {
+      key: "on_plane_pct",
+      tileKey: "on_plane",
+      label: "% of swing arc on the pitch plane",
+      kind: "number",
+      unit: "percent",
+      range: [0, 100],
+      prompt:
+        "Percentage of the swing arc that stays on the plane of the incoming pitch. PASS at 60%, ELITE at 85%. Worked example: barrel comes off plane immediately after contact → ~40%; long on-plane window through and past contact → ~85%.",
+    },
+    {
+      key: "time_to_contact_ms",
+      tileKey: "time_to_contact",
+      label: "Time from swing start to contact (ms)",
+      kind: "number",
+      unit: "ms",
+      range: [80, 400],
+      prompt:
+        "Milliseconds from the moment the bat first starts moving forward until ball-barrel contact. PASS ≤175 ms, ELITE ≤150 ms. Estimate from the visible frames using the displayed frame rate context.",
+    },
+    {
+      key: "bat_speed_contact_mph",
+      tileKey: "bat_speed_contact",
+      label: "Bat speed through contact (mph proxy)",
+      kind: "number",
+      unit: "mph",
+      range: [30, 110],
+      prompt:
+        "Estimated barrel speed AT contact in mph. PASS ≥65, ELITE ≥75. If no sensor data and motion blur is too high to estimate, set missing=true with reason 'Frame rate too low for bat speed estimate'.",
     },
     {
       key: "back_elbow_past_bb_deg",
@@ -89,19 +134,27 @@ export const bhContract: DisciplineContract = {
       unit: "degrees",
       range: [-45, 60],
       prompt:
-        "Degrees the back elbow has driven PAST the belly button at contact, with shoulders square as long as possible. " +
-        ">=0 passes (elbow at or past belly button).",
+        "Degrees back elbow has driven PAST belly button at contact, shoulders square. PASS at ≥0°, ELITE at ≥20°.",
     },
     {
-      key: "hitters_move_score_10",
+      key: "hitters_move_score_100",
       tileKey: "hitters_move",
-      label: "P4 Hitter's Move Quality (1-10)",
+      label: "P4 Hitter's Move Quality (0-100)",
       kind: "number",
       unit: "score",
-      range: [0, 10],
+      range: [0, 100],
       prompt:
-        "Score 1–10 for the hitter's move: hands stay back, elbow leads, no casting/early barrel flip, " +
-        "chest stays square, both hands to and through the ball. >=7 passes (P4 is the most important phase).",
+        "Score 0-100: hands stay back, elbow leads, no casting/early barrel flip, chest stays square, contact made with the hands, barrel catapults last. PASS at 70, ELITE at 92.",
+    },
+    {
+      key: "finish_balance_score_100",
+      tileKey: "finish_balance",
+      label: "Finish & Balance (0-100)",
+      kind: "number",
+      unit: "score",
+      range: [0, 100],
+      prompt:
+        "Score 0-100 for post-contact balance, no fall-off, two-hand finish. PASS at 65, ELITE at 88.",
     },
   ],
 };
