@@ -453,11 +453,13 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               : youthScale
                 ? "Movement quality bias for developing athletes; no max-effort loading."
                 : `Force production (${phaseTemplate.name}).` + (goal ? ` ${goal}` : ""),
-        roadmapReason: workloadHigh
+        roadmapReason: (workloadHigh
           ? "Auto-deload — workload elevated across the last 7 days."
           : recoverDay
             ? "Reduced today because readiness dropped below 40%."
-            : `Today is ${phaseTemplate.phase} because we're in ${seasonPhase ?? "an undeclared"} season phase.`,
+            : `Today is ${phaseTemplate.phase} because we're in ${seasonPhase ?? "an undeclared"} season phase.`)
+          + (anthroOut.rationale ? ` ${anthroOut.rationale}` : ""),
+
         phase: workloadHigh || recoverDay ? "deload" : phaseTemplate.phase,
         steps: drillsToSteps(drills),
         drills,
