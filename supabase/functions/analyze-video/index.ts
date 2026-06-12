@@ -1987,7 +1987,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         if (reportCardContract && (reportCardContract.id === "bp" || reportCardContract.id === "throwing" || reportCardContract.id === "bh" || reportCardContract.id === "sb-pitching")) {
           const miss = countMissing(reportCardContract, metrics);
           // Bread-and-butter BH metrics ALWAYS trigger a targeted second pass when missing.
-          const BREAD_AND_BUTTER_BH = ["time_to_contact_ms", "bat_speed_contact_mph"];
+          const BREAD_AND_BUTTER_BH = [
+            "time_to_contact_ms",
+            "bat_speed_contact_mph",
+            "shoulder_to_shoulder_hold_pct_to_contact",
+          ];
           const breadMissing = (reportCardContract.id === "bh" || reportCardContract.id === "sh")
             ? BREAD_AND_BUTTER_BH.filter((k) => miss.missingKeys.includes(k))
             : [];

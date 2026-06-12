@@ -26,6 +26,9 @@ import { useMPIScores } from '@/hooks/useMPIScores';
 import { useAIPrompts } from '@/hooks/useAIPrompts';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { ReportCardTrendStrip } from '@/components/progress/ReportCardTrendStrip';
+import { CommandCenterSection } from '@/components/command/CommandCenterSection';
+import { WeeklyDigestPreview } from '@/components/dashboard/WeeklyDigestPreview';
+import { ForecastPreview } from '@/components/dashboard/ForecastPreview';
 import { Activity, Lightbulb, TrendingUp } from 'lucide-react';
 
 function PracticeIntelligenceCard() {

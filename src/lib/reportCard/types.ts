@@ -34,6 +34,12 @@ export interface TileState {
   confidence?: number;
   /** When status === "missing", optional reason from the model. */
   missing_reason?: string;
+  /**
+   * Short red banner shown on PASS/FAIL tiles to explain *why* a FAIL is a FAIL
+   * (e.g. an auto-FAIL override that nullifies an otherwise-good measurement).
+   * Surfaced verbatim so the athlete is never left guessing.
+   */
+  note?: string;
 }
 
 export interface TileExplainer {

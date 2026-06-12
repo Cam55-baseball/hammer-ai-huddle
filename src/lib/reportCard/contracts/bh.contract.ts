@@ -175,5 +175,41 @@ export const bhContract: DisciplineContract = {
       prompt:
         "Score 0-100 for post-contact balance, no fall-off, two-hand finish. PASS at 65, ELITE at 88.",
     },
+    {
+      key: "shoulder_to_shoulder_hold_pct_to_contact",
+      tileKey: "shoulder_to_shoulder_hold",
+      label: "Hands-to-back-shoulder spacing held: % of landing→contact window",
+      kind: "number",
+      unit: "percent",
+      range: [0, 100],
+      prompt:
+        "Percentage of the LANDING→CONTACT window during which the spacing between the hand cluster and the back shoulder is HELD. Method: at the front-foot landing frame, measure the 2D distance between the hand cluster centroid and the back-shoulder joint (call this D0). For every frame from landing to contact, recompute that distance. The spacing is 'held' on a frame when distance ≥ 0.90 * D0. Return the % of frames in the landing→contact window where spacing was held. PASS at ≥50%, ELITE at ≥95% (held essentially all the way to contact). If hands or back shoulder are not trackable across the landing→contact window, set missing=true with the specific reason. NEVER guess.",
+    },
+    {
+      key: "shoulder_to_shoulder_hold_pass",
+      tileKey: "shoulder_to_shoulder_hold",
+      label: "Hands stayed back through P4 (boolean fallback)",
+      kind: "boolean",
+      prompt:
+        "TRUE only if the spacing between the hand cluster and the back shoulder remained at ≥90% of its landing-frame value across at least 50% of frames from landing to contact. Prefer emitting shoulder_to_shoulder_hold_pct_to_contact instead — only emit this boolean when you cannot estimate a percentage.",
+    },
+    {
+      key: "front_shoulder_leak_before_contact",
+      tileKey: "shoulder_to_shoulder_hold",
+      label: "Front shoulder flew open / leaked out of sequence before contact",
+      kind: "boolean",
+      prompt:
+        "TRUE if the front shoulder rotates open toward the pitcher BEFORE contact in a way that breaks the hip→shoulder sequence. Operational rule: measure the angle of the line between the two shoulders relative to the line from back shoulder to the pitcher. If that line rotates more than ~15° toward the pitcher before the contact frame (i.e. the front shoulder has flown open ahead of where the hips have rotated), set TRUE. This is the auto-FAIL trigger for the shoulder-to-shoulder hold tile — it nullifies the move regardless of spacing held.",
+    },
+    {
+      key: "front_shoulder_leak_pct_of_window",
+      tileKey: "shoulder_to_shoulder_hold",
+      label: "At what % of the landing→contact window did the front shoulder leak (if it did)",
+      kind: "number",
+      unit: "percent",
+      range: [0, 100],
+      prompt:
+        "If front_shoulder_leak_before_contact is TRUE, return the percentage of the landing→contact window at which the leak FIRST crossed the ~15° threshold (e.g. 35 means about a third of the way from landing to contact). If the leak never occurred, set missing=true with reason 'no_leak'.",
+    },
   ],
 };

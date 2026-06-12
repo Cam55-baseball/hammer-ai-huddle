@@ -25,11 +25,11 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
-import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
-import { WeeklyDigestPreview } from "@/components/dashboard/WeeklyDigestPreview";
-import { ForecastPreview } from "@/components/dashboard/ForecastPreview";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
+import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, Sparkles as SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
@@ -48,6 +48,54 @@ function OrgBadge() {
       <Building2 className="h-3 w-3 mr-1" />
       {orgName}
     </Badge>
+  );
+}
+
+/**
+ * Hammers Today Plan — collapsible Dashboard mount. Persists open/closed per
+ * day in localStorage so it auto-opens once daily and respects user choice the
+ * rest of the day. Reads the same canonical organism context as /command, so
+ * Dashboard and Command Center stay in lockstep — never random.
+ */
+function DashboardTodayPlan() {
+  const dayKey = `hammer.today.dashboard.open.${new Date().toISOString().slice(0, 10)}`;
+  const [open, setOpen] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem(dayKey);
+      return v === null ? true : v === "1";
+    } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(dayKey, open ? "1" : "0"); } catch { /* ignore */ }
+  }, [open, dayKey]);
+  return (
+    <section className="rounded-2xl border-2 border-primary/30 bg-card overflow-hidden">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+            aria-expanded={open}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <SparklesIcon className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-bold leading-tight">Hammers Today Plan</div>
+                <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                  Built from your latest organism data — never random.
+                </p>
+              </div>
+            </div>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+          <div className="p-3 sm:p-4 border-t border-border/60">
+            <HammerDailyPlan />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </section>
   );
 }
 
@@ -535,15 +583,6 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Compact summary row — pulled to the top to reduce overwhelm */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-
-            <WeeklyDigestPreview />
-            <ForecastPreview />
-          </div>
-        )}
-
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
@@ -551,8 +590,10 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
-        {/* Command Center — primary organism status surface. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommandCenterSection />}
+        {/* Hammers Today Plan — collapsible above Game Plan, populated from
+            forward-moving organism data (never random). Second home for the
+            Today Plan so users can act on it without leaving the Dashboard. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <DashboardTodayPlan />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (

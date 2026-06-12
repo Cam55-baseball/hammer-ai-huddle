@@ -1,78 +1,77 @@
+# Shoulder-to-Shoulder Hold tile + Dashboard/Sidebar reorg
 
-# Hitting Report Card — Copy Refinement, 2 New Tiles, Accuracy Pass, and Video Suggestions Surfacing
+## 1. New BH P4 Tile — "Shoulder-to-Shoulder Hold" (Pass/Fail)
 
-All work is scoped to `src/lib/reportCard/disciplines/bh.ts`, the shared server contract for new keys, and a small owner-visible doc for where Hammer Picks render. No schema changes, no UI framework changes.
+**Doctrine (frozen into prompts & UI copy):**
+- Measures held separation between **hands and back shoulder** created at landing (end of P3) through P4.
+- Hands must stay back while the elbow leads the bat to the ball (no hand-push).
+- **PASS** = spacing held for **≥50%** of the window from landing → contact. Elite = held until contact.
+- **Auto-FAIL override:** front shoulder flies open / out-of-sequence before contact, even if spacing held. Card MUST tell the hitter exactly why it auto-failed (explicit "Auto-FAIL: front shoulder leaked at ~X% of window — nullifies the move").
+- Not an arm-bar; hands' job is to line up with the ball, not push to it.
 
-## 1. Copy fixes on existing BH tiles (`bh.ts` explainer text only)
+**Files:**
+- `src/lib/reportCard/disciplines/bh.ts` — add tile id `shoulder_to_shoulder_hold` in **P4** group with full `whatWhy` + `howToImprove` copy reflecting doctrine above. Reader returns `pass | fail | null` with an `autoFailReason` string when front-shoulder leak triggers.
+- `src/lib/reportCard/contracts/bh.contract.ts` — add metric keys:
+  - `shoulder_to_shoulder_hold_pct_to_contact` (0–100, numeric: % of window spacing held)
+  - `shoulder_to_shoulder_hold_pass` (boolean)
+  - `front_shoulder_leak_before_contact` (boolean — auto-FAIL trigger)
+  - `front_shoulder_leak_pct_of_window` (0–100, when leak detected)
+- `supabase/functions/_shared/reportCardContracts.ts` — mirror the same four keys with **frame-anchored extraction prompt**: Landing frame = first frame back foot heel/full foot plants; Contact = barrel/ball overlap; track per-frame distance between **hand cluster centroid** and **back-shoulder joint** along the bat path; spacing "held" while distance ≥ 90% of its landing-frame value; front-shoulder leak = back-shoulder→front-shoulder line rotates >15° toward pitcher before contact.
+- `src/components/report-card/hammer/ReportCardTile.tsx` (or pass/fail visual) — render auto-FAIL reason chip in red when `autoFailReason` present.
+- Add to BREAD_AND_BUTTER targeted second-pass list in `supabase/functions/analyze-video/index.ts` so the metric is never silently missing.
 
-- **Hip Load Stability — howToImprove:** Replace the misplaced "catch-play with intent" line. New copy focuses on hitter-specific stability: mirror a partner's leg lift and hold peak load with zero front-foot, head, or body drift; tee work with eyes closed at peak load to feel a quiet centerline; weighted-bat hip-load holds.
-- **Eyes / Head Tracking — howToImprove:** Add that a loaded scap AFTER P1 is what locks the head still (scap pulls the chin/eye line into a fixed post). Add the pro "ball-on-the-load-spot" drill: place a ball where the head sits at peak load, take the swing, then check that the head has returned to that same reference point relative to the ball.
-- **Heel Plant / Landing — whatWhy clarification:** State that "heel plant" = full foot down (not just the heel); the back hip is what controls the stride (pitcher-like stride that tensions the core); if the scap stays loaded pre-stride the stride naturally stays sideways as long as shoulders don't open — meaning the athlete can go full force without leaking.
-- **Sequencing — whatWhy addition:** Add that the back hip is what drives the front foot to the ground — the step / back hip should be completely maxed out involuntarily by landing, with all voluntary hip work spent during the stepping phase.
-- **On-Plane % — howToImprove rewrite:** Line the hands up with the ball to "catch" it — knob does NOT compromise forward ahead of the elbow. The elbow is responsible for the forward turn to the ball. Drills: knob-stays-back tee work, elbow-leads constraint, catch-with-both-hands cue at the contact point.
-- **Time to Contact — howToImprove rewrite:** No upper-body movement until the hips have cleared a path of least resistance; THEN the back elbow goes forward linearly, taking the barrel to contact while the knob stays back as a fulcrum. Drills: pause-at-launch tee, hip-clear-first dry cuts, knob-pinned-to-side reps.
-- **Back Elbow at Contact — whatWhy + howToImprove addition:** Knob must stay back / pinned for the elbow-to-ball move to work. Cue users to "hunt the ball with the back elbow while the knob stays in the loaded position." Drill: knob-anchored tee reps, elbow-to-ball with a partner holding the knob.
-- **Hitter's Move Quality — howToImprove rewrite:** Tighten to: knob stays back (fulcrum) → hips clear → back elbow leads linearly → hands stay in line with the ball → barrel last. Drills aligned to that order.
-- **Finish & Balance — whatWhy rewrite:** Reframe as proof-of-rotation and proof-of-sequence — a clean two-hand, balanced finish over a stacked back leg means the rotation finished its job, the knob stayed back long enough, and the athlete is already reset for the next pitch; falling off line is evidence of a linear leak earlier in P4.
+## 2. Sidebar reorganization
 
-## 2. Two new tiles (added to P4 group in `bh.ts`)
+Edit `src/components/AppSidebar.tsx` `mainNavItems`:
 
-### A. Shoulder Plane Steadiness (P4) — score_meter + implicit pass/fail
-- key: `shoulder_plane_steadiness`
-- mode: `score_meter` (0–100). The status itself functions as PASS/FAIL/elite, satisfying the "x/100 & Pass/Fail" requirement within one tile (consistent with existing meter doctrine).
-- standard: "Once shoulders begin to rotate in P4, the shoulder plane holds steady through contact"
-- thresholdChip: "Acceptable 70 · Elite 90"
-- explainer: rotating shoulders must hold the plane they started on; a steady plane = the largest possible contact window for what the eyes already saw.
-- contract key: `shoulder_plane_steadiness_score_100` (with legacy `_score_10` fallback rule reserved if needed).
+- **Remove top-level:** `Weekly Digest`, `Forecast`, `Command Center`, `Notifications`, `Nutrition Hub`, `Nutrition Tips` (top-level entries).
+- **Add Nutrition group** (collapsible `SidebarMenuSub`) containing Nutrition Hub + Nutrition Tips.
+- **Move Notifications** into the existing Settings group (link `/settings/notifications`).
+- `Weekly Digest` + `Forecast` + `Command Center` → no sidebar entry; reachable from Progress Dashboard (deep links preserved).
 
-### B. Hands Outside Shoulders at Landing (pre-P4) — pass_fail
-- key: `hands_outside_shoulders_at_landing`
-- mode: `pass_fail`
-- phase: "P3 Stride / Landing" (since it's measured AT landing, before P4 begins)
-- standard: "At front-foot strike, hands sit OUTSIDE the shoulder line horizontally"
-- explainer: hands outside the shoulder line at landing give the athlete the runway to get on plane AND stay on plane smoothly.
-- contract key: `hands_outside_shoulders_at_landing_pass` (boolean).
+## 3. Progress Dashboard absorbs digest/forecast/body
 
-Both new keys get mirrored in `supabase/functions/_shared/reportCardContracts.ts` with prompt copy + worked examples so the AI extracts them. No DB migrations.
+Edit `src/pages/ProgressDashboard.tsx`:
+- Add **collapsible "How your body is doing today"** section at top using `<CommandCenterSection defaultSignalsOpen={false} />` (collapsed by default — full drop-down lives here only).
+- Add `<WeeklyDigestPreview />` and `<ForecastPreview />` as cards in a 2-col grid below it.
 
-## 3. Accuracy pass — Time to Contact & Bat Speed Through Contact
+## 4. Dashboard cleanup + Identity body-score chip
 
-These are flagged as "bread and butter" so the server contract gets strengthened, not the UI:
+Edit `src/pages/Dashboard.tsx`:
+- Remove `<CommandCenterSection />` mount (line ~555).
+- Remove `<WeeklyDigestPreview />` and `<ForecastPreview />` from Dashboard.
+- Edit `src/components/identity/IdentityCommandCard.tsx`: add compact **"Body Today"** score chip (single 0–100 derived via existing `useAthleteCommandRows` → readiness composite) with a "Full report →" link to `/progress#body`. No drop-down on the Dashboard.
 
-- In `supabase/functions/_shared/reportCardContracts.ts`, expand the per-metric prompt for `time_to_contact_ms` and `bat_speed_contact_mph`:
-  - **Frame anchors:** swing start = first frame where the knob begins forward motion AFTER hands have completed load and hips have begun to clear. Contact frame = first frame of bat-ball overlap.
-  - **Calibration:** require full-body or full-bat visibility; require known fps (use video metadata); if fps cannot be confirmed → return `missing` with `missing_reason: "fps_unknown"`.
-  - **Bat speed:** measure peak barrel translational speed over a 2-frame window straddling contact; convert to mph via known bat length (use 33 in default, note assumption). If barrel obscured at contact → `missing`.
-  - **Never guess:** if either anchor frame is ambiguous → `missing` with reason.
-- In `supabase/functions/analyze-video/index.ts` two-pass logic: if either of these two keys comes back missing, ALWAYS trigger the targeted second pass for them regardless of the >40% threshold.
+## 5. Hammers Today Plan — second home on Dashboard
 
-No client logic changes for these two metrics beyond what's already shipped.
+Edit `src/pages/Dashboard.tsx`:
+- Mount `<HammerDailyPlan />` inside a **`<Collapsible>` placed directly above `<GamePlanCard />`**, defaulting open the first time per day, with a "Populate today's plan" button that calls the existing populate hook (already deterministic, organism-data-driven — no random generation). Persist open/closed in `localStorage` (`hammer.today.dashboard.open.YYYY-MM-DD`).
+- Leave the existing copy on `/command` intact (no duplication risk: same hook, same lineage).
 
-## 4. Owner visibility — where Hammer Picks render
+## 6. Post-onboarding routing → Dashboard
 
-No code change required to make picks render (already wired). Add a short owner-facing doc + a single dev-mode debug surface so the owner can confirm tagging is taking effect.
+Edit `src/pages/Auth.tsx` (~line 185):
+- Change the post-login default from `navigate("/command")` to `navigate("/dashboard")` for athletes who **have** `hasFirstEvent` (i.e., onboarding complete).
+- Athletes without `hasFirstEvent` continue to `/onboarding/athlete`.
+- Keep scout/coach routing unchanged.
+- Edit `src/pages/AthleteCommand.tsx`: when `!hasFirstEvent` still redirect to onboarding (unchanged); otherwise allow direct visit (deep-link still works).
 
-Picks already render in:
-- **Post-session summary** (`src/components/practice/PostSessionVideoSuggestions.tsx` → `VideoSuggestionsPanel` with mode `"session"`) — appears immediately after a saved practice session whose drill blocks / outcomes / context resolve a skill domain.
-- **Dashboard long-term picks** (`src/components/dashboard/LongTermVideoSuggestions.tsx`) — driven by the athlete's weakness profile.
-- **Weakness cluster cards** (`src/components/hie/WeaknessClusterCard.tsx`).
-- **Analyze Video** flow (`src/pages/AnalyzeVideo.tsx`) — post-analysis suggestions tied to detected issues.
-
-Add a single doc page `docs/owner/video-suggestions-surfaces.md` enumerating:
-- Each surface and what triggers it.
-- The tag fields the owner controls (`skill_domains`, `video_tag_assignments`, `distribution_tier`) and how they map to selection.
-- A "how to verify" checklist: tag a video → confirm it appears in the matching post-session surface for a test session whose patterns match its tags.
-
-No new UI built — purely documentation so the owner has a single reference. (If the owner wants a live admin "preview suggestions for this tag set" tool, that's a separate scoped task.)
-
-## Out of scope
-- DB schema changes.
-- Reworking the Hammer Picks recommendation engine itself.
-- New scorecard formulas outside the report card.
-- Softball-specific deltas.
+## 7. Out of scope
+- Sidebar redesign beyond the moves listed above.
+- New DB tables/migrations.
+- Changes to other report-card tiles, scoring math for existing tiles, or Hammer Picks engine.
+- Softball deltas (BH doctrine update applies to BH discipline only; SB inherits later).
 
 ## Files touched
-- `src/lib/reportCard/disciplines/bh.ts` — copy edits + 2 new tiles.
-- `supabase/functions/_shared/reportCardContracts.ts` — 2 new keys, strengthened TtC + BatSpeed prompts.
-- `supabase/functions/analyze-video/index.ts` — force second-pass for TtC + BatSpeed when missing.
-- `docs/owner/video-suggestions-surfaces.md` — new doc.
+- `src/lib/reportCard/disciplines/bh.ts`
+- `src/lib/reportCard/contracts/bh.contract.ts`
+- `src/components/report-card/hammer/ReportCardTile.tsx`
+- `supabase/functions/_shared/reportCardContracts.ts`
+- `supabase/functions/analyze-video/index.ts` (deploy)
+- `supabase/functions/recompute-report-card/index.ts` (deploy)
+- `src/components/AppSidebar.tsx`
+- `src/pages/ProgressDashboard.tsx`
+- `src/pages/Dashboard.tsx`
+- `src/components/identity/IdentityCommandCard.tsx`
+- `src/pages/Auth.tsx`
+- `src/pages/AthleteCommand.tsx`

@@ -169,23 +169,29 @@ export function AppSidebar() {
 
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
-    ...(!isScout && !isCoach ? [{ title: t('navigation.commandCenter', 'Command Center'), url: "/command", icon: Sparkles }] : []),
-    ...(!isScout && !isCoach ? [{ title: t('navigation.weeklyDigest', 'Weekly Digest'), url: "/digest", icon: CalendarDays }] : []),
-    ...(!isScout && !isCoach ? [{ title: t('navigation.forecast', 'Forecast'), url: "/forecast", icon: BarChart3 }] : []),
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
-    ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
-    { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
-    { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },
     { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
+
+  // Nutrition lives under a single collapsible group so users pick Hub vs. Tips
+  // from one entry instead of two competing top-level items.
+  const nutritionItems = (!isScout && !isCoach)
+    ? [
+        { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
+        { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },
+      ]
+    : [];
+  const [nutritionOpen, setNutritionOpen] = useState<boolean>(
+    location.pathname.startsWith('/nutrition'),
+  );
 
   // Determine active tier (kept for downstream display logic if needed)
   const activeTier = useMemo(() => getActiveTier(modules, selectedSport), [modules, selectedSport]);
@@ -286,6 +292,7 @@ export function AppSidebar() {
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
     { title: t('navigation.profile'), url: "/profile", icon: Settings },
+    ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.myCustomActivities'), url: "/my-custom-activities", icon: LayoutGrid },
     ...(isOwner ? [
       { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
@@ -591,6 +598,43 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Nutrition (collapsible) — single entry that expands Hub + Tips */}
+              {nutritionItems.length > 0 && (
+                <SidebarMenuItem className="sidebar-item">
+                  <SidebarMenuButton
+                    onClick={() => setNutritionOpen((v) => !v)}
+                    isActive={location.pathname.startsWith('/nutrition')}
+                    tooltip={t('navigation.nutrition', 'Nutrition')}
+                    className="group sidebar-item-hover relative"
+                  >
+                    {location.pathname.startsWith('/nutrition') && <span className="sidebar-active-indicator" />}
+                    <Apple className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="flex-1 transition-colors duration-200">{t('navigation.nutrition', 'Nutrition')}</span>
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 shrink-0 transition-transform ${nutritionOpen ? 'rotate-180' : ''}`}
+                      aria-hidden
+                    />
+                  </SidebarMenuButton>
+                  {nutritionOpen && (
+                    <div className="ml-7 mt-1 flex flex-col gap-0.5">
+                      {nutritionItems.map((sub) => (
+                        <button
+                          key={sub.url}
+                          type="button"
+                          onClick={() => navigate(sub.url)}
+                          className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-sidebar-accent/60 ${
+                            isActive(sub.url) ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
+                          }`}
+                        >
+                          <sub.icon className="h-3.5 w-3.5" />
+                          <span>{sub.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

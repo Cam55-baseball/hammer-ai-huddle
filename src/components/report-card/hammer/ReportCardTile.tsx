@@ -108,6 +108,21 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
           />
         )}
       </div>
+
+      {/* Hitter-visible explanation when a FAIL has a forced cause (e.g. auto-FAIL override). */}
+      {!isMissing && isFail && state.note && (
+        <div
+          role="status"
+          className="mt-2 rounded-md border px-2 py-1.5 text-[10px] font-bold leading-snug normal-case tracking-normal text-left"
+          style={{
+            borderColor: "hsl(var(--meter-fail) / 0.55)",
+            background: "hsl(var(--meter-fail) / 0.10)",
+            color: "hsl(var(--meter-fail))",
+          }}
+        >
+          {state.note}
+        </div>
+      )}
     </motion.button>
   );
 }
