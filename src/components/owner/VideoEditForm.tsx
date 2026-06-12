@@ -653,3 +653,53 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     </div>
   );
 }
+
+function HowToReachElite({ score, hints }: { score: number; hints: string[] }) {
+  const [open, setOpen] = useReactState(score < 100);
+  const atElite = score >= 100;
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div
+        className={`rounded-md border ${
+          atElite
+            ? "border-emerald-500/30 bg-emerald-500/5"
+            : "border-amber-500/30 bg-amber-500/5"
+        }`}
+      >
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="w-full flex items-center gap-2 p-2 text-left"
+          >
+            <Trophy
+              className={`h-3.5 w-3.5 ${
+                atElite ? "text-emerald-600" : "text-amber-600"
+              }`}
+            />
+            <span className="text-[11px] font-semibold uppercase tracking-wide">
+              How to reach Elite
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {score}/100
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 ml-auto transition-transform ${
+                open ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <ul className="text-[11px] text-muted-foreground list-disc pl-6 pr-3 pb-2 space-y-0.5">
+            {atElite && hints.length === 0 ? (
+              <li>Elite — every dimension is at full coverage. Ship it.</li>
+            ) : (
+              hints.slice(0, 8).map((h, i) => <li key={i}>{h}</li>)
+            )}
+          </ul>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+}
+
