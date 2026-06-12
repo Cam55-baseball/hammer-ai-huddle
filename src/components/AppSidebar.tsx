@@ -598,6 +598,43 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Nutrition (collapsible) — single entry that expands Hub + Tips */}
+              {nutritionItems.length > 0 && (
+                <SidebarMenuItem className="sidebar-item">
+                  <SidebarMenuButton
+                    onClick={() => setNutritionOpen((v) => !v)}
+                    isActive={location.pathname.startsWith('/nutrition')}
+                    tooltip={t('navigation.nutrition', 'Nutrition')}
+                    className="group sidebar-item-hover relative"
+                  >
+                    {location.pathname.startsWith('/nutrition') && <span className="sidebar-active-indicator" />}
+                    <Apple className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="flex-1 transition-colors duration-200">{t('navigation.nutrition', 'Nutrition')}</span>
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 shrink-0 transition-transform ${nutritionOpen ? 'rotate-180' : ''}`}
+                      aria-hidden
+                    />
+                  </SidebarMenuButton>
+                  {nutritionOpen && (
+                    <div className="ml-7 mt-1 flex flex-col gap-0.5">
+                      {nutritionItems.map((sub) => (
+                        <button
+                          key={sub.url}
+                          type="button"
+                          onClick={() => navigate(sub.url)}
+                          className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-sidebar-accent/60 ${
+                            isActive(sub.url) ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
+                          }`}
+                        >
+                          <sub.icon className="h-3.5 w-3.5" />
+                          <span>{sub.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
