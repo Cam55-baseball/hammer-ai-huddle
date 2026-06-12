@@ -19,6 +19,7 @@
  *   - `useRoadmapProgress` ordering (RFL-031)
  */
 import type { HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
+import { injuryHistoryToText } from "@/lib/hammer/context/normalizers";
 
 /* ── Envelope-shaped projection ──────────────────────────────────────────── */
 
@@ -64,9 +65,6 @@ const KNOWN_INJURY_REGIONS = [
  * no usable text — missingness is preserved, never fabricated.
  */
 function normalizeInjuryToText(raw: unknown): string | null {
-  // Lazy import to keep this module's existing surface stable.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { injuryHistoryToText } = require("./normalizers") as typeof import("./normalizers");
   const txt = injuryHistoryToText(raw);
   return txt === "" ? null : txt;
 }
