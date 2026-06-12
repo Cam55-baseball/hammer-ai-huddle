@@ -9,6 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
 import { useDayState, type DayType } from '@/hooks/useDayState';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
+import { useHIESnapshot } from '@/hooks/useHIESnapshot';
+import { Link } from 'react-router-dom';
 
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
