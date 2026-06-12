@@ -29,7 +29,9 @@ import { ReportCardTrendStrip } from '@/components/progress/ReportCardTrendStrip
 import { CommandCenterSection } from '@/components/command/CommandCenterSection';
 import { WeeklyDigestPreview } from '@/components/dashboard/WeeklyDigestPreview';
 import { ForecastPreview } from '@/components/dashboard/ForecastPreview';
-import { Activity, Lightbulb, TrendingUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Activity, Lightbulb, TrendingUp, ChevronDown, HeartPulse } from 'lucide-react';
+import { useState } from 'react';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -76,6 +78,7 @@ export default function ProgressDashboard() {
   const { snapshot } = useHIESnapshot();
   const hasAdvancedAccess = isOwner || modules.length > 0;
   const selectedSport = (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
+  const [bodyOpen, setBodyOpen] = useState(false);
 
   const dashboardContext = snapshot ? `
 MPI Score: ${snapshot.mpi_score ?? 'N/A'}
@@ -96,6 +99,45 @@ Confidence: ${snapshot.development_confidence}%
           <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>
         </div>
 
+        {/* Body today — moved from Dashboard. Collapsible to preserve focus. */}
+        <section id="body" className="scroll-mt-20">
+          <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
+            <Card className="border-primary/20">
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-4 text-left hover:bg-muted/40 transition-colors rounded-t-lg"
+                  aria-expanded={bodyOpen}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-full bg-primary/10 shrink-0">
+                      <HeartPulse className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-base sm:text-lg">How your body is doing today</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Readiness, fatigue, workload, recovery — the full organism picture.
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform ${bodyOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-2 sm:px-4 pb-4 pt-2 border-t border-border/40">
+                  <CommandCenterSection defaultSignalsOpen={false} />
+                </div>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </section>
+
+        {/* Digest + Forecast — relocated from Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <WeeklyDigestPreview />
+          <ForecastPreview />
+        </div>
+
         {/* Always-visible top sections */}
         <NNSuggestionPanel />
         <PracticeIntelligenceCard />
@@ -103,6 +145,7 @@ Confidence: ${snapshot.development_confidence}%
         <DualStreakDisplay />
         <ActivityAnalytics selectedSport={selectedSport} />
         <LoadDashboard />
+
 
         <DataBuildingGate>
           <div className="space-y-6">

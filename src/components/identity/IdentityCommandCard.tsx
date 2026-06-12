@@ -9,6 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
 import { useDayState, type DayType } from '@/hooks/useDayState';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
+import { useHIESnapshot } from '@/hooks/useHIESnapshot';
+import { Link } from 'react-router-dom';
 
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
@@ -152,6 +154,7 @@ export function IdentityCommandCard({ className }: Props) {
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
   const { data: commandRows } = useAthleteCommandRows({ days: 30, limit: 500 });
+  const { snapshot: hieSnapshot } = useHIESnapshot();
   const todaysStandard = useMemo(
     () => deriveTodaysStandard(commandRows, dayType),
     [commandRows, dayType],
@@ -373,8 +376,21 @@ export function IdentityCommandCard({ className }: Props) {
                 <span>miss/7d</span>
               </span>
             )}
+            {typeof hieSnapshot?.readiness_score === 'number' && (
+              <Link
+                to="/progress#body"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground hover:bg-muted transition-colors"
+                aria-label="Open full body report"
+              >
+                <span className="text-muted-foreground">Body</span>
+                <span className="tabular-nums">{Math.round(hieSnapshot.readiness_score)}</span>
+                <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
+              </Link>
+            )}
           </div>
         </button>
+
 
 
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
