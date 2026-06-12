@@ -21,6 +21,10 @@ import {
   type AthleteContextProjection,
   type SpeedFocusDecision,
 } from "@/lib/hammer/context/decisionFilters";
+import { buildAnthroProfile, hasAnyAnthroSignal } from "@/lib/hammer/anthro/profile";
+import { selectStrengthSwaps } from "@/lib/hammer/prescription/strengthSelector";
+import { selectThrowingAdaptations } from "@/lib/hammer/prescription/throwingSelector";
+
 
 export type ModalityKey =
   | "warmup"
@@ -132,6 +136,8 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
   const availDays = proj.weeklyAvailabilityDays;
   const devPriorities = proj.developmentPriorities;
   const workloadHigh = proj.workloadHigh;
+  const anthro = buildAnthroProfile(ctx.get<unknown>("anthropometrics")?.value);
+  const anthroSignal = hasAnyAnthroSignal(anthro);
 
   const recoverDay =
     typeof (readiness as { score?: number })?.score === "number" &&
@@ -141,6 +147,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
   const lowAvail = typeof availDays === "number" && availDays <= 2;
   const bodyweightOnly = equipment !== null && BODYWEIGHT_EQUIPMENT.has(equipment);
   const goal = goalLine(proj);
+
 
   switch (modality) {
     case "warmup": {
@@ -401,6 +408,20 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       } else if (devPriorities.includes("speed")) {
         drills.push({ name: "Short-contact pogos", dosage: "3 x 8", cue: "stiff ankles" });
       }
+
+      // Anthropometric swaps — inject preferred patterns + rationale.
+      const anthroOut = anthroSignal && !youthScale && !bodyweightOnly
+        ? selectStrengthSwaps(anthro)
+        : { swaps: [] as ReturnType<typeof selectStrengthSwaps>["swaps"], rationale: null };
+      for (const sw of anthroOut.swaps) {
+        drills.push({
+          name: `Anthro pick · ${sw.pattern}: ${sw.preferred}`,
+          dosage: phaseTemplate.sets,
+          cue: sw.cue,
+          setup: sw.demote ? `Preferred over: ${sw.demote}` : undefined,
+        });
+      }
+
 
       const duration = recoverDay
         ? 30
