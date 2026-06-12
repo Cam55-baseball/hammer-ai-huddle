@@ -594,6 +594,7 @@ export default function AnalyzeVideo() {
 
             {/* Real-Time Playback Card */}
             <RealTimePlaybackCard module={module || ''} sport={sport} />
+            </div>
           </div>
         )}
 
