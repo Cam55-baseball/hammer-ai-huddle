@@ -169,23 +169,29 @@ export function AppSidebar() {
 
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
-    ...(!isScout && !isCoach ? [{ title: t('navigation.commandCenter', 'Command Center'), url: "/command", icon: Sparkles }] : []),
-    ...(!isScout && !isCoach ? [{ title: t('navigation.weeklyDigest', 'Weekly Digest'), url: "/digest", icon: CalendarDays }] : []),
-    ...(!isScout && !isCoach ? [{ title: t('navigation.forecast', 'Forecast'), url: "/forecast", icon: BarChart3 }] : []),
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
-    ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
-    { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
-    { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },
     { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
+
+  // Nutrition lives under a single collapsible group so users pick Hub vs. Tips
+  // from one entry instead of two competing top-level items.
+  const nutritionItems = (!isScout && !isCoach)
+    ? [
+        { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
+        { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },
+      ]
+    : [];
+  const [nutritionOpen, setNutritionOpen] = useState<boolean>(
+    location.pathname.startsWith('/nutrition'),
+  );
 
   // Determine active tier (kept for downstream display logic if needed)
   const activeTier = useMemo(() => getActiveTier(modules, selectedSport), [modules, selectedSport]);
