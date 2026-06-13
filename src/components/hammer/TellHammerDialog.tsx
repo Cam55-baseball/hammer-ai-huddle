@@ -32,11 +32,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-const QUICK_SEASON: Array<{ value: "in_season" | "preseason" | "post_season" | "off_season"; label: string }> = [
+const QUICK_SEASON: Array<{ value: "in_season" | "preseason" | "post_season"; label: string }> = [
   { value: "preseason", label: "Pre-season" },
   { value: "in_season", label: "In-season" },
   { value: "post_season", label: "Post-season" },
-  { value: "off_season", label: "Off-season" },
 ];
 
 const QUICK_LEVELS: Array<{ value: string; label: string }> = [
