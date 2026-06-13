@@ -1641,7 +1641,48 @@ Deno.serve(async (req) => {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Update video status to processing
+    // ===== REPLAY-EQUIVALENCE CACHE CHECK =====
+    // Same video + same engine_version + same input fingerprint → return
+    // saved analysis without re-calling the model. Guarantees "same video
+    // 10× returns identical result 10×" without spending model credits.
+    const language = (body as { language?: string }).language || 'en';
+    const inputFingerprint = await buildReplayFingerprint({
+      videoId, module, sport,
+      promptHash: "input-only", // pre-prompt fingerprint (cheap pre-check)
+      frameCount: frames.length,
+      landingFrameIndex,
+      language,
+    });
+    try {
+      const { data: cached } = await supabase
+        .from("videos")
+        .select("ai_analysis, efficiency_score, status")
+        .eq("id", videoId)
+        .maybeSingle();
+      const cachedAi = (cached?.ai_analysis ?? null) as Record<string, unknown> | null;
+      if (
+        cached?.status === "completed" &&
+        cachedAi &&
+        cachedAi.engine_version === ENGINE_VERSION &&
+        typeof cachedAi.replay_input_fingerprint === "string" &&
+        cachedAi.replay_input_fingerprint === inputFingerprint
+      ) {
+        console.log(`[ANALYZE-VIDEO] Replay cache HIT for ${videoId} — returning saved analysis`);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            replay_cache: true,
+            ai_analysis: cachedAi,
+            efficiency_score: cached.efficiency_score,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } catch (e) {
+      console.warn(`[ANALYZE-VIDEO] cache pre-check skipped:`, (e as Error)?.message);
+    }
+
+    // Update video status to processing (only after cache miss)
     await supabase.from("videos").update({ status: "processing" }).eq("id", videoId);
 
     // ===== FETCH HISTORICAL ANALYSIS DATA =====
