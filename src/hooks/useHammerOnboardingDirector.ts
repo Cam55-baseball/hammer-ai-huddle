@@ -83,7 +83,14 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   const ctx = useHammerAthleteContext();
   const qc = useQueryClient();
   const { audience, loading: audienceLoading } = useUserAudience();
-  const [coachScoutResolved, setCoachScoutResolved] = useState<Set<string>>(new Set());
+  // Session-resolved set — used by ALL audiences so the next question advances
+  // immediately after a successful save, without waiting on envelope refetch.
+  // Athlete fix: prevents users from appearing "stuck" on the same question
+  // when refetch is slow or cached.
+  const [sessionResolved, setSessionResolved] = useState<Set<string>>(new Set());
+  // Session-skipped set — user explicitly chose Skip; never imputes a value,
+  // just removes from the queue for this session.
+  const [sessionSkipped, setSessionSkipped] = useState<Set<string>>(new Set());
 
   const gapSet = useMemo(() => getKnowledgeGapsForAudience(audience), [audience]);
 
@@ -100,7 +107,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     },
   });
 
-  // Seed `coachScoutResolved` from hydrated row (one-shot per row identity).
+  // Seed `sessionResolved` from hydrated coach/scout row.
   useEffect(() => {
     if (audience === "athlete" || !coachScoutRow) return;
     const seeded = new Set<string>();
@@ -112,8 +119,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
       seeded.add(gap.id);
     }
     if (seeded.size > 0) {
-      setCoachScoutResolved((prev) => {
-        // merge — never lose session resolutions
+      setSessionResolved((prev) => {
         const next = new Set(prev);
         for (const id of seeded) next.add(id);
         return next;
@@ -122,18 +128,18 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   }, [audience, coachScoutRow, gapSet]);
 
   const openGaps = useMemo(() => {
-    if (audience === "athlete") {
-      return gapSet
-        .filter((g) => {
+    return gapSet
+      .filter((g) => {
+        if (sessionResolved.has(g.id)) return false;
+        if (sessionSkipped.has(g.id)) return false;
+        if (audience === "athlete") {
           const v = ctx.get(g.contextKey);
           return v ? v.missing : true;
-        })
-        .sort((a, b) => a.priority - b.priority);
-    }
-    return gapSet
-      .filter((g) => !coachScoutResolved.has(g.id))
+        }
+        return true;
+      })
       .sort((a, b) => a.priority - b.priority);
-  }, [audience, gapSet, ctx, coachScoutResolved]);
+  }, [audience, gapSet, ctx, sessionResolved, sessionSkipped]);
 
   const resolve = useCallback(
     async (gapId: string, value: unknown) => {
@@ -164,25 +170,24 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
           .filter(Boolean);
       }
       if (gap.persistTo === "injury_history") {
-        // Canonicalize via the shared normalizer so every consumer sees one shape.
         v = canonicalizeInjuryHistory(value);
       }
 
       try {
         if (audience === "coach") {
           await persistCoachContextAnswer(user.id, gap.persistTo, v);
-          setCoachScoutResolved((prev) => new Set(prev).add(gap.id));
         } else if (audience === "scout") {
           await persistScoutContextAnswer(user.id, gap.persistTo, v);
-          setCoachScoutResolved((prev) => new Set(prev).add(gap.id));
         } else {
           await persistContextAnswer(user.id, gap.persistTo, v, "hammer_onboarding");
         }
       } catch (err) {
-        // Re-throw so the UI can show it; do not silently advance.
         console.error("[hammer onboarding] persist failed", { gapId, err });
         throw err;
       }
+
+      // Advance immediately — do not wait on refetch.
+      setSessionResolved((prev) => new Set(prev).add(gap.id));
 
       // Best-effort cache refresh — never block forward progress on this.
       try {
@@ -198,12 +203,10 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   const skip = useCallback(
     (gapId: string) => {
       // Skipping never imputes a value — missingness remains visible.
-      // For coach/scout, mark resolved-in-session so we advance.
-      if (audience !== "athlete") {
-        setCoachScoutResolved((prev) => new Set(prev).add(gapId));
-      }
+      // Mark session-skipped so the queue advances for athlete/coach/scout alike.
+      setSessionSkipped((prev) => new Set(prev).add(gapId));
     },
-    [audience],
+    [],
   );
 
   return {
