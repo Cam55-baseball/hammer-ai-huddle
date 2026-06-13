@@ -16,6 +16,8 @@ import { HittingRecruitingCard } from "@/components/recruiting/HittingRecruiting
 import { RecruitingVisibilityGate } from "@/components/recruiting/RecruitingVisibilityGate";
 import { HittingDoctrineBlock } from "@/components/hitting/HittingDoctrineBlock";
 import { UhrcReportCard } from "@/components/report-card/UhrcReportCard";
+import { HammerReportCardAggregate } from "@/components/report-card/HammerReportCardAggregate";
+import { ReportCardTrendStrip } from "@/components/progress/ReportCardTrendStrip";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
@@ -200,6 +202,30 @@ export default function CoachAthleteDetail() {
         )}
         {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
         {pieV2Latest && <PieV2HammerBriefPanel aggregate={pieV2Latest} />}
+
+        {/* Hammer Report Card — last-30 aggregate + trend strip per discipline.
+            Replay-safe: derived from ai_analysis.metrics. Read-only for coach. */}
+        {athleteId && (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <HammerReportCardAggregate
+              module="hitting"
+              userIdOverride={athleteId}
+              title="Hitting — last 30 sessions"
+            />
+            <HammerReportCardAggregate
+              module="pitching"
+              userIdOverride={athleteId}
+              title="Pitching — last 30 sessions"
+            />
+          </div>
+        )}
+        {athleteId && (
+          <ReportCardTrendStrip
+            module="hitting"
+            userIdOverride={athleteId}
+            title="Hitting report card — last 8 sessions"
+          />
+        )}
 
         {/* Hitting doctrine (P1-P4) — same JSON as athlete surface */}
         <Card>

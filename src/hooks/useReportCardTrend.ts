@@ -19,17 +19,18 @@ export interface TrendEntry {
  * truth. Rows missing structured `metrics` surface with `grade: null` so the
  * UI can offer a recompute affordance without inventing a score.
  */
-export function useReportCardTrend(module: string | null, limit = 8) {
+export function useReportCardTrend(module: string | null, limit = 8, userIdOverride?: string) {
   const { user } = useAuth();
+  const targetUserId = userIdOverride ?? user?.id;
   return useQuery({
-    queryKey: ["report-card-trend", user?.id, module, limit],
-    enabled: !!user?.id && !!module,
+    queryKey: ["report-card-trend", targetUserId, module, limit],
+    enabled: !!targetUserId && !!module,
     staleTime: 60_000,
     queryFn: async (): Promise<TrendEntry[]> => {
       const { data, error } = await supabase
         .from("videos")
         .select("id, created_at, sport, module, ai_analysis")
-        .eq("user_id", user!.id)
+        .eq("user_id", targetUserId!)
         .eq("module", module as "hitting")
         .not("ai_analysis", "is", null)
         .order("created_at", { ascending: false })

@@ -1,118 +1,71 @@
-## Goal
-Make Hammer operationally trustworthy: buttons work, onboarding completes without silent pass-through, throwing prescriptions are specific, verified stats feed app context, and season/game schedule reality changes daily recommendations.
+# Finishing Polish — Reliability, Deferred Surfaces, Fragment Sweep
 
-## What I found
-- **Hammer “Answer Hammer” buttons are incomplete**: missing-context cards can point to keys like `position` while onboarding uses `position_primary`; inline answers only support basic text/select/number, so richer gaps like segmented, multiselect, injury, lifting history, anthropometrics cannot be answered there.
-- **Onboarding can stall or feel faulty**: athlete skip does not advance, and successful saves rely on a refetched context envelope before the next question changes. If refresh lags or fails, users can get stuck or appear to pass through incorrectly.
-- **Season language is split**: onboarding stores `off/pre/in/post`, while existing season settings use `off_season/preseason/in_season/post_season`. Hammer Daily Plan reads one source, edge functions and schedule tools read another.
-- **Schedule awareness exists but is shallow**: `useScheduleWindow` sees games/practices for the next 7 days, but Hammer does not yet classify game-day, tomorrow, doubleheader/stretches, playoffs, unknown schedule, or pro/college/amateur schedule styles as first-class context.
-- **Throwing is better than before but still not elite enough**: the plan still uses broad “band series / catch play / arm care” wording instead of position-, phase-, game-day-, and workload-specific throwing menus.
-- **Verified stats are isolated**: submission/admin/public display exist, but verified stat data is not projected into Hammer context, season/team status, or daily recommendations with clear confidence.
+## 1. Analyze-Video Reliability ("Analysis Failed" must not happen)
 
-## Implementation plan
+Session replay shows analyze-video failing ~113s after start with a generic toast. Logs show one video at `1781382034068` succeeded, then a later attempt produced "Analysis Failed". Root causes to fix:
 
-### 1. Repair Hammer to-do / button behavior
-- Fix all Hammer Daily Plan missing-context keys to match the canonical onboarding registry:
-  - `position` → `position_primary`
-  - keep `equipment_effective`, injury, anthropometrics, season, and availability keys aligned with `HAMMER_KNOWLEDGE_GAPS`.
-- Change “Answer Hammer” CTAs for awaiting-input blocks so they expand the inline gap panel and scroll to it instead of acting like a dead route button.
-- Upgrade inline gap answering to render the same input types as onboarding:
-  - segmented
-  - multiselect
-  - lifting history
-  - anthropometrics
-  - injury
-  - select / text / number
-- After any inline answer save, invalidate Hammer context and immediately show a “saved, plan updating” state so the user sees progress without needing a manual refresh.
-- Add defensive UI for suppressed blocks: no fake “Skip” navigation; show why it is suppressed and what would re-enable it.
+- **No retry / no graceful degrade**: a single Gemini / OpenAI hiccup surfaces as a fatal error. Add bounded exponential-backoff retry (3 attempts, replay-safe — same prompt, same frames, same seed) inside `analyze-video/index.ts` around the model call only.
+- **Timeout swallowed**: tighten per-call timeout (90s) and on terminal failure write a structured `failure_event` row + return an actionable message (network vs model vs schema) instead of "An error occurred".
+- **Determinism contract** (same video 10× → same result 10×):
+  - Pin `model`, `temperature: 0`, `top_p: 0`, `seed: hash(video_id + engine_version)`, deterministic frame selection (already in `[ANALYZE-VIDEO] Landing frame index: auto-detect` — replace with stable hash-based selection if `landing_frame_index` missing).
+  - Cache successful analyses by `(video_id, engine_version, reasoning_version, frame_hash)` so reruns return the same payload without re-hitting the model (replay-equivalence per Phase 47/56).
+  - Add a `replay_fingerprint` field to `ai_analysis` so a recompute can verify determinism and surface drift in `RecomputeReportCardButton`.
+- **Pass-2 recovery already exists** for metrics — extend the same recovery shape to the whole feedback object: if structured parse fails, retry with stricter schema instead of throwing.
+- **User-facing**: replace the "Analysis Failed" generic state with status detail ("Model timeout — retrying" / "Network — tap to retry") and auto-retry once before showing the manual Retry button.
 
-### 2. Make onboarding completion robust
-- Add a local resolved-session set for athlete onboarding after successful persistence, so the next question advances immediately while the canonical envelope refreshes in the background.
-- Make athlete `Skip` actually advance for skippable questions while preserving missingness; for non-skippable core identity/safety questions, show why Hammer needs it.
-- Add a clear progress footer: `Question X of Y`, `Saved`, `Saving`, `Could not save`, and `Try again`.
-- Never silently complete if persistence fails; keep the user on the same question with the exact save error.
-- Normalize and sync season values during onboarding:
-  - UI can say Off / Pre / In / Post
-  - storage uses one canonical mapping compatible with both Hammer and existing season settings.
+## 2. Deferred Report Card Surfaces
 
-### 3. Create one elite season/game context spine
-- Add a shared schedule-context projection that combines:
-  - manual season phase
-  - season date windows
-  - games/practices in the next 7 days
-  - today/tomorrow game detection
-  - games in last 7 days
-  - consecutive-game stretch / no-off-day count
-  - unknown schedule state
-  - competition level: youth, HS, college, independent pro, affiliated pro
-- Surface this in Hammer Daily Plan header as a compact context line, e.g.:
-  - “Game today — freshness mode”
-  - “Game 6 of 16-day stretch — recovery ceiling active”
-  - “In-season, schedule unknown — ask Hammer / add game”
-- Add direct actions from that context line:
-  - Mark in-season
-  - Add game today
-  - Add next game
-  - Open season dates
-  - Tell Hammer I was picked up / changed team
-- Feed this projection into `buildHammerDailyPlan` so strength, throwing, speed, hitting, recovery, and fuel all clamp based on game-day and schedule density.
+### A. Per-session HammerReportCard on **Vault video detail**
+- Mount `<HammerReportCard videoId={video.id} analysis={video.ai_analysis} sport={video.sport} module={video.module} />` inside the existing video detail view (the page that already shows playback + AI feedback).
+- Include the existing `RecomputeReportCardButton` underneath; on success it merges the new metrics into the local cache.
+- Render the `useReportCardTrend` strip ("Last 8 sessions") above the card so the athlete sees grade trajectory in-context.
 
-### 4. Upgrade throwing prescriptions from vague to coach-grade
-- Replace generic throwing drill names with detailed blocks:
-  - cuff/scap activation sequence
-  - wrist/forearm prep
-  - catch-play ramp with distances/intensity bands
-  - position-specific throws
-  - mound/position intent rules where applicable
-  - cooldown tissue/arm-care work
-- Branch throwing by:
-  - pitcher / catcher / infielder / outfielder / utility / DH
-  - in-season vs off-season vs preseason vs post-season
-  - game today / game tomorrow / dense stretch / no schedule known
-  - injury regions and reported pain
-  - anthropometrics where available
-- Add clearer `stopIf` rules: elbow grab, shoulder pinch, velo drop, command loss, forearm tightness, sharp pain.
-- Make “arm care” a real checklist, not a vague label.
+### B. Per-session HammerReportCard on **CoachAthleteDetail**
+- Inside each athlete's per-video row, add a collapsible "Report Card" disclosure that lazy-loads `HammerReportCard` for the chosen session.
+- Coach-facing affordance: show the letter grade + `measured/total` chip in the row header so coaches scan without expanding.
+- Read-only for coach (no recompute) unless they have edit authority on that athlete (`useCoachAuthority`).
 
-### 5. Wire verified stats into the entire app context
-- Add a read-only verified-stats projection for Hammer context:
-  - verified profiles
-  - league/source
-  - team name
-  - confidence weight
-  - verified date
-  - profile type
-- Add a compact “Verified context” line where useful: profile/team/league status that Hammer can reference without pretending it knows more than verified.
-- When an athlete submits or has approved verified stats, use it as corroborating context for:
-  - competition level
-  - team affiliation
-  - pro/independent status hints
-  - public profile credibility
-  - MPI/nightly calculations where already designed
-- Preserve confidence boundaries: verified stats corroborate context; they do not override athlete-reported injury, schedule, or intent.
+### C. Monthly / Vault recap aggregate block
+- Add a `HammerReportCardAggregate` component that uses `useReportCardTrend(module, 30)` (limit 30) and reduces to:
+  - Median letter grade, best & worst tile, longest passing streak, most common non-negotiable failure.
+  - Sparkline of `grade.score` over the window.
+- Mount it inside `generate-vault-recap` consumers (Vault recap page) and as a new section in the monthly recap PDF (`generateRecapPdf.ts`).
+- Replay-safe: aggregate is a pure projection over already-stored `videos.ai_analysis.metrics` — no new ledger writes.
 
-### 6. Add dialogue availability for life/team/schedule changes
-- Add a small Hammer context prompt card on the dashboard/command surface:
-  - “Tell Hammer what changed”
-  - examples: “I got picked up by an independent team,” “I’m in playoffs,” “We play 16 straight,” “Schedule is unknown until day-of.”
-- Persist structured updates where possible:
-  - season phase
-  - competition level
-  - team/status note
-  - schedule uncertainty
-  - known upcoming games
-- Route free-form context through safe self-report fields so Hammer can ask follow-up questions instead of making assumptions.
+## 3. Fragment / Error / Connection Sweep
 
-## Validation
-- Reproduce the broken Answer Hammer path and verify each missing gap can be answered inline.
-- Complete onboarding from question 1 through final confirmation without reload.
-- Test skip behavior and failed-save behavior.
-- Mark in-season and verify Hammer plan, season selector, and edge-function context agree.
-- Add a game today and verify Hammer switches to freshness/game-day mode.
-- Submit/approve a verified stat profile and verify it appears in profile plus Hammer context without overclaiming.
-- Inspect throwing block for pitcher/catcher/position player and game-day/off-season variants.
+A focused sweep — not a global refactor — targeting visible breakage:
 
-## Technical notes
-- Likely frontend edits: `HammerDailyPlan.tsx`, `HammerOnboardingChat.tsx`, `useHammerOnboardingDirector.ts`, `dailyPlan.ts`, season/schedule components, verified stats hooks/components.
-- Likely shared logic additions: schedule-context projector, season value normalizer, verified-stats context projector.
-- Only add a migration if a missing persistence field is required for schedule uncertainty/team-status notes; otherwise reuse existing `athlete_context`, `athlete_mpi_settings`, `games`, and `verified_stat_profiles` tables.
+- **TypeScript / lint**: run `tsc --noEmit` + ESLint across `src/components/hammer/**`, `src/components/report-card/**`, `src/hooks/use*Hammer*.ts`, `src/lib/hammer/**`, `supabase/functions/analyze-video/**`, `supabase/functions/recompute-report-card/**`, `supabase/functions/generate-vault-recap/**`. Fix every error/warn.
+- **Dead imports / unused exports**: prune in the same files (knip-style targeted pass).
+- **Route audit**: verify every `<Link>` / `navigate()` target in Hammer + Report Card + Vault flows resolves to a real route in `App.tsx`.
+- **Query key audit**: ensure invalidation after onboarding save, recompute, and physio intake hits the right keys (`hammer-context`, `report-card-trend`, `physio-profile`, `verified-stats`).
+- **Console clean**: load Dashboard, HammerDailyPlan, Vault detail, CoachAthleteDetail in preview; resolve every console warning/error introduced in the last 5 plans.
+- **Edge function smoke**: deploy + curl `analyze-video`, `recompute-report-card`, `generate-vault-recap`, `coach-hammer-next-step`, `predict-hammer-state` with a fixture payload; assert 200 + schema.
+
+## 4. Technical Targets
+
+```text
+supabase/functions/analyze-video/index.ts        ← retry + determinism + structured errors
+supabase/functions/analyze-video/replay.ts (new) ← fingerprint + cache lookup helper
+supabase/functions/recompute-report-card/index.ts ← honor replay_fingerprint
+src/components/vault/VideoDetail*.tsx            ← mount HammerReportCard + trend strip
+src/components/coach/CoachAthleteDetail*.tsx     ← per-session disclosure + grade chip
+src/components/report-card/HammerReportCardAggregate.tsx (new)
+src/pages/Vault*.tsx + src/utils/generateRecapPdf.ts ← aggregate block + PDF section
+src/components/hammer/HammerDailyPlan.tsx        ← surface retry-aware state if analyze running
+```
+
+Determinism contract pin: `ANALYZE_VIDEO_ENGINE_VERSION` bumps only when prompt / schema / scoring changes — never on retry logic edits.
+
+## Out of Scope
+- New report card disciplines (sb-pitching, sh) — separate plan.
+- Coach edit-on-behalf authority changes.
+- Replacing the underlying LLM provider.
+
+## Acceptance
+- Same video uploaded 10× returns byte-identical `ai_analysis` (verified by `replay_fingerprint`).
+- No "Analysis Failed" toast on transient errors — at most "Retrying… (2/3)".
+- Vault video detail and CoachAthleteDetail both render a working HammerReportCard.
+- Vault recap (page + PDF) includes the 30-day aggregate block.
+- `tsc --noEmit` clean across touched paths; zero new console errors on the four key routes.
