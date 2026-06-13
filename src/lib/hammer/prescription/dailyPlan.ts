@@ -338,20 +338,20 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       if (liftingAge === null) {
         return {
           modality,
-          title: "Strength — waiting on lifting age",
+          title: "Strength — waiting on lifting history",
           why: "I prescribe intensity from your training history. I won't guess.",
-          roadmapReason: "Missing input — strength block deferred until you tell me your lifting age.",
+          roadmapReason: "Missing input — strength block deferred until you tell me your lifting history.",
           phase: "build",
           steps: ["Tell me how many years you've been lifting consistently."],
           drills: [],
           cues: [],
           stopRules: [],
           durationMin: null,
-          route: "/command",
+          route: "#hammer-onboarding",
           ctaLabel: "Answer Hammer",
           status: "awaiting-input",
-          missing: ["lifting_age_years"],
-          missingContextKeys: ["lifting_age_years"],
+          missing: ["lifting_history"],
+          missingContextKeys: ["lifting_history"],
           gamePlanTemplate: null,
         };
       }
