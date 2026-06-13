@@ -1840,7 +1840,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // ===== END MULTIMODAL CONTENT BUILD =====
 
     // Call Lovable AI for video analysis with tool-calling for structured output
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await retryFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -2107,7 +2107,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
               const pass2Model = breadMissing.length > 0
                 ? "google/gemini-2.5-pro"
                 : "google/gemini-2.5-flash";
-              const pass2 = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              const pass2 = await retryFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
                 method: "POST",
                 headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
