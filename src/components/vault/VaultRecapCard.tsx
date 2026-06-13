@@ -254,6 +254,9 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
 
           {selectedRecap && (
             <div className="space-y-5">
+              {/* Hammer Report Card aggregate — last 30 sessions, replay-safe projection. */}
+              <HammerReportCardAggregate module="hitting" title="Hitting — last 30 sessions" />
+              <HammerReportCardAggregate module="pitching" title="Pitching — last 30 sessions" />
               {/* Stats Overview Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {selectedRecap.recap_data.workout_stats && (
