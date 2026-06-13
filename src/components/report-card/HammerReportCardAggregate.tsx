@@ -8,6 +8,7 @@ interface Props {
   module: string;
   windowSize?: number;
   title?: string;
+  userIdOverride?: string;
 }
 
 const GRADE_ORDER: LetterGrade[] = ["A", "B", "C", "D", "F"];
@@ -28,8 +29,9 @@ export function HammerReportCardAggregate({
   module,
   windowSize = 30,
   title = "Report card — last 30 sessions",
+  userIdOverride,
 }: Props) {
-  const { data = [], isLoading } = useReportCardTrend(module, windowSize);
+  const { data = [], isLoading } = useReportCardTrend(module, windowSize, userIdOverride);
   const stats = useMemo(() => reduce(data), [data]);
 
   if (isLoading) {
