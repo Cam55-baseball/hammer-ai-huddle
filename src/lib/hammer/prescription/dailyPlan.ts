@@ -709,11 +709,11 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           cues: [],
           stopRules: [],
           durationMin: null,
-          route: "/command",
+          route: "#hammer-onboarding",
           ctaLabel: "Answer Hammer",
           status: "awaiting-input",
-          missing: ["position"],
-          missingContextKeys: ["position"],
+          missing: ["position_primary"],
+          missingContextKeys: ["position_primary"],
           gamePlanTemplate: null,
         };
       }
