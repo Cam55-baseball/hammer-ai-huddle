@@ -16,6 +16,7 @@ const GRADE_VAR: Record<string, { base: string; glow: string }> = {
 interface Props {
   module: string;
   title?: string;
+  userIdOverride?: string;
 }
 
 /**
@@ -23,9 +24,9 @@ interface Props {
  * is derived from `ai_analysis.metrics`; missing metrics render as a muted
  * "—" chip rather than fabricating a grade.
  */
-export function ReportCardTrendStrip({ module, title = "Report card trend" }: Props) {
+export function ReportCardTrendStrip({ module, title = "Report card trend", userIdOverride }: Props) {
   const reduce = useReducedMotion();
-  const { data = [], isLoading } = useReportCardTrend(module, 8);
+  const { data = [], isLoading } = useReportCardTrend(module, 8, userIdOverride);
 
   if (isLoading) {
     return <Card className="h-28 animate-pulse bg-muted/30" />;
