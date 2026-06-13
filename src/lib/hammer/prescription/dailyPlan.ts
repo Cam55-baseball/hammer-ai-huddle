@@ -125,7 +125,10 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
 }
 
 function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
-  const pos = ctx.get<string>("position")?.value ?? null;
+  const pos =
+    (ctx.get<string>("position_primary")?.value as string | null) ??
+    (ctx.get<string>("position")?.value as string | null) ??
+    null;
   const liftingAge = proj.liftingAgeYears;
   const seasonPhase = proj.seasonPhase;
   const injury = proj.injury;
