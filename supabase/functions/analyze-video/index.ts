@@ -2333,6 +2333,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       model_id: MODEL_ID,
       model_version: MODEL_VERSION,
       prompt_hash,
+      // Replay-equivalence keys — same fingerprint + engine_version → cached hit.
+      replay_input_fingerprint: inputFingerprint,
+      replay_fingerprint: await sha256Hex(
+        `${inputFingerprint}|${prompt_hash}|${ENGINE_VERSION}|${MODEL_ID}`,
+      ),
       analyzed_at: new Date().toISOString(),
     };
 
