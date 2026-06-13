@@ -51,6 +51,7 @@ import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
+import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -110,6 +111,7 @@ export function HammerDailyPlan() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        <HammerScheduleStrip />
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
