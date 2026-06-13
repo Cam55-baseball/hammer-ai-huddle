@@ -1,77 +1,118 @@
-## Finalization Plan — Elite Onboarding, Anthro Prescription & Video Surfaces
+## Goal
+Make Hammer operationally trustworthy: buttons work, onboarding completes without silent pass-through, throwing prescriptions are specific, verified stats feed app context, and season/game schedule reality changes daily recommendations.
 
-Completes the five remaining items from the prior pass. No DB migration required (all fields already exist on `foundation_meta` JSONB, `anthropometrics`, `coach_context`, `scout_context`).
+## What I found
+- **Hammer “Answer Hammer” buttons are incomplete**: missing-context cards can point to keys like `position` while onboarding uses `position_primary`; inline answers only support basic text/select/number, so richer gaps like segmented, multiselect, injury, lifting history, anthropometrics cannot be answered there.
+- **Onboarding can stall or feel faulty**: athlete skip does not advance, and successful saves rely on a refetched context envelope before the next question changes. If refresh lags or fails, users can get stuck or appear to pass through incorrectly.
+- **Season language is split**: onboarding stores `off/pre/in/post`, while existing season settings use `off_season/preseason/in_season/post_season`. Hammer Daily Plan reads one source, edge functions and schedule tools read another.
+- **Schedule awareness exists but is shallow**: `useScheduleWindow` sees games/practices for the next 7 days, but Hammer does not yet classify game-day, tomorrow, doubleheader/stretches, playoffs, unknown schedule, or pro/college/amateur schedule styles as first-class context.
+- **Throwing is better than before but still not elite enough**: the plan still uses broad “band series / catch play / arm care” wording instead of position-, phase-, game-day-, and workload-specific throwing menus.
+- **Verified stats are isolated**: submission/admin/public display exist, but verified stat data is not projected into Hammer context, season/team status, or daily recommendations with clear confidence.
 
----
+## Implementation plan
 
-### 1. "How to Reach Elite" — promoted collapsible (Owner Video Library)
+### 1. Repair Hammer to-do / button behavior
+- Fix all Hammer Daily Plan missing-context keys to match the canonical onboarding registry:
+  - `position` → `position_primary`
+  - keep `equipment_effective`, injury, anthropometrics, season, and availability keys aligned with `HAMMER_KNOWLEDGE_GAPS`.
+- Change “Answer Hammer” CTAs for awaiting-input blocks so they expand the inline gap panel and scroll to it instead of acting like a dead route button.
+- Upgrade inline gap answering to render the same input types as onboarding:
+  - segmented
+  - multiselect
+  - lifting history
+  - anthropometrics
+  - injury
+  - select / text / number
+- After any inline answer save, invalidate Hammer context and immediately show a “saved, plan updating” state so the user sees progress without needing a manual refresh.
+- Add defensive UI for suppressed blocks: no fake “Skip” navigation; show why it is suppressed and what would re-enable it.
 
-`src/components/owner/VideoEditForm.tsx`
-- Replace the inline hint with a `Collapsible` section titled **"How to reach Elite"**, defaulting open when `confidence_score < 100`, closed at 100.
-- Shows the prioritized gap list (missing tags, weak rule coverage, low confidence drivers) with one-click "Apply suggestion" buttons that prefill the relevant field.
-- Mirrors the section onto Foundation videos via `FoundationTagEditor.tsx` (same component, fed from foundation-meta completeness).
+### 2. Make onboarding completion robust
+- Add a local resolved-session set for athlete onboarding after successful persistence, so the next question advances immediately while the canonical envelope refreshes in the background.
+- Make athlete `Skip` actually advance for skippable questions while preserving missingness; for non-skippable core identity/safety questions, show why Hammer needs it.
+- Add a clear progress footer: `Question X of Y`, `Saved`, `Saving`, `Could not save`, and `Try again`.
+- Never silently complete if persistence fails; keep the user on the same question with the exact save error.
+- Normalize and sync season values during onboarding:
+  - UI can say Off / Pre / In / Post
+  - storage uses one canonical mapping compatible with both Hammer and existing season settings.
 
-### 2. Throwing-block anthro cues + supplemental drills
+### 3. Create one elite season/game context spine
+- Add a shared schedule-context projection that combines:
+  - manual season phase
+  - season date windows
+  - games/practices in the next 7 days
+  - today/tomorrow game detection
+  - games in last 7 days
+  - consecutive-game stretch / no-off-day count
+  - unknown schedule state
+  - competition level: youth, HS, college, independent pro, affiliated pro
+- Surface this in Hammer Daily Plan header as a compact context line, e.g.:
+  - “Game today — freshness mode”
+  - “Game 6 of 16-day stretch — recovery ceiling active”
+  - “In-season, schedule unknown — ask Hammer / add game”
+- Add direct actions from that context line:
+  - Mark in-season
+  - Add game today
+  - Add next game
+  - Open season dates
+  - Tell Hammer I was picked up / changed team
+- Feed this projection into `buildHammerDailyPlan` so strength, throwing, speed, hitting, recovery, and fuel all clamp based on game-day and schedule density.
 
-`src/lib/hammer/prescription/dailyPlan.ts` (throwing block branch)
-- After base block assembly, call `selectThrowingAdaptations(anthroProfile)`.
-- Append `cues[]` into the block's `coachingCues` and `supplemental[]` as a new "Anthro supplemental" sub-block (does not replace base drills — additive, replay-safe).
-- Append rationale to `roadmapReason` with citation lineage.
-- Surface in `HammerDailyPlan.tsx` throwing card as a collapsible "Why these cues for your levers" row.
+### 4. Upgrade throwing prescriptions from vague to coach-grade
+- Replace generic throwing drill names with detailed blocks:
+  - cuff/scap activation sequence
+  - wrist/forearm prep
+  - catch-play ramp with distances/intensity bands
+  - position-specific throws
+  - mound/position intent rules where applicable
+  - cooldown tissue/arm-care work
+- Branch throwing by:
+  - pitcher / catcher / infielder / outfielder / utility / DH
+  - in-season vs off-season vs preseason vs post-season
+  - game today / game tomorrow / dense stretch / no schedule known
+  - injury regions and reported pain
+  - anthropometrics where available
+- Add clearer `stopIf` rules: elbow grab, shoulder pinch, velo drop, command loss, forearm tightness, sharp pain.
+- Make “arm care” a real checklist, not a vague label.
 
-### 3. Physio intake → normalizer
+### 5. Wire verified stats into the entire app context
+- Add a read-only verified-stats projection for Hammer context:
+  - verified profiles
+  - league/source
+  - team name
+  - confidence weight
+  - verified date
+  - profile type
+- Add a compact “Verified context” line where useful: profile/team/league status that Hammer can reference without pretending it knows more than verified.
+- When an athlete submits or has approved verified stats, use it as corroborating context for:
+  - competition level
+  - team affiliation
+  - pro/independent status hints
+  - public profile credibility
+  - MPI/nightly calculations where already designed
+- Preserve confidence boundaries: verified stats corroborate context; they do not override athlete-reported injury, schedule, or intent.
 
-- `src/hooks/usePhysioProfile.ts`: route reads through `normalizeInjuryHistory()`; route writes through `canonicalizeInjuryHistory()`.
-- `src/components/.../PhysioHealthIntakeDialog.tsx`: same in/out normalization; UI handles the canonical array shape only.
-- `src/lib/hammer/context/decisionFilters.ts`: replace any remaining raw `.toLowerCase()` calls with `injuryHistoryToText()`.
-- Edge functions: add `supabase/functions/_shared/normalizers.ts` (mirror of client normalizer) and import wherever `injury_history` is consumed (audit + patch in one pass).
-- New `tests/normalizers.injury.spec.ts` covering string / array / object / null / "none" / mixed shapes.
+### 6. Add dialogue availability for life/team/schedule changes
+- Add a small Hammer context prompt card on the dashboard/command surface:
+  - “Tell Hammer what changed”
+  - examples: “I got picked up by an independent team,” “I’m in playoffs,” “We play 16 straight,” “Schedule is unknown until day-of.”
+- Persist structured updates where possible:
+  - season phase
+  - competition level
+  - team/status note
+  - schedule uncertainty
+  - known upcoming games
+- Route free-form context through safe self-report fields so Hammer can ask follow-up questions instead of making assumptions.
 
-### 4. Video-suggestion chips on Hammer Daily Plan card
+## Validation
+- Reproduce the broken Answer Hammer path and verify each missing gap can be answered inline.
+- Complete onboarding from question 1 through final confirmation without reload.
+- Test skip behavior and failed-save behavior.
+- Mark in-season and verify Hammer plan, season selector, and edge-function context agree.
+- Add a game today and verify Hammer switches to freshness/game-day mode.
+- Submit/approve a verified stat profile and verify it appears in profile plus Hammer context without overclaiming.
+- Inspect throwing block for pitcher/catcher/position player and game-day/off-season variants.
 
-`src/components/hammer/HammerDailyPlan.tsx`
-- New `<DailyPlanVideoChips modality={block.modality} />` rendered on each modality card (hitting/throwing/strength/recovery).
-- Pulls from existing `useVideoSuggestions` with `mode='session'`, scoped by the block's movement patterns + the user's long-term weakness clusters (reuses logic from `LongTermVideoSuggestions`).
-- Renders max 2 chips per block (thumbnail + 1-line reason). Click → opens the watch sheet (existing `VideoSuggestionsPanel` drawer).
-- 24h per-video dismiss via `localStorage` key `hammer:vid-dismiss:{videoId}` so users don't re-see what they've skipped.
-
-### 5. Dashboard "Today's Pick" strip + post-session auto-scroll + new-pick toast
-
-`src/pages/Dashboard.tsx` (or current `/index` host)
-- New `<TodaysHammerPick />` strip directly above the daily plan card. Shows the single highest-score long-term pick when `score ≥ 0.65`, else hidden.
-- Reuses `useVideoSuggestions` already-cached data — zero extra fetch.
-- `IdentityCommandCard.tsx`: same pick surfaced inline when identity confidence ≥ 0.65.
-- Post-session: `PostSessionVideoSuggestions` gains `autoScrollIntoView` on mount.
-- New-pick toast: in `useVideoSuggestions`, diff previous vs. new top-score video id; if changed and new score ≥ 0.75, fire a `sonner` toast with "New Hammer pick for you" + jump link. One toast per session (sessionStorage guard).
-
----
-
-### Files
-
-**New**
-- `supabase/functions/_shared/normalizers.ts`
-- `src/components/hammer/DailyPlanVideoChips.tsx`
-- `src/components/dashboard/TodaysHammerPick.tsx`
-- `tests/normalizers.injury.spec.ts`
-
-**Edited**
-- `src/components/owner/VideoEditForm.tsx`
-- `src/components/owner/FoundationTagEditor.tsx`
-- `src/lib/hammer/prescription/dailyPlan.ts`
-- `src/components/hammer/HammerDailyPlan.tsx`
-- `src/hooks/usePhysioProfile.ts`
-- `src/components/.../PhysioHealthIntakeDialog.tsx`
-- `src/lib/hammer/context/decisionFilters.ts`
-- `src/hooks/useVideoSuggestions.ts`
-- `src/components/practice/PostSessionVideoSuggestions.tsx`
-- `src/components/dashboard/LongTermVideoSuggestions.tsx` (export shared agg helper)
-- `src/pages/Dashboard.tsx` / `/index` host
-- `src/components/.../IdentityCommandCard.tsx`
-- Edge functions touching `injury_history` (audited + patched)
-
-### Constitutional guarantees
-- All anthro/video additions are **additive overlays**; never author `organism_truth`, `athlete_intent`, `authority_override`, `hard_stop`, or `rehabilitation_state`.
-- Missingness preserved — empty anthro = no cue, no fabricated lever class.
-- Replay-safe: every suggestion carries `{reason, citation}` lineage already wired in selectors.
-- Athlete-reported injury text outranks any inferred readiness (RR-6).
-- Video chips never auto-play; user-initiated only; 24h dismiss honored.
+## Technical notes
+- Likely frontend edits: `HammerDailyPlan.tsx`, `HammerOnboardingChat.tsx`, `useHammerOnboardingDirector.ts`, `dailyPlan.ts`, season/schedule components, verified stats hooks/components.
+- Likely shared logic additions: schedule-context projector, season value normalizer, verified-stats context projector.
+- Only add a migration if a missing persistence field is required for schedule uncertainty/team-status notes; otherwise reuse existing `athlete_context`, `athlete_mpi_settings`, `games`, and `verified_stat_profiles` tables.
