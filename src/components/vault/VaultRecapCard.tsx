@@ -12,6 +12,7 @@ import {
   Activity, Zap, Heart
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { HammerReportCardAggregate } from '@/components/report-card/HammerReportCardAggregate';
 
 interface VaultRecap {
   id: string;
