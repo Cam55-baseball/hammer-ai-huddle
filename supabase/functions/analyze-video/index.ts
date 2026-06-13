@@ -34,6 +34,67 @@ function stableSeed(s: string): number {
   return h & 0x7fffffff;
 }
 
+/**
+ * Bounded exponential-backoff retry around the AI gateway call.
+ * Same prompt + frames + seed are sent on every attempt, so this is
+ * REPLAY-SAFE: identical input across retries → identical output.
+ * Only retries on transient classes (network errors, 5xx, 408, 425, 429).
+ * 402 (out-of-credits) and 400/401/403 are NOT retried — they need user action.
+ */
+async function retryFetch(
+  url: string,
+  init: RequestInit,
+  opts: { attempts?: number; baseDelayMs?: number; label?: string } = {},
+): Promise<Response> {
+  const attempts = opts.attempts ?? 3;
+  const base = opts.baseDelayMs ?? 600;
+  const label = opts.label ?? "ai-gateway";
+  let lastErr: unknown = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, init);
+      const transient = res.status >= 500 || [408, 425, 429].includes(res.status);
+      if (!transient || i === attempts - 1) return res;
+      console.warn(`[${label}] transient ${res.status} attempt ${i + 1}/${attempts} — retrying`);
+    } catch (e) {
+      lastErr = e;
+      console.warn(`[${label}] network error attempt ${i + 1}/${attempts}:`, (e as Error)?.message);
+      if (i === attempts - 1) throw e;
+    }
+    await new Promise((r) => setTimeout(r, base * Math.pow(2, i)));
+  }
+  // Unreachable — loop either returns or throws.
+  throw lastErr ?? new Error(`${label} exhausted retries`);
+}
+
+/**
+ * Compact, deterministic fingerprint of the request inputs that drive AI output.
+ * If two calls share the same fingerprint AND the same engine_version, the saved
+ * analysis is replay-equivalent and can be returned directly without re-calling
+ * the model. This is what makes "same video 10× → same result 10×" cheap.
+ */
+async function buildReplayFingerprint(parts: {
+  videoId: string;
+  module: string;
+  sport: string;
+  promptHash: string;
+  frameCount: number;
+  landingFrameIndex: number | null | undefined;
+  language: string;
+}): Promise<string> {
+  const payload = [
+    parts.videoId,
+    parts.module,
+    parts.sport,
+    parts.promptHash,
+    String(parts.frameCount),
+    parts.landingFrameIndex == null ? "auto" : String(parts.landingFrameIndex),
+    parts.language ?? "en",
+    ENGINE_VERSION,
+  ].join("|");
+  return await sha256Hex(payload);
+}
+
 // ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
 // These keywords in feedback text indicate violations - used to override AI's violation flags
 // NOTE: For baseball pitching and throwing, "shoulders_not_aligned" has been REMOVED as a separate violation.
