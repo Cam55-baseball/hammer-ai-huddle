@@ -125,7 +125,10 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
 }
 
 function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
-  const pos = ctx.get<string>("position")?.value ?? null;
+  const pos =
+    (ctx.get<string>("position_primary")?.value as string | null) ??
+    (ctx.get<string>("position")?.value as string | null) ??
+    null;
   const liftingAge = proj.liftingAgeYears;
   const seasonPhase = proj.seasonPhase;
   const injury = proj.injury;
@@ -338,20 +341,20 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       if (liftingAge === null) {
         return {
           modality,
-          title: "Strength — waiting on lifting age",
+          title: "Strength — waiting on lifting history",
           why: "I prescribe intensity from your training history. I won't guess.",
-          roadmapReason: "Missing input — strength block deferred until you tell me your lifting age.",
+          roadmapReason: "Missing input — strength block deferred until you tell me your lifting history.",
           phase: "build",
           steps: ["Tell me how many years you've been lifting consistently."],
           drills: [],
           cues: [],
           stopRules: [],
           durationMin: null,
-          route: "/command",
+          route: "#hammer-onboarding",
           ctaLabel: "Answer Hammer",
           status: "awaiting-input",
-          missing: ["lifting_age_years"],
-          missingContextKeys: ["lifting_age_years"],
+          missing: ["lifting_history"],
+          missingContextKeys: ["lifting_history"],
           gamePlanTemplate: null,
         };
       }
@@ -503,7 +506,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           cues: [],
           stopRules: [],
           durationMin: null,
-          route: "/command",
+          route: "#hammer-onboarding",
           ctaLabel: "Answer Hammer",
           status: "awaiting-input",
           missing: ["equipment_access"],
@@ -592,9 +595,10 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         injuryRegions.includes("elbow");
       if (armBlocked) {
         const drills: DrillStep[] = [
-          { name: "Band series (J-bands or similar)", dosage: "3 rounds full sequence", cue: "slow + controlled, no max effort" },
-          { name: "Sub-max catch play", dosage: "10 min to comfortable distance only", cue: "no pull-down, no max throws", stopIf: "any sharp arm pain — stop now" },
-          { name: "Arm-care cooldown", dosage: "5 min sleeper stretch + cross-body" },
+          { name: "Cuff/scap activation (J-band series)", setup: "light J-band or therapy band, anchored at shoulder height", dosage: "Internal rotation 2x10, external rotation 2x10, scap pulls 2x10, full sequence 1x", cue: "slow, controlled, no force — wake the cuff, do not work it" },
+          { name: "Wrist + forearm prep", dosage: "wrist circles 30s each way, forearm pronation/supination 2x10", cue: "promotes blood flow without loading" },
+          { name: "Sub-max catch play", dosage: "10 min, never past comfortable distance, never past 70% intent", cue: "every throw is a check-in — does it feel the same as the last one?", stopIf: "any sharp pain, twinge, pinch, or velo cliff — stop now and message Hammer" },
+          { name: "Arm-care cooldown", dosage: "sleeper stretch 2x30s, cross-body 2x30s, light forearm massage 2 min", cue: "long exhales, no straining the joint" },
         ];
         return {
           modality,
@@ -604,9 +608,13 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           phase: "recover",
           steps: drillsToSteps(drills),
           drills,
-          cues: ["Athlete-reported pain always outranks anything I infer."],
-          stopRules: ["Any sharp pain — stop and tell Hammer."],
-          durationMin: 15,
+          cues: ["Athlete-reported pain always outranks anything I infer.", "Today is for the joint, not for the gun."],
+          stopRules: [
+            "Any sharp pain — stop immediately.",
+            "Pinch, grab, or sudden weakness — stop, ice, message Hammer.",
+            "Velo or command falls off a cliff — that's the body talking; listen.",
+          ],
+          durationMin: 18,
           route: "/practice?module=throwing",
           ctaLabel: "Open arm-care",
           status: "ready",
@@ -617,36 +625,94 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
             activityType: "recovery",
             icon: "heart",
             color: "#f43f5e",
-            durationMinutes: 15,
+            durationMinutes: 18,
             description: "Arm-care only. No max throws.",
             checklist: drillsToChecklist(drills),
             source: "hammer.daily.throwing.armcare",
           },
         };
       }
+
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
-      const drills: DrillStep[] = inSeason
+      const preSeason = seasonPhase === "pre";
+      const postSeason = seasonPhase === "post";
+
+      // Position branch — pitcher vs catcher vs IF vs OF vs UTIL.
+      const isPitcher = pos === "P";
+      const isCatcher = pos === "C";
+      const isInfield = pos === "1B" || pos === "2B" || pos === "3B" || pos === "SS";
+      const isOutfield = pos === "LF" || pos === "CF" || pos === "RF";
+      const posLabel =
+        isPitcher ? "pitcher"
+        : isCatcher ? "catcher"
+        : isInfield ? "infielder"
+        : isOutfield ? "outfielder"
+        : "position player";
+
+      // Universal opener — cuff/scap + wrist/forearm prep (no fluffy "band series").
+      const prep: DrillStep[] = [
+        { name: "Cuff/scap activation (J-band series)", setup: "light band, anchored at shoulder height", dosage: offSeason ? "ER 2x12, IR 2x12, scap pulls 2x12, scap retractions 2x10" : "ER 1x10, IR 1x10, scap pulls 1x10", cue: "slow tempo — this is preparation, not training" },
+        { name: "Wrist + forearm prep", dosage: "wrist circles 30s each way, pronation/supination 2x10, finger flicks 30s", cue: "warm the forearm before you load it" },
+      ];
+
+      // Catch-play ramp.
+      const catchPlay: DrillStep[] = inSeason
         ? [
-            { name: "Band series", dosage: "1 round", cue: "wake the cuff up" },
-            { name: "Short catch play", dosage: "to game distance", cue: "build distance, do not start there" },
-            { name: "Position-specific throws", dosage: "8 game-rep throws", cue: "footwork first, then arm" },
-            { name: "Arm-care cooldown", dosage: "5 min" },
+            { name: "Short catch play (warm-up toss)", dosage: "60ft x 12 throws at 60%", cue: "tall posture, finish out front, build distance" },
+            { name: "Game-distance throws", dosage: `${isCatcher ? "to 90ft" : isOutfield ? "to 180ft" : "to 120ft"} x 8 throws at 80%`, cue: "intent rises only after the body says yes", stopIf: "elbow grab, shoulder pinch, or forearm tightness — stop and message Hammer" },
           ]
         : offSeason
           ? [
-              { name: "Band series", dosage: "2 rounds" },
-              { name: "Long-toss progression", dosage: "build to max comfortable distance", cue: "tall arm slot, finish out front", stopIf: "any elbow or shoulder twinge" },
-              { name: "Pull-down phase (if cleared)", dosage: "8 throws on the down-slope", cue: "do not throw harder than 90%" },
-              { name: "Position-specific throws", dosage: "20", cue: "footwork before arm" },
-              { name: "Arm-care cooldown", dosage: "5 min" },
+              { name: "Warm-up toss", dosage: "60ft x 15 throws at 60%", cue: "build slow, do not rush distance" },
+              { name: "Long-toss extension", dosage: `build to comfortable max (typically ${isOutfield ? "300ft+" : "240ft+"} if cleared)`, cue: "tall arm slot, finish out front, every throw is the same effort then the same effort plus one", stopIf: "any elbow or shoulder twinge, command loss, or velo drop — stop and pull back" },
+              { name: "Pull-down phase (if cleared by your throwing program)", dosage: "8 throws walking the distance in", cue: "do not exceed 90% perceived intent, do not chase a number" },
             ]
-          : [
-              { name: "Band series", dosage: "2 rounds" },
-              { name: "Long-toss progression", dosage: "to comfortable distance" },
-              { name: "Position-specific throws", dosage: "15", cue: "footwork before arm" },
-              { name: "Arm-care cooldown", dosage: "5 min" },
-            ];
+          : preSeason
+            ? [
+                { name: "Warm-up toss", dosage: "60ft x 12 throws at 60%", cue: "tall posture, smooth finish" },
+                { name: "Extension toss", dosage: `build to ${isOutfield ? "200ft" : "150ft"} x 6 throws at 80%`, cue: "intent rising week over week, not day over day", stopIf: "any twinge — back off, do not push through" },
+              ]
+            : [
+                { name: "Warm-up toss", dosage: "60ft x 12 throws at 60%", cue: "tall posture, smooth finish" },
+                { name: "Game-distance throws", dosage: `${isCatcher ? "to 90ft" : isOutfield ? "to 180ft" : "to 120ft"} x 8 throws at 75%`, cue: "footwork before arm" },
+              ];
+
+      // Position-specific intent throws.
+      const positionWork: DrillStep[] = isPitcher
+        ? [
+            inSeason
+              ? { name: "Flat-ground command set", dosage: "20 throws to a target at 70-80%", cue: "miss small, finish the pitch out front", stopIf: "command falls off or velo drops noticeably — stop" }
+              : offSeason
+                ? { name: "Bullpen / flat-ground build", dosage: "30 throws, focus pitch + secondary, 75-85%", cue: "shape pitches, do not just throw them", stopIf: "any forearm tightness — shut it down" }
+                : { name: "Flat-ground / light bullpen", dosage: "25 throws at 70-80%", cue: "command first, velo second" },
+          ]
+        : isCatcher
+          ? [
+              { name: "Pop-time footwork (no throw)", dosage: "8 reps", cue: "transfer first, throw second" },
+              { name: "Block-to-throw rep", dosage: inSeason ? "6 game-rep throws" : "12 throws", cue: "low and balanced before you release", stopIf: "knee, hip, or shoulder pain — stop" },
+            ]
+          : isInfield
+            ? [
+                { name: "Routine ground-ball throw", dosage: inSeason ? "10 throws at 80%" : "20 throws", cue: "footwork before arm, throw on plane" },
+                { name: "Double-play / quick-release rep", dosage: inSeason ? "6 reps" : "12 reps", cue: "feet square the target, the arm follows" },
+              ]
+            : isOutfield
+              ? [
+                  { name: "Crow-hop throw to a base", dosage: inSeason ? "8 throws at 85%" : "15 throws", cue: "throw through the cutoff line, do not loop it", stopIf: "any shoulder or elbow grab — stop" },
+                  { name: "One-hop accuracy throw", dosage: "8 throws to a target", cue: "one-hop the cutoff, not the catcher" },
+                ]
+              : [
+                  { name: "Mixed-position throws", dosage: inSeason ? "10 throws" : "20 throws", cue: "match footwork to the position you're throwing from" },
+                ];
+
+      // Cooldown.
+      const cooldown: DrillStep[] = [
+        { name: "Arm-care cooldown", dosage: "sleeper stretch 2x30s per side, cross-body 2x30s, light forearm massage 2 min", cue: "long exhales, no joint straining" },
+      ];
+
+      const drills: DrillStep[] = [...prep, ...catchPlay, ...positionWork, ...cooldown];
+
       // Anthropometric throwing cues + supplemental drills (additive overlay).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
         cues: [] as ReturnType<typeof selectThrowingAdaptations>["cues"],
@@ -660,33 +726,62 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           cue: s.cue,
         });
       }
-      const baseCues = ["Footwork before arm.", "Build distance, do not start there."];
+      const baseCues = [
+        "Footwork before arm — every throw.",
+        "Build distance and intent, never start there.",
+        "If a throw feels different, the next one does not happen until you check in.",
+      ];
       const anthroCues = thrOut.cues.map((c) => c.cue);
+
+      const durationMin = inSeason ? 18 : offSeason ? 45 : preSeason ? 32 : postSeason ? 20 : 28;
 
       return {
         modality,
-        title: inSeason ? "Throwing — in-season maintain" : offSeason ? "Throwing — off-season build" : "Throwing",
-        why: (inSeason ? "Preserve arm freshness for competition." : offSeason ? "Build long-toss base and intent." : "Arm care + position-specific intent.") + (goal ? ` ${goal}` : ""),
-        roadmapReason: (inSeason ? "In-season — keep arm fresh, save throws for games." : offSeason ? "Off-season — build the base now so you can spend in season." : "Default throwing block calibrated to season phase.")
+        title: inSeason
+          ? `Throwing — in-season ${posLabel} maintain`
+          : offSeason
+            ? `Throwing — off-season ${posLabel} build`
+            : preSeason
+              ? `Throwing — pre-season ${posLabel} ramp`
+              : `Throwing — ${posLabel}`,
+        why: (inSeason
+          ? `Preserve arm freshness for competition. ${posLabel}-specific reps only.`
+          : offSeason
+            ? `Build long-toss base and ${posLabel}-specific intent.`
+            : preSeason
+              ? `${posLabel.charAt(0).toUpperCase() + posLabel.slice(1)} ramp — rising effort week over week.`
+              : `Arm care plus ${posLabel}-specific intent.`)
+          + (goal ? ` ${goal}` : ""),
+        roadmapReason: (inSeason
+          ? "In-season — keep the arm fresh, save real throws for games."
+          : offSeason
+            ? "Off-season — build the base now so you can spend it in season."
+            : preSeason
+              ? "Pre-season — rising intent without overspend."
+              : "Post-season — protect the joint while you stay connected.")
           + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
-        phase: inSeason ? "maintain" : offSeason ? "build" : "skill",
+        phase: inSeason ? "maintain" : offSeason ? "build" : preSeason ? "build" : postSeason ? "recover" : "skill",
         steps: drillsToSteps(drills),
         drills,
         cues: [...baseCues, ...anthroCues],
-        stopRules: ["Any elbow or shoulder pain — stop. Tell Hammer."],
-        durationMin: inSeason ? 15 : offSeason ? 40 : 25,
+        stopRules: [
+          "Sharp pain anywhere in the arm — stop, ice, message Hammer.",
+          "Elbow grab, shoulder pinch, or forearm tightness — stop the session.",
+          "Sudden velo drop or command loss — stop, that's the body talking.",
+        ],
+        durationMin,
         route: "/practice?module=throwing",
         ctaLabel: "Open throwing",
         status: "ready",
         missing: [],
         missingContextKeys: [],
         gamePlanTemplate: {
-          title: `Hammer throwing — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}`,
+          title: `Hammer throwing — ${posLabel} (${inSeason ? "in-season" : offSeason ? "off-season" : preSeason ? "pre-season" : postSeason ? "post-season" : "standard"})`,
           activityType: "practice",
           icon: "target",
           color: "#0ea5e9",
-          durationMinutes: inSeason ? 15 : offSeason ? 40 : 25,
-          description: "Throwing session with bands, catch play, and position-specific throws.",
+          durationMinutes: durationMin,
+          description: `${posLabel.charAt(0).toUpperCase() + posLabel.slice(1)} throwing block: cuff/scap prep, ramped catch play, position-specific intent, cooldown.`,
           checklist: drillsToChecklist(drills),
           source: "hammer.daily.throwing",
         },
@@ -706,11 +801,11 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           cues: [],
           stopRules: [],
           durationMin: null,
-          route: "/command",
+          route: "#hammer-onboarding",
           ctaLabel: "Answer Hammer",
           status: "awaiting-input",
-          missing: ["position"],
-          missingContextKeys: ["position"],
+          missing: ["position_primary"],
+          missingContextKeys: ["position_primary"],
           gamePlanTemplate: null,
         };
       }
