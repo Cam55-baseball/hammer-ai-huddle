@@ -73,7 +73,7 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
     }
   }
 
-  async function setSeason(v: "in_season" | "preseason" | "post_season" | "off_season") {
+  async function setSeason(v: "in_season" | "preseason" | "post_season") {
     updateSeasonStatus({ season_status: v });
     toast.success(`Season set to ${v.replace("_", "-")}.`);
   }
