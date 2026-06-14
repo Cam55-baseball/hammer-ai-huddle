@@ -1712,8 +1712,9 @@ Deno.serve(async (req) => {
     // Extract historical scores for trend display
     const historicalScores = historicalVideos?.map(v => v.efficiency_score).filter(s => s != null) || [];
 
-    // Extract language from request
-    const language = body.language || 'en';
+    // `language` was already resolved above for the replay-equivalence
+    // fingerprint; reuse it here instead of re-declaring (duplicate `const`
+    // crashed worker boot).
     const languageName = getLanguageName(language);
     
     // Language instruction for non-English responses
