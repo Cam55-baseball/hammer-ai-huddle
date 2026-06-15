@@ -2,7 +2,14 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
 import { ENGINE_VERSION, sha256Hex } from "../_shared/asbEmit.ts";
-import { getContractFor, buildMetricsSchema, buildMetricsPromptBlock, buildSecondPassPromptBlock, countMissing } from "../_shared/reportCardContracts.ts";
+import { getContractFor, buildMetricsSchema, buildMetricsPromptBlock, countMissing } from "../_shared/reportCardContracts.ts";
+import {
+  buildCacheFingerprint,
+  LANDMARK_MODEL_VERSION,
+  DETECTOR_VERSION,
+  METRIC_ENGINE_VERSION,
+} from "../_shared/biomechFingerprint.ts";
+import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1620,10 +1627,24 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Best-effort audit context — populated as we learn things so the catch
+  // block can still write a "failed" video_analysis_runs row.
+  // deno-lint-ignore no-explicit-any
+  let auditSupabase: any = null;
+  let auditCtx: {
+    videoId?: string;
+    userId?: string;
+    cacheFingerprintHex?: string;
+    videoSha256Hex?: string | null;
+    fpsTrue?: number | null;
+  } = {};
+
   try {
     // Validate input
     const body = await req.json();
     const { videoId, module, sport, userId, frames, landingFrameIndex } = requestSchema.parse(body);
+    auditCtx.videoId = videoId;
+    auditCtx.userId = userId;
 
     console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
     console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
@@ -1640,40 +1661,115 @@ Deno.serve(async (req) => {
     // Initialize Supabase client with service role
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    auditSupabase = supabase;
 
-    // ===== REPLAY-EQUIVALENCE CACHE CHECK =====
-    // Same video + same engine_version + same input fingerprint → return
-    // saved analysis without re-calling the model. Guarantees "same video
-    // 10× returns identical result 10×" without spending model credits.
+    // ===== PHASE 0 — DETERMINISTIC CACHE FINGERPRINT =====
+    // Cache key is derived strictly from the physical inputs: video bytes
+    // hash, pinned engine versions, true FPS, landing time, direction, and
+    // calibration. Prompt text / athlete context / AI model id are FORBIDDEN
+    // inputs (constitutional rule). Every code path below MUST write exactly
+    // one video_analysis_runs row before returning.
     const language = (body as { language?: string }).language || 'en';
-    const inputFingerprint = await buildReplayFingerprint({
-      videoId, module, sport,
-      promptHash: "input-only", // pre-prompt fingerprint (cheap pre-check)
-      frameCount: frames.length,
-      landingFrameIndex,
-      language,
+
+    const { data: videoRow } = await supabase
+      .from("videos")
+      .select("sha256_hex, fps_true, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .eq("id", videoId)
+      .maybeSingle();
+
+    const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
+    const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
+    const landingTimeSec = videoRow?.landing_time_sec == null ? null : Number(videoRow.landing_time_sec);
+    const directionSign = ((): -1 | 0 | 1 => {
+      const v = videoRow?.direction_sign;
+      if (v === -1 || v === 0 || v === 1) return v;
+      return 0;
+    })();
+    const calibrationHpx = videoRow?.calibration_h_px == null ? 0 : Number(videoRow.calibration_h_px);
+
+    // Reject when the deterministic inputs are not yet captured. The audit
+    // row is the contract — we write it before returning.
+    if (!videoSha256Hex) {
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: "rejected:missing_video_sha256",
+        cache_hit: false,
+        outcome: "rejected",
+        outcome_reason: "missing_video_sha256",
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+      });
+      return new Response(
+        JSON.stringify({ error: "missing_video_sha256", detail: "videos.sha256_hex must be populated before analysis (Phase 0 contract)." }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (fpsTrue == null || !Number.isFinite(fpsTrue)) {
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: "rejected:missing_probe_metadata",
+        cache_hit: false,
+        video_sha256_hex: videoSha256Hex,
+        outcome: "rejected",
+        outcome_reason: "missing_probe_metadata",
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+      });
+      return new Response(
+        JSON.stringify({ error: "missing_probe_metadata", detail: "videos.fps_true must be populated before analysis (Phase 0 contract)." }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const cacheFingerprintHex = await buildCacheFingerprint({
+      videoSha256Hex,
+      fpsTrue,
+      landingTimeSec,
+      directionSign,
+      calibrationHpx,
     });
+    auditCtx.cacheFingerprintHex = cacheFingerprintHex;
+    auditCtx.videoSha256Hex = videoSha256Hex;
+    auditCtx.fpsTrue = fpsTrue;
+    console.log(`[ANALYZE-VIDEO] cache_fingerprint_hex=${cacheFingerprintHex}`);
+
+    // Cache lookup keyed strictly on cache_fingerprint_hex.
     try {
-      const { data: cached } = await supabase
-        .from("videos")
-        .select("ai_analysis, efficiency_score, status")
-        .eq("id", videoId)
+      const { data: prior } = await supabase
+        .from("video_analysis_runs")
+        .select("id, outcome")
+        .eq("video_id", videoId)
+        .eq("cache_fingerprint_hex", cacheFingerprintHex)
+        .eq("outcome", "ok")
+        .limit(1)
         .maybeSingle();
-      const cachedAi = (cached?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (
-        cached?.status === "completed" &&
-        cachedAi &&
-        cachedAi.engine_version === ENGINE_VERSION &&
-        typeof cachedAi.replay_input_fingerprint === "string" &&
-        cachedAi.replay_input_fingerprint === inputFingerprint
-      ) {
-        console.log(`[ANALYZE-VIDEO] Replay cache HIT for ${videoId} — returning saved analysis`);
+      const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
+      if (prior && cachedAi && videoRow?.status === "completed") {
+        await recordAnalysisRun(supabase, {
+          video_id: videoId,
+          requested_by: userId,
+          cache_fingerprint_hex: cacheFingerprintHex,
+          cache_hit: true,
+          video_sha256_hex: videoSha256Hex,
+          landmark_model_version: LANDMARK_MODEL_VERSION,
+          detector_version: DETECTOR_VERSION,
+          metric_engine_version: METRIC_ENGINE_VERSION,
+          fps_true: fpsTrue,
+          outcome: "cache_hit",
+          outcome_reason: `served_from:${prior.id}`,
+        });
+        console.log(`[ANALYZE-VIDEO] cache HIT for ${videoId}`);
         return new Response(
           JSON.stringify({
             success: true,
             replay_cache: true,
+            cache_fingerprint_hex: cacheFingerprintHex,
             ai_analysis: cachedAi,
-            efficiency_score: cached.efficiency_score,
+            efficiency_score: videoRow.efficiency_score,
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
@@ -2086,77 +2182,29 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
         }
 
-        // ===== PASS 2: targeted re-extraction for missing report-card keys =====
-        if (reportCardContract && (reportCardContract.id === "bp" || reportCardContract.id === "throwing" || reportCardContract.id === "bh" || reportCardContract.id === "sb-pitching")) {
+        // ===== PASS-2 RETIRED (Phase 0 contract — G-2) =====
+        // The Pass-2 model-swap escalation has been removed. Single-pass only.
+        // Tiles the first pass cannot measure are surfaced as
+        // { missing: true, missing_reason: "single_pass_only" } downstream
+        // by the metric engine; the AI path no longer attempts recovery.
+        if (reportCardContract && metrics) {
           const miss = countMissing(reportCardContract, metrics);
-          // Bread-and-butter BH metrics ALWAYS trigger a targeted second pass when missing.
-          const BREAD_AND_BUTTER_BH = [
-            "time_to_contact_ms",
-            "bat_speed_contact_mph",
-            "shoulder_to_shoulder_hold_pct_to_contact",
-          ];
-          const breadMissing = (reportCardContract.id === "bh" || reportCardContract.id === "sh")
-            ? BREAD_AND_BUTTER_BH.filter((k) => miss.missingKeys.includes(k))
-            : [];
-          if ((miss.ratio > 0.4 && miss.missingKeys.length > 0) || breadMissing.length > 0) {
-            console.log(`[REPORT-CARD] pass-2 triggered: ${miss.missingKeys.length}/${miss.total} missing for ${reportCardContract.id}`);
-            try {
-              const pass2System = `You are a ${reportCardContract.label} mechanics analyst running a TARGETED second pass over the SAME frames. Look again specifically for the landmarks listed. Do NOT invent — keep missing=true if still unmeasurable, with a sharper one-sentence reason.${buildSecondPassPromptBlock(reportCardContract, miss.missingKeys)}`;
-              // Escalate to gemini-2.5-pro when BH bread-and-butter metrics
-              // (time-to-contact, bat speed through contact) are missing — flash
-              // routinely drops barrel tracking; pro is materially better.
-              const pass2Model = breadMissing.length > 0
-                ? "google/gemini-2.5-pro"
-                : "google/gemini-2.5-flash";
-              const pass2 = await retryFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  model: pass2Model,
-                  temperature: 0,
-                  top_p: 0,
-                  seed: stableSeed(videoId + ":pass2"),
-                  messages: [
-                    { role: "system", content: pass2System },
-                    { role: "user", content: userContent },
-                  ],
-                  tools: [{
-                    type: "function",
-                    function: {
-                      name: "return_metrics",
-                      description: "Return ONLY the metrics object covering the missing keys.",
-                      parameters: { type: "object", properties: { metrics: buildMetricsSchema(reportCardContract) }, required: ["metrics"] },
-                    },
-                  }],
-                  tool_choice: { type: "function", function: { name: "return_metrics" } },
-                }),
-              });
-              if (pass2.ok) {
-                const d2 = await pass2.json();
-                const tc2 = d2?.choices?.[0]?.message?.tool_calls;
-                if (tc2 && tc2.length > 0) {
-                  const a2 = JSON.parse(tc2[0].function.arguments);
-                  const m2 = a2?.metrics;
-                  if (m2 && typeof m2 === "object" && metrics) {
-                    let recovered = 0;
-                    for (const k of miss.missingKeys) {
-                      const v2 = (m2 as Record<string, any>)[k];
-                      if (v2 && typeof v2 === "object") {
-                        (metrics as Record<string, any>)[k] = v2;
-                        if (!(v2.missing === true)) recovered++;
-                      }
-                    }
-                    console.log(`[REPORT-CARD] pass-2 recovered ${recovered}/${miss.missingKeys.length} keys`);
-                  }
-                }
-              } else {
-                console.warn("[REPORT-CARD] pass-2 non-OK", pass2.status);
+          if (miss.missingKeys.length > 0) {
+            console.log(`[REPORT-CARD] single_pass_only — ${miss.missingKeys.length}/${miss.total} tiles missing for ${reportCardContract.id} (Pass-2 retired)`);
+            for (const k of miss.missingKeys) {
+              const cur = (metrics as Record<string, unknown>)[k] as Record<string, unknown> | undefined;
+              if (!cur || cur.missing === true) {
+                (metrics as Record<string, unknown>)[k] = {
+                  missing: true,
+                  missing_reason: "single_pass_only",
+                  confidence: 0,
+                };
               }
-            } catch (e) {
-              console.warn("[REPORT-CARD] pass-2 failed", e);
             }
           }
         }
+
+
 
         
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
@@ -2334,11 +2382,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       model_id: MODEL_ID,
       model_version: MODEL_VERSION,
       prompt_hash,
-      // Replay-equivalence keys — same fingerprint + engine_version → cached hit.
-      replay_input_fingerprint: inputFingerprint,
-      replay_fingerprint: await sha256Hex(
-        `${inputFingerprint}|${prompt_hash}|${ENGINE_VERSION}|${MODEL_ID}`,
-      ),
+      // Phase 0 deterministic cache key — derived ONLY from physical inputs.
+      cache_fingerprint_hex: cacheFingerprintHex,
+      video_sha256_hex: videoSha256Hex,
+      landmark_model_version: LANDMARK_MODEL_VERSION,
+      detector_version: DETECTOR_VERSION,
+      metric_engine_version: METRIC_ENGINE_VERSION,
+      fps_true: fpsTrue,
       analyzed_at: new Date().toISOString(),
     };
 
@@ -2355,8 +2405,36 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
     if (updateError) {
       console.error("Error updating video:", updateError);
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: cacheFingerprintHex,
+        cache_hit: false,
+        video_sha256_hex: videoSha256Hex,
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+        fps_true: fpsTrue,
+        outcome: "failed",
+        outcome_reason: `videos_update_failed:${updateError.message}`,
+      });
       throw updateError;
     }
+
+    // Phase 0 audit row — successful analysis.
+    await recordAnalysisRun(supabase, {
+      video_id: videoId,
+      requested_by: userId,
+      cache_fingerprint_hex: cacheFingerprintHex,
+      cache_hit: false,
+      video_sha256_hex: videoSha256Hex,
+      landmark_model_version: LANDMARK_MODEL_VERSION,
+      detector_version: DETECTOR_VERSION,
+      metric_engine_version: METRIC_ENGINE_VERSION,
+      fps_true: fpsTrue,
+      frame_selection_jsonb: { frame_count: frames.length, landing_frame_index: landingFrameIndex ?? null },
+      outcome: "ok",
+    });
 
     // Update user progress
     const { data: progressData, error: progressFetchError } = await supabase
@@ -2428,7 +2506,28 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     );
   } catch (error) {
     console.error("analyze-video error:", error);
-    
+
+    // Phase 0 — write a "failed" audit row when we have enough context.
+    if (auditSupabase && auditCtx.videoId) {
+      try {
+        await recordAnalysisRun(auditSupabase, {
+          video_id: auditCtx.videoId,
+          requested_by: auditCtx.userId ?? null,
+          cache_fingerprint_hex: auditCtx.cacheFingerprintHex ?? "failed:no_fingerprint",
+          cache_hit: false,
+          video_sha256_hex: auditCtx.videoSha256Hex ?? null,
+          landmark_model_version: LANDMARK_MODEL_VERSION,
+          detector_version: DETECTOR_VERSION,
+          metric_engine_version: METRIC_ENGINE_VERSION,
+          fps_true: auditCtx.fpsTrue ?? null,
+          outcome: "failed",
+          outcome_reason: (error instanceof Error ? error.message : "unknown").slice(0, 500),
+        });
+      } catch (auditErr) {
+        console.error("[analyze-video] audit-row write failed:", auditErr);
+      }
+    }
+
     // Return validation errors with 400 status
     if (error instanceof z.ZodError) {
       return new Response(
@@ -2439,7 +2538,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       );
     }
-    
+
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error", status: 500 }),
       {
