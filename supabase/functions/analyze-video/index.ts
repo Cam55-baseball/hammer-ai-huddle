@@ -1732,6 +1732,9 @@ Deno.serve(async (req) => {
       directionSign,
       calibrationHpx,
     });
+    auditCtx.cacheFingerprintHex = cacheFingerprintHex;
+    auditCtx.videoSha256Hex = videoSha256Hex;
+    auditCtx.fpsTrue = fpsTrue;
     console.log(`[ANALYZE-VIDEO] cache_fingerprint_hex=${cacheFingerprintHex}`);
 
     // Cache lookup keyed strictly on cache_fingerprint_hex.
