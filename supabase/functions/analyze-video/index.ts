@@ -2506,7 +2506,28 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     );
   } catch (error) {
     console.error("analyze-video error:", error);
-    
+
+    // Phase 0 — write a "failed" audit row when we have enough context.
+    if (auditSupabase && auditCtx.videoId) {
+      try {
+        await recordAnalysisRun(auditSupabase, {
+          video_id: auditCtx.videoId,
+          requested_by: auditCtx.userId ?? null,
+          cache_fingerprint_hex: auditCtx.cacheFingerprintHex ?? "failed:no_fingerprint",
+          cache_hit: false,
+          video_sha256_hex: auditCtx.videoSha256Hex ?? null,
+          landmark_model_version: LANDMARK_MODEL_VERSION,
+          detector_version: DETECTOR_VERSION,
+          metric_engine_version: METRIC_ENGINE_VERSION,
+          fps_true: auditCtx.fpsTrue ?? null,
+          outcome: "failed",
+          outcome_reason: (error instanceof Error ? error.message : "unknown").slice(0, 500),
+        });
+      } catch (auditErr) {
+        console.error("[analyze-video] audit-row write failed:", auditErr);
+      }
+    }
+
     // Return validation errors with 400 status
     if (error instanceof z.ZodError) {
       return new Response(
@@ -2517,7 +2538,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       );
     }
-    
+
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error", status: 500 }),
       {
