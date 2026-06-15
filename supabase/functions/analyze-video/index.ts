@@ -1648,39 +1648,110 @@ Deno.serve(async (req) => {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // ===== REPLAY-EQUIVALENCE CACHE CHECK =====
-    // Same video + same engine_version + same input fingerprint → return
-    // saved analysis without re-calling the model. Guarantees "same video
-    // 10× returns identical result 10×" without spending model credits.
+    // ===== PHASE 0 — DETERMINISTIC CACHE FINGERPRINT =====
+    // Cache key is derived strictly from the physical inputs: video bytes
+    // hash, pinned engine versions, true FPS, landing time, direction, and
+    // calibration. Prompt text / athlete context / AI model id are FORBIDDEN
+    // inputs (constitutional rule). Every code path below MUST write exactly
+    // one video_analysis_runs row before returning.
     const language = (body as { language?: string }).language || 'en';
-    const inputFingerprint = await buildReplayFingerprint({
-      videoId, module, sport,
-      promptHash: "input-only", // pre-prompt fingerprint (cheap pre-check)
-      frameCount: frames.length,
-      landingFrameIndex,
-      language,
+
+    const { data: videoRow } = await supabase
+      .from("videos")
+      .select("sha256_hex, fps_true, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .eq("id", videoId)
+      .maybeSingle();
+
+    const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
+    const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
+    const landingTimeSec = videoRow?.landing_time_sec == null ? null : Number(videoRow.landing_time_sec);
+    const directionSign = ((): -1 | 0 | 1 => {
+      const v = videoRow?.direction_sign;
+      if (v === -1 || v === 0 || v === 1) return v;
+      return 0;
+    })();
+    const calibrationHpx = videoRow?.calibration_h_px == null ? 0 : Number(videoRow.calibration_h_px);
+
+    // Reject when the deterministic inputs are not yet captured. The audit
+    // row is the contract — we write it before returning.
+    if (!videoSha256Hex) {
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: "rejected:missing_video_sha256",
+        cache_hit: false,
+        outcome: "rejected",
+        outcome_reason: "missing_video_sha256",
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+      });
+      return new Response(
+        JSON.stringify({ error: "missing_video_sha256", detail: "videos.sha256_hex must be populated before analysis (Phase 0 contract)." }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (fpsTrue == null || !Number.isFinite(fpsTrue)) {
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: "rejected:missing_probe_metadata",
+        cache_hit: false,
+        video_sha256_hex: videoSha256Hex,
+        outcome: "rejected",
+        outcome_reason: "missing_probe_metadata",
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+      });
+      return new Response(
+        JSON.stringify({ error: "missing_probe_metadata", detail: "videos.fps_true must be populated before analysis (Phase 0 contract)." }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const cacheFingerprintHex = await buildCacheFingerprint({
+      videoSha256Hex,
+      fpsTrue,
+      landingTimeSec,
+      directionSign,
+      calibrationHpx,
     });
+    console.log(`[ANALYZE-VIDEO] cache_fingerprint_hex=${cacheFingerprintHex}`);
+
+    // Cache lookup keyed strictly on cache_fingerprint_hex.
     try {
-      const { data: cached } = await supabase
-        .from("videos")
-        .select("ai_analysis, efficiency_score, status")
-        .eq("id", videoId)
+      const { data: prior } = await supabase
+        .from("video_analysis_runs")
+        .select("id, outcome")
+        .eq("video_id", videoId)
+        .eq("cache_fingerprint_hex", cacheFingerprintHex)
+        .eq("outcome", "ok")
+        .limit(1)
         .maybeSingle();
-      const cachedAi = (cached?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (
-        cached?.status === "completed" &&
-        cachedAi &&
-        cachedAi.engine_version === ENGINE_VERSION &&
-        typeof cachedAi.replay_input_fingerprint === "string" &&
-        cachedAi.replay_input_fingerprint === inputFingerprint
-      ) {
-        console.log(`[ANALYZE-VIDEO] Replay cache HIT for ${videoId} — returning saved analysis`);
+      const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
+      if (prior && cachedAi && videoRow?.status === "completed") {
+        await recordAnalysisRun(supabase, {
+          video_id: videoId,
+          requested_by: userId,
+          cache_fingerprint_hex: cacheFingerprintHex,
+          cache_hit: true,
+          video_sha256_hex: videoSha256Hex,
+          landmark_model_version: LANDMARK_MODEL_VERSION,
+          detector_version: DETECTOR_VERSION,
+          metric_engine_version: METRIC_ENGINE_VERSION,
+          fps_true: fpsTrue,
+          outcome: "cache_hit",
+          outcome_reason: `served_from:${prior.id}`,
+        });
+        console.log(`[ANALYZE-VIDEO] cache HIT for ${videoId}`);
         return new Response(
           JSON.stringify({
             success: true,
             replay_cache: true,
+            cache_fingerprint_hex: cacheFingerprintHex,
             ai_analysis: cachedAi,
-            efficiency_score: cached.efficiency_score,
+            efficiency_score: videoRow.efficiency_score,
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
