@@ -1627,10 +1627,24 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Best-effort audit context — populated as we learn things so the catch
+  // block can still write a "failed" video_analysis_runs row.
+  // deno-lint-ignore no-explicit-any
+  let auditSupabase: any = null;
+  let auditCtx: {
+    videoId?: string;
+    userId?: string;
+    cacheFingerprintHex?: string;
+    videoSha256Hex?: string | null;
+    fpsTrue?: number | null;
+  } = {};
+
   try {
     // Validate input
     const body = await req.json();
     const { videoId, module, sport, userId, frames, landingFrameIndex } = requestSchema.parse(body);
+    auditCtx.videoId = videoId;
+    auditCtx.userId = userId;
 
     console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
     console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
