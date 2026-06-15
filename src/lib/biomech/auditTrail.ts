@@ -40,33 +40,39 @@ export interface AnalysisRunRecord {
  * past the analysis flow itself.
  */
 export async function recordAnalysisRun(record: AnalysisRunRecord): Promise<{ id: string | null; error: string | null }> {
-  const { data, error } = await supabase
-    .from("video_analysis_runs")
-    .insert({
-      video_id: record.video_id,
-      requested_by: record.requested_by ?? null,
-      cache_fingerprint_hex: record.cache_fingerprint_hex,
-      cache_hit: record.cache_hit,
-      video_sha256_hex: record.video_sha256_hex ?? null,
-      landmark_model_version: record.landmark_model_version ?? null,
-      detector_version: record.detector_version ?? null,
-      metric_engine_version: record.metric_engine_version ?? null,
-      fps_true: record.fps_true ?? null,
-      frame_selection_jsonb: record.frame_selection_jsonb ?? {},
-      event_selection_jsonb: record.event_selection_jsonb ?? {},
-      confidence_summary_jsonb: record.confidence_summary_jsonb ?? {},
-      landmark_run_id: record.landmark_run_id ?? null,
-      event_run_id: record.event_run_id ?? null,
-      metric_run_id: record.metric_run_id ?? null,
-      coaching_run_id: record.coaching_run_id ?? null,
-      outcome: record.outcome,
-      outcome_reason: record.outcome_reason ?? null,
-    })
+  const payload = {
+    video_id: record.video_id,
+    requested_by: record.requested_by ?? null,
+    cache_fingerprint_hex: record.cache_fingerprint_hex,
+    cache_hit: record.cache_hit,
+    video_sha256_hex: record.video_sha256_hex ?? null,
+    landmark_model_version: record.landmark_model_version ?? null,
+    detector_version: record.detector_version ?? null,
+    metric_engine_version: record.metric_engine_version ?? null,
+    fps_true: record.fps_true ?? null,
+    frame_selection_jsonb: record.frame_selection_jsonb ?? {},
+    event_selection_jsonb: record.event_selection_jsonb ?? {},
+    confidence_summary_jsonb: record.confidence_summary_jsonb ?? {},
+    landmark_run_id: record.landmark_run_id ?? null,
+    event_run_id: record.event_run_id ?? null,
+    metric_run_id: record.metric_run_id ?? null,
+    coaching_run_id: record.coaching_run_id ?? null,
+    outcome: record.outcome,
+    outcome_reason: record.outcome_reason ?? null,
+  };
+
+  // Cast through unknown because the generated Database types may lag the
+  // most recent migration by one regeneration cycle; the runtime contract is
+  // enforced by the Phase 0 schema migration.
+  const { data, error } = await (supabase
+    .from("video_analysis_runs" as never)
+    .insert(payload as never)
     .select("id")
-    .single();
+    .single() as unknown as Promise<{ data: { id: string } | null; error: { message: string } | null }>);
 
   if (error) {
     return { id: null, error: error.message };
   }
   return { id: data?.id ?? null, error: null };
 }
+
