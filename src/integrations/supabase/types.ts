@@ -11189,6 +11189,104 @@ export type Database = {
         }
         Relationships: []
       }
+      video_analysis_runs: {
+        Row: {
+          cache_fingerprint_hex: string
+          cache_hit: boolean
+          coaching_run_id: string | null
+          confidence_summary_jsonb: Json
+          detector_version: string | null
+          event_run_id: string | null
+          event_selection_jsonb: Json
+          fps_true: number | null
+          frame_selection_jsonb: Json
+          id: string
+          landmark_model_version: string | null
+          landmark_run_id: string | null
+          metric_engine_version: string | null
+          metric_run_id: string | null
+          outcome: string
+          outcome_reason: string | null
+          requested_at: string
+          requested_by: string | null
+          video_id: string
+          video_sha256_hex: string | null
+        }
+        Insert: {
+          cache_fingerprint_hex: string
+          cache_hit?: boolean
+          coaching_run_id?: string | null
+          confidence_summary_jsonb?: Json
+          detector_version?: string | null
+          event_run_id?: string | null
+          event_selection_jsonb?: Json
+          fps_true?: number | null
+          frame_selection_jsonb?: Json
+          id?: string
+          landmark_model_version?: string | null
+          landmark_run_id?: string | null
+          metric_engine_version?: string | null
+          metric_run_id?: string | null
+          outcome: string
+          outcome_reason?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          video_id: string
+          video_sha256_hex?: string | null
+        }
+        Update: {
+          cache_fingerprint_hex?: string
+          cache_hit?: boolean
+          coaching_run_id?: string | null
+          confidence_summary_jsonb?: Json
+          detector_version?: string | null
+          event_run_id?: string | null
+          event_selection_jsonb?: Json
+          fps_true?: number | null
+          frame_selection_jsonb?: Json
+          id?: string
+          landmark_model_version?: string | null
+          landmark_run_id?: string | null
+          metric_engine_version?: string | null
+          metric_run_id?: string | null
+          outcome?: string
+          outcome_reason?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          video_id?: string
+          video_sha256_hex?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_analysis_runs_coaching_run_id_fkey"
+            columns: ["coaching_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_coaching_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_analysis_runs_event_run_id_fkey"
+            columns: ["event_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_event_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_analysis_runs_landmark_run_id_fkey"
+            columns: ["landmark_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_landmark_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_analysis_runs_metric_run_id_fkey"
+            columns: ["metric_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_metric_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_annotations: {
         Row: {
           annotation_data: string
@@ -11263,6 +11361,184 @@ export type Database = {
             columns: ["video_id"]
             isOneToOne: false
             referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_coaching_runs: {
+        Row: {
+          ai_model_id: string
+          ai_model_version: string
+          created_at: string
+          drills_jsonb: Json
+          id: string
+          metric_run_id: string
+          narrative_jsonb: Json
+          prompt_sha256_hex: string
+        }
+        Insert: {
+          ai_model_id: string
+          ai_model_version: string
+          created_at?: string
+          drills_jsonb?: Json
+          id?: string
+          metric_run_id: string
+          narrative_jsonb?: Json
+          prompt_sha256_hex: string
+        }
+        Update: {
+          ai_model_id?: string
+          ai_model_version?: string
+          created_at?: string
+          drills_jsonb?: Json
+          id?: string
+          metric_run_id?: string
+          narrative_jsonb?: Json
+          prompt_sha256_hex?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_coaching_runs_metric_run_id_fkey"
+            columns: ["metric_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_metric_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_event_runs: {
+        Row: {
+          created_at: string
+          detector_version: string
+          events_jsonb: Json
+          events_sha256_hex: string
+          id: string
+          landmark_run_id: string
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          detector_version: string
+          events_jsonb: Json
+          events_sha256_hex: string
+          id?: string
+          landmark_run_id: string
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          detector_version?: string
+          events_jsonb?: Json
+          events_sha256_hex?: string
+          id?: string
+          landmark_run_id?: string
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_event_runs_landmark_run_id_fkey"
+            columns: ["landmark_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_landmark_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_landmark_runs: {
+        Row: {
+          created_at: string
+          diagnostics: Json
+          fps_true: number
+          frame_count: number
+          id: string
+          landmark_model_id: string
+          landmark_model_version: string
+          landmarks_sha256_hex: string
+          landmarks_storage_path: string
+          mean_visibility: number | null
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          diagnostics?: Json
+          fps_true: number
+          frame_count: number
+          id?: string
+          landmark_model_id: string
+          landmark_model_version: string
+          landmarks_sha256_hex: string
+          landmarks_storage_path: string
+          mean_visibility?: number | null
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          diagnostics?: Json
+          fps_true?: number
+          frame_count?: number
+          id?: string
+          landmark_model_id?: string
+          landmark_model_version?: string
+          landmarks_sha256_hex?: string
+          landmarks_storage_path?: string
+          mean_visibility?: number | null
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
+      video_metric_runs: {
+        Row: {
+          created_at: string
+          event_run_id: string
+          id: string
+          landmark_run_id: string
+          metric_engine_version: string
+          metrics_jsonb: Json
+          metrics_sha256_hex: string
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_run_id: string
+          id?: string
+          landmark_run_id: string
+          metric_engine_version: string
+          metrics_jsonb: Json
+          metrics_sha256_hex: string
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          event_run_id?: string
+          id?: string
+          landmark_run_id?: string
+          metric_engine_version?: string
+          metrics_jsonb?: Json
+          metrics_sha256_hex?: string
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_metric_runs_event_run_id_fkey"
+            columns: ["event_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_event_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_metric_runs_landmark_run_id_fkey"
+            columns: ["landmark_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_landmark_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -11730,18 +12006,26 @@ export type Database = {
           ai_analysis: Json | null
           analysis_public: boolean | null
           blurhash: string | null
+          calibration_h_px: number | null
           contributes_to_progress: boolean
           created_at: string
+          direction_sign: number | null
+          duration_sec: number | null
           efficiency_score: number | null
+          fps_true: number | null
           game_id: string | null
+          height: number | null
           id: string
+          landing_time_sec: number | null
           library_notes: string | null
           library_title: string | null
           mocap_data: Json | null
           module: Database["public"]["Enums"]["module_type"]
+          orientation: string | null
           practice_session_id: string | null
           saved_to_library: boolean | null
           session_date: string | null
+          sha256_hex: string | null
           shared_with_scouts: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status: Database["public"]["Enums"]["video_status"]
@@ -11751,23 +12035,32 @@ export type Database = {
           updated_at: string
           user_id: string
           video_url: string
+          width: number | null
         }
         Insert: {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
           blurhash?: string | null
+          calibration_h_px?: number | null
           contributes_to_progress?: boolean
           created_at?: string
+          direction_sign?: number | null
+          duration_sec?: number | null
           efficiency_score?: number | null
+          fps_true?: number | null
           game_id?: string | null
+          height?: number | null
           id?: string
+          landing_time_sec?: number | null
           library_notes?: string | null
           library_title?: string | null
           mocap_data?: Json | null
           module: Database["public"]["Enums"]["module_type"]
+          orientation?: string | null
           practice_session_id?: string | null
           saved_to_library?: boolean | null
           session_date?: string | null
+          sha256_hex?: string | null
           shared_with_scouts?: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
@@ -11777,23 +12070,32 @@ export type Database = {
           updated_at?: string
           user_id: string
           video_url: string
+          width?: number | null
         }
         Update: {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
           blurhash?: string | null
+          calibration_h_px?: number | null
           contributes_to_progress?: boolean
           created_at?: string
+          direction_sign?: number | null
+          duration_sec?: number | null
           efficiency_score?: number | null
+          fps_true?: number | null
           game_id?: string | null
+          height?: number | null
           id?: string
+          landing_time_sec?: number | null
           library_notes?: string | null
           library_title?: string | null
           mocap_data?: Json | null
           module?: Database["public"]["Enums"]["module_type"]
+          orientation?: string | null
           practice_session_id?: string | null
           saved_to_library?: boolean | null
           session_date?: string | null
+          sha256_hex?: string | null
           shared_with_scouts?: boolean | null
           sport?: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
@@ -11803,6 +12105,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           video_url?: string
+          width?: number | null
         }
         Relationships: [
           {

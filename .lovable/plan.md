@@ -1,48 +1,48 @@
-# Fix: Video Analysis Completely Broken
+# Hammers Video Analysis — Implementation Authorization (Tracking)
 
-## Root Cause (Confirmed)
+The Metric Constitution (Phase 3), Event Constitution (Phase 3A), and the prior Phase-0…Phase-2 capability audits are the binding scope. Six phases ship in order; Phase N may not begin until Phase N−1's acceptance tests pass.
 
-The `analyze-video` edge function is **failing to boot**:
+## Status
+
+- **Phase 0 — Determinism Foundation: IN PROGRESS**
+  - ✅ Schema migration shipped: `videos` extended (sha256, fps_true, duration, w/h, orientation, landing time, calibration, direction) + 5 new tables (`video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_coaching_runs`, `video_analysis_runs`) with RLS + GRANTs + updated_at triggers.
+  - ✅ Version constants: `src/lib/biomech/versions.ts` (LANDMARK_MODEL_VERSION, DETECTOR_VERSION, METRIC_ENGINE_VERSION).
+  - ✅ Deterministic SHA-256 + canonical-JSON hash + `buildCacheFingerprint`: `src/lib/biomech/fingerprint.ts` (browser + Node fallback; 5/5 unit tests green).
+  - ✅ Append-only audit-trail writer: `src/lib/biomech/auditTrail.ts`.
+  - ✅ Replay-determinism CLI: `scripts/replay/verify-determinism.ts` (10× equivalence).
+  - ⏭ Next in Phase 0: wire `analyze-video` edge function to (a) compute video_sha256_hex on upload, (b) write a `video_analysis_runs` row on every attempt, (c) replace input-only cache fingerprint with the new builder, (d) retire the `Pass-2 Pro escalation` path, (e) rewrite `recompute-report-card` as a thin re-runner.
+
+- Phase 1 — Video Processing Layer: not started.
+- Phase 2 — Landmark & Measurement Layer (MediaPipe): not started.
+- Phase 3 — Event Engine (E-1…E-10): not started.
+- Phase 4 — Metric Engine: not started.
+- Phase 5 — Coaching Layer: not started.
+- Phase 6 — Observability: not started.
+
+## Cache fingerprint contract (active)
 
 ```
-worker boot error: Uncaught SyntaxError: Identifier 'language' has already been declared
-  at analyze-video/index.ts:1700
+cache_fingerprint = SHA256(
+  video_sha256_hex || ":" ||
+  LANDMARK_MODEL_VERSION || ":" ||
+  DETECTOR_VERSION || ":" ||
+  METRIC_ENGINE_VERSION || ":" ||
+  fps_true.toFixed(6) || ":" ||
+  (landing_time_sec?.toFixed(6) ?? "null") || ":" ||
+  direction_sign || ":" ||
+  calibration_h_px.toFixed(6)
+)
 ```
 
-Because the function never starts, every invocation from the client returns:
+Prompt text, athlete-context snapshots, and AI model id are constitutionally **excluded**. They live on `video_coaching_runs`.
 
-```
-FunctionsFetchError: Failed to send a request to the Edge Function
-```
+## Acceptance criteria (release gate, unchanged)
 
-That surfaces in the UI as "Analysis Failed." It affects **every module** — hitting, pitching, throwing — not just hitting.
-
-### Why it happened
-
-In the last polish pass we added a replay-equivalence cache pre-check (lines 1644–1683) that needed `language` for the fingerprint, so a `const language` was added at **line 1648**. The original `const language` declaration further down at **line 1716** was never removed, producing a duplicate `const` in the same scope. Deno fails the entire module at parse time, so no request ever reaches `serve()`.
-
-## The Fix (1 file, ~2 lines)
-
-`supabase/functions/analyze-video/index.ts`
-
-Remove the duplicate declaration at line 1716. The earlier `const language` at line 1648 already covers the same value and stays in scope for the rest of the handler, so `languageName` / `languageInstruction` below it keep working unchanged.
-
-```diff
--    // Extract language from request
--    const language = body.language || 'en';
--    const languageName = getLanguageName(language);
-+    // language was already resolved above for the replay-equivalence
-+    // fingerprint; reuse it here.
-+    const languageName = getLanguageName(language);
-```
-
-## Verification
-
-1. Redeploy `analyze-video`.
-2. Tail edge function logs — confirm no more `worker boot error`, see normal `booted (time: …ms)` lines.
-3. From the preview, upload a hitting clip → analysis should complete (not "Analysis Failed").
-4. Re-run the same video → second run should hit the replay cache (`replay_cache: true`) and return byte-identical `ai_analysis` — the consistency guarantee from the previous pass.
-
-## Scope Discipline
-
-This is a one-line surgical fix to restore production. No changes to prompts, scoring, schema, retry logic, or the replay cache itself — all of those were correct, they just never got to execute because the file didn't parse.
+1. 10× landmarks_sha256_hex identical.
+2. 10× events_sha256_hex identical.
+3. 10× metrics_sha256_hex identical.
+4. Per-tile confidence identical.
+5. Tile status + value identical.
+6. Coaching narrative may differ; cited metric record byte-identical.
+7. Metric lineage viewer resolves every metric → events → landmarks chain.
+8. `scripts/replay/verify-determinism.ts` exits 0 in CI.
