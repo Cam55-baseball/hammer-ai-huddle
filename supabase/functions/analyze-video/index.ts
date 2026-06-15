@@ -2164,77 +2164,29 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
         }
 
-        // ===== PASS 2: targeted re-extraction for missing report-card keys =====
-        if (reportCardContract && (reportCardContract.id === "bp" || reportCardContract.id === "throwing" || reportCardContract.id === "bh" || reportCardContract.id === "sb-pitching")) {
+        // ===== PASS-2 RETIRED (Phase 0 contract — G-2) =====
+        // The Pass-2 model-swap escalation has been removed. Single-pass only.
+        // Tiles the first pass cannot measure are surfaced as
+        // { missing: true, missing_reason: "single_pass_only" } downstream
+        // by the metric engine; the AI path no longer attempts recovery.
+        if (reportCardContract && metrics) {
           const miss = countMissing(reportCardContract, metrics);
-          // Bread-and-butter BH metrics ALWAYS trigger a targeted second pass when missing.
-          const BREAD_AND_BUTTER_BH = [
-            "time_to_contact_ms",
-            "bat_speed_contact_mph",
-            "shoulder_to_shoulder_hold_pct_to_contact",
-          ];
-          const breadMissing = (reportCardContract.id === "bh" || reportCardContract.id === "sh")
-            ? BREAD_AND_BUTTER_BH.filter((k) => miss.missingKeys.includes(k))
-            : [];
-          if ((miss.ratio > 0.4 && miss.missingKeys.length > 0) || breadMissing.length > 0) {
-            console.log(`[REPORT-CARD] pass-2 triggered: ${miss.missingKeys.length}/${miss.total} missing for ${reportCardContract.id}`);
-            try {
-              const pass2System = `You are a ${reportCardContract.label} mechanics analyst running a TARGETED second pass over the SAME frames. Look again specifically for the landmarks listed. Do NOT invent — keep missing=true if still unmeasurable, with a sharper one-sentence reason.${buildSecondPassPromptBlock(reportCardContract, miss.missingKeys)}`;
-              // Escalate to gemini-2.5-pro when BH bread-and-butter metrics
-              // (time-to-contact, bat speed through contact) are missing — flash
-              // routinely drops barrel tracking; pro is materially better.
-              const pass2Model = breadMissing.length > 0
-                ? "google/gemini-2.5-pro"
-                : "google/gemini-2.5-flash";
-              const pass2 = await retryFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  model: pass2Model,
-                  temperature: 0,
-                  top_p: 0,
-                  seed: stableSeed(videoId + ":pass2"),
-                  messages: [
-                    { role: "system", content: pass2System },
-                    { role: "user", content: userContent },
-                  ],
-                  tools: [{
-                    type: "function",
-                    function: {
-                      name: "return_metrics",
-                      description: "Return ONLY the metrics object covering the missing keys.",
-                      parameters: { type: "object", properties: { metrics: buildMetricsSchema(reportCardContract) }, required: ["metrics"] },
-                    },
-                  }],
-                  tool_choice: { type: "function", function: { name: "return_metrics" } },
-                }),
-              });
-              if (pass2.ok) {
-                const d2 = await pass2.json();
-                const tc2 = d2?.choices?.[0]?.message?.tool_calls;
-                if (tc2 && tc2.length > 0) {
-                  const a2 = JSON.parse(tc2[0].function.arguments);
-                  const m2 = a2?.metrics;
-                  if (m2 && typeof m2 === "object" && metrics) {
-                    let recovered = 0;
-                    for (const k of miss.missingKeys) {
-                      const v2 = (m2 as Record<string, any>)[k];
-                      if (v2 && typeof v2 === "object") {
-                        (metrics as Record<string, any>)[k] = v2;
-                        if (!(v2.missing === true)) recovered++;
-                      }
-                    }
-                    console.log(`[REPORT-CARD] pass-2 recovered ${recovered}/${miss.missingKeys.length} keys`);
-                  }
-                }
-              } else {
-                console.warn("[REPORT-CARD] pass-2 non-OK", pass2.status);
+          if (miss.missingKeys.length > 0) {
+            console.log(`[REPORT-CARD] single_pass_only — ${miss.missingKeys.length}/${miss.total} tiles missing for ${reportCardContract.id} (Pass-2 retired)`);
+            for (const k of miss.missingKeys) {
+              const cur = (metrics as Record<string, unknown>)[k] as Record<string, unknown> | undefined;
+              if (!cur || cur.missing === true) {
+                (metrics as Record<string, unknown>)[k] = {
+                  missing: true,
+                  missing_reason: "single_pass_only",
+                  confidence: 0,
+                };
               }
-            } catch (e) {
-              console.warn("[REPORT-CARD] pass-2 failed", e);
             }
           }
         }
+
+
 
         
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
