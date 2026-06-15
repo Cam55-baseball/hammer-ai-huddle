@@ -23,21 +23,34 @@ function bytesToHex(buf: ArrayBuffer): string {
   return out;
 }
 
+async function digestSha256(buf: ArrayBuffer): Promise<ArrayBuffer> {
+  const subtle = (globalThis as { crypto?: { subtle?: SubtleCrypto } }).crypto?.subtle;
+  if (subtle) {
+    return subtle.digest("SHA-256", buf);
+  }
+  // Node / jsdom fallback (tests, edge functions without WebCrypto).
+  const nodeCrypto = await import("node:crypto");
+  const h = nodeCrypto.createHash("sha256");
+  h.update(new Uint8Array(buf));
+  const out = h.digest();
+  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength) as ArrayBuffer;
+}
+
 export async function sha256Hex(data: ArrayBuffer | Uint8Array | string): Promise<string> {
   let buf: ArrayBuffer;
   if (typeof data === "string") {
     buf = new TextEncoder().encode(data).buffer;
   } else if (data instanceof Uint8Array) {
-    // Copy to fresh ArrayBuffer to avoid SharedArrayBuffer typing issues.
     const copy = new Uint8Array(data.byteLength);
     copy.set(data);
     buf = copy.buffer;
   } else {
     buf = data;
   }
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", buf);
+  const digest = await digestSha256(buf);
   return bytesToHex(digest);
 }
+
 
 /**
  * Hash a Blob/File in chunks so we never pull a multi-GB video into memory.
