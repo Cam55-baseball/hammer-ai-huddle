@@ -2364,11 +2364,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       model_id: MODEL_ID,
       model_version: MODEL_VERSION,
       prompt_hash,
-      // Replay-equivalence keys — same fingerprint + engine_version → cached hit.
-      replay_input_fingerprint: inputFingerprint,
-      replay_fingerprint: await sha256Hex(
-        `${inputFingerprint}|${prompt_hash}|${ENGINE_VERSION}|${MODEL_ID}`,
-      ),
+      // Phase 0 deterministic cache key — derived ONLY from physical inputs.
+      cache_fingerprint_hex: cacheFingerprintHex,
+      video_sha256_hex: videoSha256Hex,
+      landmark_model_version: LANDMARK_MODEL_VERSION,
+      detector_version: DETECTOR_VERSION,
+      metric_engine_version: METRIC_ENGINE_VERSION,
+      fps_true: fpsTrue,
       analyzed_at: new Date().toISOString(),
     };
 
@@ -2385,8 +2387,36 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
     if (updateError) {
       console.error("Error updating video:", updateError);
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: cacheFingerprintHex,
+        cache_hit: false,
+        video_sha256_hex: videoSha256Hex,
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+        fps_true: fpsTrue,
+        outcome: "failed",
+        outcome_reason: `videos_update_failed:${updateError.message}`,
+      });
       throw updateError;
     }
+
+    // Phase 0 audit row — successful analysis.
+    await recordAnalysisRun(supabase, {
+      video_id: videoId,
+      requested_by: userId,
+      cache_fingerprint_hex: cacheFingerprintHex,
+      cache_hit: false,
+      video_sha256_hex: videoSha256Hex,
+      landmark_model_version: LANDMARK_MODEL_VERSION,
+      detector_version: DETECTOR_VERSION,
+      metric_engine_version: METRIC_ENGINE_VERSION,
+      fps_true: fpsTrue,
+      frame_selection_jsonb: { frame_count: frames.length, landing_frame_index: landingFrameIndex ?? null },
+      outcome: "ok",
+    });
 
     // Update user progress
     const { data: progressData, error: progressFetchError } = await supabase
