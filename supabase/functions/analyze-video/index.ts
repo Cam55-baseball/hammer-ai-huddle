@@ -1661,6 +1661,7 @@ Deno.serve(async (req) => {
     // Initialize Supabase client with service role
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    auditSupabase = supabase;
 
     // ===== PHASE 0 — DETERMINISTIC CACHE FINGERPRINT =====
     // Cache key is derived strictly from the physical inputs: video bytes
