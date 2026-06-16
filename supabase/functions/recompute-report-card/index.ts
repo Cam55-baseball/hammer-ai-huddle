@@ -4,8 +4,6 @@ import {
   getContractFor,
   buildMetricsSchema,
   buildMetricsPromptBlock,
-  buildSecondPassPromptBlock,
-  countMissing,
   type DisciplineContract,
   type MetricSpec,
 } from "../_shared/reportCardContracts.ts";
