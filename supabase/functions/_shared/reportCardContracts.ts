@@ -471,29 +471,10 @@ export function buildMetricsPromptBlock(contract: DisciplineContract): string {
   ].join("\n");
 }
 
-/**
- * Build a focused PASS-2 prompt listing ONLY the metric keys that came back
- * missing in pass 1, with their original prompt language reattached so the
- * model has another shot at the specific landmarks it failed to read.
- */
-export function buildSecondPassPromptBlock(
-  contract: DisciplineContract,
-  missingKeys: string[],
-): string {
-  const set = new Set(missingKeys);
-  const lines = contract.metrics
-    .filter((m) => set.has(m.key))
-    .map((m, i) => `${i + 1}. ${m.key} (${m.kind}${m.unit ? `, ${m.unit}` : ""}) — ${m.prompt}`);
-  return [
-    `\n\n=== REPORT CARD METRICS — PASS 2 (TARGETED) ===`,
-    `Pass 1 returned these keys as missing or unparseable. Look at the frames AGAIN, specifically for the landmarks each metric calls out. If — after re-examining — the landmark truly is not visible, return missing=true with a sharper reason. Otherwise emit a value with conservative confidence (≤0.6 is fine).`,
-    `Return ONLY the metrics object. Do not change any other field.`,
-    ``,
-    ...lines,
-    ``,
-    `=== END PASS 2 ===\n\n`,
-  ].join("\n");
-}
+// Phase 0 — buildSecondPassPromptBlock retired with Pass-2 (G-2 contract).
+// Single-pass only; missing tiles are surfaced with missing_reason: "single_pass_only".
+
+
 
 /** Count how many required (non-legacy) keys came back as missing/unparseable. */
 export function countMissing(

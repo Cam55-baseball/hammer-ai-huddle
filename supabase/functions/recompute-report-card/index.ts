@@ -4,8 +4,6 @@ import {
   getContractFor,
   buildMetricsSchema,
   buildMetricsPromptBlock,
-  buildSecondPassPromptBlock,
-  countMissing,
   type DisciplineContract,
   type MetricSpec,
 } from "../_shared/reportCardContracts.ts";
@@ -203,61 +201,12 @@ ${promptBlock}`;
 
     const metrics = validateMetrics(contract, rawMetrics);
 
-    // ===== PASS 2: targeted re-extraction for missing keys =====
-    const miss = countMissing(contract, metrics);
-    if (miss.ratio > 0.4 && miss.missingKeys.length > 0) {
-      console.log(`[recompute-report-card] pass-2: ${miss.missingKeys.length}/${miss.total} missing`);
-      const pass2Prompt = `You are a ${contract.label} mechanics analyst running a TARGETED second pass.
-RULES: Do NOT invent. If still unmeasurable from the narrative, keep missing=true with a sharper one-sentence reason.
-${buildSecondPassPromptBlock(contract, miss.missingKeys)}`;
-      try {
-        const aiResp2 = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            temperature: 0,
-            top_p: 0,
-            seed: stableSeed(video.id + ":pass2"),
-            messages: [
-              { role: "system", content: pass2Prompt },
-              { role: "user", content: userContent },
-            ],
-            tools: [{
-              type: "function",
-              function: {
-                name: "return_metrics",
-                description: "Return ONLY the missing-key metrics object.",
-                parameters: { type: "object", properties: { metrics: buildMetricsSchema(contract) }, required: ["metrics"] },
-              },
-            }],
-            tool_choice: { type: "function", function: { name: "return_metrics" } },
-          }),
-        });
-        if (aiResp2.ok) {
-          const d2 = await aiResp2.json();
-          const tc2 = d2?.choices?.[0]?.message?.tool_calls;
-          if (tc2 && tc2.length > 0) {
-            const args2 = JSON.parse(tc2[0].function.arguments);
-            const validated2 = validateMetrics(contract, args2?.metrics ?? null);
-            // Merge: pass-2 wins ONLY for keys that were missing in pass 1.
-            for (const k of miss.missingKeys) {
-              const v2 = (validated2 as Record<string, any>)[k];
-              if (v2 && !("missing" in v2 && v2.missing === true)) {
-                (metrics as Record<string, any>)[k] = v2;
-              } else if (v2) {
-                // Replace stale missing_reason with the sharper one.
-                (metrics as Record<string, any>)[k] = v2;
-              }
-            }
-          }
-        } else {
-          console.warn("[recompute-report-card] pass-2 non-OK", aiResp2.status);
-        }
-      } catch (e) {
-        console.warn("[recompute-report-card] pass-2 failed", e);
-      }
-    }
+    // Phase 0 — Pass-2 retired (single-pass only). Missing keys remain
+    // explicitly flagged with `missing: true` and a missing_reason; no model
+    // swap, no second-pass mutation, no escalation. The canonical metric
+    // engine is the sole authority for derived values.
+
+
 
     // Additive write — never touch feedback / efficiency_score / scorecard.
     const nextAnalysis = {
