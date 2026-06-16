@@ -343,6 +343,21 @@ export default function AnalyzeVideo() {
     // ===== END FRAME EXTRACTION =====
     
     try {
+      // ===== PHASE 0 — Deterministic probe (sha256 + true fps + dimensions) =====
+      // Computed BEFORE upload so the videos row is born replay-safe and
+      // analyze-video can build a canonical cache_fingerprint_hex without
+      // re-hashing the byte stream.
+      let probed: Awaited<ReturnType<typeof probeVideoMetadata>> | null = null;
+      try {
+        probed = await probeVideoMetadata(videoFile);
+        console.log("[ANALYSIS] probed metadata", probed);
+      } catch (probeErr) {
+        console.error("[ANALYSIS] probe failed", probeErr);
+        toast.error(t('videoAnalysis.probeFailed', "Could not read video metadata. Please try a different file."));
+        setUploading(false);
+        return;
+      }
+
       // Upload video to storage
       const fileExt = videoFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -385,7 +400,7 @@ export default function AnalyzeVideo() {
         });
       }
 
-      // Create video record with appropriate status
+      // Create video record with appropriate status — Phase 0 fields populated up front.
       const { data: videoData, error: videoError } = await supabase
         .from("videos")
         .insert([{
@@ -395,11 +410,19 @@ export default function AnalyzeVideo() {
           video_url: publicUrl,
           thumbnail_url: thumbnailUrl,
           status: analysisEnabled ? "uploading" : "completed",
-        }])
+          sha256_hex: probed.sha256_hex,
+          fps_true: probed.fps_true,
+          duration_sec: probed.duration_sec,
+          width: probed.width,
+          height: probed.height,
+          orientation: probed.orientation,
+          ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
+        }] as never)
         .select()
         .single();
 
       if (videoError) throw videoError;
+
 
       setCurrentVideoId(videoData.id);
       
