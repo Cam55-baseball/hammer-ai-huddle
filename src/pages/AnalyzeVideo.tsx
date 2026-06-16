@@ -26,6 +26,7 @@ import { TheScorecard } from "@/components/TheScorecard";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFrames, calculateLandingFrameIndex } from "@/lib/frameExtraction";
+import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
