@@ -1,57 +1,53 @@
-# Phase 0 Runtime Evidence — Path B Execution
 
-You uploaded `IMG_7346.mov`. I will exercise the production code path end-to-end in the sandbox (no UI clicking required — the same client functions, edge function, and DB writes) and post every persisted row.
+# Phase 0 Runtime Evidence Execution
 
-## Steps (all executed in build mode, no source code changes)
+Single-turn build-mode execution. No source-code changes. No fabricated rows. No manual `INSERT` into `video_analysis_runs` / `video_landmark_runs`. The seeded `videos` row (`ec24a165-…`, sha256 `a5a8692…`) and prepared payload `/tmp/body.json` from the prior turn are reused.
 
-1. **Upload the file via the production client path**
-   - Read `/mnt/user-uploads/IMG_7346.mov`.
-   - Insert a `videos` row owned by an existing test user (will pick the user behind the two existing `rejected` rows, `videos.id = d3731ef3...` owner).
-   - Compute `sha256_hex` deterministically over the byte stream (same `sha256HexOfBlob` algorithm as the browser).
-   - Probe `fps_true`, `duration_sec`, `width`, `height`, `orientation` server-side using `ffprobe` (matches the client probe's snap-to-standard-rates output for ≥24fps videos).
-   - Upload bytes to the same Supabase storage bucket the client uses.
-   - Persist all six probe fields onto the `videos` row.
-   - **Paste the resulting `videos` row.** (G-1 evidence)
+## Steps
 
-2. **First `analyze-video` invocation → `ok`**
-   - Call the deployed edge function with `{ video_id }`.
-   - Paste the resulting `video_analysis_runs` row showing `outcome='ok'`, `cache_hit=false`, populated `cache_fingerprint_hex` + all version pins + `fps_true` + landmark/event/metric FKs.
+1. **Invocation 1 — `ok`**
+   - `supabase--curl_edge_functions` → `POST /analyze-video` with `/tmp/body.json` as the logged-in preview user.
+   - Capture response + fetch the resulting `video_analysis_runs` row via `supabase--read_query`.
+   - Expect `outcome='ok'`, `cache_hit=false`, populated `cache_fingerprint_hex`, version pins, FK to `video_landmark_runs`.
 
-3. **Second `analyze-video` invocation (same video_id, same bytes) → `cache_hit`**
-   - Paste both rows side-by-side proving identical `cache_fingerprint_hex` and `cache_hit=true` on the second.
+2. **Invocation 2 — `cache_hit`**
+   - Re-POST identical body. Fetch new row.
+   - Expect identical `cache_fingerprint_hex`, `cache_hit=true`, `outcome='cache_hit'`.
 
-4. **`rejected` outcome — already on file**
-   - Re-paste one of the two existing `rejected:missing_video_sha256` rows with full column projection.
+3. **Invocation 3 — `failed` (controlled fault injection, no row fabrication)**
+   - Insert a *second* `videos` row with all mandatory deterministic fields populated but `storage_path` pointing at a non-existent object (`videos/__nonexistent__/missing.mp4`). This is a real `videos` insert (allowed), not a `video_analysis_runs` insert (forbidden).
+   - POST analyze-video against that video → real edge-function execution path hits storage download failure → real `failed` row written by the function itself.
 
-5. **`failed` outcome — controlled fault injection**
-   - Insert a second `videos` row pointing to a non-existent `storage_path`, with `sha256_hex` set so the function gets past the rejection guard and into the landmark/storage fetch — which throws and trips the catch block.
-   - Paste the resulting `outcome='failed'` row with `outcome_reason` populated.
+4. **`rejected`** — already exists from prior `missing_video_sha256` rows; re-query and include.
 
-6. **Final ripgrep (your exact superset query)**
-   ```bash
-   rg "pass2Model|pass2System|pass2Prompt|:pass2|breadMissing|replay_input_fingerprint" \
-      supabase/functions/analyze-video \
-      supabase/functions/recompute-report-card \
-      src
-   ```
-   Paste output + exit code.
+5. **Edge-function logs** — `supabase--edge_function_logs analyze-video` filtered around the three invocations, showing:
+   - computed `cache_fingerprint_hex` (invocation 1)
+   - cache miss branch (invocation 1)
+   - cache hit branch (invocation 2)
+   - storage/download failure branch (invocation 3)
 
-7. **Re-run determinism + lint scripts**
-   - `bunx tsx scripts/replay/verify-determinism.ts` (exit 0)
-   - `bunx tsx scripts/lint-no-landmark-recency.ts` (clean)
+6. **Aggregate matrix** — `SELECT outcome, count(*) FROM video_analysis_runs GROUP BY outcome` showing all four outcomes present.
 
-8. **Four-outcome matrix**
-   - `SELECT outcome, count(*) FROM video_analysis_runs GROUP BY outcome;` showing ≥1 per outcome.
+7. **Full row dumps** — `SELECT *` for the four representative rows (ok, cache_hit, rejected, failed).
 
-9. **Edge function logs**
-   - Paste the `analyze-video` edge-function log lines for invocations 2 and 3 showing the fingerprint computation and the cache-hit short-circuit.
+8. **Provenance statement** — explicit confirmation that the only manual DB writes were the two `videos` rows (real-upload row + fault-injection row); no `video_analysis_runs` or `video_landmark_runs` rows were hand-inserted.
 
-## What this plan does NOT do
+## Single-reply deliverable
 
-- No edits to `analyze-video`, `recompute-report-card`, `_shared/*`, `AnalyzeVideo.tsx`, or any client source — only the upload simulation script and SQL inserts of the `videos` row (allowed; `videos` is not the canonical organism ledger).
-- No Phase 1 work. No WebCodecs. No schema changes. No deletions.
-- No fabricated rows in `video_analysis_runs` or `video_landmark_runs` — those are produced exclusively by the live edge function.
+A single message containing, in order:
+- Invocation 1 HTTP response + `ok` row
+- Invocation 2 HTTP response + `cache_hit` row
+- Side-by-side `cache_fingerprint_hex` comparison
+- `failed` row + the `videos` fault-injection row used to produce it
+- `rejected` row
+- `GROUP BY outcome` matrix
+- Edge-function log excerpts for all three live invocations
+- Provenance statement
 
-## After this evidence pack is posted
+## Out of scope (unchanged from prior plans)
 
-I will await your explicit Phase 0 closure acceptance before requesting Phase 1 authorization.
+- No edits to `analyze-video`, `recompute-report-card`, `_shared/*`, `AnalyzeVideo.tsx`, or any `src/**`.
+- No schema migrations. No deletions. No Phase 1 / WebCodecs work.
+- No manual inserts into `video_analysis_runs` or `video_landmark_runs`.
+
+After the evidence package is posted, await explicit Phase 0 closure before requesting Phase 1 authorization.
