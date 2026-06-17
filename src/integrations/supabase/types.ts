@@ -11447,6 +11447,57 @@ export type Database = {
           },
         ]
       }
+      video_frame_extractions: {
+        Row: {
+          created_at: string
+          frame_index: number
+          height: number
+          id: string
+          sha256_hex: string
+          timestamp_seconds: number
+          video_analysis_run_id: string
+          video_id: string
+          width: number
+        }
+        Insert: {
+          created_at?: string
+          frame_index: number
+          height: number
+          id?: string
+          sha256_hex: string
+          timestamp_seconds: number
+          video_analysis_run_id: string
+          video_id: string
+          width: number
+        }
+        Update: {
+          created_at?: string
+          frame_index?: number
+          height?: number
+          id?: string
+          sha256_hex?: string
+          timestamp_seconds?: number
+          video_analysis_run_id?: string
+          video_id?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_frame_extractions_video_analysis_run_id_fkey"
+            columns: ["video_analysis_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_analysis_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_frame_extractions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_landmark_runs: {
         Row: {
           created_at: string

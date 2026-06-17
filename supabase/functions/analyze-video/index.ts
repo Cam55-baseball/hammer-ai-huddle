@@ -16,6 +16,14 @@ const corsHeaders = {
    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const frameExtractionSchema = z.object({
+  frame_index: z.number().int().nonnegative(),
+  timestamp_seconds: z.number().nonnegative(),
+  sha256_hex: z.string().regex(/^[0-9a-f]{64}$/i, "sha256_hex must be 64-char hex"),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
 const requestSchema = z.object({
   videoId: z.string().uuid("Invalid video ID format"),
   module: z.enum(["hitting", "pitching", "throwing"], { errorMap: () => ({ message: "Invalid module" }) }),
@@ -24,6 +32,12 @@ const requestSchema = z.object({
   language: z.string().optional(),
   frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
   landingFrameIndex: z.number().optional(),
+  /**
+   * Phase 1 — deterministic frame extraction audit. One entry per extracted
+   * frame, in the same order as `frames`. Persisted to video_frame_extractions
+   * keyed on the resulting video_analysis_runs.id.
+   */
+  frameExtractions: z.array(frameExtractionSchema).optional(),
 });
 
 /**
@@ -1642,13 +1656,14 @@ Deno.serve(async (req) => {
   try {
     // Validate input
     const body = await req.json();
-    const { videoId, module, sport, userId, frames, landingFrameIndex } = requestSchema.parse(body);
+    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions } = requestSchema.parse(body);
     auditCtx.videoId = videoId;
     auditCtx.userId = userId;
 
     console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
     console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
     console.log(`[ANALYZE-VIDEO] Landing frame index: ${landingFrameIndex ?? 'auto-detect'}`);
+    console.log(`[ANALYZE-VIDEO] frameExtractions: ${frameExtractions?.length ?? 0}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -1673,12 +1688,15 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("sha256_hex, fps_true, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("sha256_hex, fps_true, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
       .eq("id", videoId)
       .maybeSingle();
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
+    const durationSec = videoRow?.duration_sec == null ? null : Number(videoRow.duration_sec);
+    const videoWidth = videoRow?.width == null ? null : Number(videoRow.width);
+    const videoHeight = videoRow?.height == null ? null : Number(videoRow.height);
     const landingTimeSec = videoRow?.landing_time_sec == null ? null : Number(videoRow.landing_time_sec);
     const directionSign = ((): -1 | 0 | 1 => {
       const v = videoRow?.direction_sign;
@@ -1723,6 +1741,53 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "missing_probe_metadata", detail: "videos.fps_true must be populated before analysis (Phase 0 contract)." }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // ===== PHASE 1 — Deterministic acceptance gates =====
+    // Centralized thresholds: see src/lib/biomech/videoAcceptance.ts. Mirrored
+    // here so the server is the source of truth for `rejected` outcomes.
+    const PHASE1_MIN_FPS = 24;
+    const PHASE1_MIN_WIDTH = 480;
+    const PHASE1_MIN_HEIGHT = 480;
+    const PHASE1_MIN_DURATION_SEC = 0.5;
+    const PHASE1_MAX_DURATION_SEC = 60;
+    const PHASE1_MAX_DROPPED_RATIO = 0.34;
+
+    const writeReject = async (reason: string, detail: string, status = 422) => {
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: `rejected:${reason}`,
+        cache_hit: false,
+        video_sha256_hex: videoSha256Hex,
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+        fps_true: fpsTrue,
+        outcome: "rejected",
+        outcome_reason: `${reason}:${detail}`,
+      });
+      return new Response(
+        JSON.stringify({ error: reason, detail }),
+        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    };
+
+    if (fpsTrue < PHASE1_MIN_FPS) {
+      return await writeReject("reject_low_fps", `fps_true=${fpsTrue} < ${PHASE1_MIN_FPS}`);
+    }
+    if (videoWidth == null || videoHeight == null || videoWidth < PHASE1_MIN_WIDTH || videoHeight < PHASE1_MIN_HEIGHT) {
+      return await writeReject("reject_low_resolution", `${videoWidth}x${videoHeight} below ${PHASE1_MIN_WIDTH}x${PHASE1_MIN_HEIGHT}`);
+    }
+    if (durationSec == null || !Number.isFinite(durationSec) || durationSec < PHASE1_MIN_DURATION_SEC || durationSec > PHASE1_MAX_DURATION_SEC) {
+      return await writeReject("reject_duration_out_of_bounds", `duration_sec=${durationSec} outside [${PHASE1_MIN_DURATION_SEC}, ${PHASE1_MAX_DURATION_SEC}]`);
+    }
+    if (frameExtractions && frameExtractions.length > 0) {
+      const requestedCount = frameExtractions.length;
+      const droppedRatio = (requestedCount - frames.length) / requestedCount;
+      if (droppedRatio > PHASE1_MAX_DROPPED_RATIO) {
+        return await writeReject("reject_excessive_dropped_frames", `dropped=${requestedCount - frames.length}/${requestedCount} (${droppedRatio.toFixed(3)} > ${PHASE1_MAX_DROPPED_RATIO})`);
+      }
     }
 
     const cacheFingerprintHex = await buildCacheFingerprint({
@@ -2425,7 +2490,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
 
     // Phase 0 audit row — successful analysis.
-    await recordAnalysisRun(supabase, {
+    const okAudit = await recordAnalysisRun(supabase, {
       video_id: videoId,
       requested_by: userId,
       cache_fingerprint_hex: cacheFingerprintHex,
@@ -2435,9 +2500,34 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       detector_version: DETECTOR_VERSION,
       metric_engine_version: METRIC_ENGINE_VERSION,
       fps_true: fpsTrue,
-      frame_selection_jsonb: { frame_count: frames.length, landing_frame_index: landingFrameIndex ?? null },
+      frame_selection_jsonb: {
+        frame_count: frames.length,
+        landing_frame_index: landingFrameIndex ?? null,
+        extraction_count: frameExtractions?.length ?? 0,
+      },
       outcome: "ok",
     });
+
+    // Phase 1 — persist per-frame deterministic extraction audit.
+    if (okAudit.id && frameExtractions && frameExtractions.length > 0) {
+      const frameRows = frameExtractions.map((f) => ({
+        video_analysis_run_id: okAudit.id,
+        video_id: videoId,
+        frame_index: f.frame_index,
+        timestamp_seconds: f.timestamp_seconds,
+        sha256_hex: f.sha256_hex,
+        width: f.width,
+        height: f.height,
+      }));
+      const { error: frameInsertError } = await supabase
+        .from("video_frame_extractions")
+        .insert(frameRows);
+      if (frameInsertError) {
+        console.error("[ANALYZE-VIDEO] frame extraction insert failed:", frameInsertError.message);
+      } else {
+        console.log(`[ANALYZE-VIDEO] persisted ${frameRows.length} video_frame_extractions for run ${okAudit.id}`);
+      }
+    }
 
     // Update user progress
     const { data: progressData, error: progressFetchError } = await supabase
