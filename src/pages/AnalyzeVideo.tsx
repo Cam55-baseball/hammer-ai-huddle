@@ -308,28 +308,58 @@ export default function AnalyzeVideo() {
     if (!videoFile || !user) return;
 
     setUploading(true);
-    
-    // ===== EXTRACT KEY FRAMES FOR AI ANALYSIS =====
+
+    // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
+    // Probe FIRST so deterministic frame selection can use fps_true.
+    let probed: Awaited<ReturnType<typeof probeVideoMetadata>> | null = null;
+    try {
+      probed = await probeVideoMetadata(videoFile);
+      console.log("[ANALYSIS] probed metadata", probed);
+    } catch (probeErr) {
+      console.error("[ANALYSIS] probe failed", probeErr);
+      toast.error(t('videoAnalysis.probeFailed', "Could not read video metadata. Please try a different file."));
+      setUploading(false);
+      return;
+    }
+
+    // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
+    let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
     let landingFrameIndex: number | null = null;
-    
+
     if (analysisEnabled) {
       try {
         setExtractingFrames(true);
         toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
-        
-        frames = await extractKeyFrames(videoFile, landingTime);
-        
+
+        const result = await extractKeyFramesDeterministic({
+          videoFile,
+          fps_true: probed.fps_true,
+          duration_sec: probed.duration_sec,
+          landingTime,
+        });
+        frames = result.frames.map((f) => f.dataUrl);
+        frameExtractions = result.frames.map((f) => ({
+          frame_index: f.frame_index,
+          timestamp_seconds: f.timestamp_seconds,
+          sha256_hex: f.sha256_hex,
+          width: f.width,
+          height: f.height,
+        }));
+
         if (frames.length < 3) {
           throw new Error("Could not extract enough frames for accurate analysis");
         }
-        
-        // Calculate landing frame index if user marked landing
+
         if (landingTime != null) {
-          landingFrameIndex = calculateLandingFrameIndex(landingTime);
+          landingFrameIndex = calculateLandingFrameIndex(
+            landingTime,
+            probed.fps_true,
+            result.frames.map((f) => f.frame_index),
+          );
           console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
         }
-        
+
         console.log(`[ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
         setExtractingFrames(false);
       } catch (frameError: any) {
@@ -341,22 +371,8 @@ export default function AnalyzeVideo() {
       }
     }
     // ===== END FRAME EXTRACTION =====
-    
+
     try {
-      // ===== PHASE 0 — Deterministic probe (sha256 + true fps + dimensions) =====
-      // Computed BEFORE upload so the videos row is born replay-safe and
-      // analyze-video can build a canonical cache_fingerprint_hex without
-      // re-hashing the byte stream.
-      let probed: Awaited<ReturnType<typeof probeVideoMetadata>> | null = null;
-      try {
-        probed = await probeVideoMetadata(videoFile);
-        console.log("[ANALYSIS] probed metadata", probed);
-      } catch (probeErr) {
-        console.error("[ANALYSIS] probe failed", probeErr);
-        toast.error(t('videoAnalysis.probeFailed', "Could not read video metadata. Please try a different file."));
-        setUploading(false);
-        return;
-      }
 
       // Upload video to storage
       const fileExt = videoFile.name.split('.').pop();
