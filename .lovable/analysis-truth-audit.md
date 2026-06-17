@@ -1,314 +1,321 @@
 # Phase 1.75 — Analysis Truth Audit
 
-Evidence-only. Every claim cites a file path and line range. No fixes, no copy changes, no proposals, no roadmap. Where a runtime claim cannot be made from code alone, it is marked **undetermined from code — runtime evidence needed**.
+Evidence-only forensic accounting of the current analysis stack. Every claim is anchored to `path:line-range`. Where code cannot prove behavior, the entry is marked `undetermined from code — evidence needed`. No fixes, no proposals, no roadmap.
 
-Scope: Baseball Hitting (BH). Pitching/throwing share the edge function but the report-card tile set audited here is BH.
-
----
-
-## S1 — Report card phase percentages (1/2/3/4 circles)
-
-**What renders.** Each phase orb shows: (a) a count badge with `p.count` (total tiles in that phase, line 92), and (b) a percentage label `${Math.round(p.passRate * 100)}%` or `"—"` when nothing was measured (`src/components/report-card/hammer/visuals/PhaseRail.tsx:63, 97-99`).
-
-**Where the percentage comes from.** Built in `HammerReportCard.tsx:56-76`:
-```
-passRate = passed / measured   // where measured excludes status === "missing"
-```
-`passed` counts only tiles whose status is `"pass"` or `"elite"` (line 65). `"warn"` and `"fail"` count as not-passed. `"missing"` is excluded from the denominator entirely.
-
-**What the number IS.**
-- It is a **pass-rate of measured tiles in that phase**, expressed as a percent.
-- It is NOT an athlete score, NOT a 0–100 quality score, NOT a confidence value, NOT a completion percentage, NOT a phase-quality composite.
-- Example: P4 has 9 tiles. If 7 were measured and 5 were pass/elite, the orb shows `71%`.
-
-**Max / min.** Max 100% (every measured tile pass/elite). Min 0% (no measured tile pass/elite). 100% IS achievable, including with some tiles missing — missing tiles are simply omitted from the denominator. There is no visible cue distinguishing "5/5 pass" from "5/9 pass with 4 missing" beyond the small count chip (which shows TOTAL not MEASURED).
-
-**Color tiering.** `PhaseRail.tsx:46-60`: `passRate >= 0.85` → pass color; `>= 0.5` → warn; else fail; `measured === 0` → muted.
-
-**Interpretability.** A user looking at "P4 — 71%" with no legend has no way to know it is a pass-rate over measured tiles only. The count badge shows the total count (e.g. "9") not the measured/passed split. The tile pass/elite definitions (and what counts as "measured") are not surfaced next to the orb.
-
-**Tile-level numbers vs phase percent.** Individual tiles in `score_meter` mode render their own `score100` value (`ReportCardTile.tsx:81-85`) on a 0–100 scale. That number is a discrete per-tile score and is unrelated to the phase orb percent.
+Scope: BH (Baseball Hitting) report card, `analyze-video` edge function, biomech determinism layer, frame extraction, video probe, `AnalyzeVideo.tsx` upload/analyze flow. BP/throwing referenced only where the code reuses the same path.
 
 ---
 
-## S2 — Current metric inventory
+## S1 — Report Card Phase Percentages (1 / 2 / 3 / 4 circles)
 
-Source of truth: `src/lib/reportCard/disciplines/bh.ts` (tile specs + compute) and `src/lib/reportCard/contracts/bh.contract.ts` (prompt + emitted fields).
+**Where the orb is rendered.** `src/components/report-card/hammer/visuals/PhaseRail.tsx:63-99`. The orb itself displays `p.count` (the *total* number of tiles in that phase, `PhaseRail.tsx:92`). The text under each orb displays `pctLabel`, which is `"—"` when `p.measured === 0` else `Math.round(p.passRate * 100) + "%"` (`PhaseRail.tsx:63`).
 
-All numeric/boolean metrics are produced by the Gemini 2.5 Flash AI model under a structured tool-call (`supabase/functions/analyze-video/index.ts:2012-2167`). The model returns a `metrics` object keyed by the contract field names; tile `compute` functions read those values via `readNumber` / `readBool` / `readScore100` in `src/lib/reportCard/metricReaders.ts`. There is no client-side or server-side geometric computation from landmarks — the "landmark" / "detector" / "metric_engine" versions in `biomechFingerprint.ts:10-13` are explicit stubs (`@0.0.0-stub`).
+**Where the percentage is computed.** `src/components/report-card/hammer/HammerReportCard.tsx:56-76`. For each phase the loop accumulates:
+- `total` — every tile in the phase (`HammerReportCard.tsx:62`).
+- `measured` — every tile whose computed `state.status !== "missing"` (`HammerReportCard.tsx:63-64`).
+- `passed` — every tile whose computed status is `"pass"` OR `"elite"` (`HammerReportCard.tsx:65`).
 
-| Tile (key) | Display Name | Definition (per contract prompt) | How measured today | Data source (field) | Confidence logic | Missing / failure conditions |
-|---|---|---|---|---|---|---|
-| `hip_load` | Hip Load Stability | Score 0–100 of stability of back-hip load through P2 (`bh.contract.ts:19-20`) | AI score | `hip_stability_score_100` (legacy fallback `hip_load_score_10` ×10, `bh.ts:31`) | Model-emitted `confidence` field, surfaced verbatim (`metricReaders.ts:17-21`) | Model emits `missing: true` with `missing_reason`, OR field absent → tile shows "missing" |
-| `hand_load` | Hand Load | Score 0–100 bat/scap/knob load behind head after P1 stable (`bh.contract.ts:30-31`) | AI score | `hand_load_score_100` | Model-emitted | Same as above |
-| `p2_timing` | P2 Timing → Knee Lift | TRUE if hand load finished by pitcher peak knee lift; early acceptable; FALSE only if still unfinished after peak (`bh.contract.ts:38-39`) | AI boolean | `p2_timing_pass` (`bh.ts:70`) | Model-emitted | Model instruction: missing with reason `'Pitcher knee lift not in frame'` |
-| `eyes_tracking` | Eyes / Head Tracking | Score 0–100 head/eye steadiness (`bh.contract.ts:48-49`) | AI score | `eyes_track_score_100` | Model-emitted | — |
-| `stride_direction` | Stride Direction | Signed degrees off square; pass if `|deg| ≤ 15` (`bh.contract.ts:59-60`; `bh.ts:112`) | AI number, client thresholds | `stride_dir_deg_off_square` | Model-emitted | Field absent / `missing:true` |
-| `heel_plant` | Heel Plant / Landing | 0–100 landing quality (`bh.contract.ts:68-70`) | AI score | `heel_plant_score_100` | Model-emitted | — |
-| `p3_timing` | P3 Timing → Release | Signed ms from pitcher release to front-foot-down; 0 = perfect (`bh.contract.ts:79-80`) | AI number, client scoring curve (`bh.ts:148-168`) | `p3_release_offset_ms` | Model-emitted | Model instruction: missing if release or full-foot-down not visible |
-| `hands_outside_shoulders_at_landing` | Hands Outside Shoulders at Landing | TRUE if hands sit horizontally outside back-shoulder line at front-foot strike (`bh.contract.ts:87-88`) | AI boolean | `hands_outside_shoulders_at_landing_pass` | Model-emitted | Model instruction: missing if hands or back shoulder not visible |
-| `sequencing` | Sequencing | TRUE if Load legs → Load hands → Pause → Stride → Pause → Contact order held (`bh.contract.ts:97-98`) | AI boolean | `sequencing_ok` | Model-emitted | — |
-| `bat_path` | Bat Path In/Out of Zone | 0–100 entry/exit/on-plane window quality (`bh.contract.ts:107-108`) | AI score | `bat_path_score_100` | Model-emitted | — |
-| `on_plane` | On-Plane % | % of swing arc on the incoming pitch plane (`bh.contract.ts:117-118`) | AI number | `on_plane_pct` | Model-emitted | — |
-| `time_to_contact` | Time to Contact | ms from first forward bat movement to ball-barrel contact (`bh.contract.ts:127-128`) | AI estimate from frames | `time_to_contact_ms` | Model-emitted | — |
-| `bat_speed_contact` | Bat Speed Through Contact | Estimated barrel speed AT contact in mph (`bh.contract.ts:137-138`) | AI estimate | `bat_speed_contact_mph` | Model-emitted | Model instruction: missing with reason `'Frame rate too low for bat speed estimate'` |
-| `back_elbow_contact` | Connection & Barrel Delivery | 0–100 connection across P4 launch → barrel delivery → contact; blind-spot minimization (`bh.contract.ts:147-148`) | AI score | `connection_barrel_delivery_score_100` | Model-emitted | Model instruction: missing if launch / extension-start / barrel-delivery / contact not identifiable |
-| `hitters_move` | Hitter's Move Quality | 0–100 hands-back/elbow-leads/no-cast/barrel-last (`bh.contract.ts:157-158`) | AI score | `hitters_move_score_100` | Model-emitted | — |
-| `shoulder_plane_steadiness` | Shoulder Plane Steadiness | 0–100 steadiness of shoulder plane from rotation start to contact (`bh.contract.ts:167-168`) | AI score | `shoulder_plane_steadiness_score_100` | Model-emitted | — |
-| `finish_balance` | Finish & Balance | 0–100 post-contact balance / no fall-off / two-hand finish (`bh.contract.ts:177-178`) | AI score | `finish_balance_score_100` | Model-emitted | — |
-| `shoulder_to_shoulder_hold` | Shoulder-to-Shoulder Hold | % of landing→contact window where hand-to-back-shoulder distance ≥ 90% of D0 (`bh.contract.ts:187-188`), with auto-FAIL when `front_shoulder_leak_before_contact` is TRUE (`bh.ts:404-423`) | AI number + AI boolean override | `shoulder_to_shoulder_hold_pct_to_contact`, `_pass`, `front_shoulder_leak_before_contact`, `front_shoulder_leak_pct_of_window` | Model-emitted; `min` of confidences when combined (`bh.ts:414-417`) | Missing if pct + boolean both absent |
+`passRate` is `measured > 0 ? passed / measured : 0` (`HammerReportCard.tsx:74`).
 
-**Confidence semantics.** Every tile's "confidence" badge comes from a model-emitted number on the same metric object. Tile UI surfaces "Low model-stated measurement confidence (X%) — provisional. This is the model's self-reported confidence in the measurement, not a frame-coverage or pose-quality score." (`ReportCardTile.tsx:103-106`) — so the system is honest at the tooltip level that this is self-reported.
+**What this number represents.** It is the **pass-rate of measured tiles in the phase**: `(pass + elite) / (pass + elite + warn + fail)`. `warn` and `fail` are in the denominator; `missing` is excluded. It is not a score, not a confidence, not a coverage metric.
 
-**Single-pass enforcement.** After the first AI tool-call response, any contract field still missing or flagged missing is overwritten to `{ missing: true, missing_reason: "single_pass_only", confidence: 0 }` (`analyze-video/index.ts:2253-2272`). There is no second-pass model escalation.
+**Tier coloring.** `PhaseRail.tsx:46-60`: `>=0.85` green (pass), `>=0.5` amber (warn), else red (fail); `measured === 0` is gray ("missing").
+
+**Is 100% reachable?** Yes, when every measured tile in the phase has `status === "pass"` or `"elite"`. A phase with one measured tile that passes shows 100%. A phase with all tiles `missing` shows `"—"` not 0% (`PhaseRail.tsx:63`).
+
+**What this number is NOT.** It does not weight `score_meter` tiles by their 0–100 score, does not penalize `warn`, and does not account for non-negotiable severity (non-negotiable failures are tracked separately on the ribbon at `HammerReportCard.tsx:51-53`).
 
 ---
 
-## S3 — Connection & Barrel Delivery vs (legacy) Connect & Move
+## S2 — Current Metric Inventory (BH)
 
-The user mentions "Connect & Move" alongside "Barrel Delivery" as potentially overlapping. The current contract has only **one** tile in this area: `back_elbow_contact` → "Connection & Barrel Delivery" (`bh.ts:302-321`, `bh.contract.ts:140-149`).
+Every tile shipped on the BH report card. "Compute fn" = the `compute:` lambda in `src/lib/reportCard/disciplines/bh.ts`. "Source field" = the key it reads via `metricReaders.ts`. "Confidence source" is per-metric on `MetricValue.confidence` (`src/lib/reportCard/contracts/shared.ts:30-44`). "Missing reason" is whatever the AI returns; the readers do not synthesize one.
 
-- Sole input field: `connection_barrel_delivery_score_100` (0–100).
-- Prompt definition: connection + barrel delivery across P4 launch → barrel-delivery → contact window; explicitly tells the model "Do not use the old 'back elbow past belly button at contact' formula" (`bh.contract.ts:148`).
-- There is **no separate `connect_and_move_*` field, no separate tile** in `bh.ts` or `bh.contract.ts`. `rg -n "connect_and_move|connect_move|connection_move"` over `src/` and `supabase/functions/` returns no matches.
+| # | Tile key | Display name | Mode | Source field(s) read | Compute (bh.ts) | Pass/warn/fail bands | Confidence source | Missing path |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `hip_load` | Hip Load Stability | `score_meter` | `hip_stability_score_100` (fallback `hip_load_score_10`) | `bh.ts:30-34` | acceptable 70, elite 90 (`bh.ts:33`); bands per `scoreMeterState` (`metricReaders.ts:67-83`) | `m.confidence` from `readScore100` (`metricReaders.ts:24-39`) | `missingState(a, "hip_stability_score_100")` (`bh.ts:32`) → reason from AI's `missing_reason` (`metricReaders.ts:47-54`) |
+| 2 | `hand_load` | Hand Load | `score_meter` | `hand_load_score_100` (fallback `hand_load_score_10`) | `bh.ts:51-55` | 65 / 88 | same | same pattern |
+| 3 | `p2_timing` | P2 Timing → Knee Lift | `pass_fail` | `p2_timing_pass` (bool) | `bh.ts:69-73` | pass = true, fail = false | `readBool` confidence (`metricReaders.ts:42-49`) | `p2_timing_pass` missing |
+| 4 | `eyes_tracking` | Eyes / Head Tracking | `score_meter` | `eyes_track_score_100` | `bh.ts:89-93` | 70 / 90 | `readNumber` | `eyes_track_score_100` missing |
+| 5 | `stride_direction` | Stride Direction | `pass_fail` | `stride_dir_deg_off_square` (number) | `bh.ts:109-113` | pass if `Math.abs(value) <= 15` (`bh.ts:112`) | `readNumber` | `stride_dir_deg_off_square` missing |
+| 6 | `heel_plant` | Heel Plant / Landing | `score_meter` | `heel_plant_score_100` (fallback `heel_plant_score_10`) | `bh.ts:129-133` | 65 / 88 | same | same |
+| 7 | `p3_timing` | P3 Timing → Release | `score_meter` | `p3_release_offset_ms` | `bh.ts:148-168` | piecewise: deadband ±33 ms → 100; (33,80] linear 100→90; (80,150] 90→70; >150 decays to 0; early branch (offset < −33) decays from 100 → 85 over ~267 ms (`bh.ts:153-162`). `scoreMeterState` acceptable 70, elite 90 (`bh.ts:165`). Display value derived from sign of offset (`bh.ts:166`). | `readNumber` confidence | `p3_release_offset_ms` missing |
+| 8 | `hands_outside_shoulders_at_landing` | Hands Outside Shoulders at Landing | `pass_fail` | `hands_outside_shoulders_at_landing_pass` (bool) | `bh.ts:183-187` | bool pass/fail | `readBool` | bool missing |
+| 9 | `sequencing` | Sequencing | `pass_fail`, non-negotiable | `sequencing_ok` (bool) | `bh.ts:205-209` | bool | `readBool` | bool missing |
+| 10 | `bat_path` | Bat Path In/Out of Zone | `score_meter` | `bat_path_score_100` (fallback `bat_path_score_10`) | `bh.ts:224-228` | 65 / 88 | `readScore100` | same |
+| 11 | `on_plane` | On-Plane % | `score_meter` | `on_plane_pct` (number) | `bh.ts:244-248` | 60 / 85 via `scoreMeterState(value, conf, 60, 85)` | `readNumber` | `on_plane_pct` missing |
+| 12 | `time_to_contact` | Time to Contact | `raw_pass_fail` | `time_to_contact_ms` (number) | `bh.ts:264-274` | elite if `value <= 150`, pass if `value <= 175`, else fail (`bh.ts:267-273`) | `readNumber` | `time_to_contact_ms` missing |
+| 13 | `bat_speed_contact` | Bat Speed Through Contact | `raw_passed` | `bat_speed_contact_mph` (number) | `bh.ts:290-300` | elite ≥75, pass ≥65 (`bh.ts:293-294`) | `readNumber` | `bat_speed_contact_mph` missing |
+| 14 | `back_elbow_contact` | Connection & Barrel Delivery | `score_meter` | `connection_barrel_delivery_score_100` only — legacy fallback explicitly removed (no second arg passed to `readScore100`, `bh.ts:317`) | `bh.ts:316-320` | 70 / 90 | `readScore100` | `connection_barrel_delivery_score_100` missing |
+| 15 | `hitters_move` | Hitter's Move Quality | `score_meter`, non-negotiable | `hitters_move_score_100` (fallback `hitters_move_score_10`) | `bh.ts:337-341` | 70 / 92 | `readScore100` | same |
+| 16 | `shoulder_plane_steadiness` | Shoulder Plane Steadiness | `score_meter` | `shoulder_plane_steadiness_score_100` (fallback `_score_10` — note: `_10` key is not defined in the contract at `bh.contract.ts:160-216`, fallback would never resolve) | `bh.ts:357-361` | 70 / 90 | `readScore100` | same |
+| 17 | `finish_balance` | Finish & Balance | `score_meter` | `finish_balance_score_100` (no `_10` fallback — read via `readNumber`, `bh.ts:377`) | `bh.ts:376-380` | 65 / 88 | `readNumber` | same |
+| 18 | `shoulder_to_shoulder_hold` | Shoulder-to-Shoulder Hold | `pass_fail`, non-negotiable | `front_shoulder_leak_before_contact` (bool, auto-fail trigger), `shoulder_to_shoulder_hold_pct_to_contact` (number), `shoulder_to_shoulder_hold_pass` (bool fallback), `front_shoulder_leak_pct_of_window` (number, used only for display string) | `bh.ts:397-441` | If leak.value === true → forced `fail` with `note` (`bh.ts:404-423`). Else if pct present: elite ≥95, pass ≥50, else fail (`bh.ts:427-436`). Else falls back to `passM` bool (`bh.ts:437-439`). | `min(leak.confidence, pctM?.confidence)` on auto-fail (`bh.ts:414-417`); `pctM.confidence` or `passM.confidence` otherwise | `missingState(a, "shoulder_to_shoulder_hold_pct_to_contact")` (`bh.ts:440`) when none of leak/pct/pass are present |
 
-**Conclusion:** As of this audit there is no duplication in code — the two labels collapse to a single tile/field. If "Connect & Move" was a label that appeared in past UI copy or in the bucket-A change log, it does not exist as a live metric today. **Undetermined from code:** whether older labels are still visible anywhere outside `bh.ts` (e.g. translation strings, screenshots) — `rg "Connect.*Move"` in `src/i18n/locales/en.json` would need a runtime check against the rendered UI to confirm zero stale references.
+The phase grouping is set on each tile's `phase` field (`bh.ts:21,44,62,81,102,121,141,175,196,217,236,256,282,308,328,349,369,388`).
+
+**All measurement values come from a single source.** Every numeric/bool above is produced by the AI model via the `return_analysis` tool call (`supabase/functions/analyze-video/index.ts:2021-2168`) and stored at `ai_analysis.metrics[<key>]` by the edge function (`index.ts:2248-2249, 2435-2461`). There is no client-side geometric measurement of any of these values — confirmed by `LANDMARK_MODEL_VERSION`/`DETECTOR_VERSION`/`METRIC_ENGINE_VERSION` all being `"@0.0.0-stub"` (`src/lib/biomech/versions.ts:24-27`; mirrored at `supabase/functions/_shared/biomechFingerprint.ts:11-14`). The "engine" is the LLM.
+
+---
+
+## S3 — Connect & Move (Hitter's Move) vs Barrel Delivery (Connection & Barrel Delivery)
+
+There is no tile literally named "Connect & Move" in the current code. The two adjacent P4 tiles that share semantic territory are:
+
+- **Hitter's Move Quality** (`bh.ts:322-342`, contract `bh.contract.ts:151-159` / server mirror `reportCardContracts.ts:314-322`).
+  - Reads: `hitters_move_score_100` (number, 0–100).
+  - Prompt text: "Score 0-100: hands stay back, elbow leads, no casting/early barrel flip, chest stays square, contact made with the hands, barrel catapults last." (`bh.contract.ts:158`).
+
+- **Connection & Barrel Delivery** (`bh.ts:302-321`, contract `bh.contract.ts:141-148` / server mirror `reportCardContracts.ts:304-311`).
+  - Reads: `connection_barrel_delivery_score_100` (number, 0–100).
+  - Prompt text (contract `bh.contract.ts:147-148`): scores the P4 launch → barrel-delivery → contact window with explicit "do not use the old 'back elbow past belly button at contact' formula" instruction.
+
+**Shared inputs:** both are AI-emitted 0–100 scores generated from the same 7 frames in the same single `return_analysis` call (`analyze-video/index.ts:2021-2168`). They do not share a numeric input field. They are both downstream of the same prompt block (`reportCardContracts.ts:457-474`) and the same `HITTING_DOCTRINE_PROMPT` / `HITTING_CAUSAL_CHAIN_PROMPT` (`analyze-video/index.ts:267-269`).
+
+**Differences in code:**
+- Acceptable / elite thresholds differ: 70 / 92 vs 70 / 90 (`bh.ts:340, 319`).
+- Connection & Barrel Delivery explicitly drops the legacy `_score_10` fallback (`bh.ts:317`); Hitter's Move keeps it (`bh.ts:338`).
+- Non-negotiable flag: Hitter's Move = true (`bh.ts:329`); Connection & Barrel Delivery = false (no `nonNegotiable: true`).
+
+**What the code does not encode:** whether the AI is instructed to differentiate "barrel delivery quality" from "hitter's move quality" beyond the prompt text shown above. Undetermined from code — evidence needed: empirical correlation between the two emitted scores on the same video.
 
 ---
 
 ## S4 — Bat Path vs On-Plane %
 
-Two distinct tiles, two distinct fields, but the prompt definitions overlap substantively.
+- **Bat Path In/Out of Zone** (`bh.ts:211-229`, contract `bh.contract.ts:101-109`).
+  - Reads `bat_path_score_100` (fallback `bat_path_score_10`).
+  - Prompt: "Score 0-100 for elite bat path: enters behind ball, exits in front, long on-plane window. PASS at 65, ELITE at 88." (`bh.contract.ts:108`).
 
-| | `bat_path` (Bat Path In/Out of Zone) | `on_plane` (On-Plane %) |
+- **On-Plane %** (`bh.ts:230-249`, contract `bh.contract.ts:110-119`).
+  - Reads `on_plane_pct` (number, 0–100; unit `percent` at `bh.contract.ts:114-116`).
+  - Prompt: "Percentage of the swing arc that stays on the plane of the incoming pitch. PASS at 60%, ELITE at 85%." (`bh.contract.ts:117-118`).
+
+**Diff:** Bat Path is an AI 0–100 quality judgment; On-Plane % is an AI percentage estimate of the swing-arc-on-plane window. Both are emitted in the same tool call. The Bat Path prompt explicitly references "long on-plane window" as one of its scoring inputs (`bh.contract.ts:108`), so the two fields share a semantic input even though they are separate numeric outputs.
+
+`.lovable/bat-path-vs-on-plane-definitions.md` exists; per the plan, it is referenced only as a pointer and is not the source of truth for this audit. The code computes nothing beyond what is described above.
+
+---
+
+## S5 — Undetected Metrics: Contract → Prompt → Reader → Tile Trace
+
+For each metric: declared in contract, embedded in the prompt block, read by the tile, and the literal missing-reason path.
+
+### P2 knee-lift (`p2_timing_pass`)
+- Contract: `bh.contract.ts:33-40`; server `reportCardContracts.ts:179-185`.
+- Prompt instruction (verbatim, `bh.contract.ts:38-39`): "TRUE if the hitter's hand load is finished by the time the pitcher reaches PEAK KNEE LIFT. … If the pitcher's knee lift is not visible in the frames, set missing=true with reason `'Pitcher knee lift not in frame'`."
+- Prompt is concatenated into the user message by `buildMetricsPromptBlock` (`reportCardContracts.ts:457-474`); attached at `analyze-video/index.ts:2158`.
+- Reader: `readBool(a, "p2_timing_pass")` (`bh.ts:70`).
+- Missing path: `missingState(a, "p2_timing_pass")` (`bh.ts:71`) which calls `metricReaders.ts:47-54` and surfaces whatever string the AI emitted (or `undefined`).
+- Literal missing_reason strings the system can emit: AI-authored, e.g. `"Pitcher knee lift not in frame"` (from the prompt). The server also injects `"single_pass_only"` when a required key comes back missing/unparseable in the single pass (`analyze-video/index.ts:2258-2273`).
+- Failure category from code: **AI did not return a value, or AI explicitly set missing=true**. Whether the actual reason was occlusion vs frame budget is `undetermined from code — evidence needed`.
+
+### P3 release (`p3_release_offset_ms`)
+- Contract: `bh.contract.ts:72-81`; server `reportCardContracts.ts:226-234`.
+- Prompt: requires "Signed milliseconds from pitcher RELEASE to the hitter's FRONT FOOT FULLY DOWN" with the instruction "If pitcher release or full-foot-down is not visible, set missing=true with the specific missing anchor" (`bh.contract.ts:80`).
+- Reader: `readNumber(a, "p3_release_offset_ms")` (`bh.ts:149`).
+- Missing path: `missingState(a, "p3_release_offset_ms")` (`bh.ts:150`) — reason originates with the AI. `"single_pass_only"` fallback applies if blank (`analyze-video/index.ts:2266-2268`).
+- Failure category: model-emitted missing. No client-side fallback computation (no detector exists; `DETECTOR_VERSION` is `"events@0.0.0-stub"` at `versions.ts:26`).
+
+### Hands outside shoulders at landing (`hands_outside_shoulders_at_landing_pass`)
+- Contract: `bh.contract.ts:82-89`; server `reportCardContracts.ts:236-243`.
+- Prompt: "TRUE if at the frame of FRONT-FOOT STRIKE (landing) the hands sit HORIZONTALLY OUTSIDE the line of the back shoulder … If hands or back shoulder are not visible in the landing frame, set missing=true with reason `'Hands or back shoulder not visible at landing'`." (`bh.contract.ts:87-88`).
+- Reader / missing path: `readBool` / `missingState` (`bh.ts:184-185`).
+- Failure category: model decision.
+
+### Bat speed (`bat_speed_contact_mph`)
+- Contract: `bh.contract.ts:130-139`; server `reportCardContracts.ts:293-301`.
+- Prompt on the server side (`reportCardContracts.ts:300-301`): "Estimated barrel speed AT contact, in mph. … Method: measure peak translational speed of the BARREL TIP over a 2-frame window straddling the contact frame. Convert pixels/frame to mph using the bat length as the calibration ruler (default bat length = 33 in if unknown — note this assumption). … If the barrel is obscured at contact, if frame rate is unknown, or if motion blur prevents tracking the barrel tip across two consecutive frames, set missing=true with the specific reason. NEVER GUESS."
+- Client-side contract prompt is shorter (`bh.contract.ts:137-138`): "Estimated barrel speed AT contact in mph. PASS ≥65, ELITE ≥75. If no sensor data and motion blur is too high to estimate, set missing=true with reason `'Frame rate too low for bat speed estimate'`."
+- Note: contract is mirrored between client and server but the bat-speed prompt **diverges between client (`bh.contract.ts`) and server (`reportCardContracts.ts`)** — the server is the prompt actually sent to the AI (it is the one read by `buildMetricsSchema`/`buildMetricsPromptBlock` in `analyze-video/index.ts:2158`).
+- Reader: `readNumber(a, "bat_speed_contact_mph")` (`bh.ts:291`).
+- Calibration code path: no client-side pixel-to-mph conversion exists. There is no detector that locates the bat. The "bat length = 33 in" calibration is an AI-side instruction in the prompt (`reportCardContracts.ts:301`), not a measured input.
+
+### Time to contact (`time_to_contact_ms`)
+- Contract: `bh.contract.ts:120-129`; server `reportCardContracts.ts:283-291`.
+- Server prompt (`reportCardContracts.ts:290-291`): defines SWING START and CONTACT FRAME explicitly, computes `ms = (contact_frame - start_frame) * 1000 / fps`, requires `missing=true reason 'fps_unknown'` if fps absent, otherwise specific landmark reason. "NEVER GUESS."
+- Client contract prompt (`bh.contract.ts:127-128`) is the short form: "Estimate from the visible frames using the displayed frame rate context."
+- Reader: `readNumber(a, "time_to_contact_ms")` (`bh.ts:265`).
+- The fps the AI uses is whatever the system prompt feeds it. The frame timestamps are embedded as `[Frame i/N]` labels (`analyze-video/index.ts:1990-1998`); the explicit per-frame `timestamp_seconds` from deterministic extraction is sent via `frameExtractions` on the request (`analyze-video/index.ts:40, 1659`) and recorded server-side, but the labels passed to the model do not include the timestamp in seconds — `undetermined from code` whether the model sees timestamps in the visible prompt; what's visible to the model is the system prompt and the `[Frame i/N]` headers.
+
+---
+
+## S6 — Bat Speed Audit
+
+- Field: `bat_speed_contact_mph`, units `mph`, range `[30, 110]` (`bh.contract.ts:130-139`).
+- The model is told to estimate barrel speed via a 2-frame window centered on contact, using `pixels/frame → mph` with a bat length assumed at 33" if unknown (`reportCardContracts.ts:301`).
+- No code-side calibration exists:
+  - `videos` row contains no bat-length column referenced in the analyze function (selected columns: `sha256_hex, fps_true, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status` — `analyze-video/index.ts:1691`). `calibration_h_px` is athlete-height-based calibration for the determinism cache key (`fingerprint.ts:99-128`), not a bat ruler.
+  - No client transmits a bat length to the function (`AnalyzeVideo.tsx:465-479, 572-586`).
+  - No detector exists that finds the bat (versions are stubs at `versions.ts:24-27`).
+- Therefore the emitted mph value is a model estimate from visual frames only, with the 33" assumption baked into the prompt. There is no measured pixel-to-real-world scale.
+- Sampling budget: 7 frames per analysis (`frameExtractionDeterministic.ts:18-19`). The "2-frame window straddling contact" requested by the prompt is only available if two of the seven sampled frames happen to bracket contact.
+
+---
+
+## S7 — Time-to-Contact Audit
+
+- Field: `time_to_contact_ms`, units `ms`, range `[80, 400]` (`bh.contract.ts:120-129`).
+- Server prompt (`reportCardContracts.ts:283-291`) defines SWING START as "first frame in which the knob begins forward motion AFTER the hand-load has completed AND the hips have begun to clear" and CONTACT FRAME as "first frame in which the bat barrel overlaps the ball", computing `(contact_frame - start_frame) * 1000 / fps`.
+- No code-side detector identifies "knob forward motion" or "barrel-overlaps-ball"; both are model judgments from the 7 frames.
+- The fps the model uses is whatever it infers from the prompt. The deterministic `fps_true` is captured per-video at `probeVideoMetadata.ts:121` and persisted on the row at `AnalyzeVideo.tsx:434`, but `undetermined from code` whether the model receives fps_true verbatim in its visible prompt; what is verifiable: the user message does include `[Frame i/N]` labels (`analyze-video/index.ts:1990-1998`) and the system prompt block contains the contract prompt (`analyze-video/index.ts:2158`); nothing in the read sections of the edge function code shows fps being interpolated into the user prompt text. Evidence needed: a full dump of the assembled prompt at runtime.
+- Sampling: 7 frames (`frameExtractionDeterministic.ts:18-19`). Resolution of any frame-difference measurement is bounded by the 7-sample budget; at 30 fps the inter-sample interval given AUTO_PERCENTAGES `[0.10, 0.25, 0.40, 0.50, 0.60, 0.75, 0.90]` over a ~3s clip is hundreds of ms. The model cannot reach the ≤150 ms elite threshold from frame-counting alone unless contact and swing start happen to fall on adjacent sampled frames; otherwise it is interpolating.
+
+---
+
+## S8 — Failure Paths in `analyze-video`
+
+**Upload entry (`AnalyzeVideo.tsx`):**
+- `handleFileSelect` rejects non-video MIME and files >50 MB (`AnalyzeVideo.tsx:289-297`).
+- `handleUploadAndAnalyze` requires `videoFile && user` (`AnalyzeVideo.tsx:307-308`).
+- `probeVideoMetadata` failure → toast + early return (`AnalyzeVideo.tsx:315-323`).
+- Frame extraction failure → toast + early return (`AnalyzeVideo.tsx:331-371`); fewer than 3 frames extracted throws inside try block (`AnalyzeVideo.tsx:350-352`).
+- Video row insert error throws (`AnalyzeVideo.tsx:444`).
+- Edge-function invoke error: status set on `analysisError`, branches on 429 / 402 / generic (`AnalyzeVideo.tsx:481-493`).
+- On success, `setAnalysis(analysisData)` is called unconditionally even if the payload's `ai_analysis.metrics` is null or empty (`AnalyzeVideo.tsx:496`).
+
+**Edge function (`analyze-video/index.ts`):**
+- Zod request schema requires `frames.length >= 3` (`index.ts:33`).
+- Missing `videos.sha256_hex` → 422 `rejected:missing_video_sha256` (`index.ts:1710-1725`).
+- Missing `fps_true` → 422 `rejected:missing_probe_metadata` (`index.ts:1727-1743`).
+- Phase 1 acceptance gates → 422 `rejected:*` (`index.ts:1746-1791`): low fps (<24), low resolution (<480x480), duration out of `[0.5, 60]`s, dropped-frame ratio >0.34.
+- Cache hit: returns prior `ai_analysis` only if `prior && cachedAi && videoRow?.status === "completed"` (`index.ts:1816`); else cache miss path proceeds. If cache hit, returns 200 with `replay_cache: true` (`index.ts:1831-1840`).
+- `videos.status` set to `"processing"` after cache miss (`index.ts:1847`).
+- AI gateway call: `retryFetch` with up to 3 attempts on 5xx/408/425/429 (`index.ts:65-89`, `2005`).
+- AI gateway failure: writes `status: "failed"` with `ai_analysis: { error: errorData }` to the video (`index.ts:2180-2186`); throws a class-tagged Error so the outer catch records one `failed` audit row (`index.ts:2188-2206`).
+- Tool-call parse: if `toolCalls` missing, falls back to text parse — sets `feedback = content` and best-effort score (`index.ts:2409-2417`). In that fallback, `metrics` stays `null`, `summary = []`, `positives = []`, `drills = []`, and the row is still written with `status: "completed"` further below.
+- "Complete but empty" path: if `analysisArgs.metrics` is missing or not an object, `metrics` stays `null` (`index.ts:2237, 2248-2251`); the final write at `index.ts:2463-2472` sets `status: "completed"` regardless. `ai_analysis.metrics` is then `null` (`index.ts:2446`).
+- Auto-recompute on the client: when the analysis is loaded with fewer than 3 present metric values, `AnalyzeVideo.tsx:245-264` invokes `recompute-report-card` (one-shot per video). Whether that function deterministically completes the missing metrics is `undetermined from code — evidence needed` (the function is not in the read set).
+- Failed-state thumbnail path: thumbnail generation failure is caught and analysis proceeds without a thumbnail (`AnalyzeVideo.tsx:407-421`). Does not affect analysis completion semantics.
+
+**Can `status === "completed"` coexist with empty metrics / empty summary / empty feedback?** Yes:
+- Empty `metrics` (`null`): `index.ts:2446` writes `metrics: metrics ?? null`, then `index.ts:2467` writes `status: "completed"`. No guard.
+- Empty `summary`: `summary` is regenerated via `makeBeginnerBullets(feedback, positives)` at `index.ts:2419-2423` only if it is empty; if `feedback` and `positives` are also empty, the resulting array is empty but the row still completes.
+- `feedback` defaults to `"No analysis available"` (`index.ts:2212`) and then `"No feedback available"` if tool-call parse succeeded but feedback was empty (`index.ts:2244`).
+- `efficiency_score` defaults to `75` (`index.ts:2211, 2241`) if AI returns nothing parseable.
+
+---
+
+## S9 — Same-Video Nondeterminism Sources
+
+**Cache fingerprint inputs (canonical, `src/lib/biomech/fingerprint.ts:113-138`):**
+```
+SHA256(
+  videoSha256Hex : LANDMARK_MODEL_VERSION : DETECTOR_VERSION : METRIC_ENGINE_VERSION
+  : fpsTrue.toFixed(6) : landingTimeSec.toFixed(6)|null : directionSign : calibrationHpx.toFixed(6)
+)
+```
+Server mirror at `supabase/functions/_shared/biomechFingerprint.ts:42-70` is byte-identical in structure.
+
+**Cache LOOKUP key in the edge function (`analyze-video/index.ts:1805-1814`):**
+```
+videos.id == videoId  AND  video_analysis_runs.cache_fingerprint_hex == cacheFingerprintHex  AND  outcome == 'ok'
+```
+This is the load-bearing finding: cache lookup is scoped to a single `videoId`. The cache fingerprint includes the video bytes hash, but the LOOKUP is `eq("video_id", videoId)`. Re-uploading the same bytes as a new `videos` row produces a new `video_id`, which cannot hit the cache of any prior video_id even though `cache_fingerprint_hex` would match. Cross-video cache reuse is impossible by construction.
+
+**Determinism controls inside the AI call (`analyze-video/index.ts:2011-2016`):**
+- `model: "google/gemini-2.5-flash"` (fixed).
+- `temperature: 0`.
+- `top_p: 0`.
+- `seed: stableSeed(videoId)` — FNV-1a over `videoId`, masked to int32 (`index.ts:48-56`).
+
+The seed depends on `videoId`, not on video bytes. Two uploads of identical bytes produce different `videoId`s → different seeds → potentially different model output.
+
+**Enumerated nondeterminism sources, ranked by code evidence:**
+
+1. **Re-upload as a new `videos` row.** `videoId` is a new UUID per upload (`AnalyzeVideo.tsx:424-444`). New UUID → new seed (`index.ts:48-56, 2016`) AND new cache-lookup scope (`index.ts:1810`). High confidence: same bytes can produce different scores on each re-upload.
+2. **`fps_true` rounding/snapping drift across probes.** `probeVideoMetadata.ts:84-91` snaps measured fps to the nearest standard rate within 0.5 fps, else rounds to 3 decimals. Browser frame-callback timing varies; if a borderline video falls on either side of the snap window across probes, `fps_true` differs → different `cache_fingerprint_hex` (`fingerprint.ts:116`) AND different `frame_index` selection (`frameExtractionDeterministic.ts:45-58`).
+3. **PNG byte-stability across browsers.** Frames are encoded via `canvas.toBlob(resolve, "image/png")` (`frameExtraction.ts:101`). Per `frameExtraction.ts:8-11` comment, PNG is used because JPEG is "not byte-stable across browsers". PNG itself includes encoder-defined chunks (e.g. `tIME`, gamma) that vary by browser/runtime; same-browser repeat should be stable, cross-browser is `undetermined from code — evidence needed`. Frame `frame_index` selection IS deterministic via integer math (`frameExtractionDeterministic.ts:37-72`), but per-frame `sha256_hex` may vary because PNG bytes vary. This does not affect the cache fingerprint (which is keyed on video bytes, not frame bytes) but does affect `video_frame_extractions` audit content.
+4. **`landingTimeSec` input drift.** The cache key includes `landingTimeSec.toFixed(6)` (`fingerprint.ts:115, 130`). The client passes `landingTime` only if explicitly marked by the user (`AnalyzeVideo.tsx:339, 552-559`); the value is set via UI not visible in the read set. Different landing-time values on the same video → different cache keys and different frame-extraction grid (`frameExtractionDeterministic.ts:49-53`).
+5. **`fallback fps = 30`.** When `requestVideoFrameCallback` is unavailable, `probeFps` returns the constant `FALLBACK_FPS = 30` (`probeVideoMetadata.ts:26, 37-39`). On browsers without rVFC, the probe is fully deterministic but may not match a real-rVFC probe.
+6. **Frame-selection clamp/dedup determinism.** Pure integer math, no time/random sources (`frameExtractionDeterministic.ts:48-71`). Same `fps_true + duration_sec + landingTime` → identical indices. Stable.
+7. **Retry path.** `retryFetch` re-sends identical body (`analyze-video/index.ts:65-89, 2005-2169`). Replay-safe for the AI call.
+8. **Auto-recompute.** Client invokes `recompute-report-card` exactly once per `videoId` per page-mount when `<3` metrics present (`AnalyzeVideo.tsx:244-264`). Whether the recompute function uses the same seed/temperature/cache key — `undetermined from code — evidence needed` (function not in read set).
+9. **Prompt content drift via historical context.** The system prompt incorporates "historical analysis data" formatted from previous uploads (`analyze-video/index.ts:226-260`). Different historical state at the moment of analysis → different prompt → different `prompt_hash` (`index.ts:2433`) → different model output even with the same seed (Gemini's `seed` is best-effort and only stabilizes output when the prompt is also identical; the prompt fingerprint is not included in the cache key by constitutional rule per `versions.ts:21-22`).
+10. **Model upstream drift.** `model: "google/gemini-2.5-flash"` is a moving target on the upstream side (versioning beyond `2.5-flash` is not pinned). `MODEL_VERSION = "2.5-flash"` is stored on the row (`index.ts:2432`) but cannot pin upstream behavior.
+
+**Replay equivalence claim vs reality.** The Phase 0 fingerprint excludes prompt text, athlete context, and AI model id by constitutional rule (`versions.ts:21-22`, `fingerprint.ts:88-90`). Therefore two different prompts that produce different AI output can share the same `cache_fingerprint_hex` — but the cache write only happens via `recordAnalysisRun(outcome:"ok")` after a successful analysis (`index.ts:2493-2497`), and the cache READ requires both the same `cache_fingerprint_hex` AND the same `videoId` (`index.ts:1810-1814`). The cache cannot serve a wrong-prompt result because re-prompt happens only within the same `videoId`; but cross-`videoId` reuse of bytes-identical analyses is **never** served from cache.
+
+---
+
+## S10 — Desktop Failure Path
+
+**Upload page paths used on desktop:**
+- `<input type="file" accept="video/*">` is the upload control (full path not in read set — visible in handler signature `AnalyzeVideo.tsx:285-305`). 50 MB cap (`AnalyzeVideo.tsx:294`).
+- `URL.createObjectURL(file)` (`AnalyzeVideo.tsx:300`) for preview.
+
+**Probe path (desktop-impacting):** `src/lib/biomech/probeVideoMetadata.ts`.
+- Creates a hidden `<video>` element, sets `preload="auto"`, `muted=true`, `playsInline=true`, `src = blob URL` (`probeVideoMetadata.ts:98-102`).
+- Awaits `loadedmetadata`; on `error` event rejects with `"video metadata load failed"` (`probeVideoMetadata.ts:104-113`). This bubbles into `AnalyzeVideo.tsx:315-323` and shows the "probe failed" toast.
+- `probeFps` requires `videoEl.requestVideoFrameCallback` (`probeVideoMetadata.ts:33-39`). If absent, returns the constant `FALLBACK_FPS = 30` (no failure). Calls `videoEl.play()` which can be blocked by autoplay policy; on rejection it falls back to the timeout path (`probeVideoMetadata.ts:66-68`).
+
+**Frame-extraction path (desktop-impacting):** `src/lib/frameExtraction.ts`.
+- Creates a hidden `<video>` and `<canvas>` (`frameExtraction.ts:55-58`). Throws if 2D context unavailable.
+- Awaits `loadedmetadata`; on error rejects with `"video metadata load failed"` (`frameExtraction.ts:73-78`).
+- Seeks via `video.currentTime = sel.timestamp_seconds`, awaits `seeked` event with an 8 s timeout per frame (`frameExtraction.ts:88-98`). Timeout drops the frame with a console.warn (`frameExtraction.ts:115-117`).
+- `canvas.toBlob(resolve, "image/png")` is required (`frameExtraction.ts:101`). Older Safari and Firefox have implemented this for years, but encoding behavior is browser-specific.
+
+**Identified desktop-specific blockers from code:**
+- `requestVideoFrameCallback` not present in all desktop browsers (e.g., Firefox does not ship it as of this codebase; Safari shipped it more recently than Chrome). When absent, `fps_true` defaults to 30 (`probeVideoMetadata.ts:26, 37-39`). This does not block analysis; it pins fps to 30 deterministically, which is fine for the cache key but inaccurate for any timing-derived metric (P3 timing, time-to-contact).
+- Autoplay blocked + no rVFC: probe relies on the timeout path with whatever `mediaTimes` accumulated (`probeVideoMetadata.ts:51-53`). If none accumulated, fps falls to 30.
+- Codec/container support: any video the desktop browser cannot decode raises the `<video>` `error` event in `probeVideoMetadata.ts:106` and `frameExtraction.ts:75`, surfacing as "probe failed" or "frame extraction failed" toast. No code-side codec detection.
+- Per-frame `seeked` timeout: 8 s budget × 7 frames = 56 s ceiling. If decoder seek is slow (large/long videos in Safari), frames silently drop (`frameExtraction.ts:115-117`); the server then enforces `frames.length >= 3` (`analyze-video/index.ts:33`) and `dropped/requested <= 0.34` (`index.ts:1785-1790`) — videos that lose too many frames get `reject_excessive_dropped_frames`.
+- No UA-gated code path, no desktop-specific branch is present in the read set. `undetermined from code — evidence needed`: actual cross-browser test matrix.
+
+---
+
+## S11 — Trust Score per Metric
+
+Justification rooted strictly in S2–S10 evidence. "Confidence" below means measurement-confidence of the underlying signal as evidenced by the code path; it is independent of the AI's self-reported `confidence` field.
+
+| Metric (tile key) | Class | Justification (cite) |
 |---|---|---|
-| Field | `bat_path_score_100` | `on_plane_pct` |
-| Units | 0–100 score | 0–100 percent |
-| Prompt | "elite bat path: enters behind ball, exits in front, long on-plane window" (`bh.contract.ts:107-108`) | "Percentage of the swing arc that stays on the plane of the incoming pitch" (`bh.contract.ts:117-118`) |
-| Tile compute | `scoreMeterState(value, conf, 65, 88)` (`bh.ts:224-228`) | `scoreMeterState(value, conf, 60, 85)` (`bh.ts:244-248`) |
+| `hip_load` | EXPERIMENTAL | AI-only 0–100 quality judgment; no detector backing (S2; `versions.ts:24-27`). Stable across seed when prompt and `videoId` are identical (S9). |
+| `hand_load` | EXPERIMENTAL | Same as above. |
+| `p2_timing` | EXPERIMENTAL | Boolean depending on AI identifying pitcher peak knee lift in a 7-frame sample; no detector (`reportCardContracts.ts:179-185`, S5). |
+| `eyes_tracking` | EXPERIMENTAL | AI 0–100; no head-tracking signal in code. |
+| `stride_direction` | PARTIALLY TRUSTWORTHY | AI-emitted degrees; threshold logic is deterministic at `bh.ts:112`. Reliability depends on AI angle judgment from 7 frames. |
+| `heel_plant` | EXPERIMENTAL | AI 0–100; no foot-strike detector. |
+| `p3_timing` | EXPERIMENTAL | Continuous ms offset emitted by AI; scoring formula is deterministic (`bh.ts:152-168`), but the input is entirely AI-derived from 7 frames with no per-frame release/foot-down detector. |
+| `hands_outside_shoulders_at_landing` | EXPERIMENTAL | Boolean depending on AI seeing the landing frame; only ~7 frames available. |
+| `sequencing` | EXPERIMENTAL | Boolean AI judgment; non-negotiable in the grading layer (`bh.ts:197`). |
+| `bat_path` | EXPERIMENTAL | AI 0–100; overlaps semantically with `on_plane` (S4). |
+| `on_plane` | EXPERIMENTAL | AI percentage; 7-frame sampling makes a true "plane window" estimate sparse (S7). |
+| `time_to_contact` | NOT READY FOR USERS | Hard ms output, but resolution is bounded by 7-frame sampling (S6/S7). Cannot reach the ≤150 ms elite band reliably from frame-counting; the model is effectively interpolating. |
+| `bat_speed_contact` | NOT READY FOR USERS | mph output from AI with no pixel-to-real-world calibration in code (S6); 33" bat assumption is prompt-side only. |
+| `back_elbow_contact` (Connection & Barrel Delivery) | EXPERIMENTAL | New formula; AI 0–100 over a window the model itself must identify (`bh.contract.ts:147-148`). No detector. |
+| `hitters_move` | EXPERIMENTAL | AI 0–100; non-negotiable in grading. |
+| `shoulder_plane_steadiness` | EXPERIMENTAL | AI 0–100; `_score_10` fallback key is undefined in the contract (S2 row 16). |
+| `finish_balance` | EXPERIMENTAL | AI 0–100; uses `readNumber` (no `_10` fallback). |
+| `shoulder_to_shoulder_hold` | EXPERIMENTAL | Compound AI inputs (`pct`, `pass`, `leak`); auto-fail logic is deterministic (`bh.ts:404-423`) but inputs come from AI judging a multi-frame window from 7 samples. |
 
-**Shared signals.** The Bat Path prompt explicitly references "long on-plane window" as part of its scoring criterion — which is the same construct On-Plane % measures directly. Both are answered by the same AI model from the same frame set in the same tool-call, so they cannot be statistically independent.
-
-**Difference in code.** Bat Path is a holistic 0–100 quality score that includes entry/exit AND on-plane window. On-Plane is the isolated % of arc on plane. The contract does not instruct the model to remove the on-plane component from Bat Path before scoring, so the two outputs are expected to correlate strongly.
-
-**Pitch plane vs swing path.** On-Plane references "the plane of the incoming pitch" (contract line 118). Bat Path references the bat's behavior through the zone — "enters behind ball, exits in front" implies the swing path's relationship to ball trajectory but does not name the pitch plane explicitly. Neither field carries the actual pitch trajectory as an input.
-
-**User distinguishability:** The two tile standards as currently shipped read as "Enters behind ball, exits in front, long on-plane window" vs "Percentage of the swing that stays on the pitch plane" (`bh.ts:215, 234`). A user without the prompt definitions in hand would reasonably read both as "is your swing on the right path." There is no copy that explains "Bat Path = composite quality, On-Plane = isolated %." See `.lovable/bat-path-vs-on-plane-definitions.md` for the proposed disambiguation memo (out of scope for this audit).
-
----
-
-## S5 — Repeatedly-undetected metrics
-
-For each listed metric, the path is: AI model → contract field → `readNumber`/`readBool` in tile compute → `missingState(...)` when the model returned `{ missing: true, ... }` or omitted the field.
-
-There is no client-side detection logic, no pose-landmark gating, no frame-rate gate other than the upfront `PHASE1_MIN_FPS = 24` reject in the edge function (`analyze-video/index.ts:1749, 1776-1778`). All "missing" verdicts originate inside the AI model's response.
-
-| Metric | Contract field | Model-instructed missing-reason | Required visible anchors (per prompt) | Failure category (from code) |
-|---|---|---|---|---|
-| P2 Timing → Knee Lift | `p2_timing_pass` | `'Pitcher knee lift not in frame'` (`bh.contract.ts:39`) | Visible pitcher peak knee lift | Camera/framing — pitcher must be in frame and peak knee lift must occur during sampled window |
-| P3 Timing → Release | `p3_release_offset_ms` | "missing anchor" (release frame or full-foot-down frame) (`bh.contract.ts:80`) | Pitcher release frame AND hitter full-foot-down frame, both within sampled frames | Camera/framing + frame sampling (7 frames at fixed percentages or ±0.4s around landingTime) |
-| Hands Outside Shoulders | `hands_outside_shoulders_at_landing_pass` | `'Hands or back shoulder not visible at landing'` (`bh.contract.ts:88`) | Hands AND back shoulder both visible at front-foot-strike frame | AI vision / occlusion / camera angle |
-| Bat Speed | `bat_speed_contact_mph` | `'Frame rate too low for bat speed estimate'` (`bh.contract.ts:138`) | Sufficient temporal resolution to estimate barrel speed | Frame rate / motion blur — also exposes the audit-truth issue that there is NO calibration (S6) |
-| Time to Contact | `time_to_contact_ms` | No explicit missing-reason string in prompt (model is told to "Estimate from the visible frames using the displayed frame rate context") (`bh.contract.ts:127-128`) | First-forward-bat-movement frame AND contact frame within sample | AI estimation; "missing" routed through the generic single-pass-only catch-all |
-
-**Sample-set limits applicable to all of the above.** The client extracts at most 7 frames per video (`src/lib/biomech/frameExtractionDeterministic.ts:11-12`): either at fixed percentages `[0.10, 0.25, 0.40, 0.50, 0.60, 0.75, 0.90]` of clip duration, or at fixed offsets `[-0.4, -0.2, -0.1, 0, +0.1, +0.2, +0.3]` seconds around a user-marked landing time. If pitcher release, peak knee lift, contact, or full-foot-down do not happen to land within those 7 snapshots, the relevant model anchors are not visible and the metric must come back missing.
-
-**Frequency of failure:** **Undetermined from code — runtime evidence needed.** The audit table `video_analysis_runs` and `videos.ai_analysis.metrics` would need to be queried to compute miss-rates per field.
-
-**Classification per metric (code-only inference):**
-- P2 timing miss → camera/framing + 7-frame sampling.
-- P3 timing miss → camera/framing + 7-frame sampling + missing per-frame anchor detection (no detector, all model-judged).
-- Hands-outside-shoulders miss → AI vision (occlusion / camera angle / pose ambiguity at landing frame).
-- Bat speed miss → frame-rate + no calibration available (no bat length, no pixel/inch scale ever sent to model — see S6).
-- Time-to-contact miss → AI estimation + 7-frame sampling (start-of-swing and contact frames must both be in sample; the prompt does not even pin down "first forward movement of the bat" with any landmark).
-
-None of these failures route through a "missing implementation" path — the contracts exist and the model is instructed to emit them. The category is **AI/vision capability + sampling density**, not "missing implementation."
+No metric in the BH report card currently reads a value produced by code-side geometric measurement; the entire stack is AI-derived (S2 footer). No metric meets the bar for **TRUSTWORTHY** as defined by code-side measurement evidence.
 
 ---
 
-## S6 — Bat speed audit
+## A — Metrics safe for production today
 
-**Formula.** None in code. There is no client-side or server-side computation of bat speed. The value comes verbatim from the AI model under the field `bat_speed_contact_mph` (`bh.contract.ts:131-138`).
+None on the BH report card meet "TRUSTWORTHY" by the code-evidence bar applied in S11 (every signal is AI-derived from 7 frames; no detector or calibration backs any tile).
 
-**Units.** mph (per contract `unit: "mph"`, range `[30, 110]`).
+## B — Metrics requiring redesign
 
-**Inputs.** Whatever frames the model sees. No bat length, no pixel-per-inch calibration, no bat-detection landmark, no temporal stride pinning beyond the sampled frame timestamps, no athlete height context sent for scaling. `calibration_h_px` exists on the `videos` row and feeds the cache fingerprint (`biomechFingerprint.ts:65`) but is not sent into the prompt or used by any compute step — it is currently `0` for every video (`AnalyzeVideo.tsx:424-441` does not set it).
+- `time_to_contact` — needs an input path with frame resolution sufficient for sub-25 ms accuracy. Today: 7-frame sample budget (`frameExtractionDeterministic.ts:18-19`) + AI interpolation.
+- `bat_speed_contact` — needs real-world calibration (bat-length scale, contact-frame anchor). Today: AI-only with 33" prompt assumption (`reportCardContracts.ts:301`).
+- `back_elbow_contact` (Connection & Barrel Delivery) — new window-based formula has no detector for launch / extension-start / contact anchors; entirely AI-judged.
 
-**Assumptions baked in.** That a vision model can convert pixel motion across at most 7 sampled frames (0.1s apart at the densest setting) into a calibrated mph number without knowing real-world scale.
+## C — Metrics requiring investigation
 
-**Direct or estimated.** Estimated, entirely by the model. There is no sensor data path, no Doppler input, no bat-tracking module.
+- Same-video repeatability of all AI-derived tiles across re-uploads (S9-1).
+- Cross-browser frame-PNG byte-stability (S9-3) and its downstream effect on the AI's reading of those frames (visual content is identical; PNG byte ordering is not the model's input — but `video_frame_extractions` audit content varies).
+- Whether the assembled user prompt visible to the model contains explicit `fps` and per-frame `timestamp_seconds` (S7 — `undetermined from code`).
+- Behavior of `recompute-report-card` (called from `AnalyzeVideo.tsx:255`) — file not in read set, contract unknown.
+- Empirical correlation between `hitters_move_score_100` and `connection_barrel_delivery_score_100` (S3).
+- Desktop browser failure matrix (S10 — no UA-gated code; evidence requires runtime testing).
 
-**Calibration required.** Not collected, not sent, not used.
+## D — Metrics that should be hidden until trustworthy
 
-**Expected range.** Contract clamps the schema to `[30, 110]` mph but the tile thresholds are `≥65 mph` pass / `≥75 mph` elite (`bh.ts:281, 293-294`).
-
-**Why users may see unbelievable numbers.** No calibration → mph is essentially the model's guess from pixel motion. Sampling at ±0.1s around landing means the contact event may be 30–80ms off the nearest sampled frame, and there is no inter-frame motion vector input.
-
-**Known weaknesses.** Listed above. Additionally: a single low-fps phone clip will trigger the "Frame rate too low" missing-reason string and the value never appears.
-
----
-
-## S7 — Time to Contact audit
-
-**Formula.** None in code. Sole source is the AI field `time_to_contact_ms` (`bh.contract.ts:121-128`).
-
-**Start-frame definition (per prompt).** "the moment the bat first starts moving forward" (`bh.contract.ts:127`). No landmark, no detector — model self-determines from the sampled frames.
-
-**Contact-frame definition (per prompt).** "ball-barrel contact." Same — model self-determines.
-
-**Inputs.** Same sampled-frame set as the rest of the model's tool-call. The prompt instructs the model to "Estimate from the visible frames using the displayed frame rate context"; the frame timestamps and `fps_true` are part of the wider prompt context but there is no explicit per-frame timestamp annotation in the multimodal payload.
-
-**Units.** ms, schema-clamped `[80, 400]`, tile pass `≤175`, elite `≤150` (`bh.ts:254-268`).
-
-**Direct or estimated.** Estimated by AI.
-
-**Known weaknesses.**
-- 7-frame sample at fixed percentages or ±100ms around landing can easily place "start of swing" and "contact" between frames; the model is asked to interpolate without any motion-vector input.
-- The "start of bat forward movement" anchor is purely visual and subject to model interpretation of motion-blurred bat frames.
-- No sensor input.
-- For shorter swings (sub-150ms) the temporal sampling spacing is on the order of the entire quantity being measured.
-
-**Why users may see unbelievable values.** Same as S6 — there is no ground-truth temporal anchor; the value is a vision-model estimate from sparse frames.
+Determined strictly from S11 classifications above: all BH tiles classified **EXPERIMENTAL** or **NOT READY FOR USERS** would be hidden under that criterion, i.e. every BH tile in the current set. This is an audit classification, not a recommendation.
 
 ---
 
-## S8 — Failed analysis investigation
-
-**Upload path (`AnalyzeVideo.tsx:307-509`).** Order: probe metadata → extract frames → upload video to storage → generate+upload thumbnail → insert `videos` row with `status: "uploading"` → invoke `analyze-video`. Throw points:
-
-| Path | Behavior on failure | User signal |
-|---|---|---|
-| `probeVideoMetadata` throws | Toast `videoAnalysis.probeFailed`; `setUploading(false)`; return (`AnalyzeVideo.tsx:318-323`) | Toast only; no `videos` row created |
-| `extractKeyFramesDeterministic` throws or returns `<3` frames | Toast `videoAnalysis.frameExtractionFailed`; return (`AnalyzeVideo.tsx:365-371`) | Toast only |
-| Storage `upload` error | Caught in outer try, toast + `setAnalysisError`; `videos` row may not exist yet (`AnalyzeVideo.tsx:381-385, 500-504`) | Toast |
-| `generateVideoThumbnail` throws | Caught locally; honest toast `videoAnalysis.thumbnailFailed`; **analysis proceeds without thumbnail** (`AnalyzeVideo.tsx:407-421`) | Toast |
-| `videos` insert error | Outer catch, toast (`AnalyzeVideo.tsx:444, 500-504`) | Toast |
-| `supabase.functions.invoke("analyze-video")` returns `analysisError` | Toast variant by `429` / `402` / generic; `setAnalysisError` set; `setAnalyzing(false)` (`AnalyzeVideo.tsx:481-494`) | Toast + error block |
-| Edge function returns success but with degraded payload | Whatever the function returned is written to UI state via `setAnalysis(analysisData)` (`AnalyzeVideo.tsx:496`) | No client-side check that `analysisData.metrics` is non-empty or that `summary.length > 0` |
-
-**Edge function failure-to-status mapping (`analyze-video/index.ts`).**
-- Phase 0/1 rejections (missing sha, missing probe, low fps, low resolution, bad duration, excessive dropped frames) write an audit row with `outcome: "rejected"` and return 422 without touching `videos.status`, which remains whatever it was at insert (typically `"uploading"`) (`index.ts:1710-1791`).
-- AI gateway non-OK responses: `videos.status` is set to `"failed"` with `ai_analysis = { error }`, then the function throws to the outer catch which writes a `failed` audit row (`index.ts:2180-2207`, `2600-2622`).
-- Success path: `videos.status = "completed"`, full `ai_analysis` written (`index.ts:2463-2472`), then audit row with `outcome: "ok"` (`index.ts:2493-2509`).
-
-**Can "complete" coexist with empty content?** Yes. The success path runs even if `toolCalls` is empty/malformed — the `try/catch` around `JSON.parse(toolCalls[0]...)` (`index.ts:2238-2408`) only logs `"Error parsing tool call arguments"` and continues; defaults are `efficiency_score = 75`, `feedback = "No analysis available"`, `summary = []`, `metrics = null`. Then at line 2419-2423 the empty summary is synthesized via `makeBeginnerBullets(feedback, positives)`. The video is still marked `completed` and written. **An analysis with all-default content and `metrics: null` can be presented to the user as a successful run.**
-
-**Race conditions.**
-- `videos.status` flips: `"uploading"` (insert) → `"processing"` (edge function `index.ts:1847`) → `"completed"` or `"failed"`. There is no atomicity around the cache pre-check + processing flip; two concurrent invocations on the same `videoId` could both miss the cache and both call the model.
-- The cache check requires both an `outcome: "ok"` audit row AND `videos.status === "completed"` AND `videos.ai_analysis !== null` (`index.ts:1816`). If any one is out of sync, the path falls through to a fresh model call.
-
-**Retry path vs initial path (`AnalyzeVideo.tsx:handleRetryAnalysis` at 511-619).**
-- Same probe and same deterministic frame extraction logic as initial.
-- **Does NOT re-upload the video** (uses `currentVideoId`).
-- **Does NOT touch the `videos` row** before calling the edge function — initial path sets `status: "uploading"`, retry leaves whatever the prior status was. The edge function's `status === "processing"` flip on cache miss will overwrite it.
-- Otherwise identical edge-function call.
-
-**Honest surfacing.** Failures inside the edge function persist `videos.ai_analysis = { error: { code, message } }` (`index.ts:2180-2186`) but the client toast layer at `AnalyzeVideo.tsx:481-494` only inspects `analysisError`/`analysisData.status` for the 429/402/generic branch — it does not inspect whether `analysisData.metrics === null` or whether `summary` is empty. There is no UI surface that says "analysis returned no metrics."
-
----
-
-## S9 — Same-video nondeterminism investigation (highest priority)
-
-**Cache key (`supabase/functions/_shared/biomechFingerprint.ts:53-67`).** Derived from: `videoSha256Hex`, three stub engine versions, `fpsTrue.toFixed(6)`, `landingTimeSec.toFixed(6)`, `directionSign`, `calibrationHpx.toFixed(6)`. Prompt text, model id, athlete context are explicitly excluded by design.
-
-**Cache hit path (`analyze-video/index.ts:1805-1844`).** Looks up a prior `video_analysis_runs` row with the same `cache_fingerprint_hex` AND `outcome: "ok"`. If found and `videos.ai_analysis` is non-null and `videos.status === "completed"`, returns the cached `ai_analysis` verbatim. **Deterministic.**
-
-**Cache miss path.** Calls AI gateway with `model: "google/gemini-2.5-flash"`, `temperature: 0`, `top_p: 0`, `seed: stableSeed(videoId)` (`index.ts:2012-2016`). Same `videoId` → same seed.
-
-**Sources of nondeterminism, ranked by likelihood:**
-
-1. **Vendor-side model nondeterminism (highest).** `temperature: 0` + `top_p: 0` + fixed `seed` is best-effort, NOT a guarantee. Gemini 2.5 Flash via the Lovable AI gateway is not contractually deterministic; backend model versioning, sampler implementation, and batching can change output across runs even with identical inputs. **Undetermined from code** — requires running the same payload back-to-back and diffing the tool-call arguments.
-2. **`fps_true` probe drift on the client.** `probeVideoMetadata.ts:48-93` measures inter-frame deltas from `requestVideoFrameCallback` and snaps to a standard rate "when within 0.5 fps" of `[23.976, 24, 25, 29.97, 30, 50, 59.94, 60, 120]`. Anything outside that window is rounded to 3 decimals. On a slow device, fewer samples can drift the median; same bytes, different devices → potentially different `fps_true`. Different `fps_true` → different cache fingerprint → cache miss → fresh model call.
-3. **`landingTime` user input.** If the user marks a different landing time on different uploads of the same video, both the cache fingerprint (`landingTimeSec.toFixed(6)`) and the extracted frame set differ. The same video uploaded twice with `null` landing vs with a user-marked landing will produce two different runs.
-4. **Prompt assembly is `videoId`-dependent in the seed.** `seed: stableSeed(videoId)` (`index.ts:2016, 48-56`). Same video uploaded as a new row gets a NEW `videoId` UUID, so the seed changes, AND the cache key remains the same on the bytes-level (sha256 is identical) but the cache lookup keys on `video_id` (`index.ts:1810`), so a brand-new upload row will never hit a prior run's cache.
-5. **Cache lookup is per-`video_id`, not per-fingerprint.** `index.ts:1807-1814`: `.eq("video_id", videoId).eq("cache_fingerprint_hex", cacheFingerprintHex)`. So re-uploading the exact same bytes as a new row in `videos` will always re-run the model regardless of fingerprint identity.
-6. **Frame extraction is deterministic** assuming identical PNG encoding. `frameExtractionDeterministic.ts` uses integer-index math and `currentTime = index / fps_true`. Hash is taken on PNG bytes (`frameExtraction.ts:101`). PNG encoding via `canvas.toBlob(..., "image/png")` is implementation-defined per browser — **byte-identical PNGs are not guaranteed across browsers/runtime versions**. Same bytes on Chrome vs Safari can yield different PNG bytes → different per-frame `sha256_hex` (but this does NOT change the cache fingerprint, which uses video-bytes sha not frame sha; it would only show up as differing rows in `video_frame_extractions`).
-7. **Retry path divergence.** S8 noted that `handleRetryAnalysis` does not re-upload but does re-probe and re-extract — if `fps_true` rounding lands on a different value during the retry probe, the cache fingerprint differs from the original, forcing a fresh model call.
-8. **Desktop vs mobile probe variability.** `requestVideoFrameCallback` is available in Chrome/Edge/recent Safari and Firefox 132+; on older Firefox the probe falls back to `FALLBACK_FPS = 30` (`probeVideoMetadata.ts:31-34`). Desktop Firefox without rVFC vs mobile Chrome with rVFC → different `fps_true` → different cache fingerprint.
-9. **Score caps inject re-run-stable adjustments.** Score caps (`index.ts:2294-2374`) are deterministic given identical model output. Not a source of nondeterminism on their own.
-10. **Engine version pin.** `ENGINE_VERSION = "asb-1.0.0"` is a constant (`supabase/functions/_shared/asbEmit.ts:4`). Stable across runs until edited.
-
-**Cache-hit path is deterministic. Cache-miss path is NOT — it is deterministic-best-effort, gated entirely on Gemini behaving identically under temperature=0/top_p=0/fixed seed, which is not contractually guaranteed.**
-
-**Desktop vs mobile.** Captured in #8 above. Additionally: PNG encoding bytes differ across browsers (#6) but do not propagate to the cache key — they only show up in the audit table.
-
-**Retry vs initial.** Captured in #7. The big retry-side gap is that the retry path can land on a different fingerprint than the initial run, defeating the cache and re-incurring vendor nondeterminism.
-
----
-
-## S10 — Desktop failure investigation
-
-**Upload entry path.** `AnalyzeVideo.tsx:285-305` accepts any `file.type.startsWith("video/")` ≤ 50 MB. No UA-gating.
-
-**Probe path on desktop.**
-- `probeVideoMetadata.ts:97-118` creates a `<video>` element, sets `preload: "auto"`, `muted: true`, `playsInline: true`, then awaits `loadedmetadata`. Desktop Safari is the main risk here — autoplay-muted is usually permitted, but if the user has disabled autoplay entirely the `video.play()` call inside `probeFps` (`probeVideoMetadata.ts:67-69`) returns a rejected promise that is silently caught; the probe then falls back to whatever was sampled before the timeout (`PROBE_TIMEOUT_MS = 8_000`) or `FALLBACK_FPS = 30`.
-- `requestVideoFrameCallback` is feature-detected (`probeVideoMetadata.ts:36-38`); when absent it short-circuits to `FALLBACK_FPS = 30`. This affects Firefox < 132 on desktop.
-
-**Frame extraction path on desktop (`src/lib/frameExtraction.ts:45-124`).**
-- Creates a `<video>` element with `crossOrigin: "anonymous"` and waits for `loadedmetadata`. Then for each selected frame: `video.currentTime = sel.timestamp_seconds` and waits for `seeked` with an 8-second timeout per frame.
-- Renders to a `<canvas>` via `ctx.drawImage(video, 0, 0, ...)` and encodes via `canvas.toBlob(resolve, "image/png")`.
-- If `<3` frames return successfully, the upload path throws `"Could not extract enough frames for accurate analysis"`.
-
-**Known desktop blockers (code-evidenced):**
-- **Codec support.** Desktop Safari does not decode VP9/AV1 in `<video>` for many container/profile combinations. A WebM/VP9 file from Android Chrome opened on desktop Safari will fail at `loadedmetadata` with an `error` event, surfacing as `videoAnalysis.probeFailed`.
-- **`crossOrigin: "anonymous"` is set on `<video>` but the source is a local `URL.createObjectURL` blob URL**, which is unaffected. No CORS issue from local upload.
-- **`canvas.toBlob` returning `null`** silently drops the frame (`frameExtraction.ts:102` `if (!blob || blob.size === 0) continue;`). If many frames drop, the upload throws "Could not extract enough frames." This can happen on Safari with very large videos due to canvas memory pressure.
-- **Seek-timeout 8s per frame.** A long high-bitrate video on a slow desktop can exceed 8s for `seeked` on the first cold seek; that frame is dropped, may cascade into the `<3 frames` throw.
-- **`requestVideoFrameCallback` absent on older Firefox.** Probe falls back to 30 fps. If the true fps is 60 (modern phone), the cache fingerprint is "wrong-fps" relative to a mobile-uploaded run of the same file; not a desktop failure per se, but a determinism risk.
-
-**Most likely root cause for "won't analyze on desktop"** (code inference, not runtime confirmation): codec/container incompatibility at the `<video>` element level — either the probe's `loadedmetadata` error path or the extractor's seek/draw path failing on a non-decodable file. **Undetermined from code:** specific browser version and source file format combinations actually being submitted. Console logs from a reproducing session would resolve this in one read.
-
----
-
-## S11 — Trust score
-
-Brutal classification per metric. Justification cites S2–S10.
-
-| Metric | Trust | Why |
-|---|---|---|
-| Hip Load Stability | EXPERIMENTAL | AI 0–100 score with no calibration anchor; relies entirely on vision model's interpretation of "drift" over 7 frames. Subject to vendor nondeterminism (S9 #1). |
-| Hand Load | EXPERIMENTAL | Same. |
-| P2 Timing → Knee Lift | PARTIALLY TRUSTWORTHY | Boolean answer with a clear single-anchor question (peak knee lift). Definition is now tight (early acceptable, late only fail). Failure mode is honestly surfaced as "Pitcher knee lift not in frame." But still single-source AI judgment. |
-| Eyes / Head Tracking | EXPERIMENTAL | AI 0–100; head-position estimation from 7 widely-spaced frames is inherently lossy. |
-| Stride Direction | PARTIALLY TRUSTWORTHY | One number (degrees off square), clear threshold; but no landmark detector, model self-estimates angle from a frame. |
-| Heel Plant / Landing | EXPERIMENTAL | Multi-criteria 0–100 score with subjective components ("core tensioned"). |
-| P3 Timing → Release | NOT READY FOR USERS | Requires both pitcher release AND hitter full-foot-down to land in the 7-frame sample (S5). Even when both visible, ms-level precision from sparse frames is overreach. Newly graded but still single-source AI estimation. |
-| Hands Outside Shoulders | PARTIALLY TRUSTWORTHY | Binary spatial question at a single frame, clear missing path. Vulnerable to camera angle (front-on vs side); AI vision will be unreliable on borderline cases. |
-| Sequencing | EXPERIMENTAL | Pass/fail of a 6-step kinetic chain order judged from 7 frames with no per-segment timing data. Marked non-negotiable, which is a strong claim for a soft-vision metric. |
-| Bat Path | EXPERIMENTAL | Composite quality score; overlaps with On-Plane (S4). |
-| On-Plane % | EXPERIMENTAL | Same — overlaps with Bat Path, no actual pitch trajectory input. |
-| Time to Contact | NOT READY FOR USERS | No calibration, no temporal anchor closer than ~100ms between samples for a sub-200ms quantity (S7). Schema-clamped range hides absurdity. |
-| Bat Speed Through Contact | NOT READY FOR USERS | No calibration, no bat-length input, no pixel-scale (S6). mph is functionally a guess. |
-| Connection & Barrel Delivery | EXPERIMENTAL | New window-based formula; requires the model to identify launch, extension-start, barrel-delivery, contact within 7 frames. Missing rate likely high until measured. |
-| Hitter's Move Quality | EXPERIMENTAL | Non-negotiable but soft-vision composite; same single-source risk as Sequencing. |
-| Shoulder Plane Steadiness | EXPERIMENTAL | Angle-stability across rotation window; 7-frame sampling is borderline for sub-frame angular tracking. |
-| Finish & Balance | PARTIALLY TRUSTWORTHY | Post-contact pose is easier vision territory; methodology memo notes it's under review. |
-| Shoulder-to-Shoulder Hold | PARTIALLY TRUSTWORTHY | Clear operational definition (D0 measurement at landing, ≥0.90 × D0 across window), well-defined auto-FAIL trigger. Still single-source AI numeric, no landmark detector backing the distances. |
-
----
-
-## Final deliverable — A/B/C/D buckets
-
-### A. Metrics safe for production today
-None unconditionally. The strongest candidates (PARTIALLY TRUSTWORTHY in S11) — **P2 Timing → Knee Lift, Stride Direction, Hands Outside Shoulders, Finish & Balance, Shoulder-to-Shoulder Hold** — are usable today only because they are binary/clear-threshold questions with honest missing paths; even these depend on the AI model not silently drifting (S9 #1). No metric in this system is independently verifiable against ground truth in code.
-
-### B. Metrics requiring redesign
-- **Bat Speed Through Contact** — needs calibration anchor (bat length, athlete height, pixel/inch scale) before the mph number can mean anything.
-- **Time to Contact** — needs denser temporal sampling or a swing-start/contact detector; current 7-frame sampling cannot resolve sub-200ms with ms precision.
-- **P3 Timing → Release** — needs per-frame release / foot-down detection rather than ms-estimation from sparse frames.
-- **Bat Path vs On-Plane %** — needs contractual disambiguation (the prompts overlap; see `.lovable/bat-path-vs-on-plane-definitions.md`).
-
-### C. Metrics requiring investigation
-- **All EXPERIMENTAL composite scores** (Hip Load, Hand Load, Eyes, Heel Plant, Sequencing, Bat Path, On-Plane, Connection & Barrel Delivery, Hitter's Move, Shoulder Plane Steadiness): the same-video determinism question (S9 #1) must be answered with empirical replays before these are trusted, because they aggregate many sub-judgments where vendor drift compounds.
-- **Vendor determinism** (S9 #1) overall: run the same payload N times against the AI gateway and diff `tool_calls[0].function.arguments` byte-for-byte.
-- **Desktop failure root cause** (S10): one reproducing console log will resolve which of codec / probe / seek-timeout is biting.
-- **Missingness rates per field** (S5): a `select count(*) where metrics->>'<field>'::jsonb ? 'missing'` over `videos.ai_analysis` will give frequency-of-failure evidence.
-
-### D. Metrics that should be hidden until trustworthy
-- **Bat Speed Through Contact** — until S6 calibration is in place, the number misleads users.
-- **Time to Contact** — until S7 sampling/detection is addressed, the number misleads users.
-- **Connection & Barrel Delivery** — newly-formulated window metric without any in-code evidence that the model can reliably identify all four required anchors (launch, extension-start, barrel-delivery, contact) within the 7-frame sample. Worth gating behind an explicit "experimental" label or hiding until missingness rate is known.
-
----
-
-End of audit. No fixes, no copy changes, no implementation. Next decision is yours.
+End of audit. No proposals follow; this document is closed pending review.
