@@ -16,6 +16,14 @@ const corsHeaders = {
    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const frameExtractionSchema = z.object({
+  frame_index: z.number().int().nonnegative(),
+  timestamp_seconds: z.number().nonnegative(),
+  sha256_hex: z.string().regex(/^[0-9a-f]{64}$/i, "sha256_hex must be 64-char hex"),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
 const requestSchema = z.object({
   videoId: z.string().uuid("Invalid video ID format"),
   module: z.enum(["hitting", "pitching", "throwing"], { errorMap: () => ({ message: "Invalid module" }) }),
@@ -24,6 +32,12 @@ const requestSchema = z.object({
   language: z.string().optional(),
   frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
   landingFrameIndex: z.number().optional(),
+  /**
+   * Phase 1 — deterministic frame extraction audit. One entry per extracted
+   * frame, in the same order as `frames`. Persisted to video_frame_extractions
+   * keyed on the resulting video_analysis_runs.id.
+   */
+  frameExtractions: z.array(frameExtractionSchema).optional(),
 });
 
 /**
