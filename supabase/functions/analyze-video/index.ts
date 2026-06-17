@@ -1743,6 +1743,53 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ===== PHASE 1 — Deterministic acceptance gates =====
+    // Centralized thresholds: see src/lib/biomech/videoAcceptance.ts. Mirrored
+    // here so the server is the source of truth for `rejected` outcomes.
+    const PHASE1_MIN_FPS = 24;
+    const PHASE1_MIN_WIDTH = 480;
+    const PHASE1_MIN_HEIGHT = 480;
+    const PHASE1_MIN_DURATION_SEC = 0.5;
+    const PHASE1_MAX_DURATION_SEC = 60;
+    const PHASE1_MAX_DROPPED_RATIO = 0.34;
+
+    const writeReject = async (reason: string, detail: string, status = 422) => {
+      await recordAnalysisRun(supabase, {
+        video_id: videoId,
+        requested_by: userId,
+        cache_fingerprint_hex: `rejected:${reason}`,
+        cache_hit: false,
+        video_sha256_hex: videoSha256Hex,
+        landmark_model_version: LANDMARK_MODEL_VERSION,
+        detector_version: DETECTOR_VERSION,
+        metric_engine_version: METRIC_ENGINE_VERSION,
+        fps_true: fpsTrue,
+        outcome: "rejected",
+        outcome_reason: `${reason}:${detail}`,
+      });
+      return new Response(
+        JSON.stringify({ error: reason, detail }),
+        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    };
+
+    if (fpsTrue < PHASE1_MIN_FPS) {
+      return await writeReject("reject_low_fps", `fps_true=${fpsTrue} < ${PHASE1_MIN_FPS}`);
+    }
+    if (videoWidth == null || videoHeight == null || videoWidth < PHASE1_MIN_WIDTH || videoHeight < PHASE1_MIN_HEIGHT) {
+      return await writeReject("reject_low_resolution", `${videoWidth}x${videoHeight} below ${PHASE1_MIN_WIDTH}x${PHASE1_MIN_HEIGHT}`);
+    }
+    if (durationSec == null || !Number.isFinite(durationSec) || durationSec < PHASE1_MIN_DURATION_SEC || durationSec > PHASE1_MAX_DURATION_SEC) {
+      return await writeReject("reject_duration_out_of_bounds", `duration_sec=${durationSec} outside [${PHASE1_MIN_DURATION_SEC}, ${PHASE1_MAX_DURATION_SEC}]`);
+    }
+    if (frameExtractions && frameExtractions.length > 0) {
+      const requestedCount = frameExtractions.length;
+      const droppedRatio = (requestedCount - frames.length) / requestedCount;
+      if (droppedRatio > PHASE1_MAX_DROPPED_RATIO) {
+        return await writeReject("reject_excessive_dropped_frames", `dropped=${requestedCount - frames.length}/${requestedCount} (${droppedRatio.toFixed(3)} > ${PHASE1_MAX_DROPPED_RATIO})`);
+      }
+    }
+
     const cacheFingerprintHex = await buildCacheFingerprint({
       videoSha256Hex,
       fpsTrue,
