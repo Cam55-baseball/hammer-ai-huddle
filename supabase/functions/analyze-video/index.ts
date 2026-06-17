@@ -2490,7 +2490,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
 
     // Phase 0 audit row — successful analysis.
-    await recordAnalysisRun(supabase, {
+    const okAudit = await recordAnalysisRun(supabase, {
       video_id: videoId,
       requested_by: userId,
       cache_fingerprint_hex: cacheFingerprintHex,
@@ -2500,9 +2500,34 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       detector_version: DETECTOR_VERSION,
       metric_engine_version: METRIC_ENGINE_VERSION,
       fps_true: fpsTrue,
-      frame_selection_jsonb: { frame_count: frames.length, landing_frame_index: landingFrameIndex ?? null },
+      frame_selection_jsonb: {
+        frame_count: frames.length,
+        landing_frame_index: landingFrameIndex ?? null,
+        extraction_count: frameExtractions?.length ?? 0,
+      },
       outcome: "ok",
     });
+
+    // Phase 1 — persist per-frame deterministic extraction audit.
+    if (okAudit.id && frameExtractions && frameExtractions.length > 0) {
+      const frameRows = frameExtractions.map((f) => ({
+        video_analysis_run_id: okAudit.id,
+        video_id: videoId,
+        frame_index: f.frame_index,
+        timestamp_seconds: f.timestamp_seconds,
+        sha256_hex: f.sha256_hex,
+        width: f.width,
+        height: f.height,
+      }));
+      const { error: frameInsertError } = await supabase
+        .from("video_frame_extractions")
+        .insert(frameRows);
+      if (frameInsertError) {
+        console.error("[ANALYZE-VIDEO] frame extraction insert failed:", frameInsertError.message);
+      } else {
+        console.log(`[ANALYZE-VIDEO] persisted ${frameRows.length} video_frame_extractions for run ${okAudit.id}`);
+      }
+    }
 
     // Update user progress
     const { data: progressData, error: progressFetchError } = await supabase
