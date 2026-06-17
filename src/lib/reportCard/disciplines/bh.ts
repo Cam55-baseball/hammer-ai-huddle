@@ -8,7 +8,7 @@ import { readNumber, readBool, readScore100, missingState, scoreMeterState } fro
  * P2 — Hand Load · P2 Timing to Knee Lift · Eyes / Head Tracking
  * P3 — Stride Direction · Heel Plant · P3 Timing to Release · Hands Outside Shoulders at Landing
  * P4 — Sequencing (NN) · Bat Path · On-Plane % · Time-to-Contact ·
- *      Bat Speed · Back Elbow at Contact · Hitter's Move (NN) · Shoulder Plane Steadiness · Finish & Balance
+ *      Bat Speed · Connection & Barrel Delivery · Hitter's Move (NN) · Shoulder Plane Steadiness · Finish & Balance
  */
 const tiles: ReportCardTileSpec[] = [
   // ============ P1 ============
