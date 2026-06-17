@@ -1,14 +1,15 @@
 # Bucket A — Presentation/Wording Changes Log
 
 Read-only audit of every copy/label change shipped in the Bucket A pass.
-**No measurement formulas were changed.** No engine_version, prompt_version, or schema bumps. The determinism investigation is unaffected.
+Initial Bucket A was presentation-only. Round 3 includes the user-authorized metric-shape corrections for the specific elbow replacement and P3 timing tile. No schema migrations were made.
 
 ## Files touched
 
-1. `src/lib/reportCard/disciplines/bh.ts` — explainer/standard/encouragement copy only.
+1. `src/lib/reportCard/disciplines/bh.ts` — explainer/standard/encouragement copy, plus Round 3 tile formula-shape changes for back elbow and P3 timing.
 2. `src/components/report-card/hammer/ReportCardTile.tsx` — confidence tooltip relabeled honestly.
 3. `src/pages/AnalyzeVideo.tsx` — failed-analysis card now surfaces actual error message; thumbnail-failed toast rewritten.
 4. `src/i18n/locales/en.json` — `videoAnalysis.*` strings rewritten for honesty.
+5. `src/lib/reportCard/contracts/bh.contract.ts` and `supabase/functions/_shared/reportCardContracts.ts` — Round 3 metric field/prompt updates for P2, P3, and Connection & Barrel Delivery.
 
 ## Change set
 
@@ -55,17 +56,17 @@ Read-only audit of every copy/label change shipped in the Bucket A pass.
 - `frameExtractionFailed`: new key, honest "your video has not been analyzed" framing.
 - `probeFailed`: new key, format-suggestion framing.
 
-## Explicitly NOT touched
+## Initial pass explicitly did NOT touch
 
-- `compute:` functions in `bh.ts` — every formula, every threshold value, every input field name unchanged.
+- `compute:` functions in `bh.ts` during the first Bucket A pass. This was later superseded by Round 3 for the user-authorized elbow and P3 timing corrections.
 - Engine versions, prompt text, edge-function logic, schema, migrations.
 - `confidence_summary_jsonb` source, calculation, or storage.
-- Back-elbow measurement formula. Only the label, threshold chip, and explainer changed.
+- Back-elbow measurement formula during the first pass. Superseded by Round 3: the old contact-frame formula no longer drives the tile.
 - Finish-and-balance measurement formula. Only standard text and explainer changed.
 
 ## Verification
 
-Run `rg -n "compute: \(a\)" src/lib/reportCard/disciplines/bh.ts` and compare against git history — every `compute` block is byte-identical to its pre-Bucket-A version.
+For Round 3, verify `Connection & Barrel Delivery` reads `connection_barrel_delivery_score_100`, P3 reads `p3_release_offset_ms`, and P2 prompt says early is acceptable.
 
 ---
 
@@ -94,5 +95,26 @@ User feedback: P2 timing copy was wrong (early ≠ a timing miss), and P3 timing
 - Implementation gated behind determinism investigation close + open-question resolution + explicit user authorization, same as back elbow.
 
 ### Back elbow — unchanged this round
-Tile remains labeled "Back Elbow at Contact (under review)" with the existing under-review explainer. Replacement implementation still gated behind the determinism investigation. No code change this round.
+Tile remained labeled "Back Elbow at Contact (under review)" in Round 2. Superseded by Round 3 below.
+
+---
+
+## Round 3 — User-authorized metric-shape corrections
+
+User clarified that the back-elbow replacement must be implemented now and that P3 timing cannot remain pass/fail.
+
+### 13. Back Elbow replacement (`bh.ts` tile key `back_elbow_contact`)
+- **Before:** "Back Elbow at Contact (under review)" using legacy `back_elbow_past_bb_deg` at the contact frame.
+- **After:** Renamed **"Connection & Barrel Delivery"** and converted to a `score_meter` using `connection_barrel_delivery_score_100`.
+- **New intent:** Score the P4 launch → barrel-delivery → contact window, including connection, shoulder-square duration, elbow-led barrel delivery, hands staying in position, and minimized pre-contact blind spot.
+- **Legacy formula removed from tile use:** `back_elbow_past_bb_deg` no longer drives this tile.
+
+### 14. P2 Timing prompt correction
+- Updated the metric contract prompt so early hand-load completion is explicitly acceptable and must not fail `p2_timing_pass`.
+- Late/unready after pitcher peak knee lift is the only timing fail. Early-then-drift belongs to P1 Hip Load Stability.
+
+### 15. P3 Timing formula shape
+- **Before:** `pass_fail` backed by `p3_timing_pass` boolean.
+- **After:** `score_meter` backed by new signed field `p3_release_offset_ms`.
+- **Scoring intent:** 0 ms at pitcher release is perfect; slightly late remains acceptable; clearly late fails; early is lightly penalized because drift/instability belongs elsewhere.
 

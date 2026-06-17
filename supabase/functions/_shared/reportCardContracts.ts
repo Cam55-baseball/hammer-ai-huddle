@@ -178,10 +178,10 @@ export const bhContract: DisciplineContract = {
     {
       key: "p2_timing_pass",
       tileKey: "p2_timing",
-      label: "P2 timing aligned to pitcher peak knee lift",
+      label: "P2 hand load finished by pitcher peak knee lift",
       kind: "boolean",
       prompt:
-        "TRUE if the hitter's hand load completes within ±150ms of the pitcher's PEAK KNEE LIFT. FALSE if early (drifts forward) or late (rushed P3). If pitcher knee lift not visible, set missing=true with reason 'Pitcher knee lift not in frame'.",
+        "TRUE if the hitter's hand load is finished by the time the pitcher reaches PEAK KNEE LIFT. Early is acceptable and must NOT be marked false. FALSE only if the hand load is still unfinished after pitcher peak knee lift. If the hitter finishes early and then drifts forward, do not fail this metric — that belongs to P1 Hip Load Stability. If pitcher knee lift not visible, set missing=true with reason 'Pitcher knee lift not in frame'.",
     },
     {
       key: "eyes_track_score_100",
@@ -224,12 +224,14 @@ export const bhContract: DisciplineContract = {
       prompt: "Legacy 1–10 heel plant score. Prefer heel_plant_score_100.",
     },
     {
-      key: "p3_timing_pass",
+      key: "p3_release_offset_ms",
       tileKey: "p3_timing",
-      label: "P3 timing aligned to pitcher release",
-      kind: "boolean",
+      label: "P3 front-foot-down offset from pitcher release",
+      kind: "number",
+      unit: "ms",
+      range: [-500, 500],
       prompt:
-        "TRUE if the front foot is down within ±120ms of the pitcher reaching release point. FALSE if foot is down too early (drifting) or still in flight at release (late). If pitcher release point not visible, set missing=true with reason 'Pitcher release point not in frame'.",
+        "Signed milliseconds from pitcher RELEASE to the hitter's FRONT FOOT FULLY DOWN. 0 ms = perfect. Positive means foot down AFTER release (late). Negative means foot down BEFORE release (early). Do not convert to pass/fail. Slightly late is acceptable but not perfect; clearly late is the main failure. Early is timing-acceptable; if early creates drift or instability, that belongs to P1/P3 quality metrics, not this timing offset. If pitcher release or full-foot-down is not visible, set missing=true with the specific missing anchor.",
     },
     {
       key: "hands_outside_shoulders_at_landing_pass",
@@ -299,14 +301,14 @@ export const bhContract: DisciplineContract = {
         "Estimated barrel speed AT contact, in mph. THIS IS A BREAD-AND-BUTTER METRIC — be elite-accurate. Method: measure peak translational speed of the BARREL TIP over a 2-frame window straddling the contact frame. Convert pixels/frame to mph using the bat length as the calibration ruler (default bat length = 33 in if unknown — note this assumption). Required visibility: full bat AND ball visible across the 2-frame window straddling contact, frame rate known. If the barrel is obscured at contact, if frame rate is unknown, or if motion blur prevents tracking the barrel tip across two consecutive frames, set missing=true with the specific reason. NEVER GUESS. PASS ≥65 mph, ELITE ≥75 mph.",
     },
     {
-      key: "back_elbow_past_bb_deg",
+      key: "connection_barrel_delivery_score_100",
       tileKey: "back_elbow_contact",
-      label: "Back elbow past belly button at contact (degrees)",
+      label: "Connection & Barrel Delivery: P4 launch to contact (0–100)",
       kind: "number",
-      unit: "degrees",
-      range: [-45, 60],
+      unit: "score",
+      range: [0, 100],
       prompt:
-        "Degrees back elbow has driven PAST belly button at contact, shoulders square. PASS at ≥0°, ELITE at ≥20°.",
+        "Score 0–100 for connection and barrel delivery across the P4 launch → barrel-delivery → contact window, not a single contact-frame elbow angle. PASS at 70, ELITE at 90. Evaluate: connection holds through launch; shoulders stay as square as possible as long as possible while the back hip works aggressively; back elbow moves forward so the barrel begins turning forward without the hands losing position or compromising relative to the body; hands stay in a powerful position with the body; extension starts after contact or as close to contact as possible. Penalize a long blind spot: blind spot starts when extension starts, and the time from extension-start to contact should be minimized. If launch, extension-start, barrel-delivery, or contact cannot be identified, set missing=true with the specific missing anchor. Do not use the old 'back elbow past belly button at contact' formula.",
     },
     {
       key: "hitters_move_score_100",

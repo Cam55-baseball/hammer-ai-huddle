@@ -1,8 +1,8 @@
 # Back Elbow — Methodology Review Memo
 
-Status: **methodology under review. No implementation.**
+Status: **implemented for the specific back-elbow replacement metric requested by the user.**
 Owner: user (methodology) + Lovable (documentation).
-Gate: cannot be implemented until determinism investigation closes AND the open questions below are answered.
+Gate note: this one metric was explicitly removed from the hold. Broader Phase 2 metric work remains gated behind the determinism investigation.
 
 ## Verdict on the current metric
 
@@ -12,7 +12,7 @@ The existing `back_elbow_contact` tile measures elbow angle past the belly butto
 
 The metric is currently scoring the consequence of the move, sampled after the move has already finished, on a frame where the elbow-to-barrel relationship has flipped. It is being deprecated as an actionable score and will be replaced.
 
-In the meantime the tile has been relabeled "Back Elbow at Contact (under review)" with athlete-visible text telling hitters not to change mechanics based on it. The compute function is unchanged for replay-determinism reasons — only presentation is altered.
+The tile is no longer labeled "under review." It has been renamed **Connection & Barrel Delivery** and now reads `connection_barrel_delivery_score_100`, a 0–100 window score. The legacy `back_elbow_past_bb_deg` contact-frame formula is no longer used by this tile.
 
 ## Canonical methodology (locked in this memo)
 
@@ -38,7 +38,7 @@ Source: user-authored, captured verbatim.
 - Not "extension at contact." Extension after contact is the goal; extension before contact is the blind-spot leak we are penalizing.
 - Not a connection check in isolation — connection alone without barrel delivery is incomplete; barrel delivery alone without connection is the leak being measured.
 
-## Open questions (must be answered before implementation)
+## Remaining calibration questions (for later refinement, not blocking this authorized replacement)
 1. **Landmarks for "shoulders square"** — which pose landmarks (and which projection plane) approximate "chest stays square as long as possible"? How is "as long as possible" measured: degrees of rotation between heel plant and contact? Time in milliseconds before shoulders cross a threshold rotation?
 2. **Blind-spot detection** — what pose-derived signal marks the **moment extension starts**? Wrist-to-elbow angle crossing a threshold? Hand path inflection? Bat-tip trajectory (which we cannot reliably extract today without bat detection)? Define the signal and its replay-determinism characteristics.
 3. **Window duration scoring** — should the window-duration component be additive to the connection-quality component, multiplicative, or gating (a short blind-spot is a prerequisite, then connection is scored)?
@@ -47,10 +47,5 @@ Source: user-authored, captured verbatim.
 6. **Relationship to existing tiles** — explicit overlap analysis with `sequencing`, `hitters_move`, and `shoulder_to_shoulder_hold`. Confirm this is additive evaluation, not double-counting.
 7. **Final name.**
 
-## Implementation gate
-Implementation is blocked until:
-1. The determinism investigation concludes with Verdict A (Phase 1 acceptance) or with the relevant non-determinism defects fixed.
-2. All seven open questions above are answered in writing.
-3. The user explicitly authorizes the metric replacement.
-
-Until then, the current tile stays labeled as "under review" and no swing recommendations cite it as the cause of any miss.
+## Implementation note
+This replacement was authorized as the one specific formula that must change now. The implementation uses the new model-emitted field `connection_barrel_delivery_score_100` and keeps the metric standalone under the existing tile key for report-card compatibility.

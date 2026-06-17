@@ -33,10 +33,10 @@ export const bhContract: DisciplineContract = {
     {
       key: "p2_timing_pass",
       tileKey: "p2_timing",
-      label: "P2 timing aligned to pitcher peak knee lift",
+      label: "P2 hand load finished by pitcher peak knee lift",
       kind: "boolean",
       prompt:
-        "TRUE if the hitter's hand load completes within roughly ±150 ms of the pitcher's PEAK KNEE LIFT. FALSE if early (drifts forward) or late (rushed P3). If the pitcher's knee lift is not visible in the frames, set missing=true with reason 'Pitcher knee lift not in frame'.",
+        "TRUE if the hitter's hand load is finished by the time the pitcher reaches PEAK KNEE LIFT. Early is acceptable and must NOT be marked false. FALSE only if the hand load is still unfinished after pitcher peak knee lift. If the hitter finishes early and then drifts forward, do not fail this metric — that belongs to P1 Hip Load Stability. If the pitcher's knee lift is not visible in the frames, set missing=true with reason 'Pitcher knee lift not in frame'.",
     },
     {
       key: "eyes_track_score_100",
@@ -70,12 +70,14 @@ export const bhContract: DisciplineContract = {
         "Score 0-100 for landing sideways, chest+shoulders square to plate, both feet down, core tensioned, hips NOT turning shoulders open. PASS at 65, ELITE at 88. Worked example: shoulders rotate WITH hips at landing → ~45; sideways landing with shoulders still closed → ~85.",
     },
     {
-      key: "p3_timing_pass",
+      key: "p3_release_offset_ms",
       tileKey: "p3_timing",
-      label: "P3 timing aligned to pitcher release",
-      kind: "boolean",
+      label: "P3 front-foot-down offset from pitcher release",
+      kind: "number",
+      unit: "ms",
+      range: [-500, 500],
       prompt:
-        "TRUE if the front foot is down within roughly ±120 ms of the pitcher reaching release point. FALSE if foot is down too early (drifting) or still in flight at release (late). If pitcher release point is not visible, set missing=true with reason 'Pitcher release point not in frame'.",
+        "Signed milliseconds from pitcher RELEASE to the hitter's FRONT FOOT FULLY DOWN. 0 ms = perfect. Positive means foot down AFTER release (late). Negative means foot down BEFORE release (early). Do not convert to pass/fail. Slightly late is acceptable but not perfect; clearly late is the main failure. Early is timing-acceptable; if early creates drift or instability, that belongs to P1/P3 quality metrics, not this timing offset. If pitcher release or full-foot-down is not visible, set missing=true with the specific missing anchor.",
     },
     {
       key: "hands_outside_shoulders_at_landing_pass",
@@ -136,14 +138,14 @@ export const bhContract: DisciplineContract = {
         "Estimated barrel speed AT contact in mph. PASS ≥65, ELITE ≥75. If no sensor data and motion blur is too high to estimate, set missing=true with reason 'Frame rate too low for bat speed estimate'.",
     },
     {
-      key: "back_elbow_past_bb_deg",
+      key: "connection_barrel_delivery_score_100",
       tileKey: "back_elbow_contact",
-      label: "Back elbow past belly button at contact (degrees)",
+      label: "Connection & Barrel Delivery: P4 launch to contact (0-100)",
       kind: "number",
-      unit: "degrees",
-      range: [-45, 60],
+      unit: "score",
+      range: [0, 100],
       prompt:
-        "Degrees back elbow has driven PAST belly button at contact, shoulders square. PASS at ≥0°, ELITE at ≥20°.",
+        "Score 0-100 for connection and barrel delivery across the P4 launch → barrel-delivery → contact window, not a single contact-frame elbow angle. PASS at 70, ELITE at 90. Evaluate: connection holds through launch; shoulders stay as square as possible as long as possible while the back hip works aggressively; back elbow moves forward so the barrel begins turning forward without the hands losing position or compromising relative to the body; hands stay in a powerful position with the body; extension starts after contact or as close to contact as possible. Penalize a long blind spot: blind spot starts when extension starts, and the time from extension-start to contact should be minimized. If launch, extension-start, barrel-delivery, or contact cannot be identified, set missing=true with the specific missing anchor. Do not use the old 'back elbow past belly button at contact' formula.",
     },
     {
       key: "hitters_move_score_100",
