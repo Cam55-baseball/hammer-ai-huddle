@@ -1,53 +1,38 @@
+## Phase 0 Defect Fix — AI Gateway Early-Return Audit Bypass
 
-# Phase 0 Runtime Evidence Execution
+### Scope (authorized, minimal)
+Convert the three AI-gateway early-return branches in `supabase/functions/analyze-video/index.ts` (HTTP 429, 402, and generic non-OK / 500) into `throw` statements so control flows into the existing `catch` block, which already writes exactly one `outcome='failed'` audit row.
 
-Single-turn build-mode execution. No source-code changes. No fabricated rows. No manual `INSERT` into `video_analysis_runs` / `video_landmark_runs`. The seeded `videos` row (`ec24a165-…`, sha256 `a5a8692…`) and prepared payload `/tmp/body.json` from the prior turn are reused.
+### Change
+**File:** `supabase/functions/analyze-video/index.ts` (lines ~2106–2138, the AI-gateway response handling block)
 
-## Steps
+Replace each of the three `return new Response(...)` early exits with a `throw new Error(...)` carrying:
+- the upstream status code
+- the upstream error body (truncated)
+- a stable error class tag (`ai_gateway_rate_limited`, `ai_gateway_payment_required`, `ai_gateway_error`) so the catch-path's `failure_reason` column is populated deterministically
 
-1. **Invocation 1 — `ok`**
-   - `supabase--curl_edge_functions` → `POST /analyze-video` with `/tmp/body.json` as the logged-in preview user.
-   - Capture response + fetch the resulting `video_analysis_runs` row via `supabase--read_query`.
-   - Expect `outcome='ok'`, `cache_hit=false`, populated `cache_fingerprint_hex`, version pins, FK to `video_landmark_runs`.
+No other branches, no other files, no schema changes, no shared-module edits.
 
-2. **Invocation 2 — `cache_hit`**
-   - Re-POST identical body. Fetch new row.
-   - Expect identical `cache_fingerprint_hex`, `cache_hit=true`, `outcome='cache_hit'`.
+### Catch-path guarantees to preserve
+- The existing `catch` block already inserts exactly one `video_analysis_runs` row with `outcome='failed'`.
+- No new insert sites added. No retry loop added. Idempotency preserved by the existing single-write path.
 
-3. **Invocation 3 — `failed` (controlled fault injection, no row fabrication)**
-   - Insert a *second* `videos` row with all mandatory deterministic fields populated but `storage_path` pointing at a non-existent object (`videos/__nonexistent__/missing.mp4`). This is a real `videos` insert (allowed), not a `video_analysis_runs` insert (forbidden).
-   - POST analyze-video against that video → real edge-function execution path hits storage download failure → real `failed` row written by the function itself.
+### Verification protocol (post-deploy, runtime evidence)
+1. Deploy `analyze-video`.
+2. Re-run the prior fault-injection invocation (the `videos` row with a deliberately broken input that triggers an AI-gateway error).
+3. Capture and post:
+   - the resulting `video_analysis_runs` row (`outcome='failed'`, populated `failure_reason`, `cache_fingerprint_hex`, version pins)
+   - `SELECT outcome, count(*) FROM video_analysis_runs GROUP BY outcome` showing all four outcomes present
+   - edge-function logs showing the gateway error and the catch-path audit write
+   - `SELECT count(*) ... WHERE video_id = <fault-injection video> AND created_at > <invocation start>` proving exactly one `failed` row was written (no duplicates)
+4. Re-run `rg "pass2Model|pass2System|pass2Prompt|:pass2|breadMissing|replay_input_fingerprint" supabase/functions/analyze-video supabase/functions/recompute-report-card src` to reconfirm zero matches.
 
-4. **`rejected`** — already exists from prior `missing_video_sha256` rows; re-query and include.
+### Out of scope (explicitly blocked)
+- Phase 1 work
+- MediaPipe / WebCodecs / event-engine work
+- Any edit outside the three early-return branches in `analyze-video/index.ts`
+- Schema migrations, RLS changes, shared-module edits, frontend changes
+- Manual inserts into `video_analysis_runs` or `video_landmark_runs`
 
-5. **Edge-function logs** — `supabase--edge_function_logs analyze-video` filtered around the three invocations, showing:
-   - computed `cache_fingerprint_hex` (invocation 1)
-   - cache miss branch (invocation 1)
-   - cache hit branch (invocation 2)
-   - storage/download failure branch (invocation 3)
-
-6. **Aggregate matrix** — `SELECT outcome, count(*) FROM video_analysis_runs GROUP BY outcome` showing all four outcomes present.
-
-7. **Full row dumps** — `SELECT *` for the four representative rows (ok, cache_hit, rejected, failed).
-
-8. **Provenance statement** — explicit confirmation that the only manual DB writes were the two `videos` rows (real-upload row + fault-injection row); no `video_analysis_runs` or `video_landmark_runs` rows were hand-inserted.
-
-## Single-reply deliverable
-
-A single message containing, in order:
-- Invocation 1 HTTP response + `ok` row
-- Invocation 2 HTTP response + `cache_hit` row
-- Side-by-side `cache_fingerprint_hex` comparison
-- `failed` row + the `videos` fault-injection row used to produce it
-- `rejected` row
-- `GROUP BY outcome` matrix
-- Edge-function log excerpts for all three live invocations
-- Provenance statement
-
-## Out of scope (unchanged from prior plans)
-
-- No edits to `analyze-video`, `recompute-report-card`, `_shared/*`, `AnalyzeVideo.tsx`, or any `src/**`.
-- No schema migrations. No deletions. No Phase 1 / WebCodecs work.
-- No manual inserts into `video_analysis_runs` or `video_landmark_runs`.
-
-After the evidence package is posted, await explicit Phase 0 closure before requesting Phase 1 authorization.
+### Exit condition
+Phase 0 formally accepted once the four-outcome matrix is complete and the single-row guarantee for the `failed` path is demonstrated from real runtime evidence.
