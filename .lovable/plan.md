@@ -1,64 +1,58 @@
+# Phase 1 — Runtime Evidence Collection Pass
 
-## Phase 1 — Deterministic Video Processing Layer
+No implementation changes. No Phase 2 work. Sole deliverable: a runtime evidence package proving the Phase 1 deterministic video processing layer behaves correctly against the live database and deployed `analyze-video` edge function.
 
-### Objective
-Same source bytes → byte-identical probe metadata and byte-identical extracted frames, proven with runtime evidence (DB rows + frame SHA-256 hashes from real uploads), not code inspection.
+## Execution steps
 
-### Strict scope
-- Deterministic video probe (already exists at `src/lib/biomech/probeVideoMetadata.ts` — harden, do not redesign).
-- Deterministic frame selection + extraction (replaces the time-based, non-deterministic logic in `src/lib/frameExtraction.ts`).
-- Persistence of per-frame `{frame_index, timestamp_seconds, sha256_hex}` in a new audit table.
-- Rejection-path enforcement (low fps, low resolution, excessive dropped frames, out-of-bounds duration).
-- Runtime evidence package.
+1. **Fixture preparation**
+   - Reuse the Phase 0 fixture video already in `videos` storage (same `video_id` used for the Phase 0 cache-hit proof).
+   - Confirm SHA-256 of the source bytes once, before the run loop.
 
-### Explicitly out of scope (will not touch)
-MediaPipe, WebCodecs beyond what's required for deterministic decode, event detection, metric computation, coaching logic, biomech formulas, UI redesign, Phase 0 paths.
+2. **Determinism Matrix (10× upload → analyze)**
+   - Drive 10 real end-to-end invocations through the live UI path on `/AnalyzeVideo` (not direct edge curl), so probe + extractor + audit writer all execute as in production.
+   - After each run, capture from `video_analysis_runs`: `video_id, sha256_hex, fps_true, duration_sec, width, height, orientation, cache_fingerprint_hex`.
+   - Expect run 1 = `outcome='ok'`, runs 2–10 = `outcome='cache_hit'` (same fingerprint), and all 8 fields byte-identical across all 10 rows.
 
----
+3. **Frame Determinism Proof**
+   - Because cache hits short-circuit before extraction, force re-extraction for 2 of the 10 runs by uploading the same bytes under 2 fresh `video_id`s (different storage paths → different `video_id` but same `sha256_hex` → identical probe → identical frame selection). This isolates extractor determinism from cache behavior.
+   - For both runs: `SELECT frame_index, timestamp_seconds, sha256_hex FROM video_frame_extractions WHERE video_analysis_run_id = $1 ORDER BY frame_index;`
+   - Diff the two tables row-for-row.
 
-### Work items
+4. **Frame Count Proof**
+   - For each of the 10 runs, post requested / extracted / dropped / dropped-ratio from the audit row (extractor emits these into `video_analysis_runs` metadata + `video_frame_extractions` row count).
 
-1. **Determinism contract module** — `src/lib/biomech/frameExtractionDeterministic.ts` (new)
-   - Pure function: `selectFrameIndices(fps_true, duration_sec, landingTime|null) → number[]` (integer frame indices, no floats, no Date/Math.random).
-   - Selection policy: when landing is null, pick a fixed integer-index grid (e.g. round(pct × totalFrames) for the existing 7 percentages); when landing is provided, convert offsets to integer frame indices via `round(landing × fps_true) + round(offsetSec × fps_true)`. Pure integer math → identical across runs.
-   - Pure function: `framesToTimestamps(indices, fps_true) → number[]` using `index / fps_true` rounded to 6 decimals.
+5. **Rejection Proof (4 crafted fixtures)**
+   - `reject_low_fps`: transcode fixture to 15 fps.
+   - `reject_low_resolution`: scale to 320×240.
+   - `reject_duration_out_of_bounds`: trim to 0.2 s and pad to 75 s for the two bounds.
+   - `reject_excessive_dropped_frames`: feed a corrupted MP4 (truncated moov) so the extractor captures < 66% of requested frames.
+   - For each, post the resulting `video_analysis_runs` row (`outcome='rejected'`, `outcome_reason` matching).
 
-2. **Deterministic extractor** — replace body of `extractKeyFrames` to:
-   - Take `{file, fps_true, duration_sec, landingTime}` (probe results passed in, not re-derived).
-   - Seek by frame-index using `video.currentTime = index / fps_true` and `requestVideoFrameCallback` confirmation (fall back to `seeked` event).
-   - Encode each frame as PNG (lossless; `image/jpeg` is encoder-dependent and not byte-stable across browsers/runs) via `canvas.toBlob('image/png')`.
-   - Hash each PNG blob with `sha256HexOfBlob` (already in `src/lib/biomech/fingerprint.ts`).
-   - Return `Array<{frame_index, timestamp_seconds, sha256_hex, dataUrl}>`.
+6. **Persistence Proof**
+   - Post `SELECT count(*) FROM video_frame_extractions;`
+   - Post 3 example rows.
+   - Post a join showing `video_frame_extractions.video_analysis_run_id` FK → `video_analysis_runs.id` for the runs from step 3.
 
-3. **Rejection gates** — `src/lib/biomech/videoAcceptance.ts` (new)
-   - Constants centralized: `MIN_FPS`, `MIN_WIDTH`, `MIN_HEIGHT`, `MIN_DURATION_SEC`, `MAX_DURATION_SEC`, `MAX_DROPPED_FRAME_RATIO`.
-   - `evaluateProbe(probe) → { ok: true } | { ok: false, reason: 'low_fps'|'low_resolution'|'duration_out_of_bounds' }`.
-   - `evaluateExtraction(requested, captured) → { ok, reason: 'excessive_dropped_frames'|null }`.
+7. **Device Variability Audit**
+   - Run the fixture from the desktop preview (1440×900) and the current mobile viewport (440×782, dpr=3) via the same `/AnalyzeVideo` flow.
+   - Post whether the per-frame `sha256_hex` tuple matches between desktop and mobile.
+   - If divergent, identify the first `frame_index` where hashes differ and note probe-field differences (canvas PNG encoder is the most likely divergence source).
 
-4. **Persistence** — new migration:
-   - Table `public.video_frame_extractions` with columns: `id uuid pk`, `video_analysis_run_id uuid fk → video_analysis_runs(id)`, `video_id uuid`, `frame_index int`, `timestamp_seconds numeric(10,6)`, `sha256_hex text`, `width int`, `height int`, `created_at timestamptz default now()`.
-   - Unique `(video_analysis_run_id, frame_index)`.
-   - GRANTs for `authenticated` (select own via join) and `service_role` (all); RLS enabled; policy: athlete may select rows whose `video_id` they own.
-   - No edits to existing `video_analysis_runs` schema.
+8. **Production Readiness Assessment**
+   - End with `A. Phase 1 accepted` or `B. Phase 1 not accepted` + blocking defects.
 
-5. **Wiring**
-   - `analyze-video` (or the existing client path that calls `analyze-video`) writes one `video_frame_extractions` row per extracted frame in the same transaction window as the audit row. No manual inserts; written only by server code path.
-   - Rejection outcomes route through the existing `outcome='rejected'` path with a stable `outcome_reason` tag (`reject_low_fps`, `reject_low_resolution`, `reject_duration_out_of_bounds`, `reject_excessive_dropped_frames`).
+## Out of scope (will not touch)
+MediaPipe, WebCodecs beyond the current decode path, event detection, metric computation, coaching logic, biomech formulas, UI redesign, Phase 0 paths, any code or schema change. Read-only DB queries and live invocations only — zero manual inserts.
 
-6. **Runtime evidence harness** — `scripts/replay/verify-frame-determinism.ts` (read-only verification)
-   - Re-uploads the Phase 0 fixture video 10×.
-   - Asserts identical `fps_true / duration_sec / width / height / orientation` across all 10 runs.
-   - Asserts identical ordered tuple of `(frame_index, timestamp_seconds, sha256_hex)` across all 10 runs.
-   - Emits matrices for the evidence pack.
+## Tools used
+- Browser automation (`browser--view_preview`, `browser--act`) for the 10 live uploads + device audit.
+- `supabase--read_query` / `psql` for `video_analysis_runs` and `video_frame_extractions` evidence.
+- `supabase--edge_function_logs` for `analyze-video` traces.
+- `ffmpeg` (via `nix run nixpkgs#ffmpeg`) to produce the 4 rejection fixtures from the Phase 0 source.
 
----
+## Open question
+The browser automation cannot reliably drive a real file-picker upload of a multi-MB video against the live preview. To execute the 10× determinism matrix and the device audit, I need one of:
+- **(a)** a fixture video URL/path I can fetch in the sandbox and POST through a scripted client that mirrors the UI path (probe → extract → upload → invoke `analyze-video`), OR
+- **(b)** confirmation that you will perform the 10 uploads + the desktop/mobile pair manually in the preview and I collect evidence from the DB and logs after each batch.
 
-### Phase 1 acceptance evidence (to be posted after implementation)
-1. 10× upload determinism matrix from `video_analysis_runs` + `video_frame_extractions` for one fixture video showing identical probe fields and identical frame hashes.
-2. `SELECT frame_index, timestamp_seconds, sha256_hex FROM video_frame_extractions WHERE video_analysis_run_id = $1 ORDER BY frame_index` for at least two of the 10 runs, byte-identical.
-3. Four rejection demonstrations: fixtures crafted to trigger `reject_low_fps`, `reject_low_resolution`, `reject_duration_out_of_bounds`, `reject_excessive_dropped_frames`, each producing one `video_analysis_runs` row with the expected `outcome_reason`.
-4. Confirmation no manual DB inserts were used.
-5. `rg` re-audit for legacy strings remains zero.
-
-### Exit condition
-Phase 1 closed once the 10× determinism matrix, per-frame hash table, and four rejection rows are posted from real runtime invocations.
+Please confirm (a) or (b) before I begin the live runs.
