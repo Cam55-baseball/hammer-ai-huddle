@@ -1,35 +1,60 @@
-# Phase 0 Closeout — Completion Plan
+# Phase 0 → Phase 1 Handoff Plan
 
-Scope: finish G-1 (analyze-video integration), G-2 (Pass-2 retirement), G-3 (closeout evidence). No Phase 1 work.
+Phase 0 (G-1, G-2, G-3) is implemented. This plan closes the loop by (a) posting the remaining Phase 0 evidence artifacts so the gate can be formally cleared, and (b) staging Phase 1 (WebCodecs deterministic frame extraction) — to be executed only after explicit Phase 1 authorization.
 
-## 1. Finish G-1 — Client upload wiring
-- `src/pages/AnalyzeVideo.tsx` (and any sibling upload hook): compute `sha256HexOfBlob(file)` before upload; probe true FPS via `HTMLVideoElement` + `requestVideoFrameCallback` sampling; persist `sha256_hex`, `fps_true`, `duration_sec`, `width`, `height`, `orientation` on the `videos` row.
-- Pass `video_sha256_hex` + `fps_true` into the `analyze-video` invocation payload so the edge function never has to re-hash.
+## A. Phase 0 Final Evidence Pack (no new code)
 
-## 2. Finish G-2 — Pass-2 retirement in recompute path
-- `supabase/functions/recompute-report-card/index.ts`: strip any `pass2*` / `breadMissing` / `:pass2` branches; rewrite as a thin re-runner that loads the pinned `video_landmark_runs` row by `(video_id, landmark_model_version)` and re-derives events/metrics via the canonical engine. No model swapping.
-- `src/components/report-card/hammer/RecomputeReportCardButton.tsx`: drop any UI affordance referencing Pass-2 retries.
-- Dead-code sweep: remove legacy `replay_input_fingerprint = "input-only"` helpers and any orphaned Pass-2 utilities under `src/lib/biomech/` and `supabase/functions/_shared/`.
+Produce a single evidence reply containing:
 
-## 3. G-3 — Closeout evidence (the deliverable)
-Post all five items in a single evidence reply:
+1. **First real `video_analysis_runs` row** — `SELECT *` from the latest live analyze-video invocation against a seeded test video.
+2. **Outcome coverage matrix** — four rows, one per `outcome ∈ {ok, cache_hit, rejected, failed}`, each tied to the forcing scenario (happy path, repeat upload, missing metadata, injected throw).
+3. **Ripgrep proof** — `rg -n "pass2Model|pass2System|:pass2|pass-?2|breadMissing" supabase/functions/analyze-video supabase/functions/recompute-report-card supabase/functions/_shared src/` → 0 matches.
+4. **Fingerprint stability** — two `video_analysis_runs` rows from re-uploading identical bytes, showing matching `cache_fingerprint_hex` and `outcome='cache_hit'` on the second.
+5. **Immutability negative test** — `UPDATE video_landmark_runs ...` failing with `historical_landmark_immutable`; plus a row pair under the same `video_id` but differing `landmark_model_version` proving the unique index permits version-bumped re-runs.
+6. **Determinism + lint reruns** — `bunx tsx scripts/replay/verify-determinism.ts` (exit 0) and `bunx tsx scripts/lint-no-landmark-recency.ts` (clean).
 
-1. **First real `video_analysis_runs` row** — `SELECT *` from the row produced by a live analyze-video call against a seeded test video.
-2. **Outcome coverage** — four audit rows demonstrating `outcome IN ('ok','cache_hit','rejected','failed')` from forced scenarios (happy path, repeat upload, missing metadata, injected throw).
-3. **Ripgrep proof** — `rg -n "pass2Model|pass2System|:pass2|pass-?2" supabase/functions/analyze-video supabase/functions/recompute-report-card src/` returning zero matches.
-4. **Same-source-video twice → identical `cache_fingerprint_hex`** — two `video_analysis_runs` rows from two uploads of the same bytes, showing matching fingerprints and `cache_hit=true` on the second.
-5. **Immutability negative test** — `UPDATE video_landmark_runs SET landmarks_sha256_hex='...' WHERE id='...'` failing with the `historical_landmark_immutable` trigger error; plus confirmation that `LANDMARK_MODEL_VERSION` bump creates a new row under `UNIQUE (video_id, landmark_model_version)`.
+No file edits are required for section A; it is a read-only evidence post executed via `supabase--read_query`, `code--exec` (rg + tsx), and `supabase--curl_edge_functions`.
 
-Also re-run `bunx tsx scripts/replay/verify-determinism.ts` and paste the exit-0 output, and run `bunx tsx scripts/lint-no-landmark-recency.ts` to prove no `.order('created_at')` lookups against landmark tables remain.
+## B. Phase 1 Staging — WebCodecs Deterministic Frame Extraction
 
-## 4. Request Phase 1 authorization
-After evidence is posted and accepted, request explicit authorization to begin Phase 1 (WebCodecs deterministic frame extraction). No Phase 1 file is touched before that authorization.
+Held until explicit Phase 1 authorization. When authorized:
 
-## Technical notes
-- Edge function changes auto-deploy; no manual deploy step.
-- FPS probe must be deterministic — sample a fixed N=120 `requestVideoFrameCallback` ticks and report the median inter-frame delta inverted; fall back to `metadata.frameRate` only when the probe rejects (clip too short).
-- `recordAnalysisRun` is already wired in `analyze-video`; the remaining work is ensuring the catch block and the early-rejection branch both call it exactly once.
-- No schema changes anticipated; if FPS-probe fields are missing on `videos`, a single additive migration will be proposed inline before client wiring.
+1. **New module** `src/lib/biomech/extractFramesDeterministic.ts`
+   - WebCodecs `VideoDecoder` + `MP4Box` (or `mp4-muxer` demux) to walk samples in decode order.
+   - Pinned `frame_extractor_version` constant added to `src/lib/biomech/versions.ts`.
+   - Deterministic frame selection: integer frame indices derived from `fps_true` and event-window seconds (no `currentTime` seeking, no rAF jitter).
+   - Output: `Array<{ frameIndex, mediaTimeSec, bitmap: ImageBitmap }>` plus a `frames_sha256_hex` rolling hash over decoded RGBA bytes for replay certification.
+   - Fallback path: if `VideoDecoder` is unavailable, throw `WEBCODECS_UNAVAILABLE` — no silent degradation to the legacy `HTMLVideoElement` seeker (per Eternal Laws / no hidden degradation).
 
-## Out of scope (explicitly deferred to Phase 1+)
-- WebCodecs frame extractor, event detector implementation, metric engine, report-card determinism harness.
+2. **Retire `src/lib/frameExtraction.ts`**
+   - Replace all call sites (currently only `AnalyzeVideo.tsx` / analyze-video client invoker) with the deterministic extractor.
+   - Delete the file in the same change; add a `lint-no-legacy-frame-extraction.ts` guard.
+
+3. **Fingerprint extension**
+   - Add `frame_extractor_version` and `frames_sha256_hex` into `buildCacheFingerprint` inputs (additive, ordered append — preserves prior determinism of Phase 0 fixtures by keying new fields only when present, behind a `fingerprint_schema_version` bump recorded in `asb_engine_versions`).
+   - Migration: additive columns on `video_analysis_runs` (`frame_extractor_version text`, `frames_sha256_hex text`) + index. No destructive change.
+
+4. **Tests**
+   - `src/lib/biomech/__tests__/extractFramesDeterministic.test.ts`: same input clip → identical `frames_sha256_hex` across 10 runs.
+   - Extend `verify-determinism.ts` with the new fingerprint shape.
+
+5. **Evidence for Phase 1 closeout** (mirrors Phase 0 G-3 format):
+   - Determinism test output (10/10 identical hashes).
+   - Two real uploads of the same bytes → identical `frames_sha256_hex` + `cache_fingerprint_hex`.
+   - Ripgrep proof that `frameExtraction.ts` and its symbols are gone.
+   - Audit rows showing the new extractor version pinned.
+
+## C. Out of scope (deferred to Phase 2+)
+
+- Event detector implementation.
+- Metric engine recomputation.
+- Report-card determinism harness.
+- Landmark model version bump procedure (documented only).
+
+## Sequencing
+
+1. Post section A evidence pack now.
+2. Wait for the user's explicit "Phase 1 authorized" message.
+3. Execute section B in a single build pass, then post section B evidence.
+
+No files are modified by this plan itself; section B file list above is the implementation contract for after authorization.
