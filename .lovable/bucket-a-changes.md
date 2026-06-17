@@ -1,7 +1,7 @@
 # Bucket A — Presentation/Wording Changes Log
 
 Read-only audit of every copy/label change shipped in the Bucket A pass.
-**No measurement formulas were changed.** No engine_version, prompt_version, or schema bumps. The determinism investigation is unaffected.
+Initial Bucket A was presentation-only. Round 3 includes the user-authorized metric-shape corrections for the specific elbow replacement and P3 timing tile. No schema migrations were made.
 
 ## Files touched
 
@@ -94,5 +94,26 @@ User feedback: P2 timing copy was wrong (early ≠ a timing miss), and P3 timing
 - Implementation gated behind determinism investigation close + open-question resolution + explicit user authorization, same as back elbow.
 
 ### Back elbow — unchanged this round
-Tile remains labeled "Back Elbow at Contact (under review)" with the existing under-review explainer. Replacement implementation still gated behind the determinism investigation. No code change this round.
+Tile remained labeled "Back Elbow at Contact (under review)" in Round 2. Superseded by Round 3 below.
+
+---
+
+## Round 3 — User-authorized metric-shape corrections
+
+User clarified that the back-elbow replacement must be implemented now and that P3 timing cannot remain pass/fail.
+
+### 13. Back Elbow replacement (`bh.ts` tile key `back_elbow_contact`)
+- **Before:** "Back Elbow at Contact (under review)" using legacy `back_elbow_past_bb_deg` at the contact frame.
+- **After:** Renamed **"Connection & Barrel Delivery"** and converted to a `score_meter` using `connection_barrel_delivery_score_100`.
+- **New intent:** Score the P4 launch → barrel-delivery → contact window, including connection, shoulder-square duration, elbow-led barrel delivery, hands staying in position, and minimized pre-contact blind spot.
+- **Legacy formula removed from tile use:** `back_elbow_past_bb_deg` no longer drives this tile.
+
+### 14. P2 Timing prompt correction
+- Updated the metric contract prompt so early hand-load completion is explicitly acceptable and must not fail `p2_timing_pass`.
+- Late/unready after pitcher peak knee lift is the only timing fail. Early-then-drift belongs to P1 Hip Load Stability.
+
+### 15. P3 Timing formula shape
+- **Before:** `pass_fail` backed by `p3_timing_pass` boolean.
+- **After:** `score_meter` backed by new signed field `p3_release_offset_ms`.
+- **Scoring intent:** 0 ms at pitcher release is perfect; slightly late remains acceptable; clearly late fails; early is lightly penalized because drift/instability belongs elsewhere.
 
