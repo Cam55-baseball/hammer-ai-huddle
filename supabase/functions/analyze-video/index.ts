@@ -1688,12 +1688,15 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("sha256_hex, fps_true, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("sha256_hex, fps_true, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
       .eq("id", videoId)
       .maybeSingle();
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
+    const durationSec = videoRow?.duration_sec == null ? null : Number(videoRow.duration_sec);
+    const videoWidth = videoRow?.width == null ? null : Number(videoRow.width);
+    const videoHeight = videoRow?.height == null ? null : Number(videoRow.height);
     const landingTimeSec = videoRow?.landing_time_sec == null ? null : Number(videoRow.landing_time_sec);
     const directionSign = ((): -1 | 0 | 1 => {
       const v = videoRow?.direction_sign;
