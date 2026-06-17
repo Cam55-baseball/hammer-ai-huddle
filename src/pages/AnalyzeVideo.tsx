@@ -468,6 +468,7 @@ export default function AnalyzeVideo() {
             userId: user.id,
             language: i18n.language,
             frames, // Include extracted frames for visual analysis
+            frameExtractions, // Phase 1 — per-frame deterministic audit
             ...(landingFrameIndex !== null && { landingFrameIndex }), // Only include if user marked landing
           },
         }
@@ -515,26 +516,44 @@ export default function AnalyzeVideo() {
     setAnalyzing(true);
     setAnalysisError(null);
     
-    // Re-extract frames for retry
+    // Re-extract frames for retry — deterministic pipeline requires probe.
     let frames: string[] = [];
+    let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
     let landingFrameIndex: number | null = null;
-    
+
     try {
       setExtractingFrames(true);
       toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
-      
-      frames = await extractKeyFrames(videoFile, landingTime);
-      
+
+      const probed = await probeVideoMetadata(videoFile);
+      const result = await extractKeyFramesDeterministic({
+        videoFile,
+        fps_true: probed.fps_true,
+        duration_sec: probed.duration_sec,
+        landingTime,
+      });
+      frames = result.frames.map((f) => f.dataUrl);
+      frameExtractions = result.frames.map((f) => ({
+        frame_index: f.frame_index,
+        timestamp_seconds: f.timestamp_seconds,
+        sha256_hex: f.sha256_hex,
+        width: f.width,
+        height: f.height,
+      }));
+
       if (frames.length < 3) {
         throw new Error("Could not extract enough frames for accurate analysis");
       }
-      
-      // Calculate landing frame index if user marked landing
+
       if (landingTime != null) {
-        landingFrameIndex = calculateLandingFrameIndex(landingTime);
+        landingFrameIndex = calculateLandingFrameIndex(
+          landingTime,
+          probed.fps_true,
+          result.frames.map((f) => f.frame_index),
+        );
         console.log('[RETRY ANALYSIS] Using landing frame index:', landingFrameIndex);
       }
-      
+
       console.log(`[RETRY ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
       setExtractingFrames(false);
     } catch (frameError: any) {
@@ -544,7 +563,7 @@ export default function AnalyzeVideo() {
       setAnalyzing(false);
       return;
     }
-    
+
     try {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-video",
@@ -556,6 +575,7 @@ export default function AnalyzeVideo() {
             userId: user.id,
             language: i18n.language,
             frames, // Include re-extracted frames
+            frameExtractions, // Phase 1 — per-frame deterministic audit
             ...(landingFrameIndex !== null && { landingFrameIndex }), // Only include if user marked landing
           },
         }
