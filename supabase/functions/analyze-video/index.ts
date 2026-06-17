@@ -1656,13 +1656,14 @@ Deno.serve(async (req) => {
   try {
     // Validate input
     const body = await req.json();
-    const { videoId, module, sport, userId, frames, landingFrameIndex } = requestSchema.parse(body);
+    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions } = requestSchema.parse(body);
     auditCtx.videoId = videoId;
     auditCtx.userId = userId;
 
     console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
     console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
     console.log(`[ANALYZE-VIDEO] Landing frame index: ${landingFrameIndex ?? 'auto-detect'}`);
+    console.log(`[ANALYZE-VIDEO] frameExtractions: ${frameExtractions?.length ?? 0}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
