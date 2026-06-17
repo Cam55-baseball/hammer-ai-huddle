@@ -2120,21 +2120,24 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         })
         .eq("id", videoId);
       
+      // Phase 0 defect fix: do NOT early-return here. Throw so the outer catch
+      // writes exactly one outcome='failed' video_analysis_runs audit row.
+      // The HTTP status code, upstream body, and a stable error-class tag are
+      // embedded in the Error so the catch path can populate failure_reason
+      // deterministically. No new audit insert sites are added.
+      const truncatedBody = (errorText || "").slice(0, 500);
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later.", status: 429 }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        throw new Error(
+          `ai_gateway_rate_limited: upstream_status=429 body=${truncatedBody}`
         );
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add credits to your workspace.", status: 402 }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        throw new Error(
+          `ai_gateway_payment_required: upstream_status=402 body=${truncatedBody}`
         );
       }
-      return new Response(
-        JSON.stringify({ error: "AI gateway error", status: 500 }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      throw new Error(
+        `ai_gateway_error: upstream_status=${response.status} body=${truncatedBody}`
       );
     }
 
