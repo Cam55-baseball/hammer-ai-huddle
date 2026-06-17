@@ -61,3 +61,27 @@ Evidence-only. No fixes. Structure:
 ## After you approve
 
 I create the four files, then stop. Next operator action is running the Phase 1 runbook so I can fill in the live-evidence section of the determinism investigation. No metric redesign begins until that section is complete and you authorize.
+
+---
+
+# Phase 1 Verdict — 2026-06-17
+
+## B. Phase 1 NOT accepted
+
+### Blocking defects
+
+1. **BLOCKER-1: Same fixture produced inconsistent analysis results across runs.** Operator reported during the Phase 1 evidence pass that uploading the same source video multiple times produced different downstream analysis output. This violates the Phase 1 determinism contract regardless of whether the frame-extraction layer itself is byte-deterministic, because downstream analysis (currently a multimodal AI call) is the constitutional source of user-visible truth and is observably non-replay-safe. Live evidence required to localize the variance to a specific pipeline stage is enumerated in `.lovable/determinism-investigation.md` (§ "Evidence Still Required").
+
+### Other feedback items
+
+All other operator feedback (copy fixes, methodology questions, untrustworthy metrics, "measured nothing", thumbnail error wording, sequencing narrative, finish-and-balance redefinition, hands-outside-shoulders detection, bat-speed/time-to-contact replacement, partial-render bug, confidence-% labeling) is captured in `.lovable/feedback-triage.md` and routed to either Phase 1.5 (`.lovable/phase-1.5-scope.md`) or Phase 2 (pending authorization).
+
+### Phase 2 gate
+
+**Phase 2 metric redesign is NOT authorized to begin until `.lovable/determinism-investigation.md` reaches a definitive root-cause classification.** New metrics built on a pipeline that returns different outputs for identical inputs will inherit that variance. The investigation is evidence-only at this stage — no fixes, no model pin, no encoder swap, no mutex — and unblocks Phase 2 only after the operator authorizes the corresponding fixes that the investigation surfaces.
+
+### Documents created in support of this verdict
+
+- `.lovable/feedback-triage.md` — structured backlog of every feedback bullet with tag, current behavior, decided methodology, open questions, and recommended track.
+- `.lovable/phase-1.5-scope.md` — eight presentation + reliability candidates with per-item proposed approach, awaiting per-item operator sign-off.
+- `.lovable/determinism-investigation.md` — dedicated investigation: pipeline stages classified `deterministic` / `non-deterministic` / `unknown`, six live-evidence queries enumerated, fixes explicitly out of scope.
