@@ -5,10 +5,11 @@ Initial Bucket A was presentation-only. Round 3 includes the user-authorized met
 
 ## Files touched
 
-1. `src/lib/reportCard/disciplines/bh.ts` — explainer/standard/encouragement copy only.
+1. `src/lib/reportCard/disciplines/bh.ts` — explainer/standard/encouragement copy, plus Round 3 tile formula-shape changes for back elbow and P3 timing.
 2. `src/components/report-card/hammer/ReportCardTile.tsx` — confidence tooltip relabeled honestly.
 3. `src/pages/AnalyzeVideo.tsx` — failed-analysis card now surfaces actual error message; thumbnail-failed toast rewritten.
 4. `src/i18n/locales/en.json` — `videoAnalysis.*` strings rewritten for honesty.
+5. `src/lib/reportCard/contracts/bh.contract.ts` and `supabase/functions/_shared/reportCardContracts.ts` — Round 3 metric field/prompt updates for P2, P3, and Connection & Barrel Delivery.
 
 ## Change set
 
@@ -55,17 +56,17 @@ Initial Bucket A was presentation-only. Round 3 includes the user-authorized met
 - `frameExtractionFailed`: new key, honest "your video has not been analyzed" framing.
 - `probeFailed`: new key, format-suggestion framing.
 
-## Explicitly NOT touched
+## Initial pass explicitly did NOT touch
 
-- `compute:` functions in `bh.ts` — every formula, every threshold value, every input field name unchanged.
+- `compute:` functions in `bh.ts` during the first Bucket A pass. This was later superseded by Round 3 for the user-authorized elbow and P3 timing corrections.
 - Engine versions, prompt text, edge-function logic, schema, migrations.
 - `confidence_summary_jsonb` source, calculation, or storage.
-- Back-elbow measurement formula. Only the label, threshold chip, and explainer changed.
+- Back-elbow measurement formula during the first pass. Superseded by Round 3: the old contact-frame formula no longer drives the tile.
 - Finish-and-balance measurement formula. Only standard text and explainer changed.
 
 ## Verification
 
-Run `rg -n "compute: \(a\)" src/lib/reportCard/disciplines/bh.ts` and compare against git history — every `compute` block is byte-identical to its pre-Bucket-A version.
+For Round 3, verify `Connection & Barrel Delivery` reads `connection_barrel_delivery_score_100`, P3 reads `p3_release_offset_ms`, and P2 prompt says early is acceptable.
 
 ---
 
