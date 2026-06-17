@@ -102,7 +102,8 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
         <span className="truncate">{spec.thresholdChip ?? spec.standard}</span>
         {!isMissing && typeof state.confidence === "number" && state.confidence < 0.5 && (
           <span
-            title={`Low measurement confidence (${Math.round(state.confidence * 100)}%)`}
+            title={`Low model-stated measurement confidence (${Math.round(state.confidence * 100)}%) — provisional. This is the model's self-reported confidence in the measurement, not a frame-coverage or pose-quality score.`}
+            aria-label={`Low model-stated measurement confidence ${Math.round(state.confidence * 100)} percent, provisional`}
             className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
             style={{ background: "hsl(var(--meter-warn))" }}
           />

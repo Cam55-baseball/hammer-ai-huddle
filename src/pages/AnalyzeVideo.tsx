@@ -409,11 +409,15 @@ export default function AnalyzeVideo() {
         console.error('Error details:', thumbnailError);
         console.error('Error message:', thumbnailError.message);
         console.error('Error stack:', thumbnailError.stack);
-        
-        // Show detailed error to user
-        toast.error(`${t('videoAnalysis.thumbnailFailed', 'Thumbnail generation failed')}: ${thumbnailError.message || 'Unknown error'}`, {
-          duration: 5000
-        });
+
+        // Honest, non-blaming message. Analysis still proceeds without a thumbnail.
+        toast.error(
+          t(
+            'videoAnalysis.thumbnailFailed',
+            "Couldn't generate a preview image for this video — the analysis will still run. You can upload a custom cover image later from the session."
+          ),
+          { duration: 6000 }
+        );
       }
 
       // Create video record with appropriate status — Phase 0 fields populated up front.
@@ -849,14 +853,20 @@ export default function AnalyzeVideo() {
 
             {analysisError && !analyzing && (
               <Card className="p-6 border-destructive">
-                <h3 className="text-xl font-semibold text-destructive mb-4">{t('videoAnalysis.analysisFailed')}</h3>
-                <p className="text-muted-foreground mb-4">
+                <h3 className="text-xl font-semibold text-destructive mb-2">{t('videoAnalysis.analysisFailed')}</h3>
+                <p className="text-muted-foreground mb-3">
                   {analysisError.message?.includes('429') || analysisError.status === 429
                     ? t('videoAnalysis.rateLimitError')
                     : analysisError.message?.includes('402') || analysisError.status === 402
                     ? t('videoAnalysis.paymentRequiredError')
-                    : t('videoAnalysis.genericAnalysisError')}
+                    : t('videoAnalysis.genericAnalysisError', "The analysis run did not complete. No score was produced. This is shown as failed instead of as a partial result.")}
                 </p>
+                {analysisError.message && (
+                  <details className="mb-4 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs">
+                    <summary className="cursor-pointer font-medium text-foreground">Technical details</summary>
+                    <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">{String(analysisError.message)}</pre>
+                  </details>
+                )}
                 <Button onClick={handleRetryAnalysis} className="w-full">
                   {t('videoAnalysis.retryAnalysis')}
                 </Button>

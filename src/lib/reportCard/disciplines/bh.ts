@@ -62,9 +62,9 @@ const tiles: ReportCardTileSpec[] = [
     phase: "P2 Hand Load",
     explainer: {
       whatWhy:
-        "P2 should resolve right as the pitcher hits peak knee lift. Early = drifts forward; late = rushed P3.",
-      howToImprove: "Front-toss with a partner who calls 'knee up' — sync your hand load to that cue.",
-      encouragement: "Match the pitcher. Hands set when his knee peaks.",
+        "Your hand load should FINISH right as the pitcher reaches peak knee lift — not before, not after. Finishing the load early lets the body drift forward while you wait; finishing late forces a rushed P3 and a late foot down. This is a timing check on YOUR hand load against THEIR knee lift, not a knee-lift evaluation.",
+      howToImprove: "Front-toss with a partner who calls 'knee up' — sync your hand-load finish to that cue. Slow-mo side review: pause at pitcher peak knee lift and check your hands are set, not still moving.",
+      encouragement: "Hands set when his knee peaks. Then wait.",
     },
     compute: (a) => {
       const m = readBool(a, "p2_timing_pass");
@@ -158,9 +158,9 @@ const tiles: ReportCardTileSpec[] = [
     phase: "P3 Stride / Landing",
     explainer: {
       whatWhy:
-        "At landing (right before P4 begins), the hands should be horizontally OUTSIDE the shoulder line. This is the position that gives you the runway to get on plane AND stay on plane smoothly. Hands stacked inside the shoulders force a steep, short bat path.",
+        "At landing (the moment right before P4 begins), the hands should sit horizontally OUTSIDE the back-shoulder line, not stacked inside it. Hands outside = runway for the back elbow to lead the barrel onto the plane and stay there. Hands inside the shoulders force the swing to be steep and short — the barrel has to dive to find the plane, then leaves it almost immediately, which is what produces top-spin contact and inside-out cuts on pitches you should drive.",
       howToImprove:
-        "Pause-at-landing tee work — freeze at front-foot strike and check hand position relative to the back shoulder. Wall drills with a target outside the shoulder. Mirror reps at landing.",
+        "FAILURE-SPECIFIC DRILLS — pick the one that matches your miss: (1) If your hands drift INSIDE during the stride: pause-at-landing tee work, freeze at front-foot strike and physically check hand position behind the back shoulder before swinging. (2) If your hands COLLAPSE inward as the foot lands: wall-behind drill — stand with the back of your hands inches from a wall at landing, the wall fails you if the hands move toward the shoulders. (3) If your hands NEVER got outside in the load: reset the load itself — scap-load plus elbow-up dry reps before adding the stride.",
       encouragement: "Hands outside the shoulders. Plane unlocked.",
     },
     compute: (a) => {
@@ -180,10 +180,10 @@ const tiles: ReportCardTileSpec[] = [
     nonNegotiable: true,
     explainer: {
       whatWhy:
-        "Load legs → Load hands → Pause → Step / Stride → Pause → Contact. The back hip is what drives the front foot to the ground — the step / back hip should be completely maxed out involuntarily by landing, with all VOLUNTARY hip usage spent during the stepping phase. Out-of-order or rushed sequences collapse timing.",
+        "Sequencing is the ORDER the kinetic chain fires in: back hip → torso/shoulders → back elbow → hands → barrel. Each segment loads the next; nothing fires until the segment behind it has done its job. Pass means the order held. Fail means a segment jumped the line — usually shoulders firing with the hips, or hands pushing before the elbow led — which steals power from everything downstream and shortens the contact window. A low score here is the single biggest leak you can have, because every later metric (bat path, on-plane, time to contact, bat speed) is downstream of it.",
       howToImprove:
-        "Pause-pause tee rounds. Back-hip-to-floor dry work — load the back hip and let it drive the step to the floor (no voluntary hip movement after landing). Front-toss with sequence call-outs.",
-      encouragement: "Two pauses, one swing. Back hip drops the foot.",
+        "Pause-pause tee rounds (load → pause → stride → pause → swing). Back-hip-to-floor dry work — load the back hip and let IT drive the foot down, no voluntary hip after landing. Front-toss with a partner calling out the chain ('hip — shoulder — elbow — hand — barrel') so you feel the order, not just the swing.",
+      encouragement: "Hip first. Barrel last. The order is the swing.",
     },
     compute: (a) => {
       const m = readBool(a, "sequencing_ok");
@@ -284,17 +284,17 @@ const tiles: ReportCardTileSpec[] = [
   },
   {
     key: "back_elbow_contact",
-    name: "Back Elbow at Contact",
+    name: "Back Elbow at Contact (under review)",
     mode: "raw_passed",
     standard: "Past belly button, shoulders square, knob still pinned back",
-    thresholdChip: "Acceptable ≥0° past BB · Elite ≥20°",
+    thresholdChip: "Methodology under review — see .lovable/back-elbow-methodology.md",
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "Back elbow drives past the belly button while the chest stays square as long as possible. The knob MUST stay back / pinned in the loaded position for this to work — the elbow hunts the ball forward while the hands stay loaded behind it. This is what unlocks rotational extension after contact and keeps your barrel in the zone longer.",
+        "METHODOLOGY UNDER REVIEW. This metric is currently sampled at the contact frame, but at true contact the barrel has typically already passed the back elbow if the hitter stayed connected and delivered the barrel correctly. The single-frame check at contact is the wrong window. The intended evaluation is connection + barrel delivery across the P4 launch → contact window (blind-spot minimization: time between extension starting and contact made should be as short as possible). The numeric value shown is the legacy contact-frame angle and should be read as provisional until the replacement metric ships. Do not change swing mechanics based on this tile.",
       howToImprove:
-        "Hunt the ball with the back elbow while the knob stays in the loaded position. Drills: knob-anchored tee reps, partner holds the knob while you drive the back elbow to the ball, catch-the-ball-with-both-hands at contact.",
-      encouragement: "Knob pinned, elbow hunts. The ball finds the barrel.",
+        "While this metric is under review, work the underlying intent instead: stay connected through launch, let the back elbow lead the barrel, keep shoulders square as long as possible while the back hip works aggressively, and let extension happen AFTER contact — not before.",
+      encouragement: "Under review. Trust the connection cues, not this number.",
     },
     compute: (a) => {
       const m = readNumber(a, "back_elbow_past_bb_deg");
@@ -353,14 +353,14 @@ const tiles: ReportCardTileSpec[] = [
     key: "finish_balance",
     name: "Finish & Balance",
     mode: "score_meter",
-    standard: "Post-contact balance, no fall-off, two-hand finish",
+    standard: "Stayed connected with two hands through contact and extension until the ball was gone",
     thresholdChip: "Acceptable 65 · Elite 88",
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "A clean, balanced two-hand finish over a stacked back leg is the PROOF that the swing was rotational and that the sequence held — the knob stayed back long enough, the elbow led, and the rotation finished its job. It also means you're already reset for the next pitch. Falling off line is hard evidence of a linear leak somewhere earlier in P4.",
-      howToImprove: "Hold-the-finish tee rounds. Single-leg balance drills. Mirror finish review.",
-      encouragement: "Finish like a statue. Proof the swing was right.",
+        "The goal is NOT 'hold a two-hand finish.' The goal is to MAINTAIN connection with two hands through contact and all the way through extension — until the ball is gone. The two-hand finish is just the visible byproduct of that connection holding. A swing that lets go early, rolls over, or releases the top hand before the ball clears extension is leaking power and barrel control at the most important moment of the swing. Falling off line afterward is downstream evidence of a linear leak earlier in P4. Note: the measurable definition of this metric is being reviewed separately to better reflect the connection-through-extension intent.",
+      howToImprove: "Connected-extension tee rounds — both hands stay on through full extension, hold connection until well past contact. Single-leg balance work as a downstream check. Mirror review with a focus on hand connection through extension, not the final pose.",
+      encouragement: "Stay connected through the ball. The finish is the proof, not the goal.",
     },
     compute: (a) => {
       const m = readNumber(a, "finish_balance_score_100");
