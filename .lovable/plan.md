@@ -1,61 +1,80 @@
+# Phase 1.75 — Analysis Truth Audit
 
-# Fix P2 / P3 Timing + Implement Specific Back-Elbow Replacement
+**Deliverable:** one new file, `.lovable/analysis-truth-audit.md`. Evidence only. No code changes, no copy changes, no metric edits, no edge function deploys, no schema work, no proposals, no roadmap.
 
-User-authorized changes for the specific disputed timing/elbow tiles. No schema migration. Determinism investigation continues for all broader Phase 2 work.
+## Scope guardrails
 
-## 1. Back Elbow — clarify status
+- Read-only investigation across the client report-card stack, the `analyze-video` edge function, the shared contracts, the biomech/determinism layer, and the frame extraction + probe pipeline.
+- Every claim in the doc must cite a file path and line range. No assumptions, no "should", no "intended" — only what the code actually does today.
+- If something cannot be determined from the code, the doc will say "undetermined from code — evidence needed" rather than guess.
+- No new metrics, no renamed metrics, no formula edits. The P2/P3/back-elbow/finish-and-balance work already in flight is out of scope for this audit and will be referenced as "already-changed, see bucket-a-changes.md" where relevant.
 
-**Resolved:** the tile is no longer marked under review. It is now **Connection & Barrel Delivery**, a standalone P4 launch → barrel-delivery → contact window score using `connection_barrel_delivery_score_100`. The old contact-frame `back_elbow_past_bb_deg` formula no longer drives the tile.
+## Investigation map
 
-## 2. P2 Timing → Knee Lift — fix the copy
+Each section in the audit maps to a concrete set of files to read first. I will expand from there as needed.
 
-Current copy says "not before, not after" which is wrong. Early hand-load is fine; the only timing failure is LATE. Drift-while-early is a P1 stability problem, not a P2 timing problem.
+### S1 — Report card phase percentages (1/2/3/4 circles)
+- `src/components/report-card/hammer/*` (phase header / circle components)
+- `src/lib/reportCard/grade.ts`, `src/lib/reportCard/types.ts`
+- `src/lib/reportCard/disciplines/bh.ts` (phase grouping)
+- Identify: what number is rendered, which function computes it, inputs, max/min, whether 100% is reachable, whether it's score vs confidence vs completion.
 
-**Change in `src/lib/reportCard/disciplines/bh.ts` tile `p2_timing` (lines 57–74):**
+### S2 — Current metric inventory (table)
+- `src/lib/reportCard/disciplines/bh.ts` (tile specs + compute fns)
+- `src/lib/reportCard/contracts/bh.contract.ts`
+- `src/lib/reportCard/metricReaders.ts`
+- `supabase/functions/_shared/reportCardContracts.ts` (prompt + schema)
+- Build the requested table for every BH tile actually shipped: display name, definition, compute path, data source field, confidence source, failure/missing conditions.
 
-- `standard:` → `"Hand load is finished by the time the pitcher reaches peak knee lift. Early is fine; late is the only fail."`
-- `explainer.whatWhy:` rewrite to say:
-  - Your hand load must be FINISHED by pitcher peak knee lift.
-  - Finishing early is acceptable and common — it is not a timing miss.
-  - The only failure mode is finishing LATE, which forces a rushed P3 and a late foot down.
-  - If you finish early and then drift forward while you wait, that drift is caught by P1 Hip Load Stability, not here. Don't double-count it against your timing.
-- `explainer.howToImprove:` rewrite away from "sync the finish to the cue" toward "be set by the cue — earlier is fine."
-- `explainer.encouragement:` → `"Be set by his knee peak. Earlier is fine. Late is the miss."`
+### S3 — Connect & Move vs Barrel Delivery
+- Locate both tiles in `bh.ts` + contract. Diff their input fields, formulas, and source signals. State plainly whether they share inputs.
 
-**Changed:** the metric prompt now explicitly says early is acceptable and must not fail. The existing boolean remains only because P2 is late-only pass/fail.
+### S4 — Bat Path vs On-Plane %
+- Same approach. Cross-reference `.lovable/bat-path-vs-on-plane-definitions.md` only as a pointer; the audit itself reports what the code computes, not what the memo proposes.
 
-## 3. P3 Timing → Release — flag mode mismatch, fix interim copy
+### S5 — Undetected metrics
+- For each of P2 knee-lift, P3 release, hands-outside-shoulders, bat speed, time-to-contact: trace from contract field → prompt instruction → reader → tile compute → missing path. Document required inputs (frames, angles, landmarks) and the literal `missing_reason` strings the system emits. Classify failure category strictly from code evidence; mark "undetermined" where runtime telemetry would be required.
 
-You're right that pass/fail is wrong here. Foot-down-at-release is the **perfect target**, slightly late is **acceptable**, very late is a fail. That's a graded scale, not a binary.
+### S6 — Bat speed audit
+- Trace the field in `_shared/reportCardContracts.ts` prompt + schema, the reader, the tile. Document units, whether it's model-estimated vs computed, whether any calibration (pixels-per-inch, bat length) is used.
 
-The tile now reads `p3_release_offset_ms` and displays as a score meter.
+### S7 — Time to contact audit
+- Same trace. Define start/contact frame per code, units, estimation vs direct measurement.
 
-**What changed:**
-- `standard:` → `"Front foot is down at pitcher release (perfect). Slightly late is acceptable; clearly late fails."`
-- `explainer.whatWhy:` rewrite to make the gradient explicit:
-  - Foot-down-at-release is the ideal target.
-  - A small amount later (the model currently treats anything within the tolerance window as a pass) is acceptable, not perfect.
-  - Foot down BEFORE release is also acceptable from a timing standpoint, though it may indicate other issues caught elsewhere.
-  - The only true failure is foot down clearly AFTER release — you lost your look at the ball.
-  - Note that the current tile is binary; a graded version is queued for the metric-review phase.
-- `explainer.howToImprove:` keep the "release = foot down" cue, add "earlier is okay, just don't be late."
-- `explainer.encouragement:` → `"Foot down at release. A hair late is okay. Late is the miss."`
+### S8 — Failed analysis paths
+- `src/pages/AnalyzeVideo.tsx` (upload → analyze → render flow)
+- `supabase/functions/analyze-video/*`
+- Frame extraction + thumbnail paths
+- Catalog every throw/catch, every "complete but empty" path, whether `status=complete` can coexist with empty metrics, retry vs initial divergence.
 
-The score is highest at release, accepts slightly late, fails clearly late, and only lightly penalizes early because early-then-drift belongs to stability/landing metrics.
+### S9 — Same-video nondeterminism (highest priority)
+- `src/lib/biomech/fingerprint.ts`, `probeVideoMetadata.ts`, `frameExtractionDeterministic.ts`
+- `supabase/functions/_shared/biomechFingerprint.ts`
+- `analyze-video` edge function: cache lookup, cache write, AI call params (temperature, seed, model id)
+- `video_analysis_runs` table usage
+- Enumerate every known + suspected nondeterminism source: fps probe drift, landing-time input, AI temperature/seed, prompt assembly order, frame selection, cache key composition, retry path divergence, desktop vs mobile probe differences. Rank by likelihood with code evidence.
 
-**Methodology memo (new file):** `.lovable/p3-timing-methodology.md`
-- Records that the metric is misclassified as binary
-- States the correct shape: graded scale anchored on foot-down-at-release = perfect
-- Lists what's needed to implement (new numeric field: signed ms offset from release; deadband around 0; asymmetric scoring — late penalized harder than early)
-- Marked implemented for this specific correction; remaining values are calibration questions for runtime review.
+### S10 — Desktop failure path
+- `AnalyzeVideo.tsx` upload branch, `probeVideoMetadata.ts` (`requestVideoFrameCallback` availability), any UA-gated code, file size limits, MediaRecorder/Canvas usage.
+- Identify desktop-specific blockers (rVFC support in Firefox/Safari desktop, autoplay-muted requirements, file input handling).
 
-## 4. Bucket A changes log
+### S11 — Trust score
+- For every metric in the S2 table, assign one of: TRUSTWORTHY / PARTIALLY TRUSTWORTHY / EXPERIMENTAL / NOT READY. Justification rooted in S2–S10 evidence only.
 
-Append Round 3 documenting the authorized formula-shape changes.
+### Final deliverable block (A/B/C/D buckets)
+Produced strictly from S11 classifications. No recommendations beyond bucket assignment.
 
-## Out of scope
+## Out of scope (explicit)
 
-- No unrelated metric changes.
-- No database schema migration.
-- No engine_version bump.
-- Determinism investigation runbook unchanged for broader Phase 2 work.
+- No edits to `bh.ts`, contracts, prompts, edge functions, schemas, or UI.
+- No new methodology memos beyond the single audit file.
+- No changes to `.lovable/plan.md` or `bucket-a-changes.md`.
+- No determinism fixes — the audit feeds the determinism investigation, it does not perform it.
+
+## File produced
+
+- `.lovable/analysis-truth-audit.md` (new) — sections S1–S11 plus A/B/C/D final block, every claim citing `path:line-range`.
+
+## Approval gate
+
+After this audit is delivered and you review it, you decide what (if anything) moves to Phase 2. No follow-up work will be started from this plan.
