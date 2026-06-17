@@ -66,3 +66,33 @@ Read-only audit of every copy/label change shipped in the Bucket A pass.
 ## Verification
 
 Run `rg -n "compute: \(a\)" src/lib/reportCard/disciplines/bh.ts` and compare against git history — every `compute` block is byte-identical to its pre-Bucket-A version.
+
+---
+
+## Round 2 — P2/P3 timing wording correction
+
+User feedback: P2 timing copy was wrong (early ≠ a timing miss), and P3 timing is misclassified as binary (it's actually a graded target). Presentation-only fixes; no compute changes.
+
+### 10. P2 Timing → Knee Lift (`bh.ts` tile `p2_timing`)
+- **Before standard:** "Hand load completes within ±150 ms of pitcher peak knee lift"
+- **After standard:** "Hand load is finished by the time the pitcher reaches peak knee lift. Early is fine; late is the only fail."
+- **Explainer rewrite:** Removes the "not before, not after" framing. States explicitly that early is acceptable, only late is a timing miss, and that early-then-drift is a P1 Hip Load Stability issue — not to be double-counted here.
+- **Encouragement:** "Be set by his knee peak. Earlier is fine. Late is the miss."
+- **Formula unchanged.** If the underlying `p2_timing_pass` boolean is failing athletes for being early, that is a measurement-formula defect for the determinism investigation, not Bucket A.
+
+### 11. P3 Timing → Release (`bh.ts` tile `p3_timing`)
+- **Before standard:** "Front foot strike within ±120 ms of pitcher release"
+- **After standard:** "Front foot is down at pitcher release (perfect). Slightly late is acceptable; clearly late fails."
+- **Explainer rewrite:** Makes the gradient explicit — perfect target = foot-down-at-release, slightly late = acceptable, clearly late = fail, early = timing-acceptable. Explicitly flags that the tile is currently binary and a graded version is queued for metric review, with pointer to `.lovable/p3-timing-methodology.md`.
+- **Encouragement:** "Foot down at release. A hair late is okay. Late is the miss."
+- **Mode unchanged** (still `pass_fail`). **Formula unchanged.** Mode swap to `score_meter` is gated behind the determinism investigation and requires a new `p3_release_offset_ms` field.
+
+### 12. New methodology memo (`.lovable/p3-timing-methodology.md`)
+- Records that the metric is misclassified as binary.
+- Documents the canonical graded shape: signed-ms-offset from release, asymmetric scoring (late > early penalty), deadband around 0, frame-rate-aware missingness.
+- Lists 7 open questions (deadband width, acceptable-late window, fail threshold, early-side floor, min fps, release-frame ground truth, mode-swap legality).
+- Implementation gated behind determinism investigation close + open-question resolution + explicit user authorization, same as back elbow.
+
+### Back elbow — unchanged this round
+Tile remains labeled "Back Elbow at Contact (under review)" with the existing under-review explainer. Replacement implementation still gated behind the determinism investigation. No code change this round.
+

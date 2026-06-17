@@ -1,87 +1,71 @@
 
-# Bucket A Presentation Pass + Methodology Memos
+# Fix P2 / P3 Timing Copy + Clarify Back-Elbow Status
 
-Scope is presentation-layer wording, labeling, and read-only methodology documentation. **No measurement formulas change. No metric engine changes. No schema, prompt, or edge-function logic changes.** The determinism investigation continues exactly as previously approved.
+Presentation-layer only. No compute, schema, prompt, or engine_version changes. Determinism investigation unaffected.
 
-## 1. Bucket A — presentation/wording fixes (code edits, copy only)
+## 1. Back Elbow — clarify status
 
-For each item I will first locate the exact component/string with read-only search, then edit only the user-visible copy. No scoring math touched.
+**Answer to your question:** Yes, we are changing it. "Under review" was chosen as the *interim* label while the current tile still runs the old contact-frame formula. The replacement (window-based P4→contact "Connection & Barrel Delivery") is documented in `.lovable/back-elbow-methodology.md` but cannot be implemented this turn because:
 
-1. **P2 knee-lift wording** — correct the report-card description so it matches the actual P2 definition.
-2. **Sequencing explanation** — rewrite the athlete-facing explanation to describe hip → shoulder → elbow → hand → barrel chain in plain language; clarify what a low score means.
-3. **Finish & balance wording** — replace "hold a two-hand finish" with: *"Stayed connected with two hands through contact and extension until the ball was gone."* Wording only; the measurable definition stays unchanged pending separate review (see §3).
-4. **Hands-outside-shoulders drill explanation** — rewrite the drill rationale so it explains the connection failure being addressed, not a generic "keep hands in" cue.
-5. **Thumbnail-failed message** — replace the current message with an honest, non-blaming line that says what failed and what the user can do.
-6. **Honest failed-analysis surfaces** — when an analysis run finishes with `outcome != ok`, the result card surfaces the real reason (probe failed / frames dropped / model error) instead of showing a fabricated score or a misleading "complete" state.
-7. **Confidence % investigation + labeling** — read-only trace of where the `confidence_summary_jsonb` number on the report card comes from, what it actually represents, and a label change so the UI tells the truth (e.g. "Frame-coverage confidence" vs "Model confidence"). If the source is ambiguous, the label becomes `Confidence (provisional)` and the finding is logged for the determinism evidence package — no number is invented.
-8. **Related presentation clarifications** discovered while doing the above are limited to copy and labels; anything that would change a formula is logged, not edited.
+- it requires new measurement fields the model doesn't currently emit (blind-spot start frame, shoulder-square duration, window length)
+- those are Phase 2 metric work, which is not authorized until the determinism investigation closes
 
-Deliverable: a short `.lovable/bucket-a-changes.md` listing every file touched and the before/after string, so the change set is auditable.
+So the tile stays labeled honestly as provisional until that gate opens. **No code change in this plan for back elbow.** If you want a different interim label (e.g. "Back Elbow at Contact (deprecated — do not use)" or hide the tile entirely), tell me and I'll add it.
 
-## 2. Back-elbow methodology memo (no implementation)
+## 2. P2 Timing → Knee Lift — fix the copy
 
-Capture your direction as the canonical methodology record for future implementation review. Written to `.lovable/back-elbow-methodology.md`. Key points locked in from your answers:
+Current copy says "not before, not after" which is wrong. Early hand-load is fine; the only timing failure is LATE. Drift-while-early is a P1 stability problem, not a P2 timing problem.
 
-- **Not a single-frame metric.** Evaluation window = **P4 launch → barrel-delivery → contact**, plus how long that window lasted.
-- **Renamed standalone metric.** Working name: **"Connection & Barrel Delivery (P4 → Contact)"**. Final name TBD with you.
-- **What it actually evaluates:**
-  - Back elbow stays connected to torso through launch.
-  - Shoulders stay as square as possible as long as possible while the back hip works aggressively.
-  - Elbow works forward → barrel begins to turn forward → hands stay in a powerful kinematic position with knob to the catcher → hips→shoulder→knob power through the ball.
-  - **Blind-spot minimization:** time between *extension starts* and *contact made* should be as short as possible. Ideal sequence = contact, then release/extension.
-- **Explicitly not:** "elbow position at the contact frame." Current metric is measuring the wrong frame and will be deprecated once the replacement is approved.
-- **Open questions logged for next review round** (not answered now): which landmarks/derived signals approximate "shoulders square," how blind-spot duration is detected from pose data, frame-rate sensitivity, and minimum sample needed to score the window.
+**Change in `src/lib/reportCard/disciplines/bh.ts` tile `p2_timing` (lines 57–74):**
 
-No code changes. No metric engine changes. Memo is the deliverable.
+- `standard:` → `"Hand load is finished by the time the pitcher reaches peak knee lift. Early is fine; late is the only fail."`
+- `explainer.whatWhy:` rewrite to say:
+  - Your hand load must be FINISHED by pitcher peak knee lift.
+  - Finishing early is acceptable and common — it is not a timing miss.
+  - The only failure mode is finishing LATE, which forces a rushed P3 and a late foot down.
+  - If you finish early and then drift forward while you wait, that drift is caught by P1 Hip Load Stability, not here. Don't double-count it against your timing.
+- `explainer.howToImprove:` rewrite away from "sync the finish to the cue" toward "be set by the cue — earlier is fine."
+- `explainer.encouragement:` → `"Be set by his knee peak. Earlier is fine. Late is the miss."`
 
-## 3. Bat Path vs On-Plane % — definitions doc (evidence first)
+**Not changed:** the `compute` block, the `p2_timing_pass` boolean, or the underlying threshold. We are correcting what we *tell the athlete* about the existing pass/fail signal. If the boolean is currently failing athletes for being early, that is a measurement-formula bug and belongs to the determinism investigation, not Bucket A — I will flag it in the bat-path/on-plane definitions memo style as a follow-up rather than touching compute.
 
-Read-only investigation written to `.lovable/bat-path-vs-on-plane-definitions.md`:
+## 3. P3 Timing → Release — flag mode mismatch, fix interim copy
 
-- Current definition of each metric as it appears in code and in the report card.
-- Exact code references (file + symbol) for the computation path of each.
-- The input frames each uses.
-- Whether the prompt to the model treats them as the same or different.
-- A side-by-side comparison table.
-- A verdict candidate (A same-metric-different-names / B distinct / C retire one) **supported by the evidence**, presented for your decision. No redesign, no edits.
+You're right that pass/fail is wrong here. Foot-down-at-release is the **perfect target**, slightly late is **acceptable**, very late is a fail. That's a graded scale, not a binary.
 
-## 4. Finish & Balance — methodology note
+The current tile reads `p3_timing_pass` (boolean). Converting it to a score_meter requires a new numeric field (e.g. `p3_release_offset_ms`) that the model does not emit today. That is metric work, which is gated behind the determinism investigation.
 
-Short addendum in `.lovable/finish-and-balance-methodology.md` capturing: the true intent ("connection with two hands through contact and extension until the ball is gone"), why the current measurable definition may not match, and a flag that the measurable definition requires a separate review before any change. Wording fix in §1.3 is the only code change.
+**What this plan does (presentation only):**
+- `standard:` → `"Front foot is down at pitcher release (perfect). Slightly late is acceptable; clearly late fails."`
+- `explainer.whatWhy:` rewrite to make the gradient explicit:
+  - Foot-down-at-release is the ideal target.
+  - A small amount later (the model currently treats anything within the tolerance window as a pass) is acceptable, not perfect.
+  - Foot down BEFORE release is also acceptable from a timing standpoint, though it may indicate other issues caught elsewhere.
+  - The only true failure is foot down clearly AFTER release — you lost your look at the ball.
+  - Note that the current tile is binary; a graded version is queued for the metric-review phase.
+- `explainer.howToImprove:` keep the "release = foot down" cue, add "earlier is okay, just don't be late."
+- `explainer.encouragement:` → `"Foot down at release. A hair late is okay. Late is the miss."`
 
-## 5. Time-to-Contact vs Bat Speed / Power — methodology note
+**What this plan does NOT do:** swap `mode: "pass_fail"` for `mode: "score_meter"`, or change the `compute` block, or invent a new field.
 
-Documented in `.lovable/time-to-contact-vs-power.md`:
+**Methodology memo (new file):** `.lovable/p3-timing-methodology.md`
+- Records that the metric is misclassified as binary
+- States the correct shape: graded scale anchored on foot-down-at-release = perfect
+- Lists what's needed to implement (new numeric field: signed ms offset from release; deadband around 0; asymmetric scoring — late penalized harder than early)
+- Gated behind determinism investigation, same as back elbow
 
-- Time to Contact = quickness, efficiency, more time to see the ball, adjustability, strong separator of high-level hitters.
-- Bat Speed = power production, damage potential.
-- Elite hitter = both, and they compound.
-- Future metric work treats them as separate baseball qualities, not substitutes, unless evidence proves otherwise.
+## 4. Bucket A changes log
 
-No measurement changes now. Future Phase 2 work must reference this note.
+Append section "Round 2 — P2/P3 timing wording correction" to `.lovable/bucket-a-changes.md` documenting items 2 and 3 above and the new methodology memo.
 
-## 6. Determinism investigation
+## Out of scope
 
-Continues exactly as previously approved. **No Phase 2 metric implementation is authorized** until that investigation completes and you review it. Bucket A is presentation-only and does not gate or block the investigation.
+- No `compute:` changes anywhere
+- No mode changes (pass_fail stays pass_fail)
+- No new input fields, no schema, no prompt, no engine_version bump
+- No back-elbow implementation
+- Determinism investigation runbook unchanged
 
-## Out of scope (explicitly)
+## Open question for you before I implement
 
-- No metric formula edits.
-- No engine-version or prompt-version bumps.
-- No schema migrations.
-- No new edge functions.
-- No MediaPipe work.
-- No Phase 1.5 or Phase 2 work.
-- No design refresh; copy and labels only.
-
-## Deliverables summary
-
-Code (copy/labels only):
-- Bucket A wording fixes in the existing report-card / drill / analysis-status components.
-
-Docs (read-only methodology + audit):
-- `.lovable/bucket-a-changes.md`
-- `.lovable/back-elbow-methodology.md`
-- `.lovable/bat-path-vs-on-plane-definitions.md`
-- `.lovable/finish-and-balance-methodology.md`
-- `.lovable/time-to-contact-vs-power.md`
+For back elbow — keep current label "Back Elbow at Contact (under review)", or change to something stronger like "(deprecated — do not coach to this)"? I'll default to keeping current label unless you say otherwise.

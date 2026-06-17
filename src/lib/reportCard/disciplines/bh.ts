@@ -58,13 +58,13 @@ const tiles: ReportCardTileSpec[] = [
     key: "p2_timing",
     name: "P2 Timing → Knee Lift",
     mode: "pass_fail",
-    standard: "Hand load completes within ±150 ms of pitcher peak knee lift",
+    standard: "Hand load is finished by the time the pitcher reaches peak knee lift. Early is fine; late is the only fail.",
     phase: "P2 Hand Load",
     explainer: {
       whatWhy:
-        "Your hand load should FINISH right as the pitcher reaches peak knee lift — not before, not after. Finishing the load early lets the body drift forward while you wait; finishing late forces a rushed P3 and a late foot down. This is a timing check on YOUR hand load against THEIR knee lift, not a knee-lift evaluation.",
-      howToImprove: "Front-toss with a partner who calls 'knee up' — sync your hand-load finish to that cue. Slow-mo side review: pause at pitcher peak knee lift and check your hands are set, not still moving.",
-      encouragement: "Hands set when his knee peaks. Then wait.",
+        "Your hand load must be FINISHED by the time the pitcher reaches peak knee lift. Finishing EARLY is acceptable and common — it is not a timing miss. The only failure mode here is finishing LATE, which forces a rushed P3 and a late foot down. If you finish early and then drift forward while you wait, that drift is a stability problem caught by P1 Hip Load Stability, not a P2 timing problem — don't double-count it against your timing.",
+      howToImprove: "Be set by the time the pitcher's knee peaks — earlier is fine. Front-toss with a partner who calls 'knee up' — your hands should already be quiet by that cue, not still moving. Slow-mo side review: pause at pitcher peak knee lift and confirm your hands are set.",
+      encouragement: "Be set by his knee peak. Earlier is fine. Late is the miss.",
     },
     compute: (a) => {
       const m = readBool(a, "p2_timing_pass");
@@ -136,13 +136,13 @@ const tiles: ReportCardTileSpec[] = [
     key: "p3_timing",
     name: "P3 Timing → Release",
     mode: "pass_fail",
-    standard: "Front foot strike within ±120 ms of pitcher release",
+    standard: "Front foot is down at pitcher release (perfect). Slightly late is acceptable; clearly late fails.",
     phase: "P3 Stride / Landing",
     explainer: {
       whatWhy:
-        "Front foot should be down right as the pitcher reaches release. That sets your direction and gives you the longest possible look at the ball.",
-      howToImprove: "Live BP with a count cue: 'release' = foot down. Adjust load tempo to match.",
-      encouragement: "Foot down at release. Now you're a hitter, not a guesser.",
+        "Foot-down-at-release is the ideal target — that sets your direction and gives you the longest possible look at the ball. A small amount later is acceptable (the current tile treats anything inside its tolerance window as a pass). Foot down BEFORE release is also acceptable from a timing standpoint, though it may signal other issues that get caught elsewhere. The only true failure here is foot down clearly AFTER release — you lost your look at the ball. Note: this tile is currently binary (pass/fail). A graded version that scores how close you are to perfect is queued for the metric-review phase — see .lovable/p3-timing-methodology.md.",
+      howToImprove: "Live BP with a count cue: 'release' = foot down. Earlier is okay — just don't be late. Adjust load tempo (start the load sooner) if you're consistently late.",
+      encouragement: "Foot down at release. A hair late is okay. Late is the miss.",
     },
     compute: (a) => {
       const m = readBool(a, "p3_timing_pass");
