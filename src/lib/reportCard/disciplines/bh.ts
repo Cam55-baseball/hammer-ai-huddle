@@ -284,28 +284,24 @@ const tiles: ReportCardTileSpec[] = [
   },
   {
     key: "back_elbow_contact",
-    name: "Back Elbow at Contact (under review)",
+    name: "Connection & Barrel Delivery (P4 → Contact)",
     mode: "raw_passed",
-    standard: "Past belly button, shoulders square, knob still pinned back",
-    thresholdChip: "Methodology under review — see .lovable/back-elbow-methodology.md",
+    standard: "Connection held through launch → barrel delivered by the elbow → contact made BEFORE extension starts (blind spot minimized)",
+    thresholdChip: "Window metric: launch (P4) → barrel delivery → contact",
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "METHODOLOGY UNDER REVIEW. This metric is currently sampled at the contact frame, but at true contact the barrel has typically already passed the back elbow if the hitter stayed connected and delivered the barrel correctly. The single-frame check at contact is the wrong window. The intended evaluation is connection + barrel delivery across the P4 launch → contact window (blind-spot minimization: time between extension starting and contact made should be as short as possible). The numeric value shown is the legacy contact-frame angle and should be read as provisional until the replacement metric ships. Do not change swing mechanics based on this tile.",
+        "This is NOT a single-frame elbow check at contact. It evaluates connection and barrel delivery across the entire P4 launch → contact window, plus how long that window lasts. The elbow makes it easier to slot the bat, but slotting the bat is really about getting the hands on plane with the ball while the knob stays toward the catcher. If the elbow goes forward, the barrel turns forward without the hands losing position. Then the body uses energy from hips → shoulder → knob to power through the ball because everything stayed in a powerful kinematic position. Cues: shoulders stay as square as possible as long as possible while the back hip works aggressively; connection (elbow-to-torso tightness) holds through launch; sequencing into the barrel is intact (elbow leads, barrel follows). Blind spot starts when extension starts. Ideally you make contact FIRST and then release into extension — the time between extension starting and contact being made is the blind spot, and minimizing it is the whole point of the hitter's move.",
       howToImprove:
-        "While this metric is under review, work the underlying intent instead: stay connected through launch, let the back elbow lead the barrel, keep shoulders square as long as possible while the back hip works aggressively, and let extension happen AFTER contact — not before.",
-      encouragement: "Under review. Trust the connection cues, not this number.",
+        "Train the move, not the pose. Connection drills with a towel or ball pinned to the back side through launch. Slot-the-bat dry reps emphasizing knob-to-catcher while the elbow leads the barrel. Shoulders-stay-closed work against a wall or alignment stick. Tee work focused on contact-before-extension — feel the barrel meet the ball with the elbow still working, and only THEN release into extension. Slow-mo side video to check that extension does not begin before contact.",
+      encouragement: "Connection through launch. Elbow leads the barrel. Contact, then extension.",
     },
     compute: (a) => {
-      const m = readNumber(a, "back_elbow_past_bb_deg");
-      if (!m) return missingState(a, "back_elbow_past_bb_deg");
-      const elite = m.value >= 20;
-      const pass = m.value >= 0;
-      return {
-        status: elite ? "elite" : pass ? "pass" : "fail",
-        value: `${Math.round(m.value)}°`,
-        confidence: m.confidence,
-      };
+      // Measurement under review. The legacy back_elbow_past_bb_deg field samples
+      // the wrong frame (contact, after the elbow/barrel relationship has flipped).
+      // Until the new window-based measurement ships (see .lovable/back-elbow-methodology.md),
+      // this tile reports missing rather than fabricating a score from the wrong frame.
+      return missingState(a, "connection_barrel_delivery_window");
     },
   },
   {
