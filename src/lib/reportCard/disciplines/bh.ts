@@ -135,19 +135,36 @@ const tiles: ReportCardTileSpec[] = [
   {
     key: "p3_timing",
     name: "P3 Timing → Release",
-    mode: "pass_fail",
-    standard: "Front foot is down at pitcher release (perfect). Slightly late is acceptable; clearly late fails.",
+    mode: "score_meter",
+    standard: "Score how close front-foot-down is to pitcher release. Release is perfect; slightly late is acceptable; clearly late fails.",
+    thresholdChip: "Acceptable 70 · Elite 90",
     phase: "P3 Stride / Landing",
     explainer: {
       whatWhy:
-        "Foot-down-at-release is the ideal target — that sets your direction and gives you the longest possible look at the ball. A small amount later is acceptable (the current tile treats anything inside its tolerance window as a pass). Foot down BEFORE release is also acceptable from a timing standpoint, though it may signal other issues that get caught elsewhere. The only true failure here is foot down clearly AFTER release — you lost your look at the ball. Note: this tile is currently binary (pass/fail). A graded version that scores how close you are to perfect is queued for the metric-review phase — see .lovable/p3-timing-methodology.md.",
-      howToImprove: "Live BP with a count cue: 'release' = foot down. Earlier is okay — just don't be late. Adjust load tempo (start the load sooner) if you're consistently late.",
-      encouragement: "Foot down at release. A hair late is okay. Late is the miss.",
+        "Foot-down-at-release is the perfect target because it sets direction while preserving the longest possible look at the ball. This is now graded, not pass/fail: exact release earns the highest score, slightly late is still acceptable, and clearly late fails because the hitter lost look-time. Foot down before release is not punished like late timing; if the hitter gets down early and then drifts forward, that drift belongs to P1 Hip Load Stability or landing quality — not this timing score.",
+      howToImprove: "Live BP with a count cue: 'release' = foot down. If you're consistently late, start the hand load sooner and let the back hip control the stride earlier. Do not create forward drift just to be on time — stability is scored separately.",
+      encouragement: "Foot down at release is perfect. A hair late is okay. Clearly late is the miss.",
     },
     compute: (a) => {
-      const m = readBool(a, "p3_timing_pass");
-      if (!m) return missingState(a, "p3_timing_pass");
-      return { status: m.value ? "pass" : "fail", confidence: m.confidence };
+      const m = readNumber(a, "p3_release_offset_ms");
+      if (!m) return missingState(a, "p3_release_offset_ms");
+
+      const offset = m.value;
+      const deadbandMs = 33;
+      let score = 100;
+
+      if (offset > deadbandMs) {
+        if (offset <= 80) score = 100 - ((offset - deadbandMs) / (80 - deadbandMs)) * 10;
+        else if (offset <= 150) score = 90 - ((offset - 80) / (150 - 80)) * 20;
+        else score = Math.max(0, 70 - ((offset - 150) / 150) * 70);
+      } else if (offset < -deadbandMs) {
+        score = Math.max(85, 100 - ((Math.abs(offset) - deadbandMs) / 267) * 15);
+      }
+
+      return {
+        ...scoreMeterState(score, m.confidence, 70, 90),
+        value: offset > deadbandMs ? `+${Math.round(offset)}ms late` : offset < -deadbandMs ? `${Math.round(Math.abs(offset))}ms early` : "at release",
+      };
     },
   },
   {
@@ -284,28 +301,22 @@ const tiles: ReportCardTileSpec[] = [
   },
   {
     key: "back_elbow_contact",
-    name: "Back Elbow at Contact (under review)",
-    mode: "raw_passed",
-    standard: "Past belly button, shoulders square, knob still pinned back",
-    thresholdChip: "Methodology under review — see .lovable/back-elbow-methodology.md",
+    name: "Connection & Barrel Delivery",
+    mode: "score_meter",
+    standard: "Connection quality across launch → barrel delivery → contact; minimize the pre-contact blind spot.",
+    thresholdChip: "Acceptable 70 · Elite 90",
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "METHODOLOGY UNDER REVIEW. This metric is currently sampled at the contact frame, but at true contact the barrel has typically already passed the back elbow if the hitter stayed connected and delivered the barrel correctly. The single-frame check at contact is the wrong window. The intended evaluation is connection + barrel delivery across the P4 launch → contact window (blind-spot minimization: time between extension starting and contact made should be as short as possible). The numeric value shown is the legacy contact-frame angle and should be read as provisional until the replacement metric ships. Do not change swing mechanics based on this tile.",
+        "This is a window metric, not a contact-frame elbow snapshot. It evaluates the hitter's move from P4 launch through barrel delivery into contact: connection holds, shoulders stay as square as possible while the back hip works aggressively, the back elbow moves forward so the barrel begins turning without the hands losing position, and extension waits until after contact. The blind spot starts when extension starts; the shorter the time from extension-start to contact, the better.",
       howToImprove:
-        "While this metric is under review, work the underlying intent instead: stay connected through launch, let the back elbow lead the barrel, keep shoulders square as long as possible while the back hip works aggressively, and let extension happen AFTER contact — not before.",
-      encouragement: "Under review. Trust the connection cues, not this number.",
+        "Launch-to-contact constraint work: keep the knob back as a fulcrum, let the back elbow drive forward linearly, keep the hands in position with the body, and make contact before releasing into extension. Use pause-at-launch tee reps, partner-holds-the-knob elbow-to-ball reps, and slow-motion review of when extension begins relative to contact.",
+      encouragement: "Stay connected. Elbow delivers the barrel. Contact before extension.",
     },
     compute: (a) => {
-      const m = readNumber(a, "back_elbow_past_bb_deg");
-      if (!m) return missingState(a, "back_elbow_past_bb_deg");
-      const elite = m.value >= 20;
-      const pass = m.value >= 0;
-      return {
-        status: elite ? "elite" : pass ? "pass" : "fail",
-        value: `${Math.round(m.value)}°`,
-        confidence: m.confidence,
-      };
+      const m = readScore100(a, "connection_barrel_delivery_score_100");
+      if (!m) return missingState(a, "connection_barrel_delivery_score_100");
+      return scoreMeterState(m.value, m.confidence, 70, 90);
     },
   },
   {
