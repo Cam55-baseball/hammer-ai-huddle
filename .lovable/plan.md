@@ -1,39 +1,32 @@
-## Phase 10 — Canonical Implementation Reality Audit
+## Phase 11 — Canonical Build Plan
 
-Create exactly one new file: `.lovable/canonical-implementation-reality-audit.md`. No other files touched.
+Create exactly one new file: `.lovable/canonical-build-plan.md`. No other files touched.
 
 ### Approach
 
-1. Read the nine canonical source inputs (Phases 1–9 documents + truth audit/extraction) to anchor canonical requirements.
-2. Survey the repository for evidence of each canonical component:
-   - Detectors (D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE) — search `src/lib/`, `src/lib/biomech/`, `src/lib/pieV2/`, `src/lib/runtime/`.
-   - Anchors (Launch, Heel Plant, Contact, Release, Finish) — search anchor/event detection modules.
-   - 18 BH metrics — cross-reference `src/lib/biomech/`, `ENGINE_CONTRACT.ts`, methodology docs under `.lovable/`.
-   - Report card surfaces — search `src/components/` and pages for phase percentage / orb / tile / ribbon / coaching surfaces.
-   - Validation harnesses (H1–H7 per validation framework) — search `scripts/`, `tests/`, `src/test/`, `scripts/replay/`.
-   - Calibration certificates — search for any certificate/calibration scaffolding.
-   - Confidence emission — search `confidence` references in `src/lib/pieV2/`, `src/lib/biomech/`, modulators.
-3. For each row, record: canonical requirement (by reference), repository evidence (path or "none found"), implementation status (Missing / Partial / Present-Unvalidated / Present-Validated), evidence location, missing components, production readiness (per Phase 9 gate matrix).
-4. Consolidate all deficits into a Master Implementation Deficit Inventory.
+1. Treat Phase 10's Master Implementation Deficit Inventory as the closed input set. Every item in it must appear exactly once in the Canonical Build Inventory (§9).
+2. For each canonical component, translate its Phase 10 deficit into the build, validation, calibration, and confidence work required to satisfy the **existing** canonical requirements — no new metrics/detectors/anchors/gates/doctrines invented, no thresholds changed.
+3. All work items cite the canonical clause they satisfy (`arch`, `bp`, `gap`, `val`, `cal`, `conf`, `gate`, `audit`, `extract`, `reality`). No estimates, sequencing, prioritization, owners, or dates.
 
 ### Document Structure
 
-1. **Audit Scope** — boundary, canonical authority statement, repository-evaluated-against-canon statement.
-2. **Detector Reality Matrix** — 7 rows × 6 columns.
-3. **Anchor Reality Matrix** — 5 rows × 6 columns.
-4. **Metric Reality Matrix** — 18 rows × 8 columns.
-5. **Report Card Reality Matrix** — 7 rows × 5 columns.
-6. **Validation Reality Matrix** — references Phase 4 harnesses only.
-7. **Calibration Reality Matrix** — references Phase 7 only.
-8. **Confidence Reality Matrix** — references Phase 8 only.
-9. **Production Gate Reality Matrix** — pass/fail per Phase 9 gates only.
-10. **Master Implementation Deficit Inventory** — consolidated list.
-11. **Closing Constraints** — reality-audit-only; no architecture, code, roadmap, sequencing, prioritization, estimates, or new metrics/detectors/anchors/gates/doctrines invented.
+1. **Build Scope** — canonical authority statement; plan exists solely to satisfy existing canonical requirements; no architecture/validation/calibration/confidence/gate changes.
+2. **Detector Build Matrix** — 7 rows × 8 columns (Current Status, Required Canonical Outcome, Missing Components, Required Build Work, Required Validation Work, Required Calibration Work, Required Confidence Work, Production Gate Dependency).
+3. **Anchor Build Matrix** — 5 rows × 8 columns.
+4. **Metric Build Matrix** — 18 rows × 8 columns.
+5. **Report Card Build Matrix** — 7 rows × 6 columns.
+6. **Validation Build Matrix** — every missing harness (`H1`–`H7`) and universal precondition deficit from Phase 10 §10.5/§10.8, cited to `val §6` only.
+7. **Calibration Build Matrix** — every missing certificate / drift requirement from Phase 10 §10.6, cited to `cal §3`–`§6` and `cal §Drift` only.
+8. **Confidence Build Matrix** — every missing confidence emission/propagation/invalidation requirement from Phase 10 §10.7, cited to `conf §Detector`–`§Surface`, `§Propagation`, `§Promotion-Demotion` only.
+9. **Production Gate Closure Matrix** — for every detector, anchor, metric, surface: current gate status (from Phase 10 §9), missing requirements, required closure work, final target gate (per `gate` Parts 1–4 + `val §1.3` ladder).
+10. **Canonical Build Inventory** — single consolidated list mirroring Phase 10 §10.1–§10.9, with each deficit appearing exactly once.
+11. **Closing Constraints** — build-plan only; no code, no architecture/validation/calibration/confidence/gate changes; no new metrics/detectors/anchors/gates/doctrines; no estimates; no sequencing; no prioritization.
 
 ### Constraints Honored
 
 - Single new file only.
-- No code, no implementation, no architecture changes, no roadmap, no sequencing, no prioritization, no estimates.
-- No new metrics, detectors, anchors, gates, harnesses, or doctrines invented.
-- All requirements cited by reference to Phases 1–9 canonical documents.
-- Repository evidence cited by file path only; no edits.
+- Pure translation of Phase 10 deficits into satisfaction work against Phases 1–9 requirements.
+- No code, no implementation, no architecture/validation/calibration/confidence/gate changes.
+- No new metrics, detectors, anchors, gates, or doctrines invented.
+- No estimates, sequencing, prioritization, owners, or dates.
+- All requirements cited by reference; all repository references are read-only path citations.
