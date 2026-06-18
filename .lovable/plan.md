@@ -1,77 +1,90 @@
 
-# Phase 5 — Canonical Gap Analysis & Build Matrix (DELIVERED → `.lovable/canonical-gap-analysis.md`)
+# Phase 6 — Canonical Validation Framework
 
 ## Deliverable
-One file: `.lovable/canonical-gap-analysis.md`. No code, no roadmap, no prioritization, no edits anywhere else.
+One new file: `.lovable/canonical-validation-framework.md`. No other file is touched.
 
-## Source documents (read-only inputs)
-- `.lovable/analysis-truth-audit.md` — current reality
-- `.lovable/analysis-truth-extraction.md` — extracted current behavior
-- `.lovable/canonical-measurement-architecture.md` — canonical measurement spec
-- `.lovable/canonical-implementation-blueprint.md` — canonical implementation spec
-- `.lovable/bat-path-vs-on-plane-definitions.md`
-- `.lovable/p3-timing-methodology.md`
-- `.lovable/time-to-contact-vs-power.md`
-- `.lovable/back-elbow-methodology.md`
-- `.lovable/finish-and-balance-methodology.md`
-- `.lovable/confidence-source-trace.md`
+## Read-only inputs
+- `.lovable/canonical-measurement-architecture.md` (Parts 0–5)
+- `.lovable/canonical-implementation-blueprint.md` (Sections A–I)
+- `.lovable/canonical-gap-analysis.md` (Sections A–F)
+- `.lovable/analysis-truth-audit.md` (S1–S11)
+- `.lovable/analysis-truth-extraction.md` (§1–§10)
 
-No new investigation of code. Gap rows reference findings already captured in the audit/extraction; canonical-state columns cite the architecture/blueprint section IDs.
+Every requirement cell cites one of these. No new methodology, no new detectors, no new metrics, no new harnesses — only the validation rules under which the already-defined components progress from T0 → T4.
 
 ## Document structure
 
-**Preamble**
-- Purpose: translate "current vs canonical" into a single source of truth for what must change.
-- Method: each row = Current (audit citation) → Canonical (architecture/blueprint citation) → Gap classification → Required work (inventory only).
-- Gap classification vocabulary: `BUILD` (new), `FIX` (broken), `REPLACE` (swap implementation), `HIDE` (remove from surface until ready), `RETAIN` (already canonical), `CALIBRATE` (parameter/threshold tuning only).
-- Trust-class vocabulary reused from audit: T0 fabricated, T1 stub, T2 partial-deterministic, T3 deterministic-uncalibrated, T4 production-ready.
+**1. Preamble**
+- Purpose statement.
+- Validation philosophy: evidence supremacy, deterministic-first, missingness-visible, replay-equivalent, additive promotion, demotion-on-regression.
+- Trust-class promotion law: monotonic by evidence; promotion requires meeting every gate at the target class; any gate failure forces immediate demotion to the highest class whose gates still hold.
+- Promotion requirements (universal preconditions across detectors, anchors, metrics, report-card surfaces).
+- Demotion requirements (regression triggers, observed-failure triggers, version-pin breakage, replay-divergence triggers).
+- Validation evidence hierarchy (ranked, highest authority first): replay-determinism proof → golden-clip ground truth → calibration certificate → confidence-calibration curve → missingness-routing audit → human-labeled spot check → AI residual envelope check.
 
-**Section A — Metric Gap Matrix (all 18 BH metrics)**
-Columns: Metric | Current State | Canonical State | Gap | Current Trust Class | Required Detectors | Required Anchors | Required Calibration | Phone-Only Possible (Y/N + condition) | Production Ready (Y/N).
-Special-focus rows expanded with sub-bullets where the canonical spec demands them: `bat_speed_contact`, `time_to_contact`, `bat_path`, `on_plane_pct`, `connect_and_move`, `barrel_delivery`, `p2_timing`, `p3_timing`, `hands_outside_shoulders`.
+**2. Detector Validation Framework**
+One row per detector (D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE). Each row defines T0–T4 plus required evidence, required replay stability, required determinism proof, required confidence thresholds. Class definitions (uniform across detectors):
+- T0 — absent/stub (cites `audit S3` baseline).
+- T1 — wired at pinned version; emits per-frame output; no calibration; no replay evidence.
+- T2 — passes determinism harness (`bp §H1`) on a fixed input; per-keypoint confidence exposed.
+- T3 — passes golden-clip suite (`bp §H2`) at per-detector pass-rate floor; calibration-aware where applicable; replay-equivalent across re-runs.
+- T4 — passes all blueprint §I gates; gateway/runtime determinism verified; missingness routes to canonical enum (`arch P0`).
 
-**Section B — Detector Gap Matrix**
-Rows: D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-RELEASE, D-PLANT.
-Columns: Exists / Stub / Partial / Missing | Current implementation citation | Canonical contract citation | Required-by metrics | Gap classification.
+**3. Anchor Validation Framework**
+Rows: Launch, Heel Plant, Contact, Release, Finish (using the canonical-anchor names from `arch P1` and `bp §C`). Per anchor:
+- Validation requirements (source detector binding, contributing signals, `{frame_index, t_ms, confidence, source_detector, contributing_signals[]}` schema completeness).
+- Replay requirements (bit-identical `frame_index` and `t_ms` across two engine runs on the same trace; cites `bp §F5`/`§H5`).
+- Tolerance requirements (per-anchor frame tolerance vs golden ground truth at T-low/T-mid/T-high — values referenced as "per blueprint §H2" rather than newly invented).
+- Confidence requirements (minimum confidence to be considered "detected"; below that emits `anchor_not_detected` per `arch P0 missingness enum`).
+- Promotion criteria T0→T4 mirroring detector ladder.
 
-**Section C — Determinism Gap Matrix**
-Rows for each determinism seam called out in audit + blueprint §F:
-- Seed source (`seed(videoId)` → `seed(canonical_trace_fingerprint)`)
-- Cache key (`cache(videoId)` → `cache(video_sha256_hex + cache_fingerprint_hex)`)
-- Version pins (`@0.0.0-stub` → pinned `LANDMARK_MODEL_VERSION` / `DETECTOR_VERSION` / `METRIC_ENGINE_VERSION`)
-- Probe contract (synthetic 30 fps fallback → `insufficient_temporal_resolution` missingness)
-- AI residual envelope (unbounded vs bounded ±10, temp 0, seeded)
-- Replay equivalence harness (absent vs required)
-Columns: Current | Canonical | Gap | Affected metrics.
+**4. Metric Validation Framework**
+All 18 canonical BH metrics (rows reuse the gap-analysis Section A list). Per metric:
+- T0–T4 definition using shared class semantics:
+  - T0 fabricated / AI-only (audit baseline).
+  - T1 detector dependency wired; producer replaced; no calibration evidence.
+  - T2 deterministic engine output passes determinism harness; missingness routes correctly.
+  - T3 calibration certificate present where required; confidence-calibration curve within tolerance; golden-clip pass-rate floor met.
+  - T4 all blueprint §I gates pass; replay-equivalent; AI residual envelope verified bounded.
+- Required detector dependencies (cite Gap-Analysis §A "Required Detectors").
+- Required anchor dependencies (cite Gap-Analysis §A "Required Anchors").
+- Required calibration evidence (cite Gap-Analysis §A + `arch P1 calibration framework`).
+- Required replay evidence (`bp §H5`).
+- Required confidence evidence (calibration curve binding per `bp §H3`).
+- Required missingness behavior (which enum values must be emittable; cite `arch P0`).
 
-**Section D — Report Card Gap Matrix**
-Rows: Phase % computation, Phase orb behavior, Tile state mapper, Missingness surfacing, Confidence surfacing, Ribbon coverage, AI coaching layer boundary.
-Columns: Current behavior (audit cite) | Canonical behavior (blueprint §E cite) | Gap | Affected metrics/tiles.
+Compact row format (markdown table per metric, with T-ladder + dependency cells), so the section stays readable across 18 rows.
 
-**Section E — Production Readiness Matrix**
-Four buckets defined by current trust class:
-- Bucket A — Production-ready or near (T3/T4): list metrics, list residual gates outstanding.
-- Bucket B — Deterministic foundation present but uncalibrated (T2→T3): list metrics, list calibration/anchor work.
-- Bucket C — Stub-class, requires new detector or anchor (T1→T2/T3): list metrics, list detector dependencies.
-- Bucket D — Fabricated / cannot ship as measured (T0): list metrics, list whether canonical path exists or surface must be hidden.
-Each bucket row: Metric | Outstanding gates from blueprint §I (10-gate matrix) | What must happen to move up one bucket.
+**5. Report Card Validation Framework**
+Validation requirements for each surface, with T-ladder where promotion makes sense:
+- Phase percentages — formula equivalence to `bp §E2`; replay-equivalent over the same tile set.
+- Phase orbs — single-denominator presentation; color thresholds match `bp §E2`.
+- Tile states — `TileStateMapper` produces identical state given identical inputs; confidence-aware downgrade verified.
+- Ribbon generation — non-negotiable computation excludes missing tiles (gap analysis §D).
+- Confidence surfacing — every tile carries `[0,1]` confidence; surfaced one interaction away.
+- Missingness surfacing — every missing tile carries a canonical enum reason (no `single_pass_only` umbrella).
+- Coaching-layer boundaries — AI output never overwrites engine values; presenter-only validation contract.
 
-**Section F — Master Build Inventory**
-Single flat list, deduplicated across A–E. Categories only for readability (no ordering implied):
-- Detectors to build/complete
-- Event anchors to build
-- Calibration subsystems
-- Determinism seams to fix
-- Missingness/confidence surfaces
-- Report-card contract changes
-- Validation harnesses (determinism, golden clip, replay, calibration, missingness)
-- Surfaces to hide until canonical path exists
-No priorities, no sequencing, no owner assignment, no estimates.
+**6. Validation Harness Matrix**
+One block per harness (named exactly as in `bp §H`):
+- Golden-clip validation (`bp §H2`).
+- Replay validation (`bp §H5`).
+- Determinism validation (`bp §H1`).
+- Calibration validation (`bp §H3` — confidence calibration; plus `arch P1` calibration framework certificate check).
+- Missingness validation (`bp §H4`).
+- Confidence validation (`bp §H3`).
+- Version migration validation (engine-version pin promotion; cites `bp §F1`).
+Per harness: Purpose, Inputs, Pass criteria, Failure criteria, Evidence retained.
 
-**Closing constraint block**
-Reiterates: inventory only; no roadmap; supersedes nothing in audit/architecture/blueprint; future phases consume this matrix.
+**7. Trust-Class Promotion Matrix**
+Four promotion-transition tables (T0→T1, T1→T2, T2→T3, T3→T4), each with rows for Detectors, Anchors, Metrics, Report-card outputs. Each cell lists the exact gates that must be satisfied to perform that transition. Demotion column states which observed failure forces a return to the prior class.
+
+**8. Closing Constraints**
+Restates: validation framework only; no code, no implementation, no roadmap, no sequencing, no prioritization, no architecture/blueprint/gap-analysis changes; subsequent phases consume this framework.
 
 ## Hard constraints
-- Only `.lovable/canonical-gap-analysis.md` is created. No other file is touched.
-- No new methodology — every canonical cell cites architecture or blueprint; every current cell cites audit or extraction.
-- No code, no schema, no prompts, no UI, no roadmap, no sequencing, no estimates.
+- Only `.lovable/canonical-validation-framework.md` is created.
+- No edits anywhere else (no plan.md edit either).
+- Every requirement cites architecture, blueprint, gap-analysis, audit, or extraction. No new metrics, detectors, anchors, harnesses, or thresholds invented.
+- No code, schema, prompts, UI, roadmap, sequencing, owners, or estimates.
