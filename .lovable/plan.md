@@ -1,14 +1,14 @@
 
-# Phase 12 — Canonical Verification Audit
+# Phase 13 — Canonical Production Readiness Audit
 
 ## Deliverable
 Create exactly one new file:
-- `.lovable/canonical-verification-audit.md`
+- `.lovable/canonical-production-readiness-audit.md`
 
 No other files created, modified, or deleted.
 
 ## Purpose
-Define the evidence required to verify the repository's compliance with the canonical system established in Phases 1–11. This phase only specifies verification evidence — it does not introduce architecture, implementation, validation, calibration, confidence, or production-gate requirements.
+Evaluate production readiness of the repository solely against canonical requirements established in Phases 1–12. Does not introduce architecture, implementation, validation, calibration, confidence, verification, or gate requirements.
 
 ## Source Inputs (Read-Only)
 - `.lovable/canonical-measurement-architecture.md`
@@ -20,23 +20,24 @@ Define the evidence required to verify the repository's compliance with the cano
 - `.lovable/canonical-production-gate-matrix.md`
 - `.lovable/canonical-implementation-reality-audit.md`
 - `.lovable/canonical-build-plan.md`
+- `.lovable/canonical-verification-audit.md`
 - `.lovable/analysis-truth-audit.md`
 - `.lovable/analysis-truth-extraction.md`
-- Entire repository source tree (read-only citations only).
+- Repository source tree (read-only).
 
 ## Document Structure
-
-1. **Verification Scope** — boundary, canonical-document authority, repository evaluated solely against canonical requirements.
-2. **Detector Verification Matrix** — rows: D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE. Columns: Canonical Requirement, Required Evidence, Verification Method, Pass Criteria, Failure Criteria, Source Authority.
-3. **Anchor Verification Matrix** — rows: Launch, Heel Plant, Contact, Release, Finish. Same columns.
-4. **Metric Verification Matrix** — all 18 canonical BH metrics. Same columns.
-5. **Report Card Verification Matrix** — rows: Phase Percentages, Phase Orbs, Tile States, Ribbon Generation, Confidence Surfacing, Missingness Surfacing, Coaching Layer. Same columns.
-6. **Validation Verification Matrix** — audit against existing validation framework only (no new harnesses/gates).
-7. **Calibration Verification Matrix** — audit against existing calibration architecture only.
-8. **Confidence Verification Matrix** — audit against existing confidence architecture only.
-9. **Production Gate Verification Matrix** — verify satisfaction of every Phase 9 production-gate requirement.
-10. **Canonical Verification Inventory** — single consolidated list of all evidence required; every requirement appears exactly once.
-11. **Closing Constraints** — verification-only; no code, implementation, architecture/validation/calibration/confidence/gate changes; no estimates, sequencing, prioritization; no new metrics, detectors, anchors, gates, or doctrines.
+1. **Readiness Scope** — boundary, canonical-document authority, evaluation solely against existing requirements.
+2. **Detector Readiness Matrix** — rows: D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE. Columns: Current Status, Required Production Status, Verification Evidence Required, Blocking Deficits, Production Eligibility.
+3. **Anchor Readiness Matrix** — rows: Launch, Heel Plant, Contact, Release, Finish. Same columns.
+4. **Metric Readiness Matrix** — all 18 BH metrics. Same columns.
+5. **Report Card Readiness Matrix** — rows: Phase Percentages, Phase Orbs, Tile States, Ribbon Generation, Confidence Surfacing, Missingness Surfacing, Coaching Layer. Same columns.
+6. **Validation Readiness Matrix** — references `val` only.
+7. **Calibration Readiness Matrix** — references `cal` only.
+8. **Confidence Readiness Matrix** — references `conf` only.
+9. **Production Gate Readiness Matrix** — references Phase 9 `gate` only.
+10. **Canonical Production Blocker Inventory** — single deduplicated list of every condition blocking readiness.
+11. **Readiness Determination** — classification (Production Ready / Production Ready With Restrictions / Not Production Ready) based solely on canonical evidence.
+12. **Closing Constraints**.
 
 ## Approach
-Pure derivation from Phases 1–11. Each matrix row cites canonical clauses (`arch`, `bp`, `gap`, `val`, `cal`, `conf`, `gate`, `reality`, `build`, `audit`, `extract`) and references repository paths read-only. Required Evidence and Verification Methods are stated in terms of existing canonical mechanisms (pinned versions, determinism harnesses, calibration certificates, confidence propagation, missingness enums, replay equivalence). Pass/Failure Criteria mirror the existing trust-class ladder and production-gate definitions from Phase 9. The Canonical Verification Inventory deduplicates evidence across all matrices into one consolidated list.
+Pure evaluation. Current Status derived from `reality` and repository citations. Required Production Status cited from `gate` (trust class ≥ T2). Verification Evidence Required cited from `.lovable/canonical-verification-audit.md`. Blocking Deficits derived from `reality` and verification audit. Production Eligibility binary per `gate §Trust Classes`. No new metrics, detectors, anchors, gates, harnesses, or doctrines. No estimates, sequencing, or prioritization.
