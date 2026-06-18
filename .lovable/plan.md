@@ -1,52 +1,39 @@
-# Phase 9 — Canonical Production Gate Matrix
+## Phase 10 — Canonical Implementation Reality Audit
 
-## Deliverable
+Create exactly one new file: `.lovable/canonical-implementation-reality-audit.md`. No other files touched.
 
-Create exactly one new file:
+### Approach
 
-- `.lovable/canonical-production-gate-matrix.md`
+1. Read the nine canonical source inputs (Phases 1–9 documents + truth audit/extraction) to anchor canonical requirements.
+2. Survey the repository for evidence of each canonical component:
+   - Detectors (D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE) — search `src/lib/`, `src/lib/biomech/`, `src/lib/pieV2/`, `src/lib/runtime/`.
+   - Anchors (Launch, Heel Plant, Contact, Release, Finish) — search anchor/event detection modules.
+   - 18 BH metrics — cross-reference `src/lib/biomech/`, `ENGINE_CONTRACT.ts`, methodology docs under `.lovable/`.
+   - Report card surfaces — search `src/components/` and pages for phase percentage / orb / tile / ribbon / coaching surfaces.
+   - Validation harnesses (H1–H7 per validation framework) — search `scripts/`, `tests/`, `src/test/`, `scripts/replay/`.
+   - Calibration certificates — search for any certificate/calibration scaffolding.
+   - Confidence emission — search `confidence` references in `src/lib/pieV2/`, `src/lib/biomech/`, modulators.
+3. For each row, record: canonical requirement (by reference), repository evidence (path or "none found"), implementation status (Missing / Partial / Present-Unvalidated / Present-Validated), evidence location, missing components, production readiness (per Phase 9 gate matrix).
+4. Consolidate all deficits into a Master Implementation Deficit Inventory.
 
-No other files are created, modified, or deleted in this phase. `.lovable/plan.md` is intentionally left untouched per the explicit "No other files touched" constraint in the request.
+### Document Structure
 
-## Source Inputs (Read-Only)
+1. **Audit Scope** — boundary, canonical authority statement, repository-evaluated-against-canon statement.
+2. **Detector Reality Matrix** — 7 rows × 6 columns.
+3. **Anchor Reality Matrix** — 5 rows × 6 columns.
+4. **Metric Reality Matrix** — 18 rows × 8 columns.
+5. **Report Card Reality Matrix** — 7 rows × 5 columns.
+6. **Validation Reality Matrix** — references Phase 4 harnesses only.
+7. **Calibration Reality Matrix** — references Phase 7 only.
+8. **Confidence Reality Matrix** — references Phase 8 only.
+9. **Production Gate Reality Matrix** — pass/fail per Phase 9 gates only.
+10. **Master Implementation Deficit Inventory** — consolidated list.
+11. **Closing Constraints** — reality-audit-only; no architecture, code, roadmap, sequencing, prioritization, estimates, or new metrics/detectors/anchors/gates/doctrines invented.
 
-- `.lovable/canonical-measurement-architecture.md`
-- `.lovable/canonical-implementation-blueprint.md`
-- `.lovable/canonical-gap-analysis.md`
-- `.lovable/canonical-validation-framework.md`
-- `.lovable/canonical-calibration-architecture.md`
-- `.lovable/canonical-confidence-architecture.md`
-- `.lovable/analysis-truth-audit.md`
-- `.lovable/analysis-truth-extraction.md`
+### Constraints Honored
 
-## Document Structure
-
-The new file will contain the following sections, in order:
-
-1. **Preamble**
-   - Production philosophy (evidence-first, replay-equivalent, calibration-bound, confidence-visible, missingness-visible, additive-only).
-   - Evidence-first release law: nothing reaches production users without validation evidence (`val §*`), calibration certificate (`cal §*`), and confidence binding (`conf §*`).
-   - Promotion authority hierarchy: validation framework → calibration certificate → confidence binding → production gate matrix.
-   - Demotion authority hierarchy: any one upstream invalidation auto-demotes; demotion-before-correction.
-   - Release eligibility philosophy: components are presentation-only consumers of pre-certified evidence; no surface authors organism truth.
-
-2. **Detector Production Gates** — rows: `D-POSE`, `D-HANDS`, `D-BAT`, `D-BALL`, `D-CONTACT`, `D-PLANT`, `D-RELEASE`. Columns: validation status, calibration status, confidence status, certificate, replay, missingness, production eligibility, demotion triggers. All cells reference existing requirements from validation, calibration, and confidence documents.
-
-3. **Anchor Production Gates** — rows: `Launch`, `Heel Plant`, `Contact`, `Release`, `Finish`. Columns: required detector eligibility, validation, calibration, confidence, replay, production eligibility, demotion triggers.
-
-4. **Metric Production Gates** — all 18 canonical BH metrics. Columns: required detector eligibility, required anchor eligibility, validation, calibration, confidence, replay, missingness, certificate, production eligibility, demotion triggers.
-
-5. **Report Card Production Gates** — rows: Phase percentages, Phase orbs, Tile states, Ribbon generation, Confidence surfacing, Missingness surfacing, Coaching layer. Columns: eligibility, dependency, replay, production, demotion triggers.
-
-6. **Promotion Authority Matrix** — T0→T1, T1→T2, T2→T3, T3→T4 for detectors, anchors, metrics, report-card outputs. Each cell references existing `val §7` and `cal §7` and `conf §promotion-demotion` requirements only.
-
-7. **Production Demotion Matrix** — dependency failure, certificate invalidation, replay divergence, calibration drift breach, confidence invalidation, missingness routing failure, version migration failure. Each mapped onto existing T0–T4 ladder.
-
-8. **Closing Constraints** — restate scope: production-gate architecture only; no code, implementation, roadmap, sequencing, prioritization, architecture/validation/calibration/confidence changes; no new metrics, detectors, anchors, thresholds, or harnesses.
-
-## Constraints
-
-- No code, schema, prompts, UI, or runtime behavior.
-- No new metrics, detectors, anchors, harnesses, thresholds, validation rules, calibration rules, or confidence rules invented.
-- Pure references to existing Phase 1–8 canonical documents.
-- Only `.lovable/canonical-production-gate-matrix.md` is created.
+- Single new file only.
+- No code, no implementation, no architecture changes, no roadmap, no sequencing, no prioritization, no estimates.
+- No new metrics, detectors, anchors, gates, harnesses, or doctrines invented.
+- All requirements cited by reference to Phases 1–9 canonical documents.
+- Repository evidence cited by file path only; no edits.
