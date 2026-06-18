@@ -1,32 +1,42 @@
-## Phase 11 — Canonical Build Plan
 
-Create exactly one new file: `.lovable/canonical-build-plan.md`. No other files touched.
+# Phase 12 — Canonical Verification Audit
 
-### Approach
+## Deliverable
+Create exactly one new file:
+- `.lovable/canonical-verification-audit.md`
 
-1. Treat Phase 10's Master Implementation Deficit Inventory as the closed input set. Every item in it must appear exactly once in the Canonical Build Inventory (§9).
-2. For each canonical component, translate its Phase 10 deficit into the build, validation, calibration, and confidence work required to satisfy the **existing** canonical requirements — no new metrics/detectors/anchors/gates/doctrines invented, no thresholds changed.
-3. All work items cite the canonical clause they satisfy (`arch`, `bp`, `gap`, `val`, `cal`, `conf`, `gate`, `audit`, `extract`, `reality`). No estimates, sequencing, prioritization, owners, or dates.
+No other files created, modified, or deleted.
 
-### Document Structure
+## Purpose
+Define the evidence required to verify the repository's compliance with the canonical system established in Phases 1–11. This phase only specifies verification evidence — it does not introduce architecture, implementation, validation, calibration, confidence, or production-gate requirements.
 
-1. **Build Scope** — canonical authority statement; plan exists solely to satisfy existing canonical requirements; no architecture/validation/calibration/confidence/gate changes.
-2. **Detector Build Matrix** — 7 rows × 8 columns (Current Status, Required Canonical Outcome, Missing Components, Required Build Work, Required Validation Work, Required Calibration Work, Required Confidence Work, Production Gate Dependency).
-3. **Anchor Build Matrix** — 5 rows × 8 columns.
-4. **Metric Build Matrix** — 18 rows × 8 columns.
-5. **Report Card Build Matrix** — 7 rows × 6 columns.
-6. **Validation Build Matrix** — every missing harness (`H1`–`H7`) and universal precondition deficit from Phase 10 §10.5/§10.8, cited to `val §6` only.
-7. **Calibration Build Matrix** — every missing certificate / drift requirement from Phase 10 §10.6, cited to `cal §3`–`§6` and `cal §Drift` only.
-8. **Confidence Build Matrix** — every missing confidence emission/propagation/invalidation requirement from Phase 10 §10.7, cited to `conf §Detector`–`§Surface`, `§Propagation`, `§Promotion-Demotion` only.
-9. **Production Gate Closure Matrix** — for every detector, anchor, metric, surface: current gate status (from Phase 10 §9), missing requirements, required closure work, final target gate (per `gate` Parts 1–4 + `val §1.3` ladder).
-10. **Canonical Build Inventory** — single consolidated list mirroring Phase 10 §10.1–§10.9, with each deficit appearing exactly once.
-11. **Closing Constraints** — build-plan only; no code, no architecture/validation/calibration/confidence/gate changes; no new metrics/detectors/anchors/gates/doctrines; no estimates; no sequencing; no prioritization.
+## Source Inputs (Read-Only)
+- `.lovable/canonical-measurement-architecture.md`
+- `.lovable/canonical-implementation-blueprint.md`
+- `.lovable/canonical-gap-analysis.md`
+- `.lovable/canonical-validation-framework.md`
+- `.lovable/canonical-calibration-architecture.md`
+- `.lovable/canonical-confidence-architecture.md`
+- `.lovable/canonical-production-gate-matrix.md`
+- `.lovable/canonical-implementation-reality-audit.md`
+- `.lovable/canonical-build-plan.md`
+- `.lovable/analysis-truth-audit.md`
+- `.lovable/analysis-truth-extraction.md`
+- Entire repository source tree (read-only citations only).
 
-### Constraints Honored
+## Document Structure
 
-- Single new file only.
-- Pure translation of Phase 10 deficits into satisfaction work against Phases 1–9 requirements.
-- No code, no implementation, no architecture/validation/calibration/confidence/gate changes.
-- No new metrics, detectors, anchors, gates, or doctrines invented.
-- No estimates, sequencing, prioritization, owners, or dates.
-- All requirements cited by reference; all repository references are read-only path citations.
+1. **Verification Scope** — boundary, canonical-document authority, repository evaluated solely against canonical requirements.
+2. **Detector Verification Matrix** — rows: D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE. Columns: Canonical Requirement, Required Evidence, Verification Method, Pass Criteria, Failure Criteria, Source Authority.
+3. **Anchor Verification Matrix** — rows: Launch, Heel Plant, Contact, Release, Finish. Same columns.
+4. **Metric Verification Matrix** — all 18 canonical BH metrics. Same columns.
+5. **Report Card Verification Matrix** — rows: Phase Percentages, Phase Orbs, Tile States, Ribbon Generation, Confidence Surfacing, Missingness Surfacing, Coaching Layer. Same columns.
+6. **Validation Verification Matrix** — audit against existing validation framework only (no new harnesses/gates).
+7. **Calibration Verification Matrix** — audit against existing calibration architecture only.
+8. **Confidence Verification Matrix** — audit against existing confidence architecture only.
+9. **Production Gate Verification Matrix** — verify satisfaction of every Phase 9 production-gate requirement.
+10. **Canonical Verification Inventory** — single consolidated list of all evidence required; every requirement appears exactly once.
+11. **Closing Constraints** — verification-only; no code, implementation, architecture/validation/calibration/confidence/gate changes; no estimates, sequencing, prioritization; no new metrics, detectors, anchors, gates, or doctrines.
+
+## Approach
+Pure derivation from Phases 1–11. Each matrix row cites canonical clauses (`arch`, `bp`, `gap`, `val`, `cal`, `conf`, `gate`, `reality`, `build`, `audit`, `extract`) and references repository paths read-only. Required Evidence and Verification Methods are stated in terms of existing canonical mechanisms (pinned versions, determinism harnesses, calibration certificates, confidence propagation, missingness enums, replay equivalence). Pass/Failure Criteria mirror the existing trust-class ladder and production-gate definitions from Phase 9. The Canonical Verification Inventory deduplicates evidence across all matrices into one consolidated list.
