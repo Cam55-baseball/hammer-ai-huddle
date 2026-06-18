@@ -1,39 +1,29 @@
-## Plan
+## Phase 2 — Analysis Truth Audit Extraction
 
-Single-pass, read-only forensic audit. Produce exactly one file: `.lovable/analysis-truth-audit.md` (overwrite existing).
+Read-only extraction from the completed `.lovable/analysis-truth-audit.md`. No new investigation, no code changes.
 
-### Scope
-Sections S1–S11 with every claim cited as `path:line-range`. Unprovable claims marked `undetermined from code — evidence needed`. Final block: A/B/C/D trust classification derived strictly from S11.
+### Deliverable
 
-### Files to read (read-only)
-- `src/components/report-card/hammer/HammerReportCard.tsx`
-- `src/components/report-card/hammer/visuals/PhaseRail.tsx`
-- `src/lib/reportCard/contracts/bh.ts`, `bh.contract.ts`, `shared.ts`, `reportCardContracts.ts`
-- `src/lib/reportCard/metricReaders.ts`, `types.ts`, `grade.ts`
-- `src/lib/biomech/versions.ts`, `fingerprint.ts`
-- `supabase/functions/analyze-video/index.ts`
-- `supabase/functions/_shared/biomechFingerprint.ts`
-- `src/lib/video/probeVideoMetadata.ts` (or equivalent)
-- Any landmark/detector modules referenced by `versions.ts`
+Single new file: `.lovable/analysis-truth-extraction.md`
 
-### Section mapping
-- S1 Report-card calculation logic
-- S2 Metric production sources (AI vs client compute)
-- S3 Engine/detector versions
-- S4 Cache fingerprinting + scoping
-- S5 Seed derivation + same-video nondeterminism
-- S6 Calibration assumptions (bat length, pixel scaling)
-- S7 Sampling budget / frame extraction
-- S8 Failure paths (completed-with-null, fallbacks)
-- S9 Desktop/browser failure paths (probeFps, codec)
-- S10 Per-metric evidence table (all 18 BH metrics)
-- S11 Per-metric trust classification (TRUSTWORTHY / PARTIALLY / EXPERIMENTAL / NOT READY)
+### Sections (in order)
 
-### Final block
-A. Safe for production today
-B. Requiring redesign
-C. Requiring investigation
-D. Hide until trustworthy
+1. **Executive Summary** — Top 10 findings, Top 10 risks, Top 10 user-facing failures (each cited back to S1–S11 of the audit).
+2. **Report Card Accuracy Findings** — what Phase 1–4 percentages represent, whether they are confidence/completion/score, whether they can reach 100%, exact calculation path (cite S1).
+3. **Metric Reliability Findings** — per-metric table for all 18 BH metrics: trust class, source, deterministic?, AI vs computed, production-ready Y/N (cite S2, S10, S11).
+4. **Bat Speed Investigation** — unreliability cause, root cause, visibility recommendation derived strictly from audit evidence (cite S6, S10).
+5. **Time To Contact Investigation** — root cause, reliability, visibility (cite S7, S10).
+6. **Missing Metric Investigation** — P2 Knee Lift, P3 Release, Hands Outside Shoulders: missing reasons + detection failures (cite S8, S10).
+7. **Same-Video Reanalysis Investigation** — ranked nondeterminism causes (cite S4, S5).
+8. **Desktop Failure Investigation** — exact failure points (cite S9, S8).
+9. **Production Readiness Matrix** — Buckets A/B/C/D from S11.
+10. **Fix Sequencing** — rank issues by impact / difficulty / user-trust-risk. No roadmap language, no implementation steps — only ordering of the findings already in the audit.
 
-### Out of scope
-No code/schema/prompt/UI/metric changes. No edits to `.lovable/plan.md` or other docs. No roadmap, no recommendations, no fixes.
+### Hard constraints
+
+- Source = `.lovable/analysis-truth-audit.md` only.
+- Every claim carries an audit-section citation (S1–S11) and, where the audit provides one, the underlying `path:line-range`.
+- No new code reads beyond the audit file.
+- No code, schema, prompt, UI, or metric changes.
+- No edits to `.lovable/plan.md` or any file other than the new extraction file.
+- No recommendations beyond what S11 already classifies.
