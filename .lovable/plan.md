@@ -1,43 +1,105 @@
-Create exactly one new file: `.lovable/execution-cycle-1-baseline.md`. No other files modified.
+## Deliverable
 
-## Document Structure
+Create exactly one file:
 
-**1. Current Repository Status** — Restate Phase 14 findings from `.lovable/canonical-implementation-execution-audit.md`: Architecture Complete / Implementation Incomplete. All 7 detectors (D1–D7), 5 anchors (A1–A5), 18 metrics (M1–M18), 7 harnesses (H1–H7) Missing. Calibration certificate model absent. Confidence/missingness infrastructure absent. 0/10 production gates passing. 11 consolidated blockers (B-UPC … B-GATE).
+- `.lovable/execution-cycle-2-mvcs.md`
 
-**2. Production Blocker Ranking** — Rank the 11 blockers from Phases 10–14 by downstream surface impact, using only repository evidence (`src/lib/biomech/versions.ts`, absence of detector/anchor/metric modules, absence of calibration certificate table, absence of missingness enum, absence of harness directories). Expected order:
-   1. **B-UPC — Universal Placeholder Cache (`@0.0.0-stub` versions)** in `src/lib/biomech/versions.ts`
-   2. B-DET — Detector implementations (D1–D7) absent
-   3. B-ANC — Anchor implementations (A1–A5) absent
-   4. B-MET — Metric implementations (M1–M18) absent
-   5. B-CAL — Calibration certificate model absent
-   6. B-CONF — Missingness enum + propagation absent
-   7. B-HARN — Validation harnesses (H1–H7) absent
-   8. B-REPLAY — Replay determinism unverifiable
-   9. B-OBS — Observability lineage incomplete
-   10. B-AUTH — Production authority bindings absent
-   11. B-GATE — Production gate closure (downstream of all above)
+No other files created, modified, or deleted. No code, architecture, doctrine, metrics, detectors, anchors, gates, or requirements introduced. Reality-only synthesis of Phases 10–15 + Execution Cycle 1.
 
-**3. Blocker #1 Selection** — **B-UPC: Universal Placeholder Cache Fingerprint Versions.** Justification: every detector, anchor, metric, harness, calibration certificate, replay verification, and gate fingerprint binds to `LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION` in `src/lib/biomech/versions.ts`. While these remain `@0.0.0-stub`, no T2 output, no calibration certificate, no replay equivalence proof, and no gate can be evidence-bearing — every downstream implementation would be cache-poisoned at birth.
+---
 
-**4. Evidence Package for Blocker #1:**
-   - Repository paths: `src/lib/biomech/versions.ts`, `supabase/functions/_shared/biomechFingerprint.ts`
-   - Affected systems: cache fingerprint chain, T2 eligibility, replay determinism, calibration binding, AI prompt binding
-   - Affected detectors: D1–D7 (all)
-   - Affected anchors: A1–A5 (all)
-   - Affected metrics: M1–M18 (all)
-   - Affected gates: G1–G10 (all 10 production gates depend on fingerprint legality)
-   - Affected verification requirements: H1–H7 (all harnesses bind output to versioned fingerprint)
+## Document Outline (sections, all citation-only)
 
-**5. Implementation Readiness** — Answer: **NO**. Missing repository information: (a) the canonical non-stub version-string scheme is not declared in any sealed Phase 1–15 artifact reviewed; (b) no constitutional binding exists between version bumps and detector/anchor/metric maturity gates; (c) Phase 11 build plan enumerates surfaces but does not declare the first legal non-stub version triplet. Cite that `.lovable/canonical-build-plan.md`, `.lovable/canonical-verification-audit.md`, and `.lovable/canonical-production-readiness-audit.md` do not pin the initial legal version values, only require they cease to be stubs.
+### 1. Canonical Dependency Analysis
 
-**6. Success Evidence** — Using only existing requirements:
-   - `LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION` no longer match `@0.0.0-stub`
-   - Each non-stub version is bound to at least one passing harness (H1–H7) per the verification audit
-   - Calibration certificate references the bound version per Phase 6 calibration requirements
-   - Replay determinism verifier (`scripts/replay/verify-determinism.ts`) produces byte-identical reconstruction under the pinned versions per Phase 47 RP-1…RP-10 / Phase 56 RE-1…RE-10
-   - Production gate evidence pack cites the bound versions
+For each canonical surface, identify the entry with the smallest upstream dependency set using `canonical-build-plan.md §2–§4`, `canonical-production-gate-matrix.md Part 1–Part 3`, and `canonical-validation-framework.md §2–§5`.
 
-**7. Closing Determination** — **NOT READY FOR IMPLEMENTATION.** Justification: B-UPC cannot be legally retired in isolation. Per the canonical verification audit, version transitions must be accompanied by passing harness evidence; per the readiness audit, gate closure binds to certified versions. Therefore B-UPC resolution is gated on B-DET, B-ANC, B-MET, B-HARN minimum-viable evidence existing simultaneously. The repository contains no such evidence today, so Cycle 1 must first produce the smallest detector+anchor+metric+harness slice that legally justifies the first version bump.
+- **Detector with fewest upstream dependencies → D-POSE.**
+  Evidence: `build-plan §2 D-POSE` lists no upstream detector dependency; every other detector (D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE) inherits the same pose substrate per `arch §Canonical detector stack`. D-POSE is the only detector whose `gate Part 1` row has zero detector prerequisites.
+- **Anchor with fewest upstream dependencies → Finish (`finish_frame`).**
+  Evidence: `gate Part 2 Finish` requires only `D-POSE ≥T2`; Launch requires D-POSE + D-BAT, Heel Plant requires D-POSE + D-PLANT, Contact requires D-POSE + D-BAT + D-CONTACT, Release requires D-RELEASE (+ D-POSE). Finish is the unique single-detector anchor.
+- **Metric with fewest upstream dependencies → `finish_balance` (`arch §17`).**
+  Evidence: `build-plan §4 #17` lists only D-POSE + Finish anchor; scale-free per `cal §6 finish_balance`; no D-BAT, no D-CONTACT, no D-RELEASE, no T-high frame density, no pixel-to-inch certificate. (Note: `hip_load` requires D-POSE only but binds no event anchor; selecting `finish_balance` produces a closed detector → anchor → metric evidence chain, which is required by `val §1.2 Deterministic-first` and `gate §Evidence-first release law`.)
+- **Harness with fewest upstream dependencies → H1 Determinism Harness (`bp §H1` / `val §6.1`).**
+  Evidence: H1 requires only a canonical fixture and deterministic pipeline; it does not require a labeled corpus (H2), confidence calibration curve (H3), missingness audit (H4), or replay-equivalence proof spanning multiple modules (H5). H1 is the precondition for every higher harness per `val §1.3` (no class skipping).
 
-## Constraints Honored
-No code. No architecture. No doctrine. No new metrics/detectors/anchors/gates. Reality-only synthesis of Phase 10–14 evidence.
+### 2. Minimum Viable Canonical Slice (MVCS)
+
+Selection, justified solely by repository evidence:
+
+| Slot | Selection | Justification source |
+|---|---|---|
+| Detector | **D-POSE** | `build-plan §2`, `gate Part 1 D-POSE` |
+| Anchor | **Finish** (`finish_frame`) | `gate Part 2 Finish` (D-POSE-only) |
+| Metric | **`finish_balance`** (`arch §17`) | `build-plan §4 #17` (D-POSE + Finish only, scale-free) |
+| Harness | **H1 Determinism Harness** | `val §6.1`, `bp §H1` (no upstream harness) |
+
+This is the only quadruple in the repository where every slot's dependency set is the strict minimum among its peers AND the slots form a closed detector → anchor → metric → harness chain.
+
+### 3. Dependency Closure Map
+
+Enumerated strictly from existing artifacts:
+
+- **Required modules:** `src/lib/biomech/versions.ts` (version pins per `audit S3`); D-POSE extractor module per `bp §B1`; Finish anchor extractor per `bp §B`; `finish_balance` engine per `bp §C`; `scripts/replay/verify-determinism.ts` (existing H1-shaped harness).
+- **Required inputs:** side-on rear-camera capture at T-low ≥30 fps per `arch §Canonical capture envelope` (no T-high requirement); video bytes + true FPS + landing-time + direction-sign + calibration-h-px feeding `buildCacheFingerprint` per `src/lib/biomech/fingerprint.ts`.
+- **Required outputs:** D-POSE per-frame 33-landmark stream with per-landmark visibility (`val §2 D-POSE T1/T2`); Finish frame index + confidence (`arch §Event anchors finish_frame`, min conf 0.6); `finish_balance` numeric value + canonical missingness + tile confidence per `arch §17` and `arch §Confidence model`.
+- **Required version bindings:** `LANDMARK_MODEL_VERSION` non-stub per `val §1.4`; `DETECTOR_VERSION` non-stub (Finish anchor extractor); `METRIC_ENGINE_VERSION` non-stub (`finish_balance` engine). All three currently `@0.0.0-stub` per Execution Cycle 1 Blocker #1 (B-UPC).
+- **Required verification evidence:** H1 byte-identical reruns over canonical fixture per `val §6.1` and existing `scripts/replay/verify-determinism.ts`; covers D-POSE landmark stream, Finish frame index, `finish_balance` numeric value.
+- **Required calibration bindings:** scale-free metric → no pixel-to-inch certificate required (`cal §6 finish_balance`); residual-envelope certificates per `cal §4 D-POSE`, `cal §5 Finish`, `cal §6 finish_balance` with scope (segment, frame-density, device) per `cal §3.2`.
+- **Required confidence bindings:** `conf §Detector D-POSE`, `conf §Anchor Finish`, `conf §Metric finish_balance`, monotonic non-increasing per `conf §1.3`, computed via the four-factor product in `arch §Confidence model`.
+
+### 4. First Legal Version Transition Path
+
+Per `val §1.4` ("`@0.0.0-stub` placeholders are disqualifying"), each version constant in `src/lib/biomech/versions.ts` (mirrored in `supabase/functions/_shared/biomechFingerprint.ts`) may legally move beyond `@0.0.0-stub` only when:
+
+- **`LANDMARK_MODEL_VERSION`** — D-POSE is pinned to a real Blazepose-Full identifier emitting per-landmark visibility (`val §2.1 D-POSE T1`) AND H1 passes over the canonical fixture for that pin (`val §2.1 D-POSE T2`).
+- **`DETECTOR_VERSION`** — Finish anchor extractor is pinned and emits `finish_frame` with confidence ≥0.6 and `anchor_not_detected` fallback (`arch §Event anchors`), AND H1 passes for the anchor frame index against the pinned pose stream.
+- **`METRIC_ENGINE_VERSION`** — `finish_balance` engine is pinned, value-path is deterministic (model removed from value path per `arch §Measurement categories`), tile confidence computed per `arch §Confidence model`, missingness routed to the canonical enum, AND H1 passes for the metric value against the pinned pose + anchor.
+
+All three transitions are simultaneous because the cache fingerprint per `src/lib/biomech/fingerprint.ts` concatenates the three versions; bumping one without the others breaks replay equivalence for downstream consumers per `bp §F2`/`§F5`. No Phase 1–15 artifact authorizes any other minimum.
+
+### 5. Gate Impact Analysis
+
+Using `canonical-production-gate-matrix.md` Parts 1–4:
+
+- **Remain blocked after MVCS completion:**
+  - `gate Part 1` D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE — none satisfied by MVCS.
+  - `gate Part 2` Launch, Heel Plant, Contact, Release — depend on detectors outside MVCS.
+  - `gate Part 3` metrics #1–#16 and #18 — every other metric requires a detector or anchor outside MVCS, or T-high frame density (#12, #13), or pixel-to-inch calibration (#13).
+  - `gate Part 4` Phase Percentages, Discipline Score, full Report Card — require all 18 metrics ≥T2.
+- **Become partially satisfiable after MVCS completion:**
+  - `gate Part 1 D-POSE` — first detector reaching ≥T2 evidence shape.
+  - `gate Part 2 Finish` — first anchor reaching ≥T2 evidence shape.
+  - `gate Part 3 #17 finish_balance` — first metric reaching ≥T2 evidence shape.
+  - `gate Part 4 Phase Percentages` — Finish-phase denominator gains its first non-stub member (1/N progress, not closure).
+- **Verification requirements that become executable after MVCS completion:**
+  - `val §6.1 H1` Determinism Harness — executable end-to-end against pinned D-POSE → Finish → `finish_balance` chain.
+  - `val §6.5 H5` Replay Harness — becomes executable for this single chain (downstream of H1).
+  - First legal calibration certificate issuance per `cal §3.2` for D-POSE, Finish, `finish_balance`.
+  - First legal confidence-calibration evaluation per `val §6.3 H3` for this single chain.
+
+H2 (golden clips), H4 (missingness audit), and the Version Migration Harness (`val §6.7`) become **scoped** to MVCS components only — not satisfied for any non-MVCS surface.
+
+### 6. Closing Determination
+
+**MVCS IDENTIFIED.**
+
+Justification (repository evidence only):
+- D-POSE is the unique zero-detector-dependency entry in `build-plan §2` and `gate Part 1`.
+- Finish is the unique single-detector anchor in `gate Part 2`.
+- `finish_balance` is the unique metric whose dependency set is exactly `{D-POSE, Finish}` with no calibration scaling, no T-high frame density, and no additional anchors (`build-plan §4 #17`, `cal §6 finish_balance`).
+- H1 is the unique harness with no upstream harness dependency (`val §1.3`, `val §6.1`).
+- The quadruple forms a closed evidence chain consumable by the cache-fingerprint contract in `src/lib/biomech/fingerprint.ts` and the existing harness `scripts/replay/verify-determinism.ts`.
+
+No new architecture, doctrine, metric, detector, anchor, gate, or requirement was introduced. The selection is derived entirely from Phases 10–15 and Execution Cycle 1.
+
+---
+
+## Constraints honored
+
+- No code.
+- No implementation.
+- No architecture changes.
+- No doctrine changes.
+- No new metrics / detectors / anchors / gates / harnesses / requirements.
+- Exactly one new file; no other files touched.
