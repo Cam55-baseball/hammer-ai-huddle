@@ -1,59 +1,52 @@
-## Phase 8 — Canonical Confidence Architecture
+# Phase 9 — Canonical Production Gate Matrix
 
-Create exactly one new file: `.lovable/canonical-confidence-architecture.md`. No other files touched.
+## Deliverable
 
-### Source inputs (read-only, citation-bound)
-- `arch` = `.lovable/canonical-measurement-architecture.md`
-- `bp` = `.lovable/canonical-implementation-blueprint.md`
-- `gap` = `.lovable/canonical-gap-analysis.md`
-- `val` = `.lovable/canonical-validation-framework.md`
-- `cal` = `.lovable/canonical-calibration-architecture.md`
-- `audit` = `.lovable/analysis-truth-audit.md`
-- `extract` = `.lovable/analysis-truth-extraction.md`
+Create exactly one new file:
 
-Every clause cites one of the seven. No invented metrics, detectors, anchors, thresholds, confidence sources, or harnesses.
+- `.lovable/canonical-production-gate-matrix.md`
 
-### Document outline
+No other files are created, modified, or deleted in this phase. `.lovable/plan.md` is intentionally left untouched per the explicit "No other files touched" constraint in the request.
 
-**1. Preamble**
-- Confidence philosophy: derived (never authored), deterministic, replay-equivalent, calibration-bound, missingness-visible, additive.
-- Confidence authority hierarchy: calibration certificate → detector confidence → anchor confidence → metric confidence (via `arch §Confidence model` product) → report-card surface. Lower layers may not overwrite higher.
-- Confidence propagation philosophy: monotonic non-increasing along the dependency chain; products only as defined in `arch §Confidence model`; no lateral injection.
-- Confidence aggregation philosophy: products and visibility-weighted aggregations exactly as `arch §Confidence model` and `bp §D` already declare; no new operators.
-- Confidence demotion philosophy: demotion-before-correction, mirroring `val §1.5`, `val §7`, `cal §1.5`, `cal §7`.
-- Confidence visibility philosophy: every surface exposes confidence one interaction away (`bp §E`, `val §5`); fabrication, smoothing, and collapse forbidden (`gap §D`).
+## Source Inputs (Read-Only)
 
-**2. Detector Confidence Architecture**
-Rows: D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE. Each row: Confidence source (per `bp §B` and `cal §2`) · Emission contract (per-frame, scoped, version-pinned) · Persistence requirements (replay-reconstructable, retention handle per `cal §6.3`) · Propagation requirements (downstream anchor/metric usage) · Demotion triggers (`cal §7`, `val §1.5`).
+- `.lovable/canonical-measurement-architecture.md`
+- `.lovable/canonical-implementation-blueprint.md`
+- `.lovable/canonical-gap-analysis.md`
+- `.lovable/canonical-validation-framework.md`
+- `.lovable/canonical-calibration-architecture.md`
+- `.lovable/canonical-confidence-architecture.md`
+- `.lovable/analysis-truth-audit.md`
+- `.lovable/analysis-truth-extraction.md`
 
-**3. Anchor Confidence Architecture**
-Rows: Launch, Heel Plant, Contact, Release, Finish. Each row: Source (`arch §Event anchors`, `cal §3`) · Emission requirements (per-tier where required, fallback to `anchor_not_detected` from `arch §Missingness rules`) · Dependency requirements (which detector certificates must bind) · Propagation requirements · Demotion requirements.
+## Document Structure
 
-**4. Metric Confidence Architecture**
-All 18 BH metrics. Per metric: Confidence inputs (the factors of the `arch §Confidence model` product as declared in the metric's `arch §Part 2` row) · Aggregation requirements (product per `arch §Confidence model`; visibility weighting where declared) · Emission requirements · Persistence requirements (replay-equivalent via `bp §H5`) · Demotion requirements · Display requirements (tile state mapping per `bp §E1`, `val §5`).
+The new file will contain the following sections, in order:
 
-**5. Report Card Confidence Architecture**
-Rows: Phase percentages, Phase orbs, Tile states, Ribbon generation, Coaching layer, Missingness layer. Each row: Confidence requirements · Display requirements · Propagation requirements · Demotion requirements. Resolves the dual-denominator bug as already specified in `gap §D` and `val §5` (no new rule). Coaching layer remains a presentation-only consumer (`gap §D`, `bp §E4`).
+1. **Preamble**
+   - Production philosophy (evidence-first, replay-equivalent, calibration-bound, confidence-visible, missingness-visible, additive-only).
+   - Evidence-first release law: nothing reaches production users without validation evidence (`val §*`), calibration certificate (`cal §*`), and confidence binding (`conf §*`).
+   - Promotion authority hierarchy: validation framework → calibration certificate → confidence binding → production gate matrix.
+   - Demotion authority hierarchy: any one upstream invalidation auto-demotes; demotion-before-correction.
+   - Release eligibility philosophy: components are presentation-only consumers of pre-certified evidence; no surface authors organism truth.
 
-**6. Confidence Governance Framework**
-- Persistence: deterministic, immutable, retention-handle-addressable.
-- Versioning: bound to `bp §F1` engine version + reasoning version pins.
-- Replay equivalence: every confidence value reconstructable by `bp §H5`.
-- Auditability: confidence lineage exposed at every surface (`val §6`).
-- Certificate linkage: every confidence claim binds a calibration certificate (`cal §5`, `cal §6.1`).
-- Invalidation rules: dependency certificate invalidation, version migration, drift breach, evidence withdrawal, demotion event (cites `cal §6.4`, `val §1.5`).
+2. **Detector Production Gates** — rows: `D-POSE`, `D-HANDS`, `D-BAT`, `D-BALL`, `D-CONTACT`, `D-PLANT`, `D-RELEASE`. Columns: validation status, calibration status, confidence status, certificate, replay, missingness, production eligibility, demotion triggers. All cells reference existing requirements from validation, calibration, and confidence documents.
 
-**7. Confidence Promotion and Demotion Matrix**
-T0→T1, T1→T2, T2→T3, T3→T4 confidence requirements for detectors, anchors, metrics, report-card outputs — all referring back to the existing matrix in `val §7` and the calibration ladder in `cal §7`. No new gates; this section maps confidence-specific obligations onto the existing ladder.
-- Confidence failure conditions (curve violation, fabrication, smoothing, missing certificate).
-- Confidence downgrade conditions (Warn/Breach severities from `cal §7.3`).
-- Confidence recovery conditions (new certificate through `val §6/§7`; no silent re-fit).
+3. **Anchor Production Gates** — rows: `Launch`, `Heel Plant`, `Contact`, `Release`, `Finish`. Columns: required detector eligibility, validation, calibration, confidence, replay, production eligibility, demotion triggers.
 
-**8. Closing constraints** (restated verbatim from request).
+4. **Metric Production Gates** — all 18 canonical BH metrics. Columns: required detector eligibility, required anchor eligibility, validation, calibration, confidence, replay, missingness, certificate, production eligibility, demotion triggers.
 
-### Hard constraints
-- Confidence architecture only.
-- No code, schema, prompts, UI, roadmap, sequencing, prioritization, owners, or estimates.
-- No changes to architecture, blueprint, validation framework, calibration architecture, or gap analysis.
-- No new metrics, detectors, anchors, harnesses, thresholds, or confidence sources invented.
-- Only `.lovable/canonical-confidence-architecture.md` is created.
+5. **Report Card Production Gates** — rows: Phase percentages, Phase orbs, Tile states, Ribbon generation, Confidence surfacing, Missingness surfacing, Coaching layer. Columns: eligibility, dependency, replay, production, demotion triggers.
+
+6. **Promotion Authority Matrix** — T0→T1, T1→T2, T2→T3, T3→T4 for detectors, anchors, metrics, report-card outputs. Each cell references existing `val §7` and `cal §7` and `conf §promotion-demotion` requirements only.
+
+7. **Production Demotion Matrix** — dependency failure, certificate invalidation, replay divergence, calibration drift breach, confidence invalidation, missingness routing failure, version migration failure. Each mapped onto existing T0–T4 ladder.
+
+8. **Closing Constraints** — restate scope: production-gate architecture only; no code, implementation, roadmap, sequencing, prioritization, architecture/validation/calibration/confidence changes; no new metrics, detectors, anchors, thresholds, or harnesses.
+
+## Constraints
+
+- No code, schema, prompts, UI, or runtime behavior.
+- No new metrics, detectors, anchors, harnesses, thresholds, validation rules, calibration rules, or confidence rules invented.
+- Pure references to existing Phase 1–8 canonical documents.
+- Only `.lovable/canonical-production-gate-matrix.md` is created.
