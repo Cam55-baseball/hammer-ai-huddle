@@ -1,90 +1,64 @@
+## Phase 7 — Canonical Calibration Architecture
 
-# Phase 6 — Canonical Validation Framework
+Create exactly one new file: `.lovable/canonical-calibration-architecture.md`. No other files touched.
 
-## Deliverable
-One new file: `.lovable/canonical-validation-framework.md`. No other file is touched.
+### Source inputs (read-only)
+- `.lovable/canonical-measurement-architecture.md`
+- `.lovable/canonical-implementation-blueprint.md`
+- `.lovable/canonical-gap-analysis.md`
+- `.lovable/canonical-validation-framework.md`
+- `.lovable/analysis-truth-audit.md`
+- `.lovable/analysis-truth-extraction.md`
 
-## Read-only inputs
-- `.lovable/canonical-measurement-architecture.md` (Parts 0–5)
-- `.lovable/canonical-implementation-blueprint.md` (Sections A–I)
-- `.lovable/canonical-gap-analysis.md` (Sections A–F)
-- `.lovable/analysis-truth-audit.md` (S1–S11)
-- `.lovable/analysis-truth-extraction.md` (§1–§10)
+Every clause in the new document will cite one of these. No invented metrics, detectors, anchors, harnesses, or thresholds.
 
-Every requirement cell cites one of these. No new methodology, no new detectors, no new metrics, no new harnesses — only the validation rules under which the already-defined components progress from T0 → T4.
+### Document outline
 
-## Document structure
+**Preamble**
+- Calibration philosophy: evidence-bound, deterministic-first, additive, demotion-on-drift, replay-equivalent, missingness-visible.
+- Calibration authority hierarchy: ground truth → calibration certificate → detector/anchor/metric output → confidence curve → report-card surface. Lower tiers may never overwrite higher.
+- Calibration evidence requirements: pinned artifact version, canonical_trace_fingerprint, ground-truth source, residual distribution, retention handle.
+- Calibration certificate concept: signed, versioned, scope-bounded attestation binding a component to its evidence set.
+- Calibration drift philosophy: drift is observed not assumed; detection deterministic; response is demotion before silent correction.
+- Population-segmentation philosophy: segments inherited from extraction/audit (age band, handedness, frame-density tier T-low/mid/high, capture modality phone-only); no new segments invented.
 
-**1. Preamble**
-- Purpose statement.
-- Validation philosophy: evidence supremacy, deterministic-first, missingness-visible, replay-equivalent, additive promotion, demotion-on-regression.
-- Trust-class promotion law: monotonic by evidence; promotion requires meeting every gate at the target class; any gate failure forces immediate demotion to the highest class whose gates still hold.
-- Promotion requirements (universal preconditions across detectors, anchors, metrics, report-card surfaces).
-- Demotion requirements (regression triggers, observed-failure triggers, version-pin breakage, replay-divergence triggers).
-- Validation evidence hierarchy (ranked, highest authority first): replay-determinism proof → golden-clip ground truth → calibration certificate → confidence-calibration curve → missingness-routing audit → human-labeled spot check → AI residual envelope check.
+**A. Detector Calibration Architecture**
+Rows: D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE. Each row: Calibration inputs · Calibration outputs · Calibration evidence · Calibration certificate requirements · Drift-detection requirements · Recalibration requirements. All citations to blueprint §B and gap-analysis §B.
 
-**2. Detector Validation Framework**
-One row per detector (D-POSE, D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE). Each row defines T0–T4 plus required evidence, required replay stability, required determinism proof, required confidence thresholds. Class definitions (uniform across detectors):
-- T0 — absent/stub (cites `audit S3` baseline).
-- T1 — wired at pinned version; emits per-frame output; no calibration; no replay evidence.
-- T2 — passes determinism harness (`bp §H1`) on a fixed input; per-keypoint confidence exposed.
-- T3 — passes golden-clip suite (`bp §H2`) at per-detector pass-rate floor; calibration-aware where applicable; replay-equivalent across re-runs.
-- T4 — passes all blueprint §I gates; gateway/runtime determinism verified; missingness routes to canonical enum (`arch P0`).
+**B. Anchor Calibration Architecture**
+Rows: Launch, Heel Plant, Contact, Release, Finish. Each row: Ground-truth requirements · Calibration evidence · Anchor certificate requirements · Drift monitoring · Recalibration triggers. Cites blueprint §C and validation framework anchor section.
 
-**3. Anchor Validation Framework**
-Rows: Launch, Heel Plant, Contact, Release, Finish (using the canonical-anchor names from `arch P1` and `bp §C`). Per anchor:
-- Validation requirements (source detector binding, contributing signals, `{frame_index, t_ms, confidence, source_detector, contributing_signals[]}` schema completeness).
-- Replay requirements (bit-identical `frame_index` and `t_ms` across two engine runs on the same trace; cites `bp §F5`/`§H5`).
-- Tolerance requirements (per-anchor frame tolerance vs golden ground truth at T-low/T-mid/T-high — values referenced as "per blueprint §H2" rather than newly invented).
-- Confidence requirements (minimum confidence to be considered "detected"; below that emits `anchor_not_detected` per `arch P0 missingness enum`).
-- Promotion criteria T0→T4 mirroring detector ladder.
+**C. Metric Calibration Architecture**
+All 18 canonical BH metrics (as enumerated in measurement architecture / gap-analysis §A). Each row: Required calibration evidence · Required detector dependencies · Required anchor dependencies · Calibration certificate requirements · Confidence-curve linkage · Drift-detection requirements · Recalibration requirements.
 
-**4. Metric Validation Framework**
-All 18 canonical BH metrics (rows reuse the gap-analysis Section A list). Per metric:
-- T0–T4 definition using shared class semantics:
-  - T0 fabricated / AI-only (audit baseline).
-  - T1 detector dependency wired; producer replaced; no calibration evidence.
-  - T2 deterministic engine output passes determinism harness; missingness routes correctly.
-  - T3 calibration certificate present where required; confidence-calibration curve within tolerance; golden-clip pass-rate floor met.
-  - T4 all blueprint §I gates pass; replay-equivalent; AI residual envelope verified bounded.
-- Required detector dependencies (cite Gap-Analysis §A "Required Detectors").
-- Required anchor dependencies (cite Gap-Analysis §A "Required Anchors").
-- Required calibration evidence (cite Gap-Analysis §A + `arch P1 calibration framework`).
-- Required replay evidence (`bp §H5`).
-- Required confidence evidence (calibration curve binding per `bp §H3`).
-- Required missingness behavior (which enum values must be emittable; cite `arch P0`).
+**D. Confidence Calibration Architecture**
+- Detector confidence calibration (per-detector reliability curve).
+- Anchor confidence calibration (per-anchor temporal-tolerance curve).
+- Metric confidence calibration (per-metric residual-vs-stated-confidence curve).
+- Confidence-curve validation requirements (ties to validation harness H3).
+- Confidence certificate requirements.
+- Confidence drift detection (calibration-curve deviation thresholds, monotonicity violations).
 
-Compact row format (markdown table per metric, with T-ladder + dependency cells), so the section stays readable across 18 rows.
+**E. Calibration Certificate Framework**
+- Certificate contents: component id, version pin, scope (segment, frame-density tier), evidence manifest hash, issuance fingerprint, expiry conditions, supersession pointer.
+- Certificate authority: who/what issues; subordinate to validation framework promotion law.
+- Evidence retention: retention handles, immutability, replay reconstructability.
+- Certificate invalidation: triggers (dependency demotion, evidence withdrawal, drift breach).
+- Certificate expiration conditions: version migration, dependency version change, segment-population shift.
+- Certificate supersession rules: additive chain, no silent overwrite, prior certificates retained.
 
-**5. Report Card Validation Framework**
-Validation requirements for each surface, with T-ladder where promotion makes sense:
-- Phase percentages — formula equivalence to `bp §E2`; replay-equivalent over the same tile set.
-- Phase orbs — single-denominator presentation; color thresholds match `bp §E2`.
-- Tile states — `TileStateMapper` produces identical state given identical inputs; confidence-aware downgrade verified.
-- Ribbon generation — non-negotiable computation excludes missing tiles (gap analysis §D).
-- Confidence surfacing — every tile carries `[0,1]` confidence; surfaced one interaction away.
-- Missingness surfacing — every missing tile carries a canonical enum reason (no `single_pass_only` umbrella).
-- Coaching-layer boundaries — AI output never overwrites engine values; presenter-only validation contract.
+**F. Calibration Drift Framework**
+- Drift detection: deterministic comparators against certificate baselines.
+- Drift classification: input-distribution drift, residual drift, confidence-curve drift, dependency-induced drift.
+- Drift severity categories: nominal, watch, warn, breach (mapped to existing trust-class demotion ladder from validation framework).
+- Drift evidence retention.
+- Promotion and demotion implications: ties directly to validation framework Trust-Class Promotion Matrix; drift breach forces demotion one tier; no silent recalibration.
 
-**6. Validation Harness Matrix**
-One block per harness (named exactly as in `bp §H`):
-- Golden-clip validation (`bp §H2`).
-- Replay validation (`bp §H5`).
-- Determinism validation (`bp §H1`).
-- Calibration validation (`bp §H3` — confidence calibration; plus `arch P1` calibration framework certificate check).
-- Missingness validation (`bp §H4`).
-- Confidence validation (`bp §H3`).
-- Version migration validation (engine-version pin promotion; cites `bp §F1`).
-Per harness: Purpose, Inputs, Pass criteria, Failure criteria, Evidence retained.
+**Closing Constraints** (restated verbatim from request).
 
-**7. Trust-Class Promotion Matrix**
-Four promotion-transition tables (T0→T1, T1→T2, T2→T3, T3→T4), each with rows for Detectors, Anchors, Metrics, Report-card outputs. Each cell lists the exact gates that must be satisfied to perform that transition. Demotion column states which observed failure forces a return to the prior class.
-
-**8. Closing Constraints**
-Restates: validation framework only; no code, no implementation, no roadmap, no sequencing, no prioritization, no architecture/blueprint/gap-analysis changes; subsequent phases consume this framework.
-
-## Hard constraints
-- Only `.lovable/canonical-validation-framework.md` is created.
-- No edits anywhere else (no plan.md edit either).
-- Every requirement cites architecture, blueprint, gap-analysis, audit, or extraction. No new metrics, detectors, anchors, harnesses, or thresholds invented.
-- No code, schema, prompts, UI, roadmap, sequencing, owners, or estimates.
+### Hard constraints
+- Calibration architecture only.
+- No code, schema, prompts, UI, roadmap, sequencing, prioritization, owners, or estimates.
+- No changes to architecture, blueprint, validation framework, or gap analysis.
+- No new metrics, detectors, anchors, harnesses, or thresholds invented.
+- Only `.lovable/canonical-calibration-architecture.md` is created.
