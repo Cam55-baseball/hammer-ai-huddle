@@ -1,26 +1,39 @@
-# Phase 1.75 — Analysis Truth Audit (Execution)
+## Plan
 
-Single-pass forensic, read-only investigation. Produces exactly one deliverable.
+Single-pass, read-only forensic audit. Produce exactly one file: `.lovable/analysis-truth-audit.md` (overwrite existing).
 
-## Deliverable
+### Scope
+Sections S1–S11 with every claim cited as `path:line-range`. Unprovable claims marked `undetermined from code — evidence needed`. Final block: A/B/C/D trust classification derived strictly from S11.
 
-Overwrite `.lovable/analysis-truth-audit.md` with sections S1–S11 plus the final A/B/C/D trust-classification block. Every claim cites `path:line-range`, or is marked `undetermined from code — evidence needed`.
+### Files to read (read-only)
+- `src/components/report-card/hammer/HammerReportCard.tsx`
+- `src/components/report-card/hammer/visuals/PhaseRail.tsx`
+- `src/lib/reportCard/contracts/bh.ts`, `bh.contract.ts`, `shared.ts`, `reportCardContracts.ts`
+- `src/lib/reportCard/metricReaders.ts`, `types.ts`, `grade.ts`
+- `src/lib/biomech/versions.ts`, `fingerprint.ts`
+- `supabase/functions/analyze-video/index.ts`
+- `supabase/functions/_shared/biomechFingerprint.ts`
+- `src/lib/video/probeVideoMetadata.ts` (or equivalent)
+- Any landmark/detector modules referenced by `versions.ts`
 
-## Investigation scope (read-only)
+### Section mapping
+- S1 Report-card calculation logic
+- S2 Metric production sources (AI vs client compute)
+- S3 Engine/detector versions
+- S4 Cache fingerprinting + scoping
+- S5 Seed derivation + same-video nondeterminism
+- S6 Calibration assumptions (bat length, pixel scaling)
+- S7 Sampling budget / frame extraction
+- S8 Failure paths (completed-with-null, fallbacks)
+- S9 Desktop/browser failure paths (probeFps, codec)
+- S10 Per-metric evidence table (all 18 BH metrics)
+- S11 Per-metric trust classification (TRUSTWORTHY / PARTIALLY / EXPERIMENTAL / NOT READY)
 
-- **S1 — Phase percentages**: `src/components/report-card/hammer/visuals/PhaseRail.tsx`, `src/components/report-card/hammer/HammerReportCard.tsx`, `src/lib/reportCard/grade.ts`, `src/lib/reportCard/types.ts`.
-- **S2 — Metric inventory**: `src/lib/reportCard/disciplines/bh.ts`, `src/lib/reportCard/contracts/bh.contract.ts`, `src/lib/reportCard/contracts/shared.ts`, `src/lib/reportCard/metricReaders.ts`, `supabase/functions/_shared/reportCardContracts.ts`.
-- **S3 — Connect & Move vs Barrel Delivery**: same as S2.
-- **S4 — Bat Path vs On-Plane %**: same as S2 (memo pointer only).
-- **S5 — Undetected metrics**: contract → prompt → reader → tile trace; capture literal `missing_reason` strings.
-- **S6 — Bat speed**: prompt/schema/reader/tile.
-- **S7 — Time to contact**: prompt/schema/reader/tile.
-- **S8 — Failure paths**: `src/pages/AnalyzeVideo.tsx`, `supabase/functions/analyze-video/*`, frame-extraction code.
-- **S9 — Nondeterminism**: `src/lib/biomech/fingerprint.ts`, `src/lib/biomech/versions.ts`, `src/lib/biomech/probeVideoMetadata.ts`, `frameExtractionDeterministic.ts`, `supabase/functions/_shared/biomechFingerprint.ts`, `supabase/functions/analyze-video/index.ts` (cache lookup/write, model id, temperature, seed), `video_analysis_runs`.
-- **S10 — Desktop failure path**: `AnalyzeVideo.tsx` upload branch, `probeVideoMetadata.ts` rVFC use, UA gating, file size limits.
-- **S11 — Trust score per metric**: classify TRUSTWORTHY / PARTIALLY TRUSTWORTHY / EXPERIMENTAL / NOT READY using only S2–S10 evidence.
-- **Final A/B/C/D block**: derived strictly from S11.
+### Final block
+A. Safe for production today
+B. Requiring redesign
+C. Requiring investigation
+D. Hide until trustworthy
 
-## Out of scope
-
-No edits to `bh.ts`, contracts, prompts, edge functions, schemas, UI, `.lovable/plan.md`, `.lovable/bucket-a-changes.md`. No determinism fixes. No new methodology memos. No roadmap language. No code, schema, prompt, UI, or metric changes anywhere.
+### Out of scope
+No code/schema/prompt/UI/metric changes. No edits to `.lovable/plan.md` or other docs. No roadmap, no recommendations, no fixes.
