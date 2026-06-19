@@ -1,50 +1,86 @@
-# Phase 25 — First Executable Report Card Slice Implementation Plan
+# Phase 26 — First Executable Report Card Slice: Partial Honest Scaffold
 
-## Deliverable
+## Selected metric (per Phase 25 §2 selection criteria)
 
-Create exactly one new file:
+**`tempo_sec`** on the **Baseball Pitching (`bp`)** Report Card tile (`tempo`):
 
-- `.lovable/first-executable-report-card-slice.md`
+1. Detector dependencies named in `canonical-build-plan.md §2`: D-POSE, D-PLANT.
+2. Anchors named in existing methodology / contract prompts: `peak_leg_lift_frame`, `front_foot_strike_frame`.
+3. Contract field exists in `src/lib/reportCard/contracts/bp.contract.ts` (`tempo_sec`, range 0.4–2.0s).
+4. One of the 30 inventory metrics; tile spec already in `src/lib/reportCard/disciplines/bp.ts`.
 
-No other files created, modified, or deleted.
+Definition: `tempo_sec = (front_foot_strike_frame_index − peak_leg_lift_frame_index) / fps_true`.
 
-## Purpose
+## What this slice honestly implements (no fabricated certainty)
 
-Translate Phase 24's authorized implementation work into the smallest executable Report Card slice capable of generating the first truth-supported athlete-facing metric. Pure extraction — no code, no new requirements.
+End-to-end deterministic pipeline scaffold for one metric, with every layer that can be implemented today implemented in pure deterministic code, and every layer that requires absent inputs (non-stub pose model, labeled corpus, calibration certificate) wired to emit **canonical missingness** rather than fabricated values.
 
-## Source Inputs (read-only)
+### Files to create
 
-- `.lovable/report-card-implementation-authority-package.md` (Phase 24)
-- `.lovable/report-card-root-blocker-decomposition-audit.md` (Phase 23, D-1…D-11)
-- `.lovable/report-card-blocker-collapse-audit.md` (Phase 22)
-- `.lovable/canonical-build-plan.md`
-- `.lovable/canonical-verification-audit.md`
-- `.lovable/canonical-production-readiness-audit.md`
-- `.lovable/canonical-implementation-execution-audit.md`
+```
+src/lib/biomech/
+  anchors/
+    peakLegLift.ts            D-3 anchor extractor (consumes pose frames; missing when pose stub)
+    frontFootStrike.ts        D-3 anchor extractor (consumes plant detector; missing when D-PLANT absent)
+  detectors/
+    plantDetector.ts          D-PLANT skeleton; emits `front_foot_first_contact_missing` until pose non-stub
+  metrics/
+    tempoSec.ts               D-5 pure metric engine: (strike − lift) / fps_true
+    missingness.ts            canonical missingness reason enum (from arch §Missingness rules)
+    confidence.ts             confidence emitter with explicit "uncalibrated" state (no fabrication)
+  evidence/
+    tempoEvidence.ts          D-6 lineage-bound artifact shape (video_sha256, fps_true, anchor frame indices,
+                              engine_version, cache_fingerprint, missingness, confidence_status)
+  validation/
+    tempoHarness.ts           harness consuming (predicted, ground_truth) pairs → residual records
+                              (executes deterministically over empty corpus → emits "no_corpus" status)
+  calibration/
+    tempoCalibration.ts       certificate generator skeleton; refuses to emit a certificate without ≥N labeled
+                              residuals (per cal §3.2) → emits CalibrationStatus.uncalibrated
+  gates/
+    tempoGate.ts              per-gate emitter consuming {value, confidence_status, missingness, calibration_status};
+                              emits gate decision conforming to canonical-production-gate-matrix
+  __tests__/
+    tempoSec.test.ts          determinism + boundary + missingness paths
+    peakLegLift.test.ts       deterministic anchor selection + missingness on empty pose
+    frontFootStrike.test.ts   deterministic + missingness on absent D-PLANT
+    tempoEvidence.test.ts     lineage-bound artifact byte-stable across repeated runs
+    tempoHarness.test.ts      empty-corpus → no_corpus; non-empty → deterministic residuals
+    tempoCalibration.test.ts  refuses certificate when residuals < required N
+    tempoGate.test.ts         gate decision matrix (pass/fail/block) on (calibrated, uncalibrated, missing) inputs
 
-Read-only repo cross-reference: `src/lib/biomech/**`, `src/lib/reportCard/contracts/bp.contract.ts`, `src/lib/reportCard/types.ts`, `supabase/functions/analyze-video/**`, `src/hooks/useReportCardTrend.ts`.
+.lovable/phase-26-implementation-report.md
+```
 
-## File structure
+### Files NOT modified
 
-- **§1 Scope** — reality-only extraction; no new requirements; bounded by Phase 24 §1 authority scope.
-- **§2 Selected First Executable Slice** — single surface (Batter's Profile tile, bound to `bp.contract.ts`) + single metric chosen from the 30-metric inventory whose anchors/detectors are already fully specified in existing methodology docs (`.lovable/back-elbow-methodology.md` or `.lovable/p3-timing-methodology.md`).
-- **§3 Required Deterministic Evidence Components** — restated D-1…D-6 components required for the chosen metric only.
-- **§4 Required Detector Components** — exact detector(s) the chosen metric depends on, named from canonical-build-plan.
-- **§5 Required Anchor Components** — exact anchor(s) the chosen metric depends on, named from methodology docs.
-- **§6 Required Metric Components** — chosen metric definition and lineage chain D-1→D-5, restated from existing contracts.
-- **§7 Required Validation Evidence Components** — labeled-dataset validation artifact for the chosen metric per canonical-verification-audit.
-- **§8 Required Calibration Components** — calibration artifact for the chosen metric per canonical-production-readiness-audit.
-- **§9 Required Confidence Components** — calibrated confidence + deterministic missingness emitters scoped to the chosen metric.
-- **§10 Required Production Gate Components** — per-gate emitters that consume the chosen metric, scoped from canonical-production-gate-matrix.
-- **§11 Repository Touchpoints** — narrowed subset of Phase 24 §10 surfaces required by the slice.
-- **§12 Evidence Produced By Slice** — replayable artifacts, validation records, calibration records, confidence/missingness records, per-gate decisions emitted by executing the slice.
-- **§13 Truth Advancement Produced By Slice** — exact movement on the Phase 21 §2 Truth Supported ledger (0/30 → 1/30) and which F-1…F-9 blockers are retired for that one metric.
-- **§14 Release 1 Advancement Produced By Slice** — fraction of canonical Release 1 (Phase 24 §13) achieved by executing the slice.
-- **§15 Final Determination** — EXECUTABLE SLICE IDENTIFIED or EXECUTABLE SLICE NOT IDENTIFIED, justified strictly by §§2–14.
+- `src/lib/biomech/versions.ts` — D-POSE stub pin (`@0.0.0-stub`) stays. Replacing it requires a real Blazepose-Full integration outside this slice.
+- `src/lib/reportCard/contracts/bp.contract.ts` — contract is already correct.
+- `src/lib/reportCard/disciplines/bp.ts` — tile already reads `tempo_sec`, surfaces missingness via `missingState`, surfaces confidence. The athlete-facing surface for the chosen metric is already correct.
+- `supabase/functions/analyze-video/index.ts` — wiring the new deterministic chain into the edge function is explicitly deferred until D-POSE is non-stub; wiring it now would require pose data that doesn't exist and would force fabricated metric values.
+- `src/hooks/useReportCardTrend.ts` — read path is already correct (consumes `ai_analysis.metrics.tempo_sec`).
 
-## Constraints
+### Determination
 
-- Exactly one file.
-- No code, no implementation, no architecture/doctrine changes.
-- No new metrics, detectors, anchors, validation, calibration, confidence requirements, or production gates.
-- Pure extraction of the smallest slice already authorized by Phase 24.
+`IMPLEMENTATION PARTIALLY COMPLETE`.
+
+### Blockers enumerated in the report
+
+- D-POSE non-stub model integration (`versions.ts` still `@0.0.0-stub`).
+- D-PLANT real implementation (currently emits structural missingness).
+- Labeled ground-truth corpus for tempo (does not exist in repo).
+- Calibration certificate (cannot be honestly derived without corpus).
+- Confidence calibration mapping (cannot be derived without corpus).
+- Edge-function wiring (deferred until upstream stubs replaced).
+
+The report will list, for each F-1…F-9 blocker, whether the slice retires it for `tempo_sec` (full / partial / not retired) with the exact remaining preconditions cited to `canonical-build-plan.md`, `canonical-verification-audit.md`, `canonical-production-readiness-audit.md`.
+
+## Constraints respected
+
+- No fabricated validation evidence.
+- No fabricated calibration evidence.
+- No fabricated confidence values (explicit `uncalibrated` status emitted instead).
+- No new metrics, detectors, anchors, validation requirements, calibration requirements, confidence requirements, or production gates introduced.
+- No doctrine or architecture changes.
+- No DB migrations.
+- No edits to auto-generated files or `supabase/config.toml`.
