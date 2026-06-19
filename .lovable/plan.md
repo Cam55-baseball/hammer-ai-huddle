@@ -1,25 +1,31 @@
-## Phase 16 — Canonical Authority Amendment
+# Phase 17 — Canonical Closure Audit
 
-Create exactly one new file: `.lovable/canonical-authority-amendment.md`
+Create exactly one new file: `.lovable/canonical-closure-audit.md`.
 
-No other files created, modified, or deleted. Documentation-only amendment that resolves the authority gaps identified in Cycles 5–6 without introducing any new metrics, detectors, anchors, validation rules, calibration rules, confidence rules, production gates, architectures, or doctrines.
+Reality-only audit synthesizing findings from the five prior canonical artifacts (measurement-architecture, implementation-blueprint, analysis-traceability, evidence-authority-resolution, authority-amendment) plus the underlying frameworks (validation, calibration, confidence, production-gate, versioning). No other files touched. No new metrics/detectors/anchors/gates/authorities/certificates.
 
-### File Structure
+## File Structure
 
-1. **Amendment Scope** — enumerate the five Cycle 6 §5 gaps verbatim (first-issuance triplet, MVCS partial-pin carve-out, fixture creator, fixture approval, fixture immutability-at-first-approval) and the dependent issuance authorities (detector/anchor/metric/confidence certificates). Explicit non-scope statement.
+**§1 Audit Scope** — Enumerate all nine audited frameworks with citations to their canonical source files; explicit no-expansion statement.
 
-2. **Version Issuance Authority** — for each of `LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION`: name the authorizing body, the first-issuance trigger condition (rooted in existing `val §6.7` migration semantics and `bp §F1` pin shape), and the MVCS-scope partial-pin carve-out clause grounded in `c5 §2`. No new requirements — only authority assignments over existing requirements.
+**§2 End-to-End Lineage Audit** — Walk the chain Evidence → Detectors → Anchors → Metrics → Confidence → Validation → Calibration → Certificates → Production Eligibility → Report Card Output, citing the canonical document carrying each hop. Flag any unowned hop.
 
-3. **Fixture Authority** — authority assignments for creation, approval, immutability, supersession, retirement, each citing the existing canonical requirement it activates (`val §6.1`, `bp §H1`–§H6, `cal §6.4`/§6.5, `ver §6`). No new fixture requirements introduced.
+**§3 Dependency Closure Audit** — Cross-reference every requirement / certificate / version pin / fixture / authority / framework dependency named in the five prior artifacts against its canonical owner. List orphans (expected: none after Phase 16, but report whatever the evidence shows).
 
-4. **Certificate Issuance Authority** — authority assignments for detector, anchor, metric, confidence certificates citing existing issuance clauses (`cal §6.1`/§6.2`, `conf §87`/§488/§530, `gate §T1→T2`).
+**§4 Governance Closure Audit** — Tabulate authority assignments for: version issuance (triplet), fixture creation/approval/immutability/supersession/retirement, and detector/anchor/metric/confidence certificates. Cite amendment §2–§4 and prior canon. Flag residual ambiguity (G8/G9 fixture retirement/supersession explicitly out-of-scope of amendment per Cycle 6 §5 minimum set).
 
-5. **Authority Hierarchy** — table mapping each authority to the existing framework it operates within (validation, calibration, confidence, production-gate), demonstrating no new framework is created.
+**§5 Framework Boundary Audit** — Verify validation/calibration/confidence/production-gate each own only their stated concerns; verify amendment introduced no new framework (per amendment §Impact Analysis). Flag overlaps.
 
-6. **Amendment Impact Analysis** — explicit verification that no metric/detector/anchor/validation/calibration/confidence/gate is added, modified, or relaxed; only authority-holder identities and first-issuance triggers are defined.
+**§6 Canonical Completeness Assessment** — One of {Complete, Conditionally Complete, Incomplete}, justified solely by §2–§5 findings.
 
-7. **Closing Determination** — `AUTHORITY GAP CLOSED` or `AUTHORITY GAP REMAINS`, justified solely by whether §2–§4 fully cover Cycle 6 §5's minimum set.
+**§7 Amendment Impact Verification** — Restate amendment delivered authority assignments only; zero additions to metrics/detectors/anchors/validation/calibration/confidence/gates/architecture. Cite amendment §Impact Analysis.
 
-### Constraints
+**§8 Final Determination** — `CANONICAL CORPUS CLOSED` or `CANONICAL CORPUS NOT CLOSED`, supported exclusively by §2–§7.
 
-Exactly one new file. No code, no implementation, no architecture changes, no new metrics/detectors/anchors/gates, no new validation/calibration/confidence requirements. Reality-only amendment of authority assignments over already-existing canonical requirements.
+## Expected Outcome
+
+Based on Cycle 6 §5 minimum set being fully closed by amendment §2–§3, and G8/G9 explicitly declared out-of-scope of the minimum set but unresolved in the corpus, the determination will most likely be **CONDITIONALLY COMPLETE / CANONICAL CORPUS CLOSED for first implementation** — with G8 (fixture supersession) and G9 (fixture retirement) noted as post-first-implementation authority items not blocking first transition. Final wording determined by evidence read during drafting, not pre-committed here.
+
+## Constraints
+
+Exactly one new file. Documentation only. No code, no implementation, no architecture, no doctrine, no new metrics/detectors/anchors/validation/calibration/confidence/gates/authorities/certificates/governance structures. Citations point only to existing `.lovable/*.md` artifacts and the canonical framework documents they reference.
