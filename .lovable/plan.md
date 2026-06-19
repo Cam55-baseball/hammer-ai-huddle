@@ -1,57 +1,41 @@
-# Execution Cycle 5 — Evidence Foundation Audit
+# Execution Cycle 6 — Evidence Authority Resolution Audit
 
-Create exactly one file: `.lovable/execution-cycle-5-evidence-foundation-audit.md`. No other files modified. No code, no implementation, no architecture, no doctrine, no new metrics/detectors/anchors/gates/requirements. Reality-only.
+Create exactly one file: `.lovable/execution-cycle-6-evidence-authority-resolution.md`. No other files modified. No code, no implementation, no architecture/doctrine changes, no new requirements, metrics, detectors, anchors, gates, validation/calibration/confidence requirements. Reality-only synthesis over the cited source inputs.
 
-## Exploration scope (read-only, before drafting)
+## Exploration scope (read-only before drafting)
 
-Cycles 1–4 + supporting canonical artifacts already cited there:
-- `.lovable/execution-cycle-1-baseline.md`
-- `.lovable/execution-cycle-2-mvcs.md`
-- `.lovable/execution-cycle-3-implementation-readiness.md`
-- `.lovable/execution-cycle-4-mvcs-implementation-package.md`
-- `.lovable/plan.md`, `.lovable/backlog.md`
-- `.lovable/finish-and-balance-methodology.md`
-- `.lovable/back-elbow-methodology.md`, `.lovable/bat-path-vs-on-plane-definitions.md`, `.lovable/p3-timing-methodology.md`, `.lovable/time-to-contact-vs-power.md`, `.lovable/confidence-source-trace.md`
-- `src/lib/biomech/versions.ts`, `src/lib/biomech/fingerprint.ts`, `src/lib/biomech/__tests__/fingerprint.test.ts`
-- `supabase/functions/_shared/biomechFingerprint.ts`
-- `scripts/replay/verify-determinism.ts`
-- `src/lib/reportCard/contracts/bh.contract.ts` and adjacent reportCard surfaces
-- Any `canonical-validation-framework.md` / verification-audit / build-plan / production-gate-matrix file referenced by Cycles 1–4
+Already in evidence from Cycles 1–5:
+- `bp §F1` (pin shape + "must move off `@0.0.0-stub`"), `bp §F2`/`§F4`/`§F5` (fingerprint/cache/replay), `bp §H1`–`§H6` (harness specs)
+- `val §6.1`–`§6.7` (evidence requirements), `val §1.4` (universal preconditions), `val §2`/`§3`/`§5` (per-component ladders)
+- `gate §T1→T2` (line 211) + per-component gate rows
+- `c1` §B-UPC, `c5` §1–§6 determinations
 
-No file outside this set will be written. Only `.lovable/execution-cycle-5-evidence-foundation-audit.md` is created.
+Additional read-only sweeps before drafting:
+- `cal` — search for `issuer`, `authority`, `signed`, `pinned`, `certificate model` (§3.2, §6.1, §6.4 Drift)
+- `conf` — search for `issuer`, `authority`, `signed`, `promotion`, `demotion`, `invalidation`
+- `ver` — search for `issuer`, `approval`, `signoff`, fixture/certificate ownership clauses
+- `gate` — `T1→T2`/`T2→T3`/`T3→T4` rows + demotion-authority hierarchy
+- `canonical-production-readiness-audit.md` — search for `authority`, `signoff`, `issuance`, `fixture`, `corpus`, `certificate`
+- `auth` (canonical-execution-authorization.md) — confirm whether it issues any authority beyond the Phase-10 deficit input set
+
+No file outside this set is opened for modification. Only `.lovable/execution-cycle-6-evidence-authority-resolution.md` is created.
 
 ## Document outline
 
-1. **B-UPC Authority Audit**
-   - Enumerate every canonical artifact (Phases 1–15 + Cycles 1–4) that touches version governance.
-   - For each: cite exact path + section/line evidence on (a) authorization of a first legal non-stub triplet, (b) maturity conditions for version transitions.
-   - Closing answer: `AUTHORITY FOUND` or `AUTHORITY NOT FOUND` with citations.
+1. **Authority Gap Inventory** — enumerate every unresolved authority from `c5` §1–§4 (first non-stub triplet issuance, partial-pin carve-out, fixture content/authority/issuance). Per row: authority needed | canonical source searched | evidence found | evidence missing | operational impact.
 
-2. **Version Transition Dependency Audit** (per `LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION`)
-   - Existing governing requirements (cite).
-   - Existing maturity requirements (cite).
-   - Existing evidence requirements (cite).
-   - Existing verification requirements (cite).
-   - Per-pin determination: legal first-transition path exists / does not exist.
+2. **First Version Transition Authority Audit** — per pin (`LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION`): existing authority (`bp §F1` shape, `val §6.7` migration), missing authority (first-issuance clause, partial-pin carve-out), existing promotion/evidence/verification requirements (cite `val §2`/`§3`/`§5`, `val §6.1`–`§6.6`, `gate §T1→T2`). Closing: **LEGAL FIRST TRANSITION PATH DOES NOT EXIST** (forecast — subject to evidence).
 
-3. **Canonical Fixture Authority Audit**
-   - Search validation framework, verification audit, build plan, production gate matrix for fixture authority.
-   - Cite required fixture types, required fixture contents, required fixture authority source — or record absence.
+3. **Fixture Authority Audit** — for each of {creator, approval, immutability, retirement, supersession}: citation searched in `val §6.1`/`§6.3`/`§6.5`, `bp §H1`/`§H2`/`§H4`/`§H5`, `ver`, `gate`, `cal`, `conf`; mark `AUTHORITY FOUND` / `AUTHORITY NOT FOUND` per row.
 
-4. **Minimum Fixture Corpus Definition** (derivation only, no invention)
-   - For chain D-POSE → Finish → `finish_balance` → H1, list the smallest fixture set strictly implied by already-cited requirements (e.g., one side-on rear-camera clip at T-low ≥30 fps + its derived landmark/event/metric reference artifacts only if existing requirements demand them).
-   - Mark any link whose fixture cannot be derived from existing canon as `UNDERIVABLE FROM EXISTING CANON`.
+4. **Certificate Issuance Authority Audit** — for {detector, anchor, metric, confidence} certificate issuers: cite `cal §3.2`, `cal §6.1`, `cal §6.4`, `conf §Promotion-Demotion`, `gate §T1→T2`; mark `AUTHORITY FOUND` / `AUTHORITY NOT FOUND` per row. (Cycle 5 §2–§3 forecasts most of these as `NOT FOUND` — the audit will record per-row evidence.)
 
-5. **Evidence Foundation Determination**
-   - `EVIDENCE FOUNDATION COMPLETE` or `EVIDENCE FOUNDATION INCOMPLETE`, justified by §1–§4 citations.
+5. **Smallest Missing Authority Set** — minimum unresolved authority set blocking D-POSE → Finish → `finish_balance` → H1, derived only from §1–§4 citations. Expected items: (a) first non-stub triplet issuance authority, (b) MVCS-scope partial-pin carve-out (or staged-pin doctrine), (c) fixture-creator authority, (d) fixture-immutability/hash-pinning authority, (e) detector/anchor/metric/confidence certificate issuers — pruned to only those strictly required by the H1-only MVCS scope per `c2`/`c5 §4`.
 
-6. **Closing Determination**
-   - `READY FOR FIRST IMPLEMENTATION` or `NOT READY FOR FIRST IMPLEMENTATION`, citing only repository + canonical evidence.
+6. **Resolution Feasibility** — `DERIVABLE FROM EXISTING CANON` or `CONSTITUTIONAL AMENDMENT REQUIRED`, justified by §1–§5 citations. Forecast (subject to evidence): if no existing artifact contains issuance authority text, the determination is `CONSTITUTIONAL AMENDMENT REQUIRED`.
 
-## Expected outcome (pre-audit forecast, subject to evidence)
-
-Cycle 3 and Cycle 4 already recorded that no Phase 1–15 artifact binds version-pin bumps to maturity gates (B-UPC unresolved) and that no canonical fixture corpus exists (H1 pipeline coverage explicitly deferred in `scripts/replay/verify-determinism.ts`). Unless §1–§3 surface evidence those cycles missed, the audit will conclude `AUTHORITY NOT FOUND`, `EVIDENCE FOUNDATION INCOMPLETE`, and `NOT READY FOR FIRST IMPLEMENTATION`. The audit will state this only if the cited evidence supports it.
+7. **Closing Determination** — `READY FOR FIRST IMPLEMENTATION` or `NOT READY FOR FIRST IMPLEMENTATION`, justified solely by cited evidence.
 
 ## Constraints reaffirmed
 
-No code. No implementation. No architecture. No doctrine. No new requirements, metrics, detectors, anchors, or gates. Exactly one new file. Evidence-only.
+Exactly one new file. No code, no implementation, no architecture, no doctrine, no new requirements, metrics, detectors, anchors, gates, or validation/calibration/confidence requirements.
