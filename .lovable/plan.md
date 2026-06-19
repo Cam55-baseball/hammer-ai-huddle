@@ -1,71 +1,49 @@
-# Execution Cycle 3 — MVCS Implementation Readiness Audit
+## Execution Cycle 4 — MVCS Implementation Package
 
-Create exactly one new file: `.lovable/execution-cycle-3-implementation-readiness.md`. No other files modified. No code, architecture, doctrine, metrics, detectors, anchors, gates, or requirements introduced.
+Create exactly one new file: `.lovable/execution-cycle-4-mvcs-implementation-package.md`. No code, no repository modifications, documentation only. Derived strictly from Phases 1–15, Execution Cycles 1–3, and existing repository conventions.
 
-## Document Structure
+### File outline
 
-### 1. MVCS Repository Asset Audit
+**1. MVCS Component Inventory** — per component (D-POSE, Finish, `finish_balance`, H1):
+- Existing repository assets (cite exact paths: `src/lib/biomech/versions.ts`, `supabase/functions/_shared/biomechFingerprint.ts`, `src/lib/biomech/fingerprint.ts`, `src/lib/reportCard/contracts/bh.contract.ts`, `src/lib/reportCard/disciplines/bh.ts`, `supabase/functions/_shared/reportCardContracts.ts`, `.lovable/finish-and-balance-methodology.md`, `scripts/replay/verify-determinism.ts`, `src/lib/biomech/probeVideoMetadata.ts`, `src/lib/biomech/frameExtractionDeterministic.ts`, `src/lib/biomech/__tests__/fingerprint.test.ts`).
+- Missing repository assets (extractor modules, emitters, fixtures, pipeline harness wiring).
+- Canonical requirements satisfied vs unsatisfied (cite Phase 10–15 §refs: `arch §2`, `arch §17`, `arch §Confidence model`, `gate Part 1/2`, `val §1.3`, `val §6.1`, `cal §4/§5/§6`, `conf §1.3`, `reality §4 #17`).
 
-**D-POSE (BlazePose landmark extractor)**
-- Existing: version pin only — `src/lib/biomech/versions.ts` (`LANDMARK_MODEL_VERSION = "blazepose_full@0.0.0-stub"`); Deno mirror `supabase/functions/_shared/biomechFingerprint.ts`; fingerprint consumer `src/lib/biomech/fingerprint.ts`.
-- Existing adjacent: `src/lib/frameExtraction.ts`, `src/lib/biomech/frameExtractionDeterministic.ts`, `src/lib/biomech/probeVideoMetadata.ts`, `src/lib/biomech/videoAcceptance.ts`.
-- Missing: any pose landmark extractor module, any 33-landmark stream emitter, any BlazePose runtime binding, any `landmarks.jsonl` producer, any non-stub `LANDMARK_MODEL_VERSION` value.
+**2. Implementation Specification** — per component, list only:
+- Required inputs (side-on rear-camera capture ≥30 fps T-low; D-POSE 33-landmark stream for Finish; D-POSE+Finish for `finish_balance`; canonical landmarks/events/metrics fixtures for H1).
+- Required outputs (33-landmark stream; `finish_frame` index + confidence ≥0.6; `finish_balance` numeric value + canonical missingness + tile confidence; byte-identical hash triplet).
+- Required persistence artifacts (per existing fingerprint contract in `src/lib/biomech/fingerprint.ts` and its Deno mirror — no new artifacts).
+- Required confidence artifacts (four-factor product per `arch §Confidence model`, monotonic non-increasing per `conf §1.3`).
+- Required missingness artifacts (canonical missingness per `reality §4 #17`, Partial-AI-only).
+- Required fingerprint bindings (simultaneous transition of `LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION` off `@0.0.0-stub` via the existing fingerprint concatenation contract — gated by unresolved B-UPC).
 
-**Finish Anchor (`finish_frame`)**
-- Existing: nothing beyond `DETECTOR_VERSION = "events@0.0.0-stub"` in `src/lib/biomech/versions.ts`; downstream contract reference in `src/lib/reportCard/contracts/bh.contract.ts` and `src/lib/reportCard/disciplines/bh.ts` and `supabase/functions/_shared/reportCardContracts.ts`.
-- Missing: Finish anchor extractor module, frame-index emitter, confidence emitter, anchor-event schema implementation.
+**3. Repository Placement Map** — derived only from existing conventions:
+- Extractor placement under `src/lib/biomech/` (mirrors `versions.ts`, `fingerprint.ts`, `probeVideoMetadata.ts`, `frameExtractionDeterministic.ts`).
+- Edge mirrors under `supabase/functions/_shared/` (mirrors `biomechFingerprint.ts`, `reportCardContracts.ts`).
+- Metric surface alignment with `src/lib/reportCard/disciplines/bh.ts` + `contracts/bh.contract.ts`.
+- H1 harness extension under `scripts/replay/` (mirrors `verify-determinism.ts`).
+- Fixtures under existing test conventions (mirrors `src/lib/biomech/__tests__/`).
+- No new directories, no new interfaces.
 
-**`finish_balance` Metric**
-- Existing: contract surface in `src/lib/reportCard/contracts/bh.contract.ts`, `src/lib/reportCard/disciplines/bh.ts`, `supabase/functions/_shared/reportCardContracts.ts`; methodology doc `.lovable/finish-and-balance-methodology.md`; version pin `METRIC_ENGINE_VERSION = "metrics@0.0.0-stub"`.
-- Missing: numeric metric engine, canonical missingness emitter, tile-confidence emitter, four-factor confidence product implementation.
+**4. Verification Package** — citing existing requirements only:
+- Verification evidence: cache-fingerprint contract coverage in `src/lib/biomech/__tests__/fingerprint.test.ts`.
+- Determinism evidence: H1 byte-identical reruns over canonical fixture covering D-POSE→Finish→`finish_balance` per `val §1.3` / `val §6.1`.
+- Replay evidence: identical landmarks/events/metrics hashes across N runs (current `verify-determinism.ts` header explicitly defers this to Phase 2–4).
+- Calibration evidence: `cal §4` D-POSE residual envelope; `cal §5` Finish frame-index residual envelope; `cal §6` `finish_balance` scale-free certificate.
+- Confidence evidence: four-factor product per `arch §Confidence model`; monotonic non-increasing per `conf §1.3`; Partial-AI confidence ceiling per `reality §4 #17`.
 
-**H1 Determinism Harness**
-- Existing: `scripts/replay/verify-determinism.ts` (H1-shaped, fingerprint + canonical-JSON only); `src/lib/biomech/__tests__/fingerprint.test.ts`.
-- Missing: canonical landmarks fixture, canonical events fixture, canonical metrics fixture, pipeline runner that feeds D-POSE → Finish → `finish_balance` outputs into the H1 byte-identity check (the script's own header marks this as Phase 2–4 work).
+**5. Gate Advancement Analysis** — Phase 9 only:
+- Movable: D-POSE ≥T2, Finish ≥T2, #17 `finish_balance` ≥T2, Phase Percentages (1/N).
+- Reachable trust classes: Partial-AI only for `finish_balance` per `reality §4 #17`; T2 for D-POSE/Finish.
+- Issuable artifacts: first non-stub cache fingerprint triplet; first H1 pipeline determinism certificate; first calibration certificates for D-POSE/Finish/`finish_balance`; first four-factor confidence evaluation.
+- Remaining blocked: all gates dependent on additional anchors/metrics/detectors and on B-UPC resolution.
 
-### 2. Buildability Assessment
+**6. Implementation Readiness Determination**:
+- **IMPLEMENTATION PACKAGE INCOMPLETE.**
+- Justification: package can be fully specified from existing canonical requirements and repository conventions, but two prerequisites prevent it from being a complete, executable implementation package:
+  (a) **B-UPC unresolved** (per `.lovable/execution-cycle-1-baseline.md`) — no Phase 1–15 artifact binds version-pin bumps to maturity gates or declares the first legal non-stub triplet, so the fingerprint binding step in §2 has no governing rule.
+  (b) **No canonical fixture corpus exists** for landmarks/events/metrics — H1 pipeline coverage is explicitly deferred in `scripts/replay/verify-determinism.ts`, and `val §1.3`/`§6.1` cannot be satisfied without it.
+- All other package elements (inventory, spec, placement, verification, gate forecast) are fully derivable from existing repository assets and canonical requirements without introducing new architecture, doctrine, metrics, detectors, anchors, gates, or requirements.
 
-- D-POSE — **NOT BUILDABLE**. Only version pin exists; no extractor file in repo.
-- Finish — **NOT BUILDABLE**. Only contract/version stubs; no anchor extractor.
-- `finish_balance` — **NOT BUILDABLE**. Only contract surfaces and methodology doc; no engine.
-- H1 — **PARTIALLY BUILDABLE**. Determinism runner exists for the fingerprint layer; the pipeline-coverage portion required by MVCS is absent (`verify-determinism.ts` header explicitly defers it to Phase 2–4).
-
-### 3. Dependency Gap Analysis
-
-Missing artifacts (paths cited where the asset would have to land per existing conventions; no proposed solutions):
-- D-POSE extractor module under `src/lib/biomech/` (no file exists).
-- Non-stub value for `LANDMARK_MODEL_VERSION` in `src/lib/biomech/versions.ts` and its mirror `supabase/functions/_shared/biomechFingerprint.ts`.
-- Finish anchor extractor module under `src/lib/biomech/` (no file exists).
-- Non-stub value for `DETECTOR_VERSION` in the same two files.
-- `finish_balance` engine module under `src/lib/biomech/` (no file exists).
-- Non-stub value for `METRIC_ENGINE_VERSION` in the same two files.
-- Canonical fixture artifacts referenced by `scripts/replay/verify-determinism.ts` header (landmarks/events/metrics) — no fixture files present.
-- H1 pipeline wiring inside `scripts/replay/verify-determinism.ts` covering events_sha256_hex / metrics_sha256_hex (currently deferred per its own comment).
-- Constitutional binding between version-pin bumps and maturity gates (B-UPC, per `execution-cycle-1-baseline.md`) — no Phase 1–15 artifact declares the first legal non-stub triplet.
-
-### 4. Earliest Achievable Trust Class (per existing validation framework only)
-
-- D-POSE — Current: none (stub). Max with current assets: none — no extractor to evaluate.
-- Finish — Current: none (stub). Max with current assets: none — no extractor to evaluate.
-- `finish_balance` — Current: none (stub). Max with current assets: none — no engine to evaluate.
-- H1 — Current: passing for fingerprint layer only. Max with current assets: fingerprint-layer determinism only; cannot reach MVCS-chain H1 because upstream extractors and engine do not exist.
-
-### 5. First Evidence Chain Feasibility
-
-D-POSE → Finish → `finish_balance` → H1 proof without introducing new architecture?
-
-**NO.** Three of the four chain links have no executable module in the repository (only version stubs, contract surfaces, and a methodology doc). `verify-determinism.ts` cannot prove byte-identity over outputs that no module produces. Producing those modules is not "new architecture" — it is implementation of already-declared canonical surfaces — but it is *new implementation*, and this cycle is a reality-only audit, so the chain is not producible from current repository assets alone.
-
-### 6. Production Gate Movement Forecast (Phase 9 only)
-
-If MVCS were implemented:
-- Move: D-POSE ≥T2, Finish ≥T2, `finish_balance` (#17) ≥T2, Phase Percentages (1/N partial progress).
-- Remain blocked: D-HANDS, D-BAT, D-BALL, D-CONTACT, D-PLANT, D-RELEASE; Launch, Heel Plant, Contact, Release anchors; metrics #1–#16 and #18; Discipline Score; full Report Card.
-
-### 7. Closing Determination
-
-**MVCS IMPLEMENTATION NOT READY.** Three of four MVCS components have zero executable assets in the repository (only stub version pins, contract surfaces, and a methodology doc). The H1 harness exists only at the fingerprint layer and explicitly defers pipeline coverage. B-UPC (per `execution-cycle-1-baseline.md`) remains the dominant blocker: no Phase 1–15 artifact binds version-pin bumps to maturity gates or declares the first legal non-stub triplet, so even constructing the missing modules would not by itself satisfy the canonical evidence chain.
-
-## Constraints satisfied
-
-No code, no implementation, no architecture, no doctrine, no new metrics/detectors/anchors/gates/requirements. Exactly one new file: `.lovable/execution-cycle-3-implementation-readiness.md`.
+### Constraints honored
+No code. No implementation. No architecture. No doctrine. No new metrics/detectors/anchors/gates/requirements. Exactly one new file.
