@@ -1,41 +1,25 @@
-# Execution Cycle 6 — Evidence Authority Resolution Audit
+## Phase 16 — Canonical Authority Amendment
 
-Create exactly one file: `.lovable/execution-cycle-6-evidence-authority-resolution.md`. No other files modified. No code, no implementation, no architecture/doctrine changes, no new requirements, metrics, detectors, anchors, gates, validation/calibration/confidence requirements. Reality-only synthesis over the cited source inputs.
+Create exactly one new file: `.lovable/canonical-authority-amendment.md`
 
-## Exploration scope (read-only before drafting)
+No other files created, modified, or deleted. Documentation-only amendment that resolves the authority gaps identified in Cycles 5–6 without introducing any new metrics, detectors, anchors, validation rules, calibration rules, confidence rules, production gates, architectures, or doctrines.
 
-Already in evidence from Cycles 1–5:
-- `bp §F1` (pin shape + "must move off `@0.0.0-stub`"), `bp §F2`/`§F4`/`§F5` (fingerprint/cache/replay), `bp §H1`–`§H6` (harness specs)
-- `val §6.1`–`§6.7` (evidence requirements), `val §1.4` (universal preconditions), `val §2`/`§3`/`§5` (per-component ladders)
-- `gate §T1→T2` (line 211) + per-component gate rows
-- `c1` §B-UPC, `c5` §1–§6 determinations
+### File Structure
 
-Additional read-only sweeps before drafting:
-- `cal` — search for `issuer`, `authority`, `signed`, `pinned`, `certificate model` (§3.2, §6.1, §6.4 Drift)
-- `conf` — search for `issuer`, `authority`, `signed`, `promotion`, `demotion`, `invalidation`
-- `ver` — search for `issuer`, `approval`, `signoff`, fixture/certificate ownership clauses
-- `gate` — `T1→T2`/`T2→T3`/`T3→T4` rows + demotion-authority hierarchy
-- `canonical-production-readiness-audit.md` — search for `authority`, `signoff`, `issuance`, `fixture`, `corpus`, `certificate`
-- `auth` (canonical-execution-authorization.md) — confirm whether it issues any authority beyond the Phase-10 deficit input set
+1. **Amendment Scope** — enumerate the five Cycle 6 §5 gaps verbatim (first-issuance triplet, MVCS partial-pin carve-out, fixture creator, fixture approval, fixture immutability-at-first-approval) and the dependent issuance authorities (detector/anchor/metric/confidence certificates). Explicit non-scope statement.
 
-No file outside this set is opened for modification. Only `.lovable/execution-cycle-6-evidence-authority-resolution.md` is created.
+2. **Version Issuance Authority** — for each of `LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION`: name the authorizing body, the first-issuance trigger condition (rooted in existing `val §6.7` migration semantics and `bp §F1` pin shape), and the MVCS-scope partial-pin carve-out clause grounded in `c5 §2`. No new requirements — only authority assignments over existing requirements.
 
-## Document outline
+3. **Fixture Authority** — authority assignments for creation, approval, immutability, supersession, retirement, each citing the existing canonical requirement it activates (`val §6.1`, `bp §H1`–§H6, `cal §6.4`/§6.5, `ver §6`). No new fixture requirements introduced.
 
-1. **Authority Gap Inventory** — enumerate every unresolved authority from `c5` §1–§4 (first non-stub triplet issuance, partial-pin carve-out, fixture content/authority/issuance). Per row: authority needed | canonical source searched | evidence found | evidence missing | operational impact.
+4. **Certificate Issuance Authority** — authority assignments for detector, anchor, metric, confidence certificates citing existing issuance clauses (`cal §6.1`/§6.2`, `conf §87`/§488/§530, `gate §T1→T2`).
 
-2. **First Version Transition Authority Audit** — per pin (`LANDMARK_MODEL_VERSION`, `DETECTOR_VERSION`, `METRIC_ENGINE_VERSION`): existing authority (`bp §F1` shape, `val §6.7` migration), missing authority (first-issuance clause, partial-pin carve-out), existing promotion/evidence/verification requirements (cite `val §2`/`§3`/`§5`, `val §6.1`–`§6.6`, `gate §T1→T2`). Closing: **LEGAL FIRST TRANSITION PATH DOES NOT EXIST** (forecast — subject to evidence).
+5. **Authority Hierarchy** — table mapping each authority to the existing framework it operates within (validation, calibration, confidence, production-gate), demonstrating no new framework is created.
 
-3. **Fixture Authority Audit** — for each of {creator, approval, immutability, retirement, supersession}: citation searched in `val §6.1`/`§6.3`/`§6.5`, `bp §H1`/`§H2`/`§H4`/`§H5`, `ver`, `gate`, `cal`, `conf`; mark `AUTHORITY FOUND` / `AUTHORITY NOT FOUND` per row.
+6. **Amendment Impact Analysis** — explicit verification that no metric/detector/anchor/validation/calibration/confidence/gate is added, modified, or relaxed; only authority-holder identities and first-issuance triggers are defined.
 
-4. **Certificate Issuance Authority Audit** — for {detector, anchor, metric, confidence} certificate issuers: cite `cal §3.2`, `cal §6.1`, `cal §6.4`, `conf §Promotion-Demotion`, `gate §T1→T2`; mark `AUTHORITY FOUND` / `AUTHORITY NOT FOUND` per row. (Cycle 5 §2–§3 forecasts most of these as `NOT FOUND` — the audit will record per-row evidence.)
+7. **Closing Determination** — `AUTHORITY GAP CLOSED` or `AUTHORITY GAP REMAINS`, justified solely by whether §2–§4 fully cover Cycle 6 §5's minimum set.
 
-5. **Smallest Missing Authority Set** — minimum unresolved authority set blocking D-POSE → Finish → `finish_balance` → H1, derived only from §1–§4 citations. Expected items: (a) first non-stub triplet issuance authority, (b) MVCS-scope partial-pin carve-out (or staged-pin doctrine), (c) fixture-creator authority, (d) fixture-immutability/hash-pinning authority, (e) detector/anchor/metric/confidence certificate issuers — pruned to only those strictly required by the H1-only MVCS scope per `c2`/`c5 §4`.
+### Constraints
 
-6. **Resolution Feasibility** — `DERIVABLE FROM EXISTING CANON` or `CONSTITUTIONAL AMENDMENT REQUIRED`, justified by §1–§5 citations. Forecast (subject to evidence): if no existing artifact contains issuance authority text, the determination is `CONSTITUTIONAL AMENDMENT REQUIRED`.
-
-7. **Closing Determination** — `READY FOR FIRST IMPLEMENTATION` or `NOT READY FOR FIRST IMPLEMENTATION`, justified solely by cited evidence.
-
-## Constraints reaffirmed
-
-Exactly one new file. No code, no implementation, no architecture, no doctrine, no new requirements, metrics, detectors, anchors, gates, or validation/calibration/confidence requirements.
+Exactly one new file. No code, no implementation, no architecture changes, no new metrics/detectors/anchors/gates, no new validation/calibration/confidence requirements. Reality-only amendment of authority assignments over already-existing canonical requirements.
