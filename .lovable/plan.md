@@ -1,31 +1,48 @@
-# Phase 19 — Live Athlete Workflow Proof Audit
+
+# Phase 20 — Report Card Metric Truth Audit
 
 ## Deliverable
-Create exactly one new file:
+
+Create exactly **one** new file:
+
+- `.lovable/report-card-metric-truth-audit.md`
+
+No other files will be created, modified, or deleted. No code, no implementation, no architecture, no doctrine, no new metrics/detectors/anchors/validation/calibration/confidence/gates/governance/roadmap work.
+
+## Approach
+
+Pure read-only audit. I will read the source inputs and repository paths enumerated in the request, then write the audit file straight through with the prescribed section structure.
+
+### Source inputs (read-only)
 - `.lovable/live-athlete-workflow-proof-audit.md`
+- `.lovable/first-implementation-reality-audit.md`
+- `.lovable/canonical-gap-analysis.md`
+- `.lovable/canonical-measurement-architecture.md`
+- `.lovable/canonical-implementation-blueprint.md`
+- `.lovable/canonical-closure-audit.md`
+- `.lovable/analysis-truth-audit.md`
+- `.lovable/analysis-truth-extraction.md`
 
-No other files created, modified, or deleted. No code, architecture, doctrine, metrics, detectors, anchors, validation, calibration, confidence, gate, governance, or future-state changes.
+### Repository surfaces (read-only)
+- `src/lib/reportCard/**` (contracts: `bp.contract.ts`, `bh.contract.ts`, `throwing.contract.ts`, `shared.ts`; `metricReaders.ts`; `types.ts`; disciplines/*)
+- `src/lib/biomech/**` (incl. `versions.ts`)
+- `supabase/functions/analyze-video/**`
+- `src/hooks/useReportCardTrend.ts`
+- `src/hooks/usePitchingV2Trends.ts`
+- `src/hooks/useHIESnapshot.ts`
 
-## File Structure
-The audit will contain exactly the nine required sections, reality-only, citations to existing canonical docs (`.lovable/canonical-measurement-architecture.md`, `canonical-implementation-blueprint.md`, `analysis-traceability.md`, `evidence-authority-resolution.md`, `canonical-authority-amendment.md`, `canonical-closure-audit.md`, `first-implementation-reality-audit.md`) and to actual repo paths:
+## File structure (mirrors the requested spec)
 
-- **§1 Audit Scope** — Enumerate the seven canonical artifacts + the live repo surfaces being walked (athlete entry `src/pages/AthleteCommand.tsx`, onboarding `HammerOnboardingChat`, evidence pipeline `supabase/functions/analyze-video/index.ts`, report card `src/lib/reportCard/**`, recommendations, MPI/HIE/PIE v2 hooks, progress trend `src/hooks/useReportCardTrend.ts`). Explicit statement: "This audit evaluates operational workflow reality only."
-- **§2 Athlete Workflow Simulation** — Walk one athlete through Entry → Onboarding → Assessment → Evidence Submission → Analysis Processing → Metric Generation → Report Card Generation → Development Guidance → Progress Tracking; tag each step Implemented / Partial / Missing / Blocked with file:line citations.
-- **§3 Data Flow Proof** — For each stage list Input, Processing Layer, Output, Storage Location, Consuming System; flag broken links, dead ends, orphaned outputs (e.g. AI-emitted `metrics` → `videos.ai_analysis` → `useReportCardTrend` → tile `compute()`).
-- **§4 Report Card Proof** — Per discipline (BP, BH, Throwing) and per tile category, tag Fully populated / Partially populated / Empty / Placeholder-driven, citing `src/lib/reportCard/disciplines/*` and AI extractor output keys.
-- **§5 Recommendation Proof** — Classify recommendation surfaces (HammerDailyPlan, PIE v2 drill/video catalogs, S2 drill recommendations) as Evidence-backed / Rule-backed / Static / Placeholder / Missing, tracing lineage from source evidence to athlete-facing surface.
-- **§6 Athlete Experience Audit** — Document user-visible failures, confusing transitions, empty states, broken loops, dead-end workflows from existing implementation only.
-- **§7 Operational Blocking Audit** — Group observed blockers into Critical / Major / Minor; describe only, no solutions.
-- **§8 Internal Test Readiness Verification** — YES/NO with evidence-based justification, anchored to Phase 18's `LIMITED INTERNAL ATHLETE TESTING READY` determination and §§2–7 findings.
-- **§9 Final Determination** — One of {WORKFLOW NOT PROVEN, WORKFLOW PARTIALLY PROVEN, WORKFLOW PROVEN FOR INTERNAL TESTING}, supported exclusively by §§2–8.
+- **§1 Audit Scope** — define the athlete-facing report-card metric surface under evaluation; declare evaluation as metric truth only.
+- **§2 Metric Inventory** — enumerate every athlete-visible metric across BP (9), BH (per `bh.contract.ts`), Throwing (per `throwing.contract.ts`), with source location, producing system, consuming surface, current status, and classification (Evidence Derived / Rule Derived / AI Derived / Hybrid / Placeholder / Missing).
+- **§3 Metric Lineage Audit** — per metric: Input → Processing → Output → Storage → Display, with file:line citations; flag orphaned, synthetic, AI-only, and broken-lineage metrics.
+- **§4 Measurement Truth Audit** — per metric: Directly measured / Inferred / Estimated / AI generated / Placeholder generated, with citations.
+- **§5 Confidence and Missingness Audit** — per metric: exposes confidence, exposes missingness, hides uncertainty, fabricates certainty (citations only; anchored on `metricReaders.ts`, `contracts/shared.ts`, `confidence-source-trace.md`).
+- **§6 Athlete Risk Audit** — descriptive risks from AI-only metrics, self-reported confidence, broken lineage, unsupported metrics. No remediation.
+- **§7 Truth Coverage Scorecard** — Truth Supported / Partially Supported / Unsupported per metric, with justification.
+- **§8 Report Card Release Readiness** — Released Publicly / Released With Warnings / Internal Testing Only, based solely on metric truth evidence accumulated above.
+- **§9 Final Determination** — exactly one of: METRIC TRUTH PROVEN / METRIC TRUTH PARTIALLY PROVEN / METRIC TRUTH NOT PROVEN, supported exclusively by §§2–8.
 
-## Exploration Before Writing
-Read (in parallel) to ground citations:
-- `src/lib/reportCard/index.ts`, `contracts/index.ts`, discipline specs under `src/lib/reportCard/disciplines/`
-- `supabase/functions/analyze-video/index.ts` (metric emission surface)
-- `src/components/hammer/HammerOnboardingChat.tsx`, `HammerDailyPlan.tsx`
-- `src/hooks/useHammerChat.ts`, `useReportCardTrend.ts`, `useHIESnapshot.ts`, `usePitchingV2Trends.ts`
-- Existing Phase 18 audit and the six prior canonical artifacts to ensure consistency.
+## Constraints honored
 
-## Constraints Recap
-Exactly one file. Reality only. Citations only. No remediation, no new metrics/detectors/anchors/validation/calibration/confidence/gates/governance, no architecture or doctrine work.
+Exactly one file. Reality only. Citations only. No remediation, no new framework artifacts of any kind, no code changes.
