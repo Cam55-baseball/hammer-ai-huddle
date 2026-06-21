@@ -1,24 +1,40 @@
-## Phase 33 — Implementation Execution Go / No-Go Audit
+## Phase 34 — `tempo_sec` Implementation Execution
 
-Create exactly one new file: `.lovable/phase-33-implementation-execution-go-no-go-audit.md`. No other files created, modified, or deleted. No code, architecture, doctrine, requirement, metric, detector, anchor, validation, calibration, confidence, or gate changes.
+Scope is the Phase 31 §13 / Phase 33 §13 authorized `tempo_sec` path only. No new metrics, doctrine, architecture, detectors, or anchors. No fabricated evidence (no synthetic pose model, no synthetic corpus).
 
-### Sources (read-only)
-- `.lovable/`: phase-29, phase-30, phase-31, phase-32, report-card-implementation-authority-package, report-card-root-blocker-decomposition-audit, canonical-execution-authorization, canonical-production-readiness-audit, canonical-implementation-execution-audit
-- Repo cross-check: `src/lib/biomech/**`, `src/lib/reportCard/**`, `supabase/functions/analyze-video/**`, `src/hooks/useReportCardTrend.ts`, `src/hooks/usePitchingV2Trends.ts`, `src/hooks/useHIESnapshot.ts`
+### Reality constraint
+Phase 29 / Phase 31 §9 / Phase 33 §10 classified the two remaining inputs as **acquisition-class external inputs**:
+- **EXT-MODEL** — a real D-POSE (BlazePose Full) runtime binding. Not present in the repository; cannot be invented.
+- **EXT-CORPUS** — ≥30 labeled `TempoValidationPair` records. No corpus file exists.
 
-### Document sections
-1. **§1 Scope** — Audit confirms no unresolved planning/audit/authority/doctrine/validation/calibration/confidence/governance/production/implementation-readiness prerequisite remains for the Phase 31 §13–authorized `tempo_sec` implementation path; prevents further planning loops post Phase 32 closure identification.
-2. **§2 Planning Completion Audit** — Cite Phases 27–32 sealed determinations.
-3. **§3 Audit Completion Audit** — Cite each canonical audit artifact in `.lovable/` and confirm presence of explicit determinations.
-4. **§4 Authority Completion Audit** — Cite the authority package + canonical execution authorization as the closed authority envelope.
-5. **§5 Architecture Completion Audit** — Cite the deterministic chain (D-3→D-8→gate matrix→replay→tile adapter) at repository lines (`tempoPipeline.ts`, `tempoHarness.ts`, `tempoCalibration.ts`, `tempoTileAdapter.ts`, `versions.ts`).
-6. **§6 Validation Completion Audit** — Cite `runTempoValidationHarness` wiring.
-7. **§7 Calibration Completion Audit** — Cite `generateTempoCalibrationCertificate`.
-8. **§8 Confidence Completion Audit** — Cite confidence binding inside tile adapter / pipeline.
-9. **§9 Production Readiness Completion Audit** — Cite canonical production readiness audit + six-gate matrix auto-reevaluation.
-10. **§10 Implementation Dependency Audit** — Per Phase 31 §11, the only remaining dependencies are EXT-MODEL (D-POSE binding at `versions.ts:25`) and EXT-CORPUS (≥30 `TempoValidationPair`) — both classified as acquisition-class external inputs, not implementation prerequisites.
-11. **§11 Remaining Non-Implementation Blockers** — None identified beyond the acquisition-class EXT-MODEL / EXT-CORPUS inputs already governed by Phase 30 acquisition plan and reaffirmed by Phase 31 authorization.
-12. **§12 Earliest Implementation Start Condition** — `tempo_sec` scope per Phase 31 §13; two bounded edits (model binding + corpus ingestion) trigger automatic gate reevaluation; no further planning artifact required.
-13. **§13 Final Determination** — **IMPLEMENTATION MAY BEGIN**, scoped to the Phase 31 §13 `tempo_sec` path. Explicit statement: no additional planning, audit, authority, readiness, decomposition, closure, governance, or canonical artifact is identified as a prerequisite to implementation execution. EXT-MODEL / EXT-CORPUS remain acquisition-class inputs, not planning prerequisites.
+Per `mem://` doctrine and Phase 22 F-6, fabricating either is forbidden. This phase therefore implements the **in-repo surfaces** that consume those inputs the moment they land, and honestly reports the resulting gate state.
 
-Citations only from listed sources and repo files; no fabricated evidence.
+### Files to add (2)
+1. `src/lib/biomech/validation/tempoCorpusIngestion.ts` — a small, pure module that accepts a raw JSON value, validates it against the existing `TempoValidationPair` schema (clip_id: string, predicted_sec: number|null, ground_truth_sec: number), rejects unknown/malformed records, and returns a typed `readonly TempoValidationPair[]`. No new schema, no new doctrine. Adds an `EMPTY_TEMPO_CORPUS: readonly TempoValidationPair[] = []` export so callers can wire the harness deterministically when no corpus is present.
+2. `src/lib/biomech/__tests__/tempoExecution.test.ts` — Vitest suite that:
+   - Calls `parseTempoValidationCorpus` against a malformed value (rejects), an empty array (returns `[]`), and a small valid array (returns typed records).
+   - Calls `runTempoValidationHarness(EMPTY_TEMPO_CORPUS)` and asserts `status === "no_corpus"`.
+   - Calls `generateTempoCalibrationCertificate` on that report and asserts `status === "uncalibrated"`, `reason === "no_corpus"`.
+   - Builds a minimal `TempoPipelineInputs` with `pose_frames: []` (the existing D-POSE stub path — anchors emit canonical missingness), runs `evaluateTempoGateMatrix`, asserts `all_pass === false`, asserts `blocking_gates` contains `validation`, `calibration`, `confidence_calibration`.
+   - Runs `tempoEvidenceToTileState` on the resulting evidence + matrix, asserts `status === "missing"` with a canonical `missing_reason`.
+
+### Files NOT modified
+- `src/lib/biomech/versions.ts` — D-POSE binding line stays `blazepose_full@0.0.0-stub`. Replacing it with a fabricated non-stub version would fabricate evidence. The string flips only when a real EXT-MODEL artifact lands; that is acquisition, not implementation.
+- All pipeline / harness / calibration / gate / tile-adapter / reportCard / hooks files — already wired per Phase 27; they re-evaluate automatically when EXT-MODEL and EXT-CORPUS arrive.
+
+### Audit document
+Create exactly one new file: `.lovable/phase-34-tempo-sec-implementation-execution.md` with sections:
+1. Scope
+2. Files modified (2 added, 0 changed)
+3. Implementation completed (corpus ingestion surface + test harness)
+4. Tests executed (vitest results)
+5. Validation results (`status: "no_corpus"`)
+6. Calibration results (`uncalibrated / no_corpus`)
+7. Confidence results (omitted — gate blocked)
+8. Gate results (6-gate matrix; 3 blocking, `all_pass: false`)
+9. Final tile state (`status: "missing"`, canonical `missing_reason`)
+10. Remaining acquisition-class inputs (EXT-MODEL, EXT-CORPUS) — explicitly not implementation blockers per Phase 29 / 31 / 33
+11. Final Determination: **IMPLEMENTATION PARTIALLY COMPLETED** — all in-repo implementation steps the authorization permits are executed; the two remaining items are acquisition-class external inputs governed by Phase 30, not implementation work.
+
+### Verification
+Run vitest on the new test file and capture the actual pass/fail output for §4 of the audit doc. Do not claim results that were not observed.
