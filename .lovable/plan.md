@@ -1,36 +1,39 @@
-## Phase 31 — First Truth-Supported Metric Implementation Readiness
+## Phase 32 — Report Card Release 1 Implementation Closure Plan
 
 ### Deliverable
 Create exactly one new file:
-- `.lovable/phase-31-first-truth-supported-metric-implementation-readiness.md`
+- `.lovable/phase-32-report-card-release-1-implementation-closure-plan.md`
 
-No other files created, modified, or deleted. No code, architecture, doctrine, metric, detector, anchor, validation, calibration, confidence, or gate changes.
+No other files created, modified, or deleted. No code, architecture, doctrine, metric, detector, anchor, validation, calibration, confidence, or production-gate changes.
 
 ### Method
-Read-only synthesis of:
-- Phase 27–30 audit docs in `.lovable/`
-- `.lovable/report-card-implementation-authority-package.md`, `canonical-execution-authorization.md`, `canonical-production-readiness-audit.md`, `canonical-implementation-execution-audit.md`
-- Repository surfaces already cited in Phases 27–30: `src/lib/biomech/{versions.ts, pipeline/tempoPipeline.ts, calibration/tempoCalibration.ts, validation/tempoHarness.ts, gates/tempoGate.ts, replay/tempoReplay.ts, reportCard/tempoTileAdapter.ts, __tests__/**}`, `src/lib/reportCard/**`, `supabase/functions/analyze-video/**`.
+Read-only synthesis across:
+- 10 source-input `.lovable/` documents (authority package, root-blocker decomposition, blocker collapse, metric truth audit + closure audit, Phases 27–31).
+- Repository surfaces: `src/lib/reportCard/**`, `src/lib/biomech/**`, `supabase/functions/analyze-video/**`, `src/hooks/useReportCardTrend.ts`, `src/hooks/usePitchingV2Trends.ts`, `src/hooks/useHIESnapshot.ts`.
 
-All claims line-cited; no new requirements or fabricated evidence introduced.
+I will pre-read `src/lib/reportCard/` (types, metricReaders, hook), `src/lib/biomech/versions.ts`, `src/lib/biomech/gates/*`, and the three hooks to anchor every claim at line citations, plus skim the metric-truth audits to harvest the canonical metric inventory.
 
-### Document Structure (13 sections, as specified)
-1. **§1 Scope** — `tempo_sec` Partially Supported → Truth Supported; readiness-only.
-2. **§2 Planning Completion Audit** — confirms Phases 27 (closure), 28 (promotion), 29 (evidence readiness), 30 (acquisition plan) all sealed with cited determinations.
-3. **§3 Authority Completion Audit** — cites authority package + execution authorization + production-readiness + implementation-execution audits as the operative authority envelope.
-4. **§4 Repository Readiness Audit** — D-3/D-4/D-5/D-6/D-7/D-8 surfaces (anchors, plant detector, `computeTempoSec`, evidence artifact, `tempoHarness`, `tempoCalibration`, gate matrix, replay, tile adapter) present at line-level citations; no missing repository surface.
-5. **§5 Validation Readiness Audit** — `runTempoValidationHarness` deterministic, `MIN_LABELED_PAIRS_FOR_VALIDATION = 30` enforced; consumes EXT-CORPUS only.
-6. **§6 Calibration Readiness Audit** — `generateTempoCalibrationCertificate` refuses fabrication; emits `calibrated` iff harness `executed` + residual envelope present.
-7. **§7 Confidence Readiness Audit** — calibrated-confidence binding path through metric → evidence → tile is wired but currently blocked by `pose_model_is_stub` + uncalibrated certificate.
-8. **§8 Production Gate Readiness Audit** — six-gate matrix in `tempoGateMatrix`; tile adapter blocks promotion until `all_pass`; gates reevaluate automatically once EXT-MODEL + EXT-CORPUS supplied.
-9. **§9 External Dependency Audit** — EXT-MODEL (`blazepose_full@0.0.0-stub` at `versions.ts:25`) and EXT-CORPUS (≥30 `TempoValidationPair`) remain the sole external blockers (per Phase 28 §11, Phase 29, Phase 30).
-10. **§10 Remaining Non-Implementation Blockers** — none internal to repository; only EXT-MODEL + EXT-CORPUS acquisition.
-11. **§11 Earliest Implementation Start Condition** — implementation work itself (binding the non-stub D-POSE version string and ingesting the labeled corpus into the harness inputs) is authorized to begin; no further planning, audit, or doctrinal artifact required.
-12. **§12 Earliest Truth-Supported Metric Path** — 7-step deterministic sequence from Phase 30 §11 (EXT-MODEL bind → EXT-CORPUS ingest → harness `executed` → certificate `calibrated` → confidence calibrated → gate matrix `all_pass` → tile Truth Supported).
-13. **§13 Final Determination** — `IMPLEMENTATION AUTHORIZED` for the `tempo_sec` path, scoped to (a) replacing the D-POSE stub version binding and (b) wiring the labeled-corpus ingestion into `runTempoValidationHarness` consumers. All other 29 metrics remain out of scope.
+All claims line-cited to existing repository lines or sealed `.lovable/` documents. No new requirements or fabricated evidence.
+
+### Document Structure (15 sections, exactly as specified)
+1. **§1 Scope** — Release-1 Report Card = all athlete-facing metrics classified Truth Supported under existing canonical chain (D-3→D-4→D-5→D-6→D-7→D-8→gate matrix→tile). Synthesis-only.
+2. **§2 Current Report Card Truth Status** — Per Phase 27 + metric-truth audits: 1 candidate Partially Supported (`tempo_sec`), remainder distributed across Partially Supported / Unsupported / AI-Heuristic / Out-of-Scope per source audits.
+3. **§3 Metric Inventory By Truth Status** — Reproduced from `report-card-metric-truth-audit.md` / `report-card-metric-truth-closure-audit.md`, classified per existing audit categories; no new metrics introduced.
+4. **§4 Shared Dependency Inventory** — D-POSE landmark binding (`versions.ts:25`), `DETECTOR_VERSION`/`METRIC_ENGINE_VERSION` (`versions.ts:26–27`), shared fingerprinting (`src/lib/biomech/fingerprint.ts`), tile-state contract (`src/lib/reportCard/types.ts`), reader contract (`src/lib/reportCard/metricReaders.ts`), trend hook (`useReportCardTrend.ts`), pitching-v2 hook, HIE snapshot hook.
+5. **§5 Detector Closure Matrix** — Per existing detectors directory; columns: present | stubbed | external dependency | closure source. Mirrors decomposition audit findings.
+6. **§6 Anchor Closure Matrix** — Same structure across `src/lib/biomech/anchors/**`.
+7. **§7 Metric Engine Closure Matrix** — Across `src/lib/biomech/metrics/**`, mapped to athlete-facing tiles.
+8. **§8 Validation Closure Matrix** — Harness coverage per metric; reuses `tempoHarness` precedent as canonical template (`MIN_LABELED_PAIRS_FOR_VALIDATION = 30`). Identifies which metrics have an existing harness vs none.
+9. **§9 Calibration Closure Matrix** — Certificate generator coverage per metric (existing only for `tempo_sec` per Phase 26/27).
+10. **§10 Confidence Closure Matrix** — Calibrated-confidence binding wired vs not, per tile.
+11. **§11 Production Gate Closure Matrix** — Six-gate matrix presence per metric (existing only for `tempo_sec` via `tempoGate`/`tempoGateMatrix`).
+12. **§12 Release 1 Truth Closure Map** — Per-metric remaining-work map joining §§5–11 + external dependencies (EXT-MODEL, EXT-CORPUS-class) using Phase 28–31 framework, scaled across all athlete-facing metrics.
+13. **§13 Smallest Complete Release 1 Closure Set** — Aggregated closure set: (a) 1 shared EXT-MODEL binding (D-POSE non-stub at `versions.ts:25`); (b) N per-metric EXT-CORPUS-class labeled corpora ≥30 paired examples conforming to per-metric pair schemas; (c) per-metric replicas of the `tempo_sec` D-6→D-7→D-8→gate→tile chain where currently absent; (d) per-metric calibration certificate generators modeled on `tempoCalibration.ts`; (e) per-metric six-gate matrices modeled on `tempoGate`; (f) per-metric tile adapters modeled on `tempoTileAdapter.ts`. Strictly enumerative — no new requirement introduced; replicates existing canonical pattern.
+14. **§14 Remaining External Dependencies** — Single shared EXT-MODEL (D-POSE) + per-metric EXT-CORPUS-class labeled corpora. No other external dependency identified by source inputs.
+15. **§15 Final Determination** — One of `RELEASE 1 TRUTH CLOSURE IDENTIFIED` | `… PARTIALLY IDENTIFIED` | `… NOT IDENTIFIED`, supported exclusively by repository evidence and existing canonical requirements.
 
 ### Expected Determination
-**IMPLEMENTATION AUTHORIZED** — Phase 29 certified READY FOR EVIDENCE ACQUISITION, Phase 30 certified ACQUISITION READY, all downstream consumption surfaces exist at cited lines, and no further planning/authority/audit artifact is identified as a prerequisite in the source inputs.
+**RELEASE 1 TRUTH CLOSURE IDENTIFIED** — the canonical template proven for `tempo_sec` across Phases 25–31 is enumerable for every remaining athlete-facing metric using only existing canonical requirements; no missing pattern, surface, or doctrine is required to describe the full closure set. (If the metric-truth audits expose categories of metrics with no canonical Release-1 path under current doctrine, the determination downgrades to PARTIALLY IDENTIFIED — to be confirmed during file authorship via the audit reads.)
 
 ### Constraints Reiterated
-Exactly one new file. No code. No implementation. No architecture/doctrine/requirements changes. No fabricated evidence. All citations point to existing repository lines or sealed `.lovable/` documents.
+Exactly one new file. No code. No implementation. No architecture/doctrine/requirements changes. No fabricated evidence. All citations to existing repository lines or sealed `.lovable/` documents.
