@@ -1,41 +1,36 @@
-# Phase 30 — First Truth-Supported Metric Acquisition Plan
+## Phase 31 — First Truth-Supported Metric Implementation Readiness
 
-## Deliverable
+### Deliverable
 Create exactly one new file:
-- `.lovable/phase-30-first-truth-supported-metric-acquisition-plan.md`
+- `.lovable/phase-31-first-truth-supported-metric-implementation-readiness.md`
 
-No other files created, modified, or deleted. No code, no architecture, no doctrine, no new metrics/detectors/anchors/validation/calibration/confidence/gate requirements, no fabricated evidence.
+No other files created, modified, or deleted. No code, architecture, doctrine, metric, detector, anchor, validation, calibration, confidence, or gate changes.
 
-## Approach
-Read-only synthesis of the Phase 27–29 audits and the four canonical frameworks against the existing repository surfaces, then write a single analysis document identifying the smallest real-world evidence package required to promote `tempo_sec` from Partially Supported → Truth Supported.
+### Method
+Read-only synthesis of:
+- Phase 27–30 audit docs in `.lovable/`
+- `.lovable/report-card-implementation-authority-package.md`, `canonical-execution-authorization.md`, `canonical-production-readiness-audit.md`, `canonical-implementation-execution-audit.md`
+- Repository surfaces already cited in Phases 27–30: `src/lib/biomech/{versions.ts, pipeline/tempoPipeline.ts, calibration/tempoCalibration.ts, validation/tempoHarness.ts, gates/tempoGate.ts, replay/tempoReplay.ts, reportCard/tempoTileAdapter.ts, __tests__/**}`, `src/lib/reportCard/**`, `supabase/functions/analyze-video/**`.
 
-### Read-only sources
-- `.lovable/phase-27-first-truth-supported-metric-closure.md`
-- `.lovable/phase-28-first-truth-supported-metric-promotion-audit.md`
-- `.lovable/phase-29-external-evidence-readiness-audit.md`
-- `.lovable/canonical-validation-framework.md`
-- `.lovable/canonical-calibration-architecture.md`
-- `.lovable/canonical-confidence-architecture.md`
-- `.lovable/canonical-production-gate-matrix.md`
-- `src/lib/biomech/**` (versions, pipeline, calibration, validation harness, replay, gates, reportCard adapter)
-- `src/lib/reportCard/**`
-- `supabase/functions/analyze-video/**`
-- `src/lib/biomech/__tests__/**`
+All claims line-cited; no new requirements or fabricated evidence introduced.
 
-## Document structure
-1. **§1 Scope** — Acquisition-planning only for `tempo_sec`; explicit non-goals (no code, doctrine, new requirements, fabricated evidence).
-2. **§2 Tempo Metric Promotion Path** — Current Partially Supported state and the 5-step promotion chain from Phase 28 §11 / Phase 29.
-3. **§3 EXT-MODEL Acquisition Requirements** — Repository binding points (`src/lib/biomech/versions.ts` D-POSE pin, calibration residual envelope consumption), canonical requirements that any acquired model must satisfy, and the minimum acquisition artifact (model identity + version string + replay-deterministic invocation surface).
-4. **§4 EXT-CORPUS Acquisition Requirements** — `TempoValidationPair` schema (`tempoHarness.ts:21-28`), `MIN_LABELED_PAIRS_FOR_VALIDATION = 30` floor, canonical H2/H5 obligations, per-pair labeling requirements, deterministic ordering / fingerprint obligations.
-5. **§5 Smallest Valid Athlete Evidence Package** — The minimum real-world package: 1 D-POSE model binding + ≥30 labeled paired-frame clips meeting the existing schema; no additional artifacts required.
-6. **§6 Evidence Intake Readiness** — Repository surfaces already capable of ingesting the package (pipeline, versions, harness, analyze-video function), cited line-level.
-7. **§7 Validation Consumption Readiness** — How `runTempoValidationHarness` deterministically consumes the corpus once ≥30 pairs supplied (status transition `insufficient_corpus` → `executed`).
-8. **§8 Calibration Consumption Readiness** — How `tempoCalibration.ts` consumes residuals to emit the cal §4 D-POSE certificate deterministically.
-9. **§9 Confidence Consumption Readiness** — Calibrated-confidence binding path already wired per Phase 29 §6.
-10. **§10 Production Gate Consumption Readiness** — Mapping of the 3 currently-blocked gates (validation, calibration, confidence calibration) to automatic `pass` transitions once §§7–9 derivations execute.
-11. **§11 First Truth-Supported Metric Promotion Sequence** — Deterministic ordered sequence: (1) bind EXT-MODEL, (2) ingest EXT-CORPUS, (3) harness execution, (4) calibration certificate emission, (5) confidence binding, (6) gate revaluation, (7) tile state transition.
-12. **§12 Earliest Achievable Promotion Event** — Single promotion event reachable immediately upon delivery of the §5 package; no intermediate phases required.
-13. **§13 Final Determination** — One of `ACQUISITION READY` | `ACQUISITION PARTIALLY READY` | `ACQUISITION NOT READY`, supported exclusively by repository evidence and existing canonical requirements (expected: `ACQUISITION READY`, since Phase 29 already certified READY FOR EVIDENCE ACQUISITION and no new repository surface is required to consume the §5 package).
+### Document Structure (13 sections, as specified)
+1. **§1 Scope** — `tempo_sec` Partially Supported → Truth Supported; readiness-only.
+2. **§2 Planning Completion Audit** — confirms Phases 27 (closure), 28 (promotion), 29 (evidence readiness), 30 (acquisition plan) all sealed with cited determinations.
+3. **§3 Authority Completion Audit** — cites authority package + execution authorization + production-readiness + implementation-execution audits as the operative authority envelope.
+4. **§4 Repository Readiness Audit** — D-3/D-4/D-5/D-6/D-7/D-8 surfaces (anchors, plant detector, `computeTempoSec`, evidence artifact, `tempoHarness`, `tempoCalibration`, gate matrix, replay, tile adapter) present at line-level citations; no missing repository surface.
+5. **§5 Validation Readiness Audit** — `runTempoValidationHarness` deterministic, `MIN_LABELED_PAIRS_FOR_VALIDATION = 30` enforced; consumes EXT-CORPUS only.
+6. **§6 Calibration Readiness Audit** — `generateTempoCalibrationCertificate` refuses fabrication; emits `calibrated` iff harness `executed` + residual envelope present.
+7. **§7 Confidence Readiness Audit** — calibrated-confidence binding path through metric → evidence → tile is wired but currently blocked by `pose_model_is_stub` + uncalibrated certificate.
+8. **§8 Production Gate Readiness Audit** — six-gate matrix in `tempoGateMatrix`; tile adapter blocks promotion until `all_pass`; gates reevaluate automatically once EXT-MODEL + EXT-CORPUS supplied.
+9. **§9 External Dependency Audit** — EXT-MODEL (`blazepose_full@0.0.0-stub` at `versions.ts:25`) and EXT-CORPUS (≥30 `TempoValidationPair`) remain the sole external blockers (per Phase 28 §11, Phase 29, Phase 30).
+10. **§10 Remaining Non-Implementation Blockers** — none internal to repository; only EXT-MODEL + EXT-CORPUS acquisition.
+11. **§11 Earliest Implementation Start Condition** — implementation work itself (binding the non-stub D-POSE version string and ingesting the labeled corpus into the harness inputs) is authorized to begin; no further planning, audit, or doctrinal artifact required.
+12. **§12 Earliest Truth-Supported Metric Path** — 7-step deterministic sequence from Phase 30 §11 (EXT-MODEL bind → EXT-CORPUS ingest → harness `executed` → certificate `calibrated` → confidence calibrated → gate matrix `all_pass` → tile Truth Supported).
+13. **§13 Final Determination** — `IMPLEMENTATION AUTHORIZED` for the `tempo_sec` path, scoped to (a) replacing the D-POSE stub version binding and (b) wiring the labeled-corpus ingestion into `runTempoValidationHarness` consumers. All other 29 metrics remain out of scope.
 
-## Constraints reaffirmed
-Exactly one new file. No code. No implementation. No architecture changes. No doctrine changes. No new metrics, detectors, anchors, validation/calibration/confidence/gate requirements. No fabricated evidence, corpus, calibration, confidence, or gate outcomes.
+### Expected Determination
+**IMPLEMENTATION AUTHORIZED** — Phase 29 certified READY FOR EVIDENCE ACQUISITION, Phase 30 certified ACQUISITION READY, all downstream consumption surfaces exist at cited lines, and no further planning/authority/audit artifact is identified as a prerequisite in the source inputs.
+
+### Constraints Reiterated
+Exactly one new file. No code. No implementation. No architecture/doctrine/requirements changes. No fabricated evidence. All citations point to existing repository lines or sealed `.lovable/` documents.
