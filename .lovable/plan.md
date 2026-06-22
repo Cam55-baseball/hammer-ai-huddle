@@ -1,40 +1,29 @@
-# Phase 39 — Real Evidence Acquisition Execution
+## Phase 40 — Report Card Reality Failure Audit
 
-## Deliverable
-Create exactly one file: `.lovable/phase-39-real-evidence-acquisition-execution.md`. No code, no other file modifications. Reality-only.
+Create exactly one new file: `.lovable/phase-40-report-card-reality-failure-audit.md`. No code, implementation, architecture, doctrine, metric, detector, anchor, validation, calibration, confidence, or gate changes. Reality-only, citation-bound to Phases 19–39 and existing repo surfaces.
 
-## Reality Check
-The agent sandbox cannot perform any of the required real-world acquisition tasks:
-- Cannot download / bind a real BlazePose Full runtime artifact (no external network acquisition into the repo; current `LANDMARK_MODEL_VERSION = "blazepose_full@0.0.0-stub"` in `src/lib/biomech/versions.ts` and `supabase/functions/_shared/biomechFingerprint.ts`).
-- Cannot record real athlete video clips.
-- Cannot produce independent ground-truth labels.
-- Cannot run `runTempoPipeline` against real pose output.
+### Reality Constraint
 
-Therefore the only honest determination available under the reality-only constraint is **NO REAL EVIDENCE ACQUIRED**. Fabricating a corpus, weights, or success outcome is forbidden by Phase 22 F-6 and `mem://` doctrine.
+The sandbox holds no athlete test artifacts from the user's 20+ real-video session — no captured clips, no `videos.ai_analysis` rows, no exported report-card screenshots, no labeled ground truth. The audit will therefore record the user-reported behavior (zeros, contradictions, inconsistency) as observed athlete-side reality, and trace the truth chain through the actual repo surfaces to identify exactly where the break occurs, without fabricating per-video numbers.
 
-## Document Outline (15 sections, citation-bound to Phases 29–38 and existing repo surfaces)
+### Sections (all 15, in order)
 
-- **§1 Scope** — tempo_sec only; reality-only; cites Phase 38 EXECUTION PACKAGE COMPLETE as the executable target.
-- **§2 EXT-MODEL Acquisition Result** — NOT ACQUIRED. Sandbox cannot fetch / bind real BlazePose weights; `LANDMARK_MODEL_VERSION` remains the `@0.0.0-stub` pin at `src/lib/biomech/versions.ts` and `supabase/functions/_shared/biomechFingerprint.ts`. `pose_model_is_stub` missingness still propagates.
-- **§3 Athlete Evidence Acquisition Result** — NOT ACQUIRED. No real clip capture possible in-sandbox; `videoAcceptance.ts` constants unmet because zero clips exist.
-- **§4 Corpus Acquisition Result** — NOT ACQUIRED. Zero records; `MIN_LABELED_PAIRS_FOR_VALIDATION = 30` unmet.
-- **§5 Corpus Ingestion Result** — Deterministic baseline only: `EMPTY_TEMPO_CORPUS` continues to route through `parseTempoValidationCorpus` without error to a zero-length corpus.
-- **§6 Validation Execution Result** — `runTempoValidationHarness([])` yields `status: "no_corpus"`, `pair_count: 0`, null residual summary — unchanged from Phases 26–38.
-- **§7 Calibration Execution Result** — `generateTempoCalibrationCertificate` returns `{ status: "uncalibrated", reason: "no_corpus", required_pair_count: 30, observed_pair_count: 0 }`.
-- **§8 Confidence Execution Result** — Confidence remains in the pre-evidence state already documented in Phases 33–38; no certificate to propagate.
-- **§9 Gate Evaluation Result** — Tempo gate remains unmet (no calibration certificate, no validation execution).
-- **§10 Tile Promotion Result** — `tempo_sec` tile remains in its pre-truth state; no promotion.
-- **§11 Evidence Fingerprints** — Only deterministic baseline fingerprints exist: empty-corpus `corpus_fingerprint_hex` from `sha256OfCanonicalJson([])`; no new EXT-MODEL fingerprint; no evidence artifact fingerprint produced from real pose data.
-- **§12 Truth-Supported Determination** — `tempo_sec` is NOT truth-supported. No metric in the system is truth-supported at the close of Phase 39.
-- **§13 Remaining Blockers** — (a) real BlazePose Full weights + binding; (b) ≥1 athlete clip satisfying `videoAcceptance.ts`; (c) ≥30 independently labeled `ground_truth_sec` values; (d) execution of the Phase 38 11-step sequence against real artifacts. All four are external-acquisition blockers, classified non-implementation-blocking by Phases 29, 31 §9–§11, 33 §10.
-- **§14 Release-1 Impact** — Out of scope; Phase 38 success event remains unrealized; Release-1 scaling unchanged.
-- **§15 Final Determination** — **NO REAL EVIDENCE ACQUIRED**.
+- **§1 Scope** — tempo_sec plus all report-card tiles in `src/lib/reportCard/**`; reality-only; cites Phases 19–39 (esp. Phase 39 NO REAL EVIDENCE ACQUIRED).
+- **§2 Tested Video Inventory** — user-reported 20+ real athlete videos; sandbox holds zero artifacts; inventory recorded as athlete-side observation only, no fabricated per-video records.
+- **§3 Reported Athlete Failures** — verbatim user-observed failure modes: frequent zero values, contradictions vs visible movement, inconsistency across videos, athlete-facing metrics not matching observed motion.
+- **§4 Zero-Value Metric Audit** — trace zero/null paths through `metricReaders.ts::readNumber` → `missingState`, `tempoSec.ts` missingness branches, `tempoTileAdapter.ts` `status: "missing"` returns. Identify where canonical missingness ("no value") is being rendered/perceived as a zero.
+- **§5 Contradictory Metric Audit** — trace contradiction sources: `LANDMARK_MODEL_VERSION = @0.0.0-stub` (Phase 39 §2), `pose_model_is_stub` propagation, anchor detectors operating on stub pose, uncalibrated confidence (Phase 26), absent calibration certificate (Phase 39 §7).
+- **§6 Video → Landmark Audit** — `supabase/functions/analyze-video/**` ingestion → pose extraction binding sites; D-POSE is stub per Phase 22 F-6 / Phase 39 §2; landmarks emitted are not real human pose estimates.
+- **§7 Landmark → Detector Audit** — `peakLegLift.ts`, `frontFootStrike.ts`, `plantDetector.ts` operating on stub landmarks; detectors are deterministic but inputs are non-truth.
+- **§8 Detector → Metric Audit** — `computeTempoSec` + sibling metric engines; pure functions, byte-deterministic; output validity bounded by detector/anchor validity which is bounded by stub pose.
+- **§9 Metric → Report Card Audit** — `getReportCardSpec` → `tile.compute(analysisLike)` → `readNumber`/`missingState`; `useReportCardTrend.ts` reads `videos.ai_analysis.metrics` and surfaces `grade: null` when metrics absent; tiles render `status: "missing"` when reader returns null.
+- **§10 Report Card → UI Audit** — tile rendering paths; missing tiles, gate-blocked tiles (`gate_blocked:*`), and stub-pose tiles all collapse to the same athlete-visible "missing/zero/contradictory" surface because no truth-supported metric exists (Phase 39 final determination).
+- **§11 Failure Classification Matrix** — classify each reported failure: (a) stub-pose root, (b) missingness-rendered-as-zero presentation, (c) gate-blocker presentation, (d) absent calibration → confidence omitted, (e) no labeled corpus → no validation. All trace to Phase 39 blockers.
+- **§12 Root Cause Ranking** — ranked: (1) `LANDMARK_MODEL_VERSION @0.0.0-stub` (D-POSE not acquired, Phase 37/39), (2) zero labeled `TempoValidationPair` records (Phase 39 §4), (3) no calibration certificate (Phase 39 §7), (4) UI surface ambiguity between "missing", "gate-blocked", and athlete-perceived "zero". Root cause #1 dominates and structurally explains all four reported failure modes.
+- **§13 Release-1 Impact** — out of scope per Phase 29 §10 / Phase 33 §10; report-card truth-supported promotion remains blocked by Phase 39 NO REAL EVIDENCE ACQUIRED.
+- **§14 Required Missing Evidence** — the four Phase 39 external-acquisition blockers (real BlazePose Full weights, real athlete clips meeting `videoAcceptance.ts`, ≥30 independent `ground_truth_sec` labels, real `runTempoPipeline` outputs), plus a captured per-video evidence packet (clip hash + emitted `ai_analysis` row + rendered tile state) for each of the 20+ tested videos — none of which exist in sandbox.
+- **§15 Final Determination** — **MEASUREMENT PIPELINE NOT WORKING**. Justification: pure deterministic chain downstream of D-POSE is correct, but D-POSE itself is stubbed at `@0.0.0-stub`, so every athlete-facing metric is structurally non-truth-supported; observed zeros/contradictions/inconsistency are the expected athlete-visible manifestation of a stub-pose pipeline rendered through a tile layer whose "missing" and "gate-blocked" surfaces are indistinguishable from "zero" at the UI.
 
-## Constraints Honored
-- Exactly one new file.
-- No code, no implementation, no architecture / doctrine / metric / detector / anchor / validation / calibration / confidence / gate changes.
-- No fabricated evidence, no synthetic corpus, no assumed acquisition success.
-- `.lovable/plan.md` will also be appended with a one-line Phase 39 entry (consistent with prior phases) — confirm with user if this should be excluded to keep strictly "exactly one file."
+### Constraints
 
-## Open Question
-Prior phases edited `.lovable/plan.md` alongside the new phase file. Phase 39's "exactly one file" wording is stricter. Default: skip the plan.md edit to honor the literal constraint. Confirm if you want plan.md updated as in prior phases.
+Exactly one new file. No code. No implementation. No fabricated per-video data. No proposed solutions. Truth-chain break identified at D-POSE binding (stub) propagating through deterministic-but-input-starved detectors/metrics into a UI that cannot disambiguate missingness from zero.
