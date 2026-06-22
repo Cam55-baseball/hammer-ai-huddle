@@ -22,6 +22,11 @@
  */
 
 export const LANDMARK_MODEL_ID = "blazepose_full" as const;
-export const LANDMARK_MODEL_VERSION = "blazepose_full@0.0.0-stub" as const;
+// Phase 42B — D-POSE Build Authority. Real producer bound:
+// MediaPipe Tasks Vision PoseLandmarker (BlazePose Full, float16 v1) via
+// `@mediapipe/tasks-vision@0.10.35`. Lockstep partner:
+// supabase/functions/_shared/biomechFingerprint.ts.
+export const LANDMARK_MODEL_VERSION =
+  "blazepose_full@0.10.35-mediapipe-tasks-vision" as const;
 export const DETECTOR_VERSION = "events@0.0.0-stub" as const;
 export const METRIC_ENGINE_VERSION = "metrics@0.0.0-stub" as const;

@@ -8,7 +8,9 @@
  */
 
 export const LANDMARK_MODEL_ID = "blazepose_full";
-export const LANDMARK_MODEL_VERSION = "blazepose_full@0.0.0-stub";
+// Phase 42B — kept lockstep with src/lib/biomech/versions.ts.
+export const LANDMARK_MODEL_VERSION =
+  "blazepose_full@0.10.35-mediapipe-tasks-vision";
 export const DETECTOR_VERSION = "events@0.0.0-stub";
 export const METRIC_ENGINE_VERSION = "metrics@0.0.0-stub";
 
