@@ -1,118 +1,33 @@
-# Phase 42B — D-POSE Build Authority
+## Phase 43 — Trust-First Measurement Release Audit
 
-Build the first working measurement path: real uploaded athlete video → real landmark frames → existing detector/anchor/tempo chain → evidence packet.
+Create exactly one file: `.lovable/phase-43-trust-first-measurement-release-audit.md`.
 
-## Pose Engine Selection
+This is a pure audit deliverable — no code, no detectors, no metrics, no architecture changes. The document is sourced from existing evidence in the repo (Phase 39–42B docs, contracts, detectors, missingness reasons, confidence-source trace) plus the real-world testing observations the user reported (broadcast CF clips, zoom variance, inconsistent bat-speed / TTC outputs).
 
-**MediaPipe Tasks Vision (`@mediapipe/tasks-vision`) — `PoseLandmarker`, `pose_landmarker_full.task` model.**
+### Exploration before writing
+Read (no edits):
+- `.lovable/phase-42b-d-pose-build-authority.md`, `phase-41-*.md`, `phase-42-*.md`, `confidence-source-trace.md`, `bat-path-vs-on-plane-definitions.md`, `time-to-contact-vs-power.md`, `back-elbow-methodology.md`, `p3-timing-methodology.md`, `finish-and-balance-methodology.md`
+- `src/lib/reportCard/contracts/*.contract.ts` (bp, bh, and any other discipline contracts) — full athlete-facing metric inventory
+- `src/lib/biomech/metrics/missingness.ts`, `confidence.ts`, `videoAcceptance.ts`, `versions.ts`
+- `src/lib/biomech/anchors/*`, `detectors/*` — what each metric actually depends on
+- `src/lib/biomech/pose/poseRunner.ts`, `toAnchorFrames.ts` — what D-POSE currently produces
 
-| Criterion | Why this one |
-|---|---|
-| Runs where the frames already are | Frame extraction is already client-side (`src/lib/frameExtraction.ts`); putting pose inference next to it avoids re-uploading frame buffers and avoids any new server cost. |
-| Matches the contract's declared identity | `LANDMARK_MODEL_ID = "blazepose_full"` (`versions.ts`, `biomechFingerprint.ts`) — MediaPipe Pose Landmarker *is* the BlazePose Full pipeline. Flipping `LANDMARK_MODEL_VERSION` off `@0.0.0-stub` keeps the existing fingerprint contract intact. |
-| Deterministic per-frame | Static image mode + fixed model file = byte-stable landmark output, satisfies Phase 0 cache fingerprint and Phase 26 evidence-hash requirements. |
-| Outputs the fields the existing contracts need | Per-frame normalized landmarks include ankle indices (27/28) — directly usable as `lift_ankle_y` (`PoseFrame`) and `front_ankle_y` (`PlantPoseFrame`) without schema change. |
-| Realistic in sandbox | WASM bundle + model file fetch on demand; no native deps; no GPU required; works in Playwright Chromium for sandbox verification. |
+### Document structure (all 12 sections required by the prompt)
+1. **Executive Summary** — Classify the failure mode. Evidence points to *capture-environment mismatch + confidence-surface failure*, not pure measurement failure: D-POSE now runs real BlazePose Full (Phase 42B), but landmark quality collapses on broadcast CF footage (athlete <15% frame height, occlusion, motion blur) and per-tile confidence is model-self-reported, not coverage-based (per `confidence-source-trace.md`).
+2. **Capture Environment Inventory** — Enumerate observed capture types (broadcast CF, behind-pitcher, side-view tripod, showcase, cage, game footage, zoomed/non-zoomed) with what each preserves/loses (scale ref, both feet, bat tip, ball, depth).
+3. **Metric Observability Audit** — Walk every metric in `bp.contract.ts` + `bh.contract.ts` (tempo_sec, energy_angle_deg, stride_pct_of_height, head_vertical_movement_pct, glove_drift, head_at_release, shoulder_tilt, lift_thrust, premature_shoulder_open, plus hitting bat-path / on-plane / TTC / bat-speed). For each: from-any-video / from-some-videos / controlled-capture-only, with the landmark or detector dependency that drives the verdict.
+4. **Release-Ready Metric Inventory** — Pose-only metrics with weak scale dependence: `tempo_sec`, `head_vertical_movement_pct` (relative), `shoulder_tilt_deg`, `premature_shoulder_open_deg`, `energy_angle_deg`. These survive broadcast CF.
+5. **Conditional Metric Inventory** — Need calibration or specific framing: `stride_pct_of_height` (needs full-body + height ref), `head_at_release_deg` (needs release-frame visibility), `glove_drift_outside_frame_in` (needs pixel→inch calibration), `lift_thrust_deg` (needs rubber visible), `on_plane_pct` / `bat_path_score_100` (needs bat detection at hitter scale).
+6. **High-Risk Metric Inventory** — Anything requiring object tracking or absolute physics: `bat_speed_mph`, `exit_velocity_mph`, `pitch_velocity_mph`, ball/bat collision metrics. Current pipeline has no object detector and no calibration; values are model-hallucinated. Recommend suppression until D-OBJECT + D-CAL exist.
+7. **Confidence Surface Audit** — Document that `confidence` on tiles is model self-report, not coverage; warn-dot threshold 0.5 can present low-trust outputs as authoritative. No `pose_visibility_score` or `frame_coverage_ratio` is surfaced today.
+8. **Universal Analysis Candidate** — Lock the Release-1 package to the §4 list (relative pose-derived angles + tempo).
+9. **Showcase Analysis Candidate** — §5 list, with explicit prerequisites: athlete ≥40% frame height, side view ±20°, ≥60fps, full body visible, height/rubber reference in frame.
+10. **Release Recommendation** — Three tiers: **Universal Analysis** (ship), **Showcase Analysis** (ship gated by capture checklist + suppress on failure), **Future Validation Analysis** (§6, do not ship).
+11. **Release Risk Ranking** — Ordered list, highest risk first: bat_speed / exit_velocity / pitch_velocity → glove_drift_in → stride_pct → head_at_release → on_plane_pct → bat_path_score → lift_thrust → energy_angle → premature_shoulder_open → shoulder_tilt → head_vertical_movement_pct → tempo_sec.
+12. **Final Determination** — Evidence-based answer: today the trustworthy cross-upload set is the pose-derived, scale-invariant, relative-angle/time metrics from §4. Everything physics-velocity or pixel-calibrated should not ship to athletes in Release 1.
 
-## Changes (multi-file, narrow)
+### Constraints honored
+No new metrics, detectors, doctrine, architecture, or implementation. No edits to source. Only the single audit markdown file is produced.
 
-### 1. Dependency
-
-- `bun add @mediapipe/tasks-vision`.
-
-### 2. New client module: `src/lib/biomech/pose/poseRunner.ts`
-
-- Exports `runPoseInference(frames: ExtractedFrame[]): Promise<PoseFrameRow[]>`.
-- Lazy-loads `PoseLandmarker` from `FilesetResolver.forVisionTasks(".../wasm")` with `runningMode: "IMAGE"`, `numPoses: 1`, model asset path `/models/pose_landmarker_full.task` (served from `public/models/`).
-- For each extracted frame: decode data URL → `ImageBitmap` → `poseLandmarker.detect(bitmap)` → push `{ frame_index, timestamp_seconds, landmarks: NormalizedLandmark[33], world_landmarks, visibility }`.
-- Returns the array plus a summary `{ frames_processed, frames_with_pose, mean_visibility }`.
-- All numeric outputs rounded to 6 decimals so JSON round-trips byte-identically (mirrors `tempoSec.ts` convention).
-
-### 3. New adapter: `src/lib/biomech/pose/toAnchorFrames.ts`
-
-- `toPeakLegLiftFrames(rows): PoseFrame[]` → `{ frame_index, lift_ankle_y: landmarks[27].y }` (left ankle; direction_sign already in tempo inputs).
-- `toPlantFrames(rows): PlantPoseFrame[]` → `{ frame_index, front_ankle_y: landmarks[28].y }`.
-- Pure mapping, no logic.
-
-### 4. Flip the stub flag
-
-- `src/lib/biomech/versions.ts`: `LANDMARK_MODEL_VERSION = "blazepose_full@0.10.14-mediapipe-tasks-vision"` (pinned to installed package version).
-- `supabase/functions/_shared/biomechFingerprint.ts`: same string. Both files updated in lockstep — fingerprint determinism rule.
-- The existing `endsWith("@0.0.0-stub")` checks in `anchors/peakLegLift.ts` and `detectors/plantDetector.ts` now evaluate **false** → anchors/detector run their real logic instead of emitting `pose_model_is_stub` missingness.
-
-### 5. Wire into `AnalyzeVideo.tsx`
-
-Immediately after `extractKeyFramesDeterministic` succeeds (around line 363) and **before** the `analyze-video` invoke:
-
-```ts
-const poseRows = await runPoseInference(result.frames);
-const tempoResult = await runTempoPipeline({
-  video_sha256_hex: result.video_sha256_hex,
-  fps_true: result.fps_true,
-  landing_time_sec: result.landing_time_sec,
-  direction_sign: 1,
-  calibration_h_px: result.calibration_h_px,
-  pose_frames: zip(toPeakLegLiftFrames(poseRows), toPlantFrames(poseRows)),
-});
-```
-
-Persistence: insert one row into `video_landmark_runs` (already exists, 12 columns) keyed by `video_id` with columns `landmark_producer_version`, `frames_processed`, `frames_with_pose`, `mean_visibility`, `evidence_sha256_hex`, `cache_fingerprint_hex`, plus the full landmark array in a `landmarks_jsonb` column. If the existing column list doesn't include the JSON payload, write a minimal migration adding `landmarks jsonb not null` + RLS unchanged.
-
-### 6. Static model asset
-
-- `public/models/pose_landmarker_full.task` (~6.5 MB) downloaded via `curl` at build-script time from Google's official MediaPipe model URL into the project. One-time commit; no runtime fetch from third party.
-
-### 7. Determinism guard
-
-- Vitest: `src/lib/biomech/pose/__tests__/poseRunner.replay.test.ts` — runs `runPoseInference` twice over a fixed 3-frame fixture (3 PNGs added to `src/test/fixtures/pose/`) and asserts byte-identical JSON output. Protects Phase 0 replay law.
-
-## Proof Packet Capture
-
-The success criterion ("a real uploaded athlete video produces real landmark frames") requires **your** action: you indicated you will supply one short (<20 MB) athlete clip. After the code lands I will:
-
-1. Spin up the dev server and Playwright-Chromium in the sandbox (`headless=true`, viewport 1280×1800).
-2. Log into the preview using the pre-minted Supabase session, navigate to `/analyze-video`, attach the clip you upload to chat.
-3. Capture from the live run:
-   - `video_sha256_hex` (already computed by `extractKeyFramesDeterministic`)
-   - `landmark_producer_version` (from `versions.ts`)
-   - landmark count (`frames_processed × 33`)
-   - landmark sample (first frame's 33 normalized landmarks, JSON)
-   - `peakLegLift` anchor output (`frame_index` + `missingness`)
-   - `frontFootStrike` anchor output
-   - `computeTempoSec` output (`value`, `unit`, `lineage`, `confidence`)
-   - `tempoEvidence` artifact (`evidence_sha256_hex`, `cache_fingerprint_hex`)
-   - Report-card tile JSON for `tempo_sec`
-4. Write all of those — verbatim, with no fabrication — into `.lovable/phase-42b-d-pose-build-authority.md` under §"Execution Evidence Packet".
-
-The document's **Final Determination** will be set from that captured evidence:
-- If landmarks emit and tempo lineage is non-missing → **YES**.
-- If the run reaches pose inference but no athlete is detected (clip too tight, poor framing) → **PARTIAL**, with the exact missingness reason logged.
-- If pose inference itself fails (WASM load, model fetch) → **NO**, with the stack trace logged. No fabricated YES under any condition.
-
-## What This Phase Will NOT Do
-
-- No new metrics, detectors, anchors, doctrine, validation methodology, or calibration methodology — exactly the constraint set in Phase 42's original brief. `runTempoPipeline`, `findPeakLegLiftFrame`, `findFrontFootStrikeFrame`, `computeTempoSec`, `buildTempoEvidence` are all consumed unchanged.
-- No new report-card surfaces.
-- No edge-function rewrite. `analyze-video` keeps doing its Gemini visual analysis untouched; landmarks travel on a parallel track straight from client into `video_landmark_runs`.
-- No confidence-certificate work (still emits `uncalibrated()`); that remains a downstream phase blocker, not in scope here.
-
-## What You Need to Do After Approval
-
-1. Approve this plan.
-2. After I finish the code changes, **attach one short athlete pitching/hitting clip (mp4, <20 MB) to the next chat message**. Without that file the success criterion cannot be evaluated, and the document's Final Determination will be **NOT EVALUATED — AWAITING REAL VIDEO** rather than YES or NO.
-
-## Files Touched
-
-| File | Action |
-|---|---|
-| `package.json` / lockfile | add `@mediapipe/tasks-vision` |
-| `public/models/pose_landmarker_full.task` | new asset |
-| `src/lib/biomech/pose/poseRunner.ts` | new |
-| `src/lib/biomech/pose/toAnchorFrames.ts` | new |
-| `src/lib/biomech/pose/__tests__/poseRunner.replay.test.ts` | new |
-| `src/test/fixtures/pose/*.png` | new (3 fixture frames) |
-| `src/lib/biomech/versions.ts` | flip `LANDMARK_MODEL_VERSION` |
-| `supabase/functions/_shared/biomechFingerprint.ts` | flip `LANDMARK_MODEL_VERSION` (lockstep) |
-| `src/pages/AnalyzeVideo.tsx` | invoke pose runner + tempo pipeline after frame extraction; insert into `video_landmark_runs` |
-| `supabase/migrations/<ts>_video_landmark_runs_landmarks.sql` | only if `video_landmark_runs` lacks a `landmarks jsonb` column |
-| `.lovable/phase-42b-d-pose-build-authority.md` | the deliverable doc, written last with real captured proof |
+### Deliverable
+- `.lovable/phase-43-trust-first-measurement-release-audit.md` (new file, sole output)
