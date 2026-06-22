@@ -1,36 +1,40 @@
-# Phase 38 — First Truth-Supported Metric Execution Package
+# Phase 39 — Real Evidence Acquisition Execution
 
 ## Deliverable
-Create exactly one new file:
-- `.lovable/phase-38-first-truth-supported-metric-execution-package.md`
+Create exactly one file: `.lovable/phase-39-real-evidence-acquisition-execution.md`. No code, no other file modifications. Reality-only.
 
-No other files created, modified, or deleted. No code, implementation, architecture, doctrine, metric, detector, anchor, validation, calibration, confidence, or gate changes.
+## Reality Check
+The agent sandbox cannot perform any of the required real-world acquisition tasks:
+- Cannot download / bind a real BlazePose Full runtime artifact (no external network acquisition into the repo; current `LANDMARK_MODEL_VERSION = "blazepose_full@0.0.0-stub"` in `src/lib/biomech/versions.ts` and `supabase/functions/_shared/biomechFingerprint.ts`).
+- Cannot record real athlete video clips.
+- Cannot produce independent ground-truth labels.
+- Cannot run `runTempoPipeline` against real pose output.
 
-## Sources (read-only)
-- Phases 29, 30, 31, 33, 34, 35, 36, 37
-- `src/lib/biomech/**` (notably `pipeline/tempoPipeline.ts`, `videoAcceptance.ts`, `metrics/tempoSec.ts`, `validation/tempoCorpusIngestion.ts`, `calibration/tempoCalibration.ts`, `evidence/tempoEvidence.ts`)
-- `src/lib/reportCard/**`
-- `supabase/functions/analyze-video/**`
-- `supabase/functions/_shared/biomechFingerprint.ts`
+Therefore the only honest determination available under the reality-only constraint is **NO REAL EVIDENCE ACQUIRED**. Fabricating a corpus, weights, or success outcome is forbidden by Phase 22 F-6 and `mem://` doctrine.
 
-## Document Structure (15 sections)
-1. **Scope** — `tempo_sec` only; converts Phase 37 sourcing determination into an executable operational package. Reality-only, citation-bound. No new requirements.
-2. **Current State** — Phase 34 partially completed; Phase 35 READY FOR EVIDENCE EXECUTION; Phase 36 READY TO ACQUIRE REAL EVIDENCE; Phase 37 EVIDENCE SOURCES IDENTIFIED.
-3. **EXT-MODEL Acquisition Package** — operational steps to obtain one Phase 37–identified real BlazePose Full runtime; binding sites in `versions.ts` and `biomechFingerprint.ts`; no in-repo fabrication (Phase 22 F-6).
-4. **EXT-MODEL Acceptance Checklist** — pinned non-stub version; deterministic output; fingerprint stability; `pose_model_is_stub` cleared.
-5. **Athlete Capture Package** — operational steps to capture clips passing `videoAcceptance.ts` constants (MIN_FPS 24, MIN_WIDTH/HEIGHT 480, duration 0.5–60s, dropped ≤ 0.34).
-6. **Labeling Package** — operational steps to obtain independent `ground_truth_sec` per Phase 37 §7 (high-FPS reference, manual frame-stepping, or hardware timing); never model-derived.
-7. **Corpus Assembly Package** — operational steps to bind ≥30 records to the `TempoValidationPair` schema with stable `clip_id`, `predicted_sec` (from real EXT-MODEL via `runTempoPipeline`), and `ground_truth_sec`.
-8. **Corpus Acceptance Checklist** — parses without `TempoCorpusParseError`; ≥30 pairs (`MIN_LABELED_PAIRS_FOR_VALIDATION`); deterministic `corpus_fingerprint_hex`; yields `status: "executed"`.
-9. **Validation Execution Package** — operational invocation of `runTempoValidationHarness` on the assembled corpus; deterministic re-evaluation on arrival.
-10. **Calibration Execution Package** — operational invocation of `generateTempoCalibrationCertificate` on the validation report; transitions from `uncalibrated/no_corpus` to `calibrated`.
-11. **Confidence Execution Package** — operational re-evaluation of tempo confidence using the calibration certificate; deterministic.
-12. **Gate Evaluation Package** — operational re-evaluation of the gate matrix using the calibration certificate and confidence outputs.
-13. **Tempo Promotion Package** — operational transition through `tempoEvidenceToTileState` from `pending` to truth-supported; promotion event definition per Phase 35 §10.
-14. **First Truth-Supported Metric Success Event** — fixed ordered sequence (EXT-MODEL acquired → clips captured → ground truth labeled → `runTempoPipeline` yields `predicted_sec` → corpus assembled → ingestion accepts → validation executed → calibration certificate issued → confidence re-evaluated → gate matrix re-evaluated → tile transitions to truth-supported).
-15. **Final Determination** — `EXECUTION PACKAGE COMPLETE`.
+## Document Outline (15 sections, citation-bound to Phases 29–38 and existing repo surfaces)
 
-## Notes
-- Operational package only; all in-repo surfaces already exist and re-evaluate deterministically on arrival per Phases 33–37.
-- Release-1 scaling remains out of scope (governed by future phases).
-- Remaining work is purely external acquisition + execution; classified non-implementation-blocking by Phases 29, 31 §9–§11, 33 §10.
+- **§1 Scope** — tempo_sec only; reality-only; cites Phase 38 EXECUTION PACKAGE COMPLETE as the executable target.
+- **§2 EXT-MODEL Acquisition Result** — NOT ACQUIRED. Sandbox cannot fetch / bind real BlazePose weights; `LANDMARK_MODEL_VERSION` remains the `@0.0.0-stub` pin at `src/lib/biomech/versions.ts` and `supabase/functions/_shared/biomechFingerprint.ts`. `pose_model_is_stub` missingness still propagates.
+- **§3 Athlete Evidence Acquisition Result** — NOT ACQUIRED. No real clip capture possible in-sandbox; `videoAcceptance.ts` constants unmet because zero clips exist.
+- **§4 Corpus Acquisition Result** — NOT ACQUIRED. Zero records; `MIN_LABELED_PAIRS_FOR_VALIDATION = 30` unmet.
+- **§5 Corpus Ingestion Result** — Deterministic baseline only: `EMPTY_TEMPO_CORPUS` continues to route through `parseTempoValidationCorpus` without error to a zero-length corpus.
+- **§6 Validation Execution Result** — `runTempoValidationHarness([])` yields `status: "no_corpus"`, `pair_count: 0`, null residual summary — unchanged from Phases 26–38.
+- **§7 Calibration Execution Result** — `generateTempoCalibrationCertificate` returns `{ status: "uncalibrated", reason: "no_corpus", required_pair_count: 30, observed_pair_count: 0 }`.
+- **§8 Confidence Execution Result** — Confidence remains in the pre-evidence state already documented in Phases 33–38; no certificate to propagate.
+- **§9 Gate Evaluation Result** — Tempo gate remains unmet (no calibration certificate, no validation execution).
+- **§10 Tile Promotion Result** — `tempo_sec` tile remains in its pre-truth state; no promotion.
+- **§11 Evidence Fingerprints** — Only deterministic baseline fingerprints exist: empty-corpus `corpus_fingerprint_hex` from `sha256OfCanonicalJson([])`; no new EXT-MODEL fingerprint; no evidence artifact fingerprint produced from real pose data.
+- **§12 Truth-Supported Determination** — `tempo_sec` is NOT truth-supported. No metric in the system is truth-supported at the close of Phase 39.
+- **§13 Remaining Blockers** — (a) real BlazePose Full weights + binding; (b) ≥1 athlete clip satisfying `videoAcceptance.ts`; (c) ≥30 independently labeled `ground_truth_sec` values; (d) execution of the Phase 38 11-step sequence against real artifacts. All four are external-acquisition blockers, classified non-implementation-blocking by Phases 29, 31 §9–§11, 33 §10.
+- **§14 Release-1 Impact** — Out of scope; Phase 38 success event remains unrealized; Release-1 scaling unchanged.
+- **§15 Final Determination** — **NO REAL EVIDENCE ACQUIRED**.
+
+## Constraints Honored
+- Exactly one new file.
+- No code, no implementation, no architecture / doctrine / metric / detector / anchor / validation / calibration / confidence / gate changes.
+- No fabricated evidence, no synthetic corpus, no assumed acquisition success.
+- `.lovable/plan.md` will also be appended with a one-line Phase 39 entry (consistent with prior phases) — confirm with user if this should be excluded to keep strictly "exactly one file."
+
+## Open Question
+Prior phases edited `.lovable/plan.md` alongside the new phase file. Phase 39's "exactly one file" wording is stricter. Default: skip the plan.md edit to honor the literal constraint. Confirm if you want plan.md updated as in prior phases.
