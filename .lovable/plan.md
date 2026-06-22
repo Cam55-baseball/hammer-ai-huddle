@@ -1,27 +1,36 @@
-# Phase 37 — Real Evidence Acquisition Sourcing Audit
+# Phase 38 — First Truth-Supported Metric Execution Package
 
 ## Deliverable
-Create exactly one file: `.lovable/phase-37-real-evidence-acquisition-sourcing-audit.md`. No other files created, modified, or deleted. No code, implementation, architecture, doctrine, metrics, detectors, anchors, validation, calibration, confidence, or gate changes.
+Create exactly one new file:
+- `.lovable/phase-38-first-truth-supported-metric-execution-package.md`
 
-## Purpose
-Identify the exact real-world sources from which EXT-MODEL and EXT-CORPUS can be acquired for the `tempo_sec` promotion path defined in Phases 29–36, against existing repo surfaces only.
+No other files created, modified, or deleted. No code, implementation, architecture, doctrine, metric, detector, anchor, validation, calibration, confidence, or gate changes.
 
-## Document Sections (15)
-1. **Scope** — `tempo_sec` only; sourcing audit only; reality-only; citation-bound to Phases 29–36 and `src/lib/biomech/**`, `src/lib/reportCard/**`, `supabase/functions/analyze-video/**`.
-2. **EXT-MODEL Source Inventory** — enumerate real-world acquisition candidates compatible with the BlazePose Full pinning at `src/lib/biomech/versions.ts:25` and edge mirror `supabase/functions/_shared/biomechFingerprint.ts` (MediaPipe Pose / BlazePose Full upstream Google distribution, TF.js pose-detection package, MediaPipe Tasks Vision). No fabrication.
-3. **EXT-MODEL Compatibility Audit** — map each candidate against `LANDMARK_MODEL_ID = "blazepose_full"` contract, deterministic landmark output requirement, replay-equivalence requirement, and Phase 22 F-6 non-fabrication rule.
-4. **EXT-MODEL Acceptance Mapping** — map sources to the acceptance requirements declared in Phase 36 §3 (pinned non-stub version string, deterministic landmark output, fingerprint stability across replay via `buildCacheFingerprint`).
-5. **EXT-CORPUS Source Inventory** — enumerate real-world labeled tempo source candidates (instrumented athlete capture, externally-timed clips, third-party labeled motion datasets) compatible with `TempoValidationPair` schema at `src/lib/biomech/validation/tempoHarness.ts:18–25`.
-6. **Athlete Capture Source Audit** — map candidate capture surfaces against `src/lib/biomech/videoAcceptance.ts` constants (MIN_FPS 24, MIN_WIDTH/HEIGHT 480, duration 0.5–60s, dropped-frame ratio ≤ 0.34) and existing `supabase/functions/analyze-video/**` intake path.
-7. **Labeling Source Audit** — identify acceptable real-world ground-truth measurement sources (high-fps reference capture, manual frame-stepping by qualified human labeler, externally instrumented timing) producing `ground_truth_sec` independent of EXT-MODEL output; reject any self-labeled or model-derived ground truth.
-8. **Corpus Compatibility Audit** — map candidate corpora against `parseTempoValidationCorpus` contract in `src/lib/biomech/validation/tempoCorpusIngestion.ts` (stable `clip_id`, finite `predicted_sec`, finite `ground_truth_sec`, ≥ `MIN_LABELED_PAIRS_FOR_VALIDATION` = 30).
-9. **Corpus Acceptance Mapping** — map sources to Phase 36 §7 acceptance (parses without `TempoCorpusParseError`, yields `status: "executed"`, deterministic `corpus_fingerprint_hex`).
-10. **Earliest Evidence Package** — minimum real-world bundle: 1 acquired EXT-MODEL runtime + ≥30 athlete clips passing `videoAcceptance` + externally measured `ground_truth_sec` per clip + `predicted_sec` produced by EXT-MODEL through `runTempoPipeline`.
-11. **Earliest Validation Event** — first deterministic `runTempoValidationHarness` invocation yielding `status: "executed"` on the acquired corpus.
-12. **Earliest Calibration Event** — first calibration certificate emitted from that validation report.
-13. **Earliest Promotion Event** — first transition of `tempo_sec` six-gate matrix from `missing` to `pass`/`fail` under `all_pass: true` via `evaluateTempoGateMatrix` / `tempoEvidenceToTileState`.
-14. **Release-1 Impact** — sourcing pattern generalizes to future metrics but remains out of Phase 37 scope; no new requirements introduced.
-15. **Final Determination** — `EVIDENCE SOURCES IDENTIFIED`.
+## Sources (read-only)
+- Phases 29, 30, 31, 33, 34, 35, 36, 37
+- `src/lib/biomech/**` (notably `pipeline/tempoPipeline.ts`, `videoAcceptance.ts`, `metrics/tempoSec.ts`, `validation/tempoCorpusIngestion.ts`, `calibration/tempoCalibration.ts`, `evidence/tempoEvidence.ts`)
+- `src/lib/reportCard/**`
+- `supabase/functions/analyze-video/**`
+- `supabase/functions/_shared/biomechFingerprint.ts`
 
-## Constraints
-Exactly one new file. No edits to any other file (including `.lovable/plan.md`). No code. No new requirements. All claims citation-bound to Phases 29–36 and the listed repo surfaces.
+## Document Structure (15 sections)
+1. **Scope** — `tempo_sec` only; converts Phase 37 sourcing determination into an executable operational package. Reality-only, citation-bound. No new requirements.
+2. **Current State** — Phase 34 partially completed; Phase 35 READY FOR EVIDENCE EXECUTION; Phase 36 READY TO ACQUIRE REAL EVIDENCE; Phase 37 EVIDENCE SOURCES IDENTIFIED.
+3. **EXT-MODEL Acquisition Package** — operational steps to obtain one Phase 37–identified real BlazePose Full runtime; binding sites in `versions.ts` and `biomechFingerprint.ts`; no in-repo fabrication (Phase 22 F-6).
+4. **EXT-MODEL Acceptance Checklist** — pinned non-stub version; deterministic output; fingerprint stability; `pose_model_is_stub` cleared.
+5. **Athlete Capture Package** — operational steps to capture clips passing `videoAcceptance.ts` constants (MIN_FPS 24, MIN_WIDTH/HEIGHT 480, duration 0.5–60s, dropped ≤ 0.34).
+6. **Labeling Package** — operational steps to obtain independent `ground_truth_sec` per Phase 37 §7 (high-FPS reference, manual frame-stepping, or hardware timing); never model-derived.
+7. **Corpus Assembly Package** — operational steps to bind ≥30 records to the `TempoValidationPair` schema with stable `clip_id`, `predicted_sec` (from real EXT-MODEL via `runTempoPipeline`), and `ground_truth_sec`.
+8. **Corpus Acceptance Checklist** — parses without `TempoCorpusParseError`; ≥30 pairs (`MIN_LABELED_PAIRS_FOR_VALIDATION`); deterministic `corpus_fingerprint_hex`; yields `status: "executed"`.
+9. **Validation Execution Package** — operational invocation of `runTempoValidationHarness` on the assembled corpus; deterministic re-evaluation on arrival.
+10. **Calibration Execution Package** — operational invocation of `generateTempoCalibrationCertificate` on the validation report; transitions from `uncalibrated/no_corpus` to `calibrated`.
+11. **Confidence Execution Package** — operational re-evaluation of tempo confidence using the calibration certificate; deterministic.
+12. **Gate Evaluation Package** — operational re-evaluation of the gate matrix using the calibration certificate and confidence outputs.
+13. **Tempo Promotion Package** — operational transition through `tempoEvidenceToTileState` from `pending` to truth-supported; promotion event definition per Phase 35 §10.
+14. **First Truth-Supported Metric Success Event** — fixed ordered sequence (EXT-MODEL acquired → clips captured → ground truth labeled → `runTempoPipeline` yields `predicted_sec` → corpus assembled → ingestion accepts → validation executed → calibration certificate issued → confidence re-evaluated → gate matrix re-evaluated → tile transitions to truth-supported).
+15. **Final Determination** — `EXECUTION PACKAGE COMPLETE`.
+
+## Notes
+- Operational package only; all in-repo surfaces already exist and re-evaluate deterministically on arrival per Phases 33–37.
+- Release-1 scaling remains out of scope (governed by future phases).
+- Remaining work is purely external acquisition + execution; classified non-implementation-blocking by Phases 29, 31 §9–§11, 33 §10.
