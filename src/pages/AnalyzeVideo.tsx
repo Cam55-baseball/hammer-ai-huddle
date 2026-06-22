@@ -27,6 +27,9 @@ import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
+import { runPoseInference } from "@/lib/biomech/pose/poseRunner";
+import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
+import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
@@ -326,6 +329,11 @@ export default function AnalyzeVideo() {
     let frames: string[] = [];
     let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
     let landingFrameIndex: number | null = null;
+    // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
+    // captured here and persisted into `video_landmark_runs` after the video
+    // row is created. Surfaced on `window.__DPOSE_LAST_RUN__` for proof capture.
+    let poseRun: Awaited<ReturnType<typeof runPoseInference>> | null = null;
+    let tempoRun: Awaited<ReturnType<typeof runTempoPipeline>> | null = null;
 
     if (analysisEnabled) {
       try {
@@ -368,6 +376,61 @@ export default function AnalyzeVideo() {
         toast.error(t('videoAnalysis.frameExtractionFailed', "Failed to extract video frames. Please try a different video format or browser."));
         setUploading(false);
         return;
+      }
+
+      // ===== PHASE 42B — Real D-POSE landmark production =====
+      // Runs MediaPipe Tasks Vision (BlazePose Full) over the same PNG
+      // data-URL frames `extractKeyFramesDeterministic` just emitted.
+      // Feeds the existing `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
+      try {
+        console.log('[D-POSE] starting real pose inference over', frames.length, 'frames');
+        const inputFrames = frameExtractions.map((fx, i) => ({
+          frame_index: fx.frame_index,
+          timestamp_seconds: fx.timestamp_seconds,
+          dataUrl: frames[i],
+          width: fx.width,
+          height: fx.height,
+        }));
+        poseRun = await runPoseInference(inputFrames);
+        console.log('[D-POSE] inference complete', {
+          producer: poseRun.landmark_producer_version,
+          frames_processed: poseRun.frames_processed,
+          frames_with_pose: poseRun.frames_with_pose,
+          mean_visibility: poseRun.mean_visibility,
+          total_landmarks: poseRun.rows.reduce((s, r) => s + r.landmarks.length, 0),
+        });
+
+        const peakFrames = toPeakLegLiftFrames(poseRun.rows);
+        const plantFrames = toPlantFrames(poseRun.rows);
+        const merged = peakFrames.map((p, i) => ({
+          frame_index: p.frame_index,
+          lift_ankle_y: p.lift_ankle_y,
+          front_ankle_y: plantFrames[i]?.front_ankle_y ?? null,
+        }));
+
+        tempoRun = await runTempoPipeline({
+          video_sha256_hex: probed.sha256_hex,
+          fps_true: probed.fps_true,
+          landing_time_sec: landingTime ?? null,
+          direction_sign: 1,
+          calibration_h_px: probed.height,
+          pose_frames: merged,
+        });
+        console.log('[D-POSE] tempo pipeline result', {
+          metric: tempoRun.metric,
+          evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+          cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
+        });
+
+        // Expose for Playwright proof capture without affecting UI behavior.
+        (window as unknown as { __DPOSE_LAST_RUN__?: unknown }).__DPOSE_LAST_RUN__ = {
+          pose: poseRun,
+          tempo: tempoRun,
+        };
+      } catch (poseErr: any) {
+        console.error('[D-POSE] pose inference failed:', poseErr);
+        // Do not block the rest of the analysis flow — surface honest failure.
+        toast.error('Pose inference failed — see console for details');
       }
     }
     // ===== END FRAME EXTRACTION =====
@@ -445,6 +508,42 @@ export default function AnalyzeVideo() {
 
 
       setCurrentVideoId(videoData.id);
+
+      // Phase 42B — persist real landmark run for the proof packet.
+      if (poseRun && tempoRun) {
+        try {
+          const { error: landmarkErr } = await supabase
+            .from("video_landmark_runs")
+            .insert([{
+              video_id: videoData.id,
+              landmark_model_id: "blazepose_full",
+              landmark_model_version: poseRun.landmark_producer_version,
+              fps_true: probed.fps_true,
+              frame_count: poseRun.frames_processed,
+              landmarks_storage_path: null,
+              landmarks_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+              mean_visibility: poseRun.mean_visibility,
+              diagnostics: {
+                phase: "42B",
+                frames_with_pose: poseRun.frames_with_pose,
+                evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+                cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
+                tempo_sec: tempoRun.metric.value,
+                tempo_missingness: tempoRun.metric.missingness,
+                peak_leg_lift_frame_index: tempoRun.evidence.anchors.peak_leg_lift.frame_index,
+                front_foot_strike_frame_index: tempoRun.evidence.anchors.front_foot_strike.frame_index,
+                landmark_sample_first_frame: poseRun.rows[0]?.landmarks ?? [],
+              },
+            }] as never);
+          if (landmarkErr) {
+            console.error('[D-POSE] landmark run persistence failed:', landmarkErr);
+          } else {
+            console.log('[D-POSE] persisted video_landmark_runs row for video', videoData.id);
+          }
+        } catch (e) {
+          console.error('[D-POSE] landmark run persistence threw:', e);
+        }
+      }
       
       // Branch based on analysis toggle
       if (!analysisEnabled) {
