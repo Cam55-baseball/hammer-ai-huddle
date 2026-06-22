@@ -508,6 +508,42 @@ export default function AnalyzeVideo() {
 
 
       setCurrentVideoId(videoData.id);
+
+      // Phase 42B — persist real landmark run for the proof packet.
+      if (poseRun && tempoRun) {
+        try {
+          const { error: landmarkErr } = await supabase
+            .from("video_landmark_runs")
+            .insert([{
+              video_id: videoData.id,
+              landmark_model_id: "blazepose_full",
+              landmark_model_version: poseRun.landmark_producer_version,
+              fps_true: probed.fps_true,
+              frame_count: poseRun.frames_processed,
+              landmarks_storage_path: null,
+              landmarks_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+              mean_visibility: poseRun.mean_visibility,
+              diagnostics: {
+                phase: "42B",
+                frames_with_pose: poseRun.frames_with_pose,
+                evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+                cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
+                tempo_sec: tempoRun.metric.value,
+                tempo_missingness: tempoRun.metric.missingness,
+                peak_leg_lift_frame_index: tempoRun.evidence.anchors.peak_leg_lift.frame_index,
+                front_foot_strike_frame_index: tempoRun.evidence.anchors.front_foot_strike.frame_index,
+                landmark_sample_first_frame: poseRun.rows[0]?.landmarks ?? [],
+              },
+            }] as never);
+          if (landmarkErr) {
+            console.error('[D-POSE] landmark run persistence failed:', landmarkErr);
+          } else {
+            console.log('[D-POSE] persisted video_landmark_runs row for video', videoData.id);
+          }
+        } catch (e) {
+          console.error('[D-POSE] landmark run persistence threw:', e);
+        }
+      }
       
       // Branch based on analysis toggle
       if (!analysisEnabled) {
