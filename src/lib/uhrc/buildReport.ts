@@ -27,6 +27,25 @@ import {
   pieV2SignalsForPillar,
 } from "./pillars";
 import type { PieV2SeverityTier, PieV2SessionAggregate } from "@/lib/pieV2/types";
+import {
+  RELEASE1_HIDDEN_SIGNAL_IDS,
+  RELEASE1_HITTING_SUPPRESSED,
+} from "@/lib/reportCard/release1";
+
+/**
+ * Phase 45 — Release-1 Trust Lock guard.
+ *
+ * Forces any contribution backed by a HIDDEN or SHOWCASE-FUTURE source
+ * signal to render as `missing: true` instead of contributing a fabricated
+ * or LLM-derived score to pillar math. The existing missingness machinery
+ * (`contributions.filter(c => !c.missing).length` as the denominator,
+ * `biggest_leak`/`biggest_win` skip on `value == null`) does the rest.
+ */
+function applyRelease1Suppression(c: UhrcSignalContribution): UhrcSignalContribution {
+  if (!RELEASE1_HIDDEN_SIGNAL_IDS.has(c.source_signal_id)) return c;
+  if (c.missing && c.value == null) return c;
+  return { ...c, value: null, missing: true, tier: null };
+}
 
 type HittingDoctrine = {
   violated_phases: Array<"P1" | "P2" | "P3" | "P4">;
@@ -76,7 +95,10 @@ export function buildUhrcReport(input: BuildUhrcInput): UhrcReport {
   const computed_at = input.computed_at ?? new Date().toISOString();
   const sport = input.sport ?? "baseball";
   const includePitching = input.disciplines.includes("pitching");
-  const includeHitting = input.disciplines.includes("hitting");
+  // Phase 45 — Release-1 Trust Lock: hitting suppressed end-to-end. Even if
+  // a caller asks for hitting we drop it before any BH contribution lands.
+  const includeHitting =
+    !RELEASE1_HITTING_SUPPRESSED && input.disciplines.includes("hitting");
 
   const missing: string[] = [];
   const expectedSignals: string[] = [];
