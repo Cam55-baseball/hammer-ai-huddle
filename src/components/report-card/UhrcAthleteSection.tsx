@@ -19,6 +19,7 @@ import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { UhrcReportCard } from "./UhrcReportCard";
 import { BhCategoryPanels } from "./BhCategoryPanels";
+import { RELEASE1_HITTING_SUPPRESSED } from "@/lib/reportCard/release1";
 import { useEmitOnce } from "@/hooks/useEmitObservability";
 
 const SUPPORTED_SPORTS = new Set(["baseball", "softball"]);

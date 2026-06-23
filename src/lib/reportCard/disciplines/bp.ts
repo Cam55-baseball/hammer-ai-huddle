@@ -1,5 +1,6 @@
 import type { ReportCardSpec, ReportCardTileSpec, TileState, AnalysisLike } from "../types";
 import { readNumber, missingState } from "../metricReaders";
+import { isRelease1Hidden, isRelease1ShowcaseFuture } from "../release1";
 
 const tiles: ReportCardTileSpec[] = [
   {
@@ -171,8 +172,40 @@ const tiles: ReportCardTileSpec[] = [
   },
 ];
 
+/**
+ * Phase 45 — Release-1 Trust Lock.
+ *
+ * Tiles whose underlying metric is HIDDEN (LLM-derived, must not appear)
+ * or SHOWCASE_FUTURE (blocked on calibration / object tracking / release
+ * anchor) are removed from the Release-1 surface. Their backing metric
+ * key is the same key passed to `readNumber` inside `compute`, so we
+ * filter by literal tile-key → metric-key mapping below. The complete
+ * Release-1 BP visible set per Phase 44 §10 is:
+ *   tempo_sec, energy_angle_deg, lift_thrust_deg,
+ *   premature_shoulder_open_deg, shoulder_tilt_deg, head_vertical_movement_pct
+ */
+const BP_TILE_TO_METRIC: Record<string, string> = {
+  energy_angle: "energy_angle_deg",
+  hip_shoulder_separation: "premature_shoulder_open_deg",
+  tempo: "tempo_sec",
+  stride_length: "stride_pct_of_height",
+  head_stability: "head_vertical_movement_pct",
+  glove_control: "glove_drift_outside_frame_in",
+  head_at_release: "head_at_release_deg",
+  shoulder_tilt_release: "shoulder_tilt_deg",
+  lift_thrust: "lift_thrust_deg",
+};
+
+const release1Tiles = tiles.filter((t) => {
+  const metric = BP_TILE_TO_METRIC[t.key];
+  if (!metric) return true;
+  if (isRelease1Hidden(metric)) return false;
+  if (isRelease1ShowcaseFuture(metric)) return false;
+  return true;
+});
+
 export const bpReportCard: ReportCardSpec = {
   disciplineLabel: "Baseball Pitching",
   groupByPhase: false,
-  tiles,
+  tiles: release1Tiles,
 };
