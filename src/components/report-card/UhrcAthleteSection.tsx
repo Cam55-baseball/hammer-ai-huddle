@@ -40,15 +40,25 @@ export function UhrcAthleteSection({ disciplines }: Props) {
     | "baseball"
     | "softball";
 
+  // Phase 45 — Release-1 Trust Lock: hitting is suppressed end-to-end.
+  // Drop "hitting" from the disciplines passed into buildUhrcReport so no
+  // BH-derived contributions reach pillar math, biggest_leak/biggest_win,
+  // or composite scoring.
+  const requestedDisciplines = disciplines ?? ["pitching", "hitting"];
+  const effectiveDisciplines = RELEASE1_HITTING_SUPPRESSED
+    ? requestedDisciplines.filter((d) => d !== "hitting")
+    : requestedDisciplines;
+
   const report = useMemo(() => {
     if (!user?.id) return null;
     if (!sportSupported) return null;
+    if (effectiveDisciplines.length === 0) return null;
     const w30 = trends?.find((w) => w.window === "30d");
     const latest = w30?.aggregates[w30.aggregates.length - 1] ?? null;
     return buildUhrcReport({
       athlete_id: user.id,
       sport: reportSport,
-      disciplines: disciplines ?? ["pitching", "hitting"],
+      disciplines: effectiveDisciplines,
       pieV2Latest: latest ?? undefined,
       hieSnapshot: snapshot
         ? {
@@ -60,7 +70,7 @@ export function UhrcAthleteSection({ disciplines }: Props) {
           }
         : null,
     });
-  }, [user?.id, snapshot, trends, disciplines, sportSupported, reportSport]);
+  }, [user?.id, snapshot, trends, effectiveDisciplines, sportSupported, reportSport]);
 
   // RFL-003 — emit canonical intelligence.uhrc.viewed once per athlete per session/day.
   useEmitOnce(
