@@ -175,11 +175,14 @@ export function buildUhrcReport(input: BuildUhrcInput): UhrcReport {
         }
       }
 
-      const score = weightedMean(contributions);
-      const presentConfidences = contributions.filter((c) => !c.missing).length;
-      const confidence = contributions.length === 0
+      // Phase 45 — Release-1 Trust Lock: force HIDDEN / SHOWCASE_FUTURE
+      // signals to `missing: true` before any pillar math runs.
+      const suppressed = contributions.map(applyRelease1Suppression);
+      const score = weightedMean(suppressed);
+      const presentConfidences = suppressed.filter((c) => !c.missing).length;
+      const confidence = suppressed.length === 0
         ? 0
-        : Math.round((presentConfidences / contributions.length) * 100);
+        : Math.round((presentConfidences / suppressed.length) * 100);
 
       return {
         id: pid,
@@ -187,10 +190,10 @@ export function buildUhrcReport(input: BuildUhrcInput): UhrcReport {
         score,
         confidence,
         tier: tierFromScore(score),
-        contributions,
+        contributions: suppressed,
         note: score == null
           ? "Insufficient data to score this pillar yet."
-          : `Pillar derived from ${presentConfidences}/${contributions.length} source signals.`,
+          : `Pillar derived from ${presentConfidences}/${suppressed.length} source signals.`,
       };
     },
   );
