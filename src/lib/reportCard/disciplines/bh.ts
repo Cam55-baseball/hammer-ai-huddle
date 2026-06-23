@@ -442,8 +442,20 @@ const tiles: ReportCardTileSpec[] = [
   },
 ];
 
+/**
+ * Phase 45 — Release-1 Trust Lock.
+ *
+ * Every BH metric is HIDDEN today (LLM-derived; no bat detector, no
+ * swing-start / contact anchor, no calibration). Per Phase 44 §3 the
+ * entire BH spec is suppressed in Release-1 by emitting an empty tile
+ * set. The spec itself is preserved so downstream callers
+ * (`getReportCardSpec`, BH presentation surfaces) keep their shape and
+ * BH returns the moment `RELEASE1_HITTING_SUPPRESSED` flips.
+ */
+import { RELEASE1_HITTING_SUPPRESSED } from "../release1";
+
 export const bhReportCard: ReportCardSpec = {
   disciplineLabel: "Baseball Hitting",
   groupByPhase: true,
-  tiles,
+  tiles: RELEASE1_HITTING_SUPPRESSED ? [] : tiles,
 };

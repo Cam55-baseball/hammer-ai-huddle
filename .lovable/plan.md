@@ -1,43 +1,64 @@
-# Phase 44 — Trusted Release Implementation Plan
+## Phase 45 — Release-1 Implementation and Athlete Validation
 
-## Deliverable
-Create exactly one file: `.lovable/phase-44-trusted-release-implementation.md`.
+Per your answers: code execution for §1–§4 (real edits suppressing HIDDEN + SHOWCASE-FUTURE metrics from athlete-facing surfaces and coaching pipelines), then a single document `.lovable/phase-45-release-1-implementation-and-athlete-validation.md` covering §5–§10 (Universal Analysis lock, validation harness, cohort protocol, evidence-collection protocol, conditional determination — no synthetic athlete data).
 
-No source edits. No new metrics, detectors, architecture, doctrine, or measurement systems. Pure audit-and-decision document building directly on Phase 43 (`.lovable/phase-43-trust-first-measurement-release-audit.md`) and the provenance findings already established (bat_speed / time_to_contact / on_plane_pct / bat_path_score are LLM-derived via `src/lib/reportCard/reportCardContracts.ts`).
+### Scope lock (carried from Phase 44)
 
-## Evidence Sources (read-only sweep before writing)
-- `src/lib/reportCard/contracts/bp.contract.ts` (already in context)
-- `src/lib/reportCard/contracts/bh.contract.ts`
-- `src/lib/reportCard/contracts/throwing.contract.ts`
-- `src/lib/reportCard/reportCardContracts.ts` (LLM prompt source for hitting metrics)
-- `src/lib/biomech/pipeline/tempoPipeline.ts` + `src/lib/biomech/metrics/*` + `src/lib/biomech/anchors/*` + `src/lib/biomech/detectors/plantDetector.ts`
-- `src/lib/biomech/pose/poseRunner.ts` (Phase 42B D-POSE)
-- `src/components/report-card/UhrcReportCard.tsx`, `UhrcAthleteSection.tsx`, `BhCategoryPanels.tsx`
-- `src/lib/uhrc/buildReport.ts` + `src/lib/uhrc/types.ts` (pillar → contribution wiring)
-- Anything under `src/components/report-card/` and coaching pathways consuming `bh.*` / `bp.*` metric keys (grep for the metric keys listed in §2)
-- Prior audits: `.lovable/phase-43-...md`, `.lovable/bat-path-vs-on-plane-definitions.md`, `.lovable/time-to-contact-vs-power.md`, `.lovable/confidence-source-trace.md`
+- **HIDDEN (BH):** `bat_speed_contact_mph`, `time_to_contact_ms`, `on_plane_pct`, `bat_path_score_100`, all BH 0–100 judgement tiles, all BH boolean anchors.
+- **HIDDEN-via-suppression (BH discipline as a whole):** entire `BhCategoryPanels` per Phase 44 §4.
+- **SHOWCASE FUTURE (BP):** `stride_pct_of_height`, `glove_drift_outside_frame_in`, `head_at_release_deg`, `p3_release_offset_ms`, `stride_dir_deg_off_square`, `front_shoulder_leak_pct_of_window`, `shoulder_to_shoulder_hold_pct_to_contact`.
+- **VISIBLE (Release-1):** `tempo_sec`, `energy_angle_deg`, `lift_thrust_deg`, `premature_shoulder_open_deg`, `shoulder_tilt_deg`, `head_vertical_movement_pct`.
 
-## Document Structure (10 required sections)
+### §1–§4 — Code execution
 
-**§1 Measurement-Backed Metric Inventory** — Enumerate metrics whose values originate from pose landmarks / anchors / detectors / deterministic biomech math. Anchored by `runTempoPipeline` (real anchor → detector → metric → evidence chain) and the pose-derivable angle/time metrics in `bp.contract.ts`. Expected set: `tempo_sec`, `shoulder_tilt_deg`, `head_vertical_movement_pct`, `premature_shoulder_open_deg`, `energy_angle_deg`, `head_at_release_deg`, `lift_thrust_deg`. Each entry cites file:line for the derivation path and notes whether the path is fully wired today vs. wired-but-pose-stub-gated.
+Blast radius is narrow because HIDDEN keys live only in the reportCard contracts/disciplines and feed everything else through generic signal IDs.
 
-**§2 Non-Measurement Metric Inventory** — Every metric whose number is parsed from LLM JSON output (`reportCardContracts.ts` prompts). Explicitly: `bat_speed_contact_mph`, `time_to_contact_ms`, `on_plane_pct`, `bat_path_score_100`, plus any `bp` metrics that still depend on LLM visual estimation when D-POSE is unavailable. Cite source file:line and dependency chain (prompt → tool call → metrics column → tile).
+1. **Release-1 trust constant** — new `src/lib/reportCard/release1.ts` exporting `RELEASE1_VISIBLE_METRICS`, `RELEASE1_HIDDEN_METRICS`, `RELEASE1_SHOWCASE_FUTURE`, and a `classifyRelease1(key)` helper. Single source of truth so all surfaces import from one place.
 
-**§3 Release-1 Visibility Matrix** — Table: every athlete-facing metric → {VISIBLE | HIDDEN | SHOWCASE FUTURE}. No "undecided." Default rule: §1 → VISIBLE; §2 physics-velocity/collision → HIDDEN; calibration-blocked but pose-derivable (e.g. `stride_pct_of_height`, `glove_drift_outside_frame_in`) → SHOWCASE FUTURE.
+2. **BH discipline suppression** — `src/lib/reportCard/disciplines/bh.ts`: tiles list becomes empty for Release-1 (gated by a `RELEASE1_HITTING_SUPPRESSED = true` flag in `release1.ts`). The spec still exports so `getReportCardSpec` keeps shape; the tile array is `[]`.
 
-**§4 Report Card Changes** — Concrete list of UI surfaces affected: BH category panels (`BhCategoryPanels.tsx`), UHRC pillar contributions whose `signal_id` resolves to a hidden metric (`buildReport.ts`), tile components, trend charts, biggest-leak/biggest-win summaries, lineage drilldown rows. For each, state the required change: hide tile, suppress contribution (mark missing rather than scoring), recompute pillar denominator, drop trend line, or rewrite explanation copy.
+3. **BP discipline filtering** — `src/lib/reportCard/disciplines/bp.ts`: keep tiles for the 6 VISIBLE metrics. Tiles whose `key` resolves to SHOWCASE-FUTURE render through a new `showcaseFutureState()` helper (mode preserved, status `missing`, missing_reason `"showcase_future_release"`) so they appear as a single placeholder card per Phase 44 §4, not as scored tiles.
 
-**§5 Coaching-System Impact** — Coaching/recommendation pathways that read hidden metric keys: PIE V2 hitting aggregates, drill recommendations keyed off `bat_path_score_100` / `on_plane_pct`, any video-suggestion surface, HammerDailyPlan remediation anchors. List required updates (remove key from input set, rebalance weighting, fall back to measurement-backed signal).
+4. **`BhCategoryPanels.tsx`** — replace category render with the Phase 44 §4 "Hitting analysis not yet released — pitching analysis available now" notice card. Guard with `RELEASE1_HITTING_SUPPRESSED` so the panel is trivially re-enabled later.
 
-**§6 Universal Analysis Package** — Concrete Release-1 athlete experience: the visible metric set (§1 ∩ VISIBLE), the surviving explanation/recommendation copy, surviving trend systems, what the report card looks like after §4. This is the canonical Release-1 surface contract.
+5. **`UhrcAthleteSection.tsx`** — when `RELEASE1_HITTING_SUPPRESSED`, drop `"hitting"` from the disciplines passed into `buildUhrcReport` regardless of caller, and never mount `BhCategoryPanels`.
 
-**§7 Trust Risk Removal** — Athlete-facing outputs being removed: each hidden tile, each derived score/ranking/explanation that consumed a hidden input, each recommendation that can no longer be defended. One row per removed surface with the trust justification.
+6. **`src/lib/uhrc/buildReport.ts` (§3 UHRC recalculation)** — wrap contribution intake so any contribution whose `source_signal_id` matches a HIDDEN key is forced to `{ value: null, missing: true }` before pillar math. SHOWCASE-FUTURE contributions are also marked missing. No new math: existing `contributions.filter(c => !c.missing).length` denominator handles the rest, composite recomputes, `biggest_leak`/`biggest_win` candidate filter excludes missing contributions.
 
-**§8 Remaining Measurement Gaps** — Inventory only (no implementation): bat tracking (D-OBJECT), object/ball tracking, velocity systems, pixel-to-physical calibration (D-CAL), athlete-height calibration, true-fps verification. Each gap names the metrics it would unlock from §3 SHOWCASE FUTURE.
+7. **Coaching pipelines (§4)** — audit and suppress HIDDEN/BH inputs in:
+   - `usePitchingV2Trends` BH aggregator path — drop BH rollups.
+   - Drill recommendations (`src/data/baseball/pieV2DrillCatalog.ts` consumers) — filter out drills whose trigger signals are HIDDEN.
+   - `HammerDailyPlan` "Work on this" anchor (`UhrcReportCard.tsx`) — already pulls from `biggest_leak`, which is now VISIBLE-only via step 6; verify no additional path.
+   - Video-suggestion surfaces — filter to VISIBLE-metric matches.
+   - Coach console BH mirrors — apply the same `RELEASE1_HITTING_SUPPRESSED` guard.
 
-**§9 Release Readiness Determination** — Evidence-backed yes/no on whether Hammers can ship a trustworthy biomechanics-only product after §4–§7 are executed. Expected answer: yes, conditional on (a) the D-POSE → anchor → metric chain producing real values on Release-1 metrics, (b) hidden metrics fully removed not merely visually suppressed, (c) UHRC pillar math recomputed to ignore hidden contributions.
+8. **Coach surfaces** — apply the same hiding to any coach-console BH panel that mirrors `BhCategoryPanels`.
 
-**§10 Final Release Inventory** — Authoritative Release-1 athlete-facing measurement package: the final ordered metric list, the discipline each belongs to (BP/BH/throwing), and the surface(s) each appears on. This becomes the lock for Release 1.
+### `.lovable/phase-45-release-1-implementation-and-athlete-validation.md` — document for §5–§10
 
-## Constraints Restated
-Single new file. No code edits. No new metrics/detectors/architecture/doctrine. Audit + decision matrix + final inventory only.
+Single file, sections matching the prompt exactly:
+
+- **§1–§4 Implementation Log** — every edited file with rationale and the rule it enforces (which Phase 44 row it satisfies). Reads as audit-grade evidence that the trust lock executed.
+- **§5 Universal Analysis Finalization** — the locked Release-1 surface: 6 BP metrics, 3 throwing metrics, BH suppressed. Visible explanations sourced from existing contract copy. Visible recommendations: drill catalog filtered to VISIBLE keys. Visible trends: 30-day pillar trends for pillars with ≥1 VISIBLE contribution. Exact tile order, exact copy strings, exact missingness messages.
+- **§6 Internal Validation Harness** — per-metric matrix for the 6 VISIBLE metrics:
+  - expected behavior (value range, monotonicity, units)
+  - expected failure behavior (when anchor missing → `missing: true`, never fabricated)
+  - expected missingness behavior (which upstream gap surfaces which `missing_reason`)
+  - expected confidence behavior (confidence bounds, what causes degradation)
+- **§7 Athlete Test Cohort — protocol only** — minimum counts (e.g. ≥10 athletes, ≥30 pitching videos, 0 hitting videos for Release-1, split across youth / HS / advanced). Capture format. Marked **PENDING EXECUTION**.
+- **§8 Evidence Collection Protocol** — required artifacts per video (upload hash, metric outputs, report-card JSON snapshot, athlete feedback form schema, coach feedback form schema, contradiction-report schema). Where evidence is stored. No anecdotes permitted. Marked **PENDING EXECUTION**.
+- **§9 Validation Results** — empty matrix (one row per VISIBLE metric × {trust, question, fail, revise} columns) with explicit "no data — awaiting cohort execution" entries. No fabricated rows.
+- **§10 Final Determination** — conditional answer: Release-1 cannot be declared trusted until §7–§9 execute against real athletes. Implementation evidence (§1–§5) confirms only that *no untrusted metric remains visible*. Trust certification requires §9 data.
+
+### Constraints honored
+
+- No new metrics, detectors, doctrine, architecture.
+- No synthetic athlete or coach feedback.
+- Hitting suppression is reversible via one flag flip in `release1.ts` once measurement gaps close.
+- Every code change is removal/suppression, not new measurement.
+
+### Out of scope
+
+- Building D-OBJECT, D-CAL, or ball-tracking detectors.
+- Running the actual athlete cohort (requires real users; you do that).
+- Editing `poseRunner.ts` or pose pipeline wiring (Phase 42B territory).
