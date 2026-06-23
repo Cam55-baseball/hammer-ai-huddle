@@ -116,8 +116,11 @@ export function UhrcAthleteSection({ disciplines }: Props) {
   }
 
   if (!report) return null;
+  // Phase 45 — Release-1 Trust Lock: never mount BH panel while suppressed.
   const showHitting =
-    reportSport === "baseball" && (disciplines ?? ["pitching", "hitting"]).includes("hitting");
+    !RELEASE1_HITTING_SUPPRESSED &&
+    reportSport === "baseball" &&
+    requestedDisciplines.includes("hitting");
   return (
     <div className="space-y-4">
       <UhrcReportCard report={report} sourceEventId={snapshot?.id ?? null} />
