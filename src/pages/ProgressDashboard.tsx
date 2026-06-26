@@ -51,13 +51,9 @@ function PracticeIntelligenceCard() {
           <div>
             <h3 className="font-bold text-lg">Practice Intelligence</h3>
             {mpi ? (
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-2xl font-bold">{mpi.adjusted_global_score ?? '—'}</span>
-                <span className="text-sm text-muted-foreground">MPI • {gradeLabel}</span>
-                {mpi.trend_direction === 'rising' && <TrendingUp className="h-4 w-4 text-green-600" />}
-              </div>
+              <p className="text-sm text-muted-foreground mt-1">Practice intelligence based on logged sessions and self-reports.</p>
             ) : (
-              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your MPI score</p>
+              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your practice history.</p>
             )}
           </div>
         </div>
