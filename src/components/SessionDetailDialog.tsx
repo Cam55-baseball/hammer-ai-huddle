@@ -596,50 +596,7 @@ export function SessionDetailDialog({
                 </div>
               )}
 
-              {/* The Scorecard Progress Report */}
-              {aiAnalysis.scorecard && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="show-scorecard-dialog" className="text-sm font-medium">
-                      {t('sessionDetail.showProgressReport')}
-                    </Label>
-                    <Switch
-                      id="show-scorecard-dialog"
-                      checked={showScorecard}
-                      onCheckedChange={handleScorecardToggle}
-                    />
-                  </div>
-                  
-                  {showScorecard && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <Label className="text-sm font-medium">{t('sessionDetail.scorecardFilter')}</Label>
-                        <ToggleGroup 
-                          type="single" 
-                          value={scorecardFilter} 
-                          onValueChange={handleScorecardFilterChange}
-                          size="sm"
-                        >
-                          <ToggleGroupItem value="all" className="text-xs px-3">
-                            {t('sessionDetail.filterAll')}
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="improvements" className="text-xs px-3">
-                            {t('sessionDetail.filterImprovements')}
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="regressions" className="text-xs px-3">
-                            {t('sessionDetail.filterRegressions')}
-                          </ToggleGroupItem>
-                        </ToggleGroup>
-                      </div>
-                      <TheScorecard 
-                        scorecard={aiAnalysis.scorecard} 
-                        currentScore={session.efficiency_score || 0}
-                        displayFilter={scorecardFilter}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Phase 49: TheScorecard (LLM-derived progress trends) removed. */}
             </div>
           )}
 
