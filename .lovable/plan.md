@@ -1,49 +1,36 @@
-# Phase 47 — Measurement Engine Existence Audit Plan
+## Phase 48 — Actual Athlete-Facing Release Inventory
 
-Deliverable: create exactly one file — `.lovable/phase-47-measurement-engine-existence-audit.md`. Evidence-only. No code edits, no fixes, no architecture, no recommendations.
+**Single deliverable:** `.lovable/phase-48-actual-athlete-facing-release-inventory.md` (evidence-only product audit, no code changes).
 
-## Evidence already gathered
+### Investigation approach (read-only, before writing the doc)
 
-**Six Release-1 metrics** (from `src/lib/reportCard/release1.ts`):
-`tempo_sec`, `energy_angle_deg`, `lift_thrust_deg`, `premature_shoulder_open_deg`, `shoulder_tilt_deg`, `head_vertical_movement_pct`.
+1. Trace every athlete-facing mount point from routes:
+   - `src/pages/AthleteCommand.tsx` (canonical Command Center)
+   - `src/pages/AnalyzeVideo.tsx` (post-upload analysis surface)
+   - `src/pages/VideoLibrary.tsx`, `AthleteDigest.tsx`, `ProgressDashboard` (trend surfaces)
+2. Walk the report-card render tree: `UhrcAthleteSection` → `UhrcReportCard` → pillar contributions in `src/lib/uhrc/buildReport.ts`; `BhCategoryPanels` (confirmed suppressed via `RELEASE1_HITTING_SUPPRESSED`); BP tile specs in `src/lib/reportCard/disciplines/bp.ts`.
+3. Cross-reference each visible tile against `RELEASE1_VISIBLE_METRICS` / `RELEASE1_HIDDEN_METRICS` / `RELEASE1_SHOWCASE_FUTURE` in `src/lib/reportCard/release1.ts`.
+4. Identify data sources per tile: deterministic engine vs `videos.ai_analysis` (LLM) vs static catalog vs HIE/PIE snapshot.
+5. Enumerate coaching/recommendation surfaces: `HammerDailyPlan`, `HammerChat`, `HammerOnboardingChat`, lineage drilldowns, biggest_leak/biggest_win text.
+6. Enumerate trend surfaces: `useReportCardTrend`, `usePitchingV2Trends`, HIE snapshot.
+7. Inventory empty-state / missingness renders: `EmptyStateExplainer`, missing-signal copy in `UhrcReportCard`, sport-unsupported card, suppressed BH panel.
 
-**`src/lib/biomech/` inventory:**
-- `metrics/`: only `tempoSec.ts` (plus shared `confidence.ts`, `missingness.ts`).
-- `anchors/`: `peakLegLift.ts`, `frontFootStrike.ts`.
-- `detectors/`: only `plantDetector.ts`.
-- `pipeline/`: only `tempoPipeline.ts`.
-- `reportCard/`: only `tempoTileAdapter.ts`.
-- `evidence/`: only `tempoEvidence.ts`.
-- `replay/`: only `tempoReplay.ts`. `validation/`: only `tempoHarness.ts`.
-- Grep for `energy_angle|lift_thrust|premature_shoulder_open|shoulder_tilt|head_vertical_movement` inside `src/lib/biomech/` returns only `anchors/peakLegLift.ts` (incidental). No engines for the other five.
+All findings sourced from repo + prior Phase 46/47 DB evidence (0 `video_metric_runs`, 0 `video_landmark_runs`, only LLM `ai_analysis.metrics` populated). No new queries needed unless a gap appears during walkthrough.
 
-**Runtime invocation** (`src/pages/AnalyzeVideo.tsx`):
-- Line 32: imports `runTempoPipeline`.
-- Lines 394–423: real `runPoseInference` → `runTempoPipeline` executes on every uploaded video when analysis enabled.
-- Lines 513–546: persists a `video_landmark_runs` row carrying `tempo_sec` value/missingness inside `diagnostics` JSON — but never inserts into `public.video_metric_runs`. Grep `from("video_metric_runs"`/`from('video_metric_runs'` in `src/` = 0 matches.
+### Document structure (§1–§10 as specified)
 
-**Database (Phase 46 queries, still authoritative):**
-- `video_landmark_runs` = 0 rows; `video_event_runs` = 0; `video_metric_runs` = 0.
-- `videos` = 547 (160 pitching). Only structured `ai_analysis.metrics` row is LLM-derived.
+- **§1 Athlete Visible Inventory** — table of every visible tile with columns: visible / hidden / suppressed / placeholder / driven-by-measurement / driven-by-AI / driven-by-static. Pillar tiles, BP tiles, UHRC composite, biggest_leak/win, missingness footer, drill-down button, "work on this in today's plan" CTA.
+- **§2 Report Card Reality** — concrete render walkthrough for a freshly uploaded pitching video: which `UhrcReportCard` elements actually populate vs render "—" vs render missingness chip. Hitting branch confirmed unmounted.
+- **§3 Coaching Reality** — `HammerDailyPlan` items, `HammerChat` responses, `HammerOnboardingChat` prompts; classify each as LLM-generated narrative, static catalog (drill catalog, schedule rules), or measurement-derived.
+- **§4 Recommendation Reality** — sources: PIE V2 drill catalog, static drill/benefit constants, LLM coaching text, ageCurves/velocityBands. None are tied to deterministic per-video measurement.
+- **§5 Trend Reality** — `useReportCardTrend` reads `videos.ai_analysis` (LLM only); `usePitchingV2Trends` reads PIE V2 aggregates; HIE snapshot fields. Note that all per-video trend points are LLM-derived.
+- **§6 Empty-State Audit** — list every surface that today renders empty/missing/placeholder: all 6 Release-1 tiles render "—" + missingness chip (since `video_metric_runs` empty and Release-1 trust lock suppresses LLM-only values); BH panel fully unmounted; non-baseball sports show waiting-on-projector card.
+- **§7 Public Release Candidate** — feature set defensible today without false measurement claims: organism readiness/fatigue grid, daily plan (catalog-driven), HammerChat (clearly conversational), onboarding, recent activity, video upload + storage + LLM narrative coaching *if framed as opinion not measurement*. Report-card composite cannot be honestly shipped because pillar scores compute from inputs that are largely missing.
+- **§8 Trust Audit** — risks: composite pillar scores rendered as integers despite contributions being mostly missing; biggest_leak/biggest_win text reads like measured findings but originates from LLM/PIE aggregates; trend chart implies measurement continuity; engine_version badge implies deterministic engine.
+- **§9 Release Classification** — based purely on athlete-visible reality: **NOT READY for public release**, **READY for limited beta only if** report card and trend surfaces are gated off or explicitly labeled as preview/non-measured.
+- **§10 Final Determination** — one paragraph: what Hammers can honestly claim to athletes today (video upload + storage, conversational coaching framed as opinion, static daily plan, organism readiness from self-reported HIE inputs) and what it cannot claim (any per-video biomechanical measurement, any measured trend, any measurement-derived report card grade).
 
-**Report-card integration:**
-- `src/lib/reportCard/disciplines/bp.ts` reads `tempo_sec` from `ai_analysis` (LLM keyspace), not from `video_metric_runs`.
-- `tempoTileAdapter.ts` exists in `src/lib/biomech/reportCard/` but no grep hit shows it being consumed by report-card builders.
-
-## Document structure (single markdown file)
-
-1. **§1 Inventory** — list the six metrics with file references.
-2. **§2 Existence Audit** — per-metric Y/N matrix across nine axes (tile, contract, explanation, detector, anchor, metric function, pipeline integration, persistence, report-card integration). Filled strictly from grep evidence.
-3. **§3 Production Path Audit** — for each metric, walk `video → landmarks → anchors → detectors → metric calc → persistence → report card` and mark the exact break point (e.g. for `tempo_sec`: break at persistence — pipeline runs but never writes `video_metric_runs`; for the other five: break at "metric function does not exist").
-4. **§4 Runtime Invocation Audit** — `tempo_sec`: invoked at `AnalyzeVideo.tsx:411`; other five: zero call sites in `src/`.
-5. **§5 Persistence Audit** — `video_metric_runs` insert call sites in `src/` = 0; `tempo_sec` value is smuggled into `video_landmark_runs.diagnostics`, but as of Phase 46 the table is empty (0 rows). Report-card reads `tempo_sec` from `videos.ai_analysis` (LLM), not from any deterministic table.
-6. **§6 Missing Implementation Inventory** — per-metric component list.
-7. **§7 Wiring Inventory** — per-metric "exists but disconnected" assessment. `tempo_sec` = implemented but not persisted to its canonical table and not consumed by report card. Other five = nothing to disconnect.
-8. **§8 Readiness Classification** — `tempo_sec` = IMPLEMENTED_NOT_WIRED (persistence to `video_metric_runs` missing + report-card binding to deterministic source missing). `energy_angle_deg`, `lift_thrust_deg`, `premature_shoulder_open_deg`, `shoulder_tilt_deg`, `head_vertical_movement_pct` = NOT_IMPLEMENTED.
-9. **§9 Earliest Shippable Metric** — `tempo_sec` (only metric with engine + anchors + pipeline + replay + validation harness all present). Remaining gaps: `video_metric_runs` persistence, report-card binding swap, and corpus to lift `tempoHarness` out of `no_corpus`.
-10. **§10 Final Determination** — only `tempo_sec` exists as a measurement engine today.
-
-## Constraints honored
-
-- No new code, no fixes, no recommendations.
-- Every claim cites a file:line or a runtime query result already collected.
+### Constraints honored
+- No new code, no fixes, no roadmap, no architecture changes.
+- Only evidence already in repo + prior phase findings.
+- Single file output.
