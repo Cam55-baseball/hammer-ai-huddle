@@ -18,7 +18,8 @@ interface Message {
 interface AnalysisCoachChatProps {
   module: string;
   analysisContext: {
-    efficiency_score: number;
+    // Phase 51 — `efficiency_score` removed; no fabricated numeric
+    // biomechanical claims are seeded into Coach Chat context.
     feedback: string;
     positives?: string[];
     drills?: Array<{ title: string; [key: string]: any }>;
@@ -81,7 +82,7 @@ export function AnalysisCoachChat({ module, analysisContext }: AnalysisCoachChat
 
   const buildAnalysisContextString = () => {
     const parts: string[] = [];
-    parts.push(`Efficiency Score: ${analysisContext.efficiency_score}/100`);
+    // Phase 51 — never seed fabricated numeric biomechanical claims.
     if (analysisContext.summary?.length) {
       parts.push(`Summary: ${analysisContext.summary.join("; ")}`);
     }

@@ -55,7 +55,7 @@ export function PhysioPostWorkoutBanner() {
           </div>
           <div className="flex-1 min-w-0">
             <p className={cn('text-xs font-semibold mb-0.5', config.text)}>
-              Physio Report • {report.regulation_score}/100
+              Physio Report
             </p>
             <p className="text-xs text-foreground leading-relaxed">{message}</p>
           </div>

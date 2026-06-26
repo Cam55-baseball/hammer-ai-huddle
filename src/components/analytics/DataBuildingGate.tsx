@@ -196,13 +196,7 @@ function EarlyInsights({ sessions }: { sessions: any[] }) {
           <div className="text-xs text-muted-foreground">{topDrill[1]} reps logged</div>
         </div>
       )}
-      {avgGrade && (
-        <div className="bg-accent/30 rounded-lg p-3">
-          <div className="text-xs text-muted-foreground">Avg Quality</div>
-          <div className="font-semibold text-sm">{avgGrade}/100</div>
-          <div className="text-xs text-muted-foreground">Early indicator</div>
-        </div>
-      )}
+      {/* Phase 51 — fabricated "Avg Quality /100" composite removed from athlete progress surface. */}
     </div>
   );
 }

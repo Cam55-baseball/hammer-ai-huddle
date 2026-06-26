@@ -158,11 +158,7 @@ export function VaultMentalWellnessTrendCard({ isLoading: parentLoading }: Vault
               <CardDescription className="text-xs">{t('vault.mentalWellnessTrend.subtitle')}</CardDescription>
             </div>
           </div>
-          {hasAnyData && wellnessScore > 0 && (
-            <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/30">
-              {wellnessScore}/100
-            </Badge>
-          )}
+          {/* Phase 51 — fabricated /100 wellness score removed from athlete badge. */}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -271,12 +267,11 @@ export function VaultMentalWellnessTrendCard({ isLoading: parentLoading }: Vault
               </div>
             </div>
 
-            {/* Wellness Score */}
+            {/* Phase 51 — fabricated /100 wellness summary removed; qualitative label only. */}
             {wellnessScore > 0 && (
               <div className="p-3 bg-background/50 rounded-lg text-center">
                 <p className="text-xs text-muted-foreground">{t('vault.mentalWellnessTrend.wellnessScore')}</p>
-                <p className="text-lg font-bold">{wellnessScore}<span className="text-sm font-normal text-muted-foreground">/100</span></p>
-                <p className="text-xs text-muted-foreground">{getWellnessLabel()}</p>
+                <p className="text-sm font-medium">{getWellnessLabel()}</p>
               </div>
             )}
           </>
