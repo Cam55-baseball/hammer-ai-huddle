@@ -1123,55 +1123,7 @@ export default function AnalyzeVideo() {
 
                   {/* Per-rep video suggestions intentionally removed — Hammer surfaces picks post-session and long-term only. */}
 
-                  {/* The Scorecard - Progress Report */}
-                  {analysis.scorecard && (
-                    <div className="pt-4 border-t space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="show-scorecard" className="text-sm font-medium">
-                            {t('videoAnalysis.showProgressReport')}
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            {t('videoAnalysis.progressReportDescription')}
-                          </p>
-                        </div>
-                        <Switch
-                          id="show-scorecard"
-                          checked={showScorecard}
-                          onCheckedChange={handleScorecardToggle}
-                        />
-                      </div>
-                      
-                      {showScorecard && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            <Label className="text-sm font-medium">{t('videoAnalysis.scorecardFilter')}</Label>
-                            <ToggleGroup 
-                              type="single" 
-                              value={scorecardFilter} 
-                              onValueChange={handleScorecardFilterChange}
-                              size="sm"
-                            >
-                              <ToggleGroupItem value="all" className="text-xs px-3">
-                                {t('videoAnalysis.filterAll')}
-                              </ToggleGroupItem>
-                              <ToggleGroupItem value="improvements" className="text-xs px-3">
-                                {t('videoAnalysis.filterImprovements')}
-                              </ToggleGroupItem>
-                              <ToggleGroupItem value="regressions" className="text-xs px-3">
-                                {t('videoAnalysis.filterRegressions')}
-                              </ToggleGroupItem>
-                            </ToggleGroup>
-                          </div>
-                          <TheScorecard 
-                            scorecard={analysis.scorecard} 
-                            currentScore={analysis.efficiency_score}
-                            displayFilter={scorecardFilter}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Phase 49: TheScorecard removed (LLM-derived score/trend not measurement-backed). */}
 
                   <div className="pt-4 border-t">
                     <p className="text-xs text-muted-foreground/70 leading-relaxed">
@@ -1194,7 +1146,7 @@ export default function AnalyzeVideo() {
                   </div>
 
                 </div>
-                )}
+
               </Card>
             )}
           </div>
