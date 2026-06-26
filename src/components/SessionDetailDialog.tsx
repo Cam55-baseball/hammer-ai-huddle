@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
 import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
-import { TheScorecard } from '@/components/TheScorecard';
+// Phase 49: TheScorecard import removed.
 import {
   Dialog,
   DialogContent,
@@ -24,8 +24,7 @@ import { toast } from 'sonner';
 import { Upload, X, Download, Play, Heart } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
-import { HammerReportCard } from '@/components/report-card/hammer/HammerReportCard';
-import { RecomputeReportCardButton } from '@/components/report-card/hammer/RecomputeReportCardButton';
+// Phase 49: HammerReportCard + RecomputeReportCardButton imports removed.
 
 interface SessionDetailDialogProps {
   session: any;
@@ -520,25 +519,8 @@ export function SessionDetailDialog({
             <div className="space-y-4">
               <h3 className="font-semibold">{t('sessionDetail.analysisResults')}</h3>
 
-              {/* Hammer Report Card — replay-safe, derived from ai_analysis.metrics. */}
-              {(() => {
-                const metrics = (aiAnalysis as { metrics?: Record<string, unknown> | null })?.metrics ?? null;
-                const hasMetrics = !!metrics && Object.keys(metrics).length > 0;
-                if (hasMetrics) {
-                  return (
-                    <HammerReportCard
-                      sport={session.sport}
-                      module={session.module}
-                      analysis={{ metrics } as any}
-                      compact
-                    />
-                  );
-                }
-                if (isOwner && session.id) {
-                  return <RecomputeReportCardButton videoId={session.id} onRecomputed={() => onUpdate()} />;
-                }
-                return null;
-              })()}
+              {/* Phase 49: HammerReportCard + RecomputeReportCardButton removed (no truthful measured outputs). */}
+
 
               {aiAnalysis.feedback && (
                 <div className="space-y-2">
@@ -613,50 +595,7 @@ export function SessionDetailDialog({
                 </div>
               )}
 
-              {/* The Scorecard Progress Report */}
-              {aiAnalysis.scorecard && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="show-scorecard-dialog" className="text-sm font-medium">
-                      {t('sessionDetail.showProgressReport')}
-                    </Label>
-                    <Switch
-                      id="show-scorecard-dialog"
-                      checked={showScorecard}
-                      onCheckedChange={handleScorecardToggle}
-                    />
-                  </div>
-                  
-                  {showScorecard && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <Label className="text-sm font-medium">{t('sessionDetail.scorecardFilter')}</Label>
-                        <ToggleGroup 
-                          type="single" 
-                          value={scorecardFilter} 
-                          onValueChange={handleScorecardFilterChange}
-                          size="sm"
-                        >
-                          <ToggleGroupItem value="all" className="text-xs px-3">
-                            {t('sessionDetail.filterAll')}
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="improvements" className="text-xs px-3">
-                            {t('sessionDetail.filterImprovements')}
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="regressions" className="text-xs px-3">
-                            {t('sessionDetail.filterRegressions')}
-                          </ToggleGroupItem>
-                        </ToggleGroup>
-                      </div>
-                      <TheScorecard 
-                        scorecard={aiAnalysis.scorecard} 
-                        currentScore={session.efficiency_score || 0}
-                        displayFilter={scorecardFilter}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Phase 49: TheScorecard (LLM-derived progress trends) removed. */}
             </div>
           )}
 

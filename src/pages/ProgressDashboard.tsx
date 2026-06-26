@@ -25,7 +25,7 @@ import { DailyOutcomeInlineBanner } from '@/components/identity/DailyOutcomeInli
 import { useMPIScores } from '@/hooks/useMPIScores';
 import { useAIPrompts } from '@/hooks/useAIPrompts';
 import { getGradeLabel } from '@/lib/gradeLabel';
-import { ReportCardTrendStrip } from '@/components/progress/ReportCardTrendStrip';
+// Phase 49: ReportCardTrendStrip import removed.
 import { CommandCenterSection } from '@/components/command/CommandCenterSection';
 import { WeeklyDigestPreview } from '@/components/dashboard/WeeklyDigestPreview';
 import { ForecastPreview } from '@/components/dashboard/ForecastPreview';
@@ -51,13 +51,9 @@ function PracticeIntelligenceCard() {
           <div>
             <h3 className="font-bold text-lg">Practice Intelligence</h3>
             {mpi ? (
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-2xl font-bold">{mpi.adjusted_global_score ?? '—'}</span>
-                <span className="text-sm text-muted-foreground">MPI • {gradeLabel}</span>
-                {mpi.trend_direction === 'rising' && <TrendingUp className="h-4 w-4 text-green-600" />}
-              </div>
+              <p className="text-sm text-muted-foreground mt-1">Practice intelligence based on logged sessions and self-reports.</p>
             ) : (
-              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your MPI score</p>
+              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your practice history.</p>
             )}
           </div>
         </div>
@@ -141,7 +137,7 @@ Confidence: ${snapshot.development_confidence}%
         {/* Always-visible top sections */}
         <NNSuggestionPanel />
         <PracticeIntelligenceCard />
-        <ReportCardTrendStrip module="hitting" title="Hitting report card trend" />
+        {/* Phase 49: ReportCardTrendStrip removed (composite trend not measurement-backed). */}
         <DualStreakDisplay />
         <ActivityAnalytics selectedSport={selectedSport} />
         <LoadDashboard />

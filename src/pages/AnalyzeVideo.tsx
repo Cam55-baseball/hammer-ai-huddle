@@ -21,8 +21,10 @@ import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
-import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
-import { TheScorecard } from "@/components/TheScorecard";
+// Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
+// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper, AnalysisProgressIndicator,
+// TheScorecard) removed from athlete-facing analysis page. Only raw LLM
+// feedback/summary/drills + AnalysisCoachChat + VideoSuggestionsPanel remain.
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
@@ -34,10 +36,6 @@ import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
-import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
-import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
-import { RecomputeReportCardButton } from "@/components/report-card/hammer/RecomputeReportCardButton";
-import { CameraAngleHelper } from "@/components/report-card/hammer/CameraAngleHelper";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -50,7 +48,7 @@ export default function AnalyzeVideo() {
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
-  const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+  // Phase 49: analysisView removed — only detailed (raw) view ships.
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
@@ -747,7 +745,7 @@ export default function AnalyzeVideo() {
         {/* Video Upload Section */}
         {!videoPreview && (
           <div className="space-y-4">
-            <CameraAngleHelper module={module} />
+            {/* Phase 49: CameraAngleHelper removed with report-card surface. */}
             <div className="grid md:grid-cols-2 gap-4">
             {/* Upload Card */}
             <Card className="p-4 sm:p-6 text-center border-dashed border-2">
@@ -945,7 +943,7 @@ export default function AnalyzeVideo() {
 
             {analyzing && (
               <div className="space-y-4">
-                <AnalysisProgressIndicator />
+                {/* Phase 49: AnalysisProgressIndicator removed (gated on report-card surface). */}
                 <AnalysisResultSkeleton />
               </div>
             )}
@@ -976,40 +974,14 @@ export default function AnalyzeVideo() {
               <Card className="p-4 sm:p-6">
                 <div className="mb-6 space-y-4">
                   <h3 className="text-2xl font-bold">{t('videoAnalysis.analysisResults')}</h3>
-                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                  {/* Phase 49: AnalysisToggle + HammerReportCard branch removed. Only raw LLM detail view ships. */}
                 </div>
 
-                {analysisView === "report_card" ? (
-                  <div className="space-y-6">
-                    <HammerReportCard sport={sport} module={module} analysis={analysis as any} />
-
-                    {currentVideoId && (
-                      <RecomputeReportCardButton
-                        videoId={currentVideoId}
-                        onRecomputed={(metrics) =>
-                          setAnalysis((prev) => (prev ? { ...prev, metrics } : prev))
-                        }
-                      />
-                    )}
-
-                    <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
-                      <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
-                        <BookMarked className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
-                        <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
-                      </Button>
-                      <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
-                        <Home className="h-4 w-4 xs:hidden" />
-                        <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
-                        <span className="xs:hidden">{t('navigation.dashboard')}</span>
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
                 <div className="space-y-6">
                   {/* Summary - Key Findings shown first for actionable feedback */}
                   {analysis.summary && analysis.summary.length > 0 && (
                     <div className="p-4 bg-muted/50 rounded-lg border border-border">
+
                       <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.keyFindings')}</h4>
                       <ul className="space-y-2">
                         {analysis.summary.map((point: string, index: number) => (
@@ -1151,55 +1123,7 @@ export default function AnalyzeVideo() {
 
                   {/* Per-rep video suggestions intentionally removed — Hammer surfaces picks post-session and long-term only. */}
 
-                  {/* The Scorecard - Progress Report */}
-                  {analysis.scorecard && (
-                    <div className="pt-4 border-t space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="show-scorecard" className="text-sm font-medium">
-                            {t('videoAnalysis.showProgressReport')}
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            {t('videoAnalysis.progressReportDescription')}
-                          </p>
-                        </div>
-                        <Switch
-                          id="show-scorecard"
-                          checked={showScorecard}
-                          onCheckedChange={handleScorecardToggle}
-                        />
-                      </div>
-                      
-                      {showScorecard && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            <Label className="text-sm font-medium">{t('videoAnalysis.scorecardFilter')}</Label>
-                            <ToggleGroup 
-                              type="single" 
-                              value={scorecardFilter} 
-                              onValueChange={handleScorecardFilterChange}
-                              size="sm"
-                            >
-                              <ToggleGroupItem value="all" className="text-xs px-3">
-                                {t('videoAnalysis.filterAll')}
-                              </ToggleGroupItem>
-                              <ToggleGroupItem value="improvements" className="text-xs px-3">
-                                {t('videoAnalysis.filterImprovements')}
-                              </ToggleGroupItem>
-                              <ToggleGroupItem value="regressions" className="text-xs px-3">
-                                {t('videoAnalysis.filterRegressions')}
-                              </ToggleGroupItem>
-                            </ToggleGroup>
-                          </div>
-                          <TheScorecard 
-                            scorecard={analysis.scorecard} 
-                            currentScore={analysis.efficiency_score}
-                            displayFilter={scorecardFilter}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Phase 49: TheScorecard removed (LLM-derived score/trend not measurement-backed). */}
 
                   <div className="pt-4 border-t">
                     <p className="text-xs text-muted-foreground/70 leading-relaxed">
@@ -1222,7 +1146,7 @@ export default function AnalyzeVideo() {
                   </div>
 
                 </div>
-                )}
+
               </Card>
             )}
           </div>

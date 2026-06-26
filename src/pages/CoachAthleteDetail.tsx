@@ -10,15 +10,12 @@ import { ConfidencePill } from "@/components/command/ConfidencePill";
 import { MissingnessChip } from "@/components/command/MissingnessChip";
 import { ReplayDrilldownCTA } from "@/components/coach-console/ReplayDrilldownCTA";
 import { PieV2CoachPanel } from "@/components/coach/PieV2CoachPanel";
-import { PieV2HammerBriefPanel } from "@/components/coach/PieV2HammerBriefPanel";
+// Phase 49: PieV2HammerBriefPanel import removed (no longer mounted).
 import { PieV2RecruitingCard } from "@/components/recruiting/PieV2RecruitingCard";
 import { HittingRecruitingCard } from "@/components/recruiting/HittingRecruitingCard";
 import { RecruitingVisibilityGate } from "@/components/recruiting/RecruitingVisibilityGate";
 import { HittingDoctrineBlock } from "@/components/hitting/HittingDoctrineBlock";
-import { UhrcReportCard } from "@/components/report-card/UhrcReportCard";
-import { HammerReportCardAggregate } from "@/components/report-card/HammerReportCardAggregate";
-import { ReportCardTrendStrip } from "@/components/progress/ReportCardTrendStrip";
-import { buildUhrcReport } from "@/lib/uhrc/buildReport";
+// Phase 49: UhrcReportCard, HammerReportCardAggregate, ReportCardTrendStrip, buildUhrcReport imports removed.
 import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
@@ -183,49 +180,9 @@ export default function CoachAthleteDetail() {
           </div>
         )}
 
-        {athleteId && (
-          <UhrcReportCard
-            report={buildUhrcReport({
-              athlete_id: athleteId,
-              disciplines: ["pitching", "hitting"],
-              pieV2Latest: pieV2Latest ?? undefined,
-              hieSnapshot: hittingDoctrineSnap
-                ? {
-                    id: (hittingDoctrineSnap as any).id,
-                    computed_at: (hittingDoctrineSnap as any).computed_at,
-                    hitting_doctrine: (hittingDoctrineSnap as any).hitting_doctrine ?? null,
-                    decision_speed_index: (hittingDoctrineSnap as any).decision_speed_index ?? null,
-                  }
-                : null,
-            })}
-          />
-        )}
+        {/* Phase 49: UhrcReportCard, PieV2 hammer-brief, HammerReportCardAggregate, and ReportCardTrendStrip removed (composite/aggregate scores not measurement-backed). PieV2CoachPanel retained (coach-only diagnostic, not athlete-facing). */}
         {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
-        {pieV2Latest && <PieV2HammerBriefPanel aggregate={pieV2Latest} />}
 
-        {/* Hammer Report Card — last-30 aggregate + trend strip per discipline.
-            Replay-safe: derived from ai_analysis.metrics. Read-only for coach. */}
-        {athleteId && (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <HammerReportCardAggregate
-              module="hitting"
-              userIdOverride={athleteId}
-              title="Hitting — last 30 sessions"
-            />
-            <HammerReportCardAggregate
-              module="pitching"
-              userIdOverride={athleteId}
-              title="Pitching — last 30 sessions"
-            />
-          </div>
-        )}
-        {athleteId && (
-          <ReportCardTrendStrip
-            module="hitting"
-            userIdOverride={athleteId}
-            title="Hitting report card — last 8 sessions"
-          />
-        )}
 
         {/* Hitting doctrine (P1-P4) — same JSON as athlete surface */}
         <Card>
