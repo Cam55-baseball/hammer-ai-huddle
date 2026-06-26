@@ -1,59 +1,49 @@
 
-# Phase 49 — Release-1 Product Lock (Plan)
+# Phase 50 — Complete Release Verification Authority
 
-Single implementation phase. Produces athlete-safe Release-1 by **deleting** every surface that displays a "measured" output the engines cannot honestly produce today, plus one document: `.lovable/phase-49-release-product-lock.md`.
+This plan executes every automatable verification required to answer one question: *Can Hammers Modality be honestly released to athletes today?* No new architecture, no new measurement work, no new docs beyond the final verification report.
 
-No new components. No placeholders. No "coming soon." If a surface cannot tell the truth today, it is removed (component unmounted, route gated, import dropped).
+## Execution Sequence
 
----
+### 1. Static Verification (no browser)
+- `bunx tsgo --noEmit` — typecheck.
+- `bunx vitest run --reporter=dot` — full unit/integration suite.
+- Repository-wide `rg` sweeps for:
+  - Athlete-facing claim strings: `report card`, `your tempo`, `your score`, `your grade`, `composite`, `ranking`, `trend`, `measured`, `MPI`, `/100`, letter grades in JSX.
+  - Mount-point regressions: `HammerReportCard`, `UhrcReportCard`, `HammerReportCardAggregate`, `ReportCardTrendStrip`, `TheScorecard`, `RecomputeReportCardButton`, `AnalysisToggle`, `AnalysisProgressIndicator`, `CameraAngleHelper`, `PieV2CoachPanel` (athlete surfaces only).
+  - Orphan routes: enumerate every `<Route>` in `src/App.tsx`, cross-check against `src/pages/`.
+- Diff Phase-49 removal set vs. current tree to confirm no re-introductions.
 
-## What gets removed (REMOVE class)
+### 2. Runtime Verification (Playwright, headless Chromium, viewport 1280×1800)
+- Detect dev-server port; start if not running.
+- Restore Supabase session from `LOVABLE_BROWSER_SUPABASE_*` env (status check first). If `signed_out`/`external_unmanaged`/`no_supabase`, document and walk public routes only.
+- Crawl every athlete route discovered in step 1:
+  `/`, `/athlete`, `/progress`, `/practice`, `/calendar`, `/daily-plan`, `/hammer`, `/analyze`, `/videos`, `/vault`, `/settings`, `/coach-share/*`, plus any report-card routes still registered.
+- Per route capture: screenshot, console errors, failed network requests, visible/hidden/disabled components, empty/loading/error states, any misleading copy.
 
-These render composites/pillars/wins/leaks/trends derived from LLM scoring or never-populated `video_metric_runs`. All are unmounted from athlete surfaces.
+### 3. Video Execution
+- Inventory `src/`, `public/`, `tests/`, `e2e/`, `supabase/` for `.mp4|.mov|.webm` fixtures.
+- If a usable clip exists: drive `/analyze`, upload, run full analysis, screenshot every state (pre-upload, progress, results, drills, chat).
+- If none exists: state that explicitly and produce a precise recording spec (sport, skill, angle, fps, duration, framing, lighting, file size, expected movement) sized so one clip satisfies the BP `tempo_sec` path end-to-end.
 
-1. **Per-video Hammer Report Card** — `HammerReportCard` mount inside `src/pages/AnalyzeVideo.tsx` (line ~984), plus the `AnalysisToggle` that gates report-card vs detailed view, `RecomputeReportCardButton`, `CameraAngleHelper`, and `AnalysisProgressIndicator` (report-card progress). Analysis page keeps: video player, raw LLM `feedback`/`summary`/`drills` text, `AnalysisCoachChat`, `VideoSuggestionsPanel`, save-to-library, delete.
-2. **Hitting report-card trend strip** — `<ReportCardTrendStrip module="hitting" />` mount in `src/pages/ProgressDashboard.tsx` (line 144).
-3. **Athlete-side UHRC section** — file `src/components/report-card/UhrcAthleteSection.tsx` already unmounted from `AthleteCommand` and `ProgressDashboard`; delete the file and its stale comment lines so no future route can re-mount it.
-4. **Coach-facing measured report cards (athletes view via shared links)** — unmount `<UhrcReportCard>` and both `<HammerReportCardAggregate>` blocks in `src/pages/CoachAthleteDetail.tsx` (lines 187, 210, 215). Coach still sees self-reported MPI, PIE V2 panels, recruiting card, notes.
-5. **MPI Practice Intelligence card** numeric grade chip — keep card shell but remove the `mpi.adjusted_global_score` number + grade label in `PracticeIntelligenceCard` (`ProgressDashboard.tsx`). The chip implies a measured global grade. Replace inner body with "Log sessions to build practice history" copy (curriculum-truthful).
-6. **Per-analysis report-card aggregate visuals** — `ShareCardExport`, `FoilGradeCard`, `ReportCardGradeRibbon`, `ReportCardTile`, `CategoryPanel`, `BhCategoryPanels`, `UhrcDetailedAnalysis`, `HammerReportCardAggregate`, `HammerReportCard` — delete the files (dead after #1/#3/#4) so nothing in the repo can import them back.
-7. **Delta trend chart** — `src/components/analytics/DeltaTrendChart.tsx` plots player vs coach grade; self-reported, but labeled "Trend" alongside removed report-card surfaces. Audit usages with `rg`; if only mounted next to removed surfaces, delete. If used in coach-only console with self-reported inputs, keep (SAFE) and leave a note in the doc.
+### 4. Defect Classification
+Every observed issue tagged BLOCKER / HIGH / MEDIUM / LOW with: file, route, repro, athlete impact, release impact.
 
-## What stays (SAFE class)
+### 5. Final Report
+Write `.lovable/phase-50-complete-release-verification.md` containing:
+- Build/test results (raw exit codes + summaries).
+- Per-route evidence table with screenshot paths under `/tmp/browser/phase-50/`.
+- Claim-string violation table.
+- Orphan/mount regression table.
+- Video execution log or recording spec.
+- Defect list.
+- `REQUIRED HUMAN ACTIONS` section only for items proven non-automatable.
+- Final determination: **YES — PUBLIC**, **YES — LIMITED BETA**, or **NO — BLOCKED**, justified solely by evidence captured in this phase.
 
-Self-reported / completed / static / conversational surfaces are untouched:
+## Non-Goals
+- No code changes except fixing build/typecheck breakage that blocks verification itself.
+- No new measurement engines, no new UI, no doctrine documents.
+- No planning beyond the determination.
 
-- `DailyOutcomeInlineBanner`, `DualStreakDisplay`, `ActivityAnalytics`, `LoadDashboard`, `NNSuggestionPanel`
-- HIE cards on Progress: `PlayerSnapshotCard`, `WeaknessClusterCard`, `PrescriptiveActionsCard`, `ReadinessCard`, `ReadinessBreakdownCard`, `RiskAlertsCard`, `AskHammerPanel`, `SmartWeekPlan`, `ProofCard`, `ProProbabilityCard`, `HeatMapDashboard` — these consume self-reported wellness/load and curriculum logic, not measured biomechanics.
-- `CommandCenterSection`, `HammerOnboardingChat`, `HammerDailyPlan`, `HammerChat`, `RecentEventsPreview` on `AthleteCommand`.
-- Vault, curriculum, calendar, practice logging, video upload+raw-LLM coaching, video library.
-
-## Coaching-statement audit
-
-`HammerChat` / `AskHammerPanel` / `AnalysisCoachChat` system prompts: append a constitutional clause forbidding the model from quoting any numeric tempo/score/pillar/composite/grade and from claiming "your measured X is Y". Sweep `src/lib/prompts/**` (and any `aiPromptRules` files) for tokens `tempo_sec`, `composite`, `pillar`, `biggest_leak`, `biggest_win`, `measured`, `grade`, `score_100` inside instructions that produce athlete-visible copy; rewrite to reference only self-report, completed sessions, uploaded videos, curriculum.
-
-## Crawl + verification
-
-After the edits, run:
-
-```bash
-rg -n "HammerReportCard|UhrcReportCard|UhrcAthleteSection|HammerReportCardAggregate|ReportCardTrendStrip|ReportCardGradeRibbon|CategoryPanel|BhCategoryPanels|UhrcDetailedAnalysis|FoilGradeCard|ShareCardExport|RecomputeReportCardButton|CameraAngleHelper|AnalysisProgressIndicator" src
-rg -n "measured (biomech|grade|score|ranking|trend)" src
-rg -ni "your tempo|your composite|your pillar|your report card|biggest leak|biggest win" src
-```
-
-Each call must return zero athlete-visible hits. Build + tests must pass.
-
-## Deliverable doc
-
-`.lovable/phase-49-release-product-lock.md` contains, in order:
-
-1. Files deleted (full list).
-2. Files edited with line-level summary.
-3. Routes / mounts removed (athlete + coach side).
-4. SAFE inventory (athlete surfaces that remain, what they read from).
-5. Coaching-prompt sweep result.
-6. Crawl verification output (the three `rg` commands + their post-edit results).
-7. **Final Determination: YES or NO** to "Can this application be honestly released to the public without misleading athletes?" — supported only by the work above.
-
-No roadmap, no proposals, no future plans in the document.
+## Deliverable
+A single doc — `.lovable/phase-50-complete-release-verification.md` — plus the screenshot/log artifacts it references, ending with one of the three allowed answers.
