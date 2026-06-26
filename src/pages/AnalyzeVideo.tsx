@@ -943,7 +943,7 @@ export default function AnalyzeVideo() {
 
             {analyzing && (
               <div className="space-y-4">
-                <AnalysisProgressIndicator />
+                {/* Phase 49: AnalysisProgressIndicator removed (gated on report-card surface). */}
                 <AnalysisResultSkeleton />
               </div>
             )}
@@ -974,40 +974,14 @@ export default function AnalyzeVideo() {
               <Card className="p-4 sm:p-6">
                 <div className="mb-6 space-y-4">
                   <h3 className="text-2xl font-bold">{t('videoAnalysis.analysisResults')}</h3>
-                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                  {/* Phase 49: AnalysisToggle + HammerReportCard branch removed. Only raw LLM detail view ships. */}
                 </div>
 
-                {analysisView === "report_card" ? (
-                  <div className="space-y-6">
-                    <HammerReportCard sport={sport} module={module} analysis={analysis as any} />
-
-                    {currentVideoId && (
-                      <RecomputeReportCardButton
-                        videoId={currentVideoId}
-                        onRecomputed={(metrics) =>
-                          setAnalysis((prev) => (prev ? { ...prev, metrics } : prev))
-                        }
-                      />
-                    )}
-
-                    <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
-                      <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
-                        <BookMarked className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
-                        <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
-                      </Button>
-                      <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
-                        <Home className="h-4 w-4 xs:hidden" />
-                        <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
-                        <span className="xs:hidden">{t('navigation.dashboard')}</span>
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
                 <div className="space-y-6">
                   {/* Summary - Key Findings shown first for actionable feedback */}
                   {analysis.summary && analysis.summary.length > 0 && (
                     <div className="p-4 bg-muted/50 rounded-lg border border-border">
+
                       <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.keyFindings')}</h4>
                       <ul className="space-y-2">
                         {analysis.summary.map((point: string, index: number) => (
