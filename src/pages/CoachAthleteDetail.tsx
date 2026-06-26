@@ -15,10 +15,7 @@ import { PieV2RecruitingCard } from "@/components/recruiting/PieV2RecruitingCard
 import { HittingRecruitingCard } from "@/components/recruiting/HittingRecruitingCard";
 import { RecruitingVisibilityGate } from "@/components/recruiting/RecruitingVisibilityGate";
 import { HittingDoctrineBlock } from "@/components/hitting/HittingDoctrineBlock";
-import { UhrcReportCard } from "@/components/report-card/UhrcReportCard";
-import { HammerReportCardAggregate } from "@/components/report-card/HammerReportCardAggregate";
-import { ReportCardTrendStrip } from "@/components/progress/ReportCardTrendStrip";
-import { buildUhrcReport } from "@/lib/uhrc/buildReport";
+// Phase 49: UhrcReportCard, HammerReportCardAggregate, ReportCardTrendStrip, buildUhrcReport imports removed.
 import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
