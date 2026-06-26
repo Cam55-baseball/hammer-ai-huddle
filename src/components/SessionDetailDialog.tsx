@@ -24,8 +24,7 @@ import { toast } from 'sonner';
 import { Upload, X, Download, Play, Heart } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
-import { HammerReportCard } from '@/components/report-card/hammer/HammerReportCard';
-import { RecomputeReportCardButton } from '@/components/report-card/hammer/RecomputeReportCardButton';
+// Phase 49: HammerReportCard + RecomputeReportCardButton imports removed.
 
 interface SessionDetailDialogProps {
   session: any;
