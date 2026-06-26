@@ -25,7 +25,7 @@ import { DailyOutcomeInlineBanner } from '@/components/identity/DailyOutcomeInli
 import { useMPIScores } from '@/hooks/useMPIScores';
 import { useAIPrompts } from '@/hooks/useAIPrompts';
 import { getGradeLabel } from '@/lib/gradeLabel';
-import { ReportCardTrendStrip } from '@/components/progress/ReportCardTrendStrip';
+// Phase 49: ReportCardTrendStrip import removed.
 import { CommandCenterSection } from '@/components/command/CommandCenterSection';
 import { WeeklyDigestPreview } from '@/components/dashboard/WeeklyDigestPreview';
 import { ForecastPreview } from '@/components/dashboard/ForecastPreview';
