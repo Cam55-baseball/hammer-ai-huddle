@@ -21,8 +21,10 @@ import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
-import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
-import { TheScorecard } from "@/components/TheScorecard";
+// Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
+// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper, AnalysisProgressIndicator,
+// TheScorecard) removed from athlete-facing analysis page. Only raw LLM
+// feedback/summary/drills + AnalysisCoachChat + VideoSuggestionsPanel remain.
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
@@ -34,10 +36,6 @@ import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
-import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
-import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
-import { RecomputeReportCardButton } from "@/components/report-card/hammer/RecomputeReportCardButton";
-import { CameraAngleHelper } from "@/components/report-card/hammer/CameraAngleHelper";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
