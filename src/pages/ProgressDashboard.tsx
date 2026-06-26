@@ -137,7 +137,7 @@ Confidence: ${snapshot.development_confidence}%
         {/* Always-visible top sections */}
         <NNSuggestionPanel />
         <PracticeIntelligenceCard />
-        <ReportCardTrendStrip module="hitting" title="Hitting report card trend" />
+        {/* Phase 49: ReportCardTrendStrip removed (composite trend not measurement-backed). */}
         <DualStreakDisplay />
         <ActivityAnalytics selectedSport={selectedSport} />
         <LoadDashboard />
