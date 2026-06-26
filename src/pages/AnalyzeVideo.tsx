@@ -48,7 +48,7 @@ export default function AnalyzeVideo() {
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
-  const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+  // Phase 49: analysisView removed — only detailed (raw) view ships.
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
