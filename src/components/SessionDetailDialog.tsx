@@ -520,25 +520,8 @@ export function SessionDetailDialog({
             <div className="space-y-4">
               <h3 className="font-semibold">{t('sessionDetail.analysisResults')}</h3>
 
-              {/* Hammer Report Card — replay-safe, derived from ai_analysis.metrics. */}
-              {(() => {
-                const metrics = (aiAnalysis as { metrics?: Record<string, unknown> | null })?.metrics ?? null;
-                const hasMetrics = !!metrics && Object.keys(metrics).length > 0;
-                if (hasMetrics) {
-                  return (
-                    <HammerReportCard
-                      sport={session.sport}
-                      module={session.module}
-                      analysis={{ metrics } as any}
-                      compact
-                    />
-                  );
-                }
-                if (isOwner && session.id) {
-                  return <RecomputeReportCardButton videoId={session.id} onRecomputed={() => onUpdate()} />;
-                }
-                return null;
-              })()}
+              {/* Phase 49: HammerReportCard + RecomputeReportCardButton removed (no truthful measured outputs). */}
+
 
               {aiAnalysis.feedback && (
                 <div className="space-y-2">
