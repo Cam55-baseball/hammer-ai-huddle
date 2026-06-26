@@ -745,7 +745,7 @@ export default function AnalyzeVideo() {
         {/* Video Upload Section */}
         {!videoPreview && (
           <div className="space-y-4">
-            <CameraAngleHelper module={module} />
+            {/* Phase 49: CameraAngleHelper removed with report-card surface. */}
             <div className="grid md:grid-cols-2 gap-4">
             {/* Upload Card */}
             <Card className="p-4 sm:p-6 text-center border-dashed border-2">
