@@ -106,9 +106,7 @@ export function PhysioNutritionSuggestions() {
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Leaf className="h-4 w-4 text-primary" />
           Physio Nutrition Insights
-          <span className="ml-auto text-xs font-normal text-muted-foreground">
-            Score: {regulationScore}/100
-          </span>
+          {/* Phase 51 — numeric /100 score removed from athlete-facing surface. */}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

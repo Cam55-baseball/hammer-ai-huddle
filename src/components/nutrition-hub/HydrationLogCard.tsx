@@ -113,7 +113,7 @@ export function HydrationLogCard({ log, onDelete, compact = false }: Props) {
           </div>
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>Magnesium: {Math.round(Number(log.magnesium_mg || 0))}mg</span>
-            <span>Sugar Score: {sugarScoreValue}/100</span>
+            {/* Phase 51 — fabricated /100 sugar score removed from athlete surface. */}
           </div>
           <p className="text-[11px] leading-snug text-foreground/80">{profile.insight}</p>
         </>

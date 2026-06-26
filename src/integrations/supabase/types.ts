@@ -11508,7 +11508,7 @@ export type Database = {
           landmark_model_id: string
           landmark_model_version: string
           landmarks_sha256_hex: string
-          landmarks_storage_path: string
+          landmarks_storage_path: string | null
           mean_visibility: number | null
           updated_at: string
           video_id: string
@@ -11522,7 +11522,7 @@ export type Database = {
           landmark_model_id: string
           landmark_model_version: string
           landmarks_sha256_hex: string
-          landmarks_storage_path: string
+          landmarks_storage_path?: string | null
           mean_visibility?: number | null
           updated_at?: string
           video_id: string
@@ -11536,7 +11536,7 @@ export type Database = {
           landmark_model_id?: string
           landmark_model_version?: string
           landmarks_sha256_hex?: string
-          landmarks_storage_path?: string
+          landmarks_storage_path?: string | null
           mean_visibility?: number | null
           updated_at?: string
           video_id?: string

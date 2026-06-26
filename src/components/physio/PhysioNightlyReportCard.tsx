@@ -120,9 +120,7 @@ export function PhysioNightlyReportCard() {
           <div className="flex items-center gap-2">
             <div className={cn('w-3 h-3 rounded-full animate-pulse', config.dot)} />
             <span className="font-black text-sm text-foreground">{config.label}</span>
-            <span className={cn('px-2 py-0.5 rounded-full border text-xs font-mono font-bold', config.badge)}>
-              {regulationScore}/100
-            </span>
+            {/* Phase 51 — numeric /100 score removed; qualitative band only. */}
           </div>
           <Activity className="h-5 w-5 text-foreground/70" />
         </div>
@@ -158,7 +156,7 @@ export function PhysioNightlyReportCard() {
                   style={{ height: `${score ?? 0}%` }}
                 />
               </div>
-              <span className="text-xs text-foreground font-bold tabular-nums">{score ?? '?'}</span>
+              {/* Phase 51 — per-component numeric value removed; bar band remains. */}
             </div>
           ))}
         </div>

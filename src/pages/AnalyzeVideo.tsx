@@ -84,6 +84,13 @@ export default function AnalyzeVideo() {
   } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+  // Phase 51 — persisted deterministic tempo (single source of truth from
+  // `video_metric_runs`). Either a numeric `value` or a canonical missingness
+  // reason — never a fabricated default.
+  const [persistedTempo, setPersistedTempo] = useState<
+    | { value: number | null; missing_reason: string | null; evidence_sha256_hex: string }
+    | null
+  >(null);
   const [playbackRate, setPlaybackRate] = useState<string>(() => {
     return localStorage.getItem('videoPlaybackRate') || '1';
   });
@@ -507,10 +514,15 @@ export default function AnalyzeVideo() {
 
       setCurrentVideoId(videoData.id);
 
-      // Phase 42B — persist real landmark run for the proof packet.
+      // Phase 51 — persist the full deterministic-tempo lineage chain
+      // (landmark_run → event_run → metric_run → analysis_run) so the
+      // value (or its canonical missingness reason) is retrievable from
+      // `video_metric_runs` after the upload completes. No fabrication:
+      // if D-POSE produced no usable anchors, the canonical missingness
+      // reason is what gets persisted and rendered.
       if (poseRun && tempoRun) {
         try {
-          const { error: landmarkErr } = await supabase
+          const { data: landmarkRow, error: landmarkErr } = await (supabase
             .from("video_landmark_runs")
             .insert([{
               video_id: videoData.id,
@@ -522,7 +534,7 @@ export default function AnalyzeVideo() {
               landmarks_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
               mean_visibility: poseRun.mean_visibility,
               diagnostics: {
-                phase: "42B",
+                phase: "51",
                 frames_with_pose: poseRun.frames_with_pose,
                 evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
                 cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
@@ -532,14 +544,98 @@ export default function AnalyzeVideo() {
                 front_foot_strike_frame_index: tempoRun.evidence.anchors.front_foot_strike.frame_index,
                 landmark_sample_first_frame: poseRun.rows[0]?.landmarks ?? [],
               },
-            }] as never);
-          if (landmarkErr) {
+            }] as never)
+            .select("id")
+            .single() as unknown as Promise<{ data: { id: string } | null; error: { message: string } | null }>);
+          if (landmarkErr || !landmarkRow) {
             console.error('[D-POSE] landmark run persistence failed:', landmarkErr);
           } else {
-            console.log('[D-POSE] persisted video_landmark_runs row for video', videoData.id);
+            console.log('[D-POSE] persisted video_landmark_runs row', landmarkRow.id);
+
+            const detectorVersion = tempoRun.evidence.engine_version.detector;
+            const metricEngineVersion = tempoRun.evidence.engine_version.metric_engine;
+
+            const { data: eventRow, error: eventErr } = await (supabase
+              .from("video_event_runs")
+              .insert([{
+                video_id: videoData.id,
+                landmark_run_id: landmarkRow.id,
+                detector_version: detectorVersion,
+                events_jsonb: {
+                  peak_leg_lift: tempoRun.evidence.anchors.peak_leg_lift,
+                  front_foot_strike: tempoRun.evidence.anchors.front_foot_strike,
+                },
+                events_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+              }] as never)
+              .select("id")
+              .single() as unknown as Promise<{ data: { id: string } | null; error: { message: string } | null }>);
+
+            if (eventErr || !eventRow) {
+              console.error('[TEMPO] event run persistence failed:', eventErr);
+            } else {
+              const { data: metricRow, error: metricErr } = await (supabase
+                .from("video_metric_runs")
+                .insert([{
+                  video_id: videoData.id,
+                  landmark_run_id: landmarkRow.id,
+                  event_run_id: eventRow.id,
+                  metric_engine_version: metricEngineVersion,
+                  metrics_jsonb: {
+                    tempo_sec: {
+                      value: tempoRun.metric.value,
+                      missingness: tempoRun.metric.missingness,
+                    },
+                    evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+                    cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
+                  },
+                  metrics_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
+                }] as never)
+                .select("id")
+                .single() as unknown as Promise<{ data: { id: string } | null; error: { message: string } | null }>);
+
+              if (metricErr || !metricRow) {
+                console.error('[TEMPO] metric run persistence failed:', metricErr);
+              } else {
+                console.log('[TEMPO] persisted video_metric_runs row', metricRow.id);
+
+                const { error: analysisErr } = await (supabase
+                  .from("video_analysis_runs")
+                  .insert([{
+                    video_id: videoData.id,
+                    requested_by: user.id,
+                    cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
+                    cache_hit: false,
+                    video_sha256_hex: probed.sha256_hex,
+                    landmark_model_version: poseRun.landmark_producer_version,
+                    detector_version: detectorVersion,
+                    metric_engine_version: metricEngineVersion,
+                    fps_true: probed.fps_true,
+                    landmark_run_id: landmarkRow.id,
+                    event_run_id: eventRow.id,
+                    metric_run_id: metricRow.id,
+                    outcome: "ok",
+                  }] as never) as unknown as Promise<{ error: { message: string } | null }>);
+                if (analysisErr) {
+                  console.error('[TEMPO] analysis run persistence failed:', analysisErr);
+                }
+
+                // Read-back from canonical table (no client state shortcut).
+                const { data: readback } = await (supabase
+                  .from("video_metric_runs")
+                  .select("metrics_jsonb")
+                  .eq("id", metricRow.id)
+                  .single() as unknown as Promise<{ data: { metrics_jsonb: { tempo_sec?: { value: number | null; missingness?: { missing_reason?: string } }; evidence_sha256_hex?: string } } | null }>);
+                const m = readback?.metrics_jsonb?.tempo_sec;
+                setPersistedTempo({
+                  value: m?.value ?? null,
+                  missing_reason: m?.missingness?.missing_reason ?? null,
+                  evidence_sha256_hex: readback?.metrics_jsonb?.evidence_sha256_hex ?? tempoRun.evidence.evidence_sha256_hex,
+                });
+              }
+            }
           }
         } catch (e) {
-          console.error('[D-POSE] landmark run persistence threw:', e);
+          console.error('[TEMPO] persistence chain threw:', e);
         }
       }
       
@@ -996,6 +1092,32 @@ export default function AnalyzeVideo() {
                       </ul>
                     </div>
                   )}
+
+                  {/* Phase 51 — deterministic tempo readback, read directly
+                      from `video_metric_runs`. Shows the canonical missingness
+                      reason (no fabricated default) when D-POSE could not
+                      anchor the swing/pitch. Only mounted for BP (pitching). */}
+                  {persistedTempo && module === 'pitching' && (
+                    <div className="p-4 rounded-lg border border-border bg-background">
+                      <h4 className="text-lg font-semibold mb-1">Tempo (deterministic)</h4>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Measured from your video by the on-device pose engine. No estimation.
+                      </p>
+                      {persistedTempo.value != null ? (
+                        <p className="text-2xl font-bold tabular-nums">
+                          {persistedTempo.value.toFixed(2)}<span className="text-sm font-normal text-muted-foreground"> sec</span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Could not be measured from this clip ({persistedTempo.missing_reason ?? 'no_signal'}). No value is shown.
+                        </p>
+                      )}
+                      <p className="mt-2 text-[10px] text-muted-foreground/70 font-mono break-all">
+                        evidence sha256: {persistedTempo.evidence_sha256_hex.slice(0, 16)}…
+                      </p>
+                    </div>
+                  )}
+
                   
                   <div>
                     <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.detailedAnalysis')}</h4>
@@ -1113,7 +1235,7 @@ export default function AnalyzeVideo() {
                   <AnalysisCoachChat
                     module={module || 'hitting'}
                     analysisContext={{
-                      efficiency_score: analysis.efficiency_score,
+                      // Phase 51 — no fabricated numeric biomechanical claim seeded.
                       feedback: analysis.feedback,
                       positives: analysis.positives,
                       drills: analysis.drills,
