@@ -12,7 +12,7 @@ import {
   Activity, Zap, Heart
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { HammerReportCardAggregate } from '@/components/report-card/HammerReportCardAggregate';
+// Phase 49: HammerReportCardAggregate import removed.
 
 interface VaultRecap {
   id: string;
