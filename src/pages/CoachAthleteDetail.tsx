@@ -10,7 +10,7 @@ import { ConfidencePill } from "@/components/command/ConfidencePill";
 import { MissingnessChip } from "@/components/command/MissingnessChip";
 import { ReplayDrilldownCTA } from "@/components/coach-console/ReplayDrilldownCTA";
 import { PieV2CoachPanel } from "@/components/coach/PieV2CoachPanel";
-import { PieV2HammerBriefPanel } from "@/components/coach/PieV2HammerBriefPanel";
+// Phase 49: PieV2HammerBriefPanel import removed (no longer mounted).
 import { PieV2RecruitingCard } from "@/components/recruiting/PieV2RecruitingCard";
 import { HittingRecruitingCard } from "@/components/recruiting/HittingRecruitingCard";
 import { RecruitingVisibilityGate } from "@/components/recruiting/RecruitingVisibilityGate";
