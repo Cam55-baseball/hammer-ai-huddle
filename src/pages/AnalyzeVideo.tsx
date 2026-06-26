@@ -315,6 +315,42 @@ export default function AnalyzeVideo() {
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user) return;
 
+    // Phase 52 — pre-upload session assertion. RLS on `videos` requires
+    // `auth.uid() = user_id`; if the Supabase client has no live session
+    // (expired token, preview-origin session drift, race with auth restore),
+    // the insert silently fails with "new row violates row-level security
+    // policy". Verify the live session matches `useAuth().user` BEFORE any
+    // storage upload or DB write so the failure mode is explicit.
+    const { data: sessionCheck, error: sessionErr } = await supabase.auth.getSession();
+    const liveSession = sessionCheck?.session ?? null;
+    console.log('[upload] auth check', {
+      useAuthUserId: user.id,
+      liveSessionUserId: liveSession?.user?.id ?? null,
+      hasAccessToken: !!liveSession?.access_token,
+      sessionErr: sessionErr?.message ?? null,
+    });
+    if (!liveSession?.user?.id) {
+      toast.error(
+        t(
+          'videoAnalysis.sessionExpired',
+          'Your session expired. Please sign in again to upload.'
+        )
+      );
+      navigate('/auth', { replace: true });
+      return;
+    }
+    if (liveSession.user.id !== user.id) {
+      toast.error(
+        t(
+          'videoAnalysis.sessionMismatch',
+          'Sign-in mismatch detected. Please sign in again.'
+        )
+      );
+      await supabase.auth.signOut();
+      navigate('/auth', { replace: true });
+      return;
+    }
+
     setUploading(true);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
@@ -450,7 +486,16 @@ export default function AnalyzeVideo() {
         .from('videos')
         .upload(fileName, videoFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('[upload] storage upload failed', uploadError);
+        toast.error(
+          t(
+            'videoAnalysis.storageUploadFailed',
+            `Video upload to storage failed: ${uploadError.message}`
+          )
+        );
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('videos')
@@ -509,7 +554,20 @@ export default function AnalyzeVideo() {
         .select()
         .single();
 
-      if (videoError) throw videoError;
+      if (videoError) {
+        console.error('[upload] videos insert failed', videoError);
+        toast.error(
+          t(
+            'videoAnalysis.videosInsertFailed',
+            `Could not create video record: ${videoError.message}${
+              (videoError as any)?.code === '42501'
+                ? ' — your sign-in session may have expired. Please sign in again.'
+                : ''
+            }`
+          )
+        );
+        throw videoError;
+      }
 
 
       setCurrentVideoId(videoData.id);

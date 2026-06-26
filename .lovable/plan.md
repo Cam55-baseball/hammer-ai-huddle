@@ -1,52 +1,47 @@
-# Phase 51 — Release Blocker Elimination Plan
+## Phase 52 — Video Analysis Restoration Plan
 
-Three Phase 50 blockers, three surgical fixes, one verification doc. No new architecture.
+### Root cause hypothesis (to confirm during execution)
 
-## Blocker 1 — Wire `tempo_sec` end-to-end
+DB-level facts gathered:
+- `videos` INSERT policy is correct: `WITH CHECK (auth.uid() = user_id)`.
+- `videos` storage bucket exists and is public with a correct authenticated-INSERT policy keyed on `auth.uid()` folder.
+- `AnalyzeVideo.tsx` sets `user_id: user.id` from `useAuth()` and uploads to `${user.id}/...`.
 
-**Trace:** `AnalyzeVideo.tsx` already calls `runPoseInference` + `toAnchorFrames` (Phase 42B). It does NOT call `runTempoPipeline`, and the resulting evidence is never persisted to `video_metric_runs` / `video_analysis_runs`.
+If the storage upload at line 449 succeeded but the `videos` insert failed RLS, then at the moment of the DB call either:
+1. **Session was not present at the Supabase client** (`auth.uid()` returns null) — most likely root cause given current console logs show `hasUser:false, hasSession:false` on the preview origin. The user is signed in on the *published* origin (`hammers-modality.lovable.app`) but the preview origin holds no session, so `useAuth().user` is null when the upload button is reachable, OR the session expired between storage upload and insert.
+2. `user.id` from `useAuth()` is stale and does not match the current `auth.uid()`.
 
-**Fix:**
-1. In `AnalyzeVideo.tsx` after pose inference, invoke `runTempoPipeline({ video_sha256_hex, fps_true, landing_time_sec: null, direction_sign, calibration_h_px, pose_frames })`.
-2. Persist via existing `recordAnalysisRun` (`src/lib/biomech/auditTrail.ts`) with the produced `cache_fingerprint_hex`, `evidence_sha256_hex`, engine versions, outcome.
-3. Insert one row into `video_metric_runs` containing `{ metric_key: 'tempo_sec', value, missingness, evidence_sha256_hex }` so the read side can retrieve it.
-4. Read it back in the same view and render the value (or its canonical missingness reason) in the existing Release-1 surface — no new component.
+Storage upload almost certainly *didn't* actually succeed under anon — the public bucket allows public reads but its INSERT policy requires `auth.uid()`. So either the user was authenticated for storage but the JWT expired before insert (unlikely in the same tick) — or the storage upload also failed and the code's `if (uploadError) throw` path is being masked. We will verify by reading the browser session at upload time.
 
-No engine, metric, or schema changes. Pure wiring through existing functions/tables.
+### Execution steps
 
-**Evidence:** capture console + a `supabase--read_query` SELECT showing the persisted row keyed by `video_sha256_hex`.
+1. **Repro with Playwright against the running preview**: load `/analyze`, restore the injected Supabase session (`LOVABLE_BROWSER_SUPABASE_*`), attach a tiny synthetic mp4 fixture (generated via ffmpeg into `/tmp/browser/`) to the file input, click Analyze, capture: `await supabase.auth.getSession()` value just before the failing line, console errors, network 401/403 responses, and the actual error toast. Confirm exact failure mode.
 
-## Blocker 2 — Remove remaining athlete-visible `/100` Physio cards
+2. **Hard pre-insert auth assertion in `AnalyzeVideo.tsx`** (frontend-only — within Phase 49 scope):
+   - Before storage upload AND before `videos` insert, call `const { data: { session } } = await supabase.auth.getSession()`. If `session?.user?.id` is missing or `!== user.id`, abort with a clear toast ("Your session expired — please sign in again.") and `navigate('/auth')`. Eliminates the silent RLS rejection class.
+   - Log `[upload] session.user.id`, `useAuth user.id` side-by-side so any future divergence is visible.
 
-**Trace:** `PhysioPostWorkoutBanner.tsx` renders `Physio Report • {regulation_score}/100`. Phase 50 flagged this as a fabricated numeric surface still mounted in Vault.
+3. **Repair anything Playwright surfaces** under the same fix scope:
+   - If `getSession()` returns null on the preview origin despite the injected token, ensure `AnalyzeVideo` waits for `isAuthStable` before mounting the uploader (already gated — verify the gate works in build).
+   - If `videoError.code === '42501'`, surface the auth assertion above; if it is something else, fix that specific cause.
+   - If storage upload itself fails (currently masked by ordering — `uploadError` is thrown but the toast may not distinguish it), differentiate the toast messages between "storage upload failed" vs "database insert failed" so the next failure is diagnosable in one pass.
 
-**Fix:**
-1. Strip the `{score}/100` text from `PhysioPostWorkoutBanner.tsx` — keep only the qualitative regulation message (green/yellow/red + sentence).
-2. Repo crawl for any other athlete-visible `/100`, `score`, `grade`, `efficiency`, `composite`, `ranking`, `report card` mounts; suppress any that imply deterministic measurement. Coach-only / ops-only diagnostics are out of scope per Phase 49 scope.
+4. **No schema / RLS changes unless Playwright proves the existing policies are wrong.** The current policies are correct for the intended pattern; rewriting them blindly would mask the real bug.
 
-## Blocker 3 — Coach Chat fabricated efficiency score
+5. **Edge functions out of scope unless reached.** The reported failure is *before* `analyze-video` is invoked, so this phase does not modify edge functions unless step 1 proves invocation also fails. If it does, fix the specific failure (likely the JWT propagation in `supabase.functions.invoke`).
 
-**Trace:** `supabase/functions/hammer-chat/index.ts` composes a system prompt from athlete context + next-step. Need to verify whether it (or `useHammerChat` payload) injects efficiency/score language, and whether the model is instructed to invent numbers.
+6. **Verification gate** (all must pass before declaring success):
+   - `bunx tsgo --noEmit`
+   - `bunx vite build`
+   - Playwright run: signed-in upload of a 2-second 720×720 30fps mp4 fixture → `videos` row appears → `currentVideoId` set → analysis runs OR completes — capture screenshots + the final SELECT against `videos` keyed by the inserted id.
+   - `psql` SELECT showing the new `videos` row owned by the test user, plus the persisted `video_metric_runs` tempo row (Phase 51 lineage).
 
-**Fix:**
-1. Read `hammer-chat` edge function. Add an explicit system-prompt clause forbidding invented numeric biomechanical claims (scores, grades, efficiency values, composites, percentages, rankings, measured findings) unless the value is present in the supplied deterministic context.
-2. Remove any context field currently passing a fabricated efficiency/score number into the prompt (e.g. PIE V2 derived score injected as if measured). Pass only fields backed by a deterministic engine or athlete-reported truth.
-3. No change to chat UX otherwise.
+7. **Deliverable**: `.lovable/phase-52-video-analysis-restoration.md` containing: confirmed root cause(s) from step 1, exact files changed, before/after evidence per repair, Playwright screenshots, SELECT proof, and the final YES / YES — HUMAN ACTION REQUIRED / NO determination. Required-human-actions section only if Playwright proves a repair cannot be made from code (e.g. provider toggle in Cloud → Users → Auth Settings).
 
-## Verification
+### Files expected to change
 
-- `bunx tsgo --noEmit`
-- `bunx vitest run` (tempo pipeline tests already exist)
-- `rg` sweep for athlete-visible: `score`, `grade`, `efficiency`, `measured`, `report card`, `composite`, `ranking`, `/100`, letter grades, percentage scores — document every remaining hit and classify athlete-visible vs ops-only.
-- Playwright crawl of `/`, `/analyze`, `/vault`, `/progress` capturing screenshots + console + network.
-- SQL SELECT proving one `video_metric_runs` row exists for the test video.
+- `src/pages/AnalyzeVideo.tsx` — pre-insert session assertion + distinguishable error toasts.
+- Possibly one targeted migration *only if* Playwright shows the existing INSERT policy is being evaluated against a role other than `authenticated` (the policy is currently `{public}` which evaluates to all roles including `authenticated`, so this should not be needed — but it's the only DB change in scope if proven necessary).
 
-## Deliverable
-
-Single doc `.lovable/phase-51-release-blocker-elimination.md` with: files changed, before/after evidence per blocker, repo-sweep table, the five YES/NO answers, and final determination (target: READY FOR LIMITED BETA, contingent on the SELECT returning a persisted tempo row from a real uploaded clip).
-
-## Technical notes
-
-- Files expected to change: `src/pages/AnalyzeVideo.tsx`, `src/components/physio/PhysioPostWorkoutBanner.tsx`, `supabase/functions/hammer-chat/index.ts`, possibly `src/hooks/useHammerChat.ts` (context payload trim).
-- No migrations needed — `video_metric_runs` and `video_analysis_runs` already exist.
-- No new components, no new tables, no new metrics.
+### Out of scope (Phase 49 trust lock still applies)
+No new athlete-facing measurement surfaces. No reintroduction of fabricated `/100` scores. No new metrics.
