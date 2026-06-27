@@ -59,13 +59,18 @@ function ageFromDob(dobISO: string, nowISO: string): number {
 /**
  * Idempotent: emits at most once per (user, source DOB). Re-runs are no-ops
  * via the canonical idempotency_key path (sha256 over athlete+topic+occurred_at+payload).
+ *
+ * `opts.profileDob` should be passed from `profiles.date_of_birth` whenever
+ * available — it is the canonical production source for DOB.
  */
 export async function emitOnboardingBootstrap(
   user: User,
+  opts: { profileDob?: string | null } = {},
   nowISO: string = new Date().toISOString(),
 ): Promise<BootstrapResult> {
   const result: BootstrapResult = { emitted: [], skipped: [] };
-  const dob = readDob(user);
+  const dob = readDob(user, opts.profileDob ?? null);
+
 
   if (!dob) {
     result.skipped.push({
