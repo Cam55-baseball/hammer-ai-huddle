@@ -1,89 +1,72 @@
+## Phase 55 Production Verification — Plan
 
-# Onboarding End-to-End Repair Plan
+Execute a live end-to-end verification of the repaired onboarding pipeline against the running preview, with fresh accounts created at runtime, and produce `.lovable/phase-55-production-verification.md` containing PASS/FAIL, screenshots, DB evidence, and a final readiness verdict.
 
-Goal: every athlete (and every parent following an invite) exits onboarding with a real canonical ledger state, no dead routes, no orphan paths, and no premature dashboard entry — proven with fresh-account Playwright runs against the live preview.
+### Approach
 
-## 1. Bug map → fix map
+Drive the live preview with Playwright (headless Chromium, viewport 1280×1800 for desktop, 390×844 for mobile) from `/tmp/browser/phase-55/`. Create fresh Supabase auth users via the public anon key signup endpoint at runtime (random `+tag@` emails) so each scenario starts from a clean identity. Use `psql` (managed `PG*` env vars) for canonical-event evidence queries. Use `supabase--analytics_query` for auth + edge logs.
 
-| # | Defect | Fix |
-|---|---|---|
-| B1 | `emitOnboardingBootstrap` reads `user_metadata.dob`, but signup never writes it. `relational.developmental.age_observed` is never emitted in production. | Bootstrap reads from canonical `profiles.date_of_birth` first; falls back to `user_metadata.dob`/`date_of_birth`. Emits only when present; explicit missingness otherwise (constitutional). |
-| B2 | `AthleteOnboarding.tsx` is the route real athletes hit and never calls the relational bootstrap. `OnboardingFlow.tsx` (Wave3) is orphan. Two divergent surfaces. | Collapse to one canonical flow. `AthleteOnboarding` calls `emitOnboardingBootstrap` on mount. `/onboarding/flow` is redirected to `/onboarding/athlete` (route alias) and `OnboardingFlow.tsx` is removed. |
-| B3 | `Auth.tsx` ignores `?redirect=` query param used by `AcceptParentInvite`. Parents sign in and land on the dashboard, not the invite. | `Auth.tsx` reads `redirect` from `useSearchParams()` AND `state.returnTo`/`state.from`. Same-origin/relative-path allowlist only. Applied to both signup and signin success paths. |
-| B4 | `hasCompletedOnboarding = hasProfile \|\| hasSubscription \|\| hasRole`. `handle_new_user` trigger backfills `profiles.full_name` at signup → users appear onboarded the instant they sign up, bypassing role/sport/event gating. | New definition: `hasCompletedOnboarding = hasFirstEvent \|\| hasRole` (canonical ledger event is the only proof of athlete onboarding; non-athlete roles like scout/admin remain valid). Profile/subscription existence no longer counts. Premature dashboard entry blocked. |
-| B5 | `AcceptParentInvite` redirects to `/` after accept, losing the originating context; no proof of `parent_athlete_links` activation in UI. | After accept, poll `parent_athlete_links` for active row (short timeout) and route to a deterministic landing (`/parent-athletes`) with success toast. If the row doesn't appear, surface a non-fatal warning + replay link instead of silent navigation. |
+### Scenarios (each → PASS/FAIL + screenshot + SQL evidence)
 
-## 2. Code changes (concrete, minimal)
+1. Fresh athlete signup — DOB supplied → `/onboarding/athlete` → dashboard. Assert exactly one `relational.developmental.age_observed` and exactly one `athlete.schedule.day_type` row.
+2. Returning athlete (has first event) — sign out / sign in → routes directly to `/dashboard`, no onboarding bounce.
+3. Returning athlete missing canonical first event — manually delete the bootstrap event via `psql` migration-free SELECT/DELETE is not allowed; instead simulate by creating a fresh user but skipping `AthleteOnboarding` mount, then sign back in → must route to `/onboarding/athlete`.
+4. Athlete signup with missing DOB — signup without DOB metadata, then visit `/onboarding/athlete`; assert bootstrap is skipped with `dob_missing`, no event row created, UI degrades visibly without crash.
+5. Parent invite end-to-end — athlete A creates invite (`/parent-invite`), capture token, open invite link in a fresh incognito context signed-out → `/auth?redirect=…` → signup as parent → returned to `/accept-parent-invite?token=…` with token intact → accept → poll `parent_athlete_links` → land on `/parent/athletes` with athlete visible.
+6. `/onboarding/flow` redirect — navigate directly; assert `<Navigate>` lands on `/onboarding/athlete` with no flicker / no orphan mount.
+7. Idempotency under repeated logins — sign out/in 3× and reload `/onboarding/athlete` 3×; rerun event-count query, must remain exactly 1 of each canonical event.
+8. Dashboard gate — confirm a brand-new athlete with no first event is bounced from `/dashboard` to `/onboarding/athlete`.
+9. Mobile pass — repeat scenarios 1 and 5 at 390×844 viewport; assert completion.
 
-### `src/lib/runtime/relational/onboardingBootstrap.ts`
-- New signature: `emitOnboardingBootstrap(user, { profileDob? }, nowISO?)`.
-- Resolution order for DOB: `profileDob` → `user_metadata.dob` → `user_metadata.date_of_birth` → null.
-- Preserves existing idempotency (occurred_at pinned to DOB anchor; canonical idempotency_key collapse).
-- No emission when DOB missing (explicit missingness preserved per Phase 151).
+### Cross-cutting audits per scenario
 
-### `src/pages/AthleteOnboarding.tsx`
-- Read `profiles.date_of_birth` via existing `supabase` client.
-- Call `emitOnboardingBootstrap(user, { profileDob })` once per mount (in-process ref guard, mirroring `OnboardingFlow.tsx`).
-- Existing `athlete.schedule.day_type` emit chain unchanged.
+- Console: capture `page.on("console")`; fail on any `error` or `warning` containing "Warning:" (React) or "Supabase".
+- Network: capture `page.on("response")`; fail on any 4xx/5xx to `asb_events`, `profiles`, `parent_athlete_links`, `auth/v1/*`, or `functions/v1/*`.
+- Race conditions: between auth state change and first navigation, assert no double-mount of `AthleteOnboarding` (instrument by counting bootstrap log lines).
 
-### `src/pages/OnboardingFlow.tsx` + `src/App.tsx` router
-- Delete `OnboardingFlow.tsx`.
-- Replace route `/onboarding/flow` with `<Navigate to="/onboarding/athlete" replace />`. Any internal links updated by grep.
+### Database evidence (via `psql`)
 
-### `src/pages/Auth.tsx`
-- Add `useSearchParams()` and a `resolveRedirect()` helper that returns the first valid same-origin path among: `searchParams.get("redirect")`, `state?.returnTo`, `state?.from`. Must start with `/` and not contain `://`.
-- Sign-in success: if `resolveRedirect()` returns a path, navigate there before any onboarding-status branching.
-- Sign-up success: same — preserve `redirect` so parents who sign up via invite return to `/accept-parent-invite?token=…`.
-- Onboarding check rewritten:
-  - `hasCompletedOnboarding = hasFirstEvent || hasRole` (drop `hasProfile`/`hasSubscription` from the gate).
-  - Scout/admin/owner branches unchanged (driven by `hasRole`).
-  - Athletes without `hasFirstEvent` → `/onboarding/athlete`. Athletes with → `/dashboard`.
+For each created `athlete_id`:
+```sql
+select topic_id, count(*) from asb_events
+ where athlete_id = $uid
+ group by topic_id order by topic_id;
+```
+Plus a global duplicate check:
+```sql
+select athlete_id, topic_id, count(*)
+  from asb_events
+ where topic_id in ('relational.developmental.age_observed','athlete.schedule.day_type')
+ group by 1,2 having count(*) > 1;
+```
+Parent linkage:
+```sql
+select status, accepted_at, revoked_at
+  from parent_athlete_links
+ where parent_user_id = $parent_uid and athlete_user_id = $athlete_uid;
+```
 
-### `src/hooks/command/useAthleteOnboardingState.ts`
-- Already exposes `hasFirstEvent`. No change.
+### Investigation needed before fully scripting
 
-### `src/pages/AcceptParentInvite.tsx`
-- After successful `acceptParentInvite`, poll `parent_athlete_links` (max ~3s, 3 tries) for the active row; on success route to `/parent-athletes`. On miss, leave user on the page with a degraded-but-honest message and a manual retry button. No silent `/` navigation.
-- `signInPrompt` button already passes `?redirect=…` — confirmed once `Auth.tsx` honors it.
+Two unknowns require quick code reads (read-only, still in plan mode boundary — I will do these at the start of build mode, not now):
+- Where `athlete.schedule.day_type` is emitted today (the user lists it as a required canonical event, but Phase 55 repair didn't touch it — need to confirm emitter exists and is wired into the onboarding/dashboard mount).
+- Whether the in-app signup form actually collects DOB, or whether DOB only arrives via `ProfileSetup`. This determines the exact click-path Playwright must drive for scenario 1.
 
-### Tests (added, deterministic)
-- `src/lib/runtime/relational/__tests__/relational-onboarding.test.ts`: add cases (a) DOB from `profileDob` arg emits one event; (b) `profileDob` precedes `user_metadata`; (c) both absent → no emission.
+If `athlete.schedule.day_type` has no emitter on the onboarding path, the verification will FAIL scenario 1 and the fix (wire its emitter into `AthleteOnboarding` analogous to bootstrap) must land before re-running the suite — per the user's "fix immediately and rerun" directive.
 
-## 3. End-to-end Playwright proof (the only thing that closes the loop)
+### Failure handling
 
-Run from `/tmp/browser/phase55/`. Each scenario starts a fresh Chromium context, uses fresh throwaway emails, and after the UI flow reads the DB directly through the user's authenticated supabase-js to verify ledger truth. Screenshots + JSON evidence written under `screenshots/` and `evidence/`.
+For any failing scenario:
+1. Capture failing screenshot + console + network into the doc.
+2. Patch the minimum source needed (e.g., add missing emitter, fix routing edge case).
+3. Re-run the full suite from scenario 1. Do not declare PASS until every scenario is green in a single contiguous run.
 
-Auth note: Supabase `signup` requires email confirmation by default on this project. The plan is to use `supabase.auth.admin`-equivalent flow via the user's anon client + the **existing** "Auto-confirm new email signups" setting on this project (already enabled per earlier phases). If signups need confirmation, fall back to using the user's pre-injected session (`LOVABLE_BROWSER_AUTH_STATUS=injected`) for an existing athlete and a freshly created athlete via a one-off sign-up using a throwaway email + confirm via direct Supabase Admin SQL through `supabase--migration`/`supabase--read_query` is out of scope; we will gate the plan on auto-confirm being on. If it's off when execution starts, we will request enabling it before continuing rather than fabricating evidence.
+### Deliverable
 
-Scenarios and pass criteria:
-
-1. **Fresh athlete signup** — fill DOB on profile during onboarding, complete `athlete.schedule.day_type`, land on `/dashboard`. Verify:
-   - `asb_events` rows: exactly one `relational.developmental.age_observed` AND exactly one `athlete.schedule.day_type`.
-   - `relational.developmental.age_observed` idempotent under re-mount (re-visit `/onboarding/athlete` → still exactly one row).
-2. **Fresh athlete signup with no DOB** — completes flow; verify zero `relational.developmental.age_observed` rows (explicit missingness), one `athlete.schedule.day_type` row, lands on `/dashboard`.
-3. **Returning athlete with first event** — sign in → routed straight to `/dashboard` (not `/onboarding/athlete`), no duplicate bootstrap rows.
-4. **Returning athlete WITHOUT first event** (simulated by deleting their `asb_events`) — sign in → routed to `/onboarding/athlete`, can complete and emit.
-5. **`/onboarding/flow` deep link** — redirects to `/onboarding/athlete`, no orphan render.
-6. **Parent invite full chain** — athlete A issues invite → parent B opens `/accept-parent-invite?token=…` while signed out → clicks Sign in → `/auth?redirect=/accept-parent-invite?token=…` → completes signup → returned to invite page → accepts → `parent_athlete_links` row active, `parent_invite_dispatches.status='accepted'`, lands on `/parent-athletes`.
-7. **Console + network audit** — for each scenario assert zero `console.error` events and zero `>=400` network responses on the critical paths.
-
-Each scenario's verdict and evidence ID list is appended to `.lovable/phase-55-onboarding-end-to-end-proof.md` with the final top-line answer.
-
-## 4. Stop conditions
-
-- Any scenario fails → fix → re-run all scenarios. No partial PASS report.
-- Success is declared only when scenarios 1–7 all PASS with on-disk screenshots + DB row evidence and zero console/network errors on the critical paths.
-
-## 5. Out of scope
-
-- Wave3 life-context check-in copy/UX (the orphan `OnboardingFlow` carries that; if we want to preserve life-context emission, port the `LIFE_CONTEXT_CHECKIN` step into `AthleteOnboarding` as a follow-up phase — not required for the canonical-event end-to-end fix and the user did not request it).
-- Schema / migration changes. None required.
-- `handle_new_user` trigger behavior. Unchanged; we just stop treating its profile backfill as proof of onboarding.
-
-## Technical notes
-
-- `Auth.tsx` redirect allowlist: `redirect.startsWith("/") && !redirect.startsWith("//") && !redirect.includes("://")`. Anything else is dropped and the normal onboarding gate runs.
-- `useAthleteOnboardingState` already returns `hasFirstEvent` from `asb_events` count — reused as the single source of truth.
-- Bootstrap idempotency relies on `occurred_at = ${dob}T00:00:00.000Z` and the canonical `idempotency_key = sha256(athlete_id + topic_id + occurred_at + canonical(payload))`. Re-running across days/devices collapses to the same DB row.
-- `parent_athlete_links` activation is driven by the existing `project_relationship_to_parent_link` trigger on `asb_events`. The new poll is purely a UI confirmation; it never writes.
-
+`.lovable/phase-55-production-verification.md` containing:
+- Scenario matrix (PASS/FAIL, evidence links).
+- Embedded screenshots (`/tmp/browser/phase-55/screenshots/*.png` referenced relatively, copies committed under `.lovable/phase-55-evidence/`).
+- SQL output blocks for every canonical event check.
+- Console + network audit summary per scenario.
+- Edge cases discovered.
+- Final verdict: **PRODUCTION READY** or **BLOCKED** with remaining blockers enumerated.
