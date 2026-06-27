@@ -258,7 +258,7 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 3 && (
+      {step === STEP_CONFIRM && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Event recorded</h2>
           <p className="text-sm text-muted-foreground">
