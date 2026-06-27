@@ -189,14 +189,17 @@ export default function AnalyzeVideo() {
 
     const isOwnerOrAdmin = isOwner || isAdmin;
 
-    // 1. Missing session — confirm after 250ms before redirecting to /auth.
+    // 1. Missing session — confirm via fresh getSession() before redirecting to /auth.
     if (!user && !session) {
-      const t1 = setTimeout(() => {
+      const t1 = setTimeout(async () => {
         if (document.visibilityState === "hidden") return;
-        // Re-check synchronously via context closure — if still no user/session, evict.
-        // (React state will have settled by now; if a token refresh was in flight it's done.)
-        if (!user && !session) navigate("/auth", { replace: true });
-      }, 250);
+        const { data } = await supabase.auth.getSession();
+        if (data.session) return; // we're actually signed in, AuthContext just hadn't caught up
+        navigate("/auth", {
+          replace: true,
+          state: { returnTo: location.pathname + location.search },
+        });
+      }, 400);
       return () => clearTimeout(t1);
     }
 
