@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,8 +13,10 @@ import { NotificationsPreferencesPanel } from "@/components/notifications/Notifi
 import { EngineVersionBadge } from "@/components/asb/EngineVersionBadge";
 import { ENGINE_VERSION } from "@/lib/asb/engineVersion";
 import { topicLabel, shortenEventId } from "@/lib/asb/topicLabels";
+import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
+
 
 const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Notifications", "Done"];
 
@@ -48,10 +50,35 @@ export default function AthleteOnboarding() {
     if (!authLoading && isAuthStable && !user) navigate("/auth", { replace: true });
   }, [authLoading, isAuthStable, user, navigate]);
 
+  // Canonical relational onboarding bootstrap. Reads DOB from
+  // profiles.date_of_birth (canonical source). Idempotent at the emit
+  // layer; the in-process ref just prevents per-mount network round-trips.
+  const bootstrappedRef = useRef(false);
+  useEffect(() => {
+    if (!user || bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("date_of_birth")
+          .eq("id", user.id)
+          .maybeSingle();
+        const profileDob =
+          (data as { date_of_birth: string | null } | null)?.date_of_birth ?? null;
+        await emitOnboardingBootstrap(user, { profileDob });
+      } catch (e) {
+        // Constitutional: bootstrap failures degrade visibly but never block onboarding.
+        console.warn("[relational] onboarding bootstrap deferred", e);
+      }
+    })();
+  }, [user]);
+
   // If the athlete already emitted ≥1 canonical event, skip onboarding entirely.
   useEffect(() => {
     if (!stateLoading && hasFirstEvent && step < 5) navigate("/command", { replace: true });
   }, [stateLoading, hasFirstEvent, navigate, step]);
+
 
   const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const goBack = () => setStep((s) => Math.max(s - 1, 0));

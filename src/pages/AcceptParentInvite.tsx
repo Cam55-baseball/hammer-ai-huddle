@@ -90,7 +90,25 @@ export default function AcceptParentInvite() {
         console.info("[accept-parent-invite] dispatch update skipped", dispatchErr);
       }
       toast.success(PARENT_INVITE_VOICE.successToast);
-      navigate("/");
+      // Wait for the DB trigger to project the link into
+      // parent_athlete_links before routing the parent into their
+      // dashboard. Bounded poll: ≤6 attempts × 500ms = 3s.
+      let activated = false;
+      for (let i = 0; i < 6; i++) {
+        const { data: linkRows } = await supabase
+          .from("parent_athlete_links")
+          .select("id, status")
+          .eq("parent_user_id", user.id)
+          .eq("athlete_user_id", decoded.athlete_id)
+          .limit(1);
+        if (linkRows && linkRows.length > 0) {
+          activated = true;
+          break;
+        }
+        await new Promise((res) => setTimeout(res, 500));
+      }
+      navigate(activated ? "/parent/athletes" : "/");
+
     } catch (e) {
       if (e instanceof AcceptInviteError && e.reason === "expired_token") {
         toast.error(PARENT_INVITE_VOICE.expired);
@@ -129,16 +147,19 @@ export default function AcceptParentInvite() {
               {PARENT_INVITE_VOICE.signInPrompt}
             </p>
             <Button
-              onClick={() =>
-                navigate(
-                  `/auth?redirect=/accept-parent-invite?token=${encodeURIComponent(token)}`,
-                )
-              }
+              onClick={() => {
+                // Encode the FULL relative target so nested query strings
+                // (e.g. ?token=…) survive across the auth round-trip and
+                // are correctly returned by Auth.tsx's resolveRedirect().
+                const back = `/accept-parent-invite?token=${encodeURIComponent(token)}`;
+                navigate(`/auth?redirect=${encodeURIComponent(back)}`);
+              }}
               size="lg"
               className="w-full min-h-11"
             >
               {PARENT_INVITE_VOICE.signInCta}
             </Button>
+
           </Card>
         )}
 

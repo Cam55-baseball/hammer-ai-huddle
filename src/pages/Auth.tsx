@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,14 +32,15 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
   const { user, signIn, signUp, resetPassword } = useAuth();
 
-  const state = location.state as { 
-    role?: string; 
-    sport?: string; 
-    modules?: string[]; 
+  const state = location.state as {
+    role?: string;
+    sport?: string;
+    modules?: string[];
     fromPricing?: boolean;
     returnTo?: string;
     module?: string;
@@ -47,10 +49,39 @@ const Auth = () => {
     message?: string;
   };
 
+  /**
+   * Safe same-origin redirect resolver. Used to preserve invite/parent flows
+   * (e.g. ?redirect=/accept-parent-invite?token=…) across sign-in/sign-up.
+   * Accepts only relative paths starting with `/` and rejects protocol-
+   * relative or absolute URLs.
+   */
+  const resolveRedirect = (): string | null => {
+    const candidates: Array<string | undefined> = [
+      searchParams.get("redirect") ?? undefined,
+      state?.returnTo,
+      (state as { from?: string } | undefined)?.from,
+    ];
+    for (const c of candidates) {
+      if (!c || typeof c !== "string") continue;
+      if (!c.startsWith("/")) continue;
+      if (c.startsWith("//")) continue;
+      if (c.includes("://")) continue;
+      return c;
+    }
+    return null;
+  };
+
+
+  // If user is already authenticated and a ?redirect= target is present
+  // (e.g. parent invite link), honor it immediately. Otherwise leave them
+  // on the auth page — they may have landed here intentionally.
   useEffect(() => {
-    // Don't redirect if user is already authenticated
-    // They might be on this page intentionally
-  }, [user, navigate]);
+    if (!user) return;
+    const target = resolveRedirect();
+    if (target) navigate(target, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,110 +117,53 @@ const Auth = () => {
             variant: "destructive",
           });
         } else if (data.user) {
-          // Multi-factor onboarding check
-          
-          const [profileCheck, subscriptionCheck, rolesCheck, scoutAppCheck, asbEventCheck] = await Promise.all([
-            // Check if user has a profile with essential data
+          // Ledger-truth onboarding check. Profile/subscription existence
+          // is NOT proof of onboarding — only a canonical asb_events row
+          // (or a non-athlete role like scout/admin/owner) counts.
+          const [rolesCheck, asbEventCheck] = await Promise.all([
             supabase
-              .from('profiles')
-              .select('id, first_name, last_name, full_name')
-              .eq('id', data.user.id)
-              .maybeSingle(),
-            
-            // Check if user has a subscription
-            supabase
-              .from('subscriptions')
-              .select('id')
+              .from('user_roles')
+              .select('id, role')
               .eq('user_id', data.user.id)
               .limit(1),
-            
-          // Check if user has a role (scout/admin/owner)
-          supabase
-            .from('user_roles')
-            .select('id, role')
-            .eq('user_id', data.user.id)
-            .limit(1),
-          
-          // Check for scout application
-          supabase
-            .from('scout_applications')
-            .select('status')
-            .eq('user_id', data.user.id)
-            .maybeSingle(),
+            supabase
+              .from('asb_events')
+              .select('event_id', { count: 'exact', head: true })
+              .eq('athlete_id', data.user.id),
+          ]);
 
-          // RFL-032 — canonical onboarding authority: ≥1 ledger event ever.
-          // Mirrors useAthleteOnboardingState.hasFirstEvent. Profile/subscription
-          // existence is NOT proof of onboarding; only a real canonical event is.
-          supabase
-            .from('asb_events')
-            .select('event_id', { count: 'exact', head: true })
-            .eq('athlete_id', data.user.id)
-        ]);
+          const hasRole = !!(rolesCheck.data && rolesCheck.data.length > 0);
+          const hasFirstEvent = (asbEventCheck.count ?? 0) > 0;
+          const hasCompletedOnboarding = hasFirstEvent || hasRole;
+          const isScout = rolesCheck.data?.some((r: { role: string }) => r.role === 'scout');
 
-          // User is onboarded if they have profile data, subscription, or role
-        const hasProfile = profileCheck.data && (
-          profileCheck.data.first_name || 
-          profileCheck.data.last_name || 
-          profileCheck.data.full_name
-        );
-        const hasSubscription = subscriptionCheck.data && subscriptionCheck.data.length > 0;
-        const hasRole = rolesCheck.data && rolesCheck.data.length > 0;
-        const hasPendingScoutApp = scoutAppCheck.data?.status === 'pending';
-        // RFL-032 — ledger-truth gate.
-        const hasFirstEvent = (asbEventCheck.count ?? 0) > 0;
-
-        const hasCompletedOnboarding = hasProfile || hasSubscription || hasRole;
-
-        console.log('[Auth] Onboarding check:', {
-          userId: data.user.id,
-          hasProfile,
-          hasSubscription,
-          hasRole,
-          hasPendingScoutApp,
-          hasFirstEvent,
-          hasCompletedOnboarding
-        });
+          console.log('[Auth] Onboarding check:', {
+            userId: data.user.id,
+            hasRole,
+            hasFirstEvent,
+            hasCompletedOnboarding,
+          });
 
           toast({
             title: t('auth.welcomeBack'),
             description: t('auth.signInToContinue'),
           });
-          
-          // Route based on onboarding status and role
-          const isScout = rolesCheck.data?.some((r: any) => r.role === 'scout');
-          const redirectTarget = state?.returnTo || (state as any)?.from;
 
-          if (hasCompletedOnboarding) {
-            if (redirectTarget) {
-              setTimeout(() => {
-                navigate(redirectTarget, { replace: true });
-              }, 0);
-            } else if (isScout) {
-              // Scouts go to scout dashboard
-              setTimeout(() => {
-                navigate("/scout-dashboard", { replace: true });
-              }, 0);
-            } else if (!hasFirstEvent && !hasRole) {
-              // RFL-032 — athlete cohort that completed profile-setup but never
-              // emitted the first canonical event. Route through the canonical
-              // onboarding surface (AthleteOnboarding) which short-circuits to
-              // /command once hasFirstEvent flips true.
-              setTimeout(() => {
-                navigate("/onboarding/athlete", { replace: true });
-              }, 0);
-            } else {
-              // RFL-053+ — Hammers Today Plan now lives on /dashboard (collapsible
-              // above Game Plan). Onboarded athletes route to /dashboard as the
-              // post-login home. /command remains available as deep-link surface.
-              setTimeout(() => {
-                navigate("/dashboard", { replace: true });
-              }, 0);
-            }
+          // Preserve invite/parent flows: ?redirect=… wins over the
+          // default onboarding gate when it's a safe relative path.
+          const redirectTarget = resolveRedirect();
+          if (redirectTarget) {
+            setTimeout(() => navigate(redirectTarget, { replace: true }), 0);
+          } else if (isScout) {
+            setTimeout(() => navigate("/scout-dashboard", { replace: true }), 0);
+          } else if (!hasCompletedOnboarding) {
+            // Athlete with no canonical event and no role → start onboarding.
+            setTimeout(() => navigate("/onboarding/athlete", { replace: true }), 0);
+          } else if (!hasFirstEvent && !hasRole) {
+            // Defensive: should be unreachable, but route to onboarding.
+            setTimeout(() => navigate("/onboarding/athlete", { replace: true }), 0);
           } else {
-            // New user - start onboarding at role selection
-            setTimeout(() => {
-              navigate("/select-user-role", { replace: true });
-            }, 0);
+            setTimeout(() => navigate("/dashboard", { replace: true }), 0);
           }
         }
 
@@ -208,11 +182,19 @@ const Auth = () => {
             title: t('auth.accountCreated'),
             description: t('auth.letsSetupProfile'),
           });
-          
-          // Navigate to role selection for new signups
-          navigate("/select-user-role", { replace: true });
+
+          // Preserve invite/parent redirect across signup.
+          const redirectTarget = resolveRedirect();
+          if (redirectTarget) {
+            navigate(redirectTarget, { replace: true });
+          } else {
+            navigate("/select-user-role", { replace: true });
+          }
         }
       }
+
+
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({

@@ -20,15 +20,32 @@ interface BootstrapResult {
   skipped: { topic: string; reason: string }[];
 }
 
-/** Best-effort DOB read from auth user_metadata; null if unavailable. */
-function readDob(user: User): string | null {
+/**
+ * Best-effort DOB read.
+ *
+ * Resolution order (canonical-source-first):
+ *   1. `opts.profileDob` — passed in from `profiles.date_of_birth` (canonical
+ *      source where production athletes store DOB).
+ *   2. `user_metadata.dob` / `date_of_birth` — legacy / signup-metadata path.
+ *
+ * Returns `YYYY-MM-DD` or null.
+ */
+function readDob(user: User, profileDob: string | null | undefined): string | null {
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const raw = (meta.dob ?? meta.date_of_birth) as string | undefined;
-  if (!raw || typeof raw !== "string") return null;
-  const t = Date.parse(raw);
-  if (Number.isNaN(t)) return null;
-  return new Date(t).toISOString().slice(0, 10); // YYYY-MM-DD
+  const candidates: Array<string | null | undefined> = [
+    profileDob,
+    meta.dob as string | undefined,
+    meta.date_of_birth as string | undefined,
+  ];
+  for (const raw of candidates) {
+    if (!raw || typeof raw !== "string") continue;
+    const t = Date.parse(raw);
+    if (Number.isNaN(t)) continue;
+    return new Date(t).toISOString().slice(0, 10);
+  }
+  return null;
 }
+
 
 function ageFromDob(dobISO: string, nowISO: string): number {
   const dob = new Date(dobISO);
@@ -42,13 +59,18 @@ function ageFromDob(dobISO: string, nowISO: string): number {
 /**
  * Idempotent: emits at most once per (user, source DOB). Re-runs are no-ops
  * via the canonical idempotency_key path (sha256 over athlete+topic+occurred_at+payload).
+ *
+ * `opts.profileDob` should be passed from `profiles.date_of_birth` whenever
+ * available — it is the canonical production source for DOB.
  */
 export async function emitOnboardingBootstrap(
   user: User,
+  opts: { profileDob?: string | null } = {},
   nowISO: string = new Date().toISOString(),
 ): Promise<BootstrapResult> {
   const result: BootstrapResult = { emitted: [], skipped: [] };
-  const dob = readDob(user);
+  const dob = readDob(user, opts.profileDob ?? null);
+
 
   if (!dob) {
     result.skipped.push({
