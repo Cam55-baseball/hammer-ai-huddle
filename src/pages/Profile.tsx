@@ -1824,8 +1824,9 @@ export default function Profile() {
         )}
 
         {/* Onboarding resume / review — strategic Settings anchor */}
-        <div className="mb-6">
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
           <OnboardingStatusCard />
+          {!viewingOtherProfile && <CategoryGoalsCard />}
         </div>
 
         {/* Account Info Card */}
