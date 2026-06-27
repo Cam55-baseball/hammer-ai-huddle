@@ -52,7 +52,7 @@ const TIER_COPY: Record<string, TierCopy> = {
 
 const Activate = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useUserProfile();
   const { modules, loading: subLoading, initialized } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -63,7 +63,8 @@ const Activate = () => {
 
   useEffect(() => {
     if (authLoading || profileLoading || subLoading || ownerLoading || adminLoading) return;
-    if (!user) {
+    if (!isAuthStable) return;
+    if (!user && !session) {
       navigate("/auth", { replace: true });
       return;
     }

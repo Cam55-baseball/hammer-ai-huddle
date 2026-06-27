@@ -42,6 +42,7 @@ import { DaySessionsList } from './DaySessionsList';
 import { RestDayScheduler } from './RestDayScheduler';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface CalendarDaySheetProps {
   open: boolean;
@@ -80,14 +81,15 @@ const groupEventsByTimeOfDay = (events: CalendarEvent[]) => {
   return { morning, afternoon, evening, allDay };
 };
 
-// Format time for display
+// Format time for display — defensive: any unexpected shape becomes ''
 const formatTime = (time: string | null | undefined): string => {
-  if (!time) return '';
+  if (!time || typeof time !== 'string' || !time.includes(':')) return '';
   const [hours, minutes] = time.split(':');
   const hour = parseInt(hours, 10);
+  if (!Number.isFinite(hour)) return '';
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
+  return `${displayHour}:${minutes ?? '00'} ${ampm}`;
 };
 
 // Draggable event item component
@@ -630,6 +632,7 @@ export function CalendarDaySheet({
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-md">
+          <ErrorBoundary label="CalendarDaySheet">
           <SheetHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
@@ -769,9 +772,9 @@ export function CalendarDaySheet({
                       onReorder={setOrderedEvents}
                       className="space-y-2"
                     >
-                      {orderedEvents.map(event => (
+                      {orderedEvents.map((event, idx) => (
                         <DraggableEventCard
-                          key={event.id}
+                          key={`${event.type ?? 'evt'}:${event.id ?? 'noid'}:${idx}`}
                           event={event}
                           isSkipped={false}
                           isReorderMode={true}
@@ -867,6 +870,7 @@ export function CalendarDaySheet({
               </div>
             )}
           </ScrollArea>
+          </ErrorBoundary>
         </SheetContent>
       </Sheet>
 

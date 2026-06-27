@@ -55,7 +55,7 @@ interface StatsData {
 
 export default function MindFuel() {
   const { t } = useTranslation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -108,10 +108,10 @@ export default function MindFuel() {
   }, [location.hash]);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
+    if (!authLoading && isAuthStable && !user && !session) {
+      navigate('/auth', { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, session, authLoading, isAuthStable, navigate]);
 
   useEffect(() => {
     // Detect sport from localStorage or subscribed modules

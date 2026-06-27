@@ -34,6 +34,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [loading]);
 
   useEffect(() => {
+    let cancelled = false;
+    let pendingSignOutTimer: ReturnType<typeof setTimeout> | null = null;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
@@ -41,24 +44,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (event === 'TOKEN_REFRESHED' && !newSession) return;
 
         if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setSession(null);
-        } else {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
+          // Verify before evicting — spurious SIGNED_OUT events (network blips,
+          // 401 retries, multi-tab races) must not boot a still-authenticated user.
+          if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
+          pendingSignOutTimer = setTimeout(async () => {
+            if (cancelled) return;
+            const { data } = await supabase.auth.getSession();
+            if (cancelled) return;
+            if (!data.session) {
+              setUser(null);
+              setSession(null);
+            } else {
+              setSession(data.session);
+              setUser(data.session.user);
+            }
+            setLoading(false);
+          }, 250);
+          return;
         }
+
+        if (pendingSignOutTimer) {
+          clearTimeout(pendingSignOutTimer);
+          pendingSignOutTimer = null;
+        }
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         setLoading(false);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      if (cancelled) return;
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {

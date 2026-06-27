@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,6 +48,7 @@ export default function AnalyzeVideo() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
+  const location = useLocation();
   const [uploading, setUploading] = useState(false);
   // Phase 49: analysisView removed — only detailed (raw) view ships.
   const [analyzing, setAnalyzing] = useState(false);
@@ -188,14 +189,17 @@ export default function AnalyzeVideo() {
 
     const isOwnerOrAdmin = isOwner || isAdmin;
 
-    // 1. Missing session — confirm after 250ms before redirecting to /auth.
+    // 1. Missing session — confirm via fresh getSession() before redirecting to /auth.
     if (!user && !session) {
-      const t1 = setTimeout(() => {
+      const t1 = setTimeout(async () => {
         if (document.visibilityState === "hidden") return;
-        // Re-check synchronously via context closure — if still no user/session, evict.
-        // (React state will have settled by now; if a token refresh was in flight it's done.)
-        if (!user && !session) navigate("/auth", { replace: true });
-      }, 250);
+        const { data } = await supabase.auth.getSession();
+        if (data.session) return; // we're actually signed in, AuthContext just hadn't caught up
+        navigate("/auth", {
+          replace: true,
+          state: { returnTo: location.pathname + location.search },
+        });
+      }, 400);
       return () => clearTimeout(t1);
     }
 
@@ -330,25 +334,38 @@ export default function AnalyzeVideo() {
       hasAccessToken: !!liveSession?.access_token,
       sessionErr: sessionErr?.message ?? null,
     });
+    // Do NOT auto-navigate to /auth here — that's the bug that kicks users
+    // off the upload screen mid-flow. Surface an actionable toast instead;
+    // the file stays selected so they can retry after re-signing in.
+    const returnTo = `${location.pathname}${location.search}`;
     if (!liveSession?.user?.id) {
       toast.error(
-        t(
-          'videoAnalysis.sessionExpired',
-          'Your session expired. Please sign in again to upload.'
-        )
+        t('videoAnalysis.sessionExpired', 'Your session expired. Sign in again to upload — your video stays selected.'),
+        {
+          duration: 12000,
+          action: {
+            label: t('common.signIn', 'Sign in'),
+            onClick: () => navigate('/auth', { state: { returnTo } }),
+          },
+        }
       );
-      navigate('/auth', { replace: true });
       return;
     }
     if (liveSession.user.id !== user.id) {
+      console.warn('[upload] auth-origin mismatch', {
+        useAuthUserId: user.id,
+        liveSessionUserId: liveSession.user.id,
+      });
       toast.error(
-        t(
-          'videoAnalysis.sessionMismatch',
-          'Sign-in mismatch detected. Please sign in again.'
-        )
+        t('videoAnalysis.sessionMismatch', 'Two accounts detected on this device. Sign in again to continue.'),
+        {
+          duration: 12000,
+          action: {
+            label: t('common.signIn', 'Sign in'),
+            onClick: () => navigate('/auth', { state: { returnTo } }),
+          },
+        }
       );
-      await supabase.auth.signOut();
-      navigate('/auth', { replace: true });
       return;
     }
 

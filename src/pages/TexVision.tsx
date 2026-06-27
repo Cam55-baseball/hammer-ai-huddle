@@ -29,7 +29,7 @@ interface ActiveDrill {
 export default function TexVision() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   // CRITICAL FIX: Include loading state to prevent premature "locked" state display
   const { hasAccess, hasHittingAccess, loading: accessLoading } = useTexVisionAccess();
   const [currentSport, setCurrentSport] = useState<string>('baseball');
@@ -60,10 +60,10 @@ export default function TexVision() {
   const s2SectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
+    if (!authLoading && isAuthStable && !user && !session) {
+      navigate('/auth', { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, session, authLoading, isAuthStable, navigate]);
 
   useEffect(() => {
     const savedSport = localStorage.getItem('selectedSport');
