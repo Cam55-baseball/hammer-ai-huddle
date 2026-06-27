@@ -204,7 +204,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           "Dizziness or shortness of breath — pause, hydrate, restart slower.",
         ],
         durationMin: dur,
-        route: "/practice?module=warmup",
+        route: "hammer:open-warmup-generator",
         ctaLabel: "Open warm-up",
         status: "ready",
         missing: [],
