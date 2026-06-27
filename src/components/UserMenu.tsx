@@ -62,6 +62,15 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/onboarding/athlete")}>
+          <ListChecks className="mr-2 h-4 w-4" />
+          <span>Setup</span>
+          {showSetup && (
+            <Badge variant="destructive" className="ml-auto h-4 px-1.5 text-[10px]">
+              Finish
+            </Badge>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={openQuickEdit}>
           <Pencil className="mr-2 h-4 w-4" />
           <span>Quick edit</span>
