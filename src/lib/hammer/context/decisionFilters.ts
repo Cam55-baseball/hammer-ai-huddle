@@ -20,6 +20,10 @@
  */
 import type { HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { injuryHistoryToText } from "@/lib/hammer/context/normalizers";
+import {
+  normalizeCategoryGoals,
+  type CategoryGoalsPayload,
+} from "@/lib/hammer/goals/categoryGoals";
 
 /* ── Envelope-shaped projection ──────────────────────────────────────────── */
 
