@@ -73,4 +73,31 @@ describe("Phase A §4 — relational onboarding bootstrap", () => {
     expect((emitted[0].payload as { chronological_age_years: number }).chronological_age_years)
       .toBe((emitted[1].payload as { chronological_age_years: number }).chronological_age_years);
   });
+
+  it("(5) profileDob arg drives emission when user_metadata.dob absent", async () => {
+    const r = await emitOnboardingBootstrap(
+      mkUser(null),
+      { profileDob: "2010-03-20" },
+      "2026-06-01T00:00:00.000Z",
+    );
+    expect(r.emitted).toEqual(["relational.developmental.age_observed"]);
+    expect(emitted.length).toBe(1);
+    expect((emitted[0].payload as { chronological_age_years: number }).chronological_age_years).toBe(16);
+  });
+
+  it("(6) profileDob takes precedence over user_metadata.dob", async () => {
+    await emitOnboardingBootstrap(
+      mkUser("2000-01-01"),
+      { profileDob: "2012-06-15" },
+      "2026-06-01T00:00:00.000Z",
+    );
+    expect((emitted[0].payload as { chronological_age_years: number }).chronological_age_years).toBe(13);
+  });
+
+  it("(7) both DOB sources absent → no emission", async () => {
+    const r = await emitOnboardingBootstrap(mkUser(null), { profileDob: null });
+    expect(emitted.length).toBe(0);
+    expect(r.skipped[0].topic).toBe("relational.developmental.age_observed");
+  });
 });
+
