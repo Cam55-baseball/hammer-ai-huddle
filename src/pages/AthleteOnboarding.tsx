@@ -178,7 +178,7 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 1 && (
+      {step === STEP_PROFILE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Confirm your profile</h2>
           <p className="text-sm text-muted-foreground">
