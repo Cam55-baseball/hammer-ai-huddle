@@ -129,16 +129,19 @@ export default function AcceptParentInvite() {
               {PARENT_INVITE_VOICE.signInPrompt}
             </p>
             <Button
-              onClick={() =>
-                navigate(
-                  `/auth?redirect=/accept-parent-invite?token=${encodeURIComponent(token)}`,
-                )
-              }
+              onClick={() => {
+                // Encode the FULL relative target so nested query strings
+                // (e.g. ?token=…) survive across the auth round-trip and
+                // are correctly returned by Auth.tsx's resolveRedirect().
+                const back = `/accept-parent-invite?token=${encodeURIComponent(token)}`;
+                navigate(`/auth?redirect=${encodeURIComponent(back)}`);
+              }}
               size="lg"
               className="w-full min-h-11"
             >
               {PARENT_INVITE_VOICE.signInCta}
             </Button>
+
           </Card>
         )}
 
