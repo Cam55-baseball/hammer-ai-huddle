@@ -53,6 +53,7 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
