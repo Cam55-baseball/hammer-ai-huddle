@@ -162,6 +162,7 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       fromEnvelope(env, "sport_primary", "Sport", "identity"),
       fromEnvelope(env, "goal_summary", "Primary goal", "goals"),
       fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
+      fromEnvelope(env, "category_goals", "Ranked category goals", "goals"),
       fromEnvelope(env, "weekly_availability_days", "Days per week", "schedule"),
       fromEnvelope(env, "weekly_availability_hours", "Hours per week", "schedule"),
       fromEnvelope(env, "typical_session_length_min", "Session length (min)", "schedule"),
