@@ -16,9 +16,13 @@ import { topicLabel, shortenEventId } from "@/lib/asb/topicLabels";
 import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
+import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 
 
-const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Notifications", "Done"];
+const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Health check", "Notifications", "Done"];
+const STEP_DONE = 6;
+const STEP_NOTIFICATIONS = 5;
+const STEP_INJURY = 4;
 
 const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
   { value: "training", label: "Training", help: "Structured practice / drills" },
