@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, LogOut, Pencil } from "lucide-react";
+import { User, Settings, HelpCircle, LogOut, Pencil, ListChecks } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useQuickEditProfile } from "@/components/profile/QuickEditProfile";
+import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 
 interface UserMenuProps {
   userName?: string;
