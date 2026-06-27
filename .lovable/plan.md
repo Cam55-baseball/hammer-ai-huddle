@@ -1,50 +1,42 @@
-## What this error actually is
+## The two bugs
 
-The dialog (`SendCardToCoachDialog`) called `useAuth()` → `useAuthContext()` and got `undefined` back, even though `<AuthProvider>` clearly wraps the whole tree (per the stack: `App → QueryClientProvider → AuthProvider → SportThemeProvider → … → Dashboard → SendCardToCoachDialog`).
+1. **Warm-Up CTA dumps the athlete into Practice Hub** (`/practice?module=warmup`). Practice Hub is the home of hitting/throwing/defense/baserunning *practice sessions* — landing there for a warm-up is confusing and off-pattern.
+2. **Baserunning CTA opens the Baserunning IQ *learning* module** (`/baserunning-iq`). When the daily plan tells an athlete to *do baserunning practice*, it should open the baserunning practice session, not the IQ classroom. IQ stays the destination only for the injury-suppressed "IQ-only / leg-protected" variant.
 
-When the provider is present and the consumer still sees `undefined`, there is exactly one cause: **two different React Context objects exist at runtime**. The provider writes into Context‑A; the consumer reads Context‑B; they don't match, so `useContext` returns the default `undefined` and the hook throws.
+The other CTAs are already correct: Lift → `/training-block`, Speed → `/speed-lab`, Hitting → `/practice?module=hitting`, Throwing → `/practice?module=throwing`, Defense → `/practice?module=defense`, Nutrition → `/nutrition-hub`, Recovery → `/bounce-back-bay`.
 
-In this codebase that's happening because `AuthContext.tsx` is being imported through two different specifiers:
+## Fix 1 — Warm-Up opens the Warm-Up Generator in place
 
-- `src/App.tsx` → `"./contexts/AuthContext"` (relative)
-- `src/hooks/useAuth.ts` / `useGamePlanPreferences.ts` → `"@/contexts/AuthContext"` (alias)
+Stop routing the Warm-Up block. Tapping "Open warm-up" opens a dialog that wraps the existing `WarmupGeneratorCard` (`src/components/custom-activities/WarmupGeneratorCard.tsx`) right on top of the Hammer plan — the athlete picks duration/context, generates a personalized warm-up, and confirms.
 
-Normally Vite normalizes both to the same module. But after we just edited `AuthContext.tsx` in the previous turn, Vite's Fast Refresh invalidated one specifier's module record and not the other — so the running page ended up with **two `AuthContext` singletons in memory at once**. The Provider is bound to one; new components mounted after the HMR update read from the other. That's why "the rest of the app is fine" — components that were already mounted still hold the old, matching reference — and only newly‑mounted subtrees (like opening a card on the Dashboard that conditionally mounts `SendCardToCoachDialog`) blow up.
+- New thin component `src/components/hammer/HammerWarmupDialog.tsx` — a `Dialog` rendering `<WarmupGeneratorCard exercises={[]} isWarmupActivity sport={sport} onAddWarmup={…} />`.
+- On `onAddWarmup`, create a one-shot `custom_activity_templates` row tagged for today (mirroring the existing `handleAddToGamePlan` flow in `HammerDailyPlan.tsx` — `activity_type: 'warmup'`, `source: 'hammer.daily.warmup'`, `display_on_game_plan: true`), invalidate `custom-activity-logs` / `custom-activity-templates` / `game-plan`, broadcast `data-sync`, and toast "Warm-up added to today's Game Plan" with a "View" action.
+- In `src/components/hammer/HammerDailyPlan.tsx`, when a block's `modality === 'warmup'`, the CTA opens this dialog instead of navigating. The "Add to Game Plan" secondary CTA on the same block stays as-is.
+- In `src/lib/hammer/prescription/dailyPlan.ts`, the warmup block's `route` becomes a sentinel like `hammer:open-warmup-generator` and `ctaLabel` stays `"Open warm-up"`. (Sentinel-routes are already a pattern in the file — e.g. `#hammer-onboarding` for the Answer Hammer flow.)
 
-Our `ErrorBoundary` around `CalendarDaySheet` etc. is doing its job: the failure is contained to that one subtree instead of white‑screening the app — that's the "Something went wrong here. The rest of the app is fine" message.
+## Fix 2 — Baserunning prescription opens the practice session
 
-## The fix
+In `src/lib/hammer/prescription/dailyPlan.ts`, the *normal* baserunning prescription block (lines ~912–924, in-season "game scenarios" / off-season "Baserunning IQ" titles):
 
-Two small, surgical changes:
+- `route: "/practice?module=baserunning"` (was `/baserunning-iq`)
+- `ctaLabel: "Open baserunning"` (was `"Open baserunning IQ"`)
 
-### 1. Collapse Auth to a single module identity (root cause)
+`PracticeHub` already supports `?module=baserunning` natively (it's a first-class module with `SessionConfigPanel` and `RepScorer` paths), so no new pages or routes are needed.
 
-Standardize every Auth import on the `@/` alias so Vite always resolves one module record, even across HMR.
+The **injury-suppressed** "Baserunning — IQ only (leg-protected)" block (lines ~873–886) **keeps** `/baserunning-iq` + `"Open baserunning IQ"` — that variant is explicitly mental-reps-only and IQ is the correct destination.
 
-- `src/App.tsx` — change `import { AuthProvider } from "./contexts/AuthContext"` → `import { AuthProvider } from "@/contexts/AuthContext"`.
-- Grep the tree once more to confirm no other file uses a relative path or different casing for `AuthContext`. Today only `App.tsx` does, but we'll lock it in.
+## Files touched
 
-This permanently eliminates the dual‑module class of failure for Auth.
+- `src/lib/hammer/prescription/dailyPlan.ts` — change baserunning route/label (one block); change warmup `route` to sentinel.
+- `src/components/hammer/HammerDailyPlan.tsx` — intercept the warmup sentinel and open `HammerWarmupDialog` instead of navigating.
+- `src/components/hammer/HammerWarmupDialog.tsx` — **new**, ~80 lines.
 
-### 2. Defensive read in the leaf consumer (belt‑and‑suspenders)
+No DB migrations. No new routes.
 
-`SendCardToCoachDialog` only needs `user?.id` to pre‑fill a "from" field. It should never bring down its host card if Auth context is momentarily unavailable (e.g. mid‑HMR, mid‑sign‑out, mid‑mount race).
+## Verification
 
-- Add a `useOptionalAuth()` helper in `src/hooks/useAuth.ts` that returns `{ user: null, session: null }` instead of throwing when the provider isn't found.
-- Switch `SendCardToCoachDialog` to `useOptionalAuth()`. If `user` is null the dialog just renders without the pre‑fill — no crash, no error boundary.
-- Leave `useAuth()` (the throwing variant) untouched for components that legitimately require an authenticated session.
-
-### 3. Verification
-
-- Reload the preview, open the Game Plan card on the Dashboard that hosts `SendCardToCoachDialog`, confirm no error boundary fallback appears and console is clean.
-- Drive Playwright through Dashboard → open the affected card to confirm the dialog mounts cleanly post‑HMR.
-- Typecheck.
-
-## Out of scope
-
-- No changes to `AuthContext` semantics, the sign‑out debouncing we added last turn, or any route guards.
-- No mass refactor of other contexts — Auth is the only one observed to dual‑load.
-
-## Why not just "wrap it in try/catch"
-
-Catching the throw would hide the underlying dual‑module problem and the next page that mounts a fresh Auth consumer would crash again. Fixing the import specifier removes the cause; the optional‑hook is purely a safety net for non‑critical consumers.
+1. Healthy athlete with a baserunning prescription → "Open baserunning" lands on `/practice?module=baserunning` and the Baserunning module is preselected.
+2. Athlete with active leg-region injury → "Baserunning — IQ only" still shows "Open baserunning IQ" and lands on `/baserunning-iq`.
+3. Any athlete with a warmup block → tapping "Open warm-up" opens the generator dialog in place, generating + confirming adds a row to today's Game Plan, toast appears, "View" jumps to `/dashboard#game-plan`.
+4. Lift / Speed / Hitting / Throwing / Defense / Nutrition / Recovery CTAs unchanged — manual spot-check.
+5. `bunx tsgo --noEmit` clean.
