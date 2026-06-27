@@ -23,6 +23,8 @@ interface UserMenuProps {
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
   const { open: openQuickEdit } = useQuickEditProfile();
+  const { hasCompletedOnboarding, loading: onboardingLoading } = useAthleteOnboardingState();
+  const showSetup = !onboardingLoading && !hasCompletedOnboarding;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
