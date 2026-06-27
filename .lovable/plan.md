@@ -1,52 +1,33 @@
-## Phase 53 — Authentication Proof Authority
+## Phase 53 (continued) — Execute the proof now that the athlete is signed in
 
-### Objective
-Prove via execution evidence whether an authenticated athlete can complete the full upload→analysis pipeline, or identify the exact remaining blocker. Deliverable: `.lovable/phase-53-authentication-proof.md`.
+The user has signed in on the preview. Re-run the full Phase 53 evidence pipeline end-to-end and replace `.lovable/phase-53-authentication-proof.md` with execution-grade results.
 
-### Execution sequence (single Playwright session, evidence captured at every stage)
+### Steps
 
-1. **Environment probe**
-   - Read `LOVABLE_BROWSER_AUTH_STATUS` and the injected `LOVABLE_BROWSER_SUPABASE_*` vars. Record which path applies (`injected`, `signed_out`, `external_unmanaged`, `no_supabase`).
-   - Confirm dev server port via `ss -tlnp`.
-   - Generate a 2-second 720×720 H.264 mp4 fixture under `/tmp/browser/phase53/fixture.mp4` with ffmpeg.
+1. **Re-probe the harness.** Confirm `LOVABLE_BROWSER_AUTH_STATUS=injected` and that `LOVABLE_BROWSER_SUPABASE_SESSION_JSON` + `LOVABLE_BROWSER_SUPABASE_STORAGE_KEY` are now present. If still `signed_out`, stop and tell the user the session didn't inject (most common cause: signed in on the published origin instead of the preview origin).
 
-2. **Auth restore + assertion** (only if status = `injected`)
-   - `page.goto("http://localhost:<port>")`, write `LOVABLE_BROWSER_SUPABASE_SESSION_JSON` into localStorage under `LOVABLE_BROWSER_SUPABASE_STORAGE_KEY`.
-   - Navigate to `/analyze`. In-page evaluate:
-     - `supabase.auth.getSession()` → capture `session.user.id`, `expires_at`.
-     - `supabase.auth.getUser()` → capture `user.id`, validation result.
-   - Confirm both ids match and `expires_at > now`. Screenshot the analyze page.
+2. **Build fixture.** Create `/tmp/browser/phase53/fixture.mp4` — a 2-second 720×720 H.264 mp4 via ffmpeg.
 
-3. **RLS uid() proof**
-   - Run an authenticated round-trip query from the page: `supabase.from('profiles').select('id').eq('id', user.id).single()` and a `select auth.uid()` via an RPC if available, otherwise infer `auth.uid()` from a successful `videos` insert (step 4).
-
-4. **Upload pipeline — stage-by-stage PASS/FAIL**
+3. **Playwright run** (`/tmp/browser/phase53/run.py`, headless Chromium, viewport 1280×1800):
+   - Goto preview origin, write injected session JSON into `localStorage` under the injected storage key.
+   - Goto `/analyze`. Evaluate `supabase.auth.getSession()` and `supabase.auth.getUser()`; record both ids (redact access_token).
    - Attach fixture to the file input, click Analyze.
-   - Capture network for each stage with predicates:
-     - `storage/v1/object/videos/...` POST (storage upload)
-     - `rest/v1/videos` POST (videos insert) — record returned row id
-     - `functions/v1/analyze-video` POST — record status + JSON body
-     - downstream `video_landmark_runs` / `video_event_runs` / `video_metric_runs` / `video_analysis_runs` inserts
-   - Capture console errors and the final toast text via DOM.
-   - Screenshot after each major stage.
+   - Capture every relevant network request: `storage/v1/object/videos/...`, `rest/v1/videos`, `functions/v1/analyze-video`, and lineage inserts (`video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_analysis_runs`). Record method, status, response body (truncated), and the returned `videos.id`.
+   - Screenshot after auth restore, after file attach, after upload completes, and after analysis completes.
+   - Save the inserted video id to `/tmp/browser/phase53/video_id.txt`.
 
-5. **Server-side persistence proof**
-   - Via `supabase--read_query`, SELECT the inserted `videos` row by id, then the lineage rows in `video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_analysis_runs` keyed off the video id. Capture row counts and `tempo_sec` value if present.
-   - Pull `supabase--edge_function_logs` for `analyze-video` filtered to the invocation timestamp.
+4. **Server-side proof.** With the video id from step 3, run `supabase--read_query` SELECTs against `videos`, `video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_analysis_runs`. Pull `supabase--edge_function_logs` for `analyze-video` filtered to the invocation window.
 
-6. **Failure-mode forensics (only if any stage fails)**
-   - For each failure, classify exact cause from evidence: HTTP status, Supabase error code (e.g. 42501 RLS, 401 JWT), CORS, missing env var, edge-function exception, model asset 404, etc.
-   - For an auth-class failure, enumerate the eight specific sub-causes the user listed (origin, cookies, restore, callback, expiry, localStorage key mismatch, URL mismatch, publishable-key mismatch) and prove which one applies by inspecting the exact value that diverges.
+5. **Per-stage PASS/FAIL table** assembled from steps 3–4: storage upload, videos insert, edge invocation, Gemini call (from edge logs), pose execution, tempo execution, lineage persistence, athlete response render.
 
-7. **Human-action walkthrough (only if Lovable provably cannot proceed)**
-   - Concrete URL, account, post-login screen, localStorage key to verify (`sb-wysikbsjalfvjwqzkihj-auth-token`), next action, expected outcome. Written only if step 1 returned `signed_out` or `external_unmanaged`, or if step 2 proved the injected session is invalid for reasons outside code.
+6. **Failure forensics if any stage fails.** Classify exact cause from HTTP status + Supabase error code + edge logs. Fix the smallest possible code defect within scope (no schema changes unless an existing policy is provably wrong), re-run step 3, and re-evaluate.
 
-8. **Determination**
-   - **YES — READY FOR LIMITED BETA** iff steps 2–5 all PASS with persisted lineage rows.
-   - **NO — SPECIFIC BLOCKER IDENTIFIED** otherwise, with the exact failing stage, exact error, exact remediation owner (code change vs. human action vs. external dependency).
+7. **Write `.lovable/phase-53-authentication-proof.md`** (replace prior contents). Sections: env probe, session/user evidence (redacted), per-stage PASS/FAIL with HTTP evidence, screenshot paths under `/tmp/browser/phase53/screenshots/`, edge-function log excerpt, SELECT proofs, final binary determination.
 
-### Deliverable
-Single file `.lovable/phase-53-authentication-proof.md` containing: env probe output, session/user JSON (with access_token redacted), RLS uid proof, per-stage PASS/FAIL table with HTTP evidence, screenshots referenced by path under `/tmp/browser/phase53/screenshots/`, edge-function log excerpt, SELECT proofs, root-cause analysis (if any failure), human-action walkthrough (only if justified), and the binary final determination.
+### Determination rule
+
+- **YES — READY FOR LIMITED BETA** iff every stage in step 5 is PASS *and* SELECTs in step 4 return the expected lineage rows (at minimum: `videos` row owned by the signed-in user; a `video_metric_runs` row containing `tempo_sec` from the deterministic pipeline).
+- **NO — SPECIFIC BLOCKER IDENTIFIED** otherwise, with the exact failing stage and remediation owner.
 
 ### Out of scope
-No new metrics, no Phase 49 trust-lock reversals, no schema changes unless step 6 proves an existing policy is wrong (in which case a single targeted migration is the only DB change).
+No new metrics, no Phase 49 trust-lock reversals, no schema changes unless step 6 proves an existing policy is wrong.
