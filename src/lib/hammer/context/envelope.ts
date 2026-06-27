@@ -38,6 +38,7 @@ export const SPINE_VARIABLE_KEYS = [
   "sport_primary",
   "goal_summary",
   "goal_horizon",
+  "category_goals",
   "weekly_availability_days",
   "weekly_availability_hours",
   "typical_session_length_min",
