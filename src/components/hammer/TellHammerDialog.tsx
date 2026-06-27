@@ -11,7 +11,7 @@
  * for season phase and competition level. Never authors organism truth —
  * always self-report confidence.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +23,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { HeartPulse } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
+import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { detectInjuryPhrasing, type ReportInjuryRegionKey } from "@/lib/hammer/injury/reportInjury";
 
 interface Props {
   open: boolean;
