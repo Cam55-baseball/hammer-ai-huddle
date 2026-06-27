@@ -53,6 +53,7 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -133,6 +134,7 @@ function BlockCard({
   const [gapsOpen, setGapsOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [warmupOpen, setWarmupOpen] = useState(false);
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
@@ -266,6 +268,12 @@ function BlockCard({
               size="sm"
               variant={block.status === "awaiting-input" ? "outline" : "default"}
               onClick={() => {
+                // Warm-up opens the generator in place — Practice Hub is for
+                // hitting/throwing/defense/baserunning practice sessions, not warm-ups.
+                if (block.route === "hammer:open-warmup-generator") {
+                  setWarmupOpen(true);
+                  return;
+                }
                 // "Answer Hammer" (and any in-page hash route) is an
                 // inline-onboarding affordance, not a real route. Expand the
                 // block, open the gap drawer, and scroll the user to it so
@@ -431,6 +439,9 @@ function BlockCard({
           {chatOpen && <InlineBlockChat block={block} />}
         </CollapsibleContent>
       </Collapsible>
+      {block.modality === "warmup" && (
+        <HammerWarmupDialog open={warmupOpen} onOpenChange={setWarmupOpen} sport={sport} />
+      )}
     </div>
   );
 }
