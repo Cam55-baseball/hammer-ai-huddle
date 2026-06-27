@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,14 +32,15 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
   const { user, signIn, signUp, resetPassword } = useAuth();
 
-  const state = location.state as { 
-    role?: string; 
-    sport?: string; 
-    modules?: string[]; 
+  const state = location.state as {
+    role?: string;
+    sport?: string;
+    modules?: string[];
     fromPricing?: boolean;
     returnTo?: string;
     module?: string;
@@ -46,6 +48,29 @@ const Auth = () => {
     fromPayment?: boolean;
     message?: string;
   };
+
+  /**
+   * Safe same-origin redirect resolver. Used to preserve invite/parent flows
+   * (e.g. ?redirect=/accept-parent-invite?token=…) across sign-in/sign-up.
+   * Accepts only relative paths starting with `/` and rejects protocol-
+   * relative or absolute URLs.
+   */
+  const resolveRedirect = (): string | null => {
+    const candidates: Array<string | undefined> = [
+      searchParams.get("redirect") ?? undefined,
+      state?.returnTo,
+      (state as { from?: string } | undefined)?.from,
+    ];
+    for (const c of candidates) {
+      if (!c || typeof c !== "string") continue;
+      if (!c.startsWith("/")) continue;
+      if (c.startsWith("//")) continue;
+      if (c.includes("://")) continue;
+      return c;
+    }
+    return null;
+  };
+
 
   useEffect(() => {
     // Don't redirect if user is already authenticated
