@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHydrationReminders } from "@/hooks/useHydrationReminders";
 import { useUnifiedDataSync } from "@/hooks/useUnifiedDataSync";
+import { OnboardingResumeBanner } from "@/components/onboarding/OnboardingResumeBanner";
 
 interface DashboardLayoutProps {
   children: ReactNode;
