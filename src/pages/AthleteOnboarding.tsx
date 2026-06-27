@@ -17,12 +17,27 @@ import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBoot
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
+import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 
 
-const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Health check", "Notifications", "Done"];
-const STEP_DONE = 6;
-const STEP_NOTIFICATIONS = 5;
-const STEP_INJURY = 4;
+const STEPS = [
+  "Welcome",
+  "Profile",
+  "Rank goals",
+  "Schedule today",
+  "Confirm",
+  "Health check",
+  "Notifications",
+  "Done",
+];
+const STEP_WELCOME = 0;
+const STEP_PROFILE = 1;
+const STEP_GOALS = 2;
+const STEP_SCHEDULE = 3;
+const STEP_CONFIRM = 4;
+const STEP_INJURY = 5;
+const STEP_NOTIFICATIONS = 6;
+const STEP_DONE = 7;
 
 const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
   { value: "training", label: "Training", help: "Structured practice / drills" },
@@ -143,7 +158,7 @@ export default function AthleteOnboarding() {
         state={onboardingState}
         lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
       />
-      {step === 0 && (
+      {step === STEP_WELCOME && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>
           <p className="text-sm text-muted-foreground">
@@ -163,7 +178,7 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 1 && (
+      {step === STEP_PROFILE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Confirm your profile</h2>
           <p className="text-sm text-muted-foreground">
@@ -184,7 +199,11 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 2 && (
+      {step === STEP_GOALS && (
+        <CategoryGoalsStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_SCHEDULE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">What kind of day is today?</h2>
           <p className="text-sm text-muted-foreground">
@@ -239,7 +258,7 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 3 && (
+      {step === STEP_CONFIRM && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Event recorded</h2>
           <p className="text-sm text-muted-foreground">

@@ -24,6 +24,14 @@ import {
 import { buildAnthroProfile, hasAnyAnthroSignal } from "@/lib/hammer/anthro/profile";
 import { selectStrengthSwaps } from "@/lib/hammer/prescription/strengthSelector";
 import { selectThrowingAdaptations } from "@/lib/hammer/prescription/throwingSelector";
+import {
+  modalityToCategory,
+  rankFor,
+  intentFor,
+  CATEGORY_INTENTS,
+  CATEGORY_LABELS,
+  summarizeGoals,
+} from "@/lib/hammer/goals/categoryGoals";
 
 
 export type ModalityKey =
@@ -1092,11 +1100,74 @@ function applyMinorParentSupremacy(
   });
 }
 
+/**
+ * Reorder blocks so the athlete's highest-ranked skill goals lead the day,
+ * while utility blocks (warmup first, fueling/recovery last) stay anchored.
+ * Also annotates each skill-block's `roadmapReason` and `why` with the
+ * ranked goal + chosen intent so the lineage is visible in the UI.
+ *
+ * Missingness-permissive: when no ranking exists, returns blocks as-is.
+ */
+function applyCategoryGoalOrdering(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  proj: AthleteContextProjection,
+): ReadonlyArray<PrescribedBlock> {
+  const goals = proj.categoryGoals;
+  if (!goals) return blocks;
+
+  const headOrder: ReadonlyArray<ModalityKey> = ["warmup"];
+  const tailOrder: ReadonlyArray<ModalityKey> = ["fueling", "recovery"];
+  const isAnchored = (m: ModalityKey) => headOrder.includes(m) || tailOrder.includes(m);
+
+  const annotated = blocks.map((b) => {
+    const cat = modalityToCategory(b.modality);
+    if (!cat) return b;
+    const rank = rankFor(goals, cat);
+    if (!rank) return b;
+    const intentId = intentFor(goals, cat);
+    const intentLabel = intentId
+      ? CATEGORY_INTENTS[cat].find((p) => p.id === intentId)?.label ?? null
+      : null;
+    const tag = intentLabel
+      ? `Goal #${rank} (${CATEGORY_LABELS[cat]} → ${intentLabel}).`
+      : `Goal #${rank} (${CATEGORY_LABELS[cat]}).`;
+    return {
+      ...b,
+      why: `${tag} ${b.why}`,
+      roadmapReason: `${tag} ${b.roadmapReason}`,
+    } as PrescribedBlock;
+  });
+
+  const middle = annotated.filter((b) => !isAnchored(b.modality));
+  const head = headOrder
+    .map((m) => annotated.find((b) => b.modality === m))
+    .filter((b): b is PrescribedBlock => !!b);
+  const tail = tailOrder
+    .map((m) => annotated.find((b) => b.modality === m))
+    .filter((b): b is PrescribedBlock => !!b);
+
+  middle.sort((a, b) => {
+    const ca = modalityToCategory(a.modality);
+    const cb = modalityToCategory(b.modality);
+    const ra = ca ? rankFor(goals, ca) ?? 99 : 99;
+    const rb = cb ? rankFor(goals, cb) ?? 99 : 99;
+    return ra - rb;
+  });
+
+  return [...head, ...middle, ...tail];
+}
+
 export function buildHammerDailyPlan(ctx: HammerAthleteContext): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
-  const blocks = applyMinorParentSupremacy(rawBlocks, proj);
+  const guarded = applyMinorParentSupremacy(rawBlocks, proj);
+  const blocks = applyCategoryGoalOrdering(guarded, proj);
+  // Lineage breadcrumb (dev-only, harmless in prod): summarises which ranking drove ordering.
+  if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.debug("[dailyPlan] ordered by ranked goals →", summarizeGoals(proj.categoryGoals));
+  }
   return {
     blocks,
     seasonPhase: proj.seasonPhase,

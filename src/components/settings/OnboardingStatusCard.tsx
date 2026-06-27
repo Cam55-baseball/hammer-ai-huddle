@@ -19,8 +19,13 @@ import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingS
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
 export function OnboardingStatusCard() {
-  const { hasScheduleEvent, hasNotificationsPref, hasCompletedOnboarding, loading } =
-    useAthleteOnboardingState();
+  const {
+    hasScheduleEvent,
+    hasNotificationsPref,
+    hasCategoryGoals,
+    hasCompletedOnboarding,
+    loading,
+  } = useAthleteOnboardingState();
   const [injuryOpen, setInjuryOpen] = useState(false);
 
   return (
@@ -45,6 +50,9 @@ export function OnboardingStatusCard() {
           <div className="flex flex-wrap gap-1.5">
             <Badge variant={hasScheduleEvent ? "default" : "outline"}>
               {hasScheduleEvent ? "✓" : "•"} Today scheduled
+            </Badge>
+            <Badge variant={hasCategoryGoals ? "default" : "outline"}>
+              {hasCategoryGoals ? "✓" : "•"} Ranked goals
             </Badge>
             <Badge variant={hasNotificationsPref ? "default" : "outline"}>
               {hasNotificationsPref ? "✓" : "•"} Notifications

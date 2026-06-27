@@ -21,6 +21,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
+import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1824,8 +1825,9 @@ export default function Profile() {
         )}
 
         {/* Onboarding resume / review — strategic Settings anchor */}
-        <div className="mb-6">
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
           <OnboardingStatusCard />
+          {!viewingOtherProfile && <CategoryGoalsCard />}
         </div>
 
         {/* Account Info Card */}

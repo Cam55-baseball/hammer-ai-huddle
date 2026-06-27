@@ -20,6 +20,10 @@
  */
 import type { HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { injuryHistoryToText } from "@/lib/hammer/context/normalizers";
+import {
+  normalizeCategoryGoals,
+  type CategoryGoalsPayload,
+} from "@/lib/hammer/goals/categoryGoals";
 
 /* ── Envelope-shaped projection ──────────────────────────────────────────── */
 
@@ -35,6 +39,7 @@ export interface AthleteContextProjection {
   readonly weeklyAvailabilityDays: number | null;
   readonly goalSummary: string | null;
   readonly goalHorizon: string | null;
+  readonly categoryGoals: CategoryGoalsPayload | null;
   readonly readinessScore: number | null; // 0..1
   readonly workloadHigh: boolean;
   readonly asymmetryPct: number | null;
@@ -150,6 +155,7 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
       (ctx.get<number>("weekly_availability_days")?.value as number | null) ?? null,
     goalSummary: (ctx.get<string>("goal_summary")?.value as string | null) ?? null,
     goalHorizon: (ctx.get<string>("goal_horizon")?.value as string | null) ?? null,
+    categoryGoals: normalizeCategoryGoals(ctx.get<unknown>("category_goals")?.value),
     readinessScore,
     workloadHigh,
     asymmetryPct: asymVal ?? null,
