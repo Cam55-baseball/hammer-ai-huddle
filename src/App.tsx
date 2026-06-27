@@ -270,7 +270,7 @@ const App = () => {
               <Route path="/runtime/position" element={<RequireCapability capability="wave3_view"><Wave3Position /></RequireCapability>} />
               <Route path="/runtime/perception" element={<RequireCapability capability="wave3_view"><Wave3Perception /></RequireCapability>} />
               <Route path="/learn" element={<Wave3EducationHub />} />
-              <Route path="/onboarding/flow" element={<Wave3Onboarding />} />
+              <Route path="/onboarding/flow" element={<Navigate to="/onboarding/athlete" replace />} />
               <Route path="/cert" element={<RequireCapability capability="wave3_cert"><Wave3CertPath /></RequireCapability>} />
               <Route path="/share" element={<RequireCapability capability="wave3_share"><Wave3ShareConsole /></RequireCapability>} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
