@@ -330,25 +330,38 @@ export default function AnalyzeVideo() {
       hasAccessToken: !!liveSession?.access_token,
       sessionErr: sessionErr?.message ?? null,
     });
+    // Do NOT auto-navigate to /auth here — that's the bug that kicks users
+    // off the upload screen mid-flow. Surface an actionable toast instead;
+    // the file stays selected so they can retry after re-signing in.
+    const returnTo = `${location.pathname}${location.search}`;
     if (!liveSession?.user?.id) {
       toast.error(
-        t(
-          'videoAnalysis.sessionExpired',
-          'Your session expired. Please sign in again to upload.'
-        )
+        t('videoAnalysis.sessionExpired', 'Your session expired. Sign in again to upload — your video stays selected.'),
+        {
+          duration: 12000,
+          action: {
+            label: t('common.signIn', 'Sign in'),
+            onClick: () => navigate('/auth', { state: { returnTo } }),
+          },
+        }
       );
-      navigate('/auth', { replace: true });
       return;
     }
     if (liveSession.user.id !== user.id) {
+      console.warn('[upload] auth-origin mismatch', {
+        useAuthUserId: user.id,
+        liveSessionUserId: liveSession.user.id,
+      });
       toast.error(
-        t(
-          'videoAnalysis.sessionMismatch',
-          'Sign-in mismatch detected. Please sign in again.'
-        )
+        t('videoAnalysis.sessionMismatch', 'Two accounts detected on this device. Sign in again to continue.'),
+        {
+          duration: 12000,
+          action: {
+            label: t('common.signIn', 'Sign in'),
+            onClick: () => navigate('/auth', { state: { returnTo } }),
+          },
+        }
       );
-      await supabase.auth.signOut();
-      navigate('/auth', { replace: true });
       return;
     }
 

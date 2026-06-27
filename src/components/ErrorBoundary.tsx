@@ -1,113 +1,58 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { RefreshCw } from 'lucide-react';
+import { Component, ErrorInfo, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
+  fallback?: (reset: () => void, error: Error) => ReactNode;
+  label?: string;
 }
 
 interface State {
-  hasError: boolean;
   error: Error | null;
 }
 
+/**
+ * Route- or subtree-scoped error boundary. Converts render-time throws
+ * (e.g. a malformed day's calendar data) into a recoverable inline panel
+ * instead of unmounting the whole route.
+ */
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-  };
+  state: State = { error: null };
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): State {
+    return { error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // Lineage-visible: surface the real stack to the console so we can
+    // pinpoint the thrower without a guess-and-check loop.
+    console.error(`[ErrorBoundary${this.props.label ? ` ${this.props.label}` : ""}]`, error, info);
   }
 
-  private isDynamicImportError = (): boolean => {
-    const errorMessage = this.state.error?.message || '';
+  reset = () => this.setState({ error: null });
+
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    if (this.props.fallback) return this.props.fallback(this.reset, error);
+
     return (
-      errorMessage.includes('Failed to fetch dynamically imported module') ||
-      errorMessage.includes('Loading chunk') ||
-      errorMessage.includes('Loading CSS chunk')
-    );
-  };
-
-  private handleRetry = async () => {
-    // Clear all service worker caches and unregister SW, then hard reload
-    try {
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k => caches.delete(k)));
-      }
-      const regs = await navigator.serviceWorker?.getRegistrations();
-      if (regs) await Promise.all(regs.map(r => r.unregister()));
-    } catch (e) {
-      console.warn('Cache clear failed:', e);
-    }
-    window.location.reload();
-  };
-
-  private handleReset = async () => {
-    try {
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k => caches.delete(k)));
-      }
-      const regs = await navigator.serviceWorker?.getRegistrations();
-      if (regs) await Promise.all(regs.map(r => r.unregister()));
-    } catch (e) {
-      console.warn('Cache clear failed:', e);
-    }
-    this.setState({ hasError: false, error: null });
-    window.location.href = '/';
-  };
-
-  public render() {
-    if (this.state.hasError) {
-      const isDynamicImport = this.isDynamicImportError();
-
-      return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
-          <Card className="p-8 max-w-md w-full text-center">
-            <div className="text-6xl mb-4">{isDynamicImport ? '🔄' : '⚠️'}</div>
-            <h1 className="text-2xl font-bold mb-2">
-              {isDynamicImport ? 'Connection Issue' : 'Oops! Something went wrong'}
-            </h1>
-            <p className="text-muted-foreground mb-6">
-              {isDynamicImport
-                ? 'The page failed to load. This is usually temporary. Click retry to reload.'
-                : "We encountered an unexpected error. Don't worry, your data is safe."}
-            </p>
-            {this.state.error && !isDynamicImport && (
-              <div className="bg-muted p-4 rounded-lg mb-6 text-left">
-                <p className="text-sm font-mono text-muted-foreground break-all">
-                  {this.state.error.message}
-                </p>
-              </div>
-            )}
-            <div className="flex flex-col gap-3">
-              {isDynamicImport && (
-                <Button onClick={this.handleRetry} className="w-full">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry
-                </Button>
-              )}
-              <Button 
-                onClick={this.handleReset} 
-                variant={isDynamicImport ? "outline" : "default"}
-                className="w-full"
-              >
-                Return to Home
-              </Button>
-            </div>
-          </Card>
+      <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5 text-sm space-y-3">
+        <div className="flex items-center gap-2 text-destructive font-medium">
+          <AlertTriangle className="h-4 w-4" />
+          <span>Something went wrong here.</span>
         </div>
-      );
-    }
-
-    return this.props.children;
+        <p className="text-muted-foreground text-xs">
+          The rest of the app is fine — just this section couldn't render.
+          {error.message ? ` (${error.message})` : ""}
+        </p>
+        <Button size="sm" variant="outline" onClick={this.reset}>
+          Try again
+        </Button>
+      </div>
+    );
   }
 }
+
+export default ErrorBoundary;
