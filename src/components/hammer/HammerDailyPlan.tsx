@@ -268,6 +268,12 @@ function BlockCard({
               size="sm"
               variant={block.status === "awaiting-input" ? "outline" : "default"}
               onClick={() => {
+                // Warm-up opens the generator in place — Practice Hub is for
+                // hitting/throwing/defense/baserunning practice sessions, not warm-ups.
+                if (block.route === "hammer:open-warmup-generator") {
+                  setWarmupOpen(true);
+                  return;
+                }
                 // "Answer Hammer" (and any in-page hash route) is an
                 // inline-onboarding affordance, not a real route. Expand the
                 // block, open the gap drawer, and scroll the user to it so
