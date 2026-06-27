@@ -265,11 +265,30 @@ function BlockCard({
             <Button
               size="sm"
               variant={block.status === "awaiting-input" ? "outline" : "default"}
-              onClick={() => onNavigate(block.route)}
+              onClick={() => {
+                // "Answer Hammer" (and any in-page hash route) is an
+                // inline-onboarding affordance, not a real route. Expand the
+                // block, open the gap drawer, and scroll the user to it so
+                // they can answer right where they are.
+                if (block.route.startsWith("#") || block.status === "awaiting-input") {
+                  setOpen(true);
+                  setGapsOpen(true);
+                  // Fall back to chat if there are no structured gaps to ask.
+                  if (focusGaps.length === 0) setChatOpen(true);
+                  // Defer scroll until the collapsible has expanded.
+                  requestAnimationFrame(() => {
+                    const el = document.getElementById(`hammer-plan-${block.modality}`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
+                  return;
+                }
+                onNavigate(block.route);
+              }}
               className="text-xs"
             >
               {block.ctaLabel}
             </Button>
+
             <CollapsibleTrigger asChild>
               <Button size="sm" variant="ghost" className="text-[11px] h-7 px-2 gap-1">
                 {open ? "Hide" : "Details"}
@@ -343,7 +362,7 @@ function BlockCard({
             </div>
           )}
 
-          {focusGaps.length > 0 && user && (
+          {(focusGaps.length > 0 || block.missingContextKeys.length > 0) && user && (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2">
               <button
                 onClick={() => setGapsOpen((v) => !v)}
@@ -359,6 +378,15 @@ function BlockCard({
                   {focusGaps.map((g) => (
                     <InlineGapAnswer key={g.id} gap={g} userId={user.id} />
                   ))}
+                  {focusGaps.length === 0 && (
+                    <div className="text-[11px] text-muted-foreground">
+                      Tell Hammer about{" "}
+                      <span className="font-medium text-foreground">
+                        {block.missingContextKeys.join(", ").replace(/_/g, " ")}
+                      </span>{" "}
+                      in chat below and your plan will adapt.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
