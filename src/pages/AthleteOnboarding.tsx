@@ -131,7 +131,7 @@ export default function AthleteOnboarding() {
 
   const onboardingState: OnboardingStateKind = emittedEventId
     ? "first-completed-action"
-    : hasFirstEvent
+    : hasScheduleEvent
       ? "first-completed-action"
       : step === 0
         ? "first-login"
