@@ -139,6 +139,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           />
           <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-w-full box-border">
             <OfflineIndicator />
+            <OnboardingResumeBanner />
             {children}
           </main>
         </SidebarInset>
