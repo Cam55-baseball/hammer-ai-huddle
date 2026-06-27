@@ -78,10 +78,12 @@ export default function AthleteOnboarding() {
     })();
   }, [user]);
 
-  // If the athlete already emitted ≥1 canonical event, skip onboarding entirely.
+  // Skip the flow only when the athlete already finished it (schedule + notifs).
+  // Bootstrap events alone (age_observed) no longer count.
   useEffect(() => {
-    if (!stateLoading && hasFirstEvent && step < 5) navigate("/command", { replace: true });
-  }, [stateLoading, hasFirstEvent, navigate, step]);
+    if (!stateLoading && hasCompletedOnboarding && step < STEP_NOTIFICATIONS)
+      navigate("/command", { replace: true });
+  }, [stateLoading, hasCompletedOnboarding, navigate, step]);
 
 
   const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
