@@ -199,7 +199,11 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 2 && (
+      {step === STEP_GOALS && (
+        <CategoryGoalsStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_SCHEDULE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">What kind of day is today?</h2>
           <p className="text-sm text-muted-foreground">
