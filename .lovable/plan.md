@@ -1,47 +1,52 @@
-## Phase 52 — Video Analysis Restoration Plan
+## Phase 53 — Authentication Proof Authority
 
-### Root cause hypothesis (to confirm during execution)
+### Objective
+Prove via execution evidence whether an authenticated athlete can complete the full upload→analysis pipeline, or identify the exact remaining blocker. Deliverable: `.lovable/phase-53-authentication-proof.md`.
 
-DB-level facts gathered:
-- `videos` INSERT policy is correct: `WITH CHECK (auth.uid() = user_id)`.
-- `videos` storage bucket exists and is public with a correct authenticated-INSERT policy keyed on `auth.uid()` folder.
-- `AnalyzeVideo.tsx` sets `user_id: user.id` from `useAuth()` and uploads to `${user.id}/...`.
+### Execution sequence (single Playwright session, evidence captured at every stage)
 
-If the storage upload at line 449 succeeded but the `videos` insert failed RLS, then at the moment of the DB call either:
-1. **Session was not present at the Supabase client** (`auth.uid()` returns null) — most likely root cause given current console logs show `hasUser:false, hasSession:false` on the preview origin. The user is signed in on the *published* origin (`hammers-modality.lovable.app`) but the preview origin holds no session, so `useAuth().user` is null when the upload button is reachable, OR the session expired between storage upload and insert.
-2. `user.id` from `useAuth()` is stale and does not match the current `auth.uid()`.
+1. **Environment probe**
+   - Read `LOVABLE_BROWSER_AUTH_STATUS` and the injected `LOVABLE_BROWSER_SUPABASE_*` vars. Record which path applies (`injected`, `signed_out`, `external_unmanaged`, `no_supabase`).
+   - Confirm dev server port via `ss -tlnp`.
+   - Generate a 2-second 720×720 H.264 mp4 fixture under `/tmp/browser/phase53/fixture.mp4` with ffmpeg.
 
-Storage upload almost certainly *didn't* actually succeed under anon — the public bucket allows public reads but its INSERT policy requires `auth.uid()`. So either the user was authenticated for storage but the JWT expired before insert (unlikely in the same tick) — or the storage upload also failed and the code's `if (uploadError) throw` path is being masked. We will verify by reading the browser session at upload time.
+2. **Auth restore + assertion** (only if status = `injected`)
+   - `page.goto("http://localhost:<port>")`, write `LOVABLE_BROWSER_SUPABASE_SESSION_JSON` into localStorage under `LOVABLE_BROWSER_SUPABASE_STORAGE_KEY`.
+   - Navigate to `/analyze`. In-page evaluate:
+     - `supabase.auth.getSession()` → capture `session.user.id`, `expires_at`.
+     - `supabase.auth.getUser()` → capture `user.id`, validation result.
+   - Confirm both ids match and `expires_at > now`. Screenshot the analyze page.
 
-### Execution steps
+3. **RLS uid() proof**
+   - Run an authenticated round-trip query from the page: `supabase.from('profiles').select('id').eq('id', user.id).single()` and a `select auth.uid()` via an RPC if available, otherwise infer `auth.uid()` from a successful `videos` insert (step 4).
 
-1. **Repro with Playwright against the running preview**: load `/analyze`, restore the injected Supabase session (`LOVABLE_BROWSER_SUPABASE_*`), attach a tiny synthetic mp4 fixture (generated via ffmpeg into `/tmp/browser/`) to the file input, click Analyze, capture: `await supabase.auth.getSession()` value just before the failing line, console errors, network 401/403 responses, and the actual error toast. Confirm exact failure mode.
+4. **Upload pipeline — stage-by-stage PASS/FAIL**
+   - Attach fixture to the file input, click Analyze.
+   - Capture network for each stage with predicates:
+     - `storage/v1/object/videos/...` POST (storage upload)
+     - `rest/v1/videos` POST (videos insert) — record returned row id
+     - `functions/v1/analyze-video` POST — record status + JSON body
+     - downstream `video_landmark_runs` / `video_event_runs` / `video_metric_runs` / `video_analysis_runs` inserts
+   - Capture console errors and the final toast text via DOM.
+   - Screenshot after each major stage.
 
-2. **Hard pre-insert auth assertion in `AnalyzeVideo.tsx`** (frontend-only — within Phase 49 scope):
-   - Before storage upload AND before `videos` insert, call `const { data: { session } } = await supabase.auth.getSession()`. If `session?.user?.id` is missing or `!== user.id`, abort with a clear toast ("Your session expired — please sign in again.") and `navigate('/auth')`. Eliminates the silent RLS rejection class.
-   - Log `[upload] session.user.id`, `useAuth user.id` side-by-side so any future divergence is visible.
+5. **Server-side persistence proof**
+   - Via `supabase--read_query`, SELECT the inserted `videos` row by id, then the lineage rows in `video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_analysis_runs` keyed off the video id. Capture row counts and `tempo_sec` value if present.
+   - Pull `supabase--edge_function_logs` for `analyze-video` filtered to the invocation timestamp.
 
-3. **Repair anything Playwright surfaces** under the same fix scope:
-   - If `getSession()` returns null on the preview origin despite the injected token, ensure `AnalyzeVideo` waits for `isAuthStable` before mounting the uploader (already gated — verify the gate works in build).
-   - If `videoError.code === '42501'`, surface the auth assertion above; if it is something else, fix that specific cause.
-   - If storage upload itself fails (currently masked by ordering — `uploadError` is thrown but the toast may not distinguish it), differentiate the toast messages between "storage upload failed" vs "database insert failed" so the next failure is diagnosable in one pass.
+6. **Failure-mode forensics (only if any stage fails)**
+   - For each failure, classify exact cause from evidence: HTTP status, Supabase error code (e.g. 42501 RLS, 401 JWT), CORS, missing env var, edge-function exception, model asset 404, etc.
+   - For an auth-class failure, enumerate the eight specific sub-causes the user listed (origin, cookies, restore, callback, expiry, localStorage key mismatch, URL mismatch, publishable-key mismatch) and prove which one applies by inspecting the exact value that diverges.
 
-4. **No schema / RLS changes unless Playwright proves the existing policies are wrong.** The current policies are correct for the intended pattern; rewriting them blindly would mask the real bug.
+7. **Human-action walkthrough (only if Lovable provably cannot proceed)**
+   - Concrete URL, account, post-login screen, localStorage key to verify (`sb-wysikbsjalfvjwqzkihj-auth-token`), next action, expected outcome. Written only if step 1 returned `signed_out` or `external_unmanaged`, or if step 2 proved the injected session is invalid for reasons outside code.
 
-5. **Edge functions out of scope unless reached.** The reported failure is *before* `analyze-video` is invoked, so this phase does not modify edge functions unless step 1 proves invocation also fails. If it does, fix the specific failure (likely the JWT propagation in `supabase.functions.invoke`).
+8. **Determination**
+   - **YES — READY FOR LIMITED BETA** iff steps 2–5 all PASS with persisted lineage rows.
+   - **NO — SPECIFIC BLOCKER IDENTIFIED** otherwise, with the exact failing stage, exact error, exact remediation owner (code change vs. human action vs. external dependency).
 
-6. **Verification gate** (all must pass before declaring success):
-   - `bunx tsgo --noEmit`
-   - `bunx vite build`
-   - Playwright run: signed-in upload of a 2-second 720×720 30fps mp4 fixture → `videos` row appears → `currentVideoId` set → analysis runs OR completes — capture screenshots + the final SELECT against `videos` keyed by the inserted id.
-   - `psql` SELECT showing the new `videos` row owned by the test user, plus the persisted `video_metric_runs` tempo row (Phase 51 lineage).
+### Deliverable
+Single file `.lovable/phase-53-authentication-proof.md` containing: env probe output, session/user JSON (with access_token redacted), RLS uid proof, per-stage PASS/FAIL table with HTTP evidence, screenshots referenced by path under `/tmp/browser/phase53/screenshots/`, edge-function log excerpt, SELECT proofs, root-cause analysis (if any failure), human-action walkthrough (only if justified), and the binary final determination.
 
-7. **Deliverable**: `.lovable/phase-52-video-analysis-restoration.md` containing: confirmed root cause(s) from step 1, exact files changed, before/after evidence per repair, Playwright screenshots, SELECT proof, and the final YES / YES — HUMAN ACTION REQUIRED / NO determination. Required-human-actions section only if Playwright proves a repair cannot be made from code (e.g. provider toggle in Cloud → Users → Auth Settings).
-
-### Files expected to change
-
-- `src/pages/AnalyzeVideo.tsx` — pre-insert session assertion + distinguishable error toasts.
-- Possibly one targeted migration *only if* Playwright shows the existing INSERT policy is being evaluated against a role other than `authenticated` (the policy is currently `{public}` which evaluates to all roles including `authenticated`, so this should not be needed — but it's the only DB change in scope if proven necessary).
-
-### Out of scope (Phase 49 trust lock still applies)
-No new athlete-facing measurement surfaces. No reintroduction of fabricated `/100` scores. No new metrics.
+### Out of scope
+No new metrics, no Phase 49 trust-lock reversals, no schema changes unless step 6 proves an existing policy is wrong (in which case a single targeted migration is the only DB change).
