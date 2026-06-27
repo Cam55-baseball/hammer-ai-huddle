@@ -769,6 +769,7 @@ export type Database = {
         Row: {
           anthropometrics: Json | null
           bats_hand: string | null
+          category_goals: Json | null
           competition_level: string | null
           confidence: Json
           created_at: string
@@ -801,6 +802,7 @@ export type Database = {
         Insert: {
           anthropometrics?: Json | null
           bats_hand?: string | null
+          category_goals?: Json | null
           competition_level?: string | null
           confidence?: Json
           created_at?: string
@@ -833,6 +835,7 @@ export type Database = {
         Update: {
           anthropometrics?: Json | null
           bats_hand?: string | null
+          category_goals?: Json | null
           competition_level?: string | null
           confidence?: Json
           created_at?: string
