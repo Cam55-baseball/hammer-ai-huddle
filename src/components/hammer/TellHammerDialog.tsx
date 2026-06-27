@@ -55,6 +55,17 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
   const { updateSeasonStatus } = useSeasonStatus();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [injuryOpen, setInjuryOpen] = useState(false);
+  const [prefillRegion, setPrefillRegion] = useState<ReportInjuryRegionKey | null>(null);
+
+  // Deterministic phrase detection — surfaces a one-tap promotion to a real
+  // RR-6 injury report. NEVER auto-emits; the athlete still confirms.
+  const injuryHint = useMemo(() => detectInjuryPhrasing(note), [note]);
+
+  function openInjuryFromText() {
+    setPrefillRegion(injuryHint.region);
+    setInjuryOpen(true);
+  }
 
   async function saveNote() {
     if (!user || !note.trim() || busy) return;
