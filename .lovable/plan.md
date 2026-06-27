@@ -1,33 +1,42 @@
-## Phase 53 (continued) — Execute the proof now that the athlete is signed in
+# Contextual Recording Hint for Tempo (deterministic)
 
-The user has signed in on the preview. Re-run the full Phase 53 evidence pipeline end-to-end and replace `.lovable/phase-53-authentication-proof.md` with execution-grade results.
+Add a small, presentation-only hint panel under the existing **Tempo (deterministic)** tile in the pitching analysis. It explains how to record a clip so the deterministic pipeline can detect `peak_leg_lift` (the anchor whose absence currently shows `peak_leg_lift_missing` and suppresses the value).
 
-### Steps
+This is a frontend-only, additive change. No measurement logic, schema, edge function, or trust-lock behavior changes. The tile still shows the canonical missingness reason verbatim; the new panel sits next to it as recording guidance.
 
-1. **Re-probe the harness.** Confirm `LOVABLE_BROWSER_AUTH_STATUS=injected` and that `LOVABLE_BROWSER_SUPABASE_SESSION_JSON` + `LOVABLE_BROWSER_SUPABASE_STORAGE_KEY` are now present. If still `signed_out`, stop and tell the user the session didn't inject (most common cause: signed in on the published origin instead of the preview origin).
+## Behavior
 
-2. **Build fixture.** Create `/tmp/browser/phase53/fixture.mp4` — a 2-second 720×720 H.264 mp4 via ffmpeg.
+- **Where**: directly under the existing tile in `src/pages/AnalyzeVideo.tsx` (around lines 1158–1177), inside the same `module === 'pitching'` gate, so it never appears for hitting or other modules.
+- **When shown**:
+  - Auto-expanded when `persistedTempo.value == null` AND `missing_reason` is one of: `peak_leg_lift_missing`, `no_signal`, `low_pose_confidence` (anchor-related).
+  - Collapsed-by-default (a small "Recording tips for accurate Tempo" disclosure) when a value *was* measured, so it stays available without cluttering a successful result.
+- **No telemetry, no measurement coupling.** Pure static guidance keyed off the existing `missing_reason` string already in state.
 
-3. **Playwright run** (`/tmp/browser/phase53/run.py`, headless Chromium, viewport 1280×1800):
-   - Goto preview origin, write injected session JSON into `localStorage` under the injected storage key.
-   - Goto `/analyze`. Evaluate `supabase.auth.getSession()` and `supabase.auth.getUser()`; record both ids (redact access_token).
-   - Attach fixture to the file input, click Analyze.
-   - Capture every relevant network request: `storage/v1/object/videos/...`, `rest/v1/videos`, `functions/v1/analyze-video`, and lineage inserts (`video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_analysis_runs`). Record method, status, response body (truncated), and the returned `videos.id`.
-   - Screenshot after auth restore, after file attach, after upload completes, and after analysis completes.
-   - Save the inserted video id to `/tmp/browser/phase53/video_id.txt`.
+## Panel contents
 
-4. **Server-side proof.** With the video id from step 3, run `supabase--read_query` SELECTs against `videos`, `video_landmark_runs`, `video_event_runs`, `video_metric_runs`, `video_analysis_runs`. Pull `supabase--edge_function_logs` for `analyze-video` filtered to the invocation window.
+Title: **How to record for reliable Tempo**
 
-5. **Per-stage PASS/FAIL table** assembled from steps 3–4: storage upload, videos insert, edge invocation, Gemini call (from edge logs), pose execution, tempo execution, lineage persistence, athlete response render.
+Short intro line: "Tempo needs to see your peak leg lift and front-foot strike. A few small framing choices make this consistent."
 
-6. **Failure forensics if any stage fails.** Classify exact cause from HTTP status + Supabase error code + edge logs. Fix the smallest possible code defect within scope (no schema changes unless an existing policy is provably wrong), re-run step 3, and re-evaluate.
+Five concise tips (icon + label + one line each):
 
-7. **Write `.lovable/phase-53-authentication-proof.md`** (replace prior contents). Sections: env probe, session/user evidence (redacted), per-stage PASS/FAIL with HTTP evidence, screenshot paths under `/tmp/browser/phase53/screenshots/`, edge-function log excerpt, SELECT proofs, final binary determination.
+1. **Side-on camera** — Film from the open side (3B side for RHP, 1B side for LHP), perpendicular to the rubber-to-plate line.
+2. **Full body in frame** — Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.
+3. **Start before the leg lift** — Begin recording at the set position; don't trim the front of the clip.
+4. **End after release** — Keep filming through ball release and into follow-through.
+5. **Good lighting, low motion blur** — Daylight or bright cage lighting; phone in 1080p/60fps if available; lock exposure on the pitcher.
 
-### Determination rule
+Footer line (muted, smaller): "If `peak_leg_lift_missing` keeps appearing with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft."
 
-- **YES — READY FOR LIMITED BETA** iff every stage in step 5 is PASS *and* SELECTs in step 4 return the expected lineage rows (at minimum: `videos` row owned by the signed-in user; a `video_metric_runs` row containing `tempo_sec` from the deterministic pipeline).
-- **NO — SPECIFIC BLOCKER IDENTIFIED** otherwise, with the exact failing stage and remediation owner.
+## Visual / technical details
 
-### Out of scope
-No new metrics, no Phase 49 trust-lock reversals, no schema changes unless step 6 proves an existing policy is wrong.
+- Reuse existing tokens: `border-border`, `bg-background`, `text-muted-foreground`, `rounded-lg`. No new colors.
+- Use `lucide-react` icons already in the project (e.g. `Camera`, `User`, `Play`, `Square`, `Sun`) — one per tip, `h-4 w-4 text-muted-foreground`.
+- Use shadcn `Collapsible` (already in `@/components/ui/collapsible`) for the collapsed-by-default variant when a value exists.
+- No new files. ~40 lines added to `AnalyzeVideo.tsx` adjacent to the existing tile block.
+
+## Out of scope
+
+- No changes to `tempoPipeline`, `tempoTileAdapter`, evidence emission, or missingness vocabulary.
+- No copy changes to the existing "Could not be measured from this clip (…)" line — trust-lock wording is preserved verbatim.
+- No i18n keys added in this pass (matches the surrounding tile, which is also hardcoded English).
