@@ -1823,6 +1823,11 @@ export default function Profile() {
           </div>
         )}
 
+        {/* Onboarding resume / review — strategic Settings anchor */}
+        <div className="mb-6">
+          <OnboardingStatusCard />
+        </div>
+
         {/* Account Info Card */}
         <Card className="p-6">
           <h3 className="text-xl font-bold mb-4">{t('profile.accountInformation')}</h3>
