@@ -265,11 +265,30 @@ function BlockCard({
             <Button
               size="sm"
               variant={block.status === "awaiting-input" ? "outline" : "default"}
-              onClick={() => onNavigate(block.route)}
+              onClick={() => {
+                // "Answer Hammer" (and any in-page hash route) is an
+                // inline-onboarding affordance, not a real route. Expand the
+                // block, open the gap drawer, and scroll the user to it so
+                // they can answer right where they are.
+                if (block.route.startsWith("#") || block.status === "awaiting-input") {
+                  setOpen(true);
+                  setGapsOpen(true);
+                  // Fall back to chat if there are no structured gaps to ask.
+                  if (focusGaps.length === 0) setChatOpen(true);
+                  // Defer scroll until the collapsible has expanded.
+                  requestAnimationFrame(() => {
+                    const el = document.getElementById(`hammer-plan-${block.modality}`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
+                  return;
+                }
+                onNavigate(block.route);
+              }}
               className="text-xs"
             >
               {block.ctaLabel}
             </Button>
+
             <CollapsibleTrigger asChild>
               <Button size="sm" variant="ghost" className="text-[11px] h-7 px-2 gap-1">
                 {open ? "Hide" : "Details"}
