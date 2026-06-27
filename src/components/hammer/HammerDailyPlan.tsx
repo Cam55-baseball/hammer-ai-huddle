@@ -55,6 +55,7 @@ import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
+import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
