@@ -1158,35 +1158,23 @@ export default function AnalyzeVideo() {
                       anchor the swing/pitch. Only mounted for BP (pitching). */}
                   {persistedTempo && module === 'pitching' && (
                     <div className="p-4 rounded-lg border border-border bg-background">
-                      <h4 className="text-lg font-semibold mb-1">Tempo (deterministic)</h4>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Measured from your video by the on-device pose engine. No estimation.
-                      </p>
+                      <h4 className="text-lg font-semibold mb-1">Tempo</h4>
                       {persistedTempo.value != null ? (
                         <p className="text-2xl font-bold tabular-nums">
                           {persistedTempo.value.toFixed(2)}<span className="text-sm font-normal text-muted-foreground"> sec</span>
                         </p>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          Could not be measured from this clip ({persistedTempo.missing_reason ?? 'no_signal'}). No value is shown.
+                          Tempo could not be read from this clip.
                         </p>
                       )}
-                      <p className="mt-2 text-[10px] text-muted-foreground/70 font-mono break-all">
-                        evidence sha256: {persistedTempo.evidence_sha256_hex.slice(0, 16)}…
-                      </p>
                     </div>
                   )}
 
                   {/* Recording guidance for the deterministic Tempo tile.
                       Presentation-only: keyed off the existing persistedTempo
-                      state, never mutates measurement logic or copy. Auto-
-                      expanded when the anchor is missing; collapsible otherwise. */}
+                      state, never mutates measurement logic or copy. */}
                   {persistedTempo && module === 'pitching' && (() => {
-                    const anchorMissing =
-                      persistedTempo.value == null &&
-                      ['peak_leg_lift_missing', 'no_signal', 'low_pose_confidence'].includes(
-                        persistedTempo.missing_reason ?? ''
-                      );
                     const tips = [
                       { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side (3B side for RHP, 1B side for LHP), perpendicular to the rubber-to-plate line.' },
                       { Icon: User, label: 'Full body in frame', body: 'Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.' },
@@ -1194,43 +1182,35 @@ export default function AnalyzeVideo() {
                       { Icon: Square, label: 'End after release', body: 'Keep filming through ball release and into follow-through.' },
                       { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; phone in 1080p/60fps if available; lock exposure on the pitcher.' },
                     ];
-                    const body = (
-                      <div className="space-y-3">
-                        <p className="text-xs text-muted-foreground">
-                          Tempo needs to see your peak leg lift and front-foot strike. A few small framing choices make this consistent.
-                        </p>
-                        <ul className="space-y-2">
-                          {tips.map(({ Icon, label, body }) => (
-                            <li key={label} className="flex items-start gap-2">
-                              <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                              <span className="text-xs">
-                                <span className="font-semibold">{label}</span>
-                                <span className="text-muted-foreground"> — {body}</span>
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                        <p className="text-[11px] text-muted-foreground/80">
-                          If <span className="font-mono">peak_leg_lift_missing</span> keeps appearing with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft.
-                        </p>
-                      </div>
-                    );
                     return (
                       <div className="p-4 rounded-lg border border-border bg-background">
-                        {anchorMissing ? (
-                          <>
-                            <h4 className="text-sm font-semibold mb-2">How to record for reliable Tempo</h4>
-                            {body}
-                          </>
-                        ) : (
-                          <Collapsible>
-                            <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full text-left">
-                              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
-                              Recording tips for accurate Tempo
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="mt-3">{body}</CollapsibleContent>
-                          </Collapsible>
-                        )}
+                        <Collapsible>
+                          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full text-left">
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+                            How to record for reliable Tempo
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-3">
+                            <div className="space-y-3">
+                              <p className="text-xs text-muted-foreground">
+                                Tempo needs to see your peak leg lift and front-foot strike. A few small framing choices make this consistent.
+                              </p>
+                              <ul className="space-y-2">
+                                {tips.map(({ Icon, label, body }) => (
+                                  <li key={label} className="flex items-start gap-2">
+                                    <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                                    <span className="text-xs">
+                                      <span className="font-semibold">{label}</span>
+                                      <span className="text-muted-foreground"> — {body}</span>
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                              <p className="text-[11px] text-muted-foreground/80">
+                                If Tempo keeps failing to read with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft.
+                              </p>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
                       </div>
                     );
                   })()}

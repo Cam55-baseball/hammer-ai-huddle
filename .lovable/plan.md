@@ -1,42 +1,47 @@
-# Contextual Recording Hint for Tempo (deterministic)
+# Plan: Simplify the Tempo Deterministic Tile
 
-Add a small, presentation-only hint panel under the existing **Tempo (deterministic)** tile in the pitching analysis. It explains how to record a clip so the deterministic pipeline can detect `peak_leg_lift` (the anchor whose absence currently shows `peak_leg_lift_missing` and suppresses the value).
+## Goal
+Replace the current `Tempo (deterministic)` result tile in `/analyze/pitching` with a concise, athlete-friendly card that never exposes raw missingness codes, SHA fragments, or long measurement notes. Move the recording instructions into a compact dropdown directly beneath the result card.
 
-This is a frontend-only, additive change. No measurement logic, schema, edge function, or trust-lock behavior changes. The tile still shows the canonical missingness reason verbatim; the new panel sits next to it as recording guidance.
+## Current state
+In `src/pages/AnalyzeVideo.tsx` (lines ~1159–1236) the Tempo tile currently renders:
 
-## Behavior
+- Header: `Tempo (deterministic)`
+- Sub-line: `Measured from your video by the on-device pose engine. No estimation.`
+- Value or missing line that includes the raw reason code, e.g. `Could not be measured from this clip (peak_leg_lift_missing). No value is shown.`
+- `evidence sha256: 20ed0ea944bf15dc…`
+- A separate guidance block titled `How to record for reliable Tempo`, auto-expanded when the leg-lift anchor is missing.
 
-- **Where**: directly under the existing tile in `src/pages/AnalyzeVideo.tsx` (around lines 1158–1177), inside the same `module === 'pitching'` gate, so it never appears for hitting or other modules.
-- **When shown**:
-  - Auto-expanded when `persistedTempo.value == null` AND `missing_reason` is one of: `peak_leg_lift_missing`, `no_signal`, `low_pose_confidence` (anchor-related).
-  - Collapsed-by-default (a small "Recording tips for accurate Tempo" disclosure) when a value *was* measured, so it stays available without cluttering a successful result.
-- **No telemetry, no measurement coupling.** Pure static guidance keyed off the existing `missing_reason` string already in state.
+## Changes
 
-## Panel contents
+### 1. Simplify the main Tempo result card
+Rewrite the card to show only:
 
-Title: **How to record for reliable Tempo**
+- **Title:** `Tempo`
+- **Measured value present:** `{value} sec` (no extra explanatory text).
+- **Measured value missing:** `Tempo could not be read from this clip.`
 
-Short intro line: "Tempo needs to see your peak leg lift and front-foot strike. A few small framing choices make this consistent."
+Remove the sub-line, the raw reason code, and the SHA prefix from the main card.
 
-Five concise tips (icon + label + one line each):
+### 2. Move recording guidance into a dropdown below the result card
+- Place the existing recording tips list inside a `Collapsible` component.
+- Position the collapsible immediately under the Tempo result card, not as a separate floating panel.
+- Trigger text: `How to record for reliable Tempo` with a chevron.
+- Default state: **collapsed** for both success and missing cases.
+- Keep the same five bullet tips and the final occlusion note (lead leg occluded by glove-side arm).
 
-1. **Side-on camera** — Film from the open side (3B side for RHP, 1B side for LHP), perpendicular to the rubber-to-plate line.
-2. **Full body in frame** — Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.
-3. **Start before the leg lift** — Begin recording at the set position; don't trim the front of the clip.
-4. **End after release** — Keep filming through ball release and into follow-through.
-5. **Good lighting, low motion blur** — Daylight or bright cage lighting; phone in 1080p/60fps if available; lock exposure on the pitcher.
+### 3. Preserve lineage visibility for debugging
+Move the `evidence sha256` string out of the athlete-facing main card. Options:
 
-Footer line (muted, smaller): "If `peak_leg_lift_missing` keeps appearing with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft."
+- **Preferred:** Drop it from the visible UI entirely (it remains in the persisted `video_metric_runs` row for any engineering audit).
+- **Alternative if you want it discoverable:** Add a tiny, collapsed `Debug details` expander inside the Tempo card that shows the SHA only when opened. This still removes raw text from the default view.
 
-## Visual / technical details
+This plan defaults to the preferred option (drop SHA from UI) unless you ask for the debug expander.
 
-- Reuse existing tokens: `border-border`, `bg-background`, `text-muted-foreground`, `rounded-lg`. No new colors.
-- Use `lucide-react` icons already in the project (e.g. `Camera`, `User`, `Play`, `Square`, `Sun`) — one per tip, `h-4 w-4 text-muted-foreground`.
-- Use shadcn `Collapsible` (already in `@/components/ui/collapsible`) for the collapsed-by-default variant when a value exists.
-- No new files. ~40 lines added to `AnalyzeVideo.tsx` adjacent to the existing tile block.
+## Files changed
+- `src/pages/AnalyzeVideo.tsx` only.
 
-## Out of scope
-
-- No changes to `tempoPipeline`, `tempoTileAdapter`, evidence emission, or missingness vocabulary.
-- No copy changes to the existing "Could not be measured from this clip (…)" line — trust-lock wording is preserved verbatim.
-- No i18n keys added in this pass (matches the surrounding tile, which is also hardcoded English).
+## Verification
+- `bunx tsgo --noEmit` passes.
+- Tempo tile no longer contains the strings `peak_leg_lift_missing`, `evidence sha256`, or `on-device pose engine`.
+- UI renders a single clean result line with the dropdown directly beneath it.
