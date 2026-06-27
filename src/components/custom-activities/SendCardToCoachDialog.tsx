@@ -30,7 +30,7 @@ interface SendCardToCoachDialogProps {
 
 export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName, itemTitle, templateData }: SendCardToCoachDialogProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const [coaches, setCoaches] = useState<LinkedCoach[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
