@@ -158,7 +158,7 @@ export default function AthleteOnboarding() {
         state={onboardingState}
         lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
       />
-      {step === 0 && (
+      {step === STEP_WELCOME && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>
           <p className="text-sm text-muted-foreground">
