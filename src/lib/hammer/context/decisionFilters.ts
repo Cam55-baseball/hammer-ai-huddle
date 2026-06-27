@@ -39,6 +39,7 @@ export interface AthleteContextProjection {
   readonly weeklyAvailabilityDays: number | null;
   readonly goalSummary: string | null;
   readonly goalHorizon: string | null;
+  readonly categoryGoals: CategoryGoalsPayload | null;
   readonly readinessScore: number | null; // 0..1
   readonly workloadHigh: boolean;
   readonly asymmetryPct: number | null;
