@@ -13,7 +13,7 @@ type Phase = 'setup' | 'live_rep' | 'summary' | 'analysis';
 
 export default function SoftballStealingTrainer() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, session, loading, isAuthStable } = useAuth();
   const { createSession, saving } = usePerformanceSession();
   const [phase, setPhase] = useState<Phase>('setup');
   const [config, setConfig] = useState<StealSetupConfig | null>(null);
@@ -32,9 +32,9 @@ export default function SoftballStealingTrainer() {
 
   // Auth guard
   useEffect(() => {
-    if (loading) return;
-    if (!user) navigate('/auth');
-  }, [user, navigate, loading]);
+    if (loading || !isAuthStable) return;
+    if (!user && !session) navigate('/auth', { replace: true });
+  }, [user, session, navigate, loading, isAuthStable]);
 
   if (loading) {
     return (
