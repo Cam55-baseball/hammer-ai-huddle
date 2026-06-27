@@ -50,10 +50,16 @@ export function DaySessionsList({ date }: DaySessionsListProps) {
             const drillBlocks = (s.drill_blocks as any[] | null) ?? [];
             const composites = (s.composite_indexes as Record<string, number> | null) ?? {};
             const sessionModule = s.module || 'hitting';
-            const insights = generateInsights(composites, drillBlocks, sessionModule, {
-              sessionDate: s.session_date,
-              sessionType: s.session_type ?? undefined,
-            });
+            let insights;
+            try {
+              insights = generateInsights(composites, drillBlocks, sessionModule, {
+                sessionDate: s.session_date,
+                sessionType: s.session_type ?? undefined,
+              });
+            } catch (err) {
+              console.warn('[DaySessionsList] insights failed', err, s);
+              insights = { sessionTag: 'Solid Work' } as any;
+            }
             const tagStyle = TAG_STYLES[insights.sessionTag] ?? TAG_STYLES['Solid Work'];
 
             return (
