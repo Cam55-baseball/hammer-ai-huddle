@@ -1,88 +1,119 @@
+# Per-Category Ranked Goals: Onboarding → Hammer Prescription
 
-# Plan — Injury Reporting + Onboarding Closure (A + B + C + D)
+Today `AthleteOnboarding` only captures a day-type and notification prefs — there is no goal-capture step at all, and `dailyPlan.ts` makes zero references to `goal_summary` / `training_focus` / `development_priorities`. This plan adds an elite, ranked, per-category goal model and wires it through Hammer end-to-end.
 
-Goal: every injury signal flows through one canonical emitter that immediately gates Hammer; onboarding is resumable from a real, discoverable place; new athletes can't miss injury intake.
+## 1. Canonical category-goal model
 
----
-
-## A. Today-plan injury reporter (canonical RR-6 wiring)
-
-**New:** `src/components/hammer/ReportInjuryDialog.tsx`
-- Body-region chips (shoulder, elbow/UCL, forearm, wrist, hip, knee, ankle, low back, oblique, hamstring, quad, other)
-- Severity (niggle / sore / limiting / cannot-train)
-- Side (L/R/bilateral/N-A), onset date, free-text note, "affects throwing / hitting / running / lifting" checklist
-
-**New:** `src/lib/hammer/injury/reportInjury.ts` — single entrypoint that:
-1. Calls `emitInjuryReported` (RR-6 canonical, already exists in `relational/emit`)
-2. Appends `injury_history` on `athlete_context` via `persistContextAnswer` so the existing `decisionFilters` keyword path keeps working until the projection is consumed everywhere
-3. Invalidates: `['hammer-daily-plan']`, `['hammer-state']`, `['athlete-context']`, `['injury-recovery-state']`
-4. Fires `compute-hammer-state` edge function so next render reflects the report
-
-**Wire-up in `HammerDailyPlan.tsx`:** add a "Report injury" action in the header next to "Tell Hammer", plus an inline "Something hurt?" link on each modality card that pre-fills the affected modality.
-
-**Scheduler effect (immediate):** `decisionFilters.ts` already derives `injuryRegions` from `injury_history` — confirm `reportInjury` writes land before Hammer re-renders (await invalidate). Add `injuryRecoveryState` projection read into the same filter so the canonical event path also gates blocks, not just the keyword path. No RTP authoring (constitutional — human authorization only).
-
-## B. TellHammerDialog injury detection (lightweight complement)
-
-In `TellHammerDialog.tsx`, after the user types a note, run a deterministic phrase detector (regex over `hurt|pain|tweaked|strained|sprained|sore|injured|tight` + region keywords). If matched:
-- Show inline "It sounds like you mentioned an injury — want to log it properly?" prompt
-- One-tap opens `ReportInjuryDialog` pre-filled with the detected region + the note as context
-- If user dismisses, the free-text still saves to `goal_summary` as today
-
-No silent inference — athlete confirms before any RR-6 event fires.
-
-## C. Onboarding resume — settings-anchored, discoverable
-
-**Harden `useAthleteOnboardingState.ts`:** `hasFirstEvent` becomes `hasBootstrapEvent` — query `asb_events` filtered to `topic_id = 'relational.developmental.age_observed'` with `actor_role = 'athlete'`. Generic events no longer count as "onboarded".
-
-**New canonical settings location:** add an "Account & Setup" section to the existing settings/profile surface (Profile page is the natural anchor — already linked from `UserMenu`). Add a card:
-- If incomplete → "Finish onboarding" primary CTA → `/onboarding/athlete`
-- If complete → "Review setup" secondary link → `/onboarding/athlete?mode=review` (read-only step navigator)
-- Shows last completed step + remaining steps from `useAthleteOnboardingState`
-
-**UserMenu addition:** add a "Setup" item between Profile and Quick Edit that routes to the same settings section, with a small dot badge when onboarding is incomplete. This is the strategically placed entry the user asked for.
-
-**Persistent banner (dismissible per session, not permanent):** `DashboardLayout` renders a thin "Finish your setup (2 of 5 steps left)" bar only when `!hasBootstrapEvent || stepsRemaining > 0`. Dismiss persists in `sessionStorage`, not DB — so it reappears next session until completed.
-
-## D. Minimum injury step inside onboarding
-
-Add a new step to `AthleteOnboarding.tsx` flow: **"Current injuries or pain"** placed after identity/role and before goal capture.
-- Reuses the `ReportInjuryDialog` body-region picker as inline content
-- "I'm healthy" is a first-class option (emits nothing — explicit missingness preserved per Phase 151 doctrine)
-- Any selected region calls the same `reportInjury` entrypoint from A
-- Step is skippable but tracked: skipping emits `onboarding.step_completed` with `skipped: true` so the resume CTA knows it was acknowledged
-
----
-
-## Technical notes
-
-- **Single source of truth:** all four flows (A inline, A modality card, B promoted, D onboarding step) call exactly one function: `reportInjury()` in `src/lib/hammer/injury/reportInjury.ts`. No duplicated emit logic.
-- **RR-6 constitutional compliance:** no diagnosis, no RTP authoring, no severity inference — only athlete-declared values land in the event payload. `inferred_confidence` is never set.
-- **Scheduler gating:** `decisionFilters.ts` reads both the legacy `injury_history` strings AND the `injuryRecoveryState` projection, taking the union of restricted regions. This preserves backward compat while making the canonical path authoritative.
-- **No DB schema changes** — `asb_events` already holds RR-6 events; `athlete_context.injury_history` already exists; no new tables.
-- **Tests:** extend `tests/normalizers.injury.spec.ts` with a `reportInjury → decisionFilters` integration test asserting the next Hammer plan suppresses the affected modality. Extend `onboarding-regression.test.ts` with the new injury step (skippable + reportable paths) and the `hasBootstrapEvent` tightening.
-
-## Files touched
+Five categories aligned to the existing Hammer modalities and Report Card:
 
 ```text
-NEW  src/components/hammer/ReportInjuryDialog.tsx
-NEW  src/lib/hammer/injury/reportInjury.ts
-NEW  src/components/onboarding/steps/InjuryIntakeStep.tsx
-NEW  src/components/settings/OnboardingStatusCard.tsx
-EDIT src/components/hammer/HammerDailyPlan.tsx          (header action + per-modality link)
-EDIT src/components/hammer/TellHammerDialog.tsx         (phrase detector + handoff)
-EDIT src/pages/AthleteOnboarding.tsx                    (insert injury step)
-EDIT src/pages/Profile.tsx                              (mount OnboardingStatusCard)
-EDIT src/components/UserMenu.tsx                        (Setup item + incomplete badge)
-EDIT src/components/DashboardLayout.tsx                 (resume banner)
-EDIT src/hooks/command/useAthleteOnboardingState.ts     (hasBootstrapEvent + stepsRemaining)
-EDIT src/lib/hammer/context/decisionFilters.ts          (union with injuryRecoveryState)
-EDIT tests/normalizers.injury.spec.ts                   (reportInjury integration)
-EDIT src/lib/runtime/relational/__tests__/onboarding-regression.test.ts
+speed     — first-step quickness, top-end speed, baserunning explosiveness
+power     — strength, rotational power, lift gains, body comp
+throwing  — velocity, arm health, command/accuracy
+hitting   — bat speed, contact, exit velo, on-plane time
+fielding  — footwork, range, glove work, transfer/release
 ```
+
+Each athlete picks **1 specific goal per category** plus a **rank order (1–5)** of which categories matter most. Schema:
+
+```ts
+type CategoryKey = "speed"|"power"|"throwing"|"hitting"|"fielding";
+type CategoryGoal = {
+  category: CategoryKey;
+  rank: number;              // 1 = most important
+  intent: string;            // canonical id from preset list
+  intentLabel: string;       // display
+  notes?: string;            // optional free text, ≤200 chars
+};
+```
+
+Stored as:
+- `asb_events` topic `relational.athlete.category_goals.set` (replay-safe, lineage-complete) — the source of truth.
+- Mirror onto `athlete_context.category_goals jsonb` for fast read by the envelope RPC (additive column, no destructive migration).
+
+## 2. Onboarding UX (new step in `AthleteOnboarding.tsx`)
+
+Insert a **"Your goals"** step between Profile and Schedule. The step renders 5 stacked category cards in a drag-to-reorder list (keyboard `↑/↓` accessible). Each card:
+
+1. Category title + short helper.
+2. Single-select preset chips of `intent` options (sport-aware via `useAthleteGoalsAggregated`'s position mapping).
+3. Optional one-line note input.
+4. Rank chip on the left reflecting position; reorder updates rank.
+
+Validation: every category must have a chosen `intent`. Submit emits one `relational.athlete.category_goals.set` event with the full ranked array, then advances.
+
+Add resume-safety: `useAthleteOnboardingState` gains `hasCategoryGoals` (counts the topic) and includes it in `hasCompletedOnboarding`. `OnboardingResumeBanner` + `OnboardingStatusCard` already key off this hook, so they pick it up automatically.
+
+## 3. Edit surface
+
+- `Profile.tsx` → existing `OnboardingStatusCard` gains a "Goals" row linking to `/onboarding/athlete?step=goals` (deep-link support via query param in the page).
+- New compact `CategoryGoalsCard` on `AthleteCommand.tsx` showing the ranked list with an "Edit" button → same deep link. Edits re-emit the same canonical event (latest wins by `latestByTopicPrefix`).
+
+## 4. Envelope + context wiring
+
+- Extend `SPINE_VARIABLE_KEYS` in `src/lib/hammer/context/envelope.ts` with `category_goals`.
+- Update the `get_athlete_context_envelope` RPC (migration) to project `athlete_context.category_goals` with `source='athlete'`, `confidence='self_report'`.
+- `athleteContext.ts` exposes a typed `ctx.get<CategoryGoal[]>("category_goals")` plus a memoized helper `getCategoryRanking(ctx)`.
+
+## 5. Hammer prescription use (the personalization payoff)
+
+In `src/lib/hammer/prescription/dailyPlan.ts`:
+
+- Read ranked goals via the new helper.
+- **Block ordering**: when multiple modalities are `ready`, sort by athlete's category rank (speed/power/throwing/hitting/fielding → speed/strength/throwing/hitting+baserunning/defense). Warm-up, fueling, recovery keep fixed positions.
+- **Intent-aware drill selection**:
+  - `selectStrengthSwaps` reads `power.intent` → bias toward rotational/explosive vs hypertrophy vs general.
+  - `selectThrowingAdaptations` reads `throwing.intent` → velocity ladder vs command grid vs arm-care.
+  - `selectSpeedFocus` already exists — pass `speed.intent` to bias first-step vs top-end vs baserunning explosiveness.
+  - Hitting block picks tee/soft-toss/live-mix variants from `hitting.intent`.
+  - Defense + baserunning drills pick footwork vs range vs transfer / leadoff vs steal vs read-react.
+- **`roadmapReason`** strings include the top-ranked category in each block ("Aligned with your #1 goal: bat speed").
+- **`missingContextKeys`** adds `"category_goals"` when absent, so the inline gap drawer points back to onboarding.
+
+All changes preserve the existing pure-function contract (no I/O), missingness, and replay safety.
+
+## 6. RR-6 / safeguarding interplay
+
+- Injury-suppression rules already in `decisionFilters` continue to outrank goal-driven ordering. Goals can re-rank only among `ready` blocks; suppressed blocks stay suppressed.
+- Minor-athlete safeguarding precedence unchanged.
+
+## 7. Migration / data
+
+```sql
+-- additive
+ALTER TABLE public.athlete_context
+  ADD COLUMN IF NOT EXISTS category_goals jsonb;
+
+-- RPC update: include category_goals in envelope output with
+-- source='athlete', confidence='self_report', owner='athlete'.
+```
+
+No grants change (existing `athlete_context` policies cover it).
+
+## 8. Tests
+
+- Vitest: `categoryGoals.normalizer.spec.ts` — validates ranks unique 1–5, every category present.
+- `dailyPlan.categoryGoals.spec.ts` — given a context with `category_goals`, asserts block ordering and that strength/throwing/speed/hitting selectors received the right intent.
+- Extend `tests/e2e/onboarding/run.mjs` to walk the new step and assert the `relational.athlete.category_goals.set` event lands.
+- Extend `onboarding-regression.test.ts` for the resume gate including `hasCategoryGoals`.
+
+## 9. Files touched (high-level)
+
+- `src/pages/AthleteOnboarding.tsx` — insert step + deep-link
+- `src/components/onboarding/steps/CategoryGoalsStep.tsx` (new)
+- `src/lib/hammer/goals/categoryGoals.ts` (new — types, presets, normalizer, emitter)
+- `src/lib/hammer/context/envelope.ts` — add spine key
+- `src/lib/hammer/context/athleteContext.ts` — expose helper
+- `src/lib/hammer/prescription/dailyPlan.ts` — ordering + intent bias
+- `src/lib/hammer/prescription/strengthSelector.ts`, `throwingSelector.ts` — intent-aware paths
+- `src/hooks/command/useAthleteOnboardingState.ts` — add `hasCategoryGoals`
+- `src/components/settings/OnboardingStatusCard.tsx`, `UserMenu.tsx` — show "Goals" status
+- `src/pages/AthleteCommand.tsx` — `CategoryGoalsCard`
+- Supabase migration (additive column + RPC update)
+- Tests as above
 
 ## Out of scope
 
-- RTP authorization UI (constitutional — requires human-clinician surface, separate phase)
-- Coach-facing injury notification surface (RR-6 §safeguarding routing — separate phase)
-- Mutating any sealed RR-6 emitter schema
+- Coach/parent editing of athlete goals (athlete-owned per RR-8 self-disclosure).
+- Recruiter visibility of goals (RR-9/RR-10 — separate gating sprint).
+- Backfilling existing users — they'll see the resume banner and complete the new step on next visit.
