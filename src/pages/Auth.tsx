@@ -185,29 +185,8 @@ const Auth = () => {
             navigate("/select-user-role", { replace: true });
           }
         }
-      }
 
 
-      } else {
-        const validated = signUpSchema.parse({ email, password, fullName });
-        const { error } = await signUp(validated.email, validated.password, validated.fullName);
-
-        if (error) {
-          toast({
-            title: t('auth.signupFailed'),
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: t('auth.accountCreated'),
-            description: t('auth.letsSetupProfile'),
-          });
-          
-          // Navigate to role selection for new signups
-          navigate("/select-user-role", { replace: true });
-        }
-      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
