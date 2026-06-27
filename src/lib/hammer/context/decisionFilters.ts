@@ -155,6 +155,7 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
       (ctx.get<number>("weekly_availability_days")?.value as number | null) ?? null,
     goalSummary: (ctx.get<string>("goal_summary")?.value as string | null) ?? null,
     goalHorizon: (ctx.get<string>("goal_horizon")?.value as string | null) ?? null,
+    categoryGoals: normalizeCategoryGoals(ctx.get<unknown>("category_goals")?.value),
     readinessScore,
     workloadHigh,
     asymmetryPct: asymVal ?? null,
