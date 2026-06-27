@@ -185,6 +185,8 @@ const Auth = () => {
             navigate("/select-user-role", { replace: true });
           }
         }
+      }
+
 
 
     } catch (error) {
