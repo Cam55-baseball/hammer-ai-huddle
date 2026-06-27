@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:onboarding": "vitest run src/lib/runtime/relational/__tests__/onboarding-regression.test.ts",
+    "e2e:onboarding": "node tests/e2e/onboarding/run.mjs",
+    "verify:onboarding": "npm run test:onboarding && npm run e2e:onboarding"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
