@@ -772,9 +772,9 @@ export function CalendarDaySheet({
                       onReorder={setOrderedEvents}
                       className="space-y-2"
                     >
-                      {orderedEvents.map(event => (
+                      {orderedEvents.map((event, idx) => (
                         <DraggableEventCard
-                          key={event.id}
+                          key={`${event.type ?? 'evt'}:${event.id ?? 'noid'}:${idx}`}
                           event={event}
                           isSkipped={false}
                           isReorderMode={true}
