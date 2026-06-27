@@ -160,6 +160,27 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
             />
           </div>
 
+          {injuryHint.matched && (
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-[11px]">
+              <div className="flex items-center gap-2">
+                <HeartPulse className="h-3.5 w-3.5 text-amber-700" />
+                <span className="font-medium">Sounds like pain or injury.</span>
+              </div>
+              <p className="mt-1 text-muted-foreground">
+                A free-text note won't gate your plan. Promote it to a real
+                injury report so Hammer protects you.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-1.5 h-7 text-[11px]"
+                onClick={openInjuryFromText}
+              >
+                Report injury{injuryHint.region ? ` (${injuryHint.region})` : ""}
+              </Button>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={busy}>
               Close
@@ -170,6 +191,16 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
           </div>
         </div>
       </DialogContent>
+      <ReportInjuryDialog
+        open={injuryOpen}
+        onOpenChange={setInjuryOpen}
+        prefillRegion={prefillRegion}
+        prefillNote={note}
+        onReported={() => {
+          setNote("");
+          onOpenChange(false);
+        }}
+      />
     </Dialog>
   );
 }
