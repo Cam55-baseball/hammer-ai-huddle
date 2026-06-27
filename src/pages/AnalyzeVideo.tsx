@@ -48,6 +48,7 @@ export default function AnalyzeVideo() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
+  const location = useLocation();
   const [uploading, setUploading] = useState(false);
   // Phase 49: analysisView removed — only detailed (raw) view ships.
   const [analyzing, setAnalyzing] = useState(false);
