@@ -134,6 +134,7 @@ function BlockCard({
   const [gapsOpen, setGapsOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [warmupOpen, setWarmupOpen] = useState(false);
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
