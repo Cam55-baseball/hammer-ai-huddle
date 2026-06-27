@@ -20,6 +20,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
+import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1821,6 +1822,11 @@ export default function Profile() {
             <ColorCustomizationCard selectedSport={playerSport} />
           </div>
         )}
+
+        {/* Onboarding resume / review — strategic Settings anchor */}
+        <div className="mb-6">
+          <OnboardingStatusCard />
+        </div>
 
         {/* Account Info Card */}
         <Card className="p-6">

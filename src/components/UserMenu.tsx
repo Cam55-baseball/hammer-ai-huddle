@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, LogOut, Pencil } from "lucide-react";
+import { User, Settings, HelpCircle, LogOut, Pencil, ListChecks } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useQuickEditProfile } from "@/components/profile/QuickEditProfile";
+import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 
 interface UserMenuProps {
   userName?: string;
@@ -21,6 +23,8 @@ interface UserMenuProps {
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
   const { open: openQuickEdit } = useQuickEditProfile();
+  const { hasCompletedOnboarding, loading: onboardingLoading } = useAthleteOnboardingState();
+  const showSetup = !onboardingLoading && !hasCompletedOnboarding;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -57,6 +61,15 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
         <DropdownMenuItem onClick={() => navigate("/profile")}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/onboarding/athlete")}>
+          <ListChecks className="mr-2 h-4 w-4" />
+          <span>Setup</span>
+          {showSetup && (
+            <Badge variant="destructive" className="ml-auto h-4 px-1.5 text-[10px]">
+              Finish
+            </Badge>
+          )}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={openQuickEdit}>
           <Pencil className="mr-2 h-4 w-4" />

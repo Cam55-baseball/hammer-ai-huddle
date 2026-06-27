@@ -16,9 +16,13 @@ import { topicLabel, shortenEventId } from "@/lib/asb/topicLabels";
 import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
+import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 
 
-const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Notifications", "Done"];
+const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Health check", "Notifications", "Done"];
+const STEP_DONE = 6;
+const STEP_NOTIFICATIONS = 5;
+const STEP_INJURY = 4;
 
 const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
   { value: "training", label: "Training", help: "Structured practice / drills" },
@@ -37,7 +41,7 @@ const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
 export default function AthleteOnboarding() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAuthStable } = useAuth();
-  const { hasFirstEvent, loading: stateLoading } = useAthleteOnboardingState();
+  const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
   const { createEvent } = useAthleteEvents();
 
   const [step, setStep] = useState(0);
@@ -74,10 +78,12 @@ export default function AthleteOnboarding() {
     })();
   }, [user]);
 
-  // If the athlete already emitted ≥1 canonical event, skip onboarding entirely.
+  // Skip the flow only when the athlete already finished it (schedule + notifs).
+  // Bootstrap events alone (age_observed) no longer count.
   useEffect(() => {
-    if (!stateLoading && hasFirstEvent && step < 5) navigate("/command", { replace: true });
-  }, [stateLoading, hasFirstEvent, navigate, step]);
+    if (!stateLoading && hasCompletedOnboarding && step < STEP_NOTIFICATIONS)
+      navigate("/command", { replace: true });
+  }, [stateLoading, hasCompletedOnboarding, navigate, step]);
 
 
   const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -125,7 +131,7 @@ export default function AthleteOnboarding() {
 
   const onboardingState: OnboardingStateKind = emittedEventId
     ? "first-completed-action"
-    : hasFirstEvent
+    : hasScheduleEvent
       ? "first-completed-action"
       : step === 0
         ? "first-login"
@@ -281,7 +287,11 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 4 && (
+      {step === STEP_INJURY && (
+        <InjuryIntakeStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_NOTIFICATIONS && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Notification preferences (optional)</h2>
           <p className="text-sm text-muted-foreground">
@@ -300,7 +310,7 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 5 && (
+      {step === STEP_DONE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">You're set up.</h2>
           <p className="text-sm text-muted-foreground">

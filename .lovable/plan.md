@@ -1,42 +1,88 @@
-## The two bugs
 
-1. **Warm-Up CTA dumps the athlete into Practice Hub** (`/practice?module=warmup`). Practice Hub is the home of hitting/throwing/defense/baserunning *practice sessions* — landing there for a warm-up is confusing and off-pattern.
-2. **Baserunning CTA opens the Baserunning IQ *learning* module** (`/baserunning-iq`). When the daily plan tells an athlete to *do baserunning practice*, it should open the baserunning practice session, not the IQ classroom. IQ stays the destination only for the injury-suppressed "IQ-only / leg-protected" variant.
+# Plan — Injury Reporting + Onboarding Closure (A + B + C + D)
 
-The other CTAs are already correct: Lift → `/training-block`, Speed → `/speed-lab`, Hitting → `/practice?module=hitting`, Throwing → `/practice?module=throwing`, Defense → `/practice?module=defense`, Nutrition → `/nutrition-hub`, Recovery → `/bounce-back-bay`.
+Goal: every injury signal flows through one canonical emitter that immediately gates Hammer; onboarding is resumable from a real, discoverable place; new athletes can't miss injury intake.
 
-## Fix 1 — Warm-Up opens the Warm-Up Generator in place
+---
 
-Stop routing the Warm-Up block. Tapping "Open warm-up" opens a dialog that wraps the existing `WarmupGeneratorCard` (`src/components/custom-activities/WarmupGeneratorCard.tsx`) right on top of the Hammer plan — the athlete picks duration/context, generates a personalized warm-up, and confirms.
+## A. Today-plan injury reporter (canonical RR-6 wiring)
 
-- New thin component `src/components/hammer/HammerWarmupDialog.tsx` — a `Dialog` rendering `<WarmupGeneratorCard exercises={[]} isWarmupActivity sport={sport} onAddWarmup={…} />`.
-- On `onAddWarmup`, create a one-shot `custom_activity_templates` row tagged for today (mirroring the existing `handleAddToGamePlan` flow in `HammerDailyPlan.tsx` — `activity_type: 'warmup'`, `source: 'hammer.daily.warmup'`, `display_on_game_plan: true`), invalidate `custom-activity-logs` / `custom-activity-templates` / `game-plan`, broadcast `data-sync`, and toast "Warm-up added to today's Game Plan" with a "View" action.
-- In `src/components/hammer/HammerDailyPlan.tsx`, when a block's `modality === 'warmup'`, the CTA opens this dialog instead of navigating. The "Add to Game Plan" secondary CTA on the same block stays as-is.
-- In `src/lib/hammer/prescription/dailyPlan.ts`, the warmup block's `route` becomes a sentinel like `hammer:open-warmup-generator` and `ctaLabel` stays `"Open warm-up"`. (Sentinel-routes are already a pattern in the file — e.g. `#hammer-onboarding` for the Answer Hammer flow.)
+**New:** `src/components/hammer/ReportInjuryDialog.tsx`
+- Body-region chips (shoulder, elbow/UCL, forearm, wrist, hip, knee, ankle, low back, oblique, hamstring, quad, other)
+- Severity (niggle / sore / limiting / cannot-train)
+- Side (L/R/bilateral/N-A), onset date, free-text note, "affects throwing / hitting / running / lifting" checklist
 
-## Fix 2 — Baserunning prescription opens the practice session
+**New:** `src/lib/hammer/injury/reportInjury.ts` — single entrypoint that:
+1. Calls `emitInjuryReported` (RR-6 canonical, already exists in `relational/emit`)
+2. Appends `injury_history` on `athlete_context` via `persistContextAnswer` so the existing `decisionFilters` keyword path keeps working until the projection is consumed everywhere
+3. Invalidates: `['hammer-daily-plan']`, `['hammer-state']`, `['athlete-context']`, `['injury-recovery-state']`
+4. Fires `compute-hammer-state` edge function so next render reflects the report
 
-In `src/lib/hammer/prescription/dailyPlan.ts`, the *normal* baserunning prescription block (lines ~912–924, in-season "game scenarios" / off-season "Baserunning IQ" titles):
+**Wire-up in `HammerDailyPlan.tsx`:** add a "Report injury" action in the header next to "Tell Hammer", plus an inline "Something hurt?" link on each modality card that pre-fills the affected modality.
 
-- `route: "/practice?module=baserunning"` (was `/baserunning-iq`)
-- `ctaLabel: "Open baserunning"` (was `"Open baserunning IQ"`)
+**Scheduler effect (immediate):** `decisionFilters.ts` already derives `injuryRegions` from `injury_history` — confirm `reportInjury` writes land before Hammer re-renders (await invalidate). Add `injuryRecoveryState` projection read into the same filter so the canonical event path also gates blocks, not just the keyword path. No RTP authoring (constitutional — human authorization only).
 
-`PracticeHub` already supports `?module=baserunning` natively (it's a first-class module with `SessionConfigPanel` and `RepScorer` paths), so no new pages or routes are needed.
+## B. TellHammerDialog injury detection (lightweight complement)
 
-The **injury-suppressed** "Baserunning — IQ only (leg-protected)" block (lines ~873–886) **keeps** `/baserunning-iq` + `"Open baserunning IQ"` — that variant is explicitly mental-reps-only and IQ is the correct destination.
+In `TellHammerDialog.tsx`, after the user types a note, run a deterministic phrase detector (regex over `hurt|pain|tweaked|strained|sprained|sore|injured|tight` + region keywords). If matched:
+- Show inline "It sounds like you mentioned an injury — want to log it properly?" prompt
+- One-tap opens `ReportInjuryDialog` pre-filled with the detected region + the note as context
+- If user dismisses, the free-text still saves to `goal_summary` as today
+
+No silent inference — athlete confirms before any RR-6 event fires.
+
+## C. Onboarding resume — settings-anchored, discoverable
+
+**Harden `useAthleteOnboardingState.ts`:** `hasFirstEvent` becomes `hasBootstrapEvent` — query `asb_events` filtered to `topic_id = 'relational.developmental.age_observed'` with `actor_role = 'athlete'`. Generic events no longer count as "onboarded".
+
+**New canonical settings location:** add an "Account & Setup" section to the existing settings/profile surface (Profile page is the natural anchor — already linked from `UserMenu`). Add a card:
+- If incomplete → "Finish onboarding" primary CTA → `/onboarding/athlete`
+- If complete → "Review setup" secondary link → `/onboarding/athlete?mode=review` (read-only step navigator)
+- Shows last completed step + remaining steps from `useAthleteOnboardingState`
+
+**UserMenu addition:** add a "Setup" item between Profile and Quick Edit that routes to the same settings section, with a small dot badge when onboarding is incomplete. This is the strategically placed entry the user asked for.
+
+**Persistent banner (dismissible per session, not permanent):** `DashboardLayout` renders a thin "Finish your setup (2 of 5 steps left)" bar only when `!hasBootstrapEvent || stepsRemaining > 0`. Dismiss persists in `sessionStorage`, not DB — so it reappears next session until completed.
+
+## D. Minimum injury step inside onboarding
+
+Add a new step to `AthleteOnboarding.tsx` flow: **"Current injuries or pain"** placed after identity/role and before goal capture.
+- Reuses the `ReportInjuryDialog` body-region picker as inline content
+- "I'm healthy" is a first-class option (emits nothing — explicit missingness preserved per Phase 151 doctrine)
+- Any selected region calls the same `reportInjury` entrypoint from A
+- Step is skippable but tracked: skipping emits `onboarding.step_completed` with `skipped: true` so the resume CTA knows it was acknowledged
+
+---
+
+## Technical notes
+
+- **Single source of truth:** all four flows (A inline, A modality card, B promoted, D onboarding step) call exactly one function: `reportInjury()` in `src/lib/hammer/injury/reportInjury.ts`. No duplicated emit logic.
+- **RR-6 constitutional compliance:** no diagnosis, no RTP authoring, no severity inference — only athlete-declared values land in the event payload. `inferred_confidence` is never set.
+- **Scheduler gating:** `decisionFilters.ts` reads both the legacy `injury_history` strings AND the `injuryRecoveryState` projection, taking the union of restricted regions. This preserves backward compat while making the canonical path authoritative.
+- **No DB schema changes** — `asb_events` already holds RR-6 events; `athlete_context.injury_history` already exists; no new tables.
+- **Tests:** extend `tests/normalizers.injury.spec.ts` with a `reportInjury → decisionFilters` integration test asserting the next Hammer plan suppresses the affected modality. Extend `onboarding-regression.test.ts` with the new injury step (skippable + reportable paths) and the `hasBootstrapEvent` tightening.
 
 ## Files touched
 
-- `src/lib/hammer/prescription/dailyPlan.ts` — change baserunning route/label (one block); change warmup `route` to sentinel.
-- `src/components/hammer/HammerDailyPlan.tsx` — intercept the warmup sentinel and open `HammerWarmupDialog` instead of navigating.
-- `src/components/hammer/HammerWarmupDialog.tsx` — **new**, ~80 lines.
+```text
+NEW  src/components/hammer/ReportInjuryDialog.tsx
+NEW  src/lib/hammer/injury/reportInjury.ts
+NEW  src/components/onboarding/steps/InjuryIntakeStep.tsx
+NEW  src/components/settings/OnboardingStatusCard.tsx
+EDIT src/components/hammer/HammerDailyPlan.tsx          (header action + per-modality link)
+EDIT src/components/hammer/TellHammerDialog.tsx         (phrase detector + handoff)
+EDIT src/pages/AthleteOnboarding.tsx                    (insert injury step)
+EDIT src/pages/Profile.tsx                              (mount OnboardingStatusCard)
+EDIT src/components/UserMenu.tsx                        (Setup item + incomplete badge)
+EDIT src/components/DashboardLayout.tsx                 (resume banner)
+EDIT src/hooks/command/useAthleteOnboardingState.ts     (hasBootstrapEvent + stepsRemaining)
+EDIT src/lib/hammer/context/decisionFilters.ts          (union with injuryRecoveryState)
+EDIT tests/normalizers.injury.spec.ts                   (reportInjury integration)
+EDIT src/lib/runtime/relational/__tests__/onboarding-regression.test.ts
+```
 
-No DB migrations. No new routes.
+## Out of scope
 
-## Verification
-
-1. Healthy athlete with a baserunning prescription → "Open baserunning" lands on `/practice?module=baserunning` and the Baserunning module is preselected.
-2. Athlete with active leg-region injury → "Baserunning — IQ only" still shows "Open baserunning IQ" and lands on `/baserunning-iq`.
-3. Any athlete with a warmup block → tapping "Open warm-up" opens the generator dialog in place, generating + confirming adds a row to today's Game Plan, toast appears, "View" jumps to `/dashboard#game-plan`.
-4. Lift / Speed / Hitting / Throwing / Defense / Nutrition / Recovery CTAs unchanged — manual spot-check.
-5. `bunx tsgo --noEmit` clean.
+- RTP authorization UI (constitutional — requires human-clinician surface, separate phase)
+- Coach-facing injury notification surface (RR-6 §safeguarding routing — separate phase)
+- Mutating any sealed RR-6 emitter schema

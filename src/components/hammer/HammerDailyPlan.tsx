@@ -35,6 +35,7 @@ import {
   Send,
   AlertTriangle,
   CheckCircle2,
+  HeartPulse,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
@@ -54,6 +55,7 @@ import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
+import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -93,17 +95,30 @@ export function HammerDailyPlan() {
   const plan = useMemo(() => buildHammerDailyPlan(ctx), [ctx]);
   const sched = useScheduleWindow();
   const schedMsg = scheduleLine(sched);
+  const [injuryOpen, setInjuryOpen] = useState(false);
 
   return (
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <span>{identity.voiceLabel} · today's plan</span>
-          {plan.missingnessCount > 0 && (
-            <Badge variant="outline" className="text-[10px]">
-              {plan.missingnessCount} needs input
-            </Badge>
-          )}
+        <CardTitle className="text-sm flex items-center justify-between gap-2">
+          <span className="truncate">{identity.voiceLabel} · today's plan</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {plan.missingnessCount > 0 && (
+              <Badge variant="outline" className="text-[10px]">
+                {plan.missingnessCount} needs input
+              </Badge>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-[11px]"
+              onClick={() => setInjuryOpen(true)}
+              title="Report an injury — Hammer plans around it"
+            >
+              <HeartPulse className="mr-1 h-3.5 w-3.5" />
+              Report injury
+            </Button>
+          </div>
         </CardTitle>
         {schedMsg && (
           <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -118,6 +133,7 @@ export function HammerDailyPlan() {
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
       </CardContent>
+      <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
     </Card>
   );
 }
