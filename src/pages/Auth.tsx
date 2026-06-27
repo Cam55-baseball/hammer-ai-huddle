@@ -72,10 +72,16 @@ const Auth = () => {
   };
 
 
+  // If user is already authenticated and a ?redirect= target is present
+  // (e.g. parent invite link), honor it immediately. Otherwise leave them
+  // on the auth page — they may have landed here intentionally.
   useEffect(() => {
-    // Don't redirect if user is already authenticated
-    // They might be on this page intentionally
-  }, [user, navigate]);
+    if (!user) return;
+    const target = resolveRedirect();
+    if (target) navigate(target, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
