@@ -153,6 +153,10 @@ function BlockCard({
 
   async function handleAddToGamePlan() {
     if (!block.gamePlanTemplate || adding) return;
+    if (!user) {
+      toast.error("Sign in to add to your Game Plan.");
+      return;
+    }
     setAdding(true);
     try {
       const seed = block.gamePlanTemplate;
@@ -177,6 +181,8 @@ function BlockCard({
         pace_value: null,
         intervals: [],
         is_favorited: false,
+        is_non_negotiable: false,
+        source: seed.source,
         recurring_days: [],
         recurring_active: false,
         sport,
@@ -194,11 +200,30 @@ function BlockCard({
         "id" | "user_id" | "created_at" | "updated_at"
       >;
       const result = await createTemplate(payload, true);
-      if (result) {
-        setAdded(true);
-        toast.success(`${block.title} added to today's Game Plan`);
+      if (!result) {
+        // createTemplate already surfaced its own toast.error
+        return;
       }
+      setAdded(true);
+      // Nudge any listening surfaces (GamePlanCard etc.) to refetch immediately.
+      try {
+        const bc = new BroadcastChannel("data-sync");
+        bc.postMessage({ type: "custom-activity-updated", templateId: result.id });
+        bc.close();
+      } catch {
+        /* BroadcastChannel unavailable — realtime will catch up */
+      }
+      queryClient.invalidateQueries({ queryKey: ["custom-activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["custom-activity-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["game-plan"] });
+      toast.success(`${block.title} added to today's Game Plan`, {
+        action: {
+          label: "View",
+          onClick: () => navigate("/dashboard#game-plan"),
+        },
+      });
     } catch (e) {
+      console.error("[HammerDailyPlan] Add to Game Plan failed", e);
       toast.error(e instanceof Error ? e.message : "Couldn't add to Game Plan");
     } finally {
       setAdding(false);
