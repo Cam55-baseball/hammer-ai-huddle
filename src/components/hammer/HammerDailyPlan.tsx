@@ -439,6 +439,9 @@ function BlockCard({
           {chatOpen && <InlineBlockChat block={block} />}
         </CollapsibleContent>
       </Collapsible>
+      {block.modality === "warmup" && (
+        <HammerWarmupDialog open={warmupOpen} onOpenChange={setWarmupOpen} sport={sport} />
+      )}
     </div>
   );
 }
