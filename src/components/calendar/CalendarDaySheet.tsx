@@ -42,6 +42,7 @@ import { DaySessionsList } from './DaySessionsList';
 import { RestDayScheduler } from './RestDayScheduler';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface CalendarDaySheetProps {
   open: boolean;
