@@ -1,0 +1,82 @@
+name: Onboarding Regression Suite (Phase 56)
+
+# Locks the Phase 55 onboarding repair against silent regression.
+# See .lovable/phase-56-onboarding-regression-suite.md for invariants.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  unit-invariants:
+    name: Vitest — onboarding invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test:onboarding
+
+  live-e2e:
+    name: Playwright — live onboarding E2E
+    runs-on: ubuntu-latest
+    needs: unit-invariants
+    # Run live E2E on every push to main, and on PRs that touch any
+    # onboarding-critical path. Touching a gated path without running this
+    # check is a constitutional violation per Phase 56 doctrine.
+    if: |
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.changed_files, 'src/pages/Auth.tsx') ||
+      contains(github.event.pull_request.changed_files, 'src/pages/AthleteOnboarding.tsx') ||
+      contains(github.event.pull_request.changed_files, 'src/pages/AcceptParentInvite.tsx') ||
+      contains(github.event.pull_request.changed_files, 'src/pages/ParentInvite.tsx') ||
+      contains(github.event.pull_request.changed_files, 'src/App.tsx') ||
+      contains(github.event.pull_request.changed_files, 'src/lib/runtime/relational/') ||
+      contains(github.event.pull_request.changed_files, 'src/hooks/useAthleteOnboardingState.ts') ||
+      contains(github.event.pull_request.changed_files, 'src/hooks/useAthleteEvents.ts') ||
+      contains(github.event.pull_request.changed_files, 'src/contexts/AuthContext.tsx') ||
+      contains(github.event.pull_request.changed_files, 'src/integrations/supabase/') ||
+      contains(github.event.pull_request.changed_files, 'tests/e2e/onboarding/')
+    env:
+      LOVABLE_CLOUD_URL: ${{ secrets.LOVABLE_CLOUD_URL }}
+      LOVABLE_CLOUD_ANON_KEY: ${{ secrets.LOVABLE_CLOUD_ANON_KEY }}
+      VITE_SUPABASE_URL: ${{ secrets.LOVABLE_CLOUD_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.LOVABLE_CLOUD_ANON_KEY }}
+      ONBOARDING_E2E_ORIGIN: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build app
+        run: npm run build
+      - name: Start preview server
+        run: |
+          npx vite preview --port 8080 --host 127.0.0.1 &
+          npx wait-on http://localhost:8080 --timeout 60000
+      - name: Forbid skip/only in suite
+        run: |
+          if grep -RnE "(it|describe|test)\.(only|skip|todo)\b" \
+              src/lib/runtime/relational/__tests__/onboarding-regression.test.ts \
+              tests/e2e/onboarding/; then
+            echo "::error::skip/only/todo not allowed in Phase 56 regression suite"
+            exit 1
+          fi
+      - name: Run onboarding E2E
+        run: npm run e2e:onboarding
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-56-evidence
+          path: .lovable/phase-56-evidence/
+          if-no-files-found: warn
