@@ -1,72 +1,88 @@
-## Phase 55 Production Verification — Plan
 
-Execute a live end-to-end verification of the repaired onboarding pipeline against the running preview, with fresh accounts created at runtime, and produce `.lovable/phase-55-production-verification.md` containing PASS/FAIL, screenshots, DB evidence, and a final readiness verdict.
+# Phase 56 — Onboarding Regression Suite
 
-### Approach
+## Objective
 
-Drive the live preview with Playwright (headless Chromium, viewport 1280×1800 for desktop, 390×844 for mobile) from `/tmp/browser/phase-55/`. Create fresh Supabase auth users via the public anon key signup endpoint at runtime (random `+tag@` emails) so each scenario starts from a clean identity. Use `psql` (managed `PG*` env vars) for canonical-event evidence queries. Use `supabase--analytics_query` for auth + edge logs.
+Lock the Phase 55 onboarding repair against silent regression. **No production code changes.** Only tests, scripts, a CI workflow, and documentation are added.
 
-### Scenarios (each → PASS/FAIL + screenshot + SQL evidence)
+## Deliverables
 
-1. Fresh athlete signup — DOB supplied → `/onboarding/athlete` → dashboard. Assert exactly one `relational.developmental.age_observed` and exactly one `athlete.schedule.day_type` row.
-2. Returning athlete (has first event) — sign out / sign in → routes directly to `/dashboard`, no onboarding bounce.
-3. Returning athlete missing canonical first event — manually delete the bootstrap event via `psql` migration-free SELECT/DELETE is not allowed; instead simulate by creating a fresh user but skipping `AthleteOnboarding` mount, then sign back in → must route to `/onboarding/athlete`.
-4. Athlete signup with missing DOB — signup without DOB metadata, then visit `/onboarding/athlete`; assert bootstrap is skipped with `dob_missing`, no event row created, UI degrades visibly without crash.
-5. Parent invite end-to-end — athlete A creates invite (`/parent-invite`), capture token, open invite link in a fresh incognito context signed-out → `/auth?redirect=…` → signup as parent → returned to `/accept-parent-invite?token=…` with token intact → accept → poll `parent_athlete_links` → land on `/parent/athletes` with athlete visible.
-6. `/onboarding/flow` redirect — navigate directly; assert `<Navigate>` lands on `/onboarding/athlete` with no flicker / no orphan mount.
-7. Idempotency under repeated logins — sign out/in 3× and reload `/onboarding/athlete` 3×; rerun event-count query, must remain exactly 1 of each canonical event.
-8. Dashboard gate — confirm a brand-new athlete with no first event is bounced from `/dashboard` to `/onboarding/athlete`.
-9. Mobile pass — repeat scenarios 1 and 5 at 390×844 viewport; assert completion.
+1. `src/lib/runtime/relational/__tests__/onboarding-regression.test.ts` — Vitest unit invariants (fast, no network).
+2. `tests/e2e/onboarding/onboarding.regression.spec.ts` — Playwright live E2E (real signups against Lovable Cloud, mirrors Phase 55 proof).
+3. `tests/e2e/onboarding/README.md` — how to run locally and in CI.
+4. `package.json` script additions: `test:onboarding`, `e2e:onboarding`, `verify:onboarding` (runs both).
+5. `.github/workflows/onboarding-regression.yml` — CI workflow that fails the verification pipeline on any onboarding invariant violation.
+6. `.lovable/phase-56-onboarding-regression-suite.md` — the canonical regression doctrine doc.
 
-### Cross-cutting audits per scenario
+## Invariant → test coverage matrix
 
-- Console: capture `page.on("console")`; fail on any `error` or `warning` containing "Warning:" (React) or "Supabase".
-- Network: capture `page.on("response")`; fail on any 4xx/5xx to `asb_events`, `profiles`, `parent_athlete_links`, `auth/v1/*`, or `functions/v1/*`.
-- Race conditions: between auth state change and first navigation, assert no double-mount of `AthleteOnboarding` (instrument by counting bootstrap log lines).
+| # | Invariant | Layer | Test |
+|---|---|---|---|
+| I1 | Fresh athlete signup succeeds | Playwright | `S1 fresh-athlete-signup` (walks Welcome → Schedule emit) |
+| I2 | Returning athlete skips onboarding | Vitest + Playwright | unit: `Auth gate routes to /dashboard when hasFirstEvent=true`; live: `S2 returning-athlete-routes-past-auth` |
+| I3 | Athlete without canonical first event is redirected back into onboarding | Vitest + Playwright | unit: `Auth gate routes to /onboarding/athlete when hasFirstEvent=false`; live: `S3 no-first-event-redirects-to-onboarding` |
+| I4 | Exactly one `relational.developmental.age_observed` per athlete | Vitest + Playwright | unit: `emitOnboardingBootstrap is idempotent across N invocations`; live: psql assertion `COUNT(*) = 1` after 3 reloads |
+| I5 | Exactly one `athlete.schedule.day_type` per athlete | Playwright | live: psql assertion after S1 walk + one reload |
+| I6 | Duplicate bootstrap events can never occur | Vitest | `bootstrap dedup by sha256 idempotency_key across concurrent + sequential calls`; missing-DOB skip produces zero rows |
+| I7 | Parent invite survives authentication and activates | Vitest + Playwright | unit: `AcceptParentInvite poll resolves once link row appears`; live: `S5 redirect+token round-trip survives signup` (UI-level activation covered by `parent-linkage.test.ts`) |
+| I8 | `/onboarding/flow` always redirects correctly | Playwright | `S6 legacy-flow-redirects` — asserts no `/onboarding/flow` ever rendered |
+| I9 | Dashboard cannot be accessed before canonical onboarding is complete | Playwright | `S8 dashboard-gate-blocks-zero-event-athlete` |
+| I10 | Mobile onboarding remains functional | Playwright | `S9 mobile-onboarding-renders` (390×844 viewport) |
+| I11 | No console errors | Playwright | per-scenario filter on `page.on("console", "error")`, excluding the dev-only Vite SW MIME noise and React Router v7 advisory; assertion: `app_errors == 0` |
+| I12 | No React warnings | Playwright | per-scenario filter on `Warning:` substrings; assertion: `react_warnings == 0` |
+| I13 | No Supabase errors | Playwright | per-scenario filter on 4xx/5xx from `/auth/v1`, `/rest/v1`, `/functions/v1` for the onboarding-critical tables (`asb_events`, `profiles`, `parent_athlete_links`); the pre-existing `athlete.lifecycle.signup` topic FK 409 is allow-listed with a TODO referencing the Phase 55 backlog |
+| I14 | No failed critical network requests | Playwright | same listener; status ≥ 400 on the critical-path endpoints fails the test |
+| I15 | No authentication race conditions | Vitest + Playwright | unit: `Auth.tsx redirect resolution is deterministic given session+ledger state`; live: assert each scenario reaches a single terminal URL within 4s and stays there for 1s |
 
-### Database evidence (via `psql`)
+## Suite runtime expectations
 
-For each created `athlete_id`:
-```sql
-select topic_id, count(*) from asb_events
- where athlete_id = $uid
- group by topic_id order by topic_id;
+- **Vitest invariants**: cold run < 5s; runs on every PR via the existing test infrastructure plus the new `test:onboarding` filter.
+- **Playwright live E2E**: ~90–120s end-to-end; spins up 3 fresh signups against Lovable Cloud (signup auto-confirms in this project), writes DOB via REST, drives the live preview, and asserts DB row counts via `psql`.
+
+## CI wiring
+
+`package.json` additions (no removal/edit of existing scripts):
+
+```text
+"test:onboarding": "vitest run src/lib/runtime/relational/__tests__/onboarding-regression.test.ts",
+"e2e:onboarding": "node tests/e2e/onboarding/run.mjs",
+"verify:onboarding": "npm run test:onboarding && npm run e2e:onboarding"
 ```
-Plus a global duplicate check:
-```sql
-select athlete_id, topic_id, count(*)
-  from asb_events
- where topic_id in ('relational.developmental.age_observed','athlete.schedule.day_type')
- group by 1,2 having count(*) > 1;
-```
-Parent linkage:
-```sql
-select status, accepted_at, revoked_at
-  from parent_athlete_links
- where parent_user_id = $parent_uid and athlete_user_id = $athlete_uid;
-```
 
-### Investigation needed before fully scripting
+`.github/workflows/onboarding-regression.yml` triggers:
 
-Two unknowns require quick code reads (read-only, still in plan mode boundary — I will do these at the start of build mode, not now):
-- Where `athlete.schedule.day_type` is emitted today (the user lists it as a required canonical event, but Phase 55 repair didn't touch it — need to confirm emitter exists and is wired into the onboarding/dashboard mount).
-- Whether the in-app signup form actually collects DOB, or whether DOB only arrives via `ProfileSetup`. This determines the exact click-path Playwright must drive for scenario 1.
+- **Always on PR**: `npm run test:onboarding` (Vitest invariants).
+- **On PR when paths touched**: `src/pages/Auth.tsx`, `src/pages/AthleteOnboarding.tsx`, `src/pages/AcceptParentInvite.tsx`, `src/pages/ParentInvite.tsx`, `src/lib/runtime/relational/**`, `src/hooks/useAthleteOnboardingState.ts`, `src/hooks/useAthleteEvents.ts`, `src/App.tsx`, `src/integrations/supabase/**` → also run `npm run e2e:onboarding`.
+- **On push to `main`**: full `verify:onboarding`.
+- Any failure marks the workflow red and (per repo settings) blocks merge / deploy.
 
-If `athlete.schedule.day_type` has no emitter on the onboarding path, the verification will FAIL scenario 1 and the fix (wire its emitter into `AthleteOnboarding` analogous to bootstrap) must land before re-running the suite — per the user's "fix immediately and rerun" directive.
+CI needs two repo secrets (instruction in the doc, not committed):
 
-### Failure handling
+- `LOVABLE_CLOUD_URL` — the Lovable Cloud project URL.
+- `LOVABLE_CLOUD_ANON_KEY` — the publishable anon key.
 
-For any failing scenario:
-1. Capture failing screenshot + console + network into the doc.
-2. Patch the minimum source needed (e.g., add missing emitter, fix routing edge case).
-3. Re-run the full suite from scenario 1. Do not declare PASS until every scenario is green in a single contiguous run.
+The dev server is started inline by the workflow: `npm ci && npm run build && npx vite preview --port 8080 &` then `npx wait-on http://localhost:8080`. DB invariants (I4, I5) use the project's REST API rather than psql in CI (psql isn't guaranteed in GitHub-hosted runners), querying `asb_events` filtered by the fresh test athlete UIDs with the anon key + the just-signed-in user JWT.
 
-### Deliverable
+## Doctrine — how future changes must extend (not bypass) the suite
 
-`.lovable/phase-55-production-verification.md` containing:
-- Scenario matrix (PASS/FAIL, evidence links).
-- Embedded screenshots (`/tmp/browser/phase-55/screenshots/*.png` referenced relatively, copies committed under `.lovable/phase-55-evidence/`).
-- SQL output blocks for every canonical event check.
-- Console + network audit summary per scenario.
-- Edge cases discovered.
-- Final verdict: **PRODUCTION READY** or **BLOCKED** with remaining blockers enumerated.
+The `.lovable/phase-56-onboarding-regression-suite.md` doc states:
+
+1. **No invariant may be deleted.** New PRs may only *add* invariants. Removing or weakening I1–I15 requires explicit constitutional review and an entry in `.lovable/`.
+2. **Every PR touching the gated paths (above) must add a regression test** if the change introduces a new branch, redirect target, gate condition, canonical topic, or invite/role surface. The CI workflow's `paths:` filter is the enforcement mechanism — touching a gated path without touching the suite earns a review-time pushback.
+3. **The Playwright suite is the source of truth** for end-to-end onboarding behavior. Unit tests may not replace E2E coverage; they may only deepen it.
+4. **Allow-listed noise is explicit.** The pre-existing `athlete.lifecycle.signup` topic FK 409 is the only allow-listed Supabase error and is annotated with a backlog reference. Any new allow-list entry requires a code comment + a row in the doc explaining why.
+5. **No `skip`, `only`, or `todo` may be merged in this suite.** CI fails on detection.
+
+## Technical notes
+
+- The Playwright runner is plain Node (no separate Playwright config needed) — `tests/e2e/onboarding/run.mjs` uses `playwright-core` against the bundled Chromium, mirroring `/tmp/browser/phase-55/run.py` but in JS so it runs on a stock GitHub runner with `npx playwright install --with-deps chromium`.
+- The unit test imports `emitOnboardingBootstrap` directly and reuses the existing fixture pattern from `relational-onboarding.test.ts` (which already passes 7 cases) so we don't duplicate mock infrastructure.
+- The test athlete accounts created by Playwright are namespaced `ve56-regression-…@example.com`. The doc includes a cleanup SQL snippet operators may run on demand (not part of the suite — we never delete in CI).
+- No edits to `src/integrations/supabase/client.ts`, `.env`, or `supabase/config.toml`.
+- No changes to any file under `src/pages/`, `src/lib/runtime/`, or anything that affects runtime behavior. The suite is purely observational.
+
+## Out of scope
+
+- Refactors of `Auth.tsx`, `AthleteOnboarding.tsx`, `AcceptParentInvite.tsx`, or `onboardingBootstrap.ts`.
+- Changes to the `athlete.lifecycle.signup` topic FK issue (backlog from Phase 55).
+- Changes to role-selection / subscription gating (the `/start-here?intent=…` interceptor observed in Phase 55).
