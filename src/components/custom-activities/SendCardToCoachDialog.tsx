@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Send, Loader2, Users, FolderOpen, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptionalAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 interface LinkedCoach {
@@ -30,7 +30,7 @@ interface SendCardToCoachDialogProps {
 
 export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName, itemTitle, templateData }: SendCardToCoachDialogProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const [coaches, setCoaches] = useState<LinkedCoach[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
