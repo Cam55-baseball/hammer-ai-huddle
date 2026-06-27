@@ -287,7 +287,11 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 4 && (
+      {step === STEP_INJURY && (
+        <InjuryIntakeStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_NOTIFICATIONS && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Notification preferences (optional)</h2>
           <p className="text-sm text-muted-foreground">
@@ -306,7 +310,7 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
-      {step === 5 && (
+      {step === STEP_DONE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">You're set up.</h2>
           <p className="text-sm text-muted-foreground">
