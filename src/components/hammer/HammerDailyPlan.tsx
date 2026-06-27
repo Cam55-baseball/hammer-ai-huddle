@@ -135,6 +135,8 @@ function BlockCard({
   const [added, setAdded] = useState(false);
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const sport = (ctx.get<string>("sport_primary")?.value as
     | "baseball"
     | "softball"
