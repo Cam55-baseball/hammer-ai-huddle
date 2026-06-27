@@ -103,7 +103,7 @@ const Wave3Environment = lazyWithRetry(() => import("./pages/Environment"));
 const Wave3Position = lazyWithRetry(() => import("./pages/Position"));
 const Wave3Perception = lazyWithRetry(() => import("./pages/Perception"));
 const Wave3EducationHub = lazyWithRetry(() => import("./pages/EducationHub"));
-const Wave3Onboarding = lazyWithRetry(() => import("./pages/OnboardingFlow"));
+// Wave3Onboarding removed — unified onto /onboarding/athlete (canonical flow).
 const Wave3CertPath = lazyWithRetry(() => import("./pages/CertPath"));
 const Wave3ShareConsole = lazyWithRetry(() => import("./pages/ShareConsole"));
 
