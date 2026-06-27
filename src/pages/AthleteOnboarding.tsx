@@ -17,12 +17,27 @@ import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBoot
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
+import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 
 
-const STEPS = ["Welcome", "Profile", "Schedule today", "Confirm", "Health check", "Notifications", "Done"];
-const STEP_DONE = 6;
-const STEP_NOTIFICATIONS = 5;
-const STEP_INJURY = 4;
+const STEPS = [
+  "Welcome",
+  "Profile",
+  "Rank goals",
+  "Schedule today",
+  "Confirm",
+  "Health check",
+  "Notifications",
+  "Done",
+];
+const STEP_WELCOME = 0;
+const STEP_PROFILE = 1;
+const STEP_GOALS = 2;
+const STEP_SCHEDULE = 3;
+const STEP_CONFIRM = 4;
+const STEP_INJURY = 5;
+const STEP_NOTIFICATIONS = 6;
+const STEP_DONE = 7;
 
 const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
   { value: "training", label: "Training", help: "Structured practice / drills" },
