@@ -15,6 +15,7 @@
  * Schedule context line from `useScheduleWindow` retained.
  */
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -134,6 +135,8 @@ function BlockCard({
   const [added, setAdded] = useState(false);
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const sport = (ctx.get<string>("sport_primary")?.value as
     | "baseball"
     | "softball"
@@ -150,6 +153,10 @@ function BlockCard({
 
   async function handleAddToGamePlan() {
     if (!block.gamePlanTemplate || adding) return;
+    if (!user) {
+      toast.error("Sign in to add to your Game Plan.");
+      return;
+    }
     setAdding(true);
     try {
       const seed = block.gamePlanTemplate;
@@ -174,6 +181,8 @@ function BlockCard({
         pace_value: null,
         intervals: [],
         is_favorited: false,
+        is_non_negotiable: false,
+        source: seed.source,
         recurring_days: [],
         recurring_active: false,
         sport,
@@ -191,11 +200,30 @@ function BlockCard({
         "id" | "user_id" | "created_at" | "updated_at"
       >;
       const result = await createTemplate(payload, true);
-      if (result) {
-        setAdded(true);
-        toast.success(`${block.title} added to today's Game Plan`);
+      if (!result) {
+        // createTemplate already surfaced its own toast.error
+        return;
       }
+      setAdded(true);
+      // Nudge any listening surfaces (GamePlanCard etc.) to refetch immediately.
+      try {
+        const bc = new BroadcastChannel("data-sync");
+        bc.postMessage({ type: "custom-activity-updated", templateId: result.id });
+        bc.close();
+      } catch {
+        /* BroadcastChannel unavailable — realtime will catch up */
+      }
+      queryClient.invalidateQueries({ queryKey: ["custom-activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["custom-activity-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["game-plan"] });
+      toast.success(`${block.title} added to today's Game Plan`, {
+        action: {
+          label: "View",
+          onClick: () => navigate("/dashboard#game-plan"),
+        },
+      });
     } catch (e) {
+      console.error("[HammerDailyPlan] Add to Game Plan failed", e);
       toast.error(e instanceof Error ? e.message : "Couldn't add to Game Plan");
     } finally {
       setAdding(false);
@@ -386,6 +414,7 @@ function InlineGapAnswer({
   gap: (typeof HAMMER_KNOWLEDGE_GAPS)[number];
   userId: string;
 }) {
+  const queryClient = useQueryClient();
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -398,8 +427,15 @@ function InlineGapAnswer({
         gap.inputKind === "number" ? Number(value) : value.trim();
       await persistContextAnswer(userId, gap.persistTo, parsed, "hammer_daily_plan_inline");
       setSaved(true);
-      toast.success("Got it — Hammer will use this.");
+      // Live-refresh the plan so the gap disappears and prescriptions update.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["hammer-context-envelope", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["athlete-context-envelope", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["hie-snapshot"] }),
+      ]);
+      toast.success("Got it — Hammer just updated your plan.");
     } catch (e) {
+      console.error("[HammerDailyPlan] persistContextAnswer failed", e);
       toast.error(e instanceof Error ? e.message : "Couldn't save");
     } finally {
       setSaving(false);
@@ -409,7 +445,7 @@ function InlineGapAnswer({
   if (saved) {
     return (
       <div className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-        <CheckCircle2 className="h-3 w-3" /> Saved — refresh to see updated plan.
+        <CheckCircle2 className="h-3 w-3" /> Saved — plan updated.
       </div>
     );
   }
