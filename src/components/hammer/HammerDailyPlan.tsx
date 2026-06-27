@@ -362,7 +362,7 @@ function BlockCard({
             </div>
           )}
 
-          {focusGaps.length > 0 && user && (
+          {(focusGaps.length > 0 || block.missingContextKeys.length > 0) && user && (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2">
               <button
                 onClick={() => setGapsOpen((v) => !v)}
@@ -378,6 +378,15 @@ function BlockCard({
                   {focusGaps.map((g) => (
                     <InlineGapAnswer key={g.id} gap={g} userId={user.id} />
                   ))}
+                  {focusGaps.length === 0 && (
+                    <div className="text-[11px] text-muted-foreground">
+                      Tell Hammer about{" "}
+                      <span className="font-medium text-foreground">
+                        {block.missingContextKeys.join(", ").replace(/_/g, " ")}
+                      </span>{" "}
+                      in chat below and your plan will adapt.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
