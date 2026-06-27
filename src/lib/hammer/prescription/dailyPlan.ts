@@ -24,6 +24,14 @@ import {
 import { buildAnthroProfile, hasAnyAnthroSignal } from "@/lib/hammer/anthro/profile";
 import { selectStrengthSwaps } from "@/lib/hammer/prescription/strengthSelector";
 import { selectThrowingAdaptations } from "@/lib/hammer/prescription/throwingSelector";
+import {
+  modalityToCategory,
+  rankFor,
+  intentFor,
+  CATEGORY_INTENTS,
+  CATEGORY_LABELS,
+  summarizeGoals,
+} from "@/lib/hammer/goals/categoryGoals";
 
 
 export type ModalityKey =
