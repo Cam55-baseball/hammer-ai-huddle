@@ -632,6 +632,7 @@ export function CalendarDaySheet({
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-md">
+          <ErrorBoundary label="CalendarDaySheet">
           <SheetHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
@@ -869,6 +870,7 @@ export function CalendarDaySheet({
               </div>
             )}
           </ScrollArea>
+          </ErrorBoundary>
         </SheetContent>
       </Sheet>
 
