@@ -80,14 +80,15 @@ const groupEventsByTimeOfDay = (events: CalendarEvent[]) => {
   return { morning, afternoon, evening, allDay };
 };
 
-// Format time for display
+// Format time for display — defensive: any unexpected shape becomes ''
 const formatTime = (time: string | null | undefined): string => {
-  if (!time) return '';
+  if (!time || typeof time !== 'string' || !time.includes(':')) return '';
   const [hours, minutes] = time.split(':');
   const hour = parseInt(hours, 10);
+  if (!Number.isFinite(hour)) return '';
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
+  return `${displayHour}:${minutes ?? '00'} ${ampm}`;
 };
 
 // Draggable event item component
