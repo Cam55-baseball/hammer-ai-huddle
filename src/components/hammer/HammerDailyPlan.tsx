@@ -414,6 +414,7 @@ function InlineGapAnswer({
   gap: (typeof HAMMER_KNOWLEDGE_GAPS)[number];
   userId: string;
 }) {
+  const queryClient = useQueryClient();
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -426,8 +427,15 @@ function InlineGapAnswer({
         gap.inputKind === "number" ? Number(value) : value.trim();
       await persistContextAnswer(userId, gap.persistTo, parsed, "hammer_daily_plan_inline");
       setSaved(true);
-      toast.success("Got it — Hammer will use this.");
+      // Live-refresh the plan so the gap disappears and prescriptions update.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["hammer-context-envelope", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["athlete-context-envelope", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["hie-snapshot"] }),
+      ]);
+      toast.success("Got it — Hammer just updated your plan.");
     } catch (e) {
+      console.error("[HammerDailyPlan] persistContextAnswer failed", e);
       toast.error(e instanceof Error ? e.message : "Couldn't save");
     } finally {
       setSaving(false);
@@ -437,7 +445,7 @@ function InlineGapAnswer({
   if (saved) {
     return (
       <div className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-        <CheckCircle2 className="h-3 w-3" /> Saved — refresh to see updated plan.
+        <CheckCircle2 className="h-3 w-3" /> Saved — plan updated.
       </div>
     );
   }
