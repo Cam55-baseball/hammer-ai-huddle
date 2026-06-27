@@ -41,7 +41,7 @@ const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
 export default function AthleteOnboarding() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAuthStable } = useAuth();
-  const { hasFirstEvent, loading: stateLoading } = useAthleteOnboardingState();
+  const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
   const { createEvent } = useAthleteEvents();
 
   const [step, setStep] = useState(0);
