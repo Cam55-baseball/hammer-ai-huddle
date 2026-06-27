@@ -133,6 +133,7 @@ export function HammerDailyPlan() {
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
       </CardContent>
+      <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
     </Card>
   );
 }
