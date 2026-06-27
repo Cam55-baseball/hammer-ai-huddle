@@ -1153,9 +1153,9 @@ export default function AnalyzeVideo() {
                   )}
 
                   {/* Phase 51 — deterministic tempo readback, read directly
-                      from `video_metric_runs`. Shows the canonical missingness
-                      reason (no fabricated default) when D-POSE could not
-                      anchor the swing/pitch. Only mounted for BP (pitching). */}
+                      from `video_metric_runs`. Shows a plain value when measured
+                      or a simple "could not be read" line when D-POSE could not
+                      anchor the pitch. Only mounted for BP (pitching). */}
                   {persistedTempo && module === 'pitching' && (
                     <div className="p-4 rounded-lg border border-border bg-background">
                       <h4 className="text-lg font-semibold mb-1">Tempo</h4>
