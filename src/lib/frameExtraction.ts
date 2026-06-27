@@ -80,8 +80,19 @@ export const extractKeyFramesDeterministic = async (
     if (!video.videoWidth || !video.videoHeight) {
       throw new Error("video has invalid dimensions");
     }
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Downscale frames so the multimodal payload stays well under the
+    // AI gateway's 30MB-per-image cap. Long edge capped at 1280px; JPEG
+    // @ 0.85 keeps each frame typically <300KB while preserving enough
+    // detail for pose/mechanics evaluation. PNG at native resolution
+    // produced 5–25MB per frame on phone footage and routinely 413'd
+    // the gateway. Deterministic: same pixels in → same JPEG out.
+    const MAX_EDGE = 1280;
+    const srcW = video.videoWidth;
+    const srcH = video.videoHeight;
+    const longest = Math.max(srcW, srcH);
+    const scale = longest > MAX_EDGE ? MAX_EDGE / longest : 1;
+    canvas.width = Math.max(1, Math.round(srcW * scale));
+    canvas.height = Math.max(1, Math.round(srcH * scale));
 
     const frames: ExtractedFrame[] = [];
 
@@ -98,7 +109,7 @@ export const extractKeyFramesDeterministic = async (
         });
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
         if (!blob || blob.size === 0) continue;
         const [sha256_hex, dataUrl] = await Promise.all([
           sha256HexOfBlob(blob),
