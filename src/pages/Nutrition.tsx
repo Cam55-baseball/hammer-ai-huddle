@@ -26,7 +26,7 @@ export default function Nutrition() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   
   const [currentSport, setCurrentSport] = useState<'baseball' | 'softball'>(() => {
     const saved = localStorage.getItem('selectedSport');
@@ -39,10 +39,10 @@ export default function Nutrition() {
   const [streakLoading, setStreakLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
+    if (!authLoading && isAuthStable && !user && !session) {
+      navigate('/auth', { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, session, authLoading, isAuthStable, navigate]);
 
   // Scroll to anchor if hash is present (for Game Plan navigation)
   useEffect(() => {
