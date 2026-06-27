@@ -15,7 +15,7 @@
  *   LOVABLE_CLOUD_ANON_KEY   — publishable anon key
  *   ONBOARDING_E2E_ORIGIN    — origin where the app is reachable (default http://localhost:8080)
  */
-import { chromium } from "playwright-core";
+import { chromium } from "@playwright/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
