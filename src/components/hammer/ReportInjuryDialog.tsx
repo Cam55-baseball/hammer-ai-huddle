@@ -1,10 +1,13 @@
 /**
  * ReportInjuryDialog — single canonical UI for athlete-declared injury.
  *
- * Used by HammerDailyPlan (A) and TellHammerDialog (B). The onboarding
- * step (D) reuses the same body via the embedded form.
+ * Used by HammerDailyPlan (A), TellHammerDialog (B), AthleteOnboarding (D).
+ * Constitutional path: emits relational.injury.reported (RR-6) via reportInjury().
+ *
+ * Design intent: minimum clutter, clear labels above every input,
+ * text-box-first so athletes know exactly where to write what.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -17,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useOptionalAuth } from "@/hooks/useAuth";
 import {
   REPORT_INJURY_REGIONS,
   reportInjury,
@@ -28,26 +31,20 @@ import {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Optional prefilled region (e.g. from TellHammer phrase detection). */
   prefillRegion?: ReportInjuryRegionKey | null;
-  /** Optional prefilled note (free-text context). */
   prefillNote?: string;
-  /** Called after a successful report. */
   onReported?: (eventId: string) => void;
 }
 
-const SEVERITIES: Array<{ value: ReportInjurySeverity; label: string; help: string }> = [
-  { value: "niggle", label: "Niggle", help: "I notice it but training as usual" },
-  { value: "sore", label: "Sore", help: "Modify some work today" },
-  { value: "limiting", label: "Limiting", help: "Cuts into what I can do" },
-  { value: "cannot_train", label: "Can't train", help: "Skip the affected work entirely" },
-];
-
-const SIDES: Array<{ value: "left" | "right" | "bilateral" | "na"; label: string }> = [
-  { value: "left", label: "Left" },
-  { value: "right", label: "Right" },
-  { value: "bilateral", label: "Both" },
-  { value: "na", label: "N/A" },
+const SEVERITY_OPTIONS: Array<{
+  value: ReportInjurySeverity;
+  label: string;
+  help: string;
+}> = [
+  { value: "niggle", label: "Niggle", help: "I feel it. Training as usual." },
+  { value: "sore", label: "Sore", help: "Modify some work today." },
+  { value: "limiting", label: "Limiting", help: "Cuts what I can do." },
+  { value: "cannot_train", label: "Can't train", help: "Skip affected work." },
 ];
 
 export function ReportInjuryDialog({
@@ -57,33 +54,41 @@ export function ReportInjuryDialog({
   prefillNote = "",
   onReported,
 }: Props) {
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const qc = useQueryClient();
   const [region, setRegion] = useState<ReportInjuryRegionKey | null>(prefillRegion);
-  const [severity, setSeverity] = useState<ReportInjurySeverity>("sore");
-  const [side, setSide] = useState<"left" | "right" | "bilateral" | "na">("na");
+  const [severity, setSeverity] = useState<ReportInjurySeverity | null>(null);
   const [note, setNote] = useState(prefillNote);
   const [busy, setBusy] = useState(false);
 
+  // Reset on open so reopening is clean.
+  useEffect(() => {
+    if (open) {
+      setRegion(prefillRegion);
+      setNote(prefillNote);
+      setSeverity(null);
+      setBusy(false);
+    }
+  }, [open, prefillRegion, prefillNote]);
+
+  const canSubmit = !!user && !!region && !!severity && !busy;
+
   async function submit() {
-    if (!user || !region || busy) return;
+    if (!canSubmit || !user || !region || !severity) return;
     setBusy(true);
     try {
       const { eventId } = await reportInjury({
         userId: user.id,
         region,
         severity,
-        side,
         note: note.trim() || undefined,
         queryClient: qc,
       });
-      toast.success("Reported — your plan will adapt to protect this.", {
-        description: "Hammer will route around this until you mark it cleared.",
-      });
+      toast.success("Got it — Hammer is planning around this.");
       onReported?.(eventId);
       onOpenChange(false);
-      setNote("");
     } catch (e) {
+      console.error("[ReportInjuryDialog] submit failed", e);
       toast.error(e instanceof Error ? e.message : "Couldn't save the report");
     } finally {
       setBusy(false);
@@ -91,20 +96,20 @@ export function ReportInjuryDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={(v) => !busy && onOpenChange(v)}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Report an injury or pain</DialogTitle>
-          <DialogDescription>
-            What you say outranks anything we infer. We never diagnose — your
-            words gate what Hammer asks of you.
+          <DialogTitle className="text-base">Report an injury</DialogTitle>
+          <DialogDescription className="text-xs">
+            Your words gate what Hammer asks of you today. We never diagnose.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label className="text-xs">Body region</Label>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <div className="space-y-5">
+          {/* 1 — Where */}
+          <section className="space-y-2">
+            <Label className="text-xs font-medium">1 · Where does it hurt?</Label>
+            <div className="flex flex-wrap gap-1.5">
               {REPORT_INJURY_REGIONS.map((r) => (
                 <button
                   key={r.key}
@@ -112,7 +117,7 @@ export function ReportInjuryDialog({
                   onClick={() => setRegion(r.key)}
                   className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
                     region === r.key
-                      ? "border-primary bg-primary/10 text-foreground"
+                      ? "border-primary bg-primary/15 text-foreground"
                       : "border-border text-muted-foreground hover:border-foreground/40"
                   }`}
                 >
@@ -120,12 +125,15 @@ export function ReportInjuryDialog({
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div>
-            <Label className="text-xs">How limiting is it?</Label>
-            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-              {SEVERITIES.map((s) => {
+          {/* 2 — How limiting */}
+          <section className="space-y-2">
+            <Label className="text-xs font-medium">
+              2 · How much is it limiting you?
+            </Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {SEVERITY_OPTIONS.map((s) => {
                 const active = severity === s.value;
                 return (
                   <button
@@ -134,7 +142,7 @@ export function ReportInjuryDialog({
                     onClick={() => setSeverity(s.value)}
                     className={`flex flex-col items-start gap-0.5 rounded-md border p-2 text-left transition ${
                       active
-                        ? "border-primary bg-primary/5"
+                        ? "border-primary bg-primary/10"
                         : "border-border hover:border-foreground/30"
                     }`}
                   >
@@ -146,49 +154,38 @@ export function ReportInjuryDialog({
                 );
               })}
             </div>
-          </div>
+          </section>
 
-          <div>
-            <Label className="text-xs">Side</Label>
-            <div className="mt-1.5 flex gap-1.5">
-              {SIDES.map((s) => (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => setSide(s.value)}
-                  className={`rounded-md border px-3 py-1 text-[11px] transition ${
-                    side === s.value
-                      ? "border-primary bg-primary/10"
-                      : "border-border text-muted-foreground hover:border-foreground/40"
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs">Anything else? (optional)</Label>
+          {/* 3 — Free text */}
+          <section className="space-y-2">
+            <Label htmlFor="injury-note" className="text-xs font-medium">
+              3 · Describe it in your own words{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
             <Textarea
-              rows={2}
+              id="injury-note"
+              rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Started yesterday after long-toss; tight not sharp."
-              className="mt-1 text-xs"
+              placeholder="When it started, what makes it worse, left/right side, anything else…"
+              className="text-xs"
             />
-          </div>
+          </section>
 
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-[11px] text-amber-900 dark:text-amber-200">
-            We never authorize return-to-play. Only you, your parent, or your
-            clinician can clear an injury (RR-6).
-          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Only you, a parent, or a clinician can clear an injury (RR-6).
+          </p>
 
           <div className="flex justify-end gap-2 pt-1">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={busy}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              disabled={busy}
+            >
               Cancel
             </Button>
-            <Button size="sm" onClick={submit} disabled={busy || !region}>
+            <Button size="sm" onClick={submit} disabled={!canSubmit}>
               {busy ? "Saving…" : "Report it"}
             </Button>
           </div>
