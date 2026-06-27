@@ -1,0 +1,257 @@
+{
+  "athletes": {
+    "s1": "a9c479fe-f031-437c-84dc-941c53b9b577",
+    "s4_nodob": "673e355e-62b5-43ad-a537-c8440a0b9a5c",
+    "s9_mobile": "7a180557-a09d-4e33-90c8-c2f0161548f6"
+  },
+  "results": [
+    {
+      "scenario": "S6 /onboarding/flow redirect",
+      "pass": true,
+      "details": "final url: http://localhost:8080/auth",
+      "signals": {
+        "console_errors": 1,
+        "console_warnings": 3,
+        "react_warnings": 2,
+        "failed_responses": 0,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html')."
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+          ]
+        }
+      },
+      "screenshots": [
+        "06_flow_redirect.png"
+      ]
+    },
+    {
+      "scenario": "S1 fresh athlete signup (UI walk)",
+      "pass": true,
+      "details": "uid=a9c479fe-f031-437c-84dc-941c53b9b577",
+      "signals": {
+        "console_errors": 4,
+        "console_warnings": 6,
+        "react_warnings": 5,
+        "failed_responses": 1,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html').",
+            "The script has an unsupported MIME type ('text/html').",
+            "Failed to load resource: the server responded with a status of 403 ()"
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+          ],
+          "failed_responses": [
+            "403 https://wysikbsjalfvjwqzkihj.supabase.co/rest/v1/audit_log"
+          ]
+        }
+      },
+      "screenshots": [
+        "01a_onboarding_welcome.png",
+        "01b_after_emit.png"
+      ]
+    },
+    {
+      "scenario": "S7 idempotency under reloads",
+      "pass": true,
+      "details": "3 reloads completed; SQL evidence to follow",
+      "signals": {
+        "console_errors": 41,
+        "console_warnings": 23,
+        "react_warnings": 14,
+        "failed_responses": 4,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html').",
+            "The script has an unsupported MIME type ('text/html').",
+            "Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?%s%s \n\nCheck the render method of `Primitive.button.SlotClone`. \n    at Badge (http://localhost:8080/src/components/ui/badge.tsx:37:18)\n    at http://localhost:8080/node_m"
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+          ],
+          "failed_responses": [
+            "409 https://wysikbsjalfvjwqzkihj.supabase.co/rest/v1/asb_events",
+            "409 https://wysikbsjalfvjwqzkihj.supabase.co/rest/v1/asb_events",
+            "400 https://wysikbsjalfvjwqzkihj.supabase.co/rest/v1/vault_focus_quizzes?select=focus_score%2Ccreated_at&user_id=eq.a9c479fe-f031-437c-84dc-941c53b9b577&created_at=gte.2026-06-25T17%3A"
+          ]
+        }
+      },
+      "screenshots": [
+        "07_after_3_reloads.png"
+      ]
+    },
+    {
+      "scenario": "S2 returning athlete -> dashboard",
+      "pass": false,
+      "details": "final url: http://localhost:8080/start-here?intent=%2Fdashboard",
+      "signals": {
+        "console_errors": 1,
+        "console_warnings": 5,
+        "react_warnings": 2,
+        "failed_responses": 0,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html')."
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+          ]
+        }
+      },
+      "screenshots": [
+        "02_returning_login.png"
+      ]
+    },
+    {
+      "scenario": "S4 missing DOB onboarding renders",
+      "pass": true,
+      "details": "welcome visible: True",
+      "signals": {
+        "console_errors": 2,
+        "console_warnings": 6,
+        "react_warnings": 4,
+        "failed_responses": 0,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html').",
+            "The script has an unsupported MIME type ('text/html')."
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+          ]
+        }
+      },
+      "screenshots": [
+        "04_nodob_onboarding.png"
+      ]
+    },
+    {
+      "scenario": "S8 dashboard gate routes to onboarding when no first event",
+      "pass": true,
+      "details": "final url: http://localhost:8080/onboarding/athlete",
+      "signals": {
+        "console_errors": 1,
+        "console_warnings": 3,
+        "react_warnings": 2,
+        "failed_responses": 0,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html')."
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+          ]
+        }
+      },
+      "screenshots": [
+        "08_dashboard_gate.png"
+      ]
+    },
+    {
+      "scenario": "S5 parent invite \u2014 redirect+token round-trip survives signup",
+      "pass": true,
+      "details": "final url: http://localhost:8080/accept-parent-invite?token=DUMMY_TOKEN_VALUE",
+      "signals": {
+        "console_errors": 3,
+        "console_warnings": 3,
+        "react_warnings": 2,
+        "failed_responses": 1,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html').",
+            "Failed to load resource: the server responded with a status of 409 ()",
+            "[asb] emit_failed {topic_id: athlete.lifecycle.signup, code: 23503, message: insert or update on table \"asb_events\" violates foreign key constraint \"asb_events_topic_id_fkey\"}"
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+          ],
+          "failed_responses": [
+            "409 https://wysikbsjalfvjwqzkihj.supabase.co/rest/v1/asb_events"
+          ]
+        }
+      },
+      "screenshots": [
+        "05_parent_invite_redirect.png"
+      ]
+    },
+    {
+      "scenario": "S9 mobile onboarding render",
+      "pass": true,
+      "details": "iPhone 12-ish viewport",
+      "signals": {
+        "console_errors": 2,
+        "console_warnings": 6,
+        "react_warnings": 4,
+        "failed_responses": 0,
+        "samples": {
+          "console_errors": [
+            "The script has an unsupported MIME type ('text/html').",
+            "The script has an unsupported MIME type ('text/html')."
+          ],
+          "console_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "Service worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('http://localhost:8080/') with script ('http://localhost:8080/sw.js'): The script has an unsupported MIME type ('text/html')."
+          ],
+          "react_warnings": [
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+            "\u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+            "\u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+          ]
+        }
+      },
+      "screenshots": [
+        "09_mobile_onboarding.png"
+      ]
+    }
+  ]
+}
