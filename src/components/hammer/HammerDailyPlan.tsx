@@ -35,6 +35,7 @@ import {
   Send,
   AlertTriangle,
   CheckCircle2,
+  HeartPulse,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
