@@ -136,19 +136,14 @@ export default function Profile() {
 
   useEffect(() => {
     if (authLoading || ownerLoading || !isAuthStable) return;
-    
-    if (!user && !session) {
-      navigate("/auth", { replace: true });
-    } else if (user) {
-      // Check if viewing another user's profile
-      if (viewingUserId && viewingUserId !== user.id) {
-        setViewingOtherProfile(true);
-      } else {
-        setViewingOtherProfile(false);
-      }
-      fetchProfile(viewingUserId || undefined);
+    if (!user) return; // useRequireAuth handles eviction with a stable re-check
+    if (viewingUserId && viewingUserId !== user.id) {
+      setViewingOtherProfile(true);
+    } else {
+      setViewingOtherProfile(false);
     }
-  }, [authLoading, ownerLoading, user, navigate, viewingUserId]);
+    fetchProfile(viewingUserId || undefined);
+  }, [authLoading, ownerLoading, isAuthStable, user, viewingUserId]);
 
   useEffect(() => {
     const checkFollowRelationship = async () => {
