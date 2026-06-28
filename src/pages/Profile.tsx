@@ -68,6 +68,7 @@ function PracticeIntelligenceSections() {
 }
 
 export default function Profile() {
+  useRequireAuth();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
