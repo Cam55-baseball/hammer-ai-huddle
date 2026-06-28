@@ -156,6 +156,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   async function handleConfirm() {
     noteProtectedEditing(60_000);
     const selected = events.filter((_, i) => keepRow[i]);
+    let closedAfterSave = false;
     if (!selected.length) {
       toast.error("Pick at least one event to add.");
       return;
@@ -169,12 +170,17 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         toast.error(`${summary.failed} couldn't be saved. ${summary.errors[0] ?? ""}`);
       }
       if (summary.failed === 0) {
+        closedAfterSave = true;
         handleClose(false);
       }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Save failed");
     } finally {
-      noteProtectedEditing();
+      if (closedAfterSave) {
+        clearProtectedEditing();
+      } else {
+        noteProtectedEditing();
+      }
     }
   }
 
