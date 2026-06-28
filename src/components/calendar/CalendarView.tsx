@@ -29,6 +29,7 @@ import { AddCalendarEventDialog } from './AddCalendarEventDialog';
 import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
 import { SeasonStatusSelector } from './SeasonStatusSelector';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
+import { SeasonScheduleImporterDialog } from '@/components/hammer/SeasonScheduleImporterDialog';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
