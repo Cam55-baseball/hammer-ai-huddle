@@ -29,6 +29,7 @@ export function HammerScheduleStrip() {
   const { updateSeasonStatus } = useSeasonStatus();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importerOpen, setImporterOpen] = useState(false);
 
   if (ctx.loading) return null;
 
