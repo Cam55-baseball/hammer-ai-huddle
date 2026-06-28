@@ -15,7 +15,7 @@ function activeElementIsEditable(): boolean {
     tagName === "INPUT" ||
     tagName === "TEXTAREA" ||
     active.isContentEditable === true ||
-    active.closest?.("[data-protected-editing='true']") !== null
+    active.closest("[data-protected-editing='true']") !== null
   );
 }
 
