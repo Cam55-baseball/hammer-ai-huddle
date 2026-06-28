@@ -85,14 +85,17 @@ export function SeasonDatesDialog({ open, onOpenChange }: Props) {
     setDraft((d) => ({ ...d, [field]: value }));
 
   const handleSave = async () => {
+    setIsUpdating(true);
     try {
-      await updateSeasonStatus(draft as any);
+      s.updateSeasonStatus(draft as any);
       toast.success("Season dates updated");
       qc.invalidateQueries({ queryKey: ["game-day-context"] });
       qc.invalidateQueries({ queryKey: ["hammer-daily-plan"] });
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not save season dates");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
