@@ -76,6 +76,14 @@ const PHASE_TONE: Record<string, string> = {
 function scheduleLine(sched: ReturnType<typeof useScheduleWindow>): string | null {
   if (sched.unknown || sched.loading) return null;
   if (sched.empty) return null;
+  const tw = sched.tournamentWindow;
+  if (tw && tw.dayIndex >= 1) {
+    return `Tournament — Day ${tw.dayIndex} of ${tw.totalDays}. Saving legs.`;
+  }
+  const todayCamp = sched.today.find((s) => s.kind === "camp");
+  if (todayCamp) return `Camp today (${todayCamp.label}) — Hammer steps back.`;
+  const todayTravel = sched.today.find((s) => s.kind === "travel");
+  if (todayTravel) return `Travel today — mobility + hydration only.`;
   const comp = sched.upcomingCompetition;
   if (comp) {
     if (comp.daysUntil === 0) return `Game today (${comp.label}) — prioritising freshness.`;
