@@ -1,0 +1,48 @@
+name: calendar-regression
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/Calendar.tsx'
+      - 'src/components/calendar/**'
+      - 'src/components/hammer/SeasonScheduleImporterDialog.tsx'
+      - 'src/hooks/useCalendar.ts'
+      - 'src/hooks/useRequireAuth.ts'
+      - 'src/hooks/useSchedulingRealtime.ts'
+      - 'src/contexts/AuthContext.tsx'
+      - 'tests/e2e/calendar/**'
+      - '.github/workflows/calendar-regression.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LOVABLE_CLOUD_URL: ${{ secrets.LOVABLE_CLOUD_URL }}
+      LOVABLE_CLOUD_ANON_KEY: ${{ secrets.LOVABLE_CLOUD_ANON_KEY }}
+      CALENDAR_E2E_ORIGIN: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Install deps
+        run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build app
+        run: npm run build
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 0.0.0.0 --port 8080 &
+          for i in $(seq 1 40); do
+            curl -sf http://localhost:8080/ >/dev/null && break || sleep 1
+          done
+      - name: Run calendar regression
+        run: node tests/e2e/calendar/run.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-57-evidence
+          path: .lovable/phase-57-evidence/
