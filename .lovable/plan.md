@@ -1,17 +1,17 @@
-## Goal
-On the Hammer schedule strip, the "Add game" button currently navigates to `/calendar`. Change it so it opens the `SeasonScheduleImporterDialog` in place — identical behavior to the "Season dates" button right next to it.
+## Problem
+Importing tournaments/games via the Season Schedule Importer fails with `null value in column "team_name"`. The `public.games` table has multiple NOT NULL columns without app-level defaults that the importer doesn't populate: `team_name`, `league_level`, `base_distance_ft`, `mound_distance_ft`, plus `game_type` which the importer sets but should remain required.
 
-## Change
-**File:** `src/components/hammer/HammerScheduleStrip.tsx`
+## Fix
+Update `src/hooks/useImportScheduleEvents.ts` so every `gameRows` insert includes safe, athlete-scoped defaults for all required columns the importer was missing:
 
-- Remove the `navigate("/calendar")` handler on the "Add game" button.
-- Reuse the existing `importerOpen` state (already wired for "Season dates") so "Add game" also calls `setImporterOpen(true)`.
-- Drop the now-unused `useNavigate` import if nothing else in the file uses it.
+- `team_name`: fetch the athlete's team name once (priority: `profiles.team_name` → `athlete_mpi_settings.team_name` → fallback `"My Team"`).
+- `league_level`: pull from `athlete_mpi_settings.league_level` → fallback `"unknown"`.
+- `base_distance_ft` / `mound_distance_ft`: pull from `athlete_mpi_settings` → fallback to standard baseball distances (90 / 60.5).
+- Keep existing `opponent_name`, `game_date`, `status`, `game_type`, `sport`, `game_summary` lineage.
 
-No other files change. The importer dialog itself, its paste/photo flow, auth-stable typing guard, and persistence (`useImportScheduleEvents`) already work end-to-end and are unaffected.
+The fetch happens once per `mutationFn` call (before the loop) so a single import populates all rows consistently.
 
 ## Verification
-- Tap "Add game" on the dashboard schedule strip → `SeasonScheduleImporterDialog` opens (no route change).
-- Paste text or upload a photo → analyze → import succeeds, calendar reflects new games.
-- "Season dates" still opens the same dialog (unchanged).
-- "Tell Hammer what changed" still opens `TellHammerDialog` (unchanged).
+- Re-import the same tournament text → all rows save without NOT NULL errors.
+- Imported games appear on the calendar with the violet/red coloring already wired in `useCalendar.ts`.
+- No schema changes; purely a client-side payload fix.
