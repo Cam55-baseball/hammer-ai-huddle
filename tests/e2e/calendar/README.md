@@ -1,8 +1,8 @@
 # Calendar regression suite (Phase 57)
 
 Playwright live E2E that proves clicking **Calendar** never evicts a signed-in
-user, and that all four event surfaces (Game, Camp/Appointment, Practice,
-Event) accept text entry and photo upload without mid-typing eviction.
+user, all four event surfaces accept text entry, and schedule import text/photo
+flows do not kick the user out mid-edit.
 
 ## Scenarios
 
