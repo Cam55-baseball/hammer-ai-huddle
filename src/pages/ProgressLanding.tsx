@@ -125,7 +125,7 @@ const TOPIC_DEFS: Record<ProgressTopicId, TopicDef> = {
 
 export default function ProgressLanding() {
   const ctx = useHammerAthleteContext();
-  const { data: schedule } = useScheduleWindow({ days: 7 });
+  const schedule = useScheduleWindow();
   const { data: rows = [] } = useAthleteCommandRows({ days: 30, limit: 500 });
   const [openId, setOpenId] = useState<ProgressTopicId | null>(null);
   const [classicOpen, setClassicOpen] = useState(false);
