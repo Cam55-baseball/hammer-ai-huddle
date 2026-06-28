@@ -1055,12 +1055,21 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
   }
 }
 
+import {
+  NORMAL_SIGNAL,
+  type ScheduleSignal,
+  type SchedulePosture,
+} from "@/lib/hammer/prescription/scheduleContext";
+
 export interface HammerDailyPlanResult {
   readonly blocks: ReadonlyArray<PrescribedBlock>;
   readonly seasonPhase: string | null;
   readonly missingnessCount: number;
   readonly speedFocus: SpeedFocusDecision;
+  readonly schedulePosture: SchedulePosture;
+  readonly scheduleSignal: ScheduleSignal;
 }
+
 
 /**
  * RFL-034 — minor + parent-concern post-processor (unchanged).
