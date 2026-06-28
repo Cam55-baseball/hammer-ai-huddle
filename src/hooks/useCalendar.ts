@@ -296,6 +296,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .from('calendar_skipped_items')
           .select('item_id, item_type, skip_days')
           .eq('user_id', user.id),
+
+        // Games (regular + tournaments, includes AI-imported rows)
+        (supabase
+          .from('games' as any)
+          .select('id, game_date, opponent_name, venue, status, game_type, sport, game_summary')
+          .eq('user_id', user.id)
+          .gte('game_date', startStr)
+          .lte('game_date', endStr) as any),
       ]);
 
       // Build game plan skip set: "taskId:date" for fast lookup
