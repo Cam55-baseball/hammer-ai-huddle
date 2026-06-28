@@ -44,6 +44,7 @@ import {
   type BlockStatus,
   type PrescribedBlock,
 } from "@/lib/hammer/prescription/dailyPlan";
+import { projectScheduleSignal } from "@/lib/hammer/prescription/scheduleContext";
 import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
