@@ -230,6 +230,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         scheduledPracticeRes,
         gamePlanSkipsRes,
         calendarSkipItemsRes,
+        gamesRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
