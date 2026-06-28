@@ -134,9 +134,7 @@ export default function ProgressLanding() {
   const position = ctx.get<string>("position_primary")?.value ?? null;
   const isPitcher =
     typeof position === "string" && position.toLowerCase().includes("pitch");
-  const hasGameThisWeek = Boolean(
-    schedule?.slots?.some((s) => s.kind === "game" || s.kind === "tournament"),
-  );
+  const hasGameThisWeek = Boolean(schedule?.upcomingCompetition);
   const hasEscalation = rows.some((r) =>
     r.topic_id?.includes("escalation"),
   );
