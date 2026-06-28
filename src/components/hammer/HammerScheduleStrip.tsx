@@ -95,6 +95,15 @@ export function HammerScheduleStrip() {
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
+              onClick={() => setManageOpen(true)}
+            >
+              <ListChecks className="h-3 w-3" />
+              Cancel / reschedule
+            </Button>
+            <Button
+              size="sm"
               variant="ghost"
               className="h-7 text-[11px] gap-1"
               onClick={() => setDialogOpen(true)}
@@ -108,6 +117,7 @@ export function HammerScheduleStrip() {
       <TellHammerDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <SeasonScheduleImporterDialog open={importerOpen} onOpenChange={setImporterOpen} />
       <SeasonDatesDialog open={seasonDatesOpen} onOpenChange={setSeasonDatesOpen} />
+      <ManageEventsDialog open={manageOpen} onOpenChange={setManageOpen} />
     </>
   );
 }
