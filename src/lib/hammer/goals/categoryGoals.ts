@@ -1,18 +1,34 @@
 /**
  * Per-Category Ranked Goals — canonical model.
  *
+ * V1 (legacy) and V2 (current) shapes are both stored in
+ * `athlete_context.category_goals`. New writes are V2; reads tolerate both
+ * by deriving a V1-equivalent ranked view from a V2 payload so downstream
+ * Hammer code (dailyPlan.ts, decisionFilters) keeps working unchanged.
+ *
+ * V2 model (sport + discipline aware, 1–2 sub-goals per category, 70/30 split):
+ *   {
+ *     version: 2,
+ *     baseball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals },
+ *     softball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals },
+ *     updatedAt: ISO,
+ *   }
+ *
  * Constitutional rules:
- *  - Categories are fixed (speed/power/throwing/hitting/fielding). The athlete
- *    ranks ALL five in order of importance (1=most important, 5=least).
- *  - Each category may carry one optional `intent` selected from a preset list
- *    (free text is intentionally NOT supported here — Hammer must be able to
- *    deterministically reason about it).
- *  - Missingness is preserved: when nothing has been set, projection returns
- *    `null`. A partial ranking (some categories ranked, others not) is treated
- *    as missing because Hammer requires a total order to personalise.
- *  - Read-path callers must use `rankedCategories(...)` / `intentFor(...)` —
- *    never index into the raw array directly.
+ *  - Reads MUST use `rankedCategories(...)` / `intentFor(...)` (V1 view) or
+ *    the explicit `getV2(...)` / `scoreSkillLever(...)` (V2 view).
+ *  - Missingness preserved — return null when there's not enough signal.
+ *  - V2 sub-goals are validated against the catalog at normalize time.
  */
+import {
+  type CategoryKey as CatalogCategoryKey,
+  type Discipline,
+  type Sport,
+  type SubGoal,
+  type SkillLever,
+  legalSubGoalIds,
+  findSubGoal,
+} from "./subGoalCatalog";
 
 export const CATEGORY_KEYS = ["speed", "power", "throwing", "hitting", "fielding"] as const;
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
@@ -33,7 +49,7 @@ export const CATEGORY_DESCRIPTIONS: Record<CategoryKey, string> = {
   fielding: "Reactions, footwork, glove work",
 };
 
-/** Preset intents per category. Keep tight so the planner can act on them. */
+/** Legacy intents — preserved for back-compat with existing rows / Hammer reads. */
 export const CATEGORY_INTENTS: Record<CategoryKey, ReadonlyArray<{ id: string; label: string }>> = {
   speed: [
     { id: "max_velocity", label: "Add top-end speed" },
@@ -81,13 +97,113 @@ export interface CategoryGoalsPayload {
   readonly updatedAt: string;
 }
 
-/* ── Normalization / validation ─────────────────────────────────────────── */
+/* ── V2 model ─────────────────────────────────────────────────────────────── */
 
-/**
- * Coerces any inbound shape (legacy, partial, malformed) into a validated
- * payload OR null when the ranking is not total/well-formed.
- */
-export function normalizeCategoryGoals(raw: unknown): CategoryGoalsPayload | null {
+export type GoalRank = "primary" | "secondary";
+export const RANK_WEIGHT: Record<GoalRank, number> = { primary: 0.7, secondary: 0.3 };
+
+export interface SubGoalPick {
+  readonly id: string;
+  readonly rank: GoalRank;
+}
+
+export interface DisciplineGoals {
+  readonly speed?: ReadonlyArray<SubGoalPick>;
+  readonly power?: ReadonlyArray<SubGoalPick>;
+  readonly throwing?: ReadonlyArray<SubGoalPick>;
+  readonly hitting?: ReadonlyArray<SubGoalPick>;
+  readonly fielding?: ReadonlyArray<SubGoalPick>;
+  readonly pitching?: ReadonlyArray<SubGoalPick>;
+}
+
+export interface CategoryGoalsPayloadV2 {
+  readonly version: 2;
+  readonly baseball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals };
+  readonly softball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals };
+  readonly updatedAt: string;
+}
+
+/* ── V2 normalization ─────────────────────────────────────────────────────── */
+
+function normalizePicks(
+  sport: Sport,
+  discipline: Discipline,
+  category: CatalogCategoryKey,
+  raw: unknown,
+): SubGoalPick[] {
+  if (!Array.isArray(raw)) return [];
+  const legal = legalSubGoalIds(sport, discipline, category);
+  const seenIds = new Set<string>();
+  const out: SubGoalPick[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const r = item as { id?: unknown; rank?: unknown };
+    if (typeof r.id !== "string" || !legal.has(r.id) || seenIds.has(r.id)) continue;
+    const rank: GoalRank = r.rank === "secondary" ? "secondary" : "primary";
+    seenIds.add(r.id);
+    out.push({ id: r.id, rank });
+    if (out.length >= 2) break; // max 2 picks per category
+  }
+  // Guarantee at most one primary + one secondary; demote duplicates.
+  let primarySeen = false;
+  return out.map((p) => {
+    if (p.rank === "primary") {
+      if (primarySeen) return { ...p, rank: "secondary" as const };
+      primarySeen = true;
+    }
+    return p;
+  });
+}
+
+function normalizeDiscipline(
+  sport: Sport,
+  discipline: Discipline,
+  raw: unknown,
+): DisciplineGoals | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const out: DisciplineGoals = {
+    speed: normalizePicks(sport, discipline, "speed", r.speed),
+    power: normalizePicks(sport, discipline, "power", r.power),
+    throwing: normalizePicks(sport, discipline, "throwing", r.throwing),
+    hitting: normalizePicks(sport, discipline, "hitting", r.hitting),
+    fielding: normalizePicks(sport, discipline, "fielding", r.fielding),
+    pitching: normalizePicks(sport, discipline, "pitching", r.pitching),
+  };
+  const hasAny = Object.values(out).some((v) => Array.isArray(v) && v.length > 0);
+  return hasAny ? out : null;
+}
+
+export function normalizeCategoryGoalsV2(raw: unknown): CategoryGoalsPayloadV2 | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as { version?: unknown; baseball?: unknown; softball?: unknown; updatedAt?: unknown };
+  if (obj.version !== 2) return null;
+  const baseball = obj.baseball && typeof obj.baseball === "object"
+    ? {
+        position: normalizeDiscipline("baseball", "position", (obj.baseball as Record<string, unknown>).position) ?? undefined,
+        pitcher: normalizeDiscipline("baseball", "pitcher", (obj.baseball as Record<string, unknown>).pitcher) ?? undefined,
+      }
+    : undefined;
+  const softball = obj.softball && typeof obj.softball === "object"
+    ? {
+        position: normalizeDiscipline("softball", "position", (obj.softball as Record<string, unknown>).position) ?? undefined,
+        pitcher: normalizeDiscipline("softball", "pitcher", (obj.softball as Record<string, unknown>).pitcher) ?? undefined,
+      }
+    : undefined;
+  const hasAny =
+    !!(baseball?.position || baseball?.pitcher || softball?.position || softball?.pitcher);
+  if (!hasAny) return null;
+  return {
+    version: 2,
+    ...(baseball ? { baseball } : {}),
+    ...(softball ? { softball } : {}),
+    updatedAt: typeof obj.updatedAt === "string" ? obj.updatedAt : new Date().toISOString(),
+  };
+}
+
+/* ── V1 normalization (legacy) ────────────────────────────────────────────── */
+
+function normalizeV1Raw(raw: unknown): CategoryGoalsPayload | null {
   if (!raw || typeof raw !== "object") return null;
   const obj = raw as { goals?: unknown; updatedAt?: unknown };
   const list = Array.isArray(obj.goals) ? obj.goals : Array.isArray(raw) ? (raw as unknown[]) : null;
@@ -112,8 +228,7 @@ export function normalizeCategoryGoals(raw: unknown): CategoryGoalsPayload | nul
       notes: typeof r.notes === "string" ? r.notes : null,
     });
   }
-  if (goals.length !== CATEGORY_KEYS.length) return null; // partial ranking → missing
-  // Renumber to canonical 1..N in ascending rank order to guarantee a total.
+  if (goals.length !== CATEGORY_KEYS.length) return null;
   goals.sort((a, b) => a.rank - b.rank);
   const canonical = goals.map((g, i) => ({ ...g, rank: i + 1 }));
   return {
@@ -124,7 +239,123 @@ export function normalizeCategoryGoals(raw: unknown): CategoryGoalsPayload | nul
   };
 }
 
-/* ── Read helpers ────────────────────────────────────────────────────────── */
+/** Derive a V1-equivalent ranked view from a V2 payload. */
+function v2ToV1(v2: CategoryGoalsPayloadV2): CategoryGoalsPayload {
+  // Aggregate weighted presence per V1 category across all enabled discipline panes.
+  const score: Record<CategoryKey, number> = { speed: 0, power: 0, throwing: 0, hitting: 0, fielding: 0 };
+  const firstIntent: Partial<Record<CategoryKey, string>> = {};
+
+  const accept = (disc: Discipline, sport: Sport, dg: DisciplineGoals | undefined) => {
+    if (!dg) return;
+    const consume = (cat: CategoryKey, picks: ReadonlyArray<SubGoalPick> | undefined) => {
+      if (!picks) return;
+      for (const p of picks) {
+        score[cat] += RANK_WEIGHT[p.rank];
+        if (!firstIntent[cat]) firstIntent[cat] = p.id;
+      }
+    };
+    consume("speed", dg.speed);
+    consume("power", dg.power);
+    consume("hitting", dg.hitting);
+    consume("fielding", dg.fielding);
+    // Pitcher pane: Pitching picks contribute to "throwing" V1 bucket.
+    if (disc === "pitcher") {
+      consume("throwing", dg.pitching);
+    } else {
+      consume("throwing", dg.throwing);
+    }
+    void sport;
+  };
+
+  if (v2.baseball) {
+    accept("position", "baseball", v2.baseball.position);
+    accept("pitcher", "baseball", v2.baseball.pitcher);
+  }
+  if (v2.softball) {
+    accept("position", "softball", v2.softball.position);
+    accept("pitcher", "softball", v2.softball.pitcher);
+  }
+
+  const ordered = (Object.keys(score) as CategoryKey[]).sort((a, b) => {
+    if (score[b] !== score[a]) return score[b] - score[a];
+    return CATEGORY_KEYS.indexOf(a) - CATEGORY_KEYS.indexOf(b);
+  });
+
+  const goals: CategoryGoal[] = ordered.map((cat, i) => ({
+    category: cat,
+    rank: i + 1,
+    intent: firstIntent[cat] ?? null,
+  }));
+
+  return { version: 1, goals, updatedAt: v2.updatedAt };
+}
+
+/**
+ * Single canonical normalizer. Detects V2 and derives a V1 view automatically;
+ * tolerates legacy V1 payloads unchanged. Returns null only when the data is
+ * truly insufficient for Hammer to plan from.
+ */
+export function normalizeCategoryGoals(raw: unknown): CategoryGoalsPayload | null {
+  const v2 = normalizeCategoryGoalsV2(raw);
+  if (v2) return v2ToV1(v2);
+  return normalizeV1Raw(raw);
+}
+
+/** Read the raw V2 payload (or null) — for components that need the full sub-goal detail. */
+export function getV2(raw: unknown): CategoryGoalsPayloadV2 | null {
+  return normalizeCategoryGoalsV2(raw);
+}
+
+/* ── V2 scoring (Hammer prescription) ─────────────────────────────────────── */
+
+/**
+ * Aggregate skill-lever scores across all active discipline panes in a V2
+ * payload. 70/30 weights are applied automatically. Returns an empty object
+ * for V1 / null inputs (callers fall back to ranked categories).
+ */
+export function scoreSkillLevers(
+  raw: unknown,
+): Partial<Record<SkillLever, number>> {
+  const v2 = normalizeCategoryGoalsV2(raw);
+  if (!v2) return {};
+  const out: Partial<Record<SkillLever, number>> = {};
+  const consume = (
+    sport: Sport,
+    discipline: Discipline,
+    category: CatalogCategoryKey,
+    picks: ReadonlyArray<SubGoalPick> | undefined,
+  ) => {
+    if (!picks?.length) return;
+    for (const pick of picks) {
+      const sg: SubGoal | null = findSubGoal(sport, discipline, category, pick.id);
+      if (!sg) continue;
+      const w = RANK_WEIGHT[pick.rank];
+      for (const [lever, hint] of Object.entries(sg.weightHints) as Array<[SkillLever, number]>) {
+        out[lever] = (out[lever] ?? 0) + hint * w;
+      }
+    }
+  };
+  const acceptDiscipline = (sport: Sport, discipline: Discipline, dg?: DisciplineGoals) => {
+    if (!dg) return;
+    consume(sport, discipline, "speed", dg.speed);
+    consume(sport, discipline, "power", dg.power);
+    consume(sport, discipline, "throwing", dg.throwing);
+    consume(sport, discipline, "hitting", dg.hitting);
+    consume(sport, discipline, "fielding", dg.fielding);
+    consume(sport, discipline, "pitching", dg.pitching);
+  };
+  if (v2.baseball) {
+    acceptDiscipline("baseball", "position", v2.baseball.position);
+    acceptDiscipline("baseball", "pitcher", v2.baseball.pitcher);
+  }
+  if (v2.softball) {
+    acceptDiscipline("softball", "position", v2.softball.position);
+    acceptDiscipline("softball", "pitcher", v2.softball.pitcher);
+  }
+  return out;
+}
+
+/* ── Read helpers (unchanged from V1) ─────────────────────────────────────── */
 
 export function rankedCategories(
   payload: CategoryGoalsPayload | null,
@@ -151,7 +382,6 @@ export function intentFor(
   return g?.intent ?? null;
 }
 
-/** Map a daily-plan modality token to the goal-category that owns it. */
 export function modalityToCategory(modality: string): CategoryKey | null {
   switch (modality) {
     case "speed":
@@ -170,7 +400,6 @@ export function modalityToCategory(modality: string): CategoryKey | null {
   }
 }
 
-/** Convert a payload to a stable, human-readable summary used in lineage strings. */
 export function summarizeGoals(payload: CategoryGoalsPayload | null): string | null {
   if (!payload) return null;
   return rankedCategories(payload)
@@ -184,7 +413,6 @@ export function summarizeGoals(payload: CategoryGoalsPayload | null): string | n
     .join(" · ");
 }
 
-/** Equality check for de-bouncing writes. */
 export function goalsEqual(
   a: CategoryGoalsPayload | null,
   b: CategoryGoalsPayload | null,
