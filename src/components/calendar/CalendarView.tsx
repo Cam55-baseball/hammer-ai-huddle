@@ -81,6 +81,15 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   
   const { events: legacyEvents, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
 
+  const handleAddEvent = useCallback(async (event: Parameters<typeof addEvent>[0]) => {
+    const success = await addEvent(event);
+    if (success) {
+      setAddEventOpen(false);
+      refetch();
+    }
+    return success;
+  }, [addEvent, refetch]);
+
   // Calculate visible range early so the projection hook can consume it
   const monthStartForRange = startOfMonth(currentMonth);
   const fetchStart = startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 });
