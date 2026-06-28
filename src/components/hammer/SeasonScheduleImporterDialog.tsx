@@ -64,6 +64,23 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const importMutation = useImportScheduleEvents();
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { user } = useOptionalAuth();
+
+  // Hydrate pasted text from draft on open so user resumes safely.
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    readDraftSlot<{ text?: string }>(user.id, "schedule-importer").then((d) => {
+      if (d?.text && !text) setText(d.text);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.id]);
+
+  // Debounced draft autosave while typing.
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    writeDraftSlot(user.id, "schedule-importer", { text });
+  }, [open, user?.id, text]);
+
 
   function startPasteHeartbeat() {
     if (heartbeatRef.current) return;
