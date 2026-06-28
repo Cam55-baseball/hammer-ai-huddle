@@ -53,6 +53,19 @@ export function useImportScheduleEvents() {
         imported_at: new Date().toISOString(),
       };
 
+      // Resolve athlete defaults once. The `games` table requires team_name,
+      // league_level, and field distances NOT NULL — none are captured by the
+      // importer UI, so fall back to safe athlete-scoped defaults.
+      const [{ data: profile }, { data: settings }] = await Promise.all([
+        (supabase as any).from("profiles").select("full_name").eq("id", uid).maybeSingle(),
+        (supabase as any).from("athlete_mpi_settings").select("sport").eq("user_id", uid).maybeSingle(),
+      ]);
+      const defaultTeamName = (profile?.full_name?.trim() || "My Team") + " (imported)";
+      const defaultSport = settings?.sport || "baseball";
+      const defaultLeagueLevel = "unknown";
+      const defaultBaseDistance = 90;
+      const defaultMoundDistance = 60.5;
+
       for (const ev of events) {
         const day = ev.start_date;
         if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
@@ -63,12 +76,16 @@ export function useImportScheduleEvents() {
         if (ev.kind === "game" || ev.kind === "tournament_day") {
           gameRows.push({
             user_id: uid,
+            team_name: defaultTeamName,
+            league_level: defaultLeagueLevel,
+            base_distance_ft: defaultBaseDistance,
+            mound_distance_ft: defaultMoundDistance,
             game_date: day,
             opponent_name: ev.opponent ?? ev.title,
             venue: ev.location ?? null,
             status: "scheduled",
-            game_type: ev.kind === "tournament_day" ? "tournament" : "regular",
-            sport: "baseball",
+            game_type: ev.kind === "tournament_day" ? "tournament" : "regular_season",
+            sport: defaultSport,
             game_summary: {
               ...lineage,
               title: ev.title,
