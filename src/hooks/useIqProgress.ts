@@ -37,15 +37,18 @@ export function useRecordIqAttempt() {
       if (!user) throw new Error("Not signed in");
 
       // 1) Append attempt
-      const { error: aErr } = await supabase.from("iq_user_attempts").insert({
+      const attemptRow: Record<string, unknown> = {
         user_id: user.id,
         scenario_id: input.scenarioId,
         situation_id: input.situationId,
-        position_chosen: input.positionChosen,
         correct: input.correct,
         answer_payload: input.answerPayload,
         time_ms: input.timeMs,
-      });
+      };
+      if (input.positionChosen) attemptRow.position_chosen = input.positionChosen;
+      const { error: aErr } = await supabase
+        .from("iq_user_attempts")
+        .insert(attemptRow as never);
       if (aErr) throw aErr;
 
       // 2) Upsert progress with SM-2 update
