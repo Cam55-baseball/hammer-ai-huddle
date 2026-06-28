@@ -105,6 +105,7 @@ export function HammerScheduleStrip() {
       </Card>
       <TellHammerDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <SeasonScheduleImporterDialog open={importerOpen} onOpenChange={setImporterOpen} />
+      <SeasonDatesDialog open={seasonDatesOpen} onOpenChange={setSeasonDatesOpen} />
     </>
   );
 }
