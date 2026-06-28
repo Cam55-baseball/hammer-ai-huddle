@@ -87,7 +87,7 @@ export function useScheduleWindow(): ScheduleWindow {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("games")
-        .select("id, game_date, opponent_name, status")
+        .select("id, game_date, opponent_name, status, game_type")
         .eq("user_id", uid!)
         .gte("game_date", start)
         .lte("game_date", end)
@@ -97,6 +97,7 @@ export function useScheduleWindow(): ScheduleWindow {
         game_date: string;
         opponent_name: string;
         status: string;
+        game_type: string | null;
       }>;
     },
   });
@@ -108,7 +109,7 @@ export function useScheduleWindow(): ScheduleWindow {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("scheduled_practice_sessions")
-        .select("id, scheduled_date, title, status")
+        .select("id, scheduled_date, title, status, session_type, session_module")
         .eq("user_id", uid!)
         .gte("scheduled_date", start)
         .lte("scheduled_date", end)
@@ -118,6 +119,8 @@ export function useScheduleWindow(): ScheduleWindow {
         scheduled_date: string;
         title: string;
         status: string | null;
+        session_type: string | null;
+        session_module: string | null;
       }>;
     },
   });
@@ -131,7 +134,9 @@ export function useScheduleWindow(): ScheduleWindow {
       unknown: true,
       today: [],
       tomorrow: [],
+      slotsByDate: {},
       upcomingCompetition: null,
+      tournamentWindow: null,
       totalGames: 0,
       totalPractices: 0,
     };
@@ -139,31 +144,109 @@ export function useScheduleWindow(): ScheduleWindow {
 
   const slots: ScheduleSlot[] = [];
   for (const g of games.data ?? []) {
+    const isTournament = (g.game_type ?? "").toLowerCase() === "tournament";
     slots.push({
-      kind: "game",
+      kind: isTournament ? "tournament" : "game",
       date: g.game_date,
       daysUntil: daysBetween(g.game_date, today),
-      label: g.opponent_name ? `vs ${g.opponent_name}` : "Game",
+      label: g.opponent_name ? `vs ${g.opponent_name}` : isTournament ? "Tournament" : "Game",
     });
   }
   for (const p of practices.data ?? []) {
+    const t = (p.session_type ?? "").toLowerCase();
+    const titleLc = (p.title ?? "").toLowerCase();
+    const isCamp =
+      t === "camp" || t === "showcase" || t === "clinic" ||
+      /\b(camp|showcase|clinic)\b/.test(titleLc);
+    const isTravel = t === "travel" || /\btravel\b/.test(titleLc);
+    const isTeamPractice =
+      t === "team_practice" || t === "team-practice" ||
+      /\bteam practice\b/.test(titleLc);
+    const kind: ScheduleKind = isCamp
+      ? "camp"
+      : isTravel
+        ? "travel"
+        : isTeamPractice
+          ? "team_practice"
+          : t === "practice"
+            ? "practice"
+            : t === "other"
+              ? "other"
+              : "practice";
     slots.push({
-      kind: "practice",
+      kind,
       date: p.scheduled_date,
       daysUntil: daysBetween(p.scheduled_date, today),
-      label: p.title || "Practice",
+      label: p.title || (kind === "camp" ? "Camp" : kind === "travel" ? "Travel" : "Practice"),
     });
   }
 
   const todaySlots = slots.filter((s) => s.daysUntil === 0);
   const tomorrowSlots = slots.filter((s) => s.daysUntil === 1);
+  const slotsByDate: Record<string, ScheduleSlot[]> = {};
+  for (const s of slots) {
+    (slotsByDate[s.date] ??= []).push(s);
+  }
   const upcomingCompetition =
     slots
-      .filter((s) => s.kind === "game" && s.daysUntil >= 0)
+      .filter((s) => (s.kind === "game" || s.kind === "tournament") && s.daysUntil >= 0)
       .sort((a, b) => a.daysUntil - b.daysUntil)[0] ?? null;
 
-  const totalGames = slots.filter((s) => s.kind === "game").length;
-  const totalPractices = slots.filter((s) => s.kind === "practice").length;
+  // Tournament window covering today: contiguous tournament dates including today.
+  let tournamentWindow: TournamentWindow | null = null;
+  const tournamentDates = Array.from(
+    new Set(slots.filter((s) => s.kind === "tournament").map((s) => s.date)),
+  ).sort();
+  if (tournamentDates.length > 0) {
+    const todayIso = isoDate(today);
+    // Find contiguous run containing today (or starting at today).
+    const dayMs = 24 * 3600 * 1000;
+    let runStart: string | null = null;
+    let runEnd: string | null = null;
+    for (let i = 0; i < tournamentDates.length; i++) {
+      const d = tournamentDates[i];
+      let j = i;
+      while (
+        j + 1 < tournamentDates.length &&
+        new Date(tournamentDates[j + 1] + "T00:00:00").getTime() -
+          new Date(tournamentDates[j] + "T00:00:00").getTime() ===
+          dayMs
+      ) {
+        j++;
+      }
+      if (d <= todayIso && tournamentDates[j] >= todayIso) {
+        runStart = d;
+        runEnd = tournamentDates[j];
+        break;
+      }
+      i = j;
+    }
+    if (runStart && runEnd) {
+      const total =
+        Math.round(
+          (new Date(runEnd + "T00:00:00").getTime() -
+            new Date(runStart + "T00:00:00").getTime()) /
+            (24 * 3600 * 1000),
+        ) + 1;
+      const idx =
+        Math.round(
+          (new Date(todayIso + "T00:00:00").getTime() -
+            new Date(runStart + "T00:00:00").getTime()) /
+            (24 * 3600 * 1000),
+        ) + 1;
+      tournamentWindow = {
+        startDate: runStart,
+        endDate: runEnd,
+        totalDays: total,
+        dayIndex: idx,
+      };
+    }
+  }
+
+  const totalGames = slots.filter((s) => s.kind === "game" || s.kind === "tournament").length;
+  const totalPractices = slots.filter(
+    (s) => s.kind === "practice" || s.kind === "team_practice",
+  ).length;
 
   return {
     loading,
@@ -171,8 +254,11 @@ export function useScheduleWindow(): ScheduleWindow {
     unknown: false,
     today: todaySlots,
     tomorrow: tomorrowSlots,
+    slotsByDate,
     upcomingCompetition,
+    tournamentWindow,
     totalGames,
     totalPractices,
   };
 }
+
