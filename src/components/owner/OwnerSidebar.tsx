@@ -17,6 +17,7 @@ import {
   Pin,
   PinOff,
   Star,
+  Brain,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
