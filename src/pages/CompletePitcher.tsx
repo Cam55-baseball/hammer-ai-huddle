@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, ArrowRight, Zap, Crosshair } from "lucide-react";
+import { Target, Dumbbell, ArrowRight, Zap, Crosshair, Brain } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -11,6 +11,14 @@ const tiles = [
     labelKey: "dashboard.modules.pitchingAnalysis",
     description: "Analyze delivery mechanics, arm action, and sequencing",
     getRoute: (sport: string) => `/analyze/pitching?sport=${sport}`,
+  },
+  {
+    key: "pitcher-iq",
+    icon: Brain,
+    labelKey: "iq.pitcherTitle",
+    labelFallback: "Pitcher Game IQ",
+    description: "PFP, pickoffs, bunt coverage, 1st-and-3rd defense — every pitch, every play",
+    getRoute: (sport: string) => `/iq?lens=pitching&sport=${sport}`,
   },
   {
     key: "heat-factory",

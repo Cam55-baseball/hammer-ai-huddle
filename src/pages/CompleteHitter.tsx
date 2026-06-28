@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, Eye, ArrowRight } from "lucide-react";
+import { Target, Dumbbell, Eye, ArrowRight, Brain } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -11,6 +11,14 @@ const tiles = [
     labelKey: "dashboard.modules.hittingAnalysis",
     description: "Analyze swing mechanics, bat path, and timing",
     getRoute: (sport: string) => `/analyze/hitting?sport=${sport}`,
+  },
+  {
+    key: "hitter-iq",
+    icon: Brain,
+    labelKey: "iq.hitterTitle",
+    labelFallback: "Hitter Game IQ",
+    description: "Approach by count, situational hitting, hit-and-run, squeezes",
+    getRoute: (sport: string) => `/iq?lens=offense&sport=${sport}`,
   },
   {
     key: "iron-bambino",

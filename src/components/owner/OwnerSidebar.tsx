@@ -17,6 +17,7 @@ import {
   Pin,
   PinOff,
   Star,
+  Brain,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ interface SidebarItem {
   label: string;
   icon: React.ElementType;
   badgeKey?: "admin" | "scout";
+  href?: string;
 }
 
 interface SidebarGroup {
@@ -81,6 +83,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "videos", label: "Recent Videos", icon: Video },
       { id: "video-library", label: "Video Library", icon: Library },
       { id: "drill-cms", label: "Drill CMS", icon: Dumbbell },
+      { id: "videos" as OwnerSection, label: "Game IQ Library", icon: Brain, href: "/owner/iq-library" },
       { id: "promo-engine", label: "Promo Engine", icon: Film },
     ],
   },
@@ -189,7 +192,12 @@ export const OwnerSidebar = ({
     });
   };
 
-  const handleSectionClick = (section: OwnerSection) => {
+  const handleSectionClick = (section: OwnerSection, href?: string) => {
+    if (href) {
+      navigate(href);
+      if (isMobile && onMobileOpenChange) onMobileOpenChange(false);
+      return;
+    }
     onSectionChange(section);
     if (isMobile && onMobileOpenChange) onMobileOpenChange(false);
   };
@@ -211,7 +219,7 @@ export const OwnerSidebar = ({
     return (
       <div key={`${opts.pinned ? "pin-" : ""}${item.id}`} className="group/item relative">
         <button
-          onClick={() => handleSectionClick(item.id)}
+          onClick={() => handleSectionClick(item.id, item.href)}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
             isActive

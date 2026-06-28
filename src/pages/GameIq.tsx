@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,15 @@ const LENS_TABS: { value: IqLens | "all"; label: string; icon: typeof Brain }[] 
 
 export default function GameIq() {
   const { sport } = useSportTheme();
-  const [lens, setLens] = useState<IqLens | "all">("all");
+  const [params, setParams] = useSearchParams();
+  const initialLens = (params.get("lens") as IqLens | "all" | null) ?? "all";
+  const [lens, setLens] = useState<IqLens | "all">(initialLens);
+  useEffect(() => {
+    const next = new URLSearchParams(params);
+    if (lens === "all") next.delete("lens"); else next.set("lens", lens);
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lens]);
   const navigate = useNavigate();
   const situationsQ = useIqSituations(sport, lens === "all" ? undefined : lens);
   const progressQ = useIqProgress();

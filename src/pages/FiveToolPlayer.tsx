@@ -77,6 +77,15 @@ const tiles = [
     baseballOnly: false,
     softballOnly: false,
   },
+  {
+    key: "game-iq",
+    icon: Brain,
+    label: "Game IQ 101",
+    description: "Every pitch, every position — Ball · Bag · Backup. HOF-level decision training.",
+    getRoute: (sport: string) => `/iq?sport=${sport}`,
+    baseballOnly: false,
+    softballOnly: false,
+  },
 ];
 
 export default function FiveToolPlayer() {

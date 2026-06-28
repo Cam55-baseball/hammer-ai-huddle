@@ -1,149 +1,77 @@
-# Baseball & Softball IQ 101
 
-A subscriber-wide submodule that teaches every player where they must be on every pitch, for both sports. Organized around **canonical game situations** (the "40 Situations" model, extensible forever). Every situation shows **all 9 defenders** plus **all baserunners** plus **batter/pitcher intent**, with an interactive diamond, a quiz mode, spaced repetition, variant generation, an owner-managed library, and full Hammers integration.
+# Game IQ 101 — Elite Expansion & Owner Authoring Plan
 
-## Pillars
+You asked four things. Answers first, then the execution plan.
 
-1. **Situation-first taxonomy** — Defense, Offense, Pitching, Baserunning are *lenses* on the same canonical situations. One situation = one source of truth for all 10 actors.
-2. **Three B's law** — Ball / Bag / Backup. Every actor on every situation has exactly one of these assignments, validated at content-author time so no actor is ever "missing."
-3. **Self-regulating forever loop** — Spaced repetition + variant generator + accuracy guarantee. Module cannot be "completed."
-4. **Owner-extensible** — Owner Dashboard library lets the owner add new situations through a guided wizard with triple-confirmation accuracy gates.
+## Direct answers
 
-## What ships in v1
+1. **Pitcher submodules wired?** Not yet. `CompletePitcher.tsx` has no Game IQ entry. `FiveToolPlayer.tsx` / `GoldenTwoWay.tsx` reference IQ only via the sidebar. We will add a dedicated **Pitching IQ** lens entry in CompletePitcher for both Baseball and Softball (windmill vs. overhand variants), plus a Pitcher-only filter on `/iq?lens=pitching`.
 
-- **40 canonical situations per sport** (80 total), each at HOF depth:
-  - All 9 defensive assignments (with primary route, secondary read, communication call)
-  - All baserunner reads (lead, secondary, decision tree)
-  - Pitcher intent + catcher signal context
-  - Batter situational intent (sac, hit-and-run, slug, take, etc.)
-  - "Why it works" coaching note + "Pro reference" (MLB/AUSL example pattern)
-  - Common mistakes + Elite cue
-- **Interactive diamond** for every situation (teach mode + quiz mode)
-- **Scenario card quiz** layered on top of the diamond (position-picker → "where do YOU go?")
-- **Spaced repetition engine** with decay curve per situation per user
-- **Variant generator** (count, outs, runners, score, inning, handedness, opponent tendency)
-- **Hammers daily micro-rep + weekly deep block**
-- **Owner Library** for adding/editing situations
-- **Sport-aware** Baseball ↔ Softball (terminology, base distances, windmill vs overhand, slap-hit defense, etc.)
+2. **Does it have enough information?** Today: **4 published situations**. That is a proof-of-engine, not a market-beating product. To clear the "Polk / Geng / Inmotion / Yost / Cox" bar we target **120 canonical situations per sport** (240 total), each with full 9-defender Three B's matrix + 5 offensive actors, 3+ scenario variants, calls, mistakes, elite cues, sources. Released in **waves of ~20** until we hit 120/120.
 
-## Information architecture
+3. **Will it ever run out?** No — by design. Each published situation is multiplied by the deterministic variant generator (count × outs × runners × score-state × inning × handedness × opponent tendency = **thousands of unique reps per situation**) and gated by SM-2 spaced repetition. At 240 situations that's **>500k unique reps** before any repeat at the same mastery interval. Plus the Owner Library lets you keep adding forever.
 
-```text
-/iq                          ← Landing (sport-aware): paths, daily rep, progress
-  /iq/situations             ← All 40 situations, filterable by lens & position
-  /iq/situations/:slug       ← Situation detail: diamond + scenario quiz + notes
-  /iq/path/defense           ← Lens view: defense-only ordering
-  /iq/path/offense
-  /iq/path/pitching
-  /iq/path/baserunning
-  /iq/position/:pos          ← "Your position": every situation filtered to your job first
-  /iq/review                 ← Spaced-repetition queue + variant drills
+4. **Owner authoring system E2E?** Not built yet. The DB tables exist (`iq_situations`, `iq_situation_actors`, `iq_scenarios`, `iq_owner_review_log`) and an empty publishing gate. We will build **Owner → Game IQ Library** at `/owner/iq-library` with: list/search/filter, situation wizard (metadata → actor matrix on the same `IqDiamond` → scenarios → Three B's validator → triple-check → publish), variant authoring, and review log. Labeled **"Game IQ Library"** in the Owner dashboard nav, next to "Build Library".
 
-/owner/iq-library            ← Owner-only authoring + accuracy gates
-```
+---
 
-## Data model (new tables, RLS scoped to authenticated subscribers; owner-only writes)
+## Execution waves
 
-```text
-iq_situations
-  id, sport ('baseball'|'softball'|'both'), slug, title, summary,
-  lens_tags text[] (defense/offense/pitching/baserunning),
-  difficulty, canonical_order, owner_id, status ('draft'|'published'),
-  triple_check_count int, sources jsonb, updated_at
+### Wave A — Pitcher integration & discoverability (small)
+- Add **Game IQ — Pitching lens** card to `CompletePitcher.tsx` (Baseball + Softball variants; deep-link to `/iq?lens=pitching&sport=<x>`).
+- Add to `FiveToolPlayer.tsx`, `GoldenTwoWay.tsx`, `CompleteHitter.tsx`, `CompletePlayer.tsx`, `BaserunningIQ.tsx` so every role-based module exposes its lens.
+- Make `/iq` honor `?sport=` and `?lens=` query params for deep links.
 
-iq_situation_actors           ← the Three B's matrix
-  id, situation_id, role ('P','C','1B','2B','3B','SS','LF','CF','RF',
-                          'R1','R2','R3','BR','BAT'),
-  assignment ('ball'|'bag'|'backup'|'read'|'execute'),
-  primary_path jsonb (waypoints on the diamond),
-  secondary_read text, communication_call text,
-  coaching_note text, common_mistake text, elite_cue text
+### Wave B — Owner Library E2E (the authoring system)
+- New page `src/pages/owner/IqLibrary.tsx` (route `/owner/iq-library`, label **"Game IQ Library"** in OwnerDashboard nav).
+- Components:
+  - `IqLibraryList.tsx` — table with sport/lens/difficulty/status filters, mastery telemetry, "Needs review" badges.
+  - `IqSituationWizard.tsx` — 5-step flow: Metadata → **Actor Matrix** (re-uses `IqDiamond` for drag-place + assignment dropdowns per role) → Scenarios + distractors → Variant rules → Triple-check & publish.
+  - `IqValidatorPanel.tsx` — live `validateThreeBs()` + completeness gates; refuses publish unless all 9 defenders assigned, ≥1 scenario, ≥1 source cited.
+  - `IqOwnerReviewLog.tsx` — write to `iq_owner_review_log` on every publish/edit/archive.
+- Hooks: `useIqUpsertSituation`, `useIqUpsertActors`, `useIqUpsertScenario`, `useIqPublish`, `useIqOwnerReviewLog`.
+- Hammer's daily plan (`src/lib/hammer/dailyPlan.ts`): inject 1 IQ micro-rep/day + 1 weekly deep block (already stubbed; tighten selection to user's position + due queue).
 
-iq_situation_variants
-  id, situation_id, count, outs, runners jsonb, score_state,
-  inning, handedness, opponent_tendency, generated boolean
+### Wave C — Canonical content expansion (the bulk of the work, in sub-waves)
+Target: **240 situations** (120 Baseball + 120 Softball). Authored as seed migrations, each batch with full actor matrices, ≥1 scenario, 3+ variants, sources from Polk / Geng / Inmotion / Yost / Cox / MLB & AUSL coaching manuals.
 
-iq_scenarios                  ← quiz question wrapped around a variant
-  id, situation_id, variant_id, prompt, position_focus,
-  correct_actor_assignments jsonb, distractors jsonb, sport
+Sub-waves of 20 situations each. Pitching-heavy coverage first since you flagged pitchers:
 
-iq_user_progress
-  user_id, situation_id, mastery_score, last_seen_at,
-  next_due_at (spaced repetition), streak, lifetime_attempts
+- **C1 — Pitcher Fielding & PFP (20)**: comebackers, 1-3-1 DP, 3-1 cover, bunt coverage (1B/3B charging), 1st-and-3rd defense (cut/no-cut/look-back), pickoffs (1B/2B daylight/timing/inside move), back-picks, rundowns initiated by P, wild pitch with R3, slow roller decisions, infield fly with R-on, intentional walk holds.
+- **C2 — Catcher IQ (20)**: blocking with runners, pop-ups by zone, throws to all bases, pickoffs, framing legality, plays at the plate (tag/swipe/blocking-the-plate rule), passed-ball reads, signs/mound visits, foul-tip protocols, 1st-and-3rd defense calls (catcher-initiated).
+- **C3 — Infield Cutoffs / Relays / Bunt Defense (20)**: every relay alignment (LF/CF/RF single, double, triple), trail-runner reads, bunt coverages (rotation, wheel, crash, fake-bunt-slash), DP feeds, tag vs. force reads, infield in/back/halfway, drawn-in corners.
+- **C4 — Outfield IQ (20)**: hit-the-cutoff vs. throw-through, do-or-die, gap reads, sun/wind/wall positioning, communication (centerfield supremacy), backing-up bases on infield throws (the "third B" most teams skip).
+- **C5 — Offense & Baserunning IQ (20)**: leadoffs by base/count/outs, secondary leads, hit-and-run, run-and-hit, slug bunt, suicide squeeze, safety squeeze, tag-up rules by depth, first-to-third reads, scoring from 2nd on singles by field, delayed steals, busted hit-and-run recovery.
+- **C6 — Game Management / Late-Inning (20)**: extra-innings ghost-runner positioning, no-doubles defense, infield-in late, pulling the infield back, pitcher-batter matchups, lefty-righty late switches, intentional walks to set up DP, double-switch rules, replay-challenge triggers.
 
-iq_user_attempts
-  id, user_id, scenario_id, position_chosen, correct boolean,
-  answer_payload jsonb, time_ms, created_at
+After C6 we have 120 per sport. Each sub-wave is one migration + a re-validation pass through `validateThreeBs`.
 
-iq_owner_review_log           ← triple-check audit trail
-  id, situation_id, reviewer_id, check_round, notes, approved_at
-```
+### Wave D — Self-regulation & quality controls
+- **Triple-check gate**: `iq_situations.triple_check_count >= 3` required to publish (already in schema; enforce in wizard).
+- **Source citation gate**: ≥1 entry in `sources[]` (Polk, Geng, Inmotion, Yost, Cox, MLB.com, USA Softball, AUSL coaching docs).
+- **Spaced repetition tuning**: confirm SM-2 surfaces the right next-due each day; cap daily reps to avoid burnout.
+- **Variant freshness**: ensure variant generator never produces an illegal state (e.g. 4 balls).
+- Vitest coverage: `threeBs.test.ts`, `variantGenerator.test.ts`, `spacedRepetition.test.ts`, `iq-library-publish.test.ts`.
 
-GRANT block on every table per Lovable Cloud rules. Authoring writes restricted to `has_role(auth.uid(),'owner')`.
+### Wave E — Visual polish
+- Animated routes on `IqDiamond` (per-actor easing, communication call popups).
+- Lens-tinted theming (defense / offense / pitching / baserunning) already token-backed.
+- Mobile-first card stack with swipe between actors in scenario runner.
 
-## Core UI components
-
-- `IqDiamond` — SVG top-down field; renders 10 actor dots with animated paths. Teach mode shows all routes simultaneously with staggered playback; Quiz mode hides routes and waits for taps.
-- `IqSituationCard` — Hero card for a situation (visual identity per lens via accent token).
-- `IqScenarioRunner` — Reuses the proven `ScenarioBlock` pattern from Baserunning IQ, extended with `PositionPicker` + diamond overlay.
-- `IqReviewQueue` — Spaced-repetition surface, drives the "never finishes" loop.
-- `IqLensTabs` / `IqPositionFilter` — lets a CF see "my job first, then everyone else."
-- `OwnerIqAuthoringWizard` — multi-step: situation → assign all 10 actors → draw paths → add notes → submit for triple-check → publish.
-
-Sport theming uses existing `SportThemeContext` + `useSportTerminology` so every label flips between baseball and softball (windmill circle, slapper defense, riseball, 60ft base, etc.).
-
-## Accuracy guarantee ("triple-checked")
-
-Authoring wizard cannot publish a situation until:
-1. All 10 actor rows present and assigned to ball/bag/backup/read/execute (no gaps).
-2. Sources field has ≥2 citations (Polk, Geng, MLB rulebook, AUSL coaching, etc.).
-3. Owner triple-check ledger has ≥3 distinct review-round entries.
-
-Published situations are flagged "Triple-checked ✓" in the UI; un-flagged ones never reach athletes.
-
-## Hammers integration
-
-- **Daily micro-rep** — `dailyPlan.ts` picks one due scenario from `iq_user_progress.next_due_at`, weighted by athlete's primary position and upcoming opponent posture (from `scheduleContext.ts`).
-- **Weekly deep block** — One full situation walkthrough (teach → quiz → variant set) inserted by the existing schedule-aware modulator. Suppressed on `game` and `taper` postures.
-- Appears in `HammerDailyPlan` with "IQ rep" pill; "Answer Hammer" wires straight to the scenario runner.
-
-## Self-regulating loop
-
-- **Spaced repetition** — SM-2-style interval scheduler stored in `iq_user_progress`. Mastery decays if untested past `next_due_at`.
-- **Variant generator** — Deterministic permutation across count/outs/runners/score/inning/handedness, seeded so the same user keeps seeing fresh permutations. Generated variants flagged `generated=true` and never collide with hand-authored canonical variants.
-- IQ score on the landing page is a rolling 90-day weighted accuracy across all situations the user has ever touched, so the number always has something to move.
-
-## Owner Library (admin authoring)
-
-New `/owner/iq-library` route gated by `has_role(...,'owner')`:
-- List view of all situations with status, sport, triple-check count.
-- Authoring wizard with live diamond preview.
-- Bulk-import JSON for seeding the initial 80 situations.
-- Edit + version history (writes go through `iq_owner_review_log`).
-
-## Visual & UX direction
-
-- Dark, broadcast-feel aesthetic: deep field-green base (`hsl(150 35% 8%)`), chalk-line whites, lens-accent colors (defense = cyan, offense = amber, pitching = magenta, baserunning = lime). All via semantic tokens in `index.css`, no hardcoded colors in components.
-- Typography pair: Bebas Neue for situation titles (broadcast lower-third energy) + Inter for body. Loaded via `@fontsource`.
-- Motion: actor dots ease along paths with `framer-motion`; quiz reveals use `animate-scale-in`; situation transitions use `animate-fade-in`.
-- Zero clutter rule: landing page shows at most 4 surfaces — Daily rep, Continue your path, Review queue, Browse situations.
-
-## Wave plan after v1
-
-- Wave 2: +40 situations per sport (rundowns, pickoffs, 1st-and-3rd variants, weather/turf adjustments, pitch-out coverage).
-- Wave 3: Position-mastery tracks with certifications; coach-shareable QR codes per situation.
-- Wave 4: Video overlay of pro examples synced to the diamond animation.
+---
 
 ## Technical notes
 
-- Build on existing `baserunning_lessons` / `baserunning_scenarios` patterns — same Supabase + RLS shape, same `ScenarioBlock` UX DNA, extended.
-- All new tables get full GRANT statements in the same migration (per project rules).
-- Edge function `iq-variant-generator` for deterministic seeded variants (so replay-safe).
-- Vitest coverage for: Three-B's completeness validator, spaced-repetition scheduler, variant generator determinism, sport terminology mapping.
-- Playwright smoke test: situation list → open situation → quiz a position → submit answer → see it land in `iq_user_attempts`.
+- **Owner route**: `/owner/iq-library`, gated by existing owner role check used by `ProgramBuilder`.
+- **Sidebar label**: "Game IQ Library" under the Owner section of `AppSidebar.tsx`.
+- **DB**: no new tables needed — existing `iq_*` schema covers it. Content ships as approved Supabase migrations (one per sub-wave).
+- **Pitcher deep links**: `/iq?sport=baseball&lens=pitching` and `?sport=softball&lens=pitching`. `GameIq.tsx` already reads `useSportTheme`; we add `useSearchParams` to seed initial tab.
+- **Hammer integration**: `dailyPlan.ts` queries `iq_user_progress` for due items and prepends an "IQ rep" block sorted by category goals.
 
-## Out of scope for v1 (explicit)
+---
 
-- Live video ingestion / pose overlay (deferred to Wave 4).
-- Multi-user team mode (every player on a roster sees the same call).
-- Coach-authored situations (owner-only authoring in v1).
+## Suggested approval order
+
+If you want, I can execute **Wave A + Wave B + Wave C1 (Pitcher Fielding 20)** as the first build pass — that gets pitchers covered immediately, ships your authoring tool, and proves the content pipeline. Then C2…C6 land in subsequent approved passes until 240 is reached.
+
+Confirm and I'll begin with A + B + C1.
