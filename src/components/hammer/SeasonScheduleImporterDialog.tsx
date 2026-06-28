@@ -252,24 +252,40 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
               <TabsTrigger value="image">Upload photo</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="text" className="space-y-2 mt-3">
+            <TabsContent value="text" className="space-y-2 mt-3" data-protected-editing="true">
               <Label htmlFor="schedule-text" className="text-xs text-muted-foreground">
                 One game/practice/tournament per line works best.
               </Label>
-              <Textarea
-                id="schedule-text"
-                data-protected-editing="true"
-                rows={10}
-                value={text}
-                onFocus={() => noteProtectedEditing()}
-                onKeyDown={() => noteProtectedEditing()}
-                onPaste={() => noteProtectedEditing()}
-                onChange={(e) => {
-                  noteProtectedEditing();
-                  setText(e.target.value);
-                }}
-                placeholder={`April 1–4 “Final Bash” Tournament in Dunedin, FL\nApril 7–12 Game vs Madison in Wisconsin\nApril 15 Practice 4pm at field 2`}
-              />
+              <div data-protected-editing="true">
+                <Textarea
+                  id="schedule-text"
+                  data-protected-editing="true"
+                  rows={10}
+                  value={text}
+                  onFocus={() => {
+                    startPasteHeartbeat();
+                    void logPasteImportPhase({ phase: "paste-focus" });
+                  }}
+                  onBlur={() => {
+                    stopPasteHeartbeat();
+                    void logPasteImportPhase({ phase: "paste-blur" });
+                  }}
+                  onKeyDown={() => noteProtectedEditing(60_000)}
+                  onInput={() => noteProtectedEditing(60_000)}
+                  onPaste={() => {
+                    noteProtectedEditing(60_000);
+                    void logPasteImportPhase({ phase: "paste-event" });
+                  }}
+                  onCompositionStart={() => noteProtectedEditing(60_000)}
+                  onCompositionUpdate={() => noteProtectedEditing(60_000)}
+                  onCompositionEnd={() => noteProtectedEditing(60_000)}
+                  onChange={(e) => {
+                    noteProtectedEditing(60_000);
+                    setText(e.target.value);
+                  }}
+                  placeholder={`April 1–4 “Final Bash” Tournament in Dunedin, FL\nApril 7–12 Game vs Madison in Wisconsin\nApril 15 Practice 4pm at field 2`}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="image" className="space-y-3 mt-3">
