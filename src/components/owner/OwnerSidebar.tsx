@@ -51,6 +51,7 @@ interface SidebarItem {
   label: string;
   icon: React.ElementType;
   badgeKey?: "admin" | "scout";
+  href?: string;
 }
 
 interface SidebarGroup {
