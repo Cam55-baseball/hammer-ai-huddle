@@ -93,8 +93,12 @@ export function HammerDailyPlan() {
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
-  const plan = useMemo(() => buildHammerDailyPlan(ctx), [ctx]);
   const sched = useScheduleWindow();
+  const scheduleSignal = useMemo(() => projectScheduleSignal(sched), [sched]);
+  const plan = useMemo(
+    () => buildHammerDailyPlan(ctx, scheduleSignal),
+    [ctx, scheduleSignal],
+  );
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
 
