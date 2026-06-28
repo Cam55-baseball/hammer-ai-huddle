@@ -124,7 +124,10 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         const { base64, mimeType } = await downscaleImage(imageFile);
         payload = { mode: "image", imageBase64: base64, mimeType, todayISO, timezone };
       }
-      const invokePromise = supabase.functions.invoke("parse-season-schedule", { body: payload });
+      const invokePromise = supabase.functions.invoke("parse-season-schedule", {
+        body: payload,
+        headers: { Authorization: `Bearer ${sessionCheck.session.access_token}` },
+      });
       const { data, error } = (await Promise.race([invokePromise, timeoutPromise])) as Awaited<typeof invokePromise>;
       if (error) {
         console.error("[SeasonScheduleImporter] invoke error", { mode, error });
