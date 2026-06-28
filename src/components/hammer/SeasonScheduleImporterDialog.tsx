@@ -15,12 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ImagePlus, Wand2, Trash2 } from "lucide-react";
+import { Loader2, ImagePlus, Wand2, Trash2, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useImportScheduleEvents, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { logPasteImportPhase, watchAuthDuringPasteImport } from "@/lib/auth/authTelemetry";
+import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
+import { useOptionalAuth } from "@/hooks/useAuth";
 
 interface Props {
   open: boolean;
