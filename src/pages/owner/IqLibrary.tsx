@@ -285,11 +285,18 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
         const { error } = await supabase.from("iq_situation_actors").insert(actorRows as never);
         if (error) throw error;
       }
-      await supabase.from("iq_owner_review_log").insert({
-        situation_id: sitId,
-        action: publish ? "publish" : (isNew ? "create" : "update"),
-        notes: `Three Bs: ${validation.ballCount}/${validation.bagCount}/${validation.backupCount}`,
-      } as never);
+      if (publish) {
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase.from("iq_owner_review_log").insert({
+            situation_id: sitId,
+            reviewer_id: u.user.id,
+            check_round: Math.min(3, (meta.triple_check_count ?? 0) + 1),
+            approved: true,
+            notes: `Three Bs: ${validation.ballCount}/${validation.bagCount}/${validation.backupCount}`,
+          } as never);
+        }
+      }
       toast({ title: publish ? "Published" : "Saved", description: meta.title });
       onSaved(); onClose();
     } catch (e: unknown) {
