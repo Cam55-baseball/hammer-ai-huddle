@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { emitObservability } from '@/hooks/useEmitObservability';
+import { clearProtectedEditing, isProtectedEditingActive } from '@/lib/auth/protectedEditing';
 
 
 interface AuthContextType {
@@ -37,6 +38,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let cancelled = false;
     let pendingSignOutTimer: ReturnType<typeof setTimeout> | null = null;
 
+    const scheduleVerifiedSignOut = (delayMs = 250) => {
+      if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
+      pendingSignOutTimer = setTimeout(async () => {
+        if (cancelled) return;
+
+        // Defensive: never evict while the user is actively editing. Re-check shortly instead.
+        if (isProtectedEditingActive()) {
+          const { data } = await supabase.auth.getSession();
+          if (cancelled) return;
+          if (data.session) {
+            setSession(data.session);
+            setUser(data.session.user);
+          }
+          setLoading(false);
+          if (!data.session) scheduleVerifiedSignOut(2_000);
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (!data.session) {
+          setUser(null);
+          setSession(null);
+        } else {
+          setSession(data.session);
+          setUser(data.session.user);
+        }
+        setLoading(false);
+      }, delayMs);
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
@@ -46,40 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (event === 'SIGNED_OUT') {
           // Verify before evicting — spurious SIGNED_OUT events (network blips,
           // 401 retries, multi-tab races) must not boot a still-authenticated user.
-          if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
-          pendingSignOutTimer = setTimeout(async () => {
-            if (cancelled) return;
-
-            // Defensive: never evict while the user is actively typing into
-            // an input/textarea/contenteditable. Re-check shortly instead.
-            const active = typeof document !== 'undefined' ? document.activeElement : null;
-            const isTyping =
-              !!active &&
-              (active.tagName === 'INPUT' ||
-                active.tagName === 'TEXTAREA' ||
-                (active as HTMLElement).isContentEditable === true);
-            if (isTyping) {
-              const { data } = await supabase.auth.getSession();
-              if (cancelled) return;
-              if (data.session) {
-                setSession(data.session);
-                setUser(data.session.user);
-                setLoading(false);
-              }
-              return;
-            }
-
-            const { data } = await supabase.auth.getSession();
-            if (cancelled) return;
-            if (!data.session) {
-              setUser(null);
-              setSession(null);
-            } else {
-              setSession(data.session);
-              setUser(data.session.user);
-            }
-            setLoading(false);
-          }, 250);
+          scheduleVerifiedSignOut();
           return;
         }
 
@@ -141,6 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    clearProtectedEditing();
     const { error } = await supabase.auth.signOut();
     return { error };
   };

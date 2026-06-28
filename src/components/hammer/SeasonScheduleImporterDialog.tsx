@@ -19,6 +19,7 @@ import { Loader2, ImagePlus, Wand2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useImportScheduleEvents, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
+import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 
 interface Props {
   open: boolean;
@@ -70,12 +71,16 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   }
 
   function handleClose(o: boolean) {
-    if (!o) reset();
+    if (!o) {
+      clearProtectedEditing();
+      reset();
+    }
     onOpenChange(o);
   }
 
   async function handlePickFile(file: File | null) {
     if (!file) return;
+    noteProtectedEditing();
     if (file.size > 12 * 1024 * 1024) {
       toast.error("Image too large (max 12 MB)");
       return;
@@ -85,6 +90,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   }
 
   async function handleAnalyze() {
+    noteProtectedEditing(60_000);
     setParsing(true);
     setEvents([]);
     const timeoutMs = 45_000;
@@ -98,22 +104,31 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
     try {
       const todayISO = new Date().toISOString().slice(0, 10);
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const { data: sessionCheck } = await supabase.auth.getSession();
+      if (!sessionCheck.session?.user) {
+        throw new Error("Your sign-in is reconnecting. Keep this open and try Analyze again in a moment.");
+      }
       let payload: Record<string, unknown>;
       if (mode === "text") {
         if (text.trim().length < 3) {
           toast.error("Add a few lines of schedule text first.");
+          noteProtectedEditing();
           return;
         }
         payload = { mode: "text", text, todayISO, timezone };
       } else {
         if (!imageFile) {
           toast.error("Choose a schedule photo first.");
+          noteProtectedEditing();
           return;
         }
         const { base64, mimeType } = await downscaleImage(imageFile);
         payload = { mode: "image", imageBase64: base64, mimeType, todayISO, timezone };
       }
-      const invokePromise = supabase.functions.invoke("parse-season-schedule", { body: payload });
+      const invokePromise = supabase.functions.invoke("parse-season-schedule", {
+        body: payload,
+        headers: { Authorization: `Bearer ${sessionCheck.session.access_token}` },
+      });
       const { data, error } = (await Promise.race([invokePromise, timeoutPromise])) as Awaited<typeof invokePromise>;
       if (error) {
         console.error("[SeasonScheduleImporter] invoke error", { mode, error });
@@ -138,11 +153,14 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
     } finally {
       if (timer) clearTimeout(timer);
       setParsing(false);
+      noteProtectedEditing();
     }
   }
 
   async function handleConfirm() {
+    noteProtectedEditing(60_000);
     const selected = events.filter((_, i) => keepRow[i]);
+    let closedAfterSave = false;
     if (!selected.length) {
       toast.error("Pick at least one event to add.");
       return;
@@ -156,10 +174,17 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         toast.error(`${summary.failed} couldn't be saved. ${summary.errors[0] ?? ""}`);
       }
       if (summary.failed === 0) {
+        closedAfterSave = true;
         handleClose(false);
       }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      if (closedAfterSave) {
+        clearProtectedEditing();
+      } else {
+        noteProtectedEditing();
+      }
     }
   }
 
@@ -178,7 +203,11 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(next) => {
+      if (next) noteProtectedEditing();
+      if (!next) clearProtectedEditing();
+      handleClose(next);
+    }}>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Import your season schedule</DialogTitle>
@@ -201,9 +230,16 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
               </Label>
               <Textarea
                 id="schedule-text"
+                data-protected-editing="true"
                 rows={10}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onFocus={() => noteProtectedEditing()}
+                onKeyDown={() => noteProtectedEditing()}
+                onPaste={() => noteProtectedEditing()}
+                onChange={(e) => {
+                  noteProtectedEditing();
+                  setText(e.target.value);
+                }}
                 placeholder={`April 1–4 “Final Bash” Tournament in Dunedin, FL\nApril 7–12 Game vs Madison in Wisconsin\nApril 15 Practice 4pm at field 2`}
               />
             </TabsContent>
@@ -216,7 +252,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                 className="hidden"
                 onChange={(e) => handlePickFile(e.target.files?.[0] ?? null)}
               />
-              <Button variant="outline" className="w-full gap-2" onClick={() => fileRef.current?.click()}>
+              <Button variant="outline" className="w-full gap-2" onClick={() => { noteProtectedEditing(); fileRef.current?.click(); }}>
                 <ImagePlus className="h-4 w-4" />
                 {imageFile ? "Replace photo" : "Choose schedule photo"}
               </Button>
@@ -234,19 +270,24 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
           <ScrollArea className="flex-1 -mx-2 px-2">
             <div className="space-y-2">
               {events.map((ev, i) => (
-                <div key={i} className="border rounded-md p-3 space-y-2 bg-card">
+                  <div key={i} className="border rounded-md p-3 space-y-2 bg-card" data-protected-editing="true">
                   <div className="flex items-center gap-2 flex-wrap">
                     <input
                       type="checkbox"
                       checked={keepRow[i] ?? true}
-                      onChange={(e) =>
-                        setKeepRow((k) => k.map((v, idx) => (idx === i ? e.target.checked : v)))
-                      }
+                      onChange={(e) => {
+                        noteProtectedEditing();
+                        setKeepRow((k) => k.map((v, idx) => (idx === i ? e.target.checked : v)));
+                      }}
                       className="h-4 w-4"
                     />
                     <select
                       value={ev.kind}
-                      onChange={(e) => updateEvent(i, { kind: e.target.value as ParsedScheduleEvent["kind"] })}
+                      onFocus={() => noteProtectedEditing()}
+                      onChange={(e) => {
+                        noteProtectedEditing();
+                        updateEvent(i, { kind: e.target.value as ParsedScheduleEvent["kind"] });
+                      }}
                       className="text-xs border rounded px-2 py-1 bg-background"
                     >
                       <option value="game">Game</option>
@@ -265,23 +306,23 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-[10px] uppercase text-muted-foreground">Date</Label>
-                      <Input type="date" value={ev.start_date} onChange={(e) => updateEvent(i, { start_date: e.target.value, end_date: e.target.value })} className="h-8" />
+                      <Input type="date" value={ev.start_date} onFocus={() => noteProtectedEditing()} onChange={(e) => { noteProtectedEditing(); updateEvent(i, { start_date: e.target.value, end_date: e.target.value }); }} className="h-8" />
                     </div>
                     <div>
                       <Label className="text-[10px] uppercase text-muted-foreground">Time (optional)</Label>
-                      <Input type="time" value={ev.time_local ?? ""} onChange={(e) => updateEvent(i, { time_local: e.target.value || null })} className="h-8" />
+                      <Input type="time" value={ev.time_local ?? ""} onFocus={() => noteProtectedEditing()} onChange={(e) => { noteProtectedEditing(); updateEvent(i, { time_local: e.target.value || null }); }} className="h-8" />
                     </div>
                     <div className="col-span-2">
                       <Label className="text-[10px] uppercase text-muted-foreground">Title</Label>
-                      <Input value={ev.title} onChange={(e) => updateEvent(i, { title: e.target.value })} className="h-8" />
+                      <Input value={ev.title} onFocus={() => noteProtectedEditing()} onChange={(e) => { noteProtectedEditing(); updateEvent(i, { title: e.target.value }); }} className="h-8" />
                     </div>
                     <div>
                       <Label className="text-[10px] uppercase text-muted-foreground">Opponent</Label>
-                      <Input value={ev.opponent ?? ""} onChange={(e) => updateEvent(i, { opponent: e.target.value || null })} className="h-8" />
+                      <Input value={ev.opponent ?? ""} onFocus={() => noteProtectedEditing()} onChange={(e) => { noteProtectedEditing(); updateEvent(i, { opponent: e.target.value || null }); }} className="h-8" />
                     </div>
                     <div>
                       <Label className="text-[10px] uppercase text-muted-foreground">Location</Label>
-                      <Input value={ev.location ?? ""} onChange={(e) => updateEvent(i, { location: e.target.value || null })} className="h-8" />
+                      <Input value={ev.location ?? ""} onFocus={() => noteProtectedEditing()} onChange={(e) => { noteProtectedEditing(); updateEvent(i, { location: e.target.value || null }); }} className="h-8" />
                     </div>
                   </div>
                   <p className="text-[10px] text-muted-foreground italic line-clamp-2">“{ev.source_snippet}”</p>

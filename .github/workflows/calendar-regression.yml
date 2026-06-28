@@ -10,6 +10,7 @@ on:
       - 'src/hooks/useRequireAuth.ts'
       - 'src/hooks/useSchedulingRealtime.ts'
       - 'src/contexts/AuthContext.tsx'
+      - 'src/lib/auth/protectedEditing.ts'
       - 'tests/e2e/calendar/**'
       - '.github/workflows/calendar-regression.yml'
   workflow_dispatch:

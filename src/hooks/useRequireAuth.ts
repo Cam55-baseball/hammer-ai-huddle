@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { isProtectedEditingActive } from "@/lib/auth/protectedEditing";
 
 /**
  * Auth-stable guard for protected pages.
@@ -30,6 +31,7 @@ export function useRequireAuth(enabled = true) {
     if (!enabled) return;
     if (loading || !isAuthStable) return;
     if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+    if (isProtectedEditingActive()) return;
     if (user || session) return;
 
     let cancelled = false;
@@ -37,14 +39,8 @@ export function useRequireAuth(enabled = true) {
       if (cancelled) return;
       if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
 
-      // Rule 3 — never evict a typing user.
-      const active = typeof document !== "undefined" ? document.activeElement : null;
-      const isTyping =
-        !!active &&
-        (active.tagName === "INPUT" ||
-          active.tagName === "TEXTAREA" ||
-          (active as HTMLElement)?.isContentEditable === true);
-      if (isTyping) return;
+      // Rule 3 — never evict a typing/editing user.
+      if (isProtectedEditingActive()) return;
 
       // Rule 5 — if a persisted Supabase token is on disk, never evict. The
       // context will rehydrate from it on the next auth tick.
