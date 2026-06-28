@@ -15,6 +15,7 @@ import { CalendarClock, CalendarPlus, MessageSquarePlus, Settings2 } from "lucid
 import { useGameDayContext } from "@/hooks/useGameDayContext";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { TellHammerDialog } from "@/components/hammer/TellHammerDialog";
+import { SeasonScheduleImporterDialog } from "@/components/hammer/SeasonScheduleImporterDialog";
 
 const PHASE_TONE: Record<string, string> = {
   preseason: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
@@ -28,6 +29,7 @@ export function HammerScheduleStrip() {
   const { updateSeasonStatus } = useSeasonStatus();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importerOpen, setImporterOpen] = useState(false);
 
   if (ctx.loading) return null;
 
@@ -84,7 +86,7 @@ export function HammerScheduleStrip() {
               size="sm"
               variant="outline"
               className="h-7 text-[11px] gap-1"
-              onClick={() => navigate("/calendar")}
+              onClick={() => setImporterOpen(true)}
             >
               <Settings2 className="h-3 w-3" />
               Season dates
@@ -102,6 +104,7 @@ export function HammerScheduleStrip() {
         </CardContent>
       </Card>
       <TellHammerDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <SeasonScheduleImporterDialog open={importerOpen} onOpenChange={setImporterOpen} />
     </>
   );
 }

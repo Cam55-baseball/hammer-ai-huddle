@@ -254,3 +254,6 @@ verify_jwt = false
 
 [functions.get-build-purchase]
 verify_jwt = true
+
+[functions.parse-season-schedule]
+verify_jwt = true
