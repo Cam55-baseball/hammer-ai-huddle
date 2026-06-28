@@ -221,7 +221,7 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
     canonical_order: 999,
     sources: [],
   });
-  const [actors, setActors] = useState<Array<Omit<IqActor, "situation_id"> & { id?: string }>>([]);
+  const [actors, setActors] = useState<Array<Omit<IqActor, "id" | "situation_id"> & { id?: string }>>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
