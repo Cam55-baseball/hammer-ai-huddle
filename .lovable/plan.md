@@ -1,51 +1,51 @@
-## Problem
+## Goal
 
-When the user starts typing in the Add Event dialog on `/calendar`, they get kicked back to the home screen (`/index`). The console for the current session confirms the user ended up with `hasUser: false, hasSession: false` after a Vite reconnect / channel-error blip. The same eviction pattern that we hardened against in `AuthContext` for SIGNED_OUT is still firing in two new ways:
+1. Diagnose & fix the regression where clicking **Calendar** in the sidebar evicts the user to `/auth`.
+2. Add a Playwright E2E suite that proves all four event types (game, camp, practice, event) can be added via **text entry** and **photo upload** without mid-typing eviction.
 
-1. **`Calendar` page has no auth-stable guard.** `src/pages/Calendar.tsx` mounts `useSchedulingRealtime` and `CalendarView` directly without `useRequireAuth()` and without waiting for `isAuthStable`. When the Supabase channel disconnects mid-typing (we see `Channel error/closed, attempting reconnect` in the logs), the realtime hook and dependent queries re-run, hit a momentarily null user, and downstream components unmount/redirect.
-2. **`AddCalendarEventDialog` lives inside a parent that re-renders on every auth/projection blip.** The dialog's local state survives, but the moment `CalendarView`'s parent layout decides it has no user (because a child query threw, or because `DashboardLayout` re-evaluates and bounces), the dialog is torn down and the user lands on home — feeling like typing "kicked them out".
-3. **`addEvent` in `useCalendar` doesn't assert a live session before insert.** A keystroke-coincident token refresh window can put the insert into an RLS-failing state and the resulting error is swallowed (`console.error` only), then the parent unmounts.
+## Part 1 — Root-cause the eviction on Calendar entry
 
-The home redirect (not `/auth`) is consistent with `DashboardLayout`'s reload-on-error path being triggered by a thrown render in a child, not with the auth guard.
+Investigate, in this order, before changing any code:
 
-## Fix
+- `DashboardLayout` — confirm whether it runs its own auth redirect that bypasses `useRequireAuth`'s 400 ms recheck.
+- `useAuth` / `AuthContext` — confirm `isAuthStable` is `true` at first render after navigation (not flipped to `false` on every route change).
+- `useSchedulingRealtime` — confirm the `enabled=false` path doesn't still open a Supabase channel that triggers a `SIGNED_OUT` blip.
+- `Sidebar` `Calendar` link — confirm it's a `<Link>` (SPA nav) and not a full-page reload that drops the in-memory session before localStorage rehydrates.
 
-### 1. Make the Calendar page auth-stable, not just auth-checked
+Expected fix surface (apply only what the investigation proves):
+- Harden `DashboardLayout` to use the same `useRequireAuth` settle window instead of an eager `if (!user) navigate('/auth')`.
+- Ensure `useAuth().isAuthStable` is sticky-true once set, not re-armed on route change.
+- Make sure `useSchedulingRealtime(false)` is a true no-op (no channel subscription, no auth listener).
 
-`src/pages/Calendar.tsx`:
-- Call `useRequireAuth()` so the page waits for `isAuthStable` and only navigates to `/auth` (with `returnTo`) after the same 400 ms second-tick recheck used elsewhere.
-- Gate `useSchedulingRealtime()` and the render of `<CalendarView />` behind `isAuthStable && !!user`. Show the existing `DashboardLayout` shell with a lightweight skeleton while auth is settling so the dialog and its parent are never torn down by a transient null user.
+## Part 2 — E2E regression suite
 
-### 2. Keep the Add Event dialog mounted across transient auth churn
+Add `tests/e2e/calendar/run.mjs` (mirrors the existing `tests/e2e/onboarding/run.mjs` pattern) plus a short `README.md`. Drives Playwright against the local dev server using the injected Supabase session from `LOVABLE_BROWSER_SUPABASE_*` env vars.
 
-`src/components/calendar/CalendarView.tsx`:
-- Move `AddCalendarEventDialog` (and `SeasonScheduleImporterDialog`) out of any conditional render path tied to query/loading state. They should always be rendered when `addEventOpen` / `importerOpen` is true, regardless of `loading`, `derivedEvents`, or realtime reconnect state.
-- Memoize the `onAdd` callback so a parent re-render triggered by a realtime invalidation doesn't change the dialog's prop identity and cause focus loss mid-typing.
+Scenarios (each is an independent test that fails the run on any console error, network 4xx/5xx to Supabase, or navigation to `/auth`):
 
-### 3. Harden `addEvent` against the keystroke / refresh race
+1. **Sidebar nav stability** — sign-in fixture → click sidebar Calendar link → assert URL stays `/calendar`, `CalendarView` mounts, no `/auth` redirect within 3 s.
+2. **Text entry — Game** — open Add Event dialog, type a multi-word title slowly (per-character `page.keyboard.type` with 80 ms delay), pick "Game", set date, submit → row appears on calendar with red color token.
+3. **Text entry — Camp / Practice / Event** — parametrized variants of #2 covering each event type and asserting the correct color token (camp/practice/event vs. AI-imported violet/red).
+4. **Mid-typing eviction guard** — start typing in the title field, then dispatch a synthetic `visibilitychange` + a fake `SIGNED_OUT` on the auth channel (via `page.evaluate` flipping a Supabase channel event) → assert the dialog stays mounted, focus stays in the input, no navigation to `/auth`.
+5. **Photo upload — schedule import** — open `SeasonScheduleImporterDialog`, attach a fixture screenshot (`tests/e2e/calendar/fixtures/schedule.png`), click "Analyze with Hammer AI" → assert spinner resolves within 45 s, parsed events land on the calendar with the AI-import color tokens (violet tournaments, red games), no eviction.
+6. **Photo upload failure path** — attach an unreadable image → assert user-visible toast appears and the dialog stays open (no silent spin, no eviction).
 
-`src/hooks/useCalendar.ts` (`addEvent`):
-- Before insert, call `await supabase.auth.getSession()` and use the returned user id; if it's missing, surface a single toast ("Session expired — please sign in again") and return `false` without throwing. This prevents the silent RLS failure path that currently bubbles up as an unmount.
-- Wrap the existing `try/catch` so any thrown error is contained and surfaced as a toast, never as an uncaught render-time exception.
+### Test harness details
 
-### 4. Hold session through input focus (defensive)
+- One Playwright script, `--scenario=<name>` flag to run individually; default runs all.
+- Reuse the session-injection block from the onboarding suite (read `LOVABLE_BROWSER_SUPABASE_STORAGE_KEY` + `_SESSION_JSON`, `page.evaluate` localStorage write after `goto('/')`).
+- Screenshots written under `/tmp/browser/calendar/screenshots/<scenario>/`.
+- Fail-fast assertions: any navigation whose `page.url()` ends with `/auth` during a scenario throws.
+- Console listener collects errors; any `error`-level log fails the scenario unless explicitly allow-listed.
 
-`src/contexts/AuthContext.tsx`:
-- When the SIGNED_OUT debounce timer fires, also skip eviction if `document.activeElement` is an `<input>`, `<textarea>`, or `contenteditable` element. This matches the user's exact failure surface (typing) and is consistent with the existing "don't evict on hidden tab / token refresh" pattern. Re-arm the check on the next auth event so a real sign-out still works.
+### CI wiring
 
-### 5. Verify
+- Add `.github/workflows/calendar-regression.yml` mirroring `onboarding-regression.yml`: install deps, start Vite preview, run `node tests/e2e/calendar/run.mjs`, upload screenshots on failure.
+- Both workflows gate the same branch protection set.
 
-- Manual: open `/calendar`, click a day → Add Event → type into Title; with devtools network throttled to "Slow 3G" + offline toggle to force a channel reconnect, the dialog must stay open and focused.
-- Verify the Import-schedule textarea on the same page (`SeasonScheduleImporterDialog`) behaves the same — it is the second text-entry path the user named.
-- Playwright smoke against the live preview: sign in, open Add Event, type 10 characters with a 1 s pause each, assert `location.pathname === "/calendar"` and the input still has focus after each keystroke.
+## Deliverables
 
-## Out of scope
-- No schema changes; `calendar_events` insert path is unchanged beyond the pre-flight session check.
-- No redesign of the dialog or the calendar grid.
-- The photo-upload import path is already wired through `SeasonScheduleImporterDialog`; this plan keeps it mounted across blips but does not change its parsing logic.
-
-## Files touched
-- `src/pages/Calendar.tsx` — add `useRequireAuth`, gate render on `isAuthStable && user`.
-- `src/components/calendar/CalendarView.tsx` — unconditional dialog mounts, memoized `onAdd`.
-- `src/hooks/useCalendar.ts` — pre-flight session check + safe error surfacing in `addEvent`.
-- `src/contexts/AuthContext.tsx` — skip SIGNED_OUT eviction while a text input is focused.
+- Code fix(es) from Part 1 with a one-paragraph note in `.lovable/phase-57-calendar-stability.md` describing the proven root cause.
+- `tests/e2e/calendar/run.mjs`, `tests/e2e/calendar/README.md`, `tests/e2e/calendar/fixtures/schedule.png`.
+- `.github/workflows/calendar-regression.yml`.
+- Green local run captured in the phase doc (scenario list + pass/fail + screenshot paths).
