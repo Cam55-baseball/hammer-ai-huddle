@@ -161,6 +161,7 @@ const FoundationTraceInspector = lazyWithRetry(() => import("./pages/owner/Found
 const FoundationDiagnosticsPanel = lazyWithRetry(() => import("./pages/owner/FoundationDiagnosticsPanel"));
 const FoundationHealthDashboard = lazyWithRetry(() => import("./pages/owner/FoundationHealthDashboard"));
 const OwnerAlertCenter = lazyWithRetry(() => import("./pages/owner/OwnerAlertCenter"));
+const IqLibrary = lazyWithRetry(() => import("./pages/owner/IqLibrary"));
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
