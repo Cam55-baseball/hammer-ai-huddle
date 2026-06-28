@@ -5173,6 +5173,368 @@ export type Database = {
         }
         Relationships: []
       }
+      iq_owner_review_log: {
+        Row: {
+          approved: boolean
+          check_round: number
+          created_at: string
+          id: string
+          notes: string
+          reviewer_id: string
+          situation_id: string
+        }
+        Insert: {
+          approved?: boolean
+          check_round: number
+          created_at?: string
+          id?: string
+          notes?: string
+          reviewer_id: string
+          situation_id: string
+        }
+        Update: {
+          approved?: boolean
+          check_round?: number
+          created_at?: string
+          id?: string
+          notes?: string
+          reviewer_id?: string
+          situation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_owner_review_log_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_scenarios: {
+        Row: {
+          correct_actor_assignments: Json
+          created_at: string
+          distractors: Json
+          explanation: string
+          id: string
+          position_focus: string
+          prompt: string
+          situation_id: string
+          sport: string
+          updated_at: string
+          variant_id: string | null
+        }
+        Insert: {
+          correct_actor_assignments?: Json
+          created_at?: string
+          distractors?: Json
+          explanation?: string
+          id?: string
+          position_focus: string
+          prompt: string
+          situation_id: string
+          sport: string
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Update: {
+          correct_actor_assignments?: Json
+          created_at?: string
+          distractors?: Json
+          explanation?: string
+          id?: string
+          position_focus?: string
+          prompt?: string
+          situation_id?: string
+          sport?: string
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_scenarios_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iq_scenarios_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situation_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_situation_actors: {
+        Row: {
+          assignment: string
+          coaching_note: string
+          common_mistake: string
+          communication_call: string
+          created_at: string
+          elite_cue: string
+          id: string
+          primary_path: Json
+          role: string
+          secondary_read: string
+          situation_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment: string
+          coaching_note?: string
+          common_mistake?: string
+          communication_call?: string
+          created_at?: string
+          elite_cue?: string
+          id?: string
+          primary_path?: Json
+          role: string
+          secondary_read?: string
+          situation_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment?: string
+          coaching_note?: string
+          common_mistake?: string
+          communication_call?: string
+          created_at?: string
+          elite_cue?: string
+          id?: string
+          primary_path?: Json
+          role?: string
+          secondary_read?: string
+          situation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_situation_actors_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_situation_variants: {
+        Row: {
+          count_balls: number
+          count_strikes: number
+          created_at: string
+          generated: boolean
+          handedness: string | null
+          id: string
+          inning: number | null
+          opponent_tendency: string | null
+          outs: number
+          runners: Json
+          score_state: string
+          seed: string | null
+          situation_id: string
+        }
+        Insert: {
+          count_balls?: number
+          count_strikes?: number
+          created_at?: string
+          generated?: boolean
+          handedness?: string | null
+          id?: string
+          inning?: number | null
+          opponent_tendency?: string | null
+          outs?: number
+          runners?: Json
+          score_state?: string
+          seed?: string | null
+          situation_id: string
+        }
+        Update: {
+          count_balls?: number
+          count_strikes?: number
+          created_at?: string
+          generated?: boolean
+          handedness?: string | null
+          id?: string
+          inning?: number | null
+          opponent_tendency?: string | null
+          outs?: number
+          runners?: Json
+          score_state?: string
+          seed?: string | null
+          situation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_situation_variants_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_situations: {
+        Row: {
+          canonical_order: number
+          created_at: string
+          difficulty: string
+          id: string
+          lens_tags: string[]
+          owner_id: string | null
+          slug: string
+          sources: Json
+          sport: string
+          status: string
+          summary: string
+          title: string
+          triple_check_count: number
+          updated_at: string
+        }
+        Insert: {
+          canonical_order?: number
+          created_at?: string
+          difficulty?: string
+          id?: string
+          lens_tags?: string[]
+          owner_id?: string | null
+          slug: string
+          sources?: Json
+          sport: string
+          status?: string
+          summary?: string
+          title: string
+          triple_check_count?: number
+          updated_at?: string
+        }
+        Update: {
+          canonical_order?: number
+          created_at?: string
+          difficulty?: string
+          id?: string
+          lens_tags?: string[]
+          owner_id?: string | null
+          slug?: string
+          sources?: Json
+          sport?: string
+          status?: string
+          summary?: string
+          title?: string
+          triple_check_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      iq_user_attempts: {
+        Row: {
+          answer_payload: Json
+          correct: boolean
+          created_at: string
+          id: string
+          position_chosen: string | null
+          scenario_id: string
+          situation_id: string
+          time_ms: number | null
+          user_id: string
+        }
+        Insert: {
+          answer_payload?: Json
+          correct: boolean
+          created_at?: string
+          id?: string
+          position_chosen?: string | null
+          scenario_id: string
+          situation_id: string
+          time_ms?: number | null
+          user_id: string
+        }
+        Update: {
+          answer_payload?: Json
+          correct?: boolean
+          created_at?: string
+          id?: string
+          position_chosen?: string | null
+          scenario_id?: string
+          situation_id?: string
+          time_ms?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_user_attempts_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "iq_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iq_user_attempts_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_user_progress: {
+        Row: {
+          created_at: string
+          ef_factor: number
+          id: string
+          interval_days: number
+          last_seen_at: string | null
+          lifetime_attempts: number
+          lifetime_correct: number
+          mastery_score: number
+          next_due_at: string | null
+          situation_id: string
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ef_factor?: number
+          id?: string
+          interval_days?: number
+          last_seen_at?: string | null
+          lifetime_attempts?: number
+          lifetime_correct?: number
+          mastery_score?: number
+          next_due_at?: string | null
+          situation_id: string
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ef_factor?: number
+          id?: string
+          interval_days?: number
+          last_seen_at?: string | null
+          lifetime_attempts?: number
+          lifetime_correct?: number
+          mastery_score?: number
+          next_due_at?: string | null
+          situation_id?: string
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_user_progress_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       launch_events: {
         Row: {
           created_at: string
