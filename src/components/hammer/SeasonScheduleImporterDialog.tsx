@@ -176,10 +176,12 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
       }
       setEvents(parsed);
       setKeepRow(parsed.map(() => true));
+      void logPasteImportPhase({ phase: "analyze-success", detail: { count: parsed.length } });
       toast.success(`Found ${parsed.length} event${parsed.length === 1 ? "" : "s"}. Review and confirm below.`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Parse failed";
       console.error("[SeasonScheduleImporter] failed", { mode, msg });
+      void logPasteImportPhase({ phase: "analyze-failure", detail: { msg } });
       toast.error(msg);
     } finally {
       if (timer) clearTimeout(timer);
