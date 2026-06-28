@@ -242,7 +242,7 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
   const upsertActor = (role: IqActorRole, patch: Partial<Omit<IqActor, "id" | "situation_id">>) => {
     setActors((prev) => {
       const idx = prev.findIndex((a) => a.role === role);
-      if (idx === -1) return [...prev, { ...blankActor(role), ...patch }];
+      if (idx === -1) return [...prev, { ...blankActor(role), ...patch, id: undefined }];
       const copy = [...prev]; copy[idx] = { ...copy[idx], ...patch }; return copy;
     });
   };
