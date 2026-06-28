@@ -31,7 +31,7 @@ export function SaveAndExitBar({
   onContinue,
   onBack,
   onSaveAndExit,
-  exitTo = "/",
+  exitTo = "/dashboard",
   continueLabel = "Continue",
   continueDisabled,
   saving,
