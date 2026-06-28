@@ -86,7 +86,7 @@ export function HammerScheduleStrip() {
               size="sm"
               variant="outline"
               className="h-7 text-[11px] gap-1"
-              onClick={() => setImporterOpen(true)}
+              onClick={() => setSeasonDatesOpen(true)}
             >
               <Settings2 className="h-3 w-3" />
               Season dates
