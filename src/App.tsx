@@ -137,7 +137,7 @@ const GoldenTwoWay = lazyWithRetry(() => import("./pages/GoldenTwoWay"));
 const TheUnicorn = lazyWithRetry(() => import("./pages/TheUnicorn"));
 const ExplosiveConditioning = lazyWithRetry(() => import("./pages/ExplosiveConditioning"));
 const PracticeHub = lazyWithRetry(() => import("./pages/PracticeHub"));
-const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressDashboard"));
+const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressLanding"));
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
 const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
 const GameScoring = lazyWithRetry(() => import("./pages/GameScoring"));

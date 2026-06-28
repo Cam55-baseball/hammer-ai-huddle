@@ -1,0 +1,54 @@
+/**
+ * PitchingPanel — Release-1 trusted pitching metrics + correlations.
+ */
+import { useMemo } from "react";
+import { UhrcAthleteSection } from "@/components/report-card/UhrcAthleteSection";
+import { AutoCorrelationCards } from "@/components/progress/correlations/AutoCorrelationCards";
+import { CorrelationExplorer } from "@/components/progress/correlations/CorrelationExplorer";
+import { buildTopicVariables } from "@/lib/progress/topicVariables";
+import { pearson, type NumericPoint } from "@/lib/progress/correlations";
+import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
+
+export function PitchingPanel() {
+  const { data: rows = [] } = useAthleteCommandRows({ days: 60, limit: 800 });
+
+  const vars = useMemo(() => buildTopicVariables(rows, "pitching"), [rows]);
+  const auto = useMemo(() => {
+    const tempo = vars.find((v) => v.key === "tempo_sec");
+    const sleep = vars.find((v) => v.key === "sleep_hours");
+    const readiness = vars.find((v) => v.key === "readiness");
+
+    const join = (a?: typeof vars[number], b?: typeof vars[number]): NumericPoint[] => {
+      if (!a || !b) return [];
+      const out: NumericPoint[] = [];
+      for (const [date, x] of a.series.entries()) {
+        const y = b.series.get(date);
+        if (typeof y === "number") out.push({ x, y, date });
+      }
+      return out;
+    };
+
+    return [
+      {
+        title: "Tempo vs. sleep",
+        xLabel: "Sleep (h)",
+        yLabel: "Tempo (s)",
+        result: pearson(join(sleep, tempo)),
+      },
+      {
+        title: "Tempo vs. readiness",
+        xLabel: "Readiness",
+        yLabel: "Tempo (s)",
+        result: pearson(join(readiness, tempo)),
+      },
+    ];
+  }, [vars]);
+
+  return (
+    <div className="space-y-4">
+      <UhrcAthleteSection />
+      <AutoCorrelationCards items={auto} />
+      <CorrelationExplorer variables={vars} />
+    </div>
+  );
+}
