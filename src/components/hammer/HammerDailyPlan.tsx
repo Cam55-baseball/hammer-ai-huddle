@@ -108,6 +108,27 @@ export function HammerDailyPlan() {
         <CardTitle className="text-sm flex items-center justify-between gap-2">
           <span className="truncate">{identity.voiceLabel} · today's plan</span>
           <div className="flex items-center gap-1.5 shrink-0">
+            {plan.schedulePosture !== "normal" && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] capitalize"
+                title={plan.scheduleSignal.rationale}
+              >
+                {plan.scheduleSignal.tournamentDayLabel
+                  ? `Tournament ${plan.scheduleSignal.tournamentDayLabel}`
+                  : plan.schedulePosture === "team_practice"
+                    ? "Team practice"
+                    : plan.schedulePosture === "taper"
+                      ? "Tapering"
+                      : plan.schedulePosture === "game"
+                        ? "Game today"
+                        : plan.schedulePosture === "camp"
+                          ? "Camp today"
+                          : plan.schedulePosture === "travel"
+                            ? "Travel day"
+                            : plan.schedulePosture}
+              </Badge>
+            )}
             {plan.missingnessCount > 0 && (
               <Badge variant="outline" className="text-[10px]">
                 {plan.missingnessCount} needs input
