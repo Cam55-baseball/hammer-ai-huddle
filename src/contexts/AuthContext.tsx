@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { emitObservability } from '@/hooks/useEmitObservability';
+import { isProtectedEditingActive } from '@/lib/auth/protectedEditing';
 
 
 interface AuthContextType {
@@ -50,15 +51,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           pendingSignOutTimer = setTimeout(async () => {
             if (cancelled) return;
 
-            // Defensive: never evict while the user is actively typing into
-            // an input/textarea/contenteditable. Re-check shortly instead.
-            const active = typeof document !== 'undefined' ? document.activeElement : null;
-            const isTyping =
-              !!active &&
-              (active.tagName === 'INPUT' ||
-                active.tagName === 'TEXTAREA' ||
-                (active as HTMLElement).isContentEditable === true);
-            if (isTyping) {
+            // Defensive: never evict while the user is actively editing. Re-check shortly instead.
+            if (isProtectedEditingActive()) {
               const { data } = await supabase.auth.getSession();
               if (cancelled) return;
               if (data.session) {
