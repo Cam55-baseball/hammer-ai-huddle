@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
