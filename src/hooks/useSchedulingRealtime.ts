@@ -173,5 +173,5 @@ export function useSchedulingRealtime(enabled: boolean = true) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [enabled, user?.id, queryClient]);
 }
