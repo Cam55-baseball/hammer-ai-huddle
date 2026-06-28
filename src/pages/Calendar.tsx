@@ -11,7 +11,7 @@ export default function Calendar() {
   const { t } = useTranslation();
   const { sport } = useSportTheme();
   const [selectedSport] = useState<'baseball' | 'softball'>(sport || 'baseball');
-  const { user, loading: authLoading, isAuthStable } = useAuth();
+  const { user, isAuthStable } = useAuth();
   const [hasMountedWithUser, setHasMountedWithUser] = useState(false);
 
   useEffect(() => {

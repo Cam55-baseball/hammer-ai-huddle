@@ -12,6 +12,7 @@ Event) accept text entry and photo upload without mid-typing eviction.
 | S2 | Add Event dialog persists a row to `calendar_events` for each of `game / practice / event / appointment` via slow keystroke typing. |
 | S3 | Schedule importer accepts a PNG file without evicting (does not assert AI output). |
 | S4 | Synthetic visibility blip while typing leaves focus + URL untouched. |
+| S5 | Import schedule → Paste text survives slow typing, an auth-storage blip, and Analyze without `/auth` eviction or text loss. |
 
 ## Run
 
@@ -22,6 +23,6 @@ CALENDAR_E2E_ORIGIN=http://localhost:8080 \
 node tests/e2e/calendar/run.mjs
 ```
 
-Filter to one scenario with `--scenario=S1` (or `S2-game`, `S3`, `S4`).
+Filter to one scenario with `--scenario=S1` (or `S2-game`, `S3`, `S4`, `S5`).
 
 Screenshots and `results.json` land under `.lovable/phase-57-evidence/`.

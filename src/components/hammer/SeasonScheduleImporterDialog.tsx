@@ -71,7 +71,10 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   }
 
   function handleClose(o: boolean) {
-    if (!o) reset();
+    if (!o) {
+      clearProtectedEditing();
+      reset();
+    }
     onOpenChange(o);
   }
 

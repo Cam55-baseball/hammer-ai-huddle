@@ -8,6 +8,8 @@
  *    synthetic mid-typing SIGNED_OUT blip without eviction or focus loss.
  *  - Photo upload via the schedule importer accepts a file, calls the
  *    edge function, and never evicts on success or failure.
+ *  - Paste-text schedule import keeps the user on Calendar while typing,
+ *    pasting, and analyzing.
  *
  * Env:
  *   LOVABLE_CLOUD_URL        — Supabase project URL (REST + auth root)
@@ -287,6 +289,74 @@ async function scMidTypingGuard(browser, sess) {
   pass(scenario, "dialog stable, focus retained, no eviction");
 }
 
+async function scImporterPasteTextGuard(browser, sess) {
+  const scenario = "S5 import schedule paste-text guard";
+  if (ONLY && ONLY !== "S5") return;
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 1800 } });
+  const page = await ctx.newPage();
+  const w = attachWatchdog(page, scenario);
+  await injectSession(page, sess);
+  await gotoCalendar(page);
+
+  try {
+    await page.getByRole("button", { name: /Import schedule/i }).first().click();
+    await page.getByRole("tab", { name: /Paste text/i }).click();
+    await page.waitForSelector("textarea#schedule-text", { timeout: 5000 });
+  } catch (e) {
+    await page.screenshot({ path: `${SHOTS_DIR}/s5_no_importer.png` });
+    await ctx.close();
+    fail(scenario, `could not open paste-text importer: ${e.message}`);
+    return;
+  }
+
+  const scheduleText = [
+    "April 1-4 Final Bash Tournament in Dunedin FL",
+    "April 7 Game vs Madison in Wisconsin",
+    "April 12 Practice 4pm at Field 2",
+  ].join("\n");
+
+  await page.focus("textarea#schedule-text");
+  for (const ch of scheduleText) {
+    await page.keyboard.type(ch, { delay: 20 });
+    if (ch === "B") {
+      // Simulate a competing-tab/auth-storage blip during protected editing,
+      // then restore the exact session before the grace window expires.
+      await page.evaluate(
+        ([key, sessionJson]) => {
+          window.localStorage.removeItem(key);
+          try { window.dispatchEvent(new StorageEvent("storage", { key, newValue: null })); } catch {}
+          setTimeout(() => {
+            window.localStorage.setItem(key, sessionJson);
+            try { window.dispatchEvent(new StorageEvent("storage", { key, newValue: sessionJson })); } catch {}
+          }, 250);
+        },
+        [STORAGE_KEY, JSON.stringify(sess)],
+      );
+    }
+  }
+
+  await page.waitForTimeout(1200);
+  const valueAfterTyping = await page.locator("textarea#schedule-text").inputValue();
+  const focusedAfterTyping = await page.evaluate(() => document.activeElement?.id);
+
+  await page.getByRole("button", { name: /Analyze with Hammer AI/i }).click();
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: `${SHOTS_DIR}/s5_importer_after_analyze.png` });
+  const currentUrl = page.url();
+  const textareaStillPresent = await page.locator("textarea#schedule-text").count();
+  const valueAfterAnalyze = textareaStillPresent
+    ? await page.locator("textarea#schedule-text").inputValue()
+    : valueAfterTyping;
+  await ctx.close();
+
+  if (!assertNoEviction(scenario, w)) return;
+  if (!currentUrl.includes("/calendar")) { fail(scenario, `left /calendar: ${currentUrl}`); return; }
+  if (focusedAfterTyping !== "schedule-text") { fail(scenario, `lost focus after typing, activeElement.id=${focusedAfterTyping}`); return; }
+  if (valueAfterTyping !== scheduleText) { fail(scenario, "textarea content changed during typing blip"); return; }
+  if (valueAfterAnalyze !== scheduleText) { fail(scenario, "textarea content changed during analyze attempt"); return; }
+  pass(scenario, "paste text retained, no /auth eviction");
+}
+
 // ---------------- Main ----------------
 
 async function main() {
@@ -305,6 +375,7 @@ async function main() {
   await scTextEntryType(browser, sess, token, uid, "appointment", "Appointment", `E2E Camp ${ts}`);
   await scPhotoUpload(browser, sess);
   await scMidTypingGuard(browser, sess);
+  await scImporterPasteTextGuard(browser, sess);
 
   await browser.close();
 
