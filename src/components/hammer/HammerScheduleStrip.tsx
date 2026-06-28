@@ -15,6 +15,7 @@ import { CalendarClock, CalendarPlus, MessageSquarePlus, Settings2 } from "lucid
 import { useGameDayContext } from "@/hooks/useGameDayContext";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { TellHammerDialog } from "@/components/hammer/TellHammerDialog";
+import { SeasonScheduleImporterDialog } from "@/components/hammer/SeasonScheduleImporterDialog";
 
 const PHASE_TONE: Record<string, string> = {
   preseason: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
