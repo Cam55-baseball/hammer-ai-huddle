@@ -61,6 +61,33 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   const [keepRow, setKeepRow] = useState<boolean[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const importMutation = useImportScheduleEvents();
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function startPasteHeartbeat() {
+    if (heartbeatRef.current) return;
+    noteProtectedEditing(60_000);
+    heartbeatRef.current = setInterval(() => {
+      noteProtectedEditing(60_000);
+    }, 1000);
+  }
+  function stopPasteHeartbeat() {
+    if (heartbeatRef.current) {
+      clearInterval(heartbeatRef.current);
+      heartbeatRef.current = null;
+    }
+  }
+
+  // Auth listener + lifecycle telemetry, only while dialog is open.
+  useEffect(() => {
+    if (!open) return;
+    void logPasteImportPhase({ phase: "dialog-open" });
+    const unsub = watchAuthDuringPasteImport();
+    return () => {
+      unsub();
+      stopPasteHeartbeat();
+      void logPasteImportPhase({ phase: "dialog-close" });
+    };
+  }, [open]);
 
   function reset() {
     setText("");
