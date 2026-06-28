@@ -6,7 +6,7 @@
  * Subordinate to existing scheduling tables. No organism-truth authorship —
  * parsed events are athlete-approved data only.
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useImportScheduleEvents, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
+import { logPasteImportPhase, watchAuthDuringPasteImport } from "@/lib/auth/authTelemetry";
 
 interface Props {
   open: boolean;
@@ -60,6 +61,33 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   const [keepRow, setKeepRow] = useState<boolean[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const importMutation = useImportScheduleEvents();
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function startPasteHeartbeat() {
+    if (heartbeatRef.current) return;
+    noteProtectedEditing(60_000);
+    heartbeatRef.current = setInterval(() => {
+      noteProtectedEditing(60_000);
+    }, 1000);
+  }
+  function stopPasteHeartbeat() {
+    if (heartbeatRef.current) {
+      clearInterval(heartbeatRef.current);
+      heartbeatRef.current = null;
+    }
+  }
+
+  // Auth listener + lifecycle telemetry, only while dialog is open.
+  useEffect(() => {
+    if (!open) return;
+    void logPasteImportPhase({ phase: "dialog-open" });
+    const unsub = watchAuthDuringPasteImport();
+    return () => {
+      unsub();
+      stopPasteHeartbeat();
+      void logPasteImportPhase({ phase: "dialog-close" });
+    };
+  }, [open]);
 
   function reset() {
     setText("");
@@ -102,10 +130,13 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
       );
     });
     try {
+      void logPasteImportPhase({ phase: "analyze-start", detail: { mode } });
       const todayISO = new Date().toISOString().slice(0, 10);
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const { data: sessionCheck } = await supabase.auth.getSession();
       if (!sessionCheck.session?.user) {
+        void logPasteImportPhase({ phase: "analyze-no-session" });
+        toast.error("No active sign-in. Stay here — try Analyze again in a moment.", { duration: 6000 });
         throw new Error("Your sign-in is reconnecting. Keep this open and try Analyze again in a moment.");
       }
       let payload: Record<string, unknown>;
@@ -145,10 +176,12 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
       }
       setEvents(parsed);
       setKeepRow(parsed.map(() => true));
+      void logPasteImportPhase({ phase: "analyze-success", detail: { count: parsed.length } });
       toast.success(`Found ${parsed.length} event${parsed.length === 1 ? "" : "s"}. Review and confirm below.`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Parse failed";
       console.error("[SeasonScheduleImporter] failed", { mode, msg });
+      void logPasteImportPhase({ phase: "analyze-failure", detail: { msg } });
       toast.error(msg);
     } finally {
       if (timer) clearTimeout(timer);
@@ -224,24 +257,40 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
               <TabsTrigger value="image">Upload photo</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="text" className="space-y-2 mt-3">
+            <TabsContent value="text" className="space-y-2 mt-3" data-protected-editing="true">
               <Label htmlFor="schedule-text" className="text-xs text-muted-foreground">
                 One game/practice/tournament per line works best.
               </Label>
-              <Textarea
-                id="schedule-text"
-                data-protected-editing="true"
-                rows={10}
-                value={text}
-                onFocus={() => noteProtectedEditing()}
-                onKeyDown={() => noteProtectedEditing()}
-                onPaste={() => noteProtectedEditing()}
-                onChange={(e) => {
-                  noteProtectedEditing();
-                  setText(e.target.value);
-                }}
-                placeholder={`April 1–4 “Final Bash” Tournament in Dunedin, FL\nApril 7–12 Game vs Madison in Wisconsin\nApril 15 Practice 4pm at field 2`}
-              />
+              <div data-protected-editing="true">
+                <Textarea
+                  id="schedule-text"
+                  data-protected-editing="true"
+                  rows={10}
+                  value={text}
+                  onFocus={() => {
+                    startPasteHeartbeat();
+                    void logPasteImportPhase({ phase: "paste-focus" });
+                  }}
+                  onBlur={() => {
+                    stopPasteHeartbeat();
+                    void logPasteImportPhase({ phase: "paste-blur" });
+                  }}
+                  onKeyDown={() => noteProtectedEditing(60_000)}
+                  onInput={() => noteProtectedEditing(60_000)}
+                  onPaste={() => {
+                    noteProtectedEditing(60_000);
+                    void logPasteImportPhase({ phase: "paste-event" });
+                  }}
+                  onCompositionStart={() => noteProtectedEditing(60_000)}
+                  onCompositionUpdate={() => noteProtectedEditing(60_000)}
+                  onCompositionEnd={() => noteProtectedEditing(60_000)}
+                  onChange={(e) => {
+                    noteProtectedEditing(60_000);
+                    setText(e.target.value);
+                  }}
+                  placeholder={`April 1–4 “Final Bash” Tournament in Dunedin, FL\nApril 7–12 Game vs Madison in Wisconsin\nApril 15 Practice 4pm at field 2`}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="image" className="space-y-3 mt-3">
