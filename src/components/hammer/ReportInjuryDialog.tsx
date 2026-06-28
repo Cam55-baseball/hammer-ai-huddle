@@ -63,15 +63,32 @@ export function ReportInjuryDialog({
   const [note, setNote] = useState(prefillNote);
   const [busy, setBusy] = useState(false);
 
-  // Reset on open so reopening is clean.
+  // Reset on open; hydrate from draft if present so user resumes mid-intake.
   useEffect(() => {
     if (open) {
       setRegion(prefillRegion);
       setNote(prefillNote);
       setSeverity(null);
       setBusy(false);
+      if (user?.id) {
+        readDraftSlot<{ region: ReportInjuryRegionKey | null; severity: ReportInjurySeverity | null; note: string }>(
+          user.id,
+          "injury-intake",
+        ).then((draft) => {
+          if (!draft) return;
+          if (!prefillRegion && draft.region) setRegion(draft.region);
+          if (draft.severity) setSeverity(draft.severity);
+          if (!prefillNote && draft.note) setNote(draft.note);
+        });
+      }
     }
-  }, [open, prefillRegion, prefillNote]);
+  }, [open, prefillRegion, prefillNote, user?.id]);
+
+  // Autosave draft whenever any field changes while dialog is open.
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    writeDraftSlot(user.id, "injury-intake", { region, severity, note });
+  }, [open, user?.id, region, severity, note]);
 
   const canSubmit = !!user && !!region && !!severity && !busy;
 
