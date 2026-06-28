@@ -104,6 +104,7 @@ export function ReportInjuryDialog({
         queryClient: qc,
       });
       toast.success("Got it — Hammer is planning around this.");
+      if (user?.id) clearDraftSlot(user.id, "injury-intake");
       onReported?.(eventId);
       onOpenChange(false);
     } catch (e) {
