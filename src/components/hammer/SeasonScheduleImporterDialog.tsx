@@ -80,6 +80,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
 
   async function handlePickFile(file: File | null) {
     if (!file) return;
+    noteProtectedEditing();
     if (file.size > 12 * 1024 * 1024) {
       toast.error("Image too large (max 12 MB)");
       return;
@@ -251,7 +252,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                 className="hidden"
                 onChange={(e) => handlePickFile(e.target.files?.[0] ?? null)}
               />
-              <Button variant="outline" className="w-full gap-2" onClick={() => fileRef.current?.click()}>
+              <Button variant="outline" className="w-full gap-2" onClick={() => { noteProtectedEditing(); fileRef.current?.click(); }}>
                 <ImagePlus className="h-4 w-4" />
                 {imageFile ? "Replace photo" : "Choose schedule photo"}
               </Button>
@@ -274,9 +275,10 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                     <input
                       type="checkbox"
                       checked={keepRow[i] ?? true}
-                       onChange={(e) =>
-                        setKeepRow((k) => k.map((v, idx) => (idx === i ? e.target.checked : v)))
-                      }
+                      onChange={(e) => {
+                        noteProtectedEditing();
+                        setKeepRow((k) => k.map((v, idx) => (idx === i ? e.target.checked : v)));
+                      }}
                       className="h-4 w-4"
                     />
                     <select
