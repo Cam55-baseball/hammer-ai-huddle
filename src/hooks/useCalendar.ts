@@ -206,8 +206,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
 
     // Only show full skeleton on first load. Month navigation keeps prior
     // month visible while next month refreshes (no flash).
+    // Note: setLoading is called BEFORE setCurrentRange (never from inside
+    // an updater) — updater functions must be pure or React may invoke them
+    // twice (StrictMode) and amplify state churn.
     setCurrentRange((prev) => {
-      if (prev === null) setLoading(true);
+      if (prev === null) {
+        // Defer to avoid a setState-inside-setState in the same tick.
+        queueMicrotask(() => setLoading(true));
+      }
       return { start: startDate, end: endDate };
     });
 

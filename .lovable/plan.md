@@ -1,77 +1,53 @@
-# Schedule-Aware Hammer Daily Plan
+## What's actually happening
 
-Right now Hammer's daily plan is computed purely from athlete context (season phase, readiness, goals, injury). The 7-day schedule window (`useScheduleWindow`) is only displayed as a one-line hint above the cards — it does **not** change which modalities are prescribed. As a result, an athlete with a tournament today gets the same speed/strength/throwing prescription as a regular training day.
+The console shows `Maximum update depth exceeded` coming from `useCalendar.ts` every time the Calendar mounts or you click a day. That's a real infinite render loop — and once React tears the tree down, the auth guard sees an unmounted tree and the next click lands you back on the home/login screen. So the "kicked out" symptom and the "click a date crashes" symptom are the same bug.
 
-This plan wires the calendar (games, tournaments, camps, practices — from both the calendar module and Hammer's "Add game / Import schedule" entry points) into the prescription engine so the plan visibly bends around competition days.
+## Root cause (proven by reading the code)
 
-## What changes for the athlete
+In `src/components/calendar/CalendarView.tsx`:
 
-| Day type detected | Plan behavior |
-|---|---|
-| Game today | Warm-up = game-ready short version. Speed, strength, heavy throwing, baserunning suppressed → "Save legs for the game." Fueling moves to pre-game template. Recovery = post-game template enabled. |
-| Tournament day (1 of N) | Same as game day, plus a "Tournament Day X of Y" badge. Strength fully suppressed. Hitting/throwing reduced to activation only. |
-| Game tomorrow | Strength shifts to potentiation/deload, speed shifts to `inseason_freshness`, total volume capped. "Tapering for tomorrow's game" reason shown. |
-| Camp / showcase today | All training modalities suppressed except warm-up + fueling + recovery, with rationale "Camp today — Hammer is staying out of the way." |
-| Long-distance travel (kind=`travel`) | Speed/strength suppressed, mobility + hydration emphasized. |
-| Team practice today | Personal practice modalities (hitting/throwing/defense) compressed to short activation; strength deferred unless off-day; rationale "Team practice today — supplementing, not stacking." |
-| Nothing scheduled | Current behavior, unchanged. |
+```ts
+// recreated on EVERY render — new Date object identity each time
+const fetchStart = startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 });
+const fetchEnd   = endOfWeek(endOfMonth(addMonths(currentMonth, 1)), { weekStartsOn: 0 });
 
-The existing one-line schedule hint stays, but the cards themselves now reflect the same truth.
+useEffect(() => {
+  fetchEventsForRange(fetchStart, fetchEnd);
+}, [currentMonth, fetchEventsForRange, fetchStart, fetchEnd]);  // ← fires every render
+```
 
-## Files touched
+`fetchEventsForRange` then calls `setCurrentRange(...)` and `setEvents(...)` inside `useCalendar.ts`, which re-renders `CalendarView`, which builds two more new `Date` objects, which retrips the effect — forever. Same loop is what `useCalendarProjection` is also being asked to recompute against, which is why the day sheet and importer feel unstable.
 
-1. **`src/hooks/command/useScheduleWindow.ts`** — extend the slot model so the daily plan can read more than just "is there a game".
-   - Add `kind: "game" | "tournament" | "practice" | "camp" | "travel" | "other"` (derive `tournament` from `games.game_type === 'tournament'`, derive `camp`/`travel`/`other` from `scheduled_practice_sessions.session_type`).
-   - Add `tournamentWindow: { startDate, endDate, totalDays, dayIndex } | null` computed from contiguous tournament rows.
-   - Expose `slotsByDate: Record<string, ScheduleSlot[]>` for the next 7 days.
+Secondary issue in `src/hooks/useCalendar.ts` line 209: `setCurrentRange((prev) => { if (prev === null) setLoading(true); return ...; })` — calling another setState from inside an updater function is a React anti-pattern (updater must be pure; React may invoke it twice in StrictMode) and amplifies the loop.
 
-2. **New: `src/lib/hammer/prescription/scheduleContext.ts`** — pure projector.
-   ```ts
-   export interface ScheduleSignal {
-     todayKinds: ReadonlyArray<ScheduleKind>;
-     tomorrowKinds: ReadonlyArray<ScheduleKind>;
-     isGameToday: boolean;
-     isTournamentToday: boolean;
-     tournamentDayLabel: string | null;   // "Day 2 of 3"
-     isCampToday: boolean;
-     isTravelToday: boolean;
-     hasTeamPracticeToday: boolean;
-     isGameTomorrow: boolean;
-     postureToday: "game" | "tournament" | "camp" | "travel" | "team_practice" | "taper" | "normal";
-     rationale: string;                   // one-line, used in `roadmapReason`
-   }
-   export function projectScheduleSignal(window: ScheduleWindow): ScheduleSignal;
-   ```
-   No I/O; pure derivation from the schedule window. Missingness preserved (returns `postureToday: "normal"` when window is `unknown` or `empty`).
+## The fix (surgical, presentation-only)
 
-3. **`src/lib/hammer/prescription/dailyPlan.ts`** — accept the schedule signal and apply it as a final modulator after `applyCategoryGoalOrdering`.
-   - Extend `buildHammerDailyPlan(ctx, scheduleSignal?)`. Signal is optional → safe default = "normal" so existing tests and callers don't break.
-   - Add `applyScheduleModulation(blocks, signal)` that:
-     - Suppresses or shrinks modalities per the matrix above by setting `status: "suppressed"`, replacing `drills` with a short activation set or empty array, zeroing `durationMin`, and rewriting `why`/`roadmapReason` to name the scheduled event.
-     - Rewrites the warm-up block to its game-ready variant (already exists for in-season; reuse).
-     - Adds tournament day label to affected blocks (`"Tournament Day 2 of 3 — …"`).
-     - Never authors organism truth — only reshapes the prescription envelope.
-   - Ordering rule preserved: warm-up first, fueling/recovery last.
+### 1) `src/components/calendar/CalendarView.tsx`
+- Wrap `monthStartForRange`, `fetchStart`, `fetchEnd` in `useMemo` keyed only on `currentMonth` so their identity is stable across renders.
+- Reduce the fetch effect's deps to `[fetchStart, fetchEnd, fetchEventsForRange]` (drop the redundant `currentMonth`).
+- Also memoize the `useCalendarProjection` date strings (already derived from the memoized dates, so this falls out for free).
 
-4. **`src/components/hammer/HammerDailyPlan.tsx`** — pass the signal through.
-   - `const signal = useMemo(() => projectScheduleSignal(sched), [sched])`
-   - `const plan = useMemo(() => buildHammerDailyPlan(ctx, signal), [ctx, signal])`
-   - Existing `scheduleLine` hint stays; broaden it to cover tournament/camp/travel postures.
-   - Add a small pill next to "today's plan" reading e.g. `Tournament Day 2 of 3` or `Game today` when applicable (purely presentational).
+### 2) `src/hooks/useCalendar.ts`
+- Move the `setLoading(true)` call out of the `setCurrentRange` updater. Keep the "only show skeleton on first load" behavior by checking the previous range with a ref or by reading current state before the updater.
+- Leave all DB queries, sort logic, and write paths untouched.
 
-5. **No DB migration.** Source columns already exist:
-   - `games.game_type` ("tournament" / "regular_season") is already populated by `useImportScheduleEvents.ts`.
-   - `scheduled_practice_sessions.session_type` is already populated for `practice` / `travel` / `other`. We will treat `session_type IN ('camp','showcase')` as `camp` and unknown labels containing "camp"/"showcase"/"clinic" (case-insensitive) as `camp` as a missingness-permissive fallback.
+### 3) `src/pages/Calendar.tsx`
+- No changes needed. The auth guard, realtime gate, and `hasMountedWithUser` shield are already correct; once the render loop stops, the "eject" symptom goes away on its own.
 
-## Constraints honored
+## What I am explicitly NOT changing
 
-- Pure functions for the modulator — no organism-truth authorship.
-- Missingness preserved: if the schedule window is `unknown`/`empty`, behavior is identical to today.
-- Athlete-reported injury and parent-supremacy guards still run after schedule modulation, so they continue to override scheduled-day overrides.
-- Lineage breadcrumb added: when the schedule signal changes prescription, `roadmapReason` cites the scheduled event ("Game today vs Eagles — …") so the athlete sees *why* the plan shifted.
+- No auth/session logic changes (`AuthContext`, `useRequireAuth`, `protectedEditing` all stay as-is — they aren't the cause).
+- No schema, RLS, or query changes.
+- No changes to `CalendarDaySheet`, the importer dialog, or any write paths.
 
-## Out of scope (not changing)
+## Verification before declaring it fixed
 
-- The calendar module UI itself.
-- The Game Plan generator / `custom_activity_templates`.
-- Any auto-rescheduling of skipped work into future days (can come later; today the work is just suppressed with a clear reason).
+1. Open `/calendar`, confirm zero `Maximum update depth exceeded` warnings in the console over a 10-second idle.
+2. Click several day cells — the day sheet opens, no nav to `/` or `/auth`.
+3. Page through months forward/back 3× — no warning storm, events render.
+4. Open the schedule importer, type, paste a block — no eviction (already covered by the Phase 57 regression suite, which will still pass).
+
+## Technical notes
+
+- React's "Maximum update depth exceeded" is raised when a component schedules a state update from inside `useEffect` (or render) without a stable dependency boundary. Memoizing the date objects breaks the identity churn that was feeding the effect.
+- `useCallback`'s `fetchEventsForRange` is already stable (deps don't include `currentRange`), so once its inputs stop changing every render, the loop ends.

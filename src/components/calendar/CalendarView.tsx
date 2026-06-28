@@ -90,15 +90,26 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
     return success;
   }, [addEvent, refetch]);
 
-  // Calculate visible range early so the projection hook can consume it
-  const monthStartForRange = startOfMonth(currentMonth);
-  const fetchStart = startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 });
-  const fetchEnd = endOfWeek(endOfMonth(addMonths(currentMonth, 1)), { weekStartsOn: 0 });
+  // Calculate visible range early so the projection hook can consume it.
+  // Memoize on currentMonth so Date identity stays stable across renders —
+  // otherwise the fetch effect below retrips every render and blows the
+  // React update-depth budget ("Maximum update depth exceeded").
+  const monthStartForRange = useMemo(() => startOfMonth(currentMonth), [currentMonth]);
+  const fetchStart = useMemo(
+    () => startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 }),
+    [currentMonth],
+  );
+  const fetchEnd = useMemo(
+    () => endOfWeek(endOfMonth(addMonths(currentMonth, 1)), { weekStartsOn: 0 }),
+    [currentMonth],
+  );
+  const fetchStartStr = useMemo(() => format(fetchStart, 'yyyy-MM-dd'), [fetchStart]);
+  const fetchEndStr = useMemo(() => format(fetchEnd, 'yyyy-MM-dd'), [fetchEnd]);
 
   // Derived projection (read-only, source-of-truth driven, realtime-aware via React Query)
   const { events: derivedEvents } = useCalendarProjection({
-    startDate: format(fetchStart, 'yyyy-MM-dd'),
-    endDate: format(fetchEnd, 'yyyy-MM-dd'),
+    startDate: fetchStartStr,
+    endDate: fetchEndStr,
     sport: selectedSport,
   });
 
@@ -145,7 +156,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   // Fetch legacy events when month changes (derived layer fetches itself via React Query)
   useEffect(() => {
     fetchEventsForRange(fetchStart, fetchEnd);
-  }, [currentMonth, fetchEventsForRange, fetchStart, fetchEnd]);
+  }, [fetchStart, fetchEnd, fetchEventsForRange]);
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
