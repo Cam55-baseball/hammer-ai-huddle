@@ -44,6 +44,7 @@ import {
   type BlockStatus,
   type PrescribedBlock,
 } from "@/lib/hammer/prescription/dailyPlan";
+import { projectScheduleSignal } from "@/lib/hammer/prescription/scheduleContext";
 import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
@@ -75,6 +76,14 @@ const PHASE_TONE: Record<string, string> = {
 function scheduleLine(sched: ReturnType<typeof useScheduleWindow>): string | null {
   if (sched.unknown || sched.loading) return null;
   if (sched.empty) return null;
+  const tw = sched.tournamentWindow;
+  if (tw && tw.dayIndex >= 1) {
+    return `Tournament — Day ${tw.dayIndex} of ${tw.totalDays}. Saving legs.`;
+  }
+  const todayCamp = sched.today.find((s) => s.kind === "camp");
+  if (todayCamp) return `Camp today (${todayCamp.label}) — Hammer steps back.`;
+  const todayTravel = sched.today.find((s) => s.kind === "travel");
+  if (todayTravel) return `Travel today — mobility + hydration only.`;
   const comp = sched.upcomingCompetition;
   if (comp) {
     if (comp.daysUntil === 0) return `Game today (${comp.label}) — prioritising freshness.`;
@@ -92,8 +101,12 @@ export function HammerDailyPlan() {
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
-  const plan = useMemo(() => buildHammerDailyPlan(ctx), [ctx]);
   const sched = useScheduleWindow();
+  const scheduleSignal = useMemo(() => projectScheduleSignal(sched), [sched]);
+  const plan = useMemo(
+    () => buildHammerDailyPlan(ctx, scheduleSignal),
+    [ctx, scheduleSignal],
+  );
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
 
@@ -103,6 +116,27 @@ export function HammerDailyPlan() {
         <CardTitle className="text-sm flex items-center justify-between gap-2">
           <span className="truncate">{identity.voiceLabel} · today's plan</span>
           <div className="flex items-center gap-1.5 shrink-0">
+            {plan.schedulePosture !== "normal" && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] capitalize"
+                title={plan.scheduleSignal.rationale}
+              >
+                {plan.scheduleSignal.tournamentDayLabel
+                  ? `Tournament ${plan.scheduleSignal.tournamentDayLabel}`
+                  : plan.schedulePosture === "team_practice"
+                    ? "Team practice"
+                    : plan.schedulePosture === "taper"
+                      ? "Tapering"
+                      : plan.schedulePosture === "game"
+                        ? "Game today"
+                        : plan.schedulePosture === "camp"
+                          ? "Camp today"
+                          : plan.schedulePosture === "travel"
+                            ? "Travel day"
+                            : plan.schedulePosture}
+              </Badge>
+            )}
             {plan.missingnessCount > 0 && (
               <Badge variant="outline" className="text-[10px]">
                 {plan.missingnessCount} needs input
