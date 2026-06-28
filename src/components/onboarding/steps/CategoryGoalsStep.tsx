@@ -211,14 +211,14 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
 
   // ── Build V2 payload from current state ──────────────────────────────────
   const payload: CategoryGoalsPayloadV2 = useMemo(() => {
-    const out: CategoryGoalsPayloadV2 = { version: 2, updatedAt: new Date().toISOString() };
+    const buckets: { baseball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals }; softball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals } } = {};
     for (const p of panes) {
       const dg = picksByPane[paneKey(p)] ?? {};
-      const bucket = out[p.sport] ?? {};
-      bucket[p.discipline] = dg;
-      (out as Record<string, unknown>)[p.sport] = bucket;
+      const sportBucket = buckets[p.sport] ?? {};
+      sportBucket[p.discipline] = dg;
+      buckets[p.sport] = sportBucket;
     }
-    return out;
+    return { version: 2, updatedAt: new Date().toISOString(), ...buckets };
   }, [panes, picksByPane]);
 
   const totalPicks = useMemo(
