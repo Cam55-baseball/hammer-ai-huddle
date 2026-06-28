@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { emitObservability } from '@/hooks/useEmitObservability';
-import { isProtectedEditingActive } from '@/lib/auth/protectedEditing';
+import { clearProtectedEditing, isProtectedEditingActive } from '@/lib/auth/protectedEditing';
 
 
 interface AuthContextType {
@@ -140,6 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    clearProtectedEditing();
     const { error } = await supabase.auth.signOut();
     return { error };
   };

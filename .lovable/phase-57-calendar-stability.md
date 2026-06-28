@@ -39,7 +39,7 @@ typed schedule text.
 ## Regression suite
 
 `tests/e2e/calendar/run.mjs` mirrors the Phase 56 onboarding pattern and runs
-four scenarios:
+five scenarios:
 
 | ID | Asserts |
 |----|---------|
