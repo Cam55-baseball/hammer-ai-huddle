@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
@@ -18,6 +18,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
+import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
 import { writeDraftSlot } from "@/lib/onboarding/draftStore";
 
 
@@ -29,6 +30,7 @@ const STEPS = [
   "Confirm",
   "Health check",
   "Notifications",
+  "Review",
   "Done",
 ];
 const STEP_WELCOME = 0;
@@ -38,7 +40,17 @@ const STEP_SCHEDULE = 3;
 const STEP_CONFIRM = 4;
 const STEP_INJURY = 5;
 const STEP_NOTIFICATIONS = 6;
-const STEP_DONE = 7;
+const STEP_REVIEW = 7;
+const STEP_DONE = 8;
+
+/** Deep-link edit keys → owning step index. */
+const EDIT_TARGETS: Record<ReviewEditKey, number> = {
+  profile: STEP_PROFILE,
+  goals: STEP_GOALS,
+  schedule: STEP_SCHEDULE,
+  injury: STEP_INJURY,
+  notifications: STEP_NOTIFICATIONS,
+};
 
 const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
   { value: "training", label: "Training", help: "Structured practice / drills" },
@@ -56,11 +68,14 @@ const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
  */
 export default function AthleteOnboarding() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading, isAuthStable } = useAuth();
   const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
   const { createEvent } = useAthleteEvents();
 
   const [step, setStep] = useState(0);
+  /** When set, the next save returns to STEP_REVIEW instead of advancing linearly. */
+  const [editReturnTo, setEditReturnTo] = useState<number | null>(null);
   const [dayType, setDayType] = useState<DayType>("training");
   const [emitting, setEmitting] = useState(false);
   const [emittedEventId, setEmittedEventId] = useState<string | null>(null);
@@ -94,16 +109,68 @@ export default function AthleteOnboarding() {
     })();
   }, [user]);
 
-  // Skip the flow only when the athlete already finished it (schedule + notifs).
-  // Bootstrap events alone (age_observed) no longer count.
+  // Deep-link routing: ?step=review jumps to the review summary; ?edit=<key>
+  // jumps directly to that step and marks it as an edit (save returns to review).
+  const urlRoutedRef = useRef(false);
   useEffect(() => {
-    if (!stateLoading && hasCompletedOnboarding && step < STEP_NOTIFICATIONS)
+    if (urlRoutedRef.current) return;
+    const editKey = searchParams.get("edit") as ReviewEditKey | null;
+    const stepParam = searchParams.get("step");
+    if (editKey && editKey in EDIT_TARGETS) {
+      urlRoutedRef.current = true;
+      setStep(EDIT_TARGETS[editKey]);
+      setEditReturnTo(STEP_REVIEW);
+    } else if (stepParam === "review") {
+      urlRoutedRef.current = true;
+      setStep(STEP_REVIEW);
+    }
+  }, [searchParams]);
+
+  // Skip the flow only when the athlete already finished it AND we're not
+  // explicitly reviewing/editing. This lets completed users come back via
+  // /onboarding/athlete?step=review or ?edit=<key> to update answers.
+  useEffect(() => {
+    const isReviewing =
+      searchParams.has("edit") ||
+      searchParams.get("step") === "review" ||
+      step >= STEP_REVIEW;
+    if (!stateLoading && hasCompletedOnboarding && !isReviewing && step < STEP_NOTIFICATIONS) {
       navigate("/command", { replace: true });
-  }, [stateLoading, hasCompletedOnboarding, navigate, step]);
+    }
+  }, [stateLoading, hasCompletedOnboarding, navigate, step, searchParams]);
 
 
-  const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+  /** Advance, OR if we're in edit-mode, jump back to Review and clear the flag. */
+  const goNext = () => {
+    if (editReturnTo !== null) {
+      const target = editReturnTo;
+      setEditReturnTo(null);
+      setSearchParams({ step: "review" }, { replace: true });
+      setStep(target);
+      return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+  const goBack = () => {
+    if (editReturnTo !== null) {
+      const target = editReturnTo;
+      setEditReturnTo(null);
+      setSearchParams({ step: "review" }, { replace: true });
+      setStep(target);
+      return;
+    }
+    setStep((s) => Math.max(s - 1, 0));
+  };
+
+  /** Review → Edit jump. Adds a return marker so save bounces back here. */
+  const handleEditFromReview = useCallback(
+    (key: ReviewEditKey) => {
+      setEditReturnTo(STEP_REVIEW);
+      setSearchParams({ edit: key }, { replace: true });
+      setStep(EDIT_TARGETS[key]);
+    },
+    [setSearchParams],
+  );
 
   const handleEmitSchedule = async () => {
     if (!user?.id) return;
@@ -336,6 +403,13 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
+      {step === STEP_REVIEW && (
+        <ReviewAnswersStep
+          onEdit={handleEditFromReview}
+          onFinish={() => setStep(STEP_DONE)}
+        />
+      )}
+
       {step === STEP_DONE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">You're set up.</h2>
@@ -344,7 +418,10 @@ export default function AthleteOnboarding() {
             events you generate, the more your Command Center fills in — always
             with confidence and missingness visible.
           </p>
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => setStep(STEP_REVIEW)}>
+              Review answers
+            </Button>
             <Button onClick={() => navigate("/command")}>
               Open Command Center <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
