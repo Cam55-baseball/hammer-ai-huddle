@@ -401,6 +401,17 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         )}
 
         <DialogFooter className="gap-2 sm:gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              toast.success("Saved. Resume any time.");
+              handleClose(false);
+            }}
+          >
+            <LogOut className="mr-1.5 h-3.5 w-3.5" />
+            Save & exit
+          </Button>
           {events.length === 0 ? (
             <Button onClick={handleAnalyze} disabled={parsing} className="gap-2">
               {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
@@ -411,7 +422,14 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
               <Button variant="ghost" onClick={() => { setEvents([]); setKeepRow([]); }}>
                 Back
               </Button>
-              <Button onClick={handleConfirm} disabled={importMutation.isPending} className="gap-2">
+              <Button
+                onClick={async () => {
+                  await handleConfirm();
+                  if (user?.id) clearDraftSlot(user.id, "schedule-importer");
+                }}
+                disabled={importMutation.isPending}
+                className="gap-2"
+              >
                 {importMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Add {keepRow.filter(Boolean).length} to calendar
               </Button>
