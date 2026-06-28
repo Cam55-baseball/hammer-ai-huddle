@@ -76,6 +76,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [daySheetOpen, setDaySheetOpen] = useState(false);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
+  const [importerOpen, setImporterOpen] = useState(false);
   const [filters, setFilters] = useState<CalendarFilters>(getInitialFilters);
   
   const { events: legacyEvents, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
