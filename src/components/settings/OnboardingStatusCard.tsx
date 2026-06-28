@@ -66,8 +66,8 @@ export function OnboardingStatusCard() {
         </p>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant={hasCompletedOnboarding ? "outline" : "default"}>
-            <Link to="/onboarding/athlete">
-              {hasCompletedOnboarding ? "Review setup" : "Finish setup"}
+            <Link to={hasCompletedOnboarding ? "/onboarding/athlete?step=review" : "/onboarding/athlete"}>
+              {hasCompletedOnboarding ? "Review & edit answers" : "Finish setup"}
             </Link>
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setInjuryOpen(true)}>
