@@ -18,6 +18,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
+import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
 import { writeDraftSlot } from "@/lib/onboarding/draftStore";
 
 
