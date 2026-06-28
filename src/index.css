@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* IQ 101 — Game IQ design tokens (semantic, theme-safe) */
+@layer base {
+  :root {
+    --iq-field: 150 35% 12%;
+    --iq-chalk: 0 0% 96%;
+    --iq-defense: 188 90% 55%;
+    --iq-offense: 38 96% 60%;
+    --iq-pitching: 322 80% 62%;
+    --iq-baserunning: 96 70% 55%;
+    --iq-ball: 12 90% 60%;
+    --iq-bag: 188 90% 55%;
+    --iq-backup: 280 70% 65%;
+    --iq-read: 50 95% 60%;
+    --iq-execute: 96 70% 55%;
+  }
+  .dark {
+    --iq-field: 150 40% 8%;
+    --iq-chalk: 0 0% 92%;
+  }
+}
+
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
