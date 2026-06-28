@@ -6,7 +6,7 @@
  * Subordinate to existing scheduling tables. No organism-truth authorship —
  * parsed events are athlete-approved data only.
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useImportScheduleEvents, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
+import { logPasteImportPhase, watchAuthDuringPasteImport } from "@/lib/auth/authTelemetry";
 
 interface Props {
   open: boolean;
