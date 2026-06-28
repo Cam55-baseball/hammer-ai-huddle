@@ -1,55 +1,31 @@
 
-## What's wrong today
+## Problem
 
-1. **"Edit season dates" boots you to login.** The popover in `SeasonPhaseChip` links to `/profile`. `src/pages/Profile.tsx` still uses the legacy bare-redirect pattern (`if (!user && !session) navigate("/auth")` inside a `useEffect`). During the dynamic chunk load + auth-context rehydrate on the new route, `user`/`session` are momentarily null and the effect fires, so a still-signed-in athlete is kicked to `/auth`. This is the same eviction class we already fixed elsewhere with `useRequireAuth` (400 ms re-check, visibility guard, `isAuthStable` gating).
+1. **Toolbar overflow** — The header in `src/components/calendar/CalendarView.tsx` puts `SchedulePracticeDialog`, `Import schedule`, and `Add Event` in a non-wrapping `flex` row next to the title. At ~885px the row can't shrink and `Add Event` clips out of the card.
+2. **Analyze spinner never resolves** — When pasting text and clicking *Analyze with Hammer AI*, the spinner runs forever. The `parse-season-schedule` edge function was added one turn ago and may not be deployed yet, and the dialog has no client-side timeout, so any silent invoke failure (not deployed, gateway hang, missing key) leaves `parsing=true` indefinitely with no toast.
 
-2. **No way to import a schedule from the Calendar module.** The AI schedule importer dialog (`SeasonScheduleImporterDialog`) is only mounted inside `HammerScheduleStrip` on the dashboard. The Calendar page has no entry point, so athletes can't upload a photo of a season/month/week schedule from `/calendar`.
+## Fix
 
-3. **Imported games look like every other custom activity.** Rows written by `useImportScheduleEvents` land in `public.games` (and `scheduled_practice_sessions` for practice/travel). The calendar adapters don't distinguish "AI-imported" events, so they render with generic colors and athletes can't tell what came from a schedule import.
+### 1. Make the toolbar wrap cleanly (`src/components/calendar/CalendarView.tsx`)
+- Change the outer header row to allow the title block to shrink and the actions to wrap to a new line on narrow widths.
+  - Add `min-w-0 flex-1` to the title block.
+  - Change the actions container to `flex flex-wrap items-center justify-end gap-2` so all three buttons stay inside the card and wrap below the title if needed.
+  - Add `shrink-0` and `whitespace-nowrap` on each button so labels aren't clipped.
+- No visual restyle — same buttons, same order, just contained.
 
-## Changes
+### 2. Make the importer actually return (or fail loudly)
+- **Deploy** `parse-season-schedule` so the freshly added function is live.
+- **Harden** `src/components/hammer/SeasonScheduleImporterDialog.tsx`:
+  - Wrap the `supabase.functions.invoke` call in a 45-second client `AbortController` race; on timeout, toast "Hammer AI didn't respond — please try again" and clear `parsing`.
+  - Surface `data?.error` from non-2xx gateway responses (right now `error` from invoke is thrown but a 200-with-error body would still be treated as empty).
+  - Log the failure path to the console with the request mode so we can diagnose if it happens again.
+- **Verify** by calling the deployed function directly with a short text payload and confirming a JSON `{ events: [...] }` response.
 
-### 1. Fix the /profile eviction (root cause of "kicked to login")
+### Out of scope
+- No changes to event coloring, calendar grid, or import persistence — those are working from the prior turn.
+- No queue/background-worker refactor; Gemini-flash on a small text payload completes well under the edge timeout, so a synchronous call with a client timeout is sufficient.
 
-- `src/pages/Profile.tsx`
-  - Remove the bare `if (!user && !session) navigate("/auth")` inside the `useEffect` at lines 135-149.
-  - Add `useRequireAuth()` at the top of the component (same hook used by `AnalyzeVideo` and other protected pages — it waits for `isAuthStable`, skips while the tab is hidden, and re-checks `supabase.auth.getSession()` after 400 ms before navigating).
-  - Keep the rest of the effect (viewing-other-profile detection + `fetchProfile`) but guard it with `if (!user) return;` instead of redirecting.
-
-This eliminates the race where the chip → popover → `/profile` navigation evicts the user during chunk hydration.
-
-### 2. Add the AI schedule importer to the Calendar module
-
-- `src/components/calendar/CalendarView.tsx`
-  - Import `SeasonScheduleImporterDialog` and add a new toolbar button next to "Add Event":
-    - Label: **"Import schedule"** with an `Upload` icon.
-    - Opens the existing `SeasonScheduleImporterDialog` (text paste or photo upload → Gemini parses → review table → writes to `games` / `scheduled_practice_sessions`).
-  - No new persistence logic — reuses `useImportScheduleEvents`. After save, the existing `useSchedulingRealtime` + query invalidations already refresh the calendar.
-
-This makes the importer discoverable directly from `/calendar`, not just the dashboard strip.
-
-### 3. Color imported games/tournaments distinctly
-
-- `src/hooks/useCalendar.ts` (game branch where calendar events are built from `public.games`)
-  - When `game_summary.source === "ai_schedule_import"`, tag the resulting `CalendarEvent` with:
-    - `color: "#a855f7"` for `kind === "tournament_day"` (violet)
-    - `color: "#ef4444"` for `kind === "game"` (red)
-    - A small `(Imported)` suffix on the title or a stable badge field so the day cell can render a chip.
-- `src/lib/calendar/adaptDerivedEvent.ts`
-  - No change required; this only routes `public.games` rows that pass through legacy `useCalendar`.
-- `src/components/calendar/` day-cell / list renderers
-  - If they already honor `event.color` (they do for legacy events), no edit needed. If a cell hard-codes a color for the `game_plan`/`program` type, add a small override that respects the `color` field when present.
-
-Custom activities the athlete adds manually keep their existing colors — only AI-imported rows pick up the new game/tournament palette.
-
-## Out of scope
-
-- No database migration. `games.game_summary` already stores the `source: "ai_schedule_import"` marker written by `useImportScheduleEvents`.
-- No changes to the parsing edge function, the review table UX, or the Hammer dashboard strip.
-- No changes to the Maximum-update-depth warning in `CalendarView` (separate issue, not part of this report).
-
-## Technical notes
-
-- `useRequireAuth` lives at `src/hooks/useRequireAuth.ts` and is already the project's canonical "don't evict during transient null session" guard.
-- `SeasonScheduleImporterDialog` is a self-contained dialog — mounting it from `CalendarView` requires only an `open`/`onOpenChange` pair of local state.
-- `useCalendar` is the legacy projector that reads `public.games`. The `game_summary` JSON column is already returned in its select, so the color/badge logic is a pure derivation in the mapper — no new query.
+## Files touched
+- `src/components/calendar/CalendarView.tsx` — header layout only
+- `src/components/hammer/SeasonScheduleImporterDialog.tsx` — abort/timeout + error surfacing
+- Deploy: `parse-season-schedule`
