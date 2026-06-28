@@ -8,11 +8,12 @@ import { useQueryClient } from '@tanstack/react-query';
  * Performance sessions use precision INSERT/UPDATE/DELETE handlers
  * with scoped query invalidation. Other tables use broad invalidation.
  */
-export function useSchedulingRealtime() {
+export function useSchedulingRealtime(enabled: boolean = true) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!enabled) return;
     if (!user) return;
 
     const invalidateScheduling = () => {
@@ -172,5 +173,5 @@ export function useSchedulingRealtime() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [enabled, user?.id, queryClient]);
 }

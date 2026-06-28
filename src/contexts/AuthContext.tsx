@@ -49,6 +49,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
           pendingSignOutTimer = setTimeout(async () => {
             if (cancelled) return;
+
+            // Defensive: never evict while the user is actively typing into
+            // an input/textarea/contenteditable. Re-check shortly instead.
+            const active = typeof document !== 'undefined' ? document.activeElement : null;
+            const isTyping =
+              !!active &&
+              (active.tagName === 'INPUT' ||
+                active.tagName === 'TEXTAREA' ||
+                (active as HTMLElement).isContentEditable === true);
+            if (isTyping) {
+              const { data } = await supabase.auth.getSession();
+              if (cancelled) return;
+              if (data.session) {
+                setSession(data.session);
+                setUser(data.session.user);
+                setLoading(false);
+              }
+              return;
+            }
+
             const { data } = await supabase.auth.getSession();
             if (cancelled) return;
             if (!data.session) {

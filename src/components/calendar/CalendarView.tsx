@@ -81,6 +81,15 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   
   const { events: legacyEvents, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
 
+  const handleAddEvent = useCallback(async (event: Parameters<typeof addEvent>[0]) => {
+    const success = await addEvent(event);
+    if (success) {
+      setAddEventOpen(false);
+      refetch();
+    }
+    return success;
+  }, [addEvent, refetch]);
+
   // Calculate visible range early so the projection hook can consume it
   const monthStartForRange = startOfMonth(currentMonth);
   const fetchStart = startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 });
@@ -515,19 +524,14 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
         onRefresh={refetch}
       />
 
-      {/* Add Event Dialog */}
+      {/* Add Event Dialog — always mounted when open, prop identity is stable
+          so realtime/projection re-renders cannot tear the input out from under
+          a typing user. */}
       <AddCalendarEventDialog
         open={addEventOpen}
         onOpenChange={setAddEventOpen}
         date={addEventDate || new Date()}
-        onAdd={async (event) => {
-          const success = await addEvent(event);
-          if (success) {
-            setAddEventOpen(false);
-            refetch();
-          }
-          return success;
-        }}
+        onAdd={handleAddEvent}
         sport={selectedSport}
       />
 
@@ -538,6 +542,8 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
           if (!o) refetch();
         }}
       />
+
+
     </div>
   );
 }
