@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toggle } from '@/components/ui/toggle';
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, Filter } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Filter, Upload } from 'lucide-react';
 import { 
   format, 
   startOfMonth, 
