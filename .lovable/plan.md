@@ -1,33 +1,96 @@
-## Goal
-Stop the Import-schedule paste flow from kicking you to login, and make every auth/session blip visible while it happens.
+## What's changing
 
-## Changes
+The current `CategoryGoalsStep` only collects 5 top-level ranks (Speed/Power/Throwing/Hitting/Fielding). This rebuild makes goals **specific, editable, multi-select, discipline-aware, and resumable**, and wires the result through Hammer's daily plan end-to-end.
 
-### 1. Paste-specific focus guard (`SeasonScheduleImporterDialog.tsx`)
-- Wrap the paste-mode textarea + its container in a hardened "paste guard":
-  - `onFocus`, `onInput`, `onChange`, `onKeyDown`, `onPaste`, `onCompositionStart/Update/End` each refresh `noteProtectedEditing(60_000)`.
-  - On focus, start a 1-second heartbeat interval that keeps re-arming the protected window until blur. Cleared on blur/unmount/dialog close.
-  - Mark the textarea, its wrapping `<div>`, and the dialog content with `data-protected-editing="true"` so the active-element fallback in `protectedEditing.ts` matches even mid-React-rerender.
-- Same treatment for the review-step inline `<Input>` edit fields (title/location/date), since they share the eviction risk.
+## 1. Sub-goal catalog (mechanism-level, plain language)
 
-### 2. Visible session telemetry during paste/import
-- Add a tiny logger `src/lib/auth/authTelemetry.ts` that:
-  - Logs `[paste-import]` events to `console.info` with a stable tag + payload (`{ phase, hasSession, userId, expiresAt, protectedActive }`).
-  - Optionally surfaces a `toast.error` / `toast.warning` for adverse transitions (no session, expiring <60s, signed-out event during import).
-- In `SeasonScheduleImporterDialog.tsx`:
-  - On dialog open, on textarea focus, on Analyze click, on Analyze success/failure, and on Save: call the logger with current `supabase.auth.getSession()` snapshot.
-  - Subscribe to `supabase.auth.onAuthStateChange` for the lifetime of the dialog. Log every event; if `SIGNED_OUT` or session=null arrives while the dialog is open, fire a visible `toast.error("Session blip detected during import — kept your text safe")` and re-arm the protected window instead of letting the dialog close.
-  - Before calling the Edge Function, snapshot the access token; if `getSession()` returns null at that moment, show `toast.error("No active session — please sign in again")` and abort gracefully (no redirect from inside the dialog).
+New file `src/lib/hammer/goals/subGoalCatalog.ts` — typed catalog keyed by `(sport, discipline, category)` returning sub-goals with `id`, `label`, `helpText`, `weightHints` (which Hammer prescription levers it boosts).
 
-### 3. No changes to auth eviction rules
-- `useRequireAuth` / `AuthContext` already honor `isProtectedEditingActive()`. The heartbeat + data-attribute changes above guarantee that signal stays true throughout paste/typing/analysis, so no global auth changes are needed.
+Examples for **Power**:
+- `bat_speed` — "Swing the bat faster" (boosts rotational drills, overload/underload bat)
+- `rotational_horsepower` — "Turn the hips harder" (med-ball, hip mobility, core)
+- `contact_strength` — "Hold the barrel through contact" (grip, forearm, iso holds)
+- `lower_half_drive` — "Push the ground harder" (trap-bar, jumps, sled)
+- `mound_explosiveness` (pitcher only) — "More force off the rubber"
 
-### 4. Verification
-- Manual: open Calendar → Import schedule → Paste text, type slowly, paste a large block, click Analyze. Confirm: no `/auth` redirect, textarea content preserved, console shows `[paste-import]` lifecycle, and any synthetic auth blip surfaces a toast instead of an eviction.
-- Extend `tests/e2e/calendar/run.mjs` S5 to also assert (a) `[paste-import]` log lines are emitted and (b) a forced `SIGNED_OUT` event during paste produces a toast and does NOT navigate away.
+Equivalent specific lists for **Speed** (first-step, top-end, base-stealing reads, conditioning), **Throwing-Position** (arm strength, on-line accuracy, transfer/exchange, footwork, long-toss capacity), **Hitting** (barrel control, plate discipline, two-strike, oppo power, launch consistency), **Fielding** (range, glove-to-transfer, pre-pitch routine, double-play turn, first-step read), **Pitching** (command/zone%, velo, secondary pitch development, pitch mix sequencing, stamina/pitch count, holding runners — **baseball-only**, **softball-pitcher excludes pickoffs**).
 
-## Files touched
-- `src/components/hammer/SeasonScheduleImporterDialog.tsx` — paste guard wiring, auth listener, toasts, logging hooks.
-- `src/lib/auth/authTelemetry.ts` *(new)* — small logger + toast helper for paste-import phase events.
-- `tests/e2e/calendar/run.mjs` — extend S5 with telemetry + forced-signout assertions.
-- `.lovable/phase-57-calendar-stability.md` — append "Paste-specific guard + telemetry" subsection.
+## 2. Goal model (replaces the flat 5-rank)
+
+`src/lib/hammer/goals/categoryGoals.ts` extended:
+
+```ts
+type Rank = 'primary' | 'secondary';        // 70 / 30 split
+interface SubGoalPick { id: string; rank: Rank; }
+interface DisciplineGoals {                  // per discipline tree
+  power?:     SubGoalPick[];                 // 1..2
+  speed?:     SubGoalPick[];
+  hitting?:   SubGoalPick[];
+  fielding?:  SubGoalPick[];
+  throwing?:  SubGoalPick[];                 // position-player throwing
+  pitching?:  SubGoalPick[];                 // pitcher only
+}
+interface CategoryGoalsV2 {
+  version: 2;
+  baseball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals };
+  softball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals };
+  updatedAt: string;
+}
+```
+
+A normalizer keeps reading legacy V1 ranks so existing users don't lose state; on save we always write V2.
+
+## 3. Onboarding flow rebuild
+
+`src/components/onboarding/CategoryGoalsStep.tsx` becomes a **multi-pane wizard**:
+1. Discipline selector — auto-prefilled from profile (`primary_sport` + `is_two_way` + `is_pitcher`). User can toggle on additional panes (cross-sport baseball+softball, or add pitcher pane).
+2. For each enabled discipline pane, one screen per category with chip-style sub-goal picker. Tap = primary, second tap = secondary, third = deselect. Visible 70 / 30 weight badge. Max 2 per category, min 0 (skippable categories allowed for true single-skill specialists).
+3. Pitcher pane never shows position-player Throwing; position pane never shows Pitching. Softball-pitcher Pitching list omits the `hold_runners` sub-goal entirely.
+
+## 4. Edit-anywhere from Profile
+
+`src/components/profile/CategoryGoalsCard.tsx` becomes a launcher to the same wizard in "edit" mode. Every save writes a new row with `lineage_parent_ids` pointing at the previous goals snapshot in `athlete_context` (additive, no destructive overwrite).
+
+## 5. Hammer prescription wiring (E2E)
+
+`src/lib/hammer/dailyPlan.ts`:
+- Replace single-rank sort with a weighted scorer: `score(skill) = Σ pick.weightHints[skill] * (rank==='primary'?0.7:0.3)` across the *active* discipline panes.
+- For two-way athletes, both pitcher and position picks contribute; the plan surfaces a dedicated "Pitcher focus" block when pitcher weights are non-zero.
+- Softball pitcher path never schedules pickoff drills.
+
+## 6. Universal Save-&-Exit
+
+New `src/components/common/SaveAndExitBar.tsx` — sticky footer with "Save & exit" + "Continue". Backed by `src/lib/onboarding/draftStore.ts` (localStorage + debounced upsert to `athlete_context.onboarding_draft jsonb`).
+
+Mounted in:
+- every `/onboarding/athlete` step (incl. new CategoryGoalsStep, InjuryIntakeStep, schedule step)
+- `SeasonScheduleImporterDialog` (saves paste text + parsed rows as draft)
+- `ReportInjuryDialog` (saves partial intake)
+- Category-goals editor in Profile
+
+Resume banner (`OnboardingResumeBanner`) and `OnboardingStatusCard` already exist — they read the draft to deep-link back to the exact step.
+
+## 7. Migration
+
+Single migration adds `athlete_context.onboarding_draft jsonb` (nullable) and keeps `category_goals jsonb` (already exists) — V2 shape stored there.
+
+## 8. Tests
+
+Extend `src/lib/runtime/relational/__tests__/onboarding-regression.test.ts`:
+- V1→V2 normalizer round-trip
+- 70/30 scorer ranks pitcher drills above position drills for a pitcher-only athlete
+- Softball pitcher catalog excludes `hold_runners`
+- Two-way (BB pitcher + position) merges both panes
+- Save-&-exit draft restoration produces identical wizard state
+
+## Technical notes
+
+- No new tables; reuses `athlete_context`. Migration is one `ALTER TABLE` adding a nullable jsonb column → no GRANT change needed (column inherits table grants).
+- All client writes go through existing `useUpsertAthleteContext` hook; lineage uses existing ASB `relational.developmental.*` topic — no new topic ID required.
+- Draft autosave debounced 800ms; localStorage key `onboarding-draft:v2:<uid>` for offline durability before first auth-bound save.
+
+## Out of scope (explicit)
+
+- No coach/parent-facing edits to athlete goals (athlete-supremacy preserved).
+- No AI auto-suggest of sub-goals in this pass — Hammer infers later from session telemetry; we only collect explicit picks now.
+- No change to existing schedule/calendar event coloring or AI parser.

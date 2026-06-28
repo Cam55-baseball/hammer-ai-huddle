@@ -15,12 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ImagePlus, Wand2, Trash2 } from "lucide-react";
+import { Loader2, ImagePlus, Wand2, Trash2, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useImportScheduleEvents, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { logPasteImportPhase, watchAuthDuringPasteImport } from "@/lib/auth/authTelemetry";
+import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
+import { useOptionalAuth } from "@/hooks/useAuth";
 
 interface Props {
   open: boolean;
@@ -62,6 +64,23 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const importMutation = useImportScheduleEvents();
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { user } = useOptionalAuth();
+
+  // Hydrate pasted text from draft on open so user resumes safely.
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    readDraftSlot<{ text?: string }>(user.id, "schedule-importer").then((d) => {
+      if (d?.text && !text) setText(d.text);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.id]);
+
+  // Debounced draft autosave while typing.
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    writeDraftSlot(user.id, "schedule-importer", { text });
+  }, [open, user?.id, text]);
+
 
   function startPasteHeartbeat() {
     if (heartbeatRef.current) return;
@@ -382,6 +401,17 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         )}
 
         <DialogFooter className="gap-2 sm:gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              toast.success("Saved. Resume any time.");
+              handleClose(false);
+            }}
+          >
+            <LogOut className="mr-1.5 h-3.5 w-3.5" />
+            Save & exit
+          </Button>
           {events.length === 0 ? (
             <Button onClick={handleAnalyze} disabled={parsing} className="gap-2">
               {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
@@ -392,7 +422,14 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
               <Button variant="ghost" onClick={() => { setEvents([]); setKeepRow([]); }}>
                 Back
               </Button>
-              <Button onClick={handleConfirm} disabled={importMutation.isPending} className="gap-2">
+              <Button
+                onClick={async () => {
+                  await handleConfirm();
+                  if (user?.id) clearDraftSlot(user.id, "schedule-importer");
+                }}
+                disabled={importMutation.isPending}
+                className="gap-2"
+              >
                 {importMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Add {keepRow.filter(Boolean).length} to calendar
               </Button>

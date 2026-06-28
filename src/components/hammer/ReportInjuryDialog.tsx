@@ -27,6 +27,8 @@ import {
   type ReportInjuryRegionKey,
   type ReportInjurySeverity,
 } from "@/lib/hammer/injury/reportInjury";
+import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
+import { LogOut } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -61,15 +63,32 @@ export function ReportInjuryDialog({
   const [note, setNote] = useState(prefillNote);
   const [busy, setBusy] = useState(false);
 
-  // Reset on open so reopening is clean.
+  // Reset on open; hydrate from draft if present so user resumes mid-intake.
   useEffect(() => {
     if (open) {
       setRegion(prefillRegion);
       setNote(prefillNote);
       setSeverity(null);
       setBusy(false);
+      if (user?.id) {
+        readDraftSlot<{ region: ReportInjuryRegionKey | null; severity: ReportInjurySeverity | null; note: string }>(
+          user.id,
+          "injury-intake",
+        ).then((draft) => {
+          if (!draft) return;
+          if (!prefillRegion && draft.region) setRegion(draft.region);
+          if (draft.severity) setSeverity(draft.severity);
+          if (!prefillNote && draft.note) setNote(draft.note);
+        });
+      }
     }
-  }, [open, prefillRegion, prefillNote]);
+  }, [open, prefillRegion, prefillNote, user?.id]);
+
+  // Autosave draft whenever any field changes while dialog is open.
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    writeDraftSlot(user.id, "injury-intake", { region, severity, note });
+  }, [open, user?.id, region, severity, note]);
 
   const canSubmit = !!user && !!region && !!severity && !busy;
 
@@ -85,6 +104,7 @@ export function ReportInjuryDialog({
         queryClient: qc,
       });
       toast.success("Got it — Hammer is planning around this.");
+      if (user?.id) clearDraftSlot(user.id, "injury-intake");
       onReported?.(eventId);
       onOpenChange(false);
     } catch (e) {
@@ -176,14 +196,18 @@ export function ReportInjuryDialog({
             Only you, a parent, or a clinician can clear an injury (RR-6).
           </p>
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                toast.success("Saved. Resume any time.");
+                onOpenChange(false);
+              }}
               disabled={busy}
             >
-              Cancel
+              <LogOut className="mr-1.5 h-3.5 w-3.5" />
+              Save & exit
             </Button>
             <Button size="sm" onClick={submit} disabled={!canSubmit}>
               {busy ? "Saving…" : "Report it"}

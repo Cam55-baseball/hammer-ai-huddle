@@ -18,6 +18,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
+import { writeDraftSlot } from "@/lib/onboarding/draftStore";
 
 
 const STEPS = [
@@ -153,7 +154,13 @@ export default function AthleteOnboarding() {
         : "incomplete-onboarding";
 
   return (
-    <AthleteOnboardingShell stepIndex={step} steps={STEPS}>
+    <AthleteOnboardingShell
+      stepIndex={step}
+      steps={STEPS}
+      onSaveAndExit={() => {
+        if (user?.id) writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
+      }}
+    >
       <HammerOnboardingPresence
         state={onboardingState}
         lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
