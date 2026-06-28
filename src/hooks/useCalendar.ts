@@ -230,6 +230,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         scheduledPracticeRes,
         gamePlanSkipsRes,
         calendarSkipItemsRes,
+        gamesRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -295,6 +296,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .from('calendar_skipped_items')
           .select('item_id, item_type, skip_days')
           .eq('user_id', user.id),
+
+        // Games (regular + tournaments, includes AI-imported rows)
+        (supabase
+          .from('games' as any)
+          .select('id, game_date, opponent_name, venue, status, game_type, sport, game_summary')
+          .eq('user_id', user.id)
+          .gte('game_date', startStr)
+          .lte('game_date', endStr) as any),
       ]);
 
       // Build game plan skip set: "taskId:date" for fast lookup
@@ -348,6 +357,42 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             editable: true,
             deletable: true,
             sport: event.sport || undefined,
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
+        });
+      }
+
+      // Process games (regular + tournaments). Color imported games/tournaments
+      // distinctly so athletes can tell what was added by the AI importer
+      // versus what they added manually.
+      if (gamesRes?.data) {
+        (gamesRes.data as any[]).forEach((g) => {
+          const dateKey: string | undefined = g.game_date;
+          if (!dateKey) return;
+          if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+          const summary = (g.game_summary ?? {}) as Record<string, any>;
+          const isImported = summary?.source === 'ai_schedule_import';
+          const isTournament = g.game_type === 'tournament' || summary?.kind === 'tournament_day';
+          const baseTitle: string = summary?.title || g.opponent_name || (isTournament ? 'Tournament' : 'Game');
+          const color = isTournament ? '#a855f7' : '#ef4444'; // violet for tournaments, red for games
+          const calEvent: CalendarEvent = {
+            id: `game-${g.id}`,
+            date: dateKey,
+            title: isImported ? `${baseTitle} (Imported)` : baseTitle,
+            description: [
+              g.venue ? `Venue: ${g.venue}` : null,
+              summary?.time_local ? `Time: ${summary.time_local}` : null,
+              summary?.source_snippet ? `Source: ${summary.source_snippet}` : null,
+            ].filter(Boolean).join('\n') || undefined,
+            startTime: summary?.time_local ?? null,
+            type: 'athlete_event',
+            source: isTournament ? 'tournament' : 'game',
+            color,
+            icon: Target,
+            editable: false,
+            deletable: false,
+            sport: g.sport || undefined,
           };
           calEvent.orderKey = getOrderKey(calEvent);
           aggregatedEvents[dateKey].push(calEvent);

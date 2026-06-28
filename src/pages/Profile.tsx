@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ function PracticeIntelligenceSections() {
 }
 
 export default function Profile() {
+  useRequireAuth();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
@@ -134,19 +136,14 @@ export default function Profile() {
 
   useEffect(() => {
     if (authLoading || ownerLoading || !isAuthStable) return;
-    
-    if (!user && !session) {
-      navigate("/auth", { replace: true });
-    } else if (user) {
-      // Check if viewing another user's profile
-      if (viewingUserId && viewingUserId !== user.id) {
-        setViewingOtherProfile(true);
-      } else {
-        setViewingOtherProfile(false);
-      }
-      fetchProfile(viewingUserId || undefined);
+    if (!user) return; // useRequireAuth handles eviction with a stable re-check
+    if (viewingUserId && viewingUserId !== user.id) {
+      setViewingOtherProfile(true);
+    } else {
+      setViewingOtherProfile(false);
     }
-  }, [authLoading, ownerLoading, user, navigate, viewingUserId]);
+    fetchProfile(viewingUserId || undefined);
+  }, [authLoading, ownerLoading, isAuthStable, user, viewingUserId]);
 
   useEffect(() => {
     const checkFollowRelationship = async () => {

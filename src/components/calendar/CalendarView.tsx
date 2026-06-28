@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toggle } from '@/components/ui/toggle';
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, Filter } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Filter, Upload } from 'lucide-react';
 import { 
   format, 
   startOfMonth, 
@@ -29,6 +29,7 @@ import { AddCalendarEventDialog } from './AddCalendarEventDialog';
 import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
 import { SeasonStatusSelector } from './SeasonStatusSelector';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
+import { SeasonScheduleImporterDialog } from '@/components/hammer/SeasonScheduleImporterDialog';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
@@ -75,6 +76,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [daySheetOpen, setDaySheetOpen] = useState(false);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
+  const [importerOpen, setImporterOpen] = useState(false);
   const [filters, setFilters] = useState<CalendarFilters>(getInitialFilters);
   
   const { events: legacyEvents, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
@@ -230,6 +232,14 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             
             <div className="flex items-center gap-2">
               <SchedulePracticeDialog />
+              <Button
+                variant="outline"
+                onClick={() => setImporterOpen(true)}
+                className="gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                {t('calendar.importSchedule', 'Import schedule')}
+              </Button>
               <Button
                 onClick={() => {
                   setAddEventDate(new Date());
@@ -519,6 +529,14 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
           return success;
         }}
         sport={selectedSport}
+      />
+
+      <SeasonScheduleImporterDialog
+        open={importerOpen}
+        onOpenChange={(o) => {
+          setImporterOpen(o);
+          if (!o) refetch();
+        }}
       />
     </div>
   );
