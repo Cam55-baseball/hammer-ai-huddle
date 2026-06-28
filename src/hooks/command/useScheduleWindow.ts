@@ -18,11 +18,27 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+export type ScheduleKind =
+  | "game"
+  | "tournament"
+  | "practice"
+  | "team_practice"
+  | "camp"
+  | "travel"
+  | "other";
+
 export interface ScheduleSlot {
-  kind: "game" | "practice";
+  kind: ScheduleKind;
   date: string; // YYYY-MM-DD
   daysUntil: number; // 0 = today, 1 = tomorrow, …
   label: string;
+}
+
+export interface TournamentWindow {
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  dayIndex: number; // 1-based, relative to today (0 if today is not inside)
 }
 
 export interface ScheduleWindow {
@@ -34,12 +50,17 @@ export interface ScheduleWindow {
   /** Slot collections within the next 7 days. */
   today: ScheduleSlot[];
   tomorrow: ScheduleSlot[];
-  /** First competition (game) within the next 7 days, if any. */
+  /** Slots indexed by ISO date for the next 7 days. */
+  slotsByDate: Record<string, ScheduleSlot[]>;
+  /** First competition (game / tournament) within the next 7 days, if any. */
   upcomingCompetition: ScheduleSlot | null;
+  /** Tournament window covering today, if any. */
+  tournamentWindow: TournamentWindow | null;
   /** Total slots in the window. */
   totalGames: number;
   totalPractices: number;
 }
+
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
