@@ -156,7 +156,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   // Fetch legacy events when month changes (derived layer fetches itself via React Query)
   useEffect(() => {
     fetchEventsForRange(fetchStart, fetchEnd);
-  }, [currentMonth, fetchEventsForRange, fetchStart, fetchEnd]);
+  }, [fetchStart, fetchEnd, fetchEventsForRange]);
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
