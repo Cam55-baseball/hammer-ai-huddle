@@ -530,6 +530,14 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
         }}
         sport={selectedSport}
       />
+
+      <SeasonScheduleImporterDialog
+        open={importerOpen}
+        onOpenChange={(o) => {
+          setImporterOpen(o);
+          if (!o) refetch();
+        }}
+      />
     </div>
   );
 }
