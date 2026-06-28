@@ -233,6 +233,14 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             <div className="flex items-center gap-2">
               <SchedulePracticeDialog />
               <Button
+                variant="outline"
+                onClick={() => setImporterOpen(true)}
+                className="gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                {t('calendar.importSchedule', 'Import schedule')}
+              </Button>
+              <Button
                 onClick={() => {
                   setAddEventDate(new Date());
                   setAddEventOpen(true);
