@@ -217,7 +217,7 @@ export const OwnerSidebar = ({
     return (
       <div key={`${opts.pinned ? "pin-" : ""}${item.id}`} className="group/item relative">
         <button
-          onClick={() => handleSectionClick(item.id)}
+          onClick={() => handleSectionClick(item.id, item.href)}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
             isActive
