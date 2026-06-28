@@ -52,19 +52,27 @@ interface Props {
 }
 
 export function SeasonDatesDialog({ open, onOpenChange }: Props) {
-  const { data, updateSeasonStatus, isUpdating } = useSeasonStatus();
+  const s = useSeasonStatus();
   const qc = useQueryClient();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const initial = useMemo(
     () => ({
-      preseason_start_date: data?.preseason_start_date ?? null,
-      preseason_end_date: data?.preseason_end_date ?? null,
-      in_season_start_date: data?.in_season_start_date ?? null,
-      in_season_end_date: data?.in_season_end_date ?? null,
-      post_season_start_date: data?.post_season_start_date ?? null,
-      post_season_end_date: data?.post_season_end_date ?? null,
+      preseason_start_date: s.preseasonStartDate,
+      preseason_end_date: s.preseasonEndDate,
+      in_season_start_date: s.inSeasonStartDate,
+      in_season_end_date: s.inSeasonEndDate,
+      post_season_start_date: s.postSeasonStartDate,
+      post_season_end_date: s.postSeasonEndDate,
     }),
-    [data],
+    [
+      s.preseasonStartDate,
+      s.preseasonEndDate,
+      s.inSeasonStartDate,
+      s.inSeasonEndDate,
+      s.postSeasonStartDate,
+      s.postSeasonEndDate,
+    ],
   );
 
   const [draft, setDraft] = useState(initial);
