@@ -196,14 +196,18 @@ export function ReportInjuryDialog({
             Only you, a parent, or a clinician can clear an injury (RR-6).
           </p>
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                toast.success("Saved. Resume any time.");
+                onOpenChange(false);
+              }}
               disabled={busy}
             >
-              Cancel
+              <LogOut className="mr-1.5 h-3.5 w-3.5" />
+              Save & exit
             </Button>
             <Button size="sm" onClick={submit} disabled={!canSubmit}>
               {busy ? "Saving…" : "Report it"}
