@@ -215,12 +215,12 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
       {/* Header */}
       <Card className="border-primary/30 bg-secondary">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-primary">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="p-2.5 rounded-lg bg-primary shrink-0">
                 <CalendarDays className="h-6 w-6 text-primary-foreground" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight uppercase">
                   {t('calendar.title', 'Calendar')}
                 </h1>
@@ -229,13 +229,13 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
+
+            <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
               <SchedulePracticeDialog />
               <Button
                 variant="outline"
                 onClick={() => setImporterOpen(true)}
-                className="gap-2"
+                className="gap-2 shrink-0 whitespace-nowrap"
               >
                 <Upload className="h-4 w-4" />
                 {t('calendar.importSchedule', 'Import schedule')}
@@ -245,7 +245,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
                   setAddEventDate(new Date());
                   setAddEventOpen(true);
                 }}
-                className="gap-2"
+                className="gap-2 shrink-0 whitespace-nowrap"
               >
                 <Plus className="h-4 w-4" />
                 {t('calendar.addEvent', 'Add Event')}

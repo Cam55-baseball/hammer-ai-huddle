@@ -87,6 +87,14 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   async function handleAnalyze() {
     setParsing(true);
     setEvents([]);
+    const timeoutMs = 45_000;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error("Hammer AI didn't respond in time — please try again.")),
+        timeoutMs,
+      );
+    });
     try {
       const todayISO = new Date().toISOString().slice(0, 10);
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -105,8 +113,16 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         const { base64, mimeType } = await downscaleImage(imageFile);
         payload = { mode: "image", imageBase64: base64, mimeType, todayISO, timezone };
       }
-      const { data, error } = await supabase.functions.invoke("parse-season-schedule", { body: payload });
-      if (error) throw error;
+      const invokePromise = supabase.functions.invoke("parse-season-schedule", { body: payload });
+      const { data, error } = (await Promise.race([invokePromise, timeoutPromise])) as Awaited<typeof invokePromise>;
+      if (error) {
+        console.error("[SeasonScheduleImporter] invoke error", { mode, error });
+        throw new Error(error.message || "Hammer AI request failed");
+      }
+      if (data?.error) {
+        console.error("[SeasonScheduleImporter] gateway error", data);
+        throw new Error(String(data.error));
+      }
       const parsed = (data?.events ?? []) as ParsedScheduleEvent[];
       if (!parsed.length) {
         toast.warning("Hammer couldn't find any events. Try cleaner text or a sharper photo.");
@@ -117,8 +133,10 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
       toast.success(`Found ${parsed.length} event${parsed.length === 1 ? "" : "s"}. Review and confirm below.`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Parse failed";
+      console.error("[SeasonScheduleImporter] failed", { mode, msg });
       toast.error(msg);
     } finally {
+      if (timer) clearTimeout(timer);
       setParsing(false);
     }
   }
