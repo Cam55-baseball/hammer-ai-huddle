@@ -86,7 +86,7 @@ export function HammerScheduleStrip() {
               size="sm"
               variant="outline"
               className="h-7 text-[11px] gap-1"
-              onClick={() => navigate("/calendar")}
+              onClick={() => setImporterOpen(true)}
             >
               <Settings2 className="h-3 w-3" />
               Season dates
@@ -104,6 +104,7 @@ export function HammerScheduleStrip() {
         </CardContent>
       </Card>
       <TellHammerDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <SeasonScheduleImporterDialog open={importerOpen} onOpenChange={setImporterOpen} />
     </>
   );
 }
