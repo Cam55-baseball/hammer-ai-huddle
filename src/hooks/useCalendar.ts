@@ -363,6 +363,42 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       }
 
+      // Process games (regular + tournaments). Color imported games/tournaments
+      // distinctly so athletes can tell what was added by the AI importer
+      // versus what they added manually.
+      if (gamesRes?.data) {
+        (gamesRes.data as any[]).forEach((g) => {
+          const dateKey: string | undefined = g.game_date;
+          if (!dateKey) return;
+          if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+          const summary = (g.game_summary ?? {}) as Record<string, any>;
+          const isImported = summary?.source === 'ai_schedule_import';
+          const isTournament = g.game_type === 'tournament' || summary?.kind === 'tournament_day';
+          const baseTitle: string = summary?.title || g.opponent_name || (isTournament ? 'Tournament' : 'Game');
+          const color = isTournament ? '#a855f7' : '#ef4444'; // violet for tournaments, red for games
+          const calEvent: CalendarEvent = {
+            id: `game-${g.id}`,
+            date: dateKey,
+            title: isImported ? `${baseTitle} (Imported)` : baseTitle,
+            description: [
+              g.venue ? `Venue: ${g.venue}` : null,
+              summary?.time_local ? `Time: ${summary.time_local}` : null,
+              summary?.source_snippet ? `Source: ${summary.source_snippet}` : null,
+            ].filter(Boolean).join('\n') || undefined,
+            startTime: summary?.time_local ?? null,
+            type: 'athlete_event',
+            source: isTournament ? 'tournament' : 'game',
+            color,
+            icon: Target,
+            editable: false,
+            deletable: false,
+            sport: g.sport || undefined,
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
+        });
+      }
+
       // Custom activity templates + logs are now produced by the derived
       // projection layer (see useCalendarProjection); legacy processing here
       // was removed to avoid duplicate fetches and double-rendering.
