@@ -79,6 +79,13 @@ const tiles = [
     description: "Learn elite baserunning decisions and test your game IQ",
     getRoute: () => "/baserunning-iq",
   },
+  {
+    key: "game-iq",
+    icon: Brain,
+    label: "Game IQ 101",
+    description: "Pitcher PFP, defensive cutoffs, offensive situations — full Three B's mastery.",
+    getRoute: (sport: string) => `/iq?sport=${sport}`,
+  },
 ] as const;
 
 export default function GoldenTwoWay() {
