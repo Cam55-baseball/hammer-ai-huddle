@@ -783,6 +783,7 @@ export type Database = {
           last_authored_by: string | null
           lifting_age_years: number | null
           lifting_history: Json | null
+          onboarding_draft: Json | null
           other_sports: string[] | null
           position_primary: string | null
           position_secondary: string[] | null
@@ -816,6 +817,7 @@ export type Database = {
           last_authored_by?: string | null
           lifting_age_years?: number | null
           lifting_history?: Json | null
+          onboarding_draft?: Json | null
           other_sports?: string[] | null
           position_primary?: string | null
           position_secondary?: string[] | null
@@ -849,6 +851,7 @@ export type Database = {
           last_authored_by?: string | null
           lifting_age_years?: number | null
           lifting_history?: Json | null
+          onboarding_draft?: Json | null
           other_sports?: string[] | null
           position_primary?: string | null
           position_secondary?: string[] | null
