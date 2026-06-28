@@ -1326,6 +1326,3 @@ export function buildHammerDailyPlan(
     scheduleSignal,
   };
 }
-
-  };
-}
