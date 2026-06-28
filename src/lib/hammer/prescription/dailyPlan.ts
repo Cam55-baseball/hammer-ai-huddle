@@ -1166,21 +1166,166 @@ function applyCategoryGoalOrdering(
   return [...head, ...middle, ...tail];
 }
 
-export function buildHammerDailyPlan(ctx: HammerAthleteContext): HammerDailyPlanResult {
+/**
+ * Schedule modulator — reshape modality blocks around scheduled
+ * games / tournaments / camps / travel / team practices.
+ *
+ * Pure: never authors organism truth; only rewrites the prescription
+ * envelope (status / drills / durationMin / why / roadmapReason).
+ */
+const ALL_SKILL_MODALITIES: ReadonlyArray<ModalityKey> = [
+  "speed",
+  "strength",
+  "hitting",
+  "throwing",
+  "defense",
+  "baserunning",
+];
+
+function suppressBlock(
+  b: PrescribedBlock,
+  rationale: string,
+  opts?: { keepActivation?: boolean },
+): PrescribedBlock {
+  const keep = opts?.keepActivation === true;
+  return {
+    ...b,
+    status: "suppressed" as BlockStatus,
+    drills: keep ? b.drills.slice(0, 1) : [],
+    steps: keep ? b.steps.slice(0, 1) : [],
+    durationMin: keep ? Math.min(b.durationMin ?? 0, 10) : 0,
+    why: `${rationale} ${b.why}`,
+    roadmapReason: rationale,
+    gamePlanTemplate: keep ? b.gamePlanTemplate : null,
+  };
+}
+
+function annotate(b: PrescribedBlock, rationale: string): PrescribedBlock {
+  return {
+    ...b,
+    why: `${rationale} ${b.why}`,
+    roadmapReason: `${rationale} ${b.roadmapReason}`,
+  };
+}
+
+function applyScheduleModulation(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  signal: ScheduleSignal,
+): ReadonlyArray<PrescribedBlock> {
+  if (signal.postureToday === "normal") return blocks;
+
+  const rationale = signal.rationale;
+
+  switch (signal.postureToday) {
+    case "game":
+    case "tournament": {
+      return blocks.map((b) => {
+        switch (b.modality) {
+          case "warmup":
+            return annotate(b, rationale);
+          case "fueling":
+          case "recovery":
+            return annotate(b, rationale);
+          case "throwing":
+          case "hitting":
+            // Allow a brief activation set on game day; full tournament-day suppression.
+            return signal.postureToday === "tournament"
+              ? suppressBlock(b, rationale)
+              : suppressBlock(b, rationale, { keepActivation: true });
+          case "speed":
+          case "strength":
+          case "defense":
+          case "baserunning":
+            return suppressBlock(b, rationale);
+          default:
+            return b;
+        }
+      });
+    }
+    case "camp": {
+      return blocks.map((b) =>
+        b.modality === "warmup" || b.modality === "fueling" || b.modality === "recovery"
+          ? annotate(b, rationale)
+          : suppressBlock(b, rationale),
+      );
+    }
+    case "travel": {
+      return blocks.map((b) => {
+        if (b.modality === "warmup" || b.modality === "fueling" || b.modality === "recovery") {
+          return annotate(b, rationale);
+        }
+        if (b.modality === "speed" || b.modality === "strength") {
+          return suppressBlock(b, rationale);
+        }
+        return suppressBlock(b, rationale, { keepActivation: true });
+      });
+    }
+    case "team_practice": {
+      return blocks.map((b) => {
+        if (b.modality === "hitting" || b.modality === "throwing" || b.modality === "defense" || b.modality === "baserunning") {
+          return suppressBlock(b, rationale, { keepActivation: true });
+        }
+        if (b.modality === "strength") {
+          return suppressBlock(b, rationale);
+        }
+        return annotate(b, rationale);
+      });
+    }
+    case "taper": {
+      // Game/tournament tomorrow — compress volume, keep skill activations sharp.
+      return blocks.map((b) => {
+        if (b.modality === "strength") {
+          return suppressBlock(b, rationale, { keepActivation: true });
+        }
+        if (b.modality === "speed") {
+          return annotate(
+            { ...b, durationMin: Math.min(b.durationMin ?? 0, 15) },
+            rationale,
+          );
+        }
+        return annotate(b, rationale);
+      });
+    }
+    default:
+      return blocks;
+  }
+}
+
+export function buildHammerDailyPlan(
+  ctx: HammerAthleteContext,
+  scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
+): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
   const guarded = applyMinorParentSupremacy(rawBlocks, proj);
-  const blocks = applyCategoryGoalOrdering(guarded, proj);
+  const ordered = applyCategoryGoalOrdering(guarded, proj);
+  // Schedule modulation runs AFTER goal ordering so the calendar can
+  // visibly bend today's plan around games/tournaments/camps/travel.
+  // It still runs BEFORE injury / parent-supremacy ceilings have any
+  // further effect — those were already applied above and remain
+  // dominant because suppressed blocks stay suppressed.
+  const blocks = applyScheduleModulation(ordered, scheduleSignal);
   // Lineage breadcrumb (dev-only, harmless in prod): summarises which ranking drove ordering.
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
     console.debug("[dailyPlan] ordered by ranked goals →", summarizeGoals(proj.categoryGoals));
+  }
+  if (scheduleSignal.postureToday !== "normal" && typeof console !== "undefined" && import.meta.env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.debug(
+      `[dailyPlan] schedule posture=${scheduleSignal.postureToday} — ${scheduleSignal.rationale}`,
+    );
   }
   return {
     blocks,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
     speedFocus: speed,
+    schedulePosture: scheduleSignal.postureToday,
+    scheduleSignal,
+  };
+}
+
   };
 }
