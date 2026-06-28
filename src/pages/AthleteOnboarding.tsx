@@ -403,6 +403,13 @@ export default function AthleteOnboarding() {
         </section>
       )}
 
+      {step === STEP_REVIEW && (
+        <ReviewAnswersStep
+          onEdit={handleEditFromReview}
+          onFinish={() => setStep(STEP_DONE)}
+        />
+      )}
+
       {step === STEP_DONE && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">You're set up.</h2>
@@ -411,7 +418,10 @@ export default function AthleteOnboarding() {
             events you generate, the more your Command Center fills in — always
             with confidence and missingness visible.
           </p>
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => setStep(STEP_REVIEW)}>
+              Review answers
+            </Button>
             <Button onClick={() => navigate("/command")}>
               Open Command Center <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
