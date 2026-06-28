@@ -190,7 +190,12 @@ export const OwnerSidebar = ({
     });
   };
 
-  const handleSectionClick = (section: OwnerSection) => {
+  const handleSectionClick = (section: OwnerSection, href?: string) => {
+    if (href) {
+      navigate(href);
+      if (isMobile && onMobileOpenChange) onMobileOpenChange(false);
+      return;
+    }
     onSectionChange(section);
     if (isMobile && onMobileOpenChange) onMobileOpenChange(false);
   };
