@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
