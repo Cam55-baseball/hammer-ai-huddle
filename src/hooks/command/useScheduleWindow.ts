@@ -114,6 +114,7 @@ export function useScheduleWindow(): ScheduleWindow {
         .eq("user_id", uid!)
         .gte("scheduled_date", start)
         .lte("scheduled_date", end)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
         .order("scheduled_date", { ascending: true });
       return (data ?? []) as Array<{
         id: string;
