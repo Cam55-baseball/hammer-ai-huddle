@@ -1,29 +1,33 @@
-## Plan: stop Calendar import from kicking users to login
+## Goal
+Stop the Import-schedule paste flow from kicking you to login, and make every auth/session blip visible while it happens.
 
-### Goal
-Users must be able to open Calendar, click **Import schedule**, choose **Paste text**, type/paste schedule text, analyze it, and review/save events without being sent to `/auth`.
+## Changes
 
-### What I will change
-1. **Make auth eviction impossible while editing the importer**
-   - Add a small app-wide "user is actively editing" signal for focused inputs/textareas, including the schedule paste box.
-   - Teach `AuthContext` and `useRequireAuth` to treat that signal as a hard block against redirecting to login.
+### 1. Paste-specific focus guard (`SeasonScheduleImporterDialog.tsx`)
+- Wrap the paste-mode textarea + its container in a hardened "paste guard":
+  - `onFocus`, `onInput`, `onChange`, `onKeyDown`, `onPaste`, `onCompositionStart/Update/End` each refresh `noteProtectedEditing(60_000)`.
+  - On focus, start a 1-second heartbeat interval that keeps re-arming the protected window until blur. Cleared on blur/unmount/dialog close.
+  - Mark the textarea, its wrapping `<div>`, and the dialog content with `data-protected-editing="true"` so the active-element fallback in `protectedEditing.ts` matches even mid-React-rerender.
+- Same treatment for the review-step inline `<Input>` edit fields (title/location/date), since they share the eviction risk.
 
-2. **Stop Calendar from unmounting during transient auth/network blips**
-   - Change `Calendar.tsx` so once Calendar has had a valid user in the current mount, a temporary `user === null` does not replace the page with the loading/auth path.
-   - Keep the importer dialog mounted and preserve typed text through backend/realtime reconnect noise.
+### 2. Visible session telemetry during paste/import
+- Add a tiny logger `src/lib/auth/authTelemetry.ts` that:
+  - Logs `[paste-import]` events to `console.info` with a stable tag + payload (`{ phase, hasSession, userId, expiresAt, protectedActive }`).
+  - Optionally surfaces a `toast.error` / `toast.warning` for adverse transitions (no session, expiring <60s, signed-out event during import).
+- In `SeasonScheduleImporterDialog.tsx`:
+  - On dialog open, on textarea focus, on Analyze click, on Analyze success/failure, and on Save: call the logger with current `supabase.auth.getSession()` snapshot.
+  - Subscribe to `supabase.auth.onAuthStateChange` for the lifetime of the dialog. Log every event; if `SIGNED_OUT` or session=null arrives while the dialog is open, fire a visible `toast.error("Session blip detected during import — kept your text safe")` and re-arm the protected window instead of letting the dialog close.
+  - Before calling the Edge Function, snapshot the access token; if `getSession()` returns null at that moment, show `toast.error("No active session — please sign in again")` and abort gracefully (no redirect from inside the dialog).
 
-3. **Harden the schedule importer itself**
-   - Mark the paste textarea and review edit fields as protected editing surfaces.
-   - Snapshot the current session before calling Hammer AI; if the auth context blips during analysis, do not close the dialog or redirect.
-   - Keep clear error text if the AI function fails, instead of leaving the user spinning.
+### 3. No changes to auth eviction rules
+- `useRequireAuth` / `AuthContext` already honor `isProtectedEditingActive()`. The heartbeat + data-attribute changes above guarantee that signal stays true throughout paste/typing/analysis, so no global auth changes are needed.
 
-4. **Expand regression coverage**
-   - Update `tests/e2e/calendar/run.mjs` with a new scenario specifically for **Import schedule → Paste text → slow typing/paste → Analyze**.
-   - Assert the URL never becomes `/auth`, the textarea keeps its content, and the user remains on Calendar even during synthetic auth/network blips.
+### 4. Verification
+- Manual: open Calendar → Import schedule → Paste text, type slowly, paste a large block, click Analyze. Confirm: no `/auth` redirect, textarea content preserved, console shows `[paste-import]` lifecycle, and any synthetic auth blip surfaces a toast instead of an eviction.
+- Extend `tests/e2e/calendar/run.mjs` S5 to also assert (a) `[paste-import]` log lines are emitted and (b) a forced `SIGNED_OUT` event during paste produces a toast and does NOT navigate away.
 
-5. **Deliver verification report**
-   - Update `.lovable/phase-57-calendar-stability.md` with the new root cause, fix, and regression scenario.
-
-### Technical notes
-- The prior fix only checked `document.activeElement` at one moment. The current bug can still happen when the dialog remounts, focus shifts, or the auth context temporarily reports no user before the active element check catches typing.
-- The fix will move from "check focus once" to "maintain an explicit protected-editing state," which is safer for paste boxes, dialogs, mobile keyboards, and analysis requests.
+## Files touched
+- `src/components/hammer/SeasonScheduleImporterDialog.tsx` — paste guard wiring, auth listener, toasts, logging hooks.
+- `src/lib/auth/authTelemetry.ts` *(new)* — small logger + toast helper for paste-import phase events.
+- `tests/e2e/calendar/run.mjs` — extend S5 with telemetry + forced-signout assertions.
+- `.lovable/phase-57-calendar-stability.md` — append "Paste-specific guard + telemetry" subsection.
