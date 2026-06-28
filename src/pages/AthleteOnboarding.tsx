@@ -154,7 +154,13 @@ export default function AthleteOnboarding() {
         : "incomplete-onboarding";
 
   return (
-    <AthleteOnboardingShell stepIndex={step} steps={STEPS}>
+    <AthleteOnboardingShell
+      stepIndex={step}
+      steps={STEPS}
+      onSaveAndExit={() => {
+        if (user?.id) writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
+      }}
+    >
       <HammerOnboardingPresence
         state={onboardingState}
         lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
