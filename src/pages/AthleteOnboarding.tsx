@@ -68,11 +68,14 @@ const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
  */
 export default function AthleteOnboarding() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading, isAuthStable } = useAuth();
   const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
   const { createEvent } = useAthleteEvents();
 
   const [step, setStep] = useState(0);
+  /** When set, the next save returns to STEP_REVIEW instead of advancing linearly. */
+  const [editReturnTo, setEditReturnTo] = useState<number | null>(null);
   const [dayType, setDayType] = useState<DayType>("training");
   const [emitting, setEmitting] = useState(false);
   const [emittedEventId, setEmittedEventId] = useState<string | null>(null);
@@ -106,16 +109,68 @@ export default function AthleteOnboarding() {
     })();
   }, [user]);
 
-  // Skip the flow only when the athlete already finished it (schedule + notifs).
-  // Bootstrap events alone (age_observed) no longer count.
+  // Deep-link routing: ?step=review jumps to the review summary; ?edit=<key>
+  // jumps directly to that step and marks it as an edit (save returns to review).
+  const urlRoutedRef = useRef(false);
   useEffect(() => {
-    if (!stateLoading && hasCompletedOnboarding && step < STEP_NOTIFICATIONS)
+    if (urlRoutedRef.current) return;
+    const editKey = searchParams.get("edit") as ReviewEditKey | null;
+    const stepParam = searchParams.get("step");
+    if (editKey && editKey in EDIT_TARGETS) {
+      urlRoutedRef.current = true;
+      setStep(EDIT_TARGETS[editKey]);
+      setEditReturnTo(STEP_REVIEW);
+    } else if (stepParam === "review") {
+      urlRoutedRef.current = true;
+      setStep(STEP_REVIEW);
+    }
+  }, [searchParams]);
+
+  // Skip the flow only when the athlete already finished it AND we're not
+  // explicitly reviewing/editing. This lets completed users come back via
+  // /onboarding/athlete?step=review or ?edit=<key> to update answers.
+  useEffect(() => {
+    const isReviewing =
+      searchParams.has("edit") ||
+      searchParams.get("step") === "review" ||
+      step >= STEP_REVIEW;
+    if (!stateLoading && hasCompletedOnboarding && !isReviewing && step < STEP_NOTIFICATIONS) {
       navigate("/command", { replace: true });
-  }, [stateLoading, hasCompletedOnboarding, navigate, step]);
+    }
+  }, [stateLoading, hasCompletedOnboarding, navigate, step, searchParams]);
 
 
-  const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+  /** Advance, OR if we're in edit-mode, jump back to Review and clear the flag. */
+  const goNext = () => {
+    if (editReturnTo !== null) {
+      const target = editReturnTo;
+      setEditReturnTo(null);
+      setSearchParams({ step: "review" }, { replace: true });
+      setStep(target);
+      return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+  const goBack = () => {
+    if (editReturnTo !== null) {
+      const target = editReturnTo;
+      setEditReturnTo(null);
+      setSearchParams({ step: "review" }, { replace: true });
+      setStep(target);
+      return;
+    }
+    setStep((s) => Math.max(s - 1, 0));
+  };
+
+  /** Review → Edit jump. Adds a return marker so save bounces back here. */
+  const handleEditFromReview = useCallback(
+    (key: ReviewEditKey) => {
+      setEditReturnTo(STEP_REVIEW);
+      setSearchParams({ edit: key }, { replace: true });
+      setStep(EDIT_TARGETS[key]);
+    },
+    [setSearchParams],
+  );
 
   const handleEmitSchedule = async () => {
     if (!user?.id) return;
