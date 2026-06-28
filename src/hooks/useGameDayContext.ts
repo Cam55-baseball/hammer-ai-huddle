@@ -60,30 +60,13 @@ export function useGameDayContext(): GameDayContext {
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data } = await (supabase as unknown as {
-        from: (t: string) => {
-          select: (c: string) => {
-            eq: (k: string, v: string) => {
-              gte: (k: string, v: string) => {
-                lte: (
-                  k: string,
-                  v: string,
-                ) => {
-                  order: (
-                    k: string,
-                    o: { ascending: boolean },
-                  ) => Promise<{ data: Array<{ game_date: string }> | null }>;
-                };
-              };
-            };
-          };
-        };
-      })
+      const { data } = await (supabase as any)
         .from("games")
         .select("game_date")
         .eq("user_id", user!.id)
         .gte("game_date", start7dAgo)
         .lte("game_date", startToday)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
         .order("game_date", { ascending: false });
       return (data ?? []) as Array<{ game_date: string }>;
     },

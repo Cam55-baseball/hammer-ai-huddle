@@ -91,6 +91,7 @@ export function useScheduleWindow(): ScheduleWindow {
         .eq("user_id", uid!)
         .gte("game_date", start)
         .lte("game_date", end)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
         .order("game_date", { ascending: true });
       return (data ?? []) as Array<{
         id: string;
@@ -113,6 +114,7 @@ export function useScheduleWindow(): ScheduleWindow {
         .eq("user_id", uid!)
         .gte("scheduled_date", start)
         .lte("scheduled_date", end)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
         .order("scheduled_date", { ascending: true });
       return (data ?? []) as Array<{
         id: string;
