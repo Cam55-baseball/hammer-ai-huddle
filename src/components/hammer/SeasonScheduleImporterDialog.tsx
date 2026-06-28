@@ -130,10 +130,13 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
       );
     });
     try {
+      void logPasteImportPhase({ phase: "analyze-start", detail: { mode } });
       const todayISO = new Date().toISOString().slice(0, 10);
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const { data: sessionCheck } = await supabase.auth.getSession();
       if (!sessionCheck.session?.user) {
+        void logPasteImportPhase({ phase: "analyze-no-session" });
+        toast.error("No active sign-in. Stay here — try Analyze again in a moment.", { duration: 6000 });
         throw new Error("Your sign-in is reconnecting. Keep this open and try Analyze again in a moment.");
       }
       let payload: Record<string, unknown>;
