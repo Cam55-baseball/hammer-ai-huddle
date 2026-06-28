@@ -7,7 +7,6 @@
  * Read-only projector — never authors organism truth.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +26,6 @@ const PHASE_TONE: Record<string, string> = {
 export function HammerScheduleStrip() {
   const ctx = useGameDayContext();
   const { updateSeasonStatus } = useSeasonStatus();
-  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importerOpen, setImporterOpen] = useState(false);
 
@@ -77,7 +75,7 @@ export function HammerScheduleStrip() {
               size="sm"
               variant="outline"
               className="h-7 text-[11px] gap-1"
-              onClick={() => navigate("/calendar")}
+              onClick={() => setImporterOpen(true)}
             >
               <CalendarPlus className="h-3 w-3" />
               Add game

@@ -1,11 +1,17 @@
-## Fix: Save & Exit routes to dashboard
+## Goal
+On the Hammer schedule strip, the "Add game" button currently navigates to `/calendar`. Change it so it opens the `SeasonScheduleImporterDialog` in place — identical behavior to the "Season dates" button right next to it.
 
-**Problem:** "Save & exit" in onboarding (and other multi-step flows using `SaveAndExitBar` / `AthleteOnboardingShell`) navigates to `"/"`, which is the marketing/landing page. For unauthenticated-feeling sessions or when auth state is briefly hydrating, that page can bounce users to `/auth`, making it appear they were "kicked back to login."
+## Change
+**File:** `src/components/hammer/HammerScheduleStrip.tsx`
 
-**Change:** Route Save & exit to `/dashboard` (the authenticated home) instead of `/`.
+- Remove the `navigate("/calendar")` handler on the "Add game" button.
+- Reuse the existing `importerOpen` state (already wired for "Season dates") so "Add game" also calls `setImporterOpen(true)`.
+- Drop the now-unused `useNavigate` import if nothing else in the file uses it.
 
-### Edits
-1. `src/components/onboarding/AthleteOnboardingShell.tsx` — change `navigate("/")` in `handleExit` to `navigate("/dashboard")`.
-2. `src/components/common/SaveAndExitBar.tsx` — change default `exitTo = "/"` to `exitTo = "/dashboard"`. Any caller that explicitly passes `exitTo` is preserved.
+No other files change. The importer dialog itself, its paste/photo flow, auth-stable typing guard, and persistence (`useImportScheduleEvents`) already work end-to-end and are unaffected.
 
-No other behavior changes. Draft persistence and toast messaging stay intact.
+## Verification
+- Tap "Add game" on the dashboard schedule strip → `SeasonScheduleImporterDialog` opens (no route change).
+- Paste text or upload a photo → analyze → import succeeds, calendar reflects new games.
+- "Season dates" still opens the same dialog (unchanged).
+- "Tell Hammer what changed" still opens `TellHammerDialog` (unchanged).
