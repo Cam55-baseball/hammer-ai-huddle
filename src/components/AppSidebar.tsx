@@ -243,6 +243,7 @@ export function AppSidebar() {
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
           ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
           { title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Baserunning decision training' },
+          { title: 'Game IQ 101', url: '/iq', icon: Brain, description: 'Every play, every position — Three B\'s' },
         ]
       });
     }
