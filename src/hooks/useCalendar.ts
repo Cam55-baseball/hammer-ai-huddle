@@ -841,23 +841,45 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
   // Import and call useSchedulingService in the consuming component instead.
   // These thin wrappers remain for backward compatibility but delegate to the service.
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
-    if (!user) return false;
-    
     try {
+      // Pre-flight: confirm a live session right now (defeats the
+      // keystroke / token-refresh race that produced silent RLS failures
+      // and parent unmounts when the user was typing in the dialog).
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData?.session?.user?.id ?? user?.id;
+      if (!uid) {
+        try {
+          const { toast } = await import('sonner');
+          toast.error('Session expired — please sign in again to add this event.');
+        } catch {/* toast optional */}
+        return false;
+      }
+
       const { error } = await supabase
         .from('calendar_events')
         .insert({
-          user_id: user.id,
+          user_id: uid,
           ...event,
         });
-      
-      if (error) throw error;
+
+      if (error) {
+        console.error('[useCalendar.addEvent] insert failed', error);
+        try {
+          const { toast } = await import('sonner');
+          toast.error(`Could not add event: ${error.message}`);
+        } catch {/* toast optional */}
+        return false;
+      }
       if (currentRange) {
         await fetchEventsForRange(currentRange.start, currentRange.end);
       }
       return true;
-    } catch (error) {
-      console.error('Error adding calendar event:', error);
+    } catch (error: any) {
+      console.error('[useCalendar.addEvent] unexpected', error);
+      try {
+        const { toast } = await import('sonner');
+        toast.error('Something went wrong adding this event.');
+      } catch {/* toast optional */}
       return false;
     }
   }, [user, currentRange, fetchEventsForRange]);
