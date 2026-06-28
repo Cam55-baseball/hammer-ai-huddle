@@ -21,7 +21,7 @@ export function AthleteOnboardingShell({ stepIndex, steps, children, onSaveAndEx
     } catch (e) {
       toast.error(`Saved locally only — ${e instanceof Error ? e.message : String(e)}`);
     } finally {
-      navigate("/");
+      navigate("/dashboard");
     }
   };
 
