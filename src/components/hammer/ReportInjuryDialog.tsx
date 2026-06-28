@@ -27,6 +27,8 @@ import {
   type ReportInjuryRegionKey,
   type ReportInjurySeverity,
 } from "@/lib/hammer/injury/reportInjury";
+import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
+import { LogOut } from "lucide-react";
 
 interface Props {
   open: boolean;
