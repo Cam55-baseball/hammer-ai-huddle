@@ -30,6 +30,7 @@ const STEPS = [
   "Confirm",
   "Health check",
   "Notifications",
+  "Review",
   "Done",
 ];
 const STEP_WELCOME = 0;
@@ -39,7 +40,17 @@ const STEP_SCHEDULE = 3;
 const STEP_CONFIRM = 4;
 const STEP_INJURY = 5;
 const STEP_NOTIFICATIONS = 6;
-const STEP_DONE = 7;
+const STEP_REVIEW = 7;
+const STEP_DONE = 8;
+
+/** Deep-link edit keys → owning step index. */
+const EDIT_TARGETS: Record<ReviewEditKey, number> = {
+  profile: STEP_PROFILE,
+  goals: STEP_GOALS,
+  schedule: STEP_SCHEDULE,
+  injury: STEP_INJURY,
+  notifications: STEP_NOTIFICATIONS,
+};
 
 const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
   { value: "training", label: "Training", help: "Structured practice / drills" },
