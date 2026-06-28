@@ -531,14 +531,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
         open={addEventOpen}
         onOpenChange={setAddEventOpen}
         date={addEventDate || new Date()}
-        onAdd={useCallback(async (event) => {
-          const success = await addEvent(event);
-          if (success) {
-            setAddEventOpen(false);
-            refetch();
-          }
-          return success;
-        }, [addEvent, refetch])}
+        onAdd={handleAddEvent}
         sport={selectedSport}
       />
 
@@ -549,6 +542,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
           if (!o) refetch();
         }}
       />
+
 
     </div>
   );
