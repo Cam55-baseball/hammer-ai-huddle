@@ -183,25 +183,6 @@ export default function GameReports() {
       stealPct: steals.length ? Math.round((stealSuccess / steals.length) * 100) : 0,
     };
   }, [baserun.data]);
-    const byPos: Record<string, number> = {};
-    (defense.data ?? []).forEach((d) => {
-      const k = d.position ?? "?";
-      byPos[k] = (byPos[k] ?? 0) + 1;
-    });
-    return { total, errors, byPos };
-  }, [defense.data]);
-
-  // Baserunning
-  const brStats = useMemo(() => {
-    const total = (baserun.data ?? []).length;
-    const steals = (baserun.data ?? []).filter((b) => b.event_type === "steal");
-    const stealSuccess = steals.filter((b) => b.result === "safe").length;
-    return {
-      total,
-      steals: steals.length,
-      stealPct: steals.length ? Math.round((stealSuccess / steals.length) * 100) : 0,
-    };
-  }, [baserun.data]);
 
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4 space-y-5">
