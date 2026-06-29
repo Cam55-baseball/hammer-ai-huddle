@@ -86,6 +86,24 @@ export default function GameIq() {
           </Card>
         </div>
 
+        {resume && resume.situationSlug && (
+          <Card className="p-4 flex items-center gap-3 border-emerald-500/40 bg-emerald-500/5">
+            <PlayCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div className="flex-1 text-sm min-w-0">
+              <div className="font-semibold truncate">Pick up where you left off</div>
+              <div className="text-xs text-muted-foreground truncate">
+                {resume.situationTitle || resume.situationSlug}
+              </div>
+            </div>
+            <Button size="sm" onClick={() => navigate(`/iq/${resume.situationSlug}?mode=quiz`)}>
+              Resume
+            </Button>
+            <Button size="icon" variant="ghost" onClick={dismissResume} aria-label="Dismiss">
+              <X className="h-4 w-4" />
+            </Button>
+          </Card>
+        )}
+
         {dueCount > 0 && (
           <Card className="p-4 flex items-center gap-3 border-primary/30 bg-primary/5">
             <Sparkles className="h-5 w-5 text-primary shrink-0" />
