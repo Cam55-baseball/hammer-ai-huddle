@@ -50,6 +50,7 @@ import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
 import { SideContextPicker } from "@/components/shared/SideContextPicker";
 import { useSideContext } from "@/contexts/SideContext";
+import { readSideBias } from "@/lib/side/sideBias";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
@@ -105,9 +106,15 @@ export function HammerDailyPlan() {
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
   const scheduleSignal = useMemo(() => projectScheduleSignal(sched), [sched]);
+  const sideBias = useMemo(
+    () => ({ hit: readSideBias("hit"), throw: readSideBias("throw") }),
+    // Re-read once per render; cache writes happen on Progress mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ctx],
+  );
   const plan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal),
-    [ctx, scheduleSignal],
+    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias),
+    [ctx, scheduleSignal, sideBias],
   );
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
