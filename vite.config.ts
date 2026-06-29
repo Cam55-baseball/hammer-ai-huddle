@@ -81,8 +81,9 @@ export default defineConfig(({ mode }) => ({
               expiration: { maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 },
             },
           },
-
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-cache',
