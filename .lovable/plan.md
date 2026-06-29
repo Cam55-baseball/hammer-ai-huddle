@@ -1,47 +1,38 @@
-## Problem
+# Why analysis failed
 
-`/iq?lens=offense` shows "no situations published yet" for baseball. DB confirms: zero published `iq_situations` are tagged with the `offense` lens for `sport in ('baseball','both')`. Only softball has 7 offense-tagged rows. Defense and pitching are well covered (~70+ rows). The offense lens was never seeded for baseball.
+Your clip was **320×568** (a compressed phone export). The backend's Phase-1 acceptance gate requires **≥480×480**, so it returned a 422 `reject_low_resolution`. The UI swallowed the structured reason and showed only "Edge Function returned a non-2xx status code".
 
-## Fix
+# Fix (two parts)
 
-Ship a seed migration adding a Wave-O1 set of offense situations covering both sports (`sport = 'both'`) so baseball and softball players both see content, plus baseball-only entries where rules diverge from softball (lead-off timing, pickoffs, balks).
+### 1. Surface the real reason in the UI
+In `src/pages/AnalyzeVideo.tsx` (the `handleUploadAndAnalyze` catch block), parse the structured error payload from `supabase.functions.invoke` (it's on `error.context.response` / `FunctionsHttpError`) and map known reasons to friendly messages:
 
-### Content (≈18 situations, all `lens_tags` include `offense`; some also tag `baserunning`)
+- `reject_low_resolution` → "This clip is too small (e.g. 320×568). Please upload a higher-resolution version — at least 360×360. Re-exporting from your camera roll instead of sharing from a messaging app usually fixes this."
+- `reject_low_fps` → "Video frame rate is too low (need ≥24 fps)."
+- `reject_duration_out_of_bounds` → "Clip must be 0.5–60 seconds."
+- `reject_excessive_dropped_frames` → "Too many frames couldn't be read. Try re-exporting the clip."
+- `missing_video_sha256` / `missing_probe_metadata` → "Upload didn't finish probing — try again."
+- fallback → existing generic toast.
 
-At-bat / hitter IQ
-1. Hitter's count (2-0, 3-1) — sit on zone, drive the pitch
-2. Two-strike approach — shorten up, battle, foul off
-3. Runner on 3rd, <2 outs — contact / sac fly mindset
-4. Behind in count vs off-speed pitcher
-5. Leadoff at-bat of an inning — work the count
-6. Hit-and-run mechanics (hitter side) — protect the runner
-7. Bunt for a hit vs sac bunt read
+Also add the reason to the `AnalysisProgressIndicator` failure card so users see it inline (not just a toast).
 
-Baserunning IQ (offense)
-8. Primary + secondary lead off 1B
-9. Reading the ball off the bat from 1B (line drive freeze)
-10. Tag-up at 3B on fly ball — depth & angle
-11. First-and-third offense — delayed steal / read throw
-12. Stealing 2B — pitcher tells, jump timing
-13. Going first-to-third on a single to RF
-14. Scoring from 2nd on a single — picking up the 3B coach
-15. Avoiding the tag at home — slide angle / hand-swipe
-16. Rundown survival — stay alive, draw the throw
+### 2. Relax the resolution gate to match phone reality
+Both server and client mirror the threshold; lower both from 480 → **320** (still high enough for BlazePose Full to land reliable landmarks; the 480 ceiling was overly defensive). Files:
 
-Baseball-only (sport='baseball')
-17. Reading a LHP pickoff move at 1B (balk tells)
-18. Lead off 2B with pitcher in the stretch (sign relay awareness)
+- `supabase/functions/analyze-video/index.ts` — `PHASE1_MIN_WIDTH` and `PHASE1_MIN_HEIGHT` from `480` → `320`.
+- `src/lib/biomech/videoAcceptance.ts` — `MIN_WIDTH` and `MIN_HEIGHT` from `480` → `320`. (Keeps the constitutional invariant that client + server agree.)
 
-Each row populated with: `slug`, `title`, `summary`, `lens_tags: ['offense']` (or `['offense','baserunning']`), `sport`, `difficulty`, `status='published'`, `canonical_order`, plus matching `iq_situation_actors` (Three B's where applicable — runner Bag/Backup, hitter Ball) and 2–3 `iq_scenarios` MCQ variants per situation following the existing schema used by Wave-C1.
+No changes to fps/duration/dropped-frame gates. Cache-fingerprint inputs are unaffected (resolution isn't part of the fingerprint).
 
-### Files
+### 3. Add a one-line preflight on the client
+Before invoking the edge function, check `videoWidth`/`videoHeight` against `MIN_WIDTH`/`MIN_HEIGHT` and short-circuit with the same friendly message — saves a server round-trip and a `rejected` audit row when the user could fix it locally.
 
-- `supabase/migrations/<ts>_iq_wave_o1_offense_seed.sql` — inserts situations + actors + scenarios. Idempotent via `ON CONFLICT (slug) DO NOTHING`.
+# What's untouched
+- Determinism / replay contract (audit row still written for every outcome).
+- Tempo/landmark pipelines.
+- All other scorecard logic, prompts, models.
 
-### Verification
-
-After migration, re-query `iq_situations` grouped by lens/sport and confirm offense rows exist for `baseball` and `both`. Load `/iq?lens=offense` in preview as baseball user and confirm cards render. No app code changes needed — `useIqSituations` already filters by lens once data exists.
-
-### Out of scope
-
-No changes to filtering logic, no UI changes, no progress/SM-2 schema changes.
+# Verification
+- Re-upload the same 320×568 clip → analysis runs to completion.
+- Upload a deliberately tiny 240×240 clip → user sees the friendly resolution message inline, not "non-2xx".
+- Typecheck passes; existing `videoAcceptance` tests updated to new thresholds.
