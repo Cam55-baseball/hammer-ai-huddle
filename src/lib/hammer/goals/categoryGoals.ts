@@ -145,8 +145,11 @@ function normalizePicks(
     const r = item as { id?: unknown; rank?: unknown };
     if (typeof r.id !== "string" || !legal.has(r.id) || seenIds.has(r.id)) continue;
     const rank: GoalRank = r.rank === "secondary" ? "secondary" : "primary";
+    const sideRaw = (r as { side?: unknown }).side;
+    const side: GoalSide | undefined =
+      sideRaw === "L" || sideRaw === "R" || sideRaw === "both" ? sideRaw : undefined;
     seenIds.add(r.id);
-    out.push({ id: r.id, rank });
+    out.push(side ? { id: r.id, rank, side } : { id: r.id, rank });
     if (out.length >= 2) break; // max 2 picks per category
   }
   // Guarantee at most one primary + one secondary; demote duplicates.
