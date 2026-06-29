@@ -79,7 +79,7 @@ export function useGameDayContext(): GameDayContext {
           };
         };
       })
-        .from("games")
+        .from("gp_games")
         .select("game_date")
         .eq("user_id", user!.id)
         .gte("game_date", start7dAgo)
