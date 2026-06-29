@@ -12,7 +12,10 @@ interface IqDiamondProps {
   mode: "teach" | "quiz" | "reveal";
   highlightRole?: IqActorRole | null;
   className?: string;
+  /** Per-role positional shift in percent points on the 100×100 grid. */
+  roleShifts?: Record<string, { dx: number; dy: number }>;
 }
+
 
 // Canonical starting coordinates on a 100x100 grid.
 // y=100 is home plate, y=0 is the CF wall.
@@ -33,13 +36,23 @@ const HOME_POS: Record<IqActorRole, { x: number; y: number }> = {
   BAT: { x: 50, y: 96 },
 };
 
-export function IqDiamond({ actors, mode, highlightRole, className }: IqDiamondProps) {
+export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }: IqDiamondProps) {
   const byRole = useMemo(() => new Map(actors.map((a) => [a.role, a])), [actors]);
+  const posFor = (role: IqActorRole) => {
+    const base = HOME_POS[role];
+    const s = roleShifts?.[role];
+    if (!s) return base;
+    return {
+      x: Math.max(2, Math.min(98, base.x + s.dx)),
+      y: Math.max(2, Math.min(98, base.y + s.dy)),
+    };
+  };
 
   return (
     <div className={"relative w-full aspect-square overflow-hidden rounded-2xl border " + (className ?? "")}
          style={{ background: "radial-gradient(ellipse at 50% 100%, hsl(var(--iq-field)) 0%, hsl(var(--iq-field) / 0.7) 70%)" }}>
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
+
         {/* Outfield arc */}
         <path d="M 5 50 A 45 45 0 0 1 95 50 L 50 100 Z"
               fill="hsl(var(--iq-field) / 0.5)"
@@ -58,8 +71,9 @@ export function IqDiamond({ actors, mode, highlightRole, className }: IqDiamondP
 
         {/* Actor routes (only in teach/reveal modes) */}
         {(mode === "teach" || mode === "reveal") && actors.flatMap((a) => {
-          const start = HOME_POS[a.role];
+          const start = posFor(a.role);
           if (!a.primary_path?.length) return [];
+
           const pts = [start, ...a.primary_path];
           const d = pts.map((p,i)=> `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
           return [(
@@ -76,7 +90,7 @@ export function IqDiamond({ actors, mode, highlightRole, className }: IqDiamondP
 
       {/* Actor dots */}
       {actors.map((a) => {
-        const pos = HOME_POS[a.role];
+        const pos = posFor(a.role);
         const showColor = mode !== "quiz";
         const isHi = highlightRole === a.role;
         return (
