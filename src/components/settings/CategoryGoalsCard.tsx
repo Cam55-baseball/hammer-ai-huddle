@@ -18,6 +18,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
+import { useSideContext } from "@/contexts/SideContext";
+import { SideContextPicker } from "@/components/shared/SideContextPicker";
 import {
   getV2,
   type CategoryGoalsPayloadV2,
