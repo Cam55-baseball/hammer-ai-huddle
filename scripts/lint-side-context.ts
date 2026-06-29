@@ -67,7 +67,15 @@ function scan(): Violation[] {
         let m: RegExpExecArray | null;
         while ((m = re.exec(txt))) {
           const payload = m[2];
-          if (/\bside\b\s*:/.test(payload)) continue;
+          // Accept any of: literal `side:`, canonical sided columns on
+          // `videos` (`batting_side` / `throwing_hand`), or a spread that
+          // includes `side` (e.g. `...(side ? { side } : {})`).
+          if (
+            /\bside\b\s*:/.test(payload) ||
+            /\bbatting_side\b\s*:/.test(payload) ||
+            /\bthrowing_hand\b\s*:/.test(payload) ||
+            /\.\.\.[^)]*\bside\b/.test(payload)
+          ) continue;
           const idx = m.index;
           const line = txt.slice(0, idx).split("\n").length;
           out.push({
