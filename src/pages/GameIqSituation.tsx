@@ -10,7 +10,7 @@ import { useIqSituation } from "@/hooks/useIqSituations";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { ROLE_LABELS, ASSIGNMENT_LABELS, ASSIGNMENT_COLOR, LENS_ACCENT, LENS_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
+import { ROLE_LABELS, ASSIGNMENT_LABELS, ASSIGNMENT_COLOR, LENS_ACCENT, LENS_LABELS, DEFENSIVE_ROLES, OFFENSIVE_ROLES } from "@/lib/iq/types";
 import type { IqActorRole } from "@/lib/iq/types";
 import {
   CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
