@@ -946,21 +946,23 @@ export function useVault() {
     drill_description: string | null;
     module_origin: string;
     sport: string;
+    side?: 'L' | 'R' | 'both' | null;
   }) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    // Check if already saved (prevent duplicates)
-    const existing = savedDrills.find(d => 
-      d.drill_name === drill.drill_name && 
+    // Check if already saved (prevent duplicates) — side-aware: L and R can both be saved.
+    const existing = savedDrills.find(d =>
+      d.drill_name === drill.drill_name &&
       d.module_origin === drill.module_origin &&
-      d.sport === drill.sport
+      d.sport === drill.sport &&
+      ((d as any).side ?? null) === (drill.side ?? null)
     );
     if (existing) return { success: false, error: 'already_saved' };
 
     const { error } = await supabase.from('vault_saved_drills').insert({
       user_id: user.id,
       ...drill,
-    });
+    } as any);
 
     if (error) {
       console.error('Error saving drill:', error);
