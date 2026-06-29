@@ -20,6 +20,18 @@ export function HittingRoadmapLadder({ roadmap, className }: Props) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Your 4-Step Roadmap</CardTitle>
         <p className="text-xs text-muted-foreground">Feel &rarr; Isolate &rarr; Constrain &rarr; Transfer</p>
+        {/* v2 Arakawa felt-order legend. Camera sees P1→P2→P3→P4; hitter feels P1→P2→P4→P3-emerges. */}
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+          <Badge variant="outline" className="text-[10px]">Seen: P1 → P2 → P3 → P4</Badge>
+          <Badge
+            variant="outline"
+            className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300"
+            title="Hitter's felt order. P3 (stride / heel plant) is involuntary — it emerges from organized P1+P2+P4. Do not consciously cue P3."
+          >
+            Felt: P1 → P2 → P4 → P3*
+          </Badge>
+          <span className="text-[10px] italic">*P3 involuntary — do not cue</span>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {roadmap.map((step) => (

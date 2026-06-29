@@ -27,9 +27,11 @@ export interface FormulaPhase {
 
 const HITTING_PHASES: FormulaPhase[] = [
   { id: 'p1_hip_load',       label: 'P1 Hip Load',       hint: 'NN — hands-break is the hard trigger.', nonNegotiable: true },
-  { id: 'p2_heel_plant',     label: 'P2 Heel Plant',     hint: 'Front-side stack, cap 85.' },
-  { id: 'p3_launch',         label: 'P3 Launch',         hint: 'Sequencing + barrel turn, cap 75.' },
-  { id: 'p4_hitters_move',   label: "P4 Hitter's Move",  hint: 'NN — most important. Hard cap 50, elite +5 bonus.', nonNegotiable: true },
+  // v2 Arakawa: P2 is Hand Load (conscious cue). Heel plant is part of P3 and involuntary.
+  // Id `p2_heel_plant` preserved as the stable storage key so existing tagged videos keep working.
+  { id: 'p2_heel_plant',     label: 'P2 Hand Load',      hint: 'Hands break / scap+knob load. Stays back to receive — cap 85.' },
+  { id: 'p3_launch',         label: 'P3 Stride (involuntary)', hint: 'Do-not-cue — emerges from organized P1+P2+P4. Coach grades landing; fix routes upstream. Cap 75.' },
+  { id: 'p4_hitters_move',   label: "P4 Hitter's Move",  hint: 'NN — most important. Back elbow leads, hands stay back. Hard cap 50, elite +5 bonus.', nonNegotiable: true },
 ];
 
 const PITCHING_PHASES: FormulaPhase[] = [
