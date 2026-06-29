@@ -52,6 +52,14 @@ export function PitchingPanel() {
 
   return (
     <div className="space-y-4">
+      {shouldShowPicker("throw") && (
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Throw side
+          </span>
+          <SideViewTabs value={sideView} onChange={setSideView} discipline="throw" />
+        </div>
+      )}
       <UhrcAthleteSection />
       <AutoCorrelationCards items={auto} />
       <CorrelationExplorer variables={vars} />
