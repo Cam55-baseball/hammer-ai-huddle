@@ -129,19 +129,17 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div>
-            <Label className="text-xs">Quick: competition level</Label>
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {QUICK_LEVELS.map((l) => (
-                <Button
-                  key={l.value}
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-[11px]"
-                  onClick={() => setLevel(l.value)}
-                >
-                  {l.label}
-                </Button>
-              ))}
+            <Label className="text-xs">Competition level (youth → pro)</Label>
+            <div className="mt-1">
+              <CompetitionLevelPicker
+                sport={sport}
+                value={level}
+                onChange={(v) => {
+                  setLevelState(v);
+                  setLevel(v);
+                }}
+                mode="quick"
+              />
             </div>
           </div>
 
