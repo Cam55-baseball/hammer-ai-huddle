@@ -13,7 +13,7 @@ import { useState } from "react";
 import { ROLE_LABELS, ASSIGNMENT_LABELS, ASSIGNMENT_COLOR, LENS_ACCENT, LENS_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
 import type { IqActorRole } from "@/lib/iq/types";
 import {
-  CONTEXT_AXIS_LABELS, CONTEXT_VALUES, computeRoleShifts, NEUTRAL_SELECTION,
+  CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
   type ContextAxis, type ContextSelection,
 } from "@/lib/iq/contextShifts";
 
