@@ -13,7 +13,7 @@ import { useState } from "react";
 import { ROLE_LABELS, ASSIGNMENT_LABELS, ASSIGNMENT_COLOR, LENS_ACCENT, LENS_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
 import type { IqActorRole } from "@/lib/iq/types";
 import {
-  CONTEXT_AXIS_LABELS, CONTEXT_VALUES, computeRoleShifts, NEUTRAL_SELECTION,
+  CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
   type ContextAxis, type ContextSelection,
 } from "@/lib/iq/contextShifts";
 
@@ -90,6 +90,8 @@ export default function GameIqSituation() {
         {mode === "teach" && (() => {
           const roles = actors.map((a) => a.role);
           const shifts = computeRoleShifts(context, roles);
+          const ctxValues = getContextValues(sport);
+
           const activeNotes = roles.flatMap((r) =>
             (shifts[r]?.notes ?? []).map((n) => ({ role: r, note: n }))
           );
@@ -111,13 +113,14 @@ export default function GameIqSituation() {
                 )}
               </div>
               <div className="space-y-1.5">
-                {(Object.keys(CONTEXT_VALUES) as ContextAxis[]).map((axis) => (
+                {(Object.keys(ctxValues) as ContextAxis[]).map((axis) => (
                   <div key={axis} className="flex items-start gap-2 flex-wrap">
                     <div className="text-[10px] uppercase font-semibold text-muted-foreground w-24 mt-1.5 shrink-0">
                       {CONTEXT_AXIS_LABELS[axis]}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {CONTEXT_VALUES[axis].map((v) => {
+                      {ctxValues[axis].map((v) => {
+
                         const active = context[axis] === v.value;
                         return (
                           <button key={v.value} type="button"

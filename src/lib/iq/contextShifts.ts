@@ -16,7 +16,9 @@ export const CONTEXT_AXIS_LABELS: Record<ContextAxis, string> = {
   weather: "Weather",
 };
 
-export const CONTEXT_VALUES: Record<ContextAxis, { value: string; label: string; emoji?: string }[]> = {
+export type ContextOption = { value: string; label: string; emoji?: string; softballOnly?: boolean };
+
+export const CONTEXT_VALUES: Record<ContextAxis, ContextOption[]> = {
   batter_speed: [
     { value: "plus_runner", label: "Plus runner" },
     { value: "average", label: "Average" },
@@ -32,15 +34,15 @@ export const CONTEXT_VALUES: Record<ContextAxis, { value: string; label: string;
     { value: "spray", label: "Spray" },
     { value: "oppo", label: "Oppo" },
     { value: "bunt_threat", label: "Bunt threat" },
-    { value: "slap", label: "Slap (SB)" },
+    { value: "slap", label: "Slap", softballOnly: true },
   ],
   next_pitch: [
     { value: "fb_in", label: "FB in" },
     { value: "fb_away", label: "FB away" },
     { value: "breaking_low", label: "Breaking low" },
     { value: "changeup", label: "Changeup" },
-    { value: "rise_ball", label: "Rise (SB)" },
-    { value: "drop_ball", label: "Drop (SB)" },
+    { value: "rise_ball", label: "Rise", softballOnly: true },
+    { value: "drop_ball", label: "Drop", softballOnly: true },
   ],
   weather: [
     { value: "wind_in", label: "Wind in" },
@@ -52,6 +54,19 @@ export const CONTEXT_VALUES: Record<ContextAxis, { value: string; label: string;
     { value: "hot_dry_carry", label: "Hot / dry (carry)" },
   ],
 };
+
+export function getContextValues(
+  sport: "baseball" | "softball" | "both" | string | undefined,
+): Record<ContextAxis, ContextOption[]> {
+  const isSoftball = sport === "softball";
+  if (isSoftball) return CONTEXT_VALUES;
+  const out = {} as Record<ContextAxis, ContextOption[]>;
+  (Object.keys(CONTEXT_VALUES) as ContextAxis[]).forEach((axis) => {
+    out[axis] = CONTEXT_VALUES[axis].filter((v) => !v.softballOnly);
+  });
+  return out;
+}
+
 
 export interface ContextSelection {
   batter_speed?: string;
