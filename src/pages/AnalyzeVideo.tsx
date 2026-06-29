@@ -933,7 +933,12 @@ export default function AnalyzeVideo() {
             <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
             <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} {t('videoAnalysis.mechanicsEvaluation', 'mechanics evaluation')}</p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <SideContextPicker
+              discipline={sideDiscipline}
+              label={sideDiscipline === 'hit' ? 'Hitting side' : 'Throwing hand'}
+              className="mr-1"
+            />
             {videoPreview && (
               <Button variant="outline" size="sm" onClick={handleRemoveVideo} className="flex-1 sm:flex-initial">
                 <Trash2 className="h-4 w-4 sm:mr-2" />
