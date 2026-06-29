@@ -58,6 +58,7 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
@@ -187,6 +188,7 @@ export function HammerDailyPlan() {
       </CardHeader>
       <CardContent className="space-y-2">
         <HammerScheduleStrip />
+        <GpInGameAdvisoryStrip />
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
