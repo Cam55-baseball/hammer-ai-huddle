@@ -53,7 +53,7 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_at_bats")
-        .select("result,batter_handedness,exit_velo_mph,launch_angle_deg,spray_angle_deg,rbi")
+        .select("result,batting_side,exit_velo,launch_angle,exit_direction,rbi")
         .eq("user_id", user!.id)
         .limit(5000);
       if (error) throw error;
@@ -66,7 +66,7 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_defense_plays")
-        .select("position,play_type,result")
+        .select("position,play_type,result,error_flag")
         .eq("user_id", user!.id)
         .limit(5000);
       if (error) throw error;
@@ -79,7 +79,7 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_baserun_events")
-        .select("event_type,result")
+        .select("event_type,success")
         .eq("user_id", user!.id)
         .limit(5000);
       if (error) throw error;
@@ -152,7 +152,7 @@ export default function GameReports() {
   const hittingResults = useMemo(() => {
     const counts: Record<string, number> = {};
     (atBats.data ?? [])
-      .filter((a) => sideFilter(a.batter_handedness))
+      .filter((a) => sideFilter(a.batting_side))
       .forEach((a) => {
         const r = a.result ?? "unknown";
         counts[r] = (counts[r] ?? 0) + 1;
@@ -163,7 +163,26 @@ export default function GameReports() {
   // Defense
   const defStats = useMemo(() => {
     const total = (defense.data ?? []).length;
-    const errors = (defense.data ?? []).filter((d) => d.result === "error").length;
+    const errors = (defense.data ?? []).filter((d) => d.error_flag === true || d.result === "error").length;
+    const byPos: Record<string, number> = {};
+    (defense.data ?? []).forEach((d) => {
+      const k = d.position ?? "?";
+      byPos[k] = (byPos[k] ?? 0) + 1;
+    });
+    return { total, errors, byPos };
+  }, [defense.data]);
+
+  // Baserunning
+  const brStats = useMemo(() => {
+    const total = (baserun.data ?? []).length;
+    const steals = (baserun.data ?? []).filter((b) => b.event_type === "steal");
+    const stealSuccess = steals.filter((b) => b.success === true).length;
+    return {
+      total,
+      steals: steals.length,
+      stealPct: steals.length ? Math.round((stealSuccess / steals.length) * 100) : 0,
+    };
+  }, [baserun.data]);
     const byPos: Record<string, number> = {};
     (defense.data ?? []).forEach((d) => {
       const k = d.position ?? "?";
