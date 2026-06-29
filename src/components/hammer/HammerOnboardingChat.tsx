@@ -23,6 +23,8 @@ import {
 import { toast } from "sonner";
 import { useHammerOnboardingDirector } from "@/hooks/useHammerOnboardingDirector";
 import { getHammerIdentity } from "@/lib/hammer/identity";
+import { useSportTheme } from "@/contexts/SportThemeContext";
+import { CompetitionLevelPicker } from "@/components/shared/CompetitionLevelPicker";
 import type { KnowledgeGap, GapOption } from "@/lib/hammer/onboarding/knowledgeGaps";
 
 const INJURY_REGIONS = [
@@ -142,6 +144,19 @@ interface GapInputProps {
 }
 
 function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
+  const { sport } = useSportTheme();
+
+  if (gap.inputKind === "competition_level") {
+    return (
+      <CompetitionLevelPicker
+        sport={sport}
+        value={typeof value === "string" ? value : ""}
+        onChange={onChange}
+        mode="full"
+      />
+    );
+  }
+
   if (gap.inputKind === "select" && gap.options) {
     return (
       <Select value={typeof value === "string" ? value : ""} onValueChange={onChange}>
