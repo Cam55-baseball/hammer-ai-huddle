@@ -694,8 +694,8 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate('/game-scoring')}
-                  isActive={isActive('/game-scoring')}
+                  onClick={() => navigate('/games')}
+                  isActive={isActive('/games')}
                   tooltip="Game Hub"
                   className="group sidebar-item-hover relative"
                 >

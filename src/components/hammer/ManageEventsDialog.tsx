@@ -63,8 +63,8 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
     queryFn: async () => {
       const [games, practices] = await Promise.all([
         (supabase as any)
-          .from("games")
-          .select("id, game_date, opponent_name, game_type, status")
+          .from("gp_games")
+          .select("id, game_date, opponent_team, game_type, status")
           .eq("user_id", user!.id)
           .gte("game_date", start)
           .lte("game_date", end)
@@ -81,7 +81,7 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
         id: g.id,
         kind: "game",
         date: g.game_date,
-        title: g.opponent_name ? `vs ${g.opponent_name}` : "Game",
+        title: g.opponent_team ? `vs ${g.opponent_team}` : "Game",
         subtitle: g.game_type,
         status: g.status ?? "scheduled",
       }));
