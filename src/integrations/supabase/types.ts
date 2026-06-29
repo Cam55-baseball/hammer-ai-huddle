@@ -4199,39 +4199,6 @@ export type Database = {
           },
         ]
       }
-      game_opponents: {
-        Row: {
-          created_at: string | null
-          id: string
-          last_faced_at: string | null
-          matchup_context: string | null
-          opponent_name: string
-          opponent_type: string
-          times_faced: number | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          last_faced_at?: string | null
-          matchup_context?: string | null
-          opponent_name: string
-          opponent_type?: string
-          times_faced?: number | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          last_faced_at?: string | null
-          matchup_context?: string | null
-          opponent_name?: string
-          opponent_type?: string
-          times_faced?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       game_plan_days: {
         Row: {
           created_at: string
@@ -4415,182 +4382,6 @@ export type Database = {
         }
         Relationships: []
       }
-      game_plays: {
-        Row: {
-          at_bat_outcome: string | null
-          baserunning_data: Json | null
-          batted_ball_type: string | null
-          batter_name: string | null
-          batter_order: number | null
-          catcher_data: Json | null
-          contact_quality: string | null
-          created_at: string | null
-          defensive_data: Json | null
-          exit_velocity_mph: number | null
-          game_id: string
-          half: string
-          id: string
-          inning: number
-          launch_angle: number | null
-          pitch_location: Json | null
-          pitch_number: number | null
-          pitch_result: string
-          pitch_type: string | null
-          pitch_velocity_mph: number | null
-          pitcher_name: string | null
-          rbi: number | null
-          situational_data: Json | null
-          spray_direction: string | null
-          velocity_band: string | null
-          video_end_sec: number | null
-          video_id: string | null
-          video_start_sec: number | null
-        }
-        Insert: {
-          at_bat_outcome?: string | null
-          baserunning_data?: Json | null
-          batted_ball_type?: string | null
-          batter_name?: string | null
-          batter_order?: number | null
-          catcher_data?: Json | null
-          contact_quality?: string | null
-          created_at?: string | null
-          defensive_data?: Json | null
-          exit_velocity_mph?: number | null
-          game_id: string
-          half?: string
-          id?: string
-          inning: number
-          launch_angle?: number | null
-          pitch_location?: Json | null
-          pitch_number?: number | null
-          pitch_result: string
-          pitch_type?: string | null
-          pitch_velocity_mph?: number | null
-          pitcher_name?: string | null
-          rbi?: number | null
-          situational_data?: Json | null
-          spray_direction?: string | null
-          velocity_band?: string | null
-          video_end_sec?: number | null
-          video_id?: string | null
-          video_start_sec?: number | null
-        }
-        Update: {
-          at_bat_outcome?: string | null
-          baserunning_data?: Json | null
-          batted_ball_type?: string | null
-          batter_name?: string | null
-          batter_order?: number | null
-          catcher_data?: Json | null
-          contact_quality?: string | null
-          created_at?: string | null
-          defensive_data?: Json | null
-          exit_velocity_mph?: number | null
-          game_id?: string
-          half?: string
-          id?: string
-          inning?: number
-          launch_angle?: number | null
-          pitch_location?: Json | null
-          pitch_number?: number | null
-          pitch_result?: string
-          pitch_type?: string | null
-          pitch_velocity_mph?: number | null
-          pitcher_name?: string | null
-          rbi?: number | null
-          situational_data?: Json | null
-          spray_direction?: string | null
-          velocity_band?: string | null
-          video_end_sec?: number | null
-          video_id?: string | null
-          video_start_sec?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "game_plays_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      games: {
-        Row: {
-          base_distance_ft: number
-          coach_insights: Json | null
-          created_at: string | null
-          game_date: string
-          game_mode: string | null
-          game_summary: Json | null
-          game_type: string
-          id: string
-          is_practice_game: boolean | null
-          league_level: string
-          legacy_in_players_club: boolean
-          lineup: Json
-          mound_distance_ft: number
-          opponent_name: string
-          sport: string
-          starting_pitcher_id: string | null
-          status: string
-          team_name: string
-          total_innings: number
-          updated_at: string | null
-          user_id: string
-          venue: string | null
-        }
-        Insert: {
-          base_distance_ft: number
-          coach_insights?: Json | null
-          created_at?: string | null
-          game_date?: string
-          game_mode?: string | null
-          game_summary?: Json | null
-          game_type: string
-          id?: string
-          is_practice_game?: boolean | null
-          league_level: string
-          legacy_in_players_club?: boolean
-          lineup?: Json
-          mound_distance_ft: number
-          opponent_name: string
-          sport?: string
-          starting_pitcher_id?: string | null
-          status?: string
-          team_name: string
-          total_innings?: number
-          updated_at?: string | null
-          user_id: string
-          venue?: string | null
-        }
-        Update: {
-          base_distance_ft?: number
-          coach_insights?: Json | null
-          created_at?: string | null
-          game_date?: string
-          game_mode?: string | null
-          game_summary?: Json | null
-          game_type?: string
-          id?: string
-          is_practice_game?: boolean | null
-          league_level?: string
-          legacy_in_players_club?: boolean
-          lineup?: Json
-          mound_distance_ft?: number
-          opponent_name?: string
-          sport?: string
-          starting_pitcher_id?: string | null
-          status?: string
-          team_name?: string
-          total_innings?: number
-          updated_at?: string | null
-          user_id?: string
-          venue?: string | null
-        }
-        Relationships: []
-      }
       governance_flags: {
         Row: {
           admin_action: string | null
@@ -4646,6 +4437,611 @@ export type Database = {
             columns: ["source_session_id"]
             isOneToOne: false
             referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_at_bats: {
+        Row: {
+          ab_order: number | null
+          ai_summary: string | null
+          batting_side: string | null
+          contact_quality: string | null
+          count_balls: number | null
+          count_strikes: number | null
+          created_at: string
+          exit_direction: string | null
+          exit_velo: number | null
+          game_id: string
+          h1_time_sec: number | null
+          id: string
+          inning: number
+          inning_half: string | null
+          is_pinch_hit: boolean | null
+          launch_angle: number | null
+          lob: number | null
+          notes: string | null
+          opponent_pitcher_id: string | null
+          outs: number | null
+          pitch_location: Json | null
+          pitch_movement: Json | null
+          pitch_type: string | null
+          pitch_velo: number | null
+          position_played: string | null
+          rbi: number | null
+          result: string | null
+          runners_on: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ab_order?: number | null
+          ai_summary?: string | null
+          batting_side?: string | null
+          contact_quality?: string | null
+          count_balls?: number | null
+          count_strikes?: number | null
+          created_at?: string
+          exit_direction?: string | null
+          exit_velo?: number | null
+          game_id: string
+          h1_time_sec?: number | null
+          id?: string
+          inning: number
+          inning_half?: string | null
+          is_pinch_hit?: boolean | null
+          launch_angle?: number | null
+          lob?: number | null
+          notes?: string | null
+          opponent_pitcher_id?: string | null
+          outs?: number | null
+          pitch_location?: Json | null
+          pitch_movement?: Json | null
+          pitch_type?: string | null
+          pitch_velo?: number | null
+          position_played?: string | null
+          rbi?: number | null
+          result?: string | null
+          runners_on?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ab_order?: number | null
+          ai_summary?: string | null
+          batting_side?: string | null
+          contact_quality?: string | null
+          count_balls?: number | null
+          count_strikes?: number | null
+          created_at?: string
+          exit_direction?: string | null
+          exit_velo?: number | null
+          game_id?: string
+          h1_time_sec?: number | null
+          id?: string
+          inning?: number
+          inning_half?: string | null
+          is_pinch_hit?: boolean | null
+          launch_angle?: number | null
+          lob?: number | null
+          notes?: string | null
+          opponent_pitcher_id?: string | null
+          outs?: number | null
+          pitch_location?: Json | null
+          pitch_movement?: Json | null
+          pitch_type?: string | null
+          pitch_velo?: number | null
+          position_played?: string | null
+          rbi?: number | null
+          result?: string | null
+          runners_on?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_at_bats_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_at_bats_opponent_pitcher_id_fkey"
+            columns: ["opponent_pitcher_id"]
+            isOneToOne: false
+            referencedRelation: "gp_pitcher_dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_baserun_events: {
+        Row: {
+          base_from: number | null
+          base_to: number | null
+          catcher_pop_time_sec: number | null
+          created_at: string
+          event_type: string
+          game_id: string
+          id: string
+          inning: number | null
+          is_pinch_run: boolean | null
+          lead_steps: number | null
+          notes: string | null
+          pitch_type_ran_on: string | null
+          pitcher_arm_side: string | null
+          pitcher_time_to_home_sec: number | null
+          run_time_sec: number | null
+          success: boolean | null
+          user_id: string
+        }
+        Insert: {
+          base_from?: number | null
+          base_to?: number | null
+          catcher_pop_time_sec?: number | null
+          created_at?: string
+          event_type: string
+          game_id: string
+          id?: string
+          inning?: number | null
+          is_pinch_run?: boolean | null
+          lead_steps?: number | null
+          notes?: string | null
+          pitch_type_ran_on?: string | null
+          pitcher_arm_side?: string | null
+          pitcher_time_to_home_sec?: number | null
+          run_time_sec?: number | null
+          success?: boolean | null
+          user_id: string
+        }
+        Update: {
+          base_from?: number | null
+          base_to?: number | null
+          catcher_pop_time_sec?: number | null
+          created_at?: string
+          event_type?: string
+          game_id?: string
+          id?: string
+          inning?: number | null
+          is_pinch_run?: boolean | null
+          lead_steps?: number | null
+          notes?: string | null
+          pitch_type_ran_on?: string | null
+          pitcher_arm_side?: string | null
+          pitcher_time_to_home_sec?: number | null
+          run_time_sec?: number | null
+          success?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_baserun_events_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_defense_plays: {
+        Row: {
+          arm_velo: number | null
+          assist: boolean | null
+          batted_ball_type: string | null
+          created_at: string
+          error_flag: boolean | null
+          game_id: string
+          id: string
+          inning: number | null
+          notes: string | null
+          play_type: string | null
+          pop_time_sec: number | null
+          position: string
+          putout: boolean | null
+          result: string | null
+          shift: string | null
+          spray_direction: string | null
+          throwing_side: string | null
+          time_to_first_sec: number | null
+          user_id: string
+        }
+        Insert: {
+          arm_velo?: number | null
+          assist?: boolean | null
+          batted_ball_type?: string | null
+          created_at?: string
+          error_flag?: boolean | null
+          game_id: string
+          id?: string
+          inning?: number | null
+          notes?: string | null
+          play_type?: string | null
+          pop_time_sec?: number | null
+          position: string
+          putout?: boolean | null
+          result?: string | null
+          shift?: string | null
+          spray_direction?: string | null
+          throwing_side?: string | null
+          time_to_first_sec?: number | null
+          user_id: string
+        }
+        Update: {
+          arm_velo?: number | null
+          assist?: boolean | null
+          batted_ball_type?: string | null
+          created_at?: string
+          error_flag?: boolean | null
+          game_id?: string
+          id?: string
+          inning?: number | null
+          notes?: string | null
+          play_type?: string | null
+          pop_time_sec?: number | null
+          position?: string
+          putout?: boolean | null
+          result?: string | null
+          shift?: string | null
+          spray_direction?: string | null
+          throwing_side?: string | null
+          time_to_first_sec?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_defense_plays_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_documents: {
+        Row: {
+          attached_inning: number | null
+          created_at: string
+          file_mime: string | null
+          file_url: string | null
+          game_id: string | null
+          id: string
+          parse_error: string | null
+          parse_status: string
+          parsed_events: Json | null
+          raw_text: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attached_inning?: number | null
+          created_at?: string
+          file_mime?: string | null
+          file_url?: string | null
+          game_id?: string | null
+          id?: string
+          parse_error?: string | null
+          parse_status?: string
+          parsed_events?: Json | null
+          raw_text?: string | null
+          source: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attached_inning?: number | null
+          created_at?: string
+          file_mime?: string | null
+          file_url?: string | null
+          game_id?: string | null
+          id?: string
+          parse_error?: string | null
+          parse_status?: string
+          parsed_events?: Json | null
+          raw_text?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_documents_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_games: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          game_date: string
+          general_notes: string | null
+          home_away: string | null
+          id: string
+          lineup_slot: number | null
+          my_positions: string[] | null
+          my_score: number | null
+          opp_score: number | null
+          opponent_team: string | null
+          philosophy_post: string | null
+          philosophy_pre: string | null
+          philosophy_verdict: string | null
+          sport: string
+          status: string
+          updated_at: string
+          user_id: string
+          venue: string | null
+          weather: Json | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          game_date: string
+          general_notes?: string | null
+          home_away?: string | null
+          id?: string
+          lineup_slot?: number | null
+          my_positions?: string[] | null
+          my_score?: number | null
+          opp_score?: number | null
+          opponent_team?: string | null
+          philosophy_post?: string | null
+          philosophy_pre?: string | null
+          philosophy_verdict?: string | null
+          sport: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          venue?: string | null
+          weather?: Json | null
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          game_date?: string
+          general_notes?: string | null
+          home_away?: string | null
+          id?: string
+          lineup_slot?: number | null
+          my_positions?: string[] | null
+          my_score?: number | null
+          opp_score?: number | null
+          opponent_team?: string | null
+          philosophy_post?: string | null
+          philosophy_pre?: string | null
+          philosophy_verdict?: string | null
+          sport?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          venue?: string | null
+          weather?: Json | null
+        }
+        Relationships: []
+      }
+      gp_opponent_hitters: {
+        Row: {
+          bats: string | null
+          created_at: string
+          id: string
+          last_faced: string | null
+          name: string
+          notes: string | null
+          sport: string
+          team: string | null
+          tendencies: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bats?: string | null
+          created_at?: string
+          id?: string
+          last_faced?: string | null
+          name: string
+          notes?: string | null
+          sport: string
+          team?: string | null
+          tendencies?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bats?: string | null
+          created_at?: string
+          id?: string
+          last_faced?: string | null
+          name?: string
+          notes?: string | null
+          sport?: string
+          team?: string | null
+          tendencies?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gp_pitcher_dossiers: {
+        Row: {
+          arm_slot: string | null
+          created_at: string
+          id: string
+          last_faced: string | null
+          name: string
+          notes_postgame: string | null
+          notes_pregame: string | null
+          repertoire: Json | null
+          sport: string
+          strike_zone_plan: Json | null
+          team: string | null
+          tendencies: Json | null
+          throws: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          arm_slot?: string | null
+          created_at?: string
+          id?: string
+          last_faced?: string | null
+          name: string
+          notes_postgame?: string | null
+          notes_pregame?: string | null
+          repertoire?: Json | null
+          sport: string
+          strike_zone_plan?: Json | null
+          team?: string | null
+          tendencies?: Json | null
+          throws?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          arm_slot?: string | null
+          created_at?: string
+          id?: string
+          last_faced?: string | null
+          name?: string
+          notes_postgame?: string | null
+          notes_pregame?: string | null
+          repertoire?: Json | null
+          sport?: string
+          strike_zone_plan?: Json | null
+          team?: string | null
+          tendencies?: Json | null
+          throws?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gp_pitches: {
+        Row: {
+          at_bat_id: string | null
+          batter_handedness: string | null
+          count_balls: number | null
+          count_strikes: number | null
+          created_at: string
+          game_id: string
+          id: string
+          inning: number | null
+          location: Json | null
+          notes: string | null
+          opponent_hitter_name: string | null
+          perspective: string
+          pitch_movement: Json | null
+          pitch_no: number | null
+          pitch_type: string | null
+          pitch_velo: number | null
+          pitcher_arm_slot: string | null
+          pitcher_throws: string | null
+          result: string | null
+          user_id: string
+        }
+        Insert: {
+          at_bat_id?: string | null
+          batter_handedness?: string | null
+          count_balls?: number | null
+          count_strikes?: number | null
+          created_at?: string
+          game_id: string
+          id?: string
+          inning?: number | null
+          location?: Json | null
+          notes?: string | null
+          opponent_hitter_name?: string | null
+          perspective: string
+          pitch_movement?: Json | null
+          pitch_no?: number | null
+          pitch_type?: string | null
+          pitch_velo?: number | null
+          pitcher_arm_slot?: string | null
+          pitcher_throws?: string | null
+          result?: string | null
+          user_id: string
+        }
+        Update: {
+          at_bat_id?: string | null
+          batter_handedness?: string | null
+          count_balls?: number | null
+          count_strikes?: number | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          inning?: number | null
+          location?: Json | null
+          notes?: string | null
+          opponent_hitter_name?: string | null
+          perspective?: string
+          pitch_movement?: Json | null
+          pitch_no?: number | null
+          pitch_type?: string | null
+          pitch_velo?: number | null
+          pitcher_arm_slot?: string | null
+          pitcher_throws?: string | null
+          result?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_pitches_at_bat_id_fkey"
+            columns: ["at_bat_id"]
+            isOneToOne: false
+            referencedRelation: "gp_at_bats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_pitches_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_subs: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          in_position: string | null
+          inning: number | null
+          notes: string | null
+          out_position: string | null
+          sub_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          in_position?: string | null
+          inning?: number | null
+          notes?: string | null
+          out_position?: string | null
+          sub_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          in_position?: string | null
+          inning?: number | null
+          notes?: string | null
+          out_position?: string | null
+          sub_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_subs_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
             referencedColumns: ["id"]
           },
         ]
@@ -12637,13 +13033,6 @@ export type Database = {
           width?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "videos_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "videos_practice_session_id_fkey"
             columns: ["practice_session_id"]
