@@ -144,8 +144,8 @@ export function HammerDailyPlan() {
               </Badge>
             )}
             {/* Side context — only renders for switch hitters / ambidextrous throwers */}
-            <SideContextPicker discipline="hit" compact />
-            <SideContextPicker discipline="throw" compact />
+            <SideContextPicker discipline="hit" label="Bat" />
+            <SideContextPicker discipline="throw" label="Throw" />
             <Button
               size="sm"
               variant="ghost"
