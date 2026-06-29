@@ -4,13 +4,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Brain, Shield, Swords, Target, Footprints, Sparkles } from "lucide-react";
+import { Brain, Shield, Swords, Target, Footprints, Sparkles, PlayCircle, X } from "lucide-react";
 import { IqSituationCard } from "@/components/iq/IqSituationCard";
 import { useIqSituations } from "@/hooks/useIqSituations";
 import { useIqProgress } from "@/hooks/useIqProgress";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IqLens } from "@/lib/iq/types";
+import { quizResume } from "@/lib/iq/resumeStore";
 
 const LENS_TABS: { value: IqLens | "all"; label: string; icon: typeof Brain }[] = [
   { value: "all", label: "All", icon: Brain },
