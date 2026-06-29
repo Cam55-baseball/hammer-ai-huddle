@@ -1,96 +1,82 @@
 ## Goal
-Take Game IQ + recent fixes from "deeply built" to "elite, zero-hiccups, best-on-market," with progress fully tracked, wired, and learned from across the system.
+Take Game IQ + the broader Hammers Modality system from "Waves 1–2 shipped" to fully elite, zero-hiccups, best-on-market — with progress fully wired, tracked, and learned from.
 
-Work proceeds in strict sequential waves. Each wave ends with a Playwright verification pass against the live preview before the next wave starts.
-
----
-
-## Wave 1 — Daily IQ micro-reps wired into `dailyPlan.ts`
-
-Goal: Game IQ stops being a side module and shows up in every athlete's daily plan as 2–4 minute micro-reps.
-
-- Extend `src/lib/hammer/dailyPlan.ts`:
-  - New block type `iq_micro_reps` (2–4 scenarios, ~3 min).
-  - Selection rule: pull from `iq_user_progress` using SM-2 due-date, filtered by athlete's discipline (baseball/softball), role (pitcher / position / two-way → both), and current `SchedulePosture` (game day → defensive-positioning + situational awareness only, no heavy cognitive load; taper → light; normal → full mix).
-  - Respect ranked category goals — pitchers get pitcher situations weighted higher, hitters get offense/baserunning weighted higher.
-- Add `iq_micro_reps` rendering to `HammerDailyPlan.tsx` as a first-class card with "Start reps" → routes to `IqScenarioRunner` in quick-rep mode (no full module shell).
-- Write completions back to `iq_user_progress` (SM-2 update) AND emit a `behavioral_events` row so Progress Dashboard correlations can learn from IQ performance vs. workload/readiness.
-- Add IQ stats to Progress Dashboard "Goals" topic: due count, mastery %, streak, weakest situation category.
-
-Verify: Playwright opens Today Plan → IQ card appears → completes reps → confirms SM-2 record updated + progress dashboard reflects it.
-
----
-
-## Wave 2 — Seed Wave C2 (~15 situations)
-
-Themes: pickoffs, rundowns, cutoffs/relays by hit location, 1st-and-3rd permutations.
-
-- Author 15 canonical situations across both sports with full Three-B's actor matrices, count/outs/runner variants, and sources.
-- Use existing `iq_situations` + `iq_situation_actors` + `iq_situation_variants` tables via `supabase--insert`.
-- Auto-publish (status = `published`, `is_canonical = true`).
-
-Verify: Owner Library lists 29 published; quiz runner serves new situations; Playwright runs 3 random C2 scenarios end-to-end.
+Each wave ends with a Playwright verification pass against the live preview before the next wave begins.
 
 ---
 
 ## Wave 3 — Full Playwright regression sweep
 
-Single scripted run covering:
-1. Onboarding (5-category goals → Save & Exit → resume → finish).
-2. Calendar import (paste schedule text → AI extracts → events created with safe defaults → no crash on date click).
-3. Today Plan (Add to gameplan, Answer Hammer, posture pill reflects upcoming game).
-4. Manage Events (cancel + reschedule → reflected in posture).
-5. IQ quiz (daily micro-reps from Wave 1 + canonical scenarios from Wave 2).
-6. Owner Library (create draft situation, publish, verify it appears in athlete pool).
+Single scripted run under `/tmp/browser/wave3/` covering:
 
-Fix every surfaced bug before Wave 4. Capture screenshots per step as audit trail.
+1. Onboarding — 5-category ranked goals → Save & Exit → resume → finish (incl. discipline-specific pitcher/softball branches).
+2. Calendar import — paste schedule text → AI extracts → events created with safe `games` defaults → clicking a date does not crash.
+3. Today Plan — Add to gameplan, Answer Hammer drawers open + scroll, posture pill reflects upcoming game.
+4. Manage Events — cancel + reschedule → posture/daily plan reflect change.
+5. IQ daily micro-reps card (Wave 1) → Start reps → SM-2 progress writes back → `behavioral_events` row emitted.
+6. Owner Library — create draft → publish → appears in athlete pool next pull.
+
+Capture screenshots per step as audit trail. Fix every surfaced bug before Wave 4. Likely fix surface: any auth-eviction regressions, toolbar overflow, AI analysis timeout under real load.
 
 ---
 
-## Wave 4 — Waves C3, C4, C5 (Game IQ content to ~80–120)
+## Wave 4 — Seed C3, C4, C5 (~65 more canonical situations → ~94 total)
 
-- **C3 (~20):** bunt coverages by count/score, squeeze defense variants, safety vs suicide, drag bunt by LHH/RHH.
-- **C4 (~20):** softball-specific — slap (soft/hard/power), short game, rise-ball strategy, illegal pitch reactions, DP/Flex rules, re-entry awareness.
-- **C5 (~25):** pitcher PFP by count, catcher blocking + throwing decisions (pop times, runner leads), pitch-calling logic by count/score/runner, mound visit rules, balk awareness (baseball), illegal pitch (softball).
+- **C3 (~20):** bunt coverages by count/score, squeeze defense (safety vs suicide), drag bunt by LHH/RHH, fake bunt slash, push bunt to 1B side.
+- **C4 (~20):** softball-specific — slap (soft/hard/power), short-game DP/Flex rules, re-entry awareness, rise-ball strategy, illegal pitch reactions, drop-third-strike (softball rules), look-back rule.
+- **C5 (~25):** pitcher PFP by count, catcher blocking + throwing decisions (pop times, runner leads), pitch-calling logic by count/score/runner, mound visit rules, balk awareness (baseball), illegal pitch (softball), comebackers, 1-3 putouts.
 
-Each wave: seed → owner library spot-check → quiz smoke test → commit.
-
-Target total at end of C5: ~94 canonical situations × variant generator → effectively unlimited reps.
+Each sub-wave: seed via `supabase--insert` (situations + actors + variants) → owner library spot-check → quiz smoke test → continue.
 
 ---
 
 ## Wave 5 — Owner authoring polish
 
-- Bulk import (CSV / JSON paste) in `IqLibrary.tsx`.
-- Duplicate situation action (clone with `(copy)` suffix, status = draft).
-- Publish checklist diff view: before publishing, show side-by-side of canonical-quality checks (all three B's filled, ≥1 source, ≥2 variants, sport+role tagged) with pass/fail.
-- Soft-delete + restore for situations.
+Edit `IqLibrary.tsx` + new helpers:
 
-Verify: Playwright as owner — bulk import 5 situations, duplicate one, run publish checklist, restore a deleted one.
+- Bulk import via JSON paste (validated against canonical schema before insert).
+- Duplicate situation action (clone with `(copy)` suffix, status = draft).
+- Publish checklist diff view — pre-publish modal showing pass/fail for: all 9 defender Three-B's filled, ≥1 source, ≥2 variants, sport+role tagged, lens tags present.
+- Soft-delete + restore (add `deleted_at` filter to existing list query; restore action; never hard-delete published canonical rows).
+
+Verify via Playwright as owner: bulk-import 5 → duplicate one → run publish checklist → soft-delete + restore.
 
 ---
 
 ## Wave 6 — Progress wiring, tracking, learning
 
-- IQ performance feeds `correlations.ts` as a trusted signal (IQ mastery vs. game-day readiness, vs. workload, vs. sleep).
-- Weekly "IQ Insight" card on Progress Landing: weakest category + recommended focus.
-- Hammer Daily Plan reads IQ weakness signals to up-weight micro-rep selection (closes the learning loop).
-- Owner dashboard gets "Library health" tile: total published, draft backlog, athlete mastery distribution per situation (identifies weak/broken scenarios).
+- Extend `correlations.ts` whitelist with `iq_mastery` signal (sources from `iq_user_progress` aggregate).
+- New "IQ Insight" card on Progress Landing: weakest lens category + recommended focus (links into `GameIqReview?lens=…`).
+- Update `dailyPlan.ts` `game_iq` builder to up-weight situations from the athlete's weakest lens (closes the learning loop).
+- Owner dashboard: "Library health" tile — total published, draft backlog, athlete mastery distribution per situation (identifies weak/broken scenarios via low-mastery cluster).
 
-Verify: full Playwright pass repeats Wave 3 flow + checks correlations + library health tile populates.
+Verify: full Playwright pass repeats Wave 3 + checks correlations populate after seeded attempts + library health tile renders.
 
 ---
 
 ## Wave 7 — Final E2E certification
 
-- One uninterrupted Playwright run: new athlete signs up → onboarding → imports schedule → 7 simulated days of Today Plan + IQ reps + posture changes → progress dashboard shows correlations → owner adds a new situation → athlete sees it next day.
-- Fix anything that surfaces.
-- Produce a short "elite readiness" report (pass/fail per surface) as the shipping artifact.
+One uninterrupted Playwright run:
+
+1. New athlete signs up → onboarding (incl. ranked goals + pitcher branch).
+2. Imports schedule (text + image).
+3. Simulate 7 days of Today Plan completions + IQ reps + a posture-changing canceled game.
+4. Progress dashboard shows ≥1 correlation card with `n ≥ MIN_SAMPLES`.
+5. Owner adds a new situation → athlete sees it the next day.
+
+Fix anything that surfaces. Produce a short pass/fail-per-surface "elite readiness" report at `docs/asb/elite-readiness-wave7.md` as the shipping artifact.
 
 ---
 
 ## Technical notes
 
-- All DB inserts via `supabase--insert`; no schema changes expected (existing IQ tables cover everything). Only Wave 6 may add a small `iq_weekly_insights` materialization if correlations need it — flagged then.
-- All edits stay additive and replay-safe per existing organism doctrine.
-- Each wave is independently shippable; user can stop after any wave and still have a strictly better system.
+- No schema changes expected. Wave 6 may add a tiny `iq_weekly_insights` materialization only if correlations need it — flagged at that point.
+- All DB writes via `supabase--insert`; all edits additive and replay-safe per organism doctrine.
+- Each wave is independently shippable.
+- Stop points are explicit between waves so you can halt after any wave with a strictly better system.
+
+```text
+Wave 3 ──► Wave 4 ──► Wave 5 ──► Wave 6 ──► Wave 7
+ regress    C3–C5     authoring    learning    final
+  sweep    content     polish        loop      E2E cert
+```

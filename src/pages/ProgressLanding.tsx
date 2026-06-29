@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/collapsible";
 import { TopicButtonGrid, type TopicTile } from "@/components/progress/TopicButtonGrid";
 import { TopicPanel } from "@/components/progress/TopicPanel";
+import { IqInsightCard } from "@/components/progress/IqInsightCard";
 import { PitchingPanel } from "@/components/progress/panels/PitchingPanel";
 import { ReadinessPanel } from "@/components/progress/panels/ReadinessPanel";
 import { WorkloadPanel } from "@/components/progress/panels/WorkloadPanel";
@@ -201,6 +202,8 @@ export default function ProgressLanding() {
         </div>
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
+
+        <IqInsightCard />
 
         <div className="space-y-3">
           {ranked.map((r, idx) => {
