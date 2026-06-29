@@ -87,9 +87,66 @@ export default function GameIqSituation() {
           </Button>
         </div>
 
-        {mode === "teach" && (
+        {mode === "teach" && (() => {
+          const roles = actors.map((a) => a.role);
+          const shifts = computeRoleShifts(context, roles);
+          const activeNotes = roles.flatMap((r) =>
+            (shifts[r]?.notes ?? []).map((n) => ({ role: r, note: n }))
+          );
+          const hasContext = Object.values(context).some(Boolean);
+          return (
           <>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} />
+            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} />
+
+            <Card className="p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Context — shift the defense by the read
+                </div>
+                {hasContext && (
+                  <Button size="sm" variant="ghost" className="h-6 text-xs"
+                          onClick={() => setContext(NEUTRAL_SELECTION)}>
+                    Reset
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                {(Object.keys(CONTEXT_VALUES) as ContextAxis[]).map((axis) => (
+                  <div key={axis} className="flex items-start gap-2 flex-wrap">
+                    <div className="text-[10px] uppercase font-semibold text-muted-foreground w-24 mt-1.5 shrink-0">
+                      {CONTEXT_AXIS_LABELS[axis]}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {CONTEXT_VALUES[axis].map((v) => {
+                        const active = context[axis] === v.value;
+                        return (
+                          <button key={v.value} type="button"
+                                  onClick={() => setContext((c) => ({
+                                    ...c, [axis]: active ? undefined : v.value,
+                                  }))}
+                                  className={"text-[10px] px-2 py-1 rounded-full border transition-colors " +
+                                    (active
+                                      ? "bg-primary text-primary-foreground border-primary"
+                                      : "bg-muted/30 hover:bg-muted")}>
+                            {v.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {activeNotes.length > 0 && (
+                <div className="border-t pt-2 space-y-1 max-h-32 overflow-y-auto">
+                  {activeNotes.slice(0, 8).map((n, i) => (
+                    <div key={i} className="text-[11px] leading-snug">
+                      <span className="font-semibold">{n.role}:</span> {n.note}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
 
             <Card className="p-3 flex flex-wrap gap-3 justify-center text-xs">
               {legendForAssignments().map((l) => (
