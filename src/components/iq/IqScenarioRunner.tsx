@@ -1,35 +1,94 @@
 // Quiz runner: pick your position, answer "where do YOU go?", record attempt.
-import { useState } from "react";
+// Hardened with: per-tick resume snapshot, offline attempt queue, Save & exit,
+// and `data-protected-editing` so the auth guard never evicts mid-rep.
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
 import { toast } from "@/hooks/use-toast";
 import type { IqActor, IqActorRole, IqScenario, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_LABELS, ROLE_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
+import { quizResume, pendingAttempts } from "@/lib/iq/resumeStore";
 
 interface Props {
   situationId: string;
+  situationSlug?: string;
+  situationTitle?: string;
   scenario: IqScenario;
   actors: IqActor[];
 }
 
-export function IqScenarioRunner({ situationId, scenario, actors }: Props) {
-  const [position, setPosition] = useState<IqActorRole | null>(null);
-  const [answer, setAnswer] = useState<IqAssignment | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [startTime] = useState(Date.now());
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors }: Props) {
+  const navigate = useNavigate();
   const record = useRecordIqAttempt();
+
+  // Rehydrate from any saved snapshot for this exact scenario.
+  const initial = (() => {
+    const snap = quizResume.load();
+    if (snap && snap.situationId === situationId && snap.scenarioId === scenario.id) return snap;
+    return null;
+  })();
+
+  const [position, setPosition] = useState<IqActorRole | null>(
+    (initial?.position as IqActorRole | null) ?? null,
+  );
+  const [answer, setAnswer] = useState<IqAssignment | null>(
+    (initial?.answer as IqAssignment | null) ?? null,
+  );
+  const [submitted, setSubmitted] = useState(false);
+  const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
   const correct = position
     ? scenario.correct_actor_assignments[position] === answer
     : false;
 
+  // Persist every state change so a reload / accidental exit resumes here.
+  useEffect(() => {
+    if (submitted) return;
+    quizResume.save({
+      situationId,
+      situationSlug: situationSlug ?? "",
+      situationTitle: situationTitle ?? "",
+      scenarioId: scenario.id,
+      position,
+      answer,
+      startedAt: startTimeRef.current,
+    });
+  }, [position, answer, submitted, situationId, situationSlug, situationTitle, scenario.id]);
+
+  // On mount, drain any pending attempts from a previous offline session.
+  useEffect(() => {
+    const pending = pendingAttempts.list();
+    if (pending.length === 0) return;
+    (async () => {
+      for (const p of pending) {
+        try {
+          await record.mutateAsync({
+            scenarioId: p.scenarioId,
+            situationId: p.situationId,
+            positionChosen: p.positionChosen,
+            correct: p.correct,
+            answerPayload: p.answerPayload,
+            timeMs: p.timeMs,
+          });
+          pendingAttempts.remove(p.id);
+        } catch {
+          // Leave it queued; will retry next mount.
+          break;
+        }
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSubmit = async () => {
     if (!position || !answer) return;
-    const timeMs = Date.now() - startTime;
+    const timeMs = Date.now() - startTimeRef.current;
     setSubmitted(true);
+    quizResume.clear();
     try {
       await record.mutateAsync({
         scenarioId: scenario.id,
@@ -40,16 +99,35 @@ export function IqScenarioRunner({ situationId, scenario, actors }: Props) {
         timeMs,
       });
     } catch (e) {
-      toast({ title: "Couldn't save", description: e instanceof Error ? e.message : "Sign in to track progress.", variant: "destructive" });
+      // Queue offline; will retry on next mount.
+      pendingAttempts.enqueue({
+        scenarioId: scenario.id,
+        situationId,
+        positionChosen: position,
+        correct,
+        answerPayload: { position, answer },
+        timeMs,
+      });
+      toast({
+        title: "Saved offline",
+        description: "We'll send your answer the next time you're online.",
+      });
     }
   };
 
   const reset = () => {
     setPosition(null); setAnswer(null); setSubmitted(false);
+    startTimeRef.current = Date.now();
+  };
+
+  const handleSaveAndExit = () => {
+    // Snapshot already kept current by the effect above.
+    toast({ title: "Saved", description: "You can pick this rep back up anytime." });
+    navigate("/iq");
   };
 
   return (
-    <Card className="p-5 space-y-4">
+    <Card className="p-5 space-y-4" data-protected-editing="true">
       <p className="text-base font-medium">{scenario.prompt}</p>
 
       <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} />
@@ -88,6 +166,15 @@ export function IqScenarioRunner({ situationId, scenario, actors }: Props) {
                   onClick={handleSubmit} className="w-full">
             Lock it in <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
+
+          <div className="flex items-center justify-between gap-2 pt-2 border-t">
+            <Button type="button" variant="ghost" size="sm" onClick={reset}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Restart rep
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleSaveAndExit}>
+              <LogOut className="h-3.5 w-3.5 mr-1" /> Save & exit
+            </Button>
+          </div>
         </>
       )}
 
@@ -101,7 +188,10 @@ export function IqScenarioRunner({ situationId, scenario, actors }: Props) {
             {scenario.explanation && (
               <p className="text-sm text-muted-foreground">{scenario.explanation}</p>
             )}
-            <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
+              <Button size="sm" variant="ghost" onClick={() => navigate("/iq")}>Back to library</Button>
+            </div>
           </div>
         </div>
       )}
