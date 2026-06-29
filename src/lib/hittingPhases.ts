@@ -12,6 +12,16 @@ export interface HittingPhase {
   styleVariants: string[];
   failureSymptoms: string[];
   summary: string;
+  /**
+   * v2 (Arakawa) additive metadata. The athlete-felt order is
+   * P1 → P2 → P4 → (P3 emerges). Camera/coach order remains P1→P2→P3→P4.
+   * See `.lovable/hitting-philosophy-v2-arakawa-integration.md`.
+   */
+  feltOrder?: 1 | 2 | 3 | 4;
+  /** When true, no conscious athlete-facing cue may target this phase. */
+  doNotCue?: boolean;
+  /** When true, this phase emerges from upstream organization. */
+  involuntary?: boolean;
 }
 
 export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
@@ -31,6 +41,7 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
     ],
     summary:
       'Slow, controlled, balanced back-hip load BEFORE the hand load, timed to the pitcher starting delivery. Bigger hip load = more swing power.',
+    feltOrder: 1,
   },
   P2: {
     id: 'P2',
@@ -47,6 +58,7 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'chest_not_square_to_plate',
     ],
     summary: 'Bat/scap/knob load behind the head locks the balance Phase 1 created.',
+    feltOrder: 2,
   },
   P3: {
     id: 'P3',
@@ -66,7 +78,12 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'elbow_jammed_behind_hands',
     ],
     summary:
-      'Short controlled back-hip step; lands SIDEWAYS, chest+shoulders square to plate, both feet down, core max-tensioned.',
+      'Involuntary stride / heel plant. Emerges from organized P1+P2+P4 — never coached as a conscious action. Camera sees it third; hitter never feels it directly. Coach grades the landing, but the fix lives upstream in P1/P2/P4.',
+    // v2 Arakawa: P3 is the involuntary, do-not-cue phase. See
+    // `.lovable/p3-do-not-cue-rule.md`. CI lint enforces banned cue strings.
+    feltOrder: 4,
+    doNotCue: true,
+    involuntary: true,
   },
   P4: {
     id: 'P4',
@@ -86,9 +103,18 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'shoulders_open_before_elbow_extends',
     ],
     summary:
-      'Knob = fulcrum. Back elbow drives forward first; hands stay back; barrel catapults last.',
+      'Knob = fulcrum. Back elbow drives forward first; hands stay back; barrel catapults last. Hitter feels this as the third conscious action; P3 (stride/heel plant) emerges from it.',
+    feltOrder: 3,
   },
 };
+
+/**
+ * Athlete-felt order through the swing. Camera/coach order remains P1→P2→P3→P4
+ * (see HITTING_PHASES `.id`), but the hitter's conscious sequence is:
+ *   P1 (hip load) → P2 (hand load) → P4 (hitter's move) → P3 emerges involuntarily.
+ * See `.lovable/hitting-philosophy-v2-arakawa-integration.md`.
+ */
+export const HITTING_FELT_ORDER: readonly HittingPhaseId[] = ['P1', 'P2', 'P4', 'P3'] as const;
 
 export const TWO_PLUS_PHASE_VIOLATION_CAP = 65;
 
