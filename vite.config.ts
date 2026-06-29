@@ -41,9 +41,12 @@ export default defineConfig(({ mode }) => ({
       injectRegister: null,
       manifest: false,
       workbox: {
-        // CRITICAL: do NOT precache HTML. The precached index.html is what causes
-        // standalone (Home Screen) PWAs to ship the old shell after a deploy.
-        globPatterns: ['**/*.{js,css}'],
+        // CRITICAL: precache NEITHER HTML nor JS. Precaching hashed JS chunks
+        // is what strands installed PWAs on a manifest of vanished hashes
+        // after a deploy → "Importing a module script failed". Let the
+        // network serve JS, with a small SWR runtime cache as a safety net.
+        globPatterns: ['**/*.css'],
+
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // No navigateFallback: we always want HTML to come from the network on cold launch.
         navigateFallbackDenylist: [/^\/~oauth/],
@@ -67,7 +70,20 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
+            // Hashed JS chunks under /assets/ — NetworkFirst so a stale SW
+            // never hands a vanished hash to the browser after deploy.
+            urlPattern: ({ url, request }: { url: URL; request: Request }) =>
+              request.destination === 'script' && url.pathname.startsWith('/assets/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'js-assets',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 },
+            },
+          },
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-cache',
