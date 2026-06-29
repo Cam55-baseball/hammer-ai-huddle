@@ -592,6 +592,12 @@ export default function AnalyzeVideo() {
           height: probed.height,
           orientation: probed.orientation,
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
+          // Side stamp — only when picker is shown (switch hitter / ambidextrous thrower)
+          ...(shouldShowPicker(sideDiscipline)
+            ? (sideDiscipline === 'hit'
+                ? { batting_side: activeSide }
+                : { throwing_hand: activeSide })
+            : {}),
         }] as never)
         .select()
         .single();
