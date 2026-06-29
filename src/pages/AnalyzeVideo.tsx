@@ -409,6 +409,28 @@ export default function AnalyzeVideo() {
       return;
     }
 
+    // Client-side preflight: short-circuit obviously unanalyzable clips so
+    // users get a clear message instead of an opaque server rejection.
+    // Mirrors thresholds in src/lib/biomech/videoAcceptance.ts.
+    {
+      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC } = await import("@/lib/biomech/videoAcceptance");
+      if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
+        toast.error(`This clip is too small to analyze (${probed.width}×${probed.height}). Please upload at least ${MIN_WIDTH}×${MIN_HEIGHT} — re-exporting from your camera roll instead of forwarding from a messaging app usually fixes this.`);
+        setUploading(false);
+        return;
+      }
+      if (probed.fps_true < MIN_FPS) {
+        toast.error(`Video frame rate is too low (${probed.fps_true.toFixed(1)} fps). Please upload a clip recorded at ${MIN_FPS} fps or higher.`);
+        setUploading(false);
+        return;
+      }
+      if (probed.duration_sec < MIN_DURATION_SEC || probed.duration_sec > MAX_DURATION_SEC) {
+        toast.error(`Clips must be between ${MIN_DURATION_SEC}s and ${MAX_DURATION_SEC}s (this one is ${probed.duration_sec.toFixed(1)}s). Please trim and try again.`);
+        setUploading(false);
+        return;
+      }
+    }
+
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
     let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
