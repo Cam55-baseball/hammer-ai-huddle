@@ -121,10 +121,10 @@ const tiles: ReportCardTileSpec[] = [
     phase: "P3 Stride / Landing",
     explainer: {
       whatWhy:
-        "'Heel plant' is the moment the FULL foot is down — not just the heel — landed sideways with chest and shoulders square to the plate, core max-tensioned. The back hip is what controls the stride (a pitcher-style stride that tensions the core). If the scap stays loaded pre-stride, your stride naturally stays sideways as long as the shoulders don't begin to open — meaning you can engage all of P3 at full force without leaking. Turning shoulders WITH hips at landing creates a longer, more miss-prone swing.",
+        "'Heel plant' is the moment the FULL foot is down — not just the heel — landed sideways with chest and shoulders square to the plate, core max-tensioned. P3 is INVOLUNTARY: the landing is the body's solution to a clean P1 hip load + P2 hand load + P4 back-elbow drive. You don't think about the stride — when the upstream sequence is organized, the foot plants sideways on its own. If the scap stays loaded pre-stride, the landing naturally stays sideways as long as the shoulders don't begin to open. Turning shoulders WITH hips at landing creates a longer, more miss-prone swing.",
       howToImprove:
-        "Heel-plant pause drills with the scap held loaded the whole time. Back-hip-controls-stride dry work (no bat). Mirror landings checking shoulders are still closed. Slow-mo side-view review.",
-      encouragement: "Land it square. Scap loaded. Then explode.",
+        "Re-cue UPSTREAM, not the stride itself: (1) audit P1 hip-load completeness (bigger back-hip load = more swing power), (2) hold P2 scap/hand depth pre-stride, (3) reinforce P4 elbow-first intent. Constraint drills: heel-plant pause holds with the scap loaded; sideways-landing photo audit; outside-third front toss (the constraint forces the involuntary sideways landing). Mirror landings checking shoulders are still closed. Slow-mo side-view review.",
+      encouragement: "Organize the hip, hands, and elbow — the foot lands itself.",
     },
     compute: (a) => {
       const m = readScore100(a, "heel_plant_score_100", "heel_plant_score_10");
@@ -142,7 +142,7 @@ const tiles: ReportCardTileSpec[] = [
     explainer: {
       whatWhy:
         "Foot-down-at-release is the perfect target because it sets direction while preserving the longest possible look at the ball. This is now graded, not pass/fail: exact release earns the highest score, slightly late is still acceptable, and clearly late fails because the hitter lost look-time. Foot down before release is not punished like late timing; if the hitter gets down early and then drifts forward, that drift belongs to P1 Hip Load Stability or landing quality — not this timing score.",
-      howToImprove: "Live BP with a count cue: 'release' = foot down. If you're consistently late, start the hand load sooner and let the back hip control the stride earlier. Do not create forward drift just to be on time — stability is scored separately.",
+      howToImprove: "Live BP with a count cue: 'release' = foot down. If you're consistently late, START P1 EARLIER — begin the back-hip load and the P2 hand load sooner so the upstream sequence has time to complete; the involuntary landing will arrive on time. Never coach the stride directly. Do not create forward drift just to be on time — stability is scored separately.",
       encouragement: "Foot down at release is perfect. A hair late is okay. Clearly late is the miss.",
     },
     compute: (a) => {
@@ -199,7 +199,7 @@ const tiles: ReportCardTileSpec[] = [
       whatWhy:
         "Sequencing is the ORDER the kinetic chain fires in: back hip → torso/shoulders → back elbow → hands → barrel. Each segment loads the next; nothing fires until the segment behind it has done its job. Pass means the order held. Fail means a segment jumped the line — usually shoulders firing with the hips, or hands pushing before the elbow led — which steals power from everything downstream and shortens the contact window. A low score here is the single biggest leak you can have, because every later metric (bat path, on-plane, time to contact, bat speed) is downstream of it.",
       howToImprove:
-        "Pause-pause tee rounds (load → pause → stride → pause → swing). Back-hip-to-floor dry work — load the back hip and let IT drive the foot down, no voluntary hip after landing. Front-toss with a partner calling out the chain ('hip — shoulder — elbow — hand — barrel') so you feel the order, not just the swing.",
+        "Pause-pause tee rounds (load → pause → swing — the stride emerges on its own, never voluntary). Load the back hip and let it UNLOAD when P4 fires — bigger early hip load = more swing power. Front-toss with a partner calling out the chain ('hip — shoulder — elbow — hand — barrel') so you feel the order, not just the swing.",
       encouragement: "Hip first. Barrel last. The order is the swing.",
     },
     compute: (a) => {
