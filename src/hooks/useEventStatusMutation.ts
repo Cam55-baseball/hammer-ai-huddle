@@ -18,7 +18,7 @@ export type EventKind = "game" | "practice";
 export type EventStatus = "scheduled" | "canceled";
 
 const TABLE: Record<EventKind, string> = {
-  game: "games",
+  game: "gp_games",
   practice: "scheduled_practice_sessions",
 };
 const DATE_COL: Record<EventKind, string> = {

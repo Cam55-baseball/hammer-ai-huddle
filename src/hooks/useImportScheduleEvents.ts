@@ -60,11 +60,7 @@ export function useImportScheduleEvents() {
         (supabase as any).from("profiles").select("full_name").eq("id", uid).maybeSingle(),
         (supabase as any).from("athlete_mpi_settings").select("sport").eq("user_id", uid).maybeSingle(),
       ]);
-      const defaultTeamName = (profile?.full_name?.trim() || "My Team") + " (imported)";
       const defaultSport = settings?.sport || "baseball";
-      const defaultLeagueLevel = "unknown";
-      const defaultBaseDistance = 90;
-      const defaultMoundDistance = 60.5;
 
       for (const ev of events) {
         const day = ev.start_date;
@@ -76,12 +72,8 @@ export function useImportScheduleEvents() {
         if (ev.kind === "game" || ev.kind === "tournament_day") {
           gameRows.push({
             user_id: uid,
-            team_name: defaultTeamName,
-            league_level: defaultLeagueLevel,
-            base_distance_ft: defaultBaseDistance,
-            mound_distance_ft: defaultMoundDistance,
             game_date: day,
-            opponent_name: ev.opponent ?? ev.title,
+            opponent_team: ev.opponent ?? ev.title,
             venue: ev.location ?? null,
             status: "scheduled",
             game_type: ev.kind === "tournament_day" ? "tournament" : "regular_season",
@@ -119,7 +111,7 @@ export function useImportScheduleEvents() {
       }
 
       if (gameRows.length) {
-        const { error } = await (supabase as any).from("games").insert(gameRows);
+        const { error } = await (supabase as any).from("gp_games").insert(gameRows);
         if (error) {
           summary.failed += gameRows.length;
           summary.errors.push(`Games: ${error.message}`);

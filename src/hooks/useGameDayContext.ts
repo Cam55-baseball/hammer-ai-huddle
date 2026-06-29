@@ -61,7 +61,7 @@ export function useGameDayContext(): GameDayContext {
     staleTime: 60_000,
     queryFn: async () => {
       const { data } = await (supabase as any)
-        .from("games")
+        .from("gp_games")
         .select("game_date")
         .eq("user_id", user!.id)
         .gte("game_date", start7dAgo)

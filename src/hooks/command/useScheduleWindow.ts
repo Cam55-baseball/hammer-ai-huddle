@@ -86,14 +86,20 @@ export function useScheduleWindow(): ScheduleWindow {
     staleTime: 60_000,
     queryFn: async () => {
       const { data } = await (supabase as any)
-        .from("games")
-        .select("id, game_date, opponent_name, status, game_type")
+        .from("gp_games")
+        .select("id, game_date, opponent_team, status, game_type")
         .eq("user_id", uid!)
         .gte("game_date", start)
         .lte("game_date", end)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
         .order("game_date", { ascending: true });
-      return (data ?? []) as Array<{
+      return ((data ?? []) as any[]).map((g: any) => ({
+        id: g.id,
+        game_date: g.game_date,
+        opponent_name: g.opponent_team ?? "",
+        status: g.status,
+        game_type: g.game_type,
+      })) as Array<{
         id: string;
         game_date: string;
         opponent_name: string;
