@@ -1,106 +1,99 @@
+## Goal
 
-# Game Performance System — Complete Rebuild
+Complete the 7-Phase Game Performance rebuild on top of the already-shipped `gp_*` ledger and Phase 1–2 shell. Every new surface reads/writes only `gp_*` tables, is autosave-on-blur, save-and-exit safe, switch-side aware, and survives chunk reloads. No drift back to the legacy `games` table.
 
-A full replacement of personal game logging. Built to drive the roadmap, daily plan, dashboards, and AI coaching — not just record stats. Baseball + softball, switch-hitter/thrower aware, side-tagged everywhere.
+## Phase 3 — Pitch-by-Pitch logger (the one Phase 3 piece still missing)
 
-## Guiding principles
+New `src/components/games/PitchLogger.tsx` and `useGamePitches.ts`:
 
-- **One canonical event ledger.** Every at-bat, pitch, defensive play, baserunning event, and substitution is a typed row tied to `(game, inning, half, side, position)`. No more parallel schemas.
-- **Text-first + button-fast.** Every input has a structured form AND a free-text box. Save & Exit anywhere; resume later.
-- **AI as accelerator, not gatekeeper.** Trackman / GameChanger / Rapsodo / photos parse into draft events; user confirms per inning.
-- **Position-open.** A game is not locked to one position. Switch positions mid-game, log DH, pinch-hit, pinch-run, late-relief, defensive replacement.
-- **Switch hitter / switch thrower aware.** Every offensive + defensive event carries a `side` field, feeding the existing `SideContext` differential.
-- **Opponent memory.** Every pitcher / opponent named once becomes a reusable dossier surfaced next time you face them.
-- **Drives the app.** Game data feeds Hammer daily plan, roadmap weaknesses, dashboards, and AI feedback — not a dead-end log.
+- Tabs inside the logger: **As Pitcher** vs **As Hitter** — writes to `gp_pitches` with `perspective` = `pitcher` or `hitter`.
+- Per-pitch row: inning, pitch #, type, velo, location (9-zone grid + ball/off-plate), result (ball/called/swinging/foul/in-play), count before, arm slot, throws (L/R), batter handedness, opponent hitter name link, notes.
+- When `perspective='hitter'`, autofills `at_bat_id` with the currently-active at-bat (last open AB on the same inning) and updates the parent at-bat aggregates (`pitch_velo`, `pitch_type`, `pitch_location`) on the final pitch of the PA.
+- Add `<TabsTrigger value="pitches">` to `GameSheet.tsx` between At-Bats and Defense.
+- 9-zone visual: small SVG strike-zone grid, taps set `location.zone` (1–9) + optional `out_zone` (HL/HR/LL/LR/Up/Down). Lives in `src/components/games/StrikeZoneGrid.tsx` so Phase 4 reuses it.
 
-## Visual direction
+## Phase 4 — Opponent Dossiers + Strike-Zone Planner
 
-Game Day = the most polished surface in the app. Dark glassy field-themed background, semantic tokens only, large tap targets, sticky inning rail, tabbed events bar (At-Bat / Pitch / Defense / Baserun / Sub), animated diamond mini-map showing current state, framer-motion transitions between events. Trackman-quality dataviz for heat maps and spray.
+New page `/games/dossiers` (lazy route from `Games.tsx` "Pitcher dossiers" tile):
 
----
+- `src/pages/Dossiers.tsx`: list with search, sport filter, "last faced" sort. Two sub-tabs: **Pitchers** (`gp_pitcher_dossiers`) and **Hitters** (`gp_opponent_hitters`).
+- `src/components/games/PitcherDossierDrawer.tsx`: edit throws, arm slot, repertoire (chip list with usage% sliders), tendencies (0-0 first-pitch %, put-away pitch, behind-in-count tendency), pregame/postgame notes, strike-zone plan.
+- `src/components/games/StrikeZonePlanner.tsx`: same 9-zone grid; each zone can be marked **attack / avoid / take** with a color, plus per-zone pitch-type preference. Saved to `gp_pitcher_dossiers.strike_zone_plan` jsonb.
+- Post-game overlay: when a `gp_pitches.opponent_hitter_name` matches and `perspective='hitter'`, render dots on the same grid (filled by `result`) so the athlete sees plan-vs-actual.
+- `src/components/games/HitterDossierDrawer.tsx`: bats, tendencies (chases high/low, pull/oppo, first-pitch swing %), notes.
+- Dossier picker integrated into `AtBatLogger` (opponent pitcher dropdown writes `opponent_pitcher_id` foreign-soft-link) and `PitchLogger` (opponent hitter name autocomplete).
 
-## Phase 1 — Hard wipe + new schema (foundation)
+## Phase 5 — AI Multimodal Document/Photo ingest
 
-Migration drops `games`, `game_plays`, `game_opponents` and any dependent triggers/views. Creates the new ledger:
+Edge function `supabase/functions/gp-ingest-document/index.ts`:
 
-- `gp_games` — date, sport, opponent_team, home/away, venue, weather, score, lineup_slot, my_positions[], status, philosophy_pre, philosophy_post, philosophy_verdict (`keep`/`tweak`/`can`).
-- `gp_innings` — game_id, number, half (`top`/`bot`), my_role (`offense`/`defense`/`bench`).
-- `gp_at_bats` — game_id, inning, batting_side L/R, position_played, opponent_pitcher_id, count_final, result enum, contact_quality, exit_direction, pitch_location grid, pitch_type, pitch_movement, runners_on, outs, lop, ribi, h1_time (sec), notes, ai_summary.
-- `gp_pitches` — at_bat_id, pitch_no, type, velo, location grid, result, pitcher_arm_slot, batter_handedness (mirror logger for pitcher's outing).
-- `gp_defense_plays` — game_id, inning, position, play_type (catalogue mirrors practice hub), shift (`L/R/extreme_L/extreme_R/in/back/no_shift`), result, error_flag, time_to_first (sec), notes.
-- `gp_baserun_events` — game_id, inning, base_from, base_to, event_type (`steal`/`dirtball_read`/`pickoff`/`advance`/`caught`), lead_steps, pitcher_arm_side, pitcher_time_to_home, catcher_pop_time, pitch_type_ran_on, success, notes.
-- `gp_subs` — game_id, inning, type (`pinch_hit`/`pinch_run`/`def_replace`/`relief`), in/out position.
-- `gp_pitcher_dossiers` — name, team, sport, throws L/R, arm_slot, repertoire, tendencies, notes_pregame, notes_postgame, strike_zone_plan_grid (json: 5×5 tap squares with intent), last_faced.
-- `gp_opponent_hitters` — for the pitcher mirror (hitter lineup tracker).
-- `gp_documents` — uploaded Trackman/GameChanger/Rapsodo/photo, parse_status, parsed_events_json, attached_inning.
+- Accepts `{ game_id, file_url, file_mime, source }`. Sources: `trackman`, `gamechanger`, `rapsodo`, `scorebook_photo`, `box_score`, `other`.
+- Calls Lovable AI Gateway (`google/gemini-3-flash-preview`) with the file as `image_url` (jpg/png) or `file` block (pdf/csv) — MIME derived from upload, never hardcoded.
+- Strict Zod-shaped `Output.object` schema: `{ events: Array<{ kind: 'at_bat'|'pitch'|'defense'|'baserun'; inning; payload: {...} }> }`. Schema is small and flat (Gemini-state-limit safe).
+- Writes raw text + parsed JSON to `gp_documents`, sets `parse_status='parsed'|'failed'`.
+- Returns parsed events; client reviews and confirms per-inning before inserting into the right `gp_*` table.
+- New `src/components/games/DocumentIngestTab.tsx` (new tab in `GameSheet`): upload widget → signed URL → invoke function → grouped-by-inning approval list with per-event "Insert / Skip / Edit". 429/402 errors surfaced verbatim per gateway rules; no auto-retry.
 
-All tables: `user_id`, RLS scoped to `auth.uid()`, GRANTs to `authenticated`/`service_role`, `updated_at` triggers. Side feeds existing `SideContext` aggregations.
-
-## Phase 2 — Game Shell + At-Bat Logger (V1 visible UX)
-
-- New top-level **Games** route + nav entry (sport-themed). List, calendar, search.
-- "Did you play today?" button in Hammer Daily Plan on scheduled game days → opens the same Game Sheet.
-- Game Sheet layout:
-  - Header: opponent, date, my position(s) chips (add/swap mid-game), philosophy pre/post.
-  - Inning rail (sticky 1–9+) with offense/defense indicator.
-  - Event bar: **At-Bat · Pitch · Defense · Baserun · Sub · Notes**.
-  - At-Bat drawer reuses practice-hub micro layer (`PitchLocationGrid`, `CountSelector`, `ContactQualitySelector`, `ExitDirectionSelector`, `PitchMovementSelector`) + new fields: position played, batting side, RBI, LOB, H1 time, opponent pitcher (dropdown of dossiers, "Add new" inline), free-text notes with AI summary on save.
-  - "New pitcher entered" inline action creates/updates dossier and tags subsequent ABs.
-- Save & Exit at every level (autosave to draft).
-
-## Phase 3 — Pitch-by-pitch + Defense + Baserun + Sub loggers
-
-- Pitch-by-pitch sheet for hitter's AB and pitcher's outing (lineup tracker on the mound).
-- Defense logger mirrors practice hub catalogue + shift selector + position-open switching.
-- Baserun logger: lead steps, pitcher time-to-home, catcher pop, arm side, pitch type ran on, success — all surfaced as quick chips.
-- Sub logger handles pinch-hit/run, late relief, defensive replacement.
-
-## Phase 4 — Opponent Pitcher Dossier system
-
-- Persistent `gp_pitcher_dossiers`. Surface card on any AB when that pitcher is selected.
-- Pre-game tap-grid strike-zone plan (5×5 squares, multi-tap with intent labels). Save & resume post-game with results overlay.
-- Arm slot picker (over-top / high-3/4 / 3/4 / low-3/4 / sidearm / submarine) + repertoire chips.
-- Searchable by name, team, throws, arm slot, pitch type.
-
-## Phase 5 — Document & photo AI ingest
-
-- Edge function `ingest-game-doc` (Gemini 2.5 Pro multimodal): accepts Trackman CSV, GameChanger export, Rapsodo CSV, or photo of scorebook/report.
-- Returns structured draft events with confidence; UI shows per-event cards user assigns to inning + edits + saves.
-- Attaches original file to `gp_documents` for audit.
+Storage: create `gp_documents` bucket (private) via migration; signed URLs valid 1h passed to the function.
 
 ## Phase 6 — Report Builder
 
-- Per-role reports (Hitter / Pitcher / Defender / Baserunner) with side filter:
-  - Heat maps (pitch location seen, contact location), spray charts, sequencing trees ("what's thrown to me in 0-2"), result-by-pitch-type, result-by-arm-slot, vs L/R pitching, situational LOB/RISP.
-  - Strengths / weaknesses ranked by sample-size-adjusted confidence (uses existing confidence/missingness lineage).
-- Search across games: opponent, date, inning, pitcher, pitch type, result, position, side.
+New `src/pages/GameReports.tsx` linked from the "Reports" tile in `Games.tsx`:
 
-## Phase 7 — Cross-app integration (Hammer + Roadmap + Dashboards + AI)
+- **Hitter heat map**: pulls `gp_pitches` (perspective='hitter') + `gp_at_bats.pitch_location`. SVG 9-zone, color = batting avg / xwOBA-lite (hits ÷ swings-in-play). Filters: side (L/R via SideContext), pitch type, count, last N games.
+- **Spray chart**: `gp_at_bats.exit_direction` → polar plot on a diamond. Colored by `contact_quality`. Filters same as above.
+- **Pitch arsenal report** (perspective='pitcher'): velo distribution, usage %, whiff %, called-strike % per zone — re-uses StrikeZoneGrid.
+- **Defense splits**: by position, by play_type, errors trend.
+- **Baserunning splits**: SB% by lead steps, by pitcher arm side, by pitch type.
+- Each chart has an "Ask Hammer" button that posts the underlying aggregate to `hammer-chat` for plain-English interpretation (reuses existing `useHammerChat`).
 
-- Game-day weaknesses feed `dailyPlan.ts` modulation (e.g., 0-2 K-rate spike → next-day plate-discipline block).
-- Roadmap goal progress receives game-derived signals tagged by category + side.
-- Progress Dashboard adds Game tiles (correlations engine ingests `gp_*`).
-- Ask Hammer gets `gp_*` context for game-specific Q&A.
-- Side differential pipeline auto-aggregates from new tables.
+All aggregates in `src/lib/games/reports/*.ts` so they are unit-testable and stay drift-proof from the UI.
 
----
+## Phase 7 — App-wide integration
 
-## Technical notes
+- **HammerDailyPlan**: `src/lib/hammer/prescription/dailyPlan.ts` gets a new `applyGameLedgerSignals(plan, ledger)` step that reads the last 7d from `gp_at_bats` / `gp_pitches` / `gp_defense_plays` and surfaces a "From your last game" block (e.g. "0-for-3 vs CB low-and-away → 10 min CB recognition drill").
+- **useGameDayContext**: extend `recentGames` to also count `gp_at_bats` for fatigue/density (a 4-AB DH counts heavier than a 1-AB pinch hit).
+- **Roadmap**: `src/hooks/useRoadmapProgress.ts` — new milestone signals fed by ledger aggregates (e.g. "10 quality ABs vs LHP", "5 successful steals").
+- **Progress Dashboard**: add `GameLedgerPanel.tsx` under `src/components/progress/panels/`, plus 2 correlation variables in `topicVariables.ts` (e.g. `gp_avg_exit_velo`, `gp_pop_time`). Surfaces in the existing `TopicButtonGrid`.
+- **Calendar**: confirm `useCalendar.ts` (already migrated to `gp_games`) renders the new game-type/colors; add a small badge when a game has logged ABs/pitches.
 
-- **Stack:** existing React/Vite/Tailwind/shadcn + framer-motion. Reuses `SideContext`, `useSportConfig`, `protectedEditing`, `lazyWithRetry`.
-- **AI:** Lovable AI Gateway, `google/gemini-2.5-pro` for multimodal doc parse, `google/gemini-3-flash-preview` for AI summaries/notes.
-- **Files added (high level):** `src/pages/Games.tsx`, `src/pages/GameSheet.tsx`, `src/components/games/*` (AtBatDrawer, PitchByPitchDrawer, DefenseDrawer, BaserunDrawer, SubDrawer, PitcherDossierCard, StrikeZonePlanner, InningRail, EventBar, DocImportDialog, GameSearch), `src/hooks/useGameSheet.ts` (autosave), `src/lib/games/*` (event normalizers, side router, weakness emitter), `src/lib/reports/*` (heat/spray/sequence builders), `supabase/functions/ingest-game-doc/index.ts`.
-- **Files deleted:** `src/components/game-scoring/GameSummaryView.tsx`, `src/components/splits/GameAtBatLogger.tsx`, `src/hooks/useGamePlays.ts`, related old hooks.
-- **Migration is destructive.** Confirmed by user — no backup.
+## Drift-proof guards
 
-## Order of shipping
+- Repo-wide grep gate: add `scripts/check-no-legacy-games.sh` that fails CI if any non-types file references `from('games')` / `from("games")` / `opponent_name`. Document it in `docs/games-rebuild.md`.
+- All new hooks use `(supabase as any).from('gp_*')` consistently and route writes through a single `src/lib/games/ledger.ts` adapter so a future rename only touches one file.
+- Every new lazy route wrapped in `lazyWithRetry` to survive stale-chunk reloads.
+- Storage bucket + edge function deployed via migration; `LOVABLE_API_KEY` confirmed via `fetch_secrets` before the function ships.
 
-1. Migration + types (Phase 1)
-2. Game Shell + At-Bat (Phase 2) → usable end-to-end immediately
-3. Pitch / Defense / Baserun / Sub (Phase 3)
-4. Pitcher Dossiers + Strike-zone planner (Phase 4)
-5. Doc/photo AI ingest (Phase 5)
-6. Report Builder (Phase 6)
-7. Hammer + Roadmap + Dashboard wiring (Phase 7)
+## Technical details
 
-Each phase is a single approve-and-go batch; after Phase 1's migration approval, the rest is straight code.
+```text
+gp_games ──┬── gp_at_bats ── gp_pitches (perspective=hitter, at_bat_id FK-soft)
+           ├── gp_pitches  (perspective=pitcher, at_bat_id NULL)
+           ├── gp_defense_plays
+           ├── gp_baserun_events
+           ├── gp_subs
+           └── gp_documents ── parsed_events[] → fan-out into the tables above
+
+gp_pitcher_dossiers  ◄── gp_at_bats.opponent_pitcher_id
+gp_opponent_hitters  ◄── gp_pitches.opponent_hitter_name (text match, not FK)
+```
+
+New files (high level):
+- `src/components/games/PitchLogger.tsx`, `StrikeZoneGrid.tsx`, `StrikeZonePlanner.tsx`, `PitcherDossierDrawer.tsx`, `HitterDossierDrawer.tsx`, `DocumentIngestTab.tsx`
+- `src/pages/Dossiers.tsx`, `src/pages/GameReports.tsx`
+- `src/hooks/useGamePitches.ts`, `useGameDossiers.ts`, `useGameReports.ts`
+- `src/lib/games/ledger.ts`, `src/lib/games/reports/{heatmap,spray,arsenal,defense,baserun}.ts`
+- `supabase/functions/gp-ingest-document/index.ts` + storage bucket migration
+- `src/components/progress/panels/GameLedgerPanel.tsx`
+
+## Out of scope (deferred, not silently dropped)
+
+- Live "in-stadium" mode with offline queue (already covered loosely by autosave; full offline-first sync deferred).
+- Coach-shared dossiers (RLS scaffold added but no UI this round).
+
+## Acceptance — done means all true
+
+1. Every Phase 3–7 surface above loads, writes, and re-reads without a console error.
+2. `rg "from\\(['\"]games['\"]\\)" src/` returns zero matches (excluding `types.ts`).
+3. Creating a game → logging 1 AB + 1 pitch + 1 defense + 1 steal + uploading a scorebook photo → seeing the AB in the heat map and a "From your last game" line in the Hammer plan, all in one session.
+4. Stale-chunk reload on any new route recovers via `lazyWithRetry`.

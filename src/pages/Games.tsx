@@ -17,7 +17,7 @@ import {
   Trophy,
   ArrowRight,
   Sparkles,
-  FileUp,
+  BarChart3,
   Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -191,15 +191,15 @@ export default function Games() {
         />
         <HelperTile
           icon={<Users className="h-5 w-5" />}
-          title="Pitcher dossiers"
-          desc="Persistent notes on every pitcher you've faced. Pre-game strike-zone plan + post-game results overlay."
-          onClick={() => navigate("/games?dossiers=1")}
+          title="Dossiers"
+          desc="Persistent notes on every pitcher and hitter you've faced. Pre-game strike-zone plan + post-game review."
+          onClick={() => navigate("/games/dossiers")}
         />
         <HelperTile
-          icon={<FileUp className="h-5 w-5" />}
+          icon={<BarChart3 className="h-5 w-5" />}
           title="Reports"
-          desc="Heat maps, spray, sequencing, strengths/weaknesses — across all sides (L/R) you've used."
-          onClick={() => toast.info("Reports unlock as you log games.")}
+          desc="Heat maps, plate discipline, pitcher usage, defense and baserun — switch-side aware."
+          onClick={() => navigate("/games/reports")}
         />
       </div>
 

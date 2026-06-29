@@ -192,6 +192,8 @@ const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressLanding"))
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
 const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
 const Games = lazyWithRetry(() => import("./pages/Games"));
+const Dossiers = lazyWithRetry(() => import("./pages/Dossiers"));
+const GameReports = lazyWithRetry(() => import("./pages/GameReports"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
@@ -407,6 +409,8 @@ const App = () => {
               <Route path="/organization" element={<OrganizationDashboard />} />
               <Route path="/admin-verification" element={<AdminVerification />} />
               <Route path="/games" element={<Games />} />
+              <Route path="/games/dossiers" element={<Dossiers />} />
+              <Route path="/games/reports" element={<GameReports />} />
               <Route path="/game-scoring" element={<Navigate to="/games" replace />} />
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
