@@ -160,24 +160,48 @@ export default function GameIqSituation() {
               ))}
             </Card>
 
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="space-y-3">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Tap a position to study its job
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {DEFENSIVE_ROLES.map((r) => {
-                  const a = actors.find((x) => x.role === r);
-                  return (
-                    <Button key={r} size="sm"
-                            variant={hover === r ? "default" : "outline"}
-                            onClick={() => setHover(hover === r ? null : r)}
-                            style={a ? { borderColor: ASSIGNMENT_COLOR[a.assignment] } : undefined}>
-                      {r}
-                    </Button>
-                  );
-                })}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Defense</div>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {DEFENSIVE_ROLES.map((r) => {
+                    const a = actors.find((x) => x.role === r);
+                    if (!a) return null;
+                    return (
+                      <Button key={r} size="sm"
+                              variant={hover === r ? "default" : "outline"}
+                              onClick={() => setHover(hover === r ? null : r)}
+                              style={{ borderColor: ASSIGNMENT_COLOR[a.assignment] }}>
+                        {r}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
+              {OFFENSIVE_ROLES.some((r) => actors.some((x) => x.role === r)) && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Offense</div>
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    {OFFENSIVE_ROLES.map((r) => {
+                      const a = actors.find((x) => x.role === r);
+                      if (!a) return null;
+                      return (
+                        <Button key={r} size="sm"
+                                variant={hover === r ? "default" : "outline"}
+                                onClick={() => setHover(hover === r ? null : r)}
+                                style={{ borderColor: ASSIGNMENT_COLOR[a.assignment] }}>
+                          {r}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
+
 
             {hoveredActor && (
               <Card className="p-5 space-y-3 animate-fade-in">
