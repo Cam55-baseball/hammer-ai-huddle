@@ -202,6 +202,8 @@ export default function ProgressLanding() {
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
 
+        <IqInsightCard />
+
         <div className="space-y-3">
           {ranked.map((r, idx) => {
             const def = TOPIC_DEFS[r.id];
