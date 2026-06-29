@@ -9,6 +9,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SideContextProvider } from "@/contexts/SideContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { QuickEditProfileProvider } from "./components/profile/QuickEditProfile";
 import { RequireCapability } from "./lib/auth/governance/requireRole";
