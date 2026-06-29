@@ -37,6 +37,8 @@ import { AtBatLogger } from "./AtBatLogger";
 import { DefenseLogger } from "./DefenseLogger";
 import { BaserunLogger } from "./BaserunLogger";
 import { SubLogger } from "./SubLogger";
+import { PitchLogger } from "./PitchLogger";
+import { GameDocumentIngest } from "./GameDocumentIngest";
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
 
@@ -144,12 +146,14 @@ export function GameSheet({
         ) : (
           <div className="px-6 py-4">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid grid-cols-6 w-full">
+              <TabsList className="flex flex-wrap h-auto justify-start w-full">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="atbats">At-Bats</TabsTrigger>
+                <TabsTrigger value="pitches">Pitches</TabsTrigger>
                 <TabsTrigger value="defense">Defense</TabsTrigger>
                 <TabsTrigger value="baserun">Baserun</TabsTrigger>
                 <TabsTrigger value="subs">Subs</TabsTrigger>
+                <TabsTrigger value="import">Import</TabsTrigger>
                 <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
 
@@ -163,6 +167,9 @@ export function GameSheet({
               <TabsContent value="atbats" className="pt-4">
                 <AtBatLogger gameId={gameId} sport={g.sport} />
               </TabsContent>
+              <TabsContent value="pitches" className="pt-4">
+                <PitchLogger gameId={gameId} sport={g.sport} />
+              </TabsContent>
               <TabsContent value="defense" className="pt-4">
                 <DefenseLogger gameId={gameId} />
               </TabsContent>
@@ -171,6 +178,9 @@ export function GameSheet({
               </TabsContent>
               <TabsContent value="subs" className="pt-4">
                 <SubLogger gameId={gameId} />
+              </TabsContent>
+              <TabsContent value="import" className="pt-4">
+                <GameDocumentIngest gameId={gameId} sport={g.sport} />
               </TabsContent>
               <TabsContent value="notes" className="pt-4 space-y-3">
                 <Label>Philosophy — pre-game</Label>
