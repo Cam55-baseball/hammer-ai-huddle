@@ -48,6 +48,7 @@ import { projectScheduleSignal } from "@/lib/hammer/prescription/scheduleContext
 import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
+import { SideContextPicker } from "@/components/shared/SideContextPicker";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
