@@ -62,10 +62,11 @@ export default function IqLibrary() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [sportFilter, setSportFilter] = useState<"all" | IqSport>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | IqStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | IqStatus | "deleted">("all");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<SituationRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isOwner) navigate("/dashboard", { replace: true });
@@ -76,13 +77,54 @@ export default function IqLibrary() {
     queryFn: async () => {
       let q = supabase.from("iq_situations").select("*").order("canonical_order");
       if (sportFilter !== "all") q = q.eq("sport", sportFilter);
-      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (statusFilter === "deleted") {
+        q = q.not("deleted_at", "is", null);
+      } else {
+        q = q.is("deleted_at", null);
+        if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      }
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as SituationRow[];
     },
     enabled: isOwner,
   });
+
+  const refreshAll = () => {
+    qc.invalidateQueries({ queryKey: ["iq-library"] });
+    qc.invalidateQueries({ queryKey: ["iq-situations"] });
+  };
+
+  const handleDuplicate = async (id: string, title: string) => {
+    try {
+      await duplicateSituation(id);
+      toast({ title: "Duplicated", description: `${title} → draft copy` });
+      refreshAll();
+    } catch (e) {
+      toast({ title: "Duplicate failed", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+    }
+  };
+
+  const handleSoftDelete = async (id: string, title: string) => {
+    try {
+      await softDeleteSituation(id);
+      toast({ title: "Hidden", description: `${title} hidden from athletes (restore from Deleted tab)` });
+      refreshAll();
+    } catch (e) {
+      toast({ title: "Hide failed", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+    }
+  };
+
+  const handleRestore = async (id: string, title: string) => {
+    try {
+      await restoreSituation(id);
+      toast({ title: "Restored", description: title });
+      refreshAll();
+    } catch (e) {
+      toast({ title: "Restore failed", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+    }
+  };
+
 
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase();
