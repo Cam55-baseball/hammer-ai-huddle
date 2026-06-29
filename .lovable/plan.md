@@ -1,37 +1,53 @@
-## Problem
+## Goal
 
-"Importing a module script failed" fires when a lazy-loaded route chunk's hash no longer exists on the server — typically after a deploy while the browser is holding an older `index.html` reference (esp. on installed PWAs). The current `lazyWithRetry` in `src/App.tsx` retries the same broken URL 3× and then surrenders to the local `ErrorBoundary`, which is why "Try again" never recovers — the file at that hash is permanently gone.
+Let switch hitters / ambidextrous throwers tag each ranked sub-goal with a side (L, R, or Both) inside `CategoryGoalsStep` (onboarding) and `CategoryGoalsCard` (settings), persist it through the V2 payload, and feed it into the existing side-bias intelligence — without breaking non-switch athletes who should still see no picker.
 
-## Fix (global, swift)
+## Scope
 
-### 1. `src/App.tsx` — make `lazyWithRetry` self-healing
-- On the **final** retry failure for a chunk-load / module-import error, do a **one-shot hard reload** with a cache-bust param (`?_cb=<buildId>`), guarded by `sessionStorage` so we never loop:
-  - Detect via `error.name === 'ChunkLoadError'` OR `/Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(error.message)`.
-  - Key: `sessionStorage['chunkReload:' + importPath]`. If already set, fall through and throw (lets ErrorBoundary show its message instead of reload-looping).
-- Apply the same wrap to the two preloaded lazies (`Dashboard`, `ScoutDashboard`) so the preload path isn't an escape hatch.
+1. **Data model (`src/lib/hammer/goals/categoryGoals.ts`)**
+   - Extend `SubGoalPick` with `side?: 'L' | 'R' | 'both'`.
+   - `normalizePicks` accepts/sanitizes the `side` field (legal values only; default `undefined`, meaning "unscoped / both"). Fully back-compatible: legacy picks without `side` load unchanged.
+   - `scoreSkillLevers` extended to optionally accept `{ side?: 'L' | 'R' }`. When passed, picks tagged for the opposite side contribute 0; `both` / untagged picks contribute normally. Default call signature unchanged → no regression for existing callers.
+   - `v2ToV1` unchanged (side is detail, not rank).
 
-### 2. `src/App.tsx` — global listeners catch chunk errors outside `lazy()`
-Add a `useEffect` in `App` that listens for:
-- `window.addEventListener('error', …)` filtering for the same message patterns
-- `window.addEventListener('unhandledrejection', …)` for promise rejections from dynamic `import()` calls anywhere in the app
+2. **UI chip — onboarding (`CategoryGoalsStep.tsx`)**
+   - Gate on `useSideContext()`: only render the side chip for the relevant discipline (hit chip on hitting/power sub-goals when `isSwitchHitter`; throw chip on throwing/pitching sub-goals when `isAmbidextrousThrower`).
+   - Compact 3-segment toggle `R / L / Both` next to each selected sub-goal (primary + secondary), defaulting to the athlete's last-used side for that discipline, falling back to `both`.
+   - Toggling writes `side` into the pick within the V2 payload via the existing autosave path. No new save button required.
 
-…and routes them through the same `triggerChunkReload(importKey)` helper. This covers non-route dynamic imports (e.g. dialogs, drill detail sheets opened from "Open Baserunning").
+3. **UI chip — settings (`CategoryGoalsCard.tsx`)**
+   - Mirror the same per-pick chip in the editable view. Read-only view shows a tiny `SideBadge` next to picks that have a side.
 
-### 3. `vite.config.ts` — keep workbox honest
-Already `globPatterns: ['**/*.{js,css}']` precaches JS — which is exactly what makes hashed chunks go stale post-deploy in installed PWAs. Change to **`globPatterns: ['**/*.css']` only** (or drop JS precache and add a `runtimeCaching` rule for `/assets/*.js` with `StaleWhileRevalidate` + short maxAgeSeconds). This stops the SW from serving a manifest of vanished hashes after an update.
+4. **Review surface (`ReviewAnswersStep.tsx`)**
+   - When rendering picks, append `SideBadge` if `side && side !== 'both'`.
 
-### 4. `src/registerSW.ts` (verify) — on `needRefresh`, prompt + `updateSW(true)`; on first uncaught chunk error, call `updateSW(true)` once before the cache-bust reload so the new SW takes over.
+5. **Intelligence wiring**
+   - `src/lib/hammer/prescription/dailyPlan.ts`: where it calls `scoreSkillLevers(...)`, when the current plan block is side-aware (hitting / throwing / pitching) and the athlete is switch/ambi, pass `{ side: activeSide }`. This makes per-side goals actually steer the per-side dosing already produced by `applySideBias`.
+   - `src/lib/side/sideBias.ts`: no signature change; goal-derived bias becomes a multiplier on the side already favored by performance differential (additive, never replaces the perf-based bias).
 
-### 5. `src/components/ErrorBoundary.tsx` — chunk-aware fallback
-When `componentDidCatch` sees a chunk-load message and the auto-reload guard is already tripped (so we can't reload again this session), render a friendlier panel with a "Reload app" button that clears the `chunkReload:` sentinels and calls `location.reload()` — instead of the "Try again" that just re-throws.
+6. **Non-switch safety**
+   - `SideContextPicker`-style gating: chip never renders, `side` field is never written, downstream `scoreSkillLevers()` default call path stays identical. Verified by reading `useSideContext().shouldShowPicker(discipline)`.
 
-## Why this fixes the Baserunning click
-The Hammers daily "Open Baserunning" navigates to `/baserunning-iq` (lazy route) or opens a lazy dialog. After a deploy the old SHA-hashed chunk URL 404s; today's retry loop can't help. With (1)+(2) the first failure triggers a single clean reload against the new `index.html`, which fetches the current hashes — and (3) ensures the SW isn't the one feeding stale URLs in the first place.
+7. **Lint / regression**
+   - `scripts/lint-side-context.ts` already scans for side-aware writes on side-aware tables. `athlete_context.category_goals` is a JSON blob, not a side-aware row, so no new lint rule required — document this in `.lovable/side-context-mastery.md` (small append).
+   - Add 1 unit test against `scoreSkillLevers` proving: untagged picks score on both sides; `side:'L'` picks contribute only when called with `{side:'L'}`; default call (no side) sums everything (back-compat).
+
+## Out of scope
+
+- No schema migration (V2 already lives in `athlete_context.category_goals` JSON).
+- No change to non-hitting / non-throwing categories' visual surface (Speed / Fielding stay side-less; chip won't render there).
+- No change to the V1-derived ranking used by legacy Hammer reads.
 
 ## Files touched
-- `src/App.tsx` (modify `lazyWithRetry`, add global error listeners, wrap preloaded lazies)
-- `src/components/ErrorBoundary.tsx` (chunk-aware fallback + clear sentinels)
-- `vite.config.ts` (stop precaching JS; add runtime cache rule)
-- `src/registerSW.ts` (verify update-on-error path)
 
-No business logic changes. No DB changes.
+- `src/lib/hammer/goals/categoryGoals.ts` — type + normalizer + `scoreSkillLevers` overload
+- `src/components/onboarding/steps/CategoryGoalsStep.tsx` — chip per pick
+- `src/components/settings/CategoryGoalsCard.tsx` — chip per pick + read-only badge
+- `src/components/onboarding/steps/ReviewAnswersStep.tsx` — display badge
+- `src/lib/hammer/prescription/dailyPlan.ts` — pass active side when scoring
+- `src/lib/side/sideBias.test.ts` — add `scoreSkillLevers` side cases (new minimal block)
+- `.lovable/side-context-mastery.md` — append goal-payload note
+
+## Risk / rollback
+
+Pure additive. `side` is optional on `SubGoalPick`; missing field = legacy behavior. Default `scoreSkillLevers()` call unchanged. Reverting just removes the chip — existing rows keep working.

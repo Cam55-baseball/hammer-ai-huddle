@@ -42,6 +42,12 @@ layer reasons on per-side deltas, and CI structurally blocks regressions.
 3. Ask Hammer prompt builder — appends a single context line when
    meaningful differential exists (e.g. "Left swing tempo 14% slower
    than right, n=7/8").
+4. `scoreSkillLevers(payload, { side })` — V2 sub-goal scoring filters
+   out picks tagged for the opposite side; `both` / untagged picks
+   always count. Default call (no `side`) is back-compat unchanged.
+   `athlete_context.category_goals` is a JSON blob, so `side` rides
+   inside each `SubGoalPick`, not as a table column — no lint rule
+   required (the side-context lint targets row-level inserts only).
 
 ## Invariants (do not regress)
 - **Switch/ambi gating**: non-switch / non-ambi athletes see **zero**

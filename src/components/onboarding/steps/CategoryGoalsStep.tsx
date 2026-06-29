@@ -33,7 +33,9 @@ import {
   type DisciplineGoals,
   type SubGoalPick,
   type GoalRank,
+  type GoalSide,
 } from "@/lib/hammer/goals/categoryGoals";
+import { useSideContext, type Discipline as SideDiscipline } from "@/contexts/SideContext";
 import {
   CATEGORIES_FOR,
   subGoalsFor,
@@ -79,11 +81,24 @@ interface DraftShape {
 
 export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
   const { user } = useAuth();
+  const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const [panes, setPanes] = useState<PaneId[]>([]);
   const [picksByPane, setPicksByPane] = useState<Record<string, DisciplineGoals>>({});
   const [activePane, setActivePane] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  /** Which Side discipline applies to a given goal category, if any.
+   *  Returns null when the category is bilaterally neutral (Speed, Fielding)
+   *  or when the athlete doesn't have switch/ambi flag for the relevant side. */
+  const sideDisciplineFor = useCallback(
+    (cat: CategoryKey): SideDiscipline | null => {
+      if (cat === "hitting" || cat === "power") return isSwitchHitter ? "hit" : null;
+      if (cat === "throwing" || cat === "pitching") return isAmbidextrousThrower ? "throw" : null;
+      return null;
+    },
+    [isSwitchHitter, isAmbidextrousThrower],
+  );
 
   // ── Hydrate from existing V2 row OR draft slot ────────────────────────────
   useEffect(() => {
@@ -203,6 +218,22 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
           // Ensure remaining pick is primary.
           nextSlot = nextSlot.map((p, i) => ({ ...p, rank: i === 0 ? "primary" : "secondary" }));
         }
+        return { ...s, [key]: { ...pane, [category]: nextSlot } };
+      });
+    },
+    [],
+  );
+
+  /** Set the L/R/both scope on a single picked sub-goal. */
+  const setPickSide = useCallback(
+    (paneId: PaneId, category: CategoryKey, subGoalId: string, side: GoalSide) => {
+      const key = paneKey(paneId);
+      setPicksByPane((s) => {
+        const pane: DisciplineGoals = s[key] ?? {};
+        const slot = (pane[category as keyof DisciplineGoals] as ReadonlyArray<SubGoalPick> | undefined) ?? [];
+        const nextSlot = slot.map((p) =>
+          p.id === subGoalId ? (side === "both" ? { id: p.id, rank: p.rank } : { id: p.id, rank: p.rank, side }) : p,
+        );
         return { ...s, [key]: { ...pane, [category]: nextSlot } };
       });
     },
@@ -386,6 +417,39 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
                   <p className="mt-1.5 text-[11px] text-muted-foreground">
                     Hover or long-press a chip to see what it means.
                   </p>
+                )}
+                {picks.length > 0 && sideDisciplineFor(cat) && (
+                  <div className="mt-2 space-y-1 rounded-md border border-dashed border-border/70 bg-muted/20 p-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Which side is this goal for?
+                    </p>
+                    {picks.map((p) => {
+                      const sg = sgs.find((s) => s.id === p.id);
+                      const side: GoalSide = p.side ?? "both";
+                      return (
+                        <div key={p.id} className="flex items-center justify-between gap-2">
+                          <span className="truncate text-[11px] text-foreground">{sg?.label ?? p.id}</span>
+                          <div className="inline-flex overflow-hidden rounded-md border border-border">
+                            {(["R", "L", "both"] as GoalSide[]).map((opt) => (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => setPickSide(active!, cat, p.id, opt)}
+                                aria-pressed={side === opt}
+                                className={`px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                                  side === opt
+                                    ? "bg-primary/20 text-primary"
+                                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                                }`}
+                              >
+                                {opt === "both" ? "Both" : opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             );

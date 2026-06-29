@@ -57,6 +57,7 @@ function renderPane(sport: Sport, discipline: Discipline, dg: DisciplineGoals) {
             <span className="font-medium capitalize">{cat}:</span>{" "}
             {picks.map((p, i) => {
               const sg = findSubGoal(sport, discipline, cat, p.id);
+              const sideLabel = p.side && p.side !== "both" ? p.side : null;
               return (
                 <span key={p.id}>
                   {i > 0 && " · "}
@@ -64,7 +65,7 @@ function renderPane(sport: Sport, discipline: Discipline, dg: DisciplineGoals) {
                     {sg?.label ?? p.id}
                   </span>
                   <span className="ml-0.5 text-[10px] text-muted-foreground">
-                    ({p.rank === "primary" ? "70%" : "30%"})
+                    ({p.rank === "primary" ? "70%" : "30%"}{sideLabel ? ` · ${sideLabel}` : ""})
                   </span>
                 </span>
               );
@@ -149,7 +150,7 @@ export function CategoryGoalsCard() {
             {isAmbidextrousThrower && (
               <span className="font-semibold text-foreground">Throw: {selectedSide.throw}</span>
             )}
-            . Goals you set apply to both sides — Hammer tracks the differential separately.
+            . Tag each goal with a side (R / L / Both) in the editor so Hammer can dose your weaker side accordingly.
           </p>
         )}
         {loading ? (

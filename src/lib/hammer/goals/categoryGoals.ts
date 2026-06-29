@@ -102,9 +102,14 @@ export interface CategoryGoalsPayload {
 export type GoalRank = "primary" | "secondary";
 export const RANK_WEIGHT: Record<GoalRank, number> = { primary: 0.7, secondary: 0.3 };
 
+/** Optional side scope for switch hitters / ambidextrous throwers.
+ *  Missing/undefined or 'both' = applies to both sides (legacy behavior). */
+export type GoalSide = "L" | "R" | "both";
+
 export interface SubGoalPick {
   readonly id: string;
   readonly rank: GoalRank;
+  readonly side?: GoalSide;
 }
 
 export interface DisciplineGoals {
@@ -140,8 +145,11 @@ function normalizePicks(
     const r = item as { id?: unknown; rank?: unknown };
     if (typeof r.id !== "string" || !legal.has(r.id) || seenIds.has(r.id)) continue;
     const rank: GoalRank = r.rank === "secondary" ? "secondary" : "primary";
+    const sideRaw = (r as { side?: unknown }).side;
+    const side: GoalSide | undefined =
+      sideRaw === "L" || sideRaw === "R" || sideRaw === "both" ? sideRaw : undefined;
     seenIds.add(r.id);
-    out.push({ id: r.id, rank });
+    out.push(side ? { id: r.id, rank, side } : { id: r.id, rank });
     if (out.length >= 2) break; // max 2 picks per category
   }
   // Guarantee at most one primary + one secondary; demote duplicates.
@@ -315,9 +323,11 @@ export function getV2(raw: unknown): CategoryGoalsPayloadV2 | null {
  */
 export function scoreSkillLevers(
   raw: unknown,
+  opts?: { side?: "L" | "R" },
 ): Partial<Record<SkillLever, number>> {
   const v2 = normalizeCategoryGoalsV2(raw);
   if (!v2) return {};
+  const filterSide = opts?.side;
   const out: Partial<Record<SkillLever, number>> = {};
   const consume = (
     sport: Sport,
@@ -327,6 +337,9 @@ export function scoreSkillLevers(
   ) => {
     if (!picks?.length) return;
     for (const pick of picks) {
+      // Side-aware filtering: when caller pins a side, picks tagged for
+      // the opposite side contribute 0. `both` / untagged picks always count.
+      if (filterSide && pick.side && pick.side !== "both" && pick.side !== filterSide) continue;
       const sg: SubGoal | null = findSubGoal(sport, discipline, category, pick.id);
       if (!sg) continue;
       const w = RANK_WEIGHT[pick.rank];

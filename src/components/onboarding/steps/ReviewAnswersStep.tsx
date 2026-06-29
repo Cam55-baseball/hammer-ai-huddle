@@ -54,7 +54,11 @@ function summarizeGoals(payload: CategoryGoalsPayloadV2 | null): string {
       const picks = (dg[cat as keyof DisciplineGoals] as ReadonlyArray<SubGoalPick> | undefined) ?? [];
       if (!picks.length) continue;
       const labels = picks
-        .map((p) => findSubGoal(s, d, cat, p.id)?.label ?? p.id)
+        .map((p) => {
+          const base = findSubGoal(s, d, cat, p.id)?.label ?? p.id;
+          const sideTag = p.side && p.side !== "both" ? ` [${p.side}]` : "";
+          return `${base}${sideTag}`;
+        })
         .join(" · ");
       cats.push(`${cat}: ${labels}`);
     }
