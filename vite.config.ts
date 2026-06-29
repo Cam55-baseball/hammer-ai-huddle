@@ -70,6 +70,18 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
+            // Hashed JS chunks under /assets/ — NetworkFirst so a stale SW
+            // never hands a vanished hash to the browser after deploy.
+            urlPattern: ({ url, request }: { url: URL; request: Request }) =>
+              request.destination === 'script' && url.pathname.startsWith('/assets/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'js-assets',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 },
+            },
+          },
+
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
