@@ -90,6 +90,8 @@ export default function GameIqSituation() {
         {mode === "teach" && (() => {
           const roles = actors.map((a) => a.role);
           const shifts = computeRoleShifts(context, roles);
+          const ctxValues = getContextValues(sport);
+
           const activeNotes = roles.flatMap((r) =>
             (shifts[r]?.notes ?? []).map((n) => ({ role: r, note: n }))
           );
