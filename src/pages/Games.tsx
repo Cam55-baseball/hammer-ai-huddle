@@ -45,6 +45,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { GameSheet } from "@/components/games/GameSheet";
+import { useGpRealtime } from "@/hooks/useGpRealtime";
+import { useGameDayContext } from "@/hooks/useGameDayContext";
 
 interface GameRow {
   id: string;
@@ -67,6 +69,9 @@ export default function Games() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [openSheet, setOpenSheet] = useState<string | null>(null);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  useGpRealtime(true);
+  const gameDay = useGameDayContext();
+
 
   const games = useQuery({
     queryKey: ["gp-games-list", user?.id],
