@@ -12,7 +12,10 @@ interface IqDiamondProps {
   mode: "teach" | "quiz" | "reveal";
   highlightRole?: IqActorRole | null;
   className?: string;
+  /** Per-role positional shift in percent points on the 100×100 grid. */
+  roleShifts?: Record<string, { dx: number; dy: number }>;
 }
+
 
 // Canonical starting coordinates on a 100x100 grid.
 // y=100 is home plate, y=0 is the CF wall.
