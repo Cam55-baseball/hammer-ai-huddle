@@ -120,15 +120,38 @@ export function CategoryGoalsCard() {
       ] as const).filter(([, , dg]) => !!dg)
     : [];
 
+  const showSideHint = isSwitchHitter || isAmbidextrousThrower;
+
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Target className="h-4 w-4 text-primary" />
-          Ranked goals
+        <CardTitle className="flex items-center justify-between gap-2 text-base">
+          <span className="inline-flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            Ranked goals
+          </span>
+          {showSideHint && (
+            <span className="inline-flex items-center gap-2">
+              {isSwitchHitter && <SideContextPicker discipline="hit" label="Bat" />}
+              {isAmbidextrousThrower && <SideContextPicker discipline="throw" label="Throw" />}
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {showSideHint && (
+          <p className="text-[11px] text-muted-foreground">
+            Currently scoped to{" "}
+            {isSwitchHitter && (
+              <span className="font-semibold text-foreground">Bat: {selectedSide.hit}</span>
+            )}
+            {isSwitchHitter && isAmbidextrousThrower && " · "}
+            {isAmbidextrousThrower && (
+              <span className="font-semibold text-foreground">Throw: {selectedSide.throw}</span>
+            )}
+            . Goals you set apply to both sides — Hammer tracks the differential separately.
+          </p>
+        )}
         {loading ? (
           <p className="text-xs text-muted-foreground">Loading…</p>
         ) : panes.length > 0 ? (
@@ -150,6 +173,7 @@ export function CategoryGoalsCard() {
           {panes.length > 0 ? "Edit goals" : "Set goals"}
         </Button>
       </CardContent>
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
