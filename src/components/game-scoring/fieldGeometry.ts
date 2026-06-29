@@ -112,8 +112,25 @@ export function getFieldGeometry(sport: 'baseball' | 'softball', size: number = 
     'P': moundActual,
     'C': { x: homeX, y: homeY + basePx * 0.15 },
     '1B': lerp(first, diamondCenter, -0.25), // slightly past first toward foul line
-    '2B': lerp(second, first, 0.35), // between 2nd and 1st, shifted toward home
-    'SS': lerp(second, third, 0.35), // between 2nd and 3rd, shifted toward home
+    '2B': lerp(second, first, 0.42), // just behind baseline on 1B side of 2nd
+    'SS': lerp(second, third, 0.42), // just behind baseline on 3B side of 2nd
+    '3B': lerp(third, diamondCenter, -0.25),
+    'LF': {
+      x: homeX - outfieldPx * 0.45 * Math.SQRT1_2,
+      y: homeY - outfieldPx * 0.45 * Math.SQRT1_2 - outfieldPx * 0.12,
+    },
+    'CF': {
+      x: homeX,
+      y: homeY - outfieldPx * 0.6,
+    },
+    'RF': {
+      x: homeX + outfieldPx * 0.45 * Math.SQRT1_2,
+      y: homeY - outfieldPx * 0.45 * Math.SQRT1_2 - outfieldPx * 0.12,
+    },
+  };
+
+  // Normalize all positions to 0-1
+
     '3B': lerp(third, diamondCenter, -0.25),
     'LF': {
       x: homeX - outfieldPx * 0.45 * Math.SQRT1_2,
