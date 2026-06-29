@@ -1360,9 +1360,39 @@ function applyScheduleModulation(
   }
 }
 
+/**
+ * Side-bias rider: when a switch/ambi athlete has a trusted L/R asymmetry
+ * (computed by SideSplitsSection on the Progress dashboard and cached to
+ * localStorage), append a single extra activation step to the relevant
+ * skill block. Pure: caller passes the already-resolved bias result so
+ * this stays free of I/O and replay-safe under test.
+ */
+export interface SideBiasForPlan {
+  readonly hit?: { weakerSide: "L" | "R"; absPct: number; extraSetMultiplier: number; note: string } | null;
+  readonly throw?: { weakerSide: "L" | "R"; absPct: number; extraSetMultiplier: number; note: string } | null;
+}
+
+function applySideBias(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  bias: SideBiasForPlan | null,
+): ReadonlyArray<PrescribedBlock> {
+  if (!bias) return blocks;
+  return blocks.map((b) => {
+    const r = b.modality === "hitting" ? bias.hit : b.modality === "throwing" ? bias.throw : null;
+    if (!r || b.status === "suppressed") return b;
+    const extraStep = `Extra activation set on your ${r.weakerSide === "L" ? "Left" : "Right"} side — close the L/R asymmetry first.`;
+    return {
+      ...b,
+      steps: [...b.steps, extraStep],
+      cues: [...b.cues, r.note],
+    };
+  });
+}
+
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
   scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
+  sideBias: SideBiasForPlan | null = null,
 ): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
@@ -1374,7 +1404,10 @@ export function buildHammerDailyPlan(
   // It still runs BEFORE injury / parent-supremacy ceilings have any
   // further effect — those were already applied above and remain
   // dominant because suppressed blocks stay suppressed.
-  const blocks = applyScheduleModulation(ordered, scheduleSignal);
+  const modulated = applyScheduleModulation(ordered, scheduleSignal);
+  // Side-bias rider runs LAST so suppressed blocks remain suppressed
+  // (no extra reps stacked on a game/tournament/injury suppression).
+  const blocks = applySideBias(modulated, sideBias);
   // Lineage breadcrumb (dev-only, harmless in prod): summarises which ranking drove ordering.
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -1393,5 +1426,7 @@ export function buildHammerDailyPlan(
     speedFocus: speed,
     schedulePosture: scheduleSignal.postureToday,
     scheduleSignal,
+    sideBias,
   };
 }
+
