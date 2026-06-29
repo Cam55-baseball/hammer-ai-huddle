@@ -41,14 +41,15 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       });
       if (up.error) throw up.error;
 
+      // gp_documents schema uses (source, file_url, file_mime, parse_status,
+      // parse_error, parsed_events). We pack bucket+path into source/file_url.
       const docRow = await gp("gp_documents").insert({
         user_id: user.id,
         game_id: gameId,
-        bucket: GP_DOC_BUCKET,
-        path,
-        original_name: file.name,
-        mime_type: file.type || null,
-        status: "uploaded",
+        source: "upload",
+        file_url: `${GP_DOC_BUCKET}://${path}`,
+        file_mime: file.type || null,
+        parse_status: "uploaded",
       }).select("id").single();
       if (docRow.error) throw docRow.error;
 

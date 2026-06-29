@@ -83,7 +83,7 @@ serve(async (req) => {
     base64 = btoa(base64);
 
     // 2. call gemini
-    await admin.from("gp_documents").update({ status: "processing" }).eq("id", documentId);
+    await admin.from("gp_documents").update({ parse_status: "processing" }).eq("id", documentId);
     const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE}`, "Content-Type": "application/json" },
@@ -103,6 +103,9 @@ serve(async (req) => {
     });
     if (!ai.ok) {
       const t = await ai.text();
+      await admin.from("gp_documents").update({
+        parse_status: "error", parse_error: `gemini ${ai.status}`,
+      }).eq("id", documentId);
       throw new Error(`Gemini error ${ai.status}: ${t.slice(0, 400)}`);
     }
     const aiJson = await ai.json();
@@ -115,27 +118,54 @@ serve(async (req) => {
     const defense = Array.isArray(parsed.defense) ? parsed.defense : [];
     const baserun = Array.isArray(parsed.baserun) ? parsed.baserun : [];
 
-    // 3. insert drafts
-    const draftMeta = { source: "ai_ingest", draft: true, document_id: documentId };
+    // 3. insert drafts — map to ACTUAL gp_* columns.
     const inserts: Promise<any>[] = [];
     if (atBats.length) inserts.push(admin.from("gp_at_bats").insert(
-      atBats.map((a: any) => ({ user_id: user.id, game_id: gameId, ...a, source_meta: draftMeta }))
+      atBats.map((a: any) => ({
+        user_id: user.id, game_id: gameId,
+        inning: a.inning ?? null,
+        ab_order: a.pa_no ?? null,
+        result: a.result ?? null,
+        rbi: a.rbi ?? null,
+        exit_velo: a.exit_velo_mph ?? null,
+        launch_angle: a.launch_angle_deg ?? null,
+        batting_side: a.batter_handedness ?? null,
+        notes: a.notes ?? null,
+      }))
     ));
     if (pitches.length) inserts.push(admin.from("gp_pitches").insert(
       pitches.map((p: any) => ({
         user_id: user.id, game_id: gameId,
-        inning: p.inning, pitch_no: p.pitch_no, pitch_type: p.pitch_type,
-        pitch_velo: p.pitch_velo, result: p.result,
+        inning: p.inning ?? null,
+        pitch_no: p.pitch_no ?? null,
+        pitch_type: p.pitch_type ?? null,
+        pitch_velo: p.pitch_velo ?? null,
+        result: p.result ?? null,
         perspective: p.perspective === "pitcher" ? "pitcher" : "hitter",
         location: p.zone ? { zone: p.zone } : null,
-        source_meta: draftMeta,
+        notes: "ai_draft",
       }))
     ));
     if (defense.length) inserts.push(admin.from("gp_defense_plays").insert(
-      defense.map((d: any) => ({ user_id: user.id, game_id: gameId, ...d, source_meta: draftMeta }))
+      defense.map((d: any) => ({
+        user_id: user.id, game_id: gameId,
+        inning: d.inning ?? null,
+        position: d.position ?? null,
+        play_type: d.play_type ?? null,
+        result: d.result ?? null,
+        notes: d.notes ?? null,
+      }))
     ));
     if (baserun.length) inserts.push(admin.from("gp_baserun_events").insert(
-      baserun.map((b: any) => ({ user_id: user.id, game_id: gameId, ...b, source_meta: draftMeta }))
+      baserun.map((b: any) => ({
+        user_id: user.id, game_id: gameId,
+        inning: b.inning ?? null,
+        event_type: b.event_type ?? null,
+        base_from: b.from_base ?? null,
+        base_to: b.to_base ?? null,
+        success: b.result === "safe" ? true : b.result === "out" ? false : null,
+        notes: b.notes ?? null,
+      }))
     ));
     const results = await Promise.allSettled(inserts);
     const failed = results.filter((r) => r.status === "rejected");
@@ -145,8 +175,8 @@ serve(async (req) => {
       defense: defense.length, baserun: baserun.length,
     };
     await admin.from("gp_documents").update({
-      status: failed.length ? "partial" : "processed",
-      extraction: { summary, failures: failed.length },
+      parse_status: failed.length ? "partial" : "processed",
+      parsed_events: { summary, failures: failed.length, raw: parsed },
     }).eq("id", documentId);
 
     return json({ summary, failures: failed.length });
