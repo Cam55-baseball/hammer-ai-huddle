@@ -1,57 +1,72 @@
 
-# Game IQ 101 — Full Accuracy Audit (Option B: Report First, Fixes on Approval)
+# Game IQ 101 — Full Remediation Sweep
 
-You picked **B**. Nothing gets written to the database or code until you approve each fix.
+Authority: `docs/iq/iq101-audit-report.md` (6 OK · 77 EDIT · 31 WRONG across 114 published situations). Work proceeds top-to-bottom through 6 phases; each phase is a checkpoint where I'll post a summary before moving on, so you can pause/redirect without re-approving.
 
-## Phase 1 — Read-only Audit (this run)
+## Phase 0 — Rule & factual corrections (18 items)
 
-Spawn 6 parallel read-only research sub-agents. Each one pulls the relevant rows from `iq_situations`, `iq_situation_actors`, `iq_scenarios`, and `iq_actor_context_shifts`, cross-references the source files (`src/lib/iq/contextShifts.ts`, `src/lib/iq/fieldGeometry.ts`, `src/pages/GameIqSituation.tsx`, `src/components/iq/IqDiamond.tsx`), and checks each situation against the official MLB rulebook (baseball) and NCAA / USA Softball rulebook (softball).
+Pure data updates via `supabase--insert` (UPDATE on `iq_situations`, `iq_situation_actors`, `iq_scenarios`). Highest credibility risk, fastest to ship.
 
-```text
-Bucket A — Bunt / Squeeze family            (~22 situations)
-Bucket B — Pickoff / Balk / PFP / Mound     (~16)
-Bucket C — Cutoff / Relay / Outfield reads  (~8)
-Bucket D — 1st-and-3rd / Steal / Rundown    (~12)
-Bucket E — Offense / Baserunning / Hitting  (~17)
-Bucket F — Softball-specific + Catcher / Pitch-call / Misc (~36)
-```
+1. `intentional-walk-baseball` — re-encode to MLB 5.05(b)(1) auto-IBB (no pitches thrown); C→`read`
+2. `courtesy-runner-pitcher-catcher` — remove "with 2 outs" (NCAA 8.10 any inning)
+3. `appeal-leaving-base-early` — "reached plate" → "leaves pitcher's hand" (NCAA 12.21)
+4. `rise-ball-2-strike-approach` — zone bottom "sternum" → "top of knees"
+5. `illegal-pitch-softball-r0` — replace MLB sources with NCAA Softball Rule 10.5 + NFCA
+6. `bunt-tag-play-r3` — remove "block plate" (violates MLB 6.01(i))
+7. `bunt-defense-tying-run-9th` — 3B→`ball` (charge), SS→`bag` (rotate to 3B)
+8. `safety-squeeze-r3-2-outs` — rename + reframe as 2-out suicide squeeze
+9. `off-bunt-for-hit` Scenario 2 — fix RHH push-bunt direction (P–1B corridor)
+10. `bunt-pop-up-corner` — add IFF-does-NOT-apply-to-bunts cue (MLB 5.09(a)(12))
+11. `bunt-3-2-count-r1`, `bunt-defense-cover-r1-steal`, `bunt-foul-pop-c` — add 2-strike-foul-bunt = K rule (MLB 5.09(a)(3))
+12. `bunt-3b-line-r1` — P→`bag` covering 1B
+13. Rundown family (3 slugs): trappers→`execute`, backers→`backup`, fix C on rundown-r3-between-3-home
+14. 1st-and-3rd family (4 slugs): C `read`→`ball`
+15. `catcher-throw-3b-r2-steal` — SS→`backup`; 3B covers
+16. `off-lead-from-2b`, `off-lhp-pickoff-tells`, `off-primary-secondary-1b` — set `sport='baseball'`
+17. `off-tag-up-3b` — verify break cue says "ball secured", not "first touch"
+18. `first-third-walk-off-bunt` — temporarily unpublish (`status='draft'`) until rewritten in Phase 2
 
-Each sub-agent grades every situation on 7 axes:
-1. Rulebook correctness (outs, force/tag, balk/illegal pitch, infield-fly, appeals, drop-3rd, courtesy runner, look-back)
-2. Sport gating (no SB-only content leaking into baseball; no baseball-only content in softball)
-3. Starting positions (depth, DP depth, no-doubles, bunt creep, wheel, rotations, cutoff alignments)
-4. Movement paths (`primary_path` choreography matches real coverage)
-5. Coaching text quality (elite cues, not generic)
-6. Context shifts (dx/dy direction correct for Speed / Swing Side / Tendency / Pitch / Weather)
-7. Scenarios (3 distinct reps per situation with a defensible "correct" answer)
+## Phase 1 — System / structural fixes (code)
 
-## Phase 2 — Deliverable: Audit Report
+| File | Change |
+|---|---|
+| `src/pages/GameIqSituation.tsx` (line ~168) | Render `OFFENSIVE_ROLES` (BAT/BR/R1/R2/R3) in the teach grid alongside `DEFENSIVE_ROLES` so offense actors are accessible |
+| `src/lib/iq/contextShifts.ts` | Add baserunner entries (R1/R2/R3/BR/BAT) to `SHIFTS` map across batter_speed / swing_side / tendency / next_pitch / weather; add new axes `lead_type`, `pickoff_look`, `secondary_timing` to `CONTEXT_VALUES` (baseballOnly) |
+| Migration | `ALTER TABLE iq_actor_context_shifts DROP CONSTRAINT … CHECK (context_axis IN …)` then re-add with the 3 new axes |
+| `src/lib/iq/bulkImport.ts` | Validator: slugs containing `lead`/`pickoff`/`primary-secondary` must have `sport='baseball'` |
 
-A single consolidated report at `docs/iq/iq101-audit-report.md` with one row per situation:
+## Phase 2 — Stub-text purge (~12 slugs)
 
-| slug | sport | verdict | issues | proposed fix |
-|---|---|---|---|---|
+Rewrite every actor that currently reads "Standard coaching / Out of position / Anticipate pre-pitch / Standard" with play-specific assignments, common mistakes, elite cues, and comms calls. Plus full rewrite of `first-third-walk-off-bunt` and the 3 fully-stubbed pickoffs (`pickoff-2b-daylight`, `pickoff-2b-timing`, `pickoff-3b-lhp`). Re-publish after rewrite.
 
-Verdicts: ✅ correct · ⚠ needs edit · ❌ wrong. Each ⚠/❌ row includes the exact proposed correction (new coordinates, new path JSON, rewritten coaching text, dx/dy change, rule citation).
+## Phase 3 — Path choreography (~80 slugs)
 
-## Phase 3 — Your Approval Loop
+Replace every `primary_path=[{x:50,y:50}]` with real coordinates. Templates already validated in the existing DB: `runner-1st-sac-bunt`, `comebacker-r1-double-play`, `mound-visit-runners-12-no-outs`, `no-one-on-ball-in-gap`. Coordinate plan per slug authored from the per-bucket tables in the audit report (e.g. SS relay LF→home alignment `(30,72)`, 2B relay RF→home `(65,62)`, P backup 3B `(24,72)` not `(18,85)`). Work in batches of ~10 slugs per `supabase--insert`.
 
-After you read the report you can approve in any of these shapes:
-- "Apply all ✅-approved rows" (you mark which)
-- "Apply Bucket A & C only"
-- "Skip these 4 slugs, apply the rest"
-- "Fix this one row differently: …"
+## Phase 4 — Missing runner actors (~30 slugs)
 
-## Phase 4 — Applied Fixes (only after approval)
+Add the absent R1/R2/R3 actor row (with `execute` assignment + canonical lead path) to every pickoff, wild-pitch, squeeze, look-back, wheel, and first-third slug where the runner is the subject of the play. Verified list per bucket-tables.
 
-For approved rows I'll ship:
-- A single data update via the insert tool (coords, paths, coaching text, context shifts)
-- Code patches to `contextShifts.ts` / `GameIqSituation.tsx` if sport-gating or dx/dy logic needs to change
-- An `iq_owner_review_log` entry per fixed situation citing the rule source
-- Re-stamp `triple_check_count = 3` only after the fix lands; rows that needed correction get reset to `0` first so the count means something
+## Phase 5 — Scenario authoring (~90 slugs at 0 scenarios)
 
-## Technical notes
-- No schema changes expected.
-- `HOME_POS` reference for path validation: Home (50,96), 1B (78,72), 2B (50,48), 3B (22,72), Mound (50,70).
-- Audit is fully read-only — safe to run immediately on approval of this plan.
-- Effort: 1 turn to run all 6 audits in parallel + write the report; subsequent turns sized to whatever subset you approve.
+Target 3 scenarios per slug (one teaching the primary decision branch, one distractor against a common mistake, one rules-edge case). Authored to match the corrected coaching content. Inserted via `iq_scenarios` with explicit `correct_actor_assignments`. Batched ~15 slugs per call.
+
+## Phase 6 — Context-shift seeding
+
+Populate `iq_actor_context_shifts` for the highest-leverage axes first: `pitchout-r1-suspected-steal` (batter_speed), `pickoff-1b-daylight-lhp` (swing_side), all pitch-call slugs (tendency / next_pitch), `bunt-vs-shift` (swing_side), `off-steal-2b` and `catcher-pop-time-r1-steal` (swing_side gating SS-vs-RHH / 2B-vs-LHH). Then sweep remaining slugs.
+
+## Working rhythm & guardrails
+
+- After each phase I post a one-screen summary: slugs changed, counts, links to spot-check.
+- All `iq_situations` data changes go through `supabase--insert` (no schema mutation except the Phase-1 `context_axis` CHECK).
+- The Phase-1 code edits (`GameIqSituation.tsx`, `contextShifts.ts`, `bulkImport.ts`) are presentation-layer only; no business-logic refactors.
+- Reply "pause" at any phase boundary to redirect; otherwise I continue.
+
+## Out of scope
+
+- New situations beyond the published 114
+- Sport expansion (e.g. coach-pitch, T-ball)
+- UI redesign of the IQ teach mode beyond the one-line offense-actor render fix
+- `fieldGeometry.ts` repositioning (already settled in prior turn)
+
+Approve and I begin Phase 0 immediately.
