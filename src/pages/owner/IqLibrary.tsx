@@ -396,6 +396,7 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
         }
       }
       toast({ title: publish ? "Published" : "Saved", description: meta.title });
+      wizardDraft.clear(draftKey);
       onSaved(); onClose();
     } catch (e: unknown) {
       const m = e instanceof Error ? e.message : "Save failed";
@@ -403,11 +404,24 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
     } finally { setSaving(false); }
   };
 
+  const handleSaveAndExit = () => {
+    wizardDraft.save(draftKey, meta as unknown as Record<string, unknown>, actors);
+    toast({ title: "Draft saved locally", description: "Reopen this situation anytime to keep editing." });
+    onClose();
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto" data-protected-editing="true">
         <DialogHeader>
-          <DialogTitle>{isNew ? "New situation" : `Edit · ${meta.title}`}</DialogTitle>
+          <DialogTitle className="flex items-center gap-3">
+            <span>{isNew ? "New situation" : `Edit · ${meta.title}`}</span>
+            {draftSavedAt && (
+              <span className="text-[10px] font-normal text-muted-foreground">
+                Autosaved {new Date(draftSavedAt).toLocaleTimeString()}
+              </span>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="meta" className="mt-2">
