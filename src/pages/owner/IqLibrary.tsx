@@ -287,7 +287,7 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
 
   const [meta, setMeta] = useState<SituationRow>(() => {
     const saved = wizardDraft.load(draftKey);
-    if (saved?.meta) return saved.meta as SituationRow;
+    if (saved?.meta) return saved.meta as unknown as SituationRow;
     return row ?? {
       id: "",
       sport: "both",
