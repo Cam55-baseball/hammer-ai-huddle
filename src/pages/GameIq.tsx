@@ -55,6 +55,9 @@ export default function GameIq() {
 
   const situations = situationsQ.data ?? [];
 
+  const [resume, setResume] = useState(() => quizResume.load());
+  const dismissResume = () => { quizResume.clear(); setResume(null); };
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-6 py-4 px-4 sm:px-0">
