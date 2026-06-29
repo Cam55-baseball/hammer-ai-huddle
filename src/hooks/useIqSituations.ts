@@ -34,7 +34,9 @@ export function useIqSituation(slug: string, sport: IqSport) {
         .in("sport", sportFilter)
         .eq("slug", slug)
         .eq("status", "published")
+        .is("deleted_at", null)
         .maybeSingle();
+
       if (error) throw error;
       if (!sit) return null;
 
