@@ -323,9 +323,11 @@ export function getV2(raw: unknown): CategoryGoalsPayloadV2 | null {
  */
 export function scoreSkillLevers(
   raw: unknown,
+  opts?: { side?: "L" | "R" },
 ): Partial<Record<SkillLever, number>> {
   const v2 = normalizeCategoryGoalsV2(raw);
   if (!v2) return {};
+  const filterSide = opts?.side;
   const out: Partial<Record<SkillLever, number>> = {};
   const consume = (
     sport: Sport,
@@ -335,6 +337,9 @@ export function scoreSkillLevers(
   ) => {
     if (!picks?.length) return;
     for (const pick of picks) {
+      // Side-aware filtering: when caller pins a side, picks tagged for
+      // the opposite side contribute 0. `both` / untagged picks always count.
+      if (filterSide && pick.side && pick.side !== "both" && pick.side !== filterSide) continue;
       const sg: SubGoal | null = findSubGoal(sport, discipline, category, pick.id);
       if (!sg) continue;
       const w = RANK_WEIGHT[pick.rank];
