@@ -23,6 +23,7 @@ import {
 } from "@/lib/iq/types";
 import { BulkImportDialog } from "@/components/owner/iq/BulkImportDialog";
 import { duplicateSituation, softDeleteSituation, restoreSituation } from "@/lib/iq/authoring/lifecycle";
+import { wizardDraft } from "@/lib/iq/resumeStore";
 
 const ALL_ROLES: IqActorRole[] = [...DEFENSIVE_ROLES, ...OFFENSIVE_ROLES];
 const ASSIGNMENTS: IqAssignment[] = ["ball","bag","backup","read","execute","idle"];
