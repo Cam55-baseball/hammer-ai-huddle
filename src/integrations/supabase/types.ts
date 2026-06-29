@@ -4758,6 +4758,8 @@ export type Database = {
           ai_summary: string | null
           created_at: string
           game_date: string
+          game_summary: Json | null
+          game_type: string | null
           general_notes: string | null
           home_away: string | null
           id: string
@@ -4769,6 +4771,7 @@ export type Database = {
           philosophy_post: string | null
           philosophy_pre: string | null
           philosophy_verdict: string | null
+          scheduled_time: string | null
           sport: string
           status: string
           updated_at: string
@@ -4780,6 +4783,8 @@ export type Database = {
           ai_summary?: string | null
           created_at?: string
           game_date: string
+          game_summary?: Json | null
+          game_type?: string | null
           general_notes?: string | null
           home_away?: string | null
           id?: string
@@ -4791,6 +4796,7 @@ export type Database = {
           philosophy_post?: string | null
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
+          scheduled_time?: string | null
           sport: string
           status?: string
           updated_at?: string
@@ -4802,6 +4808,8 @@ export type Database = {
           ai_summary?: string | null
           created_at?: string
           game_date?: string
+          game_summary?: Json | null
+          game_type?: string | null
           general_notes?: string | null
           home_away?: string | null
           id?: string
@@ -4813,6 +4821,7 @@ export type Database = {
           philosophy_post?: string | null
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
+          scheduled_time?: string | null
           sport?: string
           status?: string
           updated_at?: string
