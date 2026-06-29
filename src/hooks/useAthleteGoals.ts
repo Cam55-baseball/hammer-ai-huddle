@@ -95,8 +95,9 @@ export function useAthleteGoals() {
           target_body_fat_percent: input.targetBodyFatPercent,
           weekly_change_rate: input.weeklyChangeRate || 1,
           target_date: input.targetDate,
-          is_active: true
-        })
+          is_active: true,
+          ...(input.side ? { side: input.side } : {}),
+        } as any)
         .select()
         .single();
 
