@@ -215,18 +215,35 @@ export default function IqLibrary() {
           {listQ.isLoading ? <div className="p-6 text-muted-foreground">Loading…</div> :
            rows.length === 0 ? <Card className="p-8 text-center text-muted-foreground">No situations match.</Card> :
            rows.map((r) => (
-            <Card key={r.id} className="p-4 flex items-center gap-3 hover:bg-muted/30 cursor-pointer" onClick={() => setEditing(r)}>
+            <Card key={r.id} className="p-4 flex items-center gap-3 hover:bg-muted/30">
               <Brain className="h-5 w-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
+              <button className="flex-1 min-w-0 text-left" onClick={() => setEditing(r)}>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="font-semibold truncate">{r.title}</span>
                   <Badge variant="outline" className="text-[10px]">{r.sport}</Badge>
                   <Badge variant="outline" className="text-[10px] capitalize">{r.difficulty}</Badge>
                   {r.lens_tags.map((l) => <Badge key={l} variant="secondary" className="text-[10px]">{l}</Badge>)}
                   <Badge className="text-[10px]" variant={r.status === "published" ? "default" : "secondary"}>{r.status}</Badge>
+                  {r.deleted_at && <Badge variant="destructive" className="text-[10px]">deleted</Badge>}
                   {r.triple_check_count >= 3 && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{r.summary}</div>
+              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                {r.deleted_at ? (
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleRestore(r.id, r.title); }} title="Restore">
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDuplicate(r.id, r.title); }} title="Duplicate">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSoftDelete(r.id, r.title); }} title="Hide from athletes">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
               </div>
             </Card>
           ))}
@@ -237,9 +254,11 @@ export default function IqLibrary() {
         <SituationEditor
           row={editing}
           onClose={() => { setEditing(null); setCreating(false); }}
-          onSaved={() => { qc.invalidateQueries({ queryKey: ["iq-library"] }); qc.invalidateQueries({ queryKey: ["iq-situations"] }); }}
+          onSaved={() => { refreshAll(); }}
         />
       )}
+      <BulkImportDialog open={bulkOpen} onClose={() => setBulkOpen(false)} onImported={refreshAll} />
+
     </DashboardLayout>
   );
 }
