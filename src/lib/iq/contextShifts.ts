@@ -55,6 +55,16 @@ export const CONTEXT_VALUES: Record<ContextAxis, ContextOption[]> = {
     { value: "sun_rf", label: "Sun in RF" },
     { value: "hot_dry_carry", label: "Hot / dry (carry)" },
   ],
+  baserunner_speed: [
+    { value: "burner", label: "Burner runner" },
+    { value: "average_runner", label: "Average" },
+    { value: "station_to_station", label: "Station-to-station" },
+  ],
+  outs: [
+    { value: "zero_out", label: "0 out" },
+    { value: "one_out", label: "1 out" },
+    { value: "two_out", label: "2 out" },
+  ],
 };
 
 export function getContextValues(
