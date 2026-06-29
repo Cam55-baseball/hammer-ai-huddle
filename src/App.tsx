@@ -245,6 +245,28 @@ const App = () => {
     cleanupCacheBustParam();
   }, []);
 
+  // Global catcher for stale dynamic-import failures that escape lazy() —
+  // e.g. dialogs/sheets opened from inside a page that themselves import().
+  useEffect(() => {
+    const onError = (e: ErrorEvent) => {
+      if (isChunkLoadError(e.error ?? { message: e.message })) {
+        triggerChunkReload('window.error: ' + (e.message || 'chunk'));
+      }
+    };
+    const onRejection = (e: PromiseRejectionEvent) => {
+      if (isChunkLoadError(e.reason)) {
+        triggerChunkReload('unhandledrejection: chunk import');
+      }
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
+
+
   return (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
