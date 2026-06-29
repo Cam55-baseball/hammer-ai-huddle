@@ -223,6 +223,8 @@ export function AppSidebar() {
           { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: t('workoutModules.productionStudio.subtitle') || "6-week workout" },
           { title: 'Explosive Conditioning', url: "/explosive-conditioning", icon: Zap, description: "Build elite speed and explosive power" },
           ...(selectedSport === 'baseball' ? [{ title: 'Pick-Off Trainer', url: '/pickoff-trainer', icon: Target, description: 'Pick-off decision training' }] : []),
+          { title: 'Game IQ 101', url: `/iq?lens=pitching&sport=${selectedSport}`, icon: Brain, description: 'Every pitch, every play — Three B\'s' },
+          { title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Read runners and control the run game' },
         ]
       });
     }
