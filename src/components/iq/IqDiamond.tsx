@@ -90,7 +90,7 @@ export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }
 
       {/* Actor dots */}
       {actors.map((a) => {
-        const pos = HOME_POS[a.role];
+        const pos = posFor(a.role);
         const showColor = mode !== "quiz";
         const isHi = highlightRole === a.role;
         return (
