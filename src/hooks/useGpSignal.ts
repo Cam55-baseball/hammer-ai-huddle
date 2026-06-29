@@ -159,7 +159,7 @@ export function useGpSignal(windowDays = 7): GpSignal {
       .map(([position, errors]) => ({ position, errors }))
       .sort((a, b) => b.errors - a.errors);
 
-    const advisories: GpSignal["advisories"] = [];
+    const advisories: Array<{ kind: "discipline" | "defense" | "whiff"; message: string }> = [];
     if (chasePct != null && chasePct > 35) {
       advisories.push({
         kind: "discipline",
