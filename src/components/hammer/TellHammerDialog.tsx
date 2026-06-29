@@ -26,8 +26,10 @@ import { toast } from "sonner";
 import { HeartPulse } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
+import { useSportTheme } from "@/contexts/SportThemeContext";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { CompetitionLevelPicker } from "@/components/shared/CompetitionLevelPicker";
 import { detectInjuryPhrasing, type ReportInjuryRegionKey } from "@/lib/hammer/injury/reportInjury";
 
 interface Props {
@@ -41,20 +43,14 @@ const QUICK_SEASON: Array<{ value: "in_season" | "preseason" | "post_season"; la
   { value: "post_season", label: "Post-season" },
 ];
 
-const QUICK_LEVELS: Array<{ value: string; label: string }> = [
-  { value: "hs_jr", label: "HS junior" },
-  { value: "hs_sr", label: "HS senior" },
-  { value: "juco", label: "JUCO" },
-  { value: "ncaa_d1", label: "NCAA D1" },
-  { value: "indy_pro", label: "Independent pro" },
-  { value: "milb", label: "Affiliated MiLB" },
-];
 
 export function TellHammerDialog({ open, onOpenChange }: Props) {
   const { user } = useAuth();
+  const { sport } = useSportTheme();
   const { updateSeasonStatus } = useSeasonStatus();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [level, setLevelState] = useState<string>("");
   const [injuryOpen, setInjuryOpen] = useState(false);
   const [prefillRegion, setPrefillRegion] = useState<ReportInjuryRegionKey | null>(null);
 
