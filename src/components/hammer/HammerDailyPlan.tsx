@@ -666,3 +666,29 @@ function InlineBlockChat({ block }: { block: PrescribedBlock }) {
     </div>
   );
 }
+
+/**
+ * Tiny L/R badge that auto-decides which side context applies to a block
+ * (hitting → hit picker; throwing/pitching/defense → throw picker). Hidden
+ * for non-switch / non-ambi athletes.
+ */
+function BlockSideBadge({ modality }: { modality: string }) {
+  const { shouldShowPicker, selectedSide } = useSideContext();
+  const discipline: "hit" | "throw" | null =
+    modality === "hitting"
+      ? "hit"
+      : modality === "throwing" || modality === "defense"
+        ? "throw"
+        : null;
+  if (!discipline || !shouldShowPicker(discipline)) return null;
+  const s = selectedSide[discipline];
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] font-bold"
+      title={`Programmed for ${s === "L" ? "Left" : "Right"} ${discipline === "hit" ? "swing" : "arm"} — toggle in header`}
+    >
+      {s}
+    </Badge>
+  );
+}
