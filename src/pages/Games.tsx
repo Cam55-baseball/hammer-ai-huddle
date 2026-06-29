@@ -160,6 +160,9 @@ export default function Games() {
         </div>
       </motion.div>
 
+      {/* Game-day call-to-action — opens today's game directly, or offers to draft one. */}
+      {gameDay.isGameToday && <TodayGameCta onOpen={(id) => setOpenSheet(id)} />}
+
       {/* Filter bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
