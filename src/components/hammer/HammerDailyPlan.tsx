@@ -151,6 +151,18 @@ export function HammerDailyPlan() {
                 {plan.missingnessCount} needs input
               </Badge>
             )}
+            {(plan.sideBias?.hit || plan.sideBias?.throw) && (
+              <Badge
+                variant="default"
+                className="text-[10px]"
+                title={[plan.sideBias?.hit?.note, plan.sideBias?.throw?.note].filter(Boolean).join(" ")}
+              >
+                Weaker side focus:{" "}
+                {plan.sideBias?.hit
+                  ? `Bat ${plan.sideBias.hit.weakerSide}`
+                  : `Throw ${plan.sideBias!.throw!.weakerSide}`}
+              </Badge>
+            )}
             {/* Side context — only renders for switch hitters / ambidextrous throwers */}
             <SideContextPicker discipline="hit" label="Bat" />
             <SideContextPicker discipline="throw" label="Throw" />
