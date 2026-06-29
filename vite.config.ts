@@ -41,9 +41,12 @@ export default defineConfig(({ mode }) => ({
       injectRegister: null,
       manifest: false,
       workbox: {
-        // CRITICAL: do NOT precache HTML. The precached index.html is what causes
-        // standalone (Home Screen) PWAs to ship the old shell after a deploy.
-        globPatterns: ['**/*.{js,css}'],
+        // CRITICAL: precache NEITHER HTML nor JS. Precaching hashed JS chunks
+        // is what strands installed PWAs on a manifest of vanished hashes
+        // after a deploy → "Importing a module script failed". Let the
+        // network serve JS, with a small SWR runtime cache as a safety net.
+        globPatterns: ['**/*.css'],
+
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // No navigateFallback: we always want HTML to come from the network on cold launch.
         navigateFallbackDenylist: [/^\/~oauth/],
