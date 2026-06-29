@@ -14,16 +14,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Brain, CheckCircle2, AlertTriangle, BookOpen, Library } from "lucide-react";
+import { ArrowLeft, Plus, Brain, CheckCircle2, AlertTriangle, BookOpen, Library, Upload, Copy, Trash2, RotateCcw } from "lucide-react";
 import { IqDiamond } from "@/components/iq/IqDiamond";
 import { validateThreeBs } from "@/lib/iq/threeBs";
 import {
   DEFENSIVE_ROLES, OFFENSIVE_ROLES, ROLE_LABELS, ASSIGNMENT_LABELS,
   type IqActor, type IqActorRole, type IqAssignment, type IqSport, type IqLens, type IqDifficulty, type IqStatus,
 } from "@/lib/iq/types";
+import { BulkImportDialog } from "@/components/owner/iq/BulkImportDialog";
+import { duplicateSituation, softDeleteSituation, restoreSituation } from "@/lib/iq/authoring/lifecycle";
 
 const ALL_ROLES: IqActorRole[] = [...DEFENSIVE_ROLES, ...OFFENSIVE_ROLES];
 const ASSIGNMENTS: IqAssignment[] = ["ball","bag","backup","read","execute","idle"];
+
 
 interface SituationRow {
   id: string;
