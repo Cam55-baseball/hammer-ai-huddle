@@ -543,8 +543,9 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 flex-wrap">
           <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button variant="outline" onClick={handleSaveAndExit} disabled={saving}>Save &amp; exit</Button>
           <Button variant="secondary" onClick={() => save(false)} disabled={saving}>Save draft</Button>
           <Button onClick={() => save(true)} disabled={saving || !canPublish}>Publish</Button>
         </DialogFooter>
