@@ -33,7 +33,9 @@ import {
   type DisciplineGoals,
   type SubGoalPick,
   type GoalRank,
+  type GoalSide,
 } from "@/lib/hammer/goals/categoryGoals";
+import { useSideContext, type Discipline as SideDiscipline } from "@/contexts/SideContext";
 import {
   CATEGORIES_FOR,
   subGoalsFor,
