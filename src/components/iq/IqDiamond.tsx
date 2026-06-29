@@ -48,8 +48,11 @@ export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }
     };
   };
 
+  return (
+    <div className={"relative w-full aspect-square overflow-hidden rounded-2xl border " + (className ?? "")}
          style={{ background: "radial-gradient(ellipse at 50% 100%, hsl(var(--iq-field)) 0%, hsl(var(--iq-field) / 0.7) 70%)" }}>
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
+
         {/* Outfield arc */}
         <path d="M 5 50 A 45 45 0 0 1 95 50 L 50 100 Z"
               fill="hsl(var(--iq-field) / 0.5)"
