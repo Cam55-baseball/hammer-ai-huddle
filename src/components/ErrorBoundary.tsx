@@ -32,27 +32,57 @@ export class ErrorBoundary extends Component<Props, State> {
 
   reset = () => this.setState({ error: null });
 
+  hardReload = () => {
+    try {
+      // Clear our chunk-reload sentinel so the next load can self-heal again.
+      sessionStorage.removeItem('__chunk_reload_once');
+    } catch { /* ignore */ }
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('_cb', Date.now().toString(36));
+      window.location.replace(url.toString());
+    } catch {
+      window.location.reload();
+    }
+  };
+
   render() {
     const { error } = this.state;
     if (!error) return this.props.children;
     if (this.props.fallback) return this.props.fallback(this.reset, error);
 
+    const isChunk =
+      error.name === 'ChunkLoadError' ||
+      /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|Loading chunk \d+ failed|Loading CSS chunk/i.test(
+        error.message ?? '',
+      );
+
     return (
       <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5 text-sm space-y-3">
         <div className="flex items-center gap-2 text-destructive font-medium">
           <AlertTriangle className="h-4 w-4" />
-          <span>Something went wrong here.</span>
+          <span>{isChunk ? 'A newer version of the app is available.' : 'Something went wrong here.'}</span>
         </div>
         <p className="text-muted-foreground text-xs">
-          The rest of the app is fine — just this section couldn't render.
-          {error.message ? ` (${error.message})` : ""}
+          {isChunk
+            ? "Tap reload to pick up the latest build — your data is safe."
+            : `The rest of the app is fine — just this section couldn't render.${error.message ? ` (${error.message})` : ''}`}
         </p>
-        <Button size="sm" variant="outline" onClick={this.reset}>
-          Try again
-        </Button>
+        <div className="flex gap-2">
+          {isChunk ? (
+            <Button size="sm" onClick={this.hardReload}>
+              Reload app
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" onClick={this.reset}>
+              Try again
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
 }
+
 
 export default ErrorBoundary;
