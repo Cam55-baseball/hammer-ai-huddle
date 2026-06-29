@@ -66,12 +66,22 @@ export default function PracticeHub() {
   const [activeModule, setActiveModule] = useState(prescribedModule || searchParams.get('module') || 'hitting');
   const [prescribedBanner, setPrescribedBanner] = useState<string | null>(null);
 
-  // Reset module selection when sport changes
+  // Reset module selection when sport *changes* (not on initial mount, and
+  // never override a module the user navigated in with via ?module=…).
+  const prevSportKeyRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (step === 'select_type') {
-      setActiveModule('hitting');
+    if (prevSportKeyRef.current === undefined) {
+      prevSportKeyRef.current = sportKey;
+      return;
     }
-  }, [sportKey]);
+    if (prevSportKeyRef.current !== sportKey) {
+      prevSportKeyRef.current = sportKey;
+      if (step === 'select_type') {
+        setActiveModule('hitting');
+      }
+    }
+  }, [sportKey, step]);
+
 
   // Auto-configure prescribed drill from HIE
   useEffect(() => {
