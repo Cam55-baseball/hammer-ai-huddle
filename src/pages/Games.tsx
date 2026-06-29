@@ -289,6 +289,77 @@ export default function Games() {
   );
 }
 
+/**
+ * TodayGameCta — if a game is scheduled or drafted for today, show a
+ * one-tap "Open today's game" banner that jumps straight to the GameSheet.
+ * Auto-creates a draft row if none exists yet.
+ */
+function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const todayGame = useQuery({
+    queryKey: ["gp-today-game", user?.id, today],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("gp_games")
+        .select("id,opponent_team,status")
+        .eq("user_id", user!.id)
+        .eq("game_date", today)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data as { id: string; opponent_team: string | null; status: string } | null;
+    },
+  });
+
+  const start = useMutation({
+    mutationFn: async () => {
+      if (todayGame.data?.id) return todayGame.data.id;
+      const { data, error } = await (supabase as any)
+        .from("gp_games")
+        .insert({
+          user_id: user!.id,
+          game_date: today,
+          sport: "baseball",
+          status: "in_progress",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      return data.id as string;
+    },
+    onSuccess: (id) => {
+      qc.invalidateQueries({ queryKey: ["gp-games-list"] });
+      qc.invalidateQueries({ queryKey: ["gp-today-game"] });
+      onOpen(id);
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not open today's game"),
+  });
+
+  return (
+    <Card className="p-4 border-primary/30 bg-gradient-to-br from-primary/10 to-transparent">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Trophy className="h-4 w-4 text-primary" />
+            Game day
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+            {todayGame.data
+              ? `Open today's game${todayGame.data.opponent_team ? ` vs ${todayGame.data.opponent_team}` : ""} to log live.`
+              : "Tap to spin up today's live log."}
+          </p>
+        </div>
+        <Button size="sm" onClick={() => start.mutate()} disabled={start.isPending}>
+          {todayGame.data ? "Open" : "Start"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 function HelperTile({
   icon,
   title,
