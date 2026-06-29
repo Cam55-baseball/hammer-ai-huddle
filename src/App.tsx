@@ -98,8 +98,14 @@ const lazyWithRetry = <T extends ComponentType<any>>(
 };
 
 
+// Lazy components that resolve from the already-in-flight preload, with
+// the same reload-recovery semantics as every other route.
+const Dashboard = lazyWithRetry(() => dashboardPreload.then((m) => m ?? dashboardImport()).then((m) => m as { default: ComponentType<any> }));
+const ScoutDashboard = lazyWithRetry(() => scoutDashboardPreload.then((m) => m ?? scoutDashboardImport()).then((m) => m as { default: ComponentType<any> }));
+
 // Lazy load all pages with retry logic for better reliability
 const Index = lazyWithRetry(() => import("./pages/Index"));
+
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const SelectUserRole = lazyWithRetry(() => import("./pages/SelectUserRole"));
