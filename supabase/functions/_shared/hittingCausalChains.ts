@@ -93,26 +93,29 @@ export const PHASE_CAUSAL_CHAINS: Record<HittingPhaseId, CausalChain> = {
     },
   },
   P3: {
+    // v2 Arakawa: P3 is involuntary / do-not-cue. Athlete voice routes upstream
+    // to P1/P2/P4. Coach voice keeps full diagnostic for grading + intervention.
+    // See `.lovable/p3-do-not-cue-rule.md`.
     phase: 'P3',
     trigger: {
-      athlete: 'Hip load and hand load are done. Now the stride is happening.',
-      coach_note: 'Stride window: front foot in flight after hip + hand load are set.',
+      athlete: "Your front foot lands on its own as the back elbow rushes past the front hip — you don't think about it.",
+      coach_note: "Stride window: front foot in flight after hip + hand load are set; landing is the organism's solution to organized P1+P2+P4.",
     },
     cause: {
-      athlete: 'You land open — toes and chest pointing at the pitcher — instead of sideways.',
-      coach_note: 'Front-foot lands externally rotated with thorax pre-opened; pelvis cannot store rotational torque.',
+      athlete: "If you land open, it's because the hip load was thin, the hands leaked forward, or the back elbow never led — not because of how you strode.",
+      coach_note: 'Front-foot lands externally rotated with thorax pre-opened; pelvis cannot store rotational torque. Root cause is upstream sequencing, not stride instruction.',
     },
     mechanism: {
-      athlete: "Your hips can't store torque, your core can't tension, and your back side either collapses or gets stuck.",
-      coach_note: 'Loss of pelvis-shoulder separation at landing; core fails to reach max tensional state; posterior chain either yields or locks.',
+      athlete: "When the upstream stuff is right, the body plants sideways on time. When it's wrong, no stride cue can save it.",
+      coach_note: 'Loss of pelvis-shoulder separation at landing; core fails to reach max tensional state; posterior chain either yields or locks. Conscious stride cueing masks the upstream fault and ingrains compensation.',
     },
     result: {
-      athlete: "Late on velocity, can't reach the outside pitch, off-balance at contact, jammed.",
-      coach_note: 'Reduced angular velocity capacity, restricted plate coverage, dynamic balance loss, inside-pitch jam.',
+      athlete: "Late on velocity, can't reach the outside pitch, off-balance at contact, jammed — these are signs the upstream sequence broke.",
+      coach_note: 'Reduced angular velocity capacity, restricted plate coverage, dynamic balance loss, inside-pitch jam. Use these as diagnostic signals, not as stride-coaching prompts.',
     },
     fix: {
-      athlete: 'Land sideways with both feet down, chest still toward the plate, back hip controlling the step, core max-tensioned.',
-      coach_note: 'Land with closed thorax + sideways pelvis; back hip dictates stride length; achieve max core tension at front-foot strike.',
+      athlete: "Don't cue the stride. Re-tune the hip load (P1), the hand depth (P2), and the back-elbow drive (P4) — the body will plant sideways on its own.",
+      coach_note: 'DO-NOT-CUE: P3 is involuntary. Route the fix to P1 hip-load completeness, P2 hand depth, and P4 elbow-first sequencing. Coach by constraint (sideways-landing audit, no-stride power, knob-back holds) — never by stride instruction. See `.lovable/p3-do-not-cue-rule.md`.',
     },
   },
   P4: {
@@ -154,10 +157,12 @@ export const PHASE_ROADMAPS: Record<HittingPhaseId, RoadmapStep[]> = {
     { step: 4, key: 'transfer', label: 'Transfer', intent: 'Live BP holding the depth under speed.', drillId: 'machine_bp', athleteCue: 'Don\'t leak. Hands stay back, chest stays in.', coachNote: 'Test sequence integrity at game velocity.' },
   ],
   P3: [
-    { step: 1, key: 'feel', label: 'Feel', intent: 'Feel a sideways landing with both feet down.', drillId: 'sideways_landing_check', athleteCue: 'Stride and freeze. Chest still toward the plate.', coachNote: 'Static landing audit; thorax closed, pelvis sideways.' },
-    { step: 2, key: 'iso', label: 'Isolate', intent: 'Repeat the landing pose with no swing.', drillId: 'sideways_landing_check', athleteCue: 'Land. Hold. Photo. Reset.', coachNote: 'Pattern engrains landing geometry without launch noise.' },
-    { step: 3, key: 'constraint', label: 'Constrain', intent: 'Front toss only outside-third pitches.', drillId: 'front_toss', athleteCue: 'Outside pitch only. Stay sideways or you can\'t reach it.', coachNote: 'Outside-third constraint exposes premature opening.' },
-    { step: 4, key: 'transfer', label: 'Transfer', intent: 'Live machine to hold landing under velocity.', drillId: 'machine_bp', athleteCue: 'Land sideways every pitch. No exceptions.', coachNote: 'Velocity stress test for landing integrity.' },
+    // v2 Arakawa: athlete cues are constraint-based, never stride-instruction.
+    // The constraint forces the correct involuntary landing.
+    { step: 1, key: 'feel', label: 'Feel', intent: 'Feel that a clean hip load + hand load + elbow drive lands the front foot sideways on its own.', drillId: 'no_stride_power', athleteCue: "Load the hip. Load the hands. Elbow leads. Don't think about the stride — just notice where the foot lands.", coachNote: 'Awareness drill — surface the involuntary landing as a *byproduct* of upstream organization. Do not coach the stride.' },
+    { step: 2, key: 'iso', label: 'Isolate', intent: 'Repeat the landing pose with no swing — pure audit of organization.', drillId: 'sideways_landing_check', athleteCue: 'Hip load, hand load, elbow-led intent — freeze where the foot lands. Photo. Reset.', coachNote: 'Static landing audit; thorax closed, pelvis sideways. Grade landing; if it fails, re-cue P1/P2/P4, NOT the stride.' },
+    { step: 3, key: 'constraint', label: 'Constrain', intent: 'Outside-third front toss — the constraint forces the involuntary sideways landing.', drillId: 'front_toss', athleteCue: "Outside pitch only. Knob back, elbow leads — if you open early you can't reach it.", coachNote: 'Outside-third constraint exposes premature opening. The constraint is the coach — no verbal stride instruction.' },
+    { step: 4, key: 'transfer', label: 'Transfer', intent: 'Live machine to hold the involuntary landing under velocity.', drillId: 'machine_bp', athleteCue: 'Same intent every pitch: hip → hand → elbow. The body plants when it needs to.', coachNote: 'Velocity stress test for landing integrity. If landing degrades, the upstream sequence broke — re-cue P1/P2/P4.' },
   ],
   P4: [
     { step: 1, key: 'feel', label: 'Feel', intent: 'Feel the back elbow lead forward while hands stay back.', drillId: 'elbow_first_fulcrum', athleteCue: 'Elbow first. Hands wait. The elbow turns you.', coachNote: 'Knob-fulcrum awareness; scap protraction precedes hand acceleration.' },
