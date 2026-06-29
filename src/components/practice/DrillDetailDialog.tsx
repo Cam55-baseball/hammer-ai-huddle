@@ -6,6 +6,7 @@ import type { ScoredDrill } from '@/utils/drillRecommendationEngine';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { getSideFor } from '@/lib/side/getSideFor';
 
 interface DrillInstructions {
   purpose?: string;
@@ -39,13 +40,17 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
 
   const handleSaveToVault = async () => {
     if (!user?.id) return;
+    // Side context: hitting drills inherit bat side; everything else inherits throw side.
+    const isHit = (drill.module || '').toLowerCase().includes('hit');
+    const side = getSideFor(isHit ? 'hit' : 'throw');
     const { error } = await supabase.from('vault_saved_drills').insert({
       user_id: user.id,
       drill_name: drill.name,
       drill_description: drill.ai_context || null,
       module_origin: drill.module,
       sport: drill.sport,
-    });
+      ...(side ? { side } : {}),
+    } as any);
     if (error) {
       toast.error('Failed to save drill');
     } else {

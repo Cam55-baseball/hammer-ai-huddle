@@ -1,61 +1,70 @@
+## Side Context (L/R) — Finish-to-Mastery Plan
 
-# Side Context (L/R) — Full E2E Completion Plan
+**Total remaining work: 6 slices.** After Slice 6, every capture surface writes `side`, every render surface filters by `side`, Hammer + Workouts + Report Card + Ask Hammer all reason on per-side deltas, lints + Playwright E2E lock it in place, and non-switch/ambi athletes see zero new UI. I'll offer to continue automatically after each slice — you say "next slice" and I keep going until Slice 6 ships and the E2E is green.
 
-Foundation already shipped: `SideContextProvider`, `SideContextPicker`, `SideViewTabs`, DB columns on `videos`/`vault_saved_drills`/`drill_assignments`/`pending_drills`/`athlete_body_goals`/`daily_standard_checks`/`calendar_events`/`mpi_scores`, plus wiring on `AnalyzeVideo` upload + drill save and `HammerDailyPlan` header. This plan finishes every remaining surface so L/R is a true app-wide theme.
+Each slice is **additive-only, replay-safe, subordinate to all prior invariants**, scoped so it cannot regress prior shipped work (foundation, AnalyzeVideo, saveDrill, HammerDailyPlan header, PitchingPanel tabs, CategoryGoalsCard hints all stay untouched except where explicitly extended).
 
-## A. Capture surfaces (write `side`)
+---
 
-1. **Goals** — `CategoryGoalsStep` / `CategoryGoalsCard` and any `athlete_body_goals` insert: add a Side picker per goal (L / R / Both). Default Both for non-switch/ambi.
-2. **Body check daily tests** (`daily_standard_checks`): add side toggle on relevant bilateral tests (grip, jump, single-leg, throwing velo). Persist `side`.
-3. **Practice / GameSession results** — confirm existing dual-side writes still flow; add `SideContextPicker` where missing on drill-completion forms (`drill_assignments`, `pending_drills`).
-4. **Scheduled events** (`calendar_events`): add side tag on bullpens / hitting cages so workload splits cleanly.
-5. **MPI scores** (`mpi_scores.side`): stamp from `SideContext` at scoring time inside report-card pipeline (`src/lib/reportCard/*`).
-6. **Saved drills from non-AnalyzeVideo surfaces** (Vault, library): pass `side` to `saveDrill` everywhere it's called.
+### Slice 1 — Capture completion (write `side` everywhere)
+Goal: no capture surface silently drops side.
 
-## B. Render surfaces (read & filter by `side`)
+- `CategoryGoalsStep` / `athlete_body_goals` writes → per-goal Side picker (L/R/Both), default Both for non-switch/ambi.
+- `daily_standard_checks` body-check form → side toggle on bilateral tests (grip, jump, single-leg, throwing velo).
+- `drill_assignments` + `pending_drills` completion forms → `SideContextPicker` inheriting from header.
+- `calendar_events` create/edit (bullpens, cage work) → optional side tag.
+- `mpi_scores.side` → stamped from `getSideFor()` inside `src/lib/reportCard/*` scorer entry.
+- Audit every remaining `saveDrill` callsite (Vault, library, IQ) → pass `side`.
+- Add `compact` prop (real, not shim) to `SideContextPicker` for tight rows.
 
-1. **Video Library / Player's Club** — add `SideViewTabs` ("L · R · Both") above the user's own video list; filter `videos.batting_side` / `throwing_hand`.
-2. **Progress Dashboard** (`ProgressLanding.tsx` + `correlations.ts`):
-   - Mount `SideViewTabs` in the topic header for hit/throw topics.
-   - Update `correlations.ts` to compute L-only, R-only, and Combined deltas; surface "Side differential" insight cards (e.g., "Bat speed +6% R vs L").
-3. **Report card / Scorecard** — split tiles by side when both sides have data; show a "Differential" badge if delta exceeds threshold.
-4. **Hammer Daily Plan rendering** — `dailyPlan.ts` chooses side-targeted blocks: if differential > X% or a side goal is set, prescribe the weaker side more reps; render side chip on each block.
-5. **Workout rendering** — for bilateral lifts, surface per-side prescription pulled from the latest side-specific deficits.
-6. **Goal cards** — show L/R/Both badge and per-side progress bars.
+### Slice 2 — Render completion (filter + split by `side`)
+- `VideoLibrary.tsx` → `SideViewTabs` above user's own videos, filters `batting_side` / `throwing_hand`.
+- Hitting progress panel → `SideViewTabs` (mirror PitchingPanel pattern).
+- Throwing progress panel → `SideViewTabs`.
+- Goal cards → L/R/Both badge + per-side progress bars.
+- Hammer block headers already show side chip — extend to Workout block rendering for bilateral lifts.
 
-## C. Correlation & intelligence
+### Slice 3 — Intelligence layer (differential drives decisions)
+- Mount `SideViewTabs` in `ProgressLanding` topic headers (hit/throw).
+- Extend `correlations.ts` to compute L-only / R-only / Combined deltas.
+- New `SideDifferentialCard.tsx` surfaced on dashboard when delta exceeds confidence-bounded threshold (uses existing `sideDifferential.ts`, never collapses missingness).
+- `dailyPlan.ts` reads `computeSideDifferential` → biases reps toward weaker side when gap is real (n ≥ MIN_PER_SIDE).
+- "Ask Hammer" prompt builder appends side-differential context line when meaningful.
+- Report card / scorecard → per-side split tiles when both sides have data + "Differential" badge.
 
-1. New `src/lib/side/sideDifferential.ts`:
-   - `computeSideDifferential(metric, window)` → `{ left, right, delta, sampleSize, confidence }`.
-   - Confidence-bounded per existing AR-1/DG-1 invariants — never collapse missingness.
-2. Hammer reasoning: feed differential into block selection and into "Ask Hammer" prompts ("Why is my right-side bat speed lower?").
-3. Insight surfaces: `SideDifferentialCard` for the dashboard + a thin pill on the Hammer plan when a meaningful gap exists.
+### Slice 4 — Plumbing, hygiene, type-safety
+- `scripts/lint-side-context.ts` — flags inserts to `videos` / `vault_saved_drills` / `drill_assignments` / `pending_drills` / `athlete_body_goals` / `daily_standard_checks` / `mpi_scores` that omit `side` when picker is visible.
+- Verify RLS inheritance on new columns (no policy change expected — written confirmation in `.lovable/`).
+- `last_used_side` persistence wired from Goals + Body Check writes (not just header).
+- Tighten `as any` casts once supabase types regenerate.
 
-## D. Plumbing / hygiene
+### Slice 5 — Playwright E2E (switch-hitter + ambi-thrower)
+Headless Chromium run against localhost:
+1. Sign in as switch-hitter test user (managed Supabase session).
+2. Upload L hitting video → toggle R → upload R → assert Video Library tabs split correctly.
+3. Trigger report card → assert per-side tiles + differential badge present.
+4. Open Hammer plan → assert weaker-side rep bias visible in block chips.
+5. Non-switch athlete sanity sweep → assert zero pickers, zero behavior change.
+6. Screenshots saved under `/tmp/browser/side-e2e/` for proof.
 
-1. `SideContextPicker` variant flags: add a real `compact` prop (icon-only L/R, h-6) for tight headers (fixes the earlier shim).
-2. `useSideContext` selectors: add `getSideFor(discipline, fallback)` helper so non-React code paths (e.g. report-card builders) can read context-equivalent defaults.
-3. Persist `last_used_side` on every successful write (already in provider, but wire from Goals / Body Check writes too).
-4. Type-safety: extend generated supabase types usage with local `as any` only where columns are new; tighten once types regen.
-5. Lints / guards:
-   - Add `scripts/lint-side-context.ts` to flag video/drill/goal inserts that omit `side` when picker should show.
-   - RLS: confirm new columns inherit existing per-row policies (no policy change needed; verify).
+### Slice 6 — Mastery seal (zero-regression lock)
+- Add `.github/workflows/side-context-regression.yml` running the Playwright spec + lint on every PR.
+- `.lovable/side-context-mastery.md` — full surface inventory, invariants, "do-not-regress" rules.
+- Wire `lint-side-context.ts` into `scripts/preflight.sh`.
+- Final audit pass: grep every insert into the 7 side-aware tables, confirm 100% coverage, attach grep results to the doc.
 
-## E. UI/UX rules (clutterless)
+---
 
-- Picker auto-hides when `is_switch_hitter`/`is_ambidextrous_thrower` is false for that discipline — single source of truth.
-- One picker per page max in the header; downstream surfaces inherit silently.
-- Aggregate read views default to **Combined** with a one-tap split into L / R.
-- Color tokens only — no hardcoded colors; reuse `primary`/`muted` semantic tokens.
+### Risk posture
+- **Additive-only**: no column removal, no policy mutation, no behavior change for non-switch/ambi.
+- **Replay-safe**: every new write goes through canonical inserts; no parallel surfaces.
+- **Confidence-bounded**: differential never invents data — below `MIN_PER_SIDE` it stays silent.
+- **Lint + CI + Playwright** together make future regressions structurally blocked, not just discouraged.
 
-## F. Verification
+### Technical files added/edited
+**Add**: `SideDifferentialCard.tsx`, `scripts/lint-side-context.ts`, `tests/e2e/side-context/switch-hitter.spec.ts`, `.github/workflows/side-context-regression.yml`, `.lovable/side-context-mastery.md`.
+**Edit**: `CategoryGoalsStep.tsx`, `CategoryGoalsCard.tsx`, body-check form, drill-completion forms, `VideoLibrary.tsx`, Hitting/Throwing progress panels, `ProgressLanding.tsx`, `correlations.ts`, `dailyPlan.ts`, report card builders in `src/lib/reportCard/*`, `SideContextPicker.tsx` (real `compact`), Workout block renderer, Ask Hammer prompt builder.
 
-1. Playwright run as a switch-hitter test user: upload L video → toggle R → upload R → confirm Video Library tabs split, dashboard shows differential, Hammer plan rebalances toward weaker side.
-2. Edge-function check: report-card pipeline emits `side` on `mpi_scores` insert; replay-safe (no silent missingness collapse).
-3. Non-switch athlete sanity: picker hidden everywhere; nothing in UI changes.
+---
 
-## Technical notes
-
-- Files to add: `src/lib/side/sideDifferential.ts`, `src/components/shared/SideDifferentialCard.tsx`, `scripts/lint-side-context.ts`.
-- Files to edit: `CategoryGoalsStep.tsx`, `CategoryGoalsCard.tsx`, `BodyCheckForm` (daily standard checks), `GameSessionFields.tsx` (already side-aware — verify), drill-completion forms, `VideoLibrary.tsx`, `ProgressLanding.tsx`, `correlations.ts`, `dailyPlan.ts`, `HammerDailyPlan.tsx` (block chips), report-card builders in `src/lib/reportCard/*`, `SideContextPicker.tsx` (add `compact`), `SideContext.tsx` (add `getSideFor`).
-- No new tables. No RLS changes. Additive-only, replay-safe, subordinate to existing invariants.
+**Shall I start Slice 1 now and continue automatically through Slice 6 until the system is sealed?** Say "go" and I'll ship Slice 1, then pause for your "next" between each — or say "go straight through" and I'll chain all 6 without stopping.

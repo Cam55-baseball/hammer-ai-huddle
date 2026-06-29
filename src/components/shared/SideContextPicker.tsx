@@ -7,6 +7,8 @@ interface SideContextPickerProps {
   force?: boolean;
   className?: string;
   size?: "sm" | "md";
+  /** Icon-only, h-6 — for tight headers. Overrides `size` and `label`. */
+  compact?: boolean;
   /** Optional label prefix, e.g. "Hitting side" */
   label?: string;
 }
@@ -20,17 +22,20 @@ export function SideContextPicker({
   force = false,
   className,
   size = "sm",
+  compact = false,
   label,
 }: SideContextPickerProps) {
   const { shouldShowPicker, selectedSide, setSide } = useSideContext();
   if (!force && !shouldShowPicker(discipline)) return null;
 
   const side = selectedSide[discipline];
-  const heightCls = size === "sm" ? "h-7 text-[11px]" : "h-9 text-xs";
+  const heightCls = compact
+    ? "h-6 text-[10px]"
+    : size === "sm" ? "h-7 text-[11px]" : "h-9 text-xs";
 
   return (
     <div className={cn("inline-flex items-center gap-1.5", className)}>
-      {label && (
+      {label && !compact && (
         <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </span>
@@ -46,7 +51,8 @@ export function SideContextPicker({
             onClick={() => setSide(discipline, s)}
             aria-pressed={side === s}
             className={cn(
-              "px-2.5 font-semibold transition-colors",
+              "font-semibold transition-colors",
+              compact ? "px-1.5" : "px-2.5",
               side === s
                 ? "bg-primary/20 text-primary"
                 : "bg-muted/30 text-muted-foreground hover:bg-muted/50",

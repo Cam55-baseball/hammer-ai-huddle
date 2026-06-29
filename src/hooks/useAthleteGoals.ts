@@ -25,6 +25,8 @@ export interface CreateGoalInput {
   targetBodyFatPercent?: number;
   weeklyChangeRate?: number;
   targetDate?: string;
+  /** Optional L/R/both scope for bilateral-relevant goals. */
+  side?: 'L' | 'R' | 'both';
 }
 
 export function useAthleteGoals() {
@@ -93,8 +95,9 @@ export function useAthleteGoals() {
           target_body_fat_percent: input.targetBodyFatPercent,
           weekly_change_rate: input.weeklyChangeRate || 1,
           target_date: input.targetDate,
-          is_active: true
-        })
+          is_active: true,
+          ...(input.side ? { side: input.side } : {}),
+        } as any)
         .select()
         .single();
 
@@ -139,8 +142,9 @@ export function useAthleteGoals() {
           ...(updates.targetBodyFatPercent !== undefined && { target_body_fat_percent: updates.targetBodyFatPercent }),
           ...(updates.weeklyChangeRate !== undefined && { weekly_change_rate: updates.weeklyChangeRate }),
           ...(updates.targetDate !== undefined && { target_date: updates.targetDate }),
+          ...(updates.side !== undefined && { side: updates.side }),
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', goalId)
         .eq('user_id', user.id);
 
