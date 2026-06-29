@@ -81,11 +81,24 @@ interface DraftShape {
 
 export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
   const { user } = useAuth();
+  const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const [panes, setPanes] = useState<PaneId[]>([]);
   const [picksByPane, setPicksByPane] = useState<Record<string, DisciplineGoals>>({});
   const [activePane, setActivePane] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  /** Which Side discipline applies to a given goal category, if any.
+   *  Returns null when the category is bilaterally neutral (Speed, Fielding)
+   *  or when the athlete doesn't have switch/ambi flag for the relevant side. */
+  const sideDisciplineFor = useCallback(
+    (cat: CategoryKey): SideDiscipline | null => {
+      if (cat === "hitting" || cat === "power") return isSwitchHitter ? "hit" : null;
+      if (cat === "throwing" || cat === "pitching") return isAmbidextrousThrower ? "throw" : null;
+      return null;
+    },
+    [isSwitchHitter, isAmbidextrousThrower],
+  );
 
   // ── Hydrate from existing V2 row OR draft slot ────────────────────────────
   useEffect(() => {
