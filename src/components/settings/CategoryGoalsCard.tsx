@@ -79,6 +79,7 @@ function renderPane(sport: Sport, discipline: Discipline, dg: DisciplineGoals) {
 export function CategoryGoalsCard() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { isSwitchHitter, isAmbidextrousThrower, selectedSide } = useSideContext();
   const [open, setOpen] = useState(false);
   const [payload, setPayload] = useState<CategoryGoalsPayloadV2 | null>(null);
   const [loading, setLoading] = useState(true);
