@@ -24,6 +24,8 @@ import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
 import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
+import { useSideContext } from "@/contexts/SideContext";
+import { SideContextPicker } from "@/components/shared/SideContextPicker";
 // Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
 // AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
 // TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
@@ -113,6 +115,11 @@ export default function AnalyzeVideo() {
   const [extractingFrames, setExtractingFrames] = useState(false);
   const { saveDrill, savedDrills } = useVault();
 
+  // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
+  const sideDiscipline: 'hit' | 'throw' = module === 'hitting' ? 'hit' : 'throw';
+  const { selectedSide, shouldShowPicker } = useSideContext();
+  const activeSide = selectedSide[sideDiscipline];
+
   // Track which drills are already saved
   useEffect(() => {
     if (savedDrills && analysis?.drills) {
@@ -150,6 +157,7 @@ export default function AnalyzeVideo() {
       drill_description: fullDescription || null,
       module_origin: module || '',
       sport: sport,
+      side: shouldShowPicker(sideDiscipline) ? activeSide : null,
     });
 
     if (result.success) {
@@ -585,6 +593,12 @@ export default function AnalyzeVideo() {
           height: probed.height,
           orientation: probed.orientation,
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
+          // Side stamp — only when picker is shown (switch hitter / ambidextrous thrower)
+          ...(shouldShowPicker(sideDiscipline)
+            ? (sideDiscipline === 'hit'
+                ? { batting_side: activeSide }
+                : { throwing_hand: activeSide })
+            : {}),
         }] as never)
         .select()
         .single();
@@ -920,7 +934,12 @@ export default function AnalyzeVideo() {
             <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
             <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} {t('videoAnalysis.mechanicsEvaluation', 'mechanics evaluation')}</p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <SideContextPicker
+              discipline={sideDiscipline}
+              label={sideDiscipline === 'hit' ? 'Hitting side' : 'Throwing hand'}
+              className="mr-1"
+            />
             {videoPreview && (
               <Button variant="outline" size="sm" onClick={handleRemoveVideo} className="flex-1 sm:flex-initial">
                 <Trash2 className="h-4 w-4 sm:mr-2" />
