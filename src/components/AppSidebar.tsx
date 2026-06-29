@@ -699,7 +699,7 @@ export function AppSidebar() {
                   tooltip="Game Hub"
                   className="group sidebar-item-hover relative"
                 >
-                  {isActive('/game-scoring') && <span className="sidebar-active-indicator" />}
+                  {isActive('/games') && <span className="sidebar-active-indicator" />}
                   <Gamepad2 className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
                   <span className="transition-colors duration-200">Game Hub</span>
                 </SidebarMenuButton>

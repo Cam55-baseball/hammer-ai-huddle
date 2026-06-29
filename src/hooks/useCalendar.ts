@@ -305,8 +305,8 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
 
         // Games (regular + tournaments, includes AI-imported rows)
         (supabase
-          .from('games' as any)
-          .select('id, game_date, opponent_name, venue, status, game_type, sport, game_summary')
+          .from('gp_games' as any)
+          .select('id, game_date, opponent_team, venue, status, game_type, sport, game_summary')
           .eq('user_id', user.id)
           .gte('game_date', startStr)
           .lte('game_date', endStr) as any),
@@ -380,7 +380,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           const summary = (g.game_summary ?? {}) as Record<string, any>;
           const isImported = summary?.source === 'ai_schedule_import';
           const isTournament = g.game_type === 'tournament' || summary?.kind === 'tournament_day';
-          const baseTitle: string = summary?.title || g.opponent_name || (isTournament ? 'Tournament' : 'Game');
+          const baseTitle: string = summary?.title || g.opponent_team || g.opponent_name || (isTournament ? 'Tournament' : 'Game');
           const color = isTournament ? '#a855f7' : '#ef4444'; // violet for tournaments, red for games
           const calEvent: CalendarEvent = {
             id: `game-${g.id}`,
