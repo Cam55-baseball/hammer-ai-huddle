@@ -217,7 +217,9 @@ export default function GameIqSituation() {
               </Card>
             )}
           </>
-        )}
+          );
+        })()}
+
 
         {mode === "quiz" && firstScenario && (
           <IqScenarioRunner
