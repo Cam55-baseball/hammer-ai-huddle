@@ -282,27 +282,38 @@ interface EditorProps {
 
 function SituationEditor({ row, onClose, onSaved }: EditorProps) {
   const isNew = !row;
-  const [meta, setMeta] = useState<SituationRow>(() => row ?? {
-    id: "",
-    sport: "both",
-    slug: "",
-    title: "",
-    summary: "",
-    lens_tags: ["defense"],
-    difficulty: "core",
-    status: "draft",
-    triple_check_count: 0,
-    canonical_order: 999,
-    sources: [],
-    deleted_at: null,
+  const draftKey = row?.id ?? "new:owner";
 
+  const [meta, setMeta] = useState<SituationRow>(() => {
+    const saved = wizardDraft.load(draftKey);
+    if (saved?.meta) return saved.meta as SituationRow;
+    return row ?? {
+      id: "",
+      sport: "both",
+      slug: "",
+      title: "",
+      summary: "",
+      lens_tags: ["defense"],
+      difficulty: "core",
+      status: "draft",
+      triple_check_count: 0,
+      canonical_order: 999,
+      sources: [],
+      deleted_at: null,
+    };
   });
-  const [actors, setActors] = useState<Array<Omit<IqActor, "id" | "situation_id"> & { id?: string }>>([]);
+  const [actors, setActors] = useState<Array<Omit<IqActor, "id" | "situation_id"> & { id?: string }>>(() => {
+    const saved = wizardDraft.load(draftKey);
+    return (saved?.actors as Array<Omit<IqActor, "id" | "situation_id"> & { id?: string }>) ?? [];
+  });
   const [saving, setSaving] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(
+    () => wizardDraft.load(draftKey)?.updatedAt ?? null,
+  );
 
   useEffect(() => {
+    if (actors.length) return; // already restored from draft
     if (!row) {
-      // pre-fill defense roles for a new situation
       setActors(DEFENSIVE_ROLES.map((r) => ({ ...blankActor(r), id: undefined })));
       return;
     }
@@ -310,7 +321,17 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
       const { data } = await supabase.from("iq_situation_actors").select("*").eq("situation_id", row.id);
       setActors((data ?? []) as never);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row]);
+
+  // Autosave to localStorage on any change (debounced via rAF).
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      wizardDraft.save(draftKey, meta as unknown as Record<string, unknown>, actors);
+      setDraftSavedAt(Date.now());
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [meta, actors, draftKey]);
 
   const validation = useMemo(() => validateThreeBs(actors as unknown as IqActor[]), [actors]);
   const canPublish = validation.ok && meta.sources.length > 0 && actors.filter((a) => a.assignment !== "idle").length >= 6;
