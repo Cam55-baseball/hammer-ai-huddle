@@ -42,6 +42,7 @@ export type ModalityKey =
   | "throwing"
   | "defense"
   | "baserunning"
+  | "game_iq"
   | "fueling"
   | "recovery";
 
