@@ -254,6 +254,21 @@ export default function AnalyzeVideo() {
     }
   }, [playbackRate]);
 
+  // Auth-eviction guard: while the video is uploading, frames are extracting,
+  // or analyze-video is running, hold the protected-editing heartbeat open so
+  // a transient auth/visibility blip cannot kick the user to /auth or /home
+  // mid-analysis. Matches the pattern used by SeasonScheduleImporterDialog.
+  useEffect(() => {
+    const busy = analyzing || uploading || extractingFrames;
+    if (!busy) return;
+    noteProtectedEditing(180_000); // refresh every tick up to the edge budget
+    const id = window.setInterval(() => noteProtectedEditing(180_000), 10_000);
+    return () => {
+      window.clearInterval(id);
+      clearProtectedEditing();
+    };
+  }, [analyzing, uploading, extractingFrames]);
+
   // Auto-recompute report card ONCE per video when metrics are missing/sparse.
   // Lineage-preserving: only mutates ai_analysis.metrics via the edge function.
   const autoRecomputedRef = useRef<Set<string>>(new Set());
