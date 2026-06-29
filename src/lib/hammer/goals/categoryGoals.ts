@@ -102,9 +102,14 @@ export interface CategoryGoalsPayload {
 export type GoalRank = "primary" | "secondary";
 export const RANK_WEIGHT: Record<GoalRank, number> = { primary: 0.7, secondary: 0.3 };
 
+/** Optional side scope for switch hitters / ambidextrous throwers.
+ *  Missing/undefined or 'both' = applies to both sides (legacy behavior). */
+export type GoalSide = "L" | "R" | "both";
+
 export interface SubGoalPick {
   readonly id: string;
   readonly rank: GoalRank;
+  readonly side?: GoalSide;
 }
 
 export interface DisciplineGoals {
