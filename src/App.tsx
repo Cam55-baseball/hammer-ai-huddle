@@ -17,13 +17,11 @@ import { RequireCapability } from "./lib/auth/governance/requireRole";
 const dashboardImport = () => import("./pages/Dashboard");
 const scoutDashboardImport = () => import("./pages/ScoutDashboard");
 
-// Fire preloads immediately at module load time
-const dashboardPreload = dashboardImport();
-const scoutDashboardPreload = scoutDashboardImport();
+// Fire preloads immediately at module load time (swallow errors here — the
+// real failure path runs inside lazyWithRetry below so we get reload recovery).
+const dashboardPreload = dashboardImport().catch(() => null as any);
+const scoutDashboardPreload = scoutDashboardImport().catch(() => null as any);
 
-// Lazy components that resolve from the already-in-flight preload
-const Dashboard = lazy(() => dashboardPreload.catch(() => dashboardImport()));
-const ScoutDashboard = lazy(() => scoutDashboardPreload.catch(() => scoutDashboardImport()));
 
 // Clean up cache-busting param after successful load
 const cleanupCacheBustParam = () => {
