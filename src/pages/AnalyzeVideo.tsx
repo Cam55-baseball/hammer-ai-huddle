@@ -409,6 +409,28 @@ export default function AnalyzeVideo() {
       return;
     }
 
+    // Client-side preflight: short-circuit obviously unanalyzable clips so
+    // users get a clear message instead of an opaque server rejection.
+    // Mirrors thresholds in src/lib/biomech/videoAcceptance.ts.
+    {
+      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC } = await import("@/lib/biomech/videoAcceptance");
+      if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
+        toast.error(`This clip is too small to analyze (${probed.width}×${probed.height}). Please upload at least ${MIN_WIDTH}×${MIN_HEIGHT} — re-exporting from your camera roll instead of forwarding from a messaging app usually fixes this.`);
+        setUploading(false);
+        return;
+      }
+      if (probed.fps_true < MIN_FPS) {
+        toast.error(`Video frame rate is too low (${probed.fps_true.toFixed(1)} fps). Please upload a clip recorded at ${MIN_FPS} fps or higher.`);
+        setUploading(false);
+        return;
+      }
+      if (probed.duration_sec < MIN_DURATION_SEC || probed.duration_sec > MAX_DURATION_SEC) {
+        toast.error(`Clips must be between ${MIN_DURATION_SEC}s and ${MAX_DURATION_SEC}s (this one is ${probed.duration_sec.toFixed(1)}s). Please trim and try again.`);
+        setUploading(false);
+        return;
+      }
+    }
+
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
     let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
@@ -781,11 +803,49 @@ export default function AnalyzeVideo() {
       if (analysisError) {
         console.error("Analysis error:", analysisError);
         setAnalysisError(analysisError);
-        
+
+        // Try to extract the structured rejection payload the edge function
+        // returns (e.g. { error: "reject_low_resolution", detail: "..." }).
+        // supabase-js stuffs the raw Response on `error.context`.
+        let rejectReason: string | null = null;
+        let rejectDetail: string | null = null;
+        try {
+          const resp = (analysisError as any)?.context;
+          if (resp && typeof resp.json === "function") {
+            const body = await resp.clone().json();
+            if (body && typeof body.error === "string") {
+              rejectReason = body.error;
+              rejectDetail = typeof body.detail === "string" ? body.detail : null;
+            }
+          }
+        } catch { /* ignore parse failures, fall through to generic */ }
+
+        const friendly = (() => {
+          switch (rejectReason) {
+            case "reject_low_resolution":
+              return "This clip is too small to analyze reliably. Please upload a higher-resolution version (at least 320×320). Re-exporting from your camera roll — instead of forwarding from a messaging app — usually fixes this.";
+            case "reject_low_fps":
+              return "Video frame rate is too low — please upload a clip recorded at 24 fps or higher.";
+            case "reject_duration_out_of_bounds":
+              return "Clips must be between 0.5 and 60 seconds. Please trim and try again.";
+            case "reject_excessive_dropped_frames":
+              return "Too many frames couldn't be read from this clip. Try re-exporting it from your camera roll and uploading again.";
+            case "missing_video_sha256":
+            case "missing_probe_metadata":
+              return "Upload didn't finish preparing — please try again in a moment.";
+            default:
+              return null;
+          }
+        })();
+
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
           toast.error(t('videoAnalysis.rateLimitError'));
         } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
           toast.error(t('videoAnalysis.paymentRequiredError'));
+        } else if (friendly) {
+          toast.error(friendly);
+          // Attach the friendly reason so the in-page failure card shows it too.
+          setAnalysisError({ ...(analysisError as any), friendlyMessage: friendly, rejectReason, rejectDetail });
         } else {
           toast.error(t('videoAnalysis.genericAnalysisError'));
         }

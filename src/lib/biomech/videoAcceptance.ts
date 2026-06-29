@@ -9,8 +9,12 @@
 import type { ProbedVideoMetadata } from "./probeVideoMetadata";
 
 export const MIN_FPS = 24;
-export const MIN_WIDTH = 480;
-export const MIN_HEIGHT = 480;
+// 320px floor matches real-world phone exports (iMessage / WhatsApp /
+// social re-encodes commonly arrive at 320–360px wide). BlazePose Full
+// still lands reliable landmarks at this resolution; the previous 480px
+// gate was overly defensive and rejected typical user uploads.
+export const MIN_WIDTH = 320;
+export const MIN_HEIGHT = 320;
 export const MIN_DURATION_SEC = 0.5;
 export const MAX_DURATION_SEC = 60;
 export const MAX_DROPPED_FRAME_RATIO = 0.34; // > 1/3 of requested frames dropped = reject

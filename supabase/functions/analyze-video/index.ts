@@ -1747,8 +1747,11 @@ Deno.serve(async (req) => {
     // Centralized thresholds: see src/lib/biomech/videoAcceptance.ts. Mirrored
     // here so the server is the source of truth for `rejected` outcomes.
     const PHASE1_MIN_FPS = 24;
-    const PHASE1_MIN_WIDTH = 480;
-    const PHASE1_MIN_HEIGHT = 480;
+    // Mirrors src/lib/biomech/videoAcceptance.ts. 320px floor accepts
+    // real-world phone exports; BlazePose Full still produces reliable
+    // landmarks at this resolution.
+    const PHASE1_MIN_WIDTH = 320;
+    const PHASE1_MIN_HEIGHT = 320;
     const PHASE1_MIN_DURATION_SEC = 0.5;
     const PHASE1_MAX_DURATION_SEC = 60;
     const PHASE1_MAX_DROPPED_RATIO = 0.34;
