@@ -36,11 +36,18 @@ const HOME_POS: Record<IqActorRole, { x: number; y: number }> = {
   BAT: { x: 50, y: 96 },
 };
 
-export function IqDiamond({ actors, mode, highlightRole, className }: IqDiamondProps) {
+export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }: IqDiamondProps) {
   const byRole = useMemo(() => new Map(actors.map((a) => [a.role, a])), [actors]);
+  const posFor = (role: IqActorRole) => {
+    const base = HOME_POS[role];
+    const s = roleShifts?.[role];
+    if (!s) return base;
+    return {
+      x: Math.max(2, Math.min(98, base.x + s.dx)),
+      y: Math.max(2, Math.min(98, base.y + s.dy)),
+    };
+  };
 
-  return (
-    <div className={"relative w-full aspect-square overflow-hidden rounded-2xl border " + (className ?? "")}
          style={{ background: "radial-gradient(ellipse at 50% 100%, hsl(var(--iq-field)) 0%, hsl(var(--iq-field) / 0.7) 70%)" }}>
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
         {/* Outfield arc */}
