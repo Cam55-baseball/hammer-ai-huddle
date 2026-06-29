@@ -76,11 +76,10 @@ export default function PracticeHub() {
     }
     if (prevSportKeyRef.current !== sportKey) {
       prevSportKeyRef.current = sportKey;
-      if (step === 'select_type') {
-        setActiveModule('hitting');
-      }
+      setActiveModule('hitting');
     }
-  }, [sportKey, step]);
+  }, [sportKey]);
+
 
 
   // Auto-configure prescribed drill from HIE
