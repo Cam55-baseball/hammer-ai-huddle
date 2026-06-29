@@ -24,6 +24,7 @@ import {
 import { TopicButtonGrid, type TopicTile } from "@/components/progress/TopicButtonGrid";
 import { TopicPanel } from "@/components/progress/TopicPanel";
 import { IqInsightCard } from "@/components/progress/IqInsightCard";
+import { SideSplitsSection } from "@/components/progress/SideSplitsSection";
 import { PitchingPanel } from "@/components/progress/panels/PitchingPanel";
 import { ReadinessPanel } from "@/components/progress/panels/ReadinessPanel";
 import { WorkloadPanel } from "@/components/progress/panels/WorkloadPanel";
@@ -204,6 +205,8 @@ export default function ProgressLanding() {
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
 
         <IqInsightCard />
+
+        <SideSplitsSection />
 
         <div className="space-y-3">
           {ranked.map((r, idx) => {

@@ -50,6 +50,7 @@ import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
 import { SideContextPicker } from "@/components/shared/SideContextPicker";
 import { useSideContext } from "@/contexts/SideContext";
+import { readSideBias } from "@/lib/side/sideBias";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
@@ -105,9 +106,15 @@ export function HammerDailyPlan() {
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
   const scheduleSignal = useMemo(() => projectScheduleSignal(sched), [sched]);
+  const sideBias = useMemo(
+    () => ({ hit: readSideBias("hit"), throw: readSideBias("throw") }),
+    // Re-read once per render; cache writes happen on Progress mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ctx],
+  );
   const plan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal),
-    [ctx, scheduleSignal],
+    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias),
+    [ctx, scheduleSignal, sideBias],
   );
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
@@ -142,6 +149,18 @@ export function HammerDailyPlan() {
             {plan.missingnessCount > 0 && (
               <Badge variant="outline" className="text-[10px]">
                 {plan.missingnessCount} needs input
+              </Badge>
+            )}
+            {(plan.sideBias?.hit || plan.sideBias?.throw) && (
+              <Badge
+                variant="default"
+                className="text-[10px]"
+                title={[plan.sideBias?.hit?.note, plan.sideBias?.throw?.note].filter(Boolean).join(" ")}
+              >
+                Weaker side focus:{" "}
+                {plan.sideBias?.hit
+                  ? `Bat ${plan.sideBias.hit.weakerSide}`
+                  : `Throw ${plan.sideBias!.throw!.weakerSide}`}
               </Badge>
             )}
             {/* Side context — only renders for switch hitters / ambidextrous throwers */}
