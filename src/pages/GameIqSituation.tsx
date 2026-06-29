@@ -156,7 +156,13 @@ export default function GameIqSituation() {
         )}
 
         {mode === "quiz" && firstScenario && (
-          <IqScenarioRunner situationId={situation.id} scenario={firstScenario} actors={actors} />
+          <IqScenarioRunner
+            situationId={situation.id}
+            situationSlug={situation.slug}
+            situationTitle={situation.title}
+            scenario={firstScenario}
+            actors={actors}
+          />
         )}
       </div>
     </DashboardLayout>
