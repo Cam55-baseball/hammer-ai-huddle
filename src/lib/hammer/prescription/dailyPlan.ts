@@ -103,6 +103,7 @@ const ALL_MODALITIES: ModalityKey[] = [
   "throwing",
   "defense",
   "baserunning",
+  "game_iq",
   "fueling",
   "recovery",
 ];
