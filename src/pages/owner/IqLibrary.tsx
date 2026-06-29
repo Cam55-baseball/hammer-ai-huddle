@@ -225,6 +225,8 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
     triple_check_count: 0,
     canonical_order: 999,
     sources: [],
+    deleted_at: null,
+
   });
   const [actors, setActors] = useState<Array<Omit<IqActor, "id" | "situation_id"> & { id?: string }>>([]);
   const [saving, setSaving] = useState(false);
