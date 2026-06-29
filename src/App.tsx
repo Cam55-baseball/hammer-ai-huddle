@@ -199,6 +199,7 @@ const App = () => {
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
     <SportThemeProvider>
+    <SideContextProvider>
       <TooltipProvider>
         <ErrorBoundary>
           <Toaster />
