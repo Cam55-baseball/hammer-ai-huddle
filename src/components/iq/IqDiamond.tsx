@@ -71,8 +71,9 @@ export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }
 
         {/* Actor routes (only in teach/reveal modes) */}
         {(mode === "teach" || mode === "reveal") && actors.flatMap((a) => {
-          const start = HOME_POS[a.role];
+          const start = posFor(a.role);
           if (!a.primary_path?.length) return [];
+
           const pts = [start, ...a.primary_path];
           const d = pts.map((p,i)=> `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
           return [(
