@@ -1,7 +1,7 @@
 /**
  * Wave 5 — Bulk JSON import dialog for the owner Game IQ Library.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,11 +45,34 @@ const EXAMPLE = `[
   }
 ]`;
 
+const DRAFT_KEY = "iq:bulk-import:draft";
+
 export function BulkImportDialog({ open, onClose, onImported }: Props) {
-  const [json, setJson] = useState(EXAMPLE);
+  const [json, setJson] = useState<string>(() => {
+    try {
+      if (typeof window === "undefined") return EXAMPLE;
+      return window.sessionStorage.getItem(DRAFT_KEY) ?? EXAMPLE;
+    } catch {
+      return EXAMPLE;
+    }
+  });
   const [reports, setReports] = useState<BulkValidationResult[] | null>(null);
   const [parsed, setParsed] = useState<BulkSituationInput[] | null>(null);
   const [importing, setImporting] = useState(false);
+
+  // Persist the paste buffer across reloads / accidental dismissals.
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      if (json && json !== EXAMPLE) window.sessionStorage.setItem(DRAFT_KEY, json);
+    } catch {
+      // ignore
+    }
+  }, [json]);
+
+  const clearDraft = () => {
+    try { window.sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+  };
 
   const validate = () => {
     setReports(null);
@@ -87,6 +110,7 @@ export function BulkImportDialog({ open, onClose, onImported }: Props) {
           ? `Failed: ${summary.failed.map((f) => f.slug).join(", ")}`
           : "All entries inserted as drafts.",
       });
+      clearDraft();
       onImported();
       onClose();
     } catch (e) {
@@ -102,7 +126,7 @@ export function BulkImportDialog({ open, onClose, onImported }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto" data-protected-editing="true">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" /> Bulk import situations

@@ -4,13 +4,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Brain, Shield, Swords, Target, Footprints, Sparkles } from "lucide-react";
+import { Brain, Shield, Swords, Target, Footprints, Sparkles, PlayCircle, X } from "lucide-react";
 import { IqSituationCard } from "@/components/iq/IqSituationCard";
 import { useIqSituations } from "@/hooks/useIqSituations";
 import { useIqProgress } from "@/hooks/useIqProgress";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IqLens } from "@/lib/iq/types";
+import { quizResume } from "@/lib/iq/resumeStore";
 
 const LENS_TABS: { value: IqLens | "all"; label: string; icon: typeof Brain }[] = [
   { value: "all", label: "All", icon: Brain },
@@ -54,6 +55,9 @@ export default function GameIq() {
 
   const situations = situationsQ.data ?? [];
 
+  const [resume, setResume] = useState(() => quizResume.load());
+  const dismissResume = () => { quizResume.clear(); setResume(null); };
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-6 py-4 px-4 sm:px-0">
@@ -81,6 +85,24 @@ export default function GameIq() {
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Due now</div>
           </Card>
         </div>
+
+        {resume && resume.situationSlug && (
+          <Card className="p-4 flex items-center gap-3 border-emerald-500/40 bg-emerald-500/5">
+            <PlayCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div className="flex-1 text-sm min-w-0">
+              <div className="font-semibold truncate">Pick up where you left off</div>
+              <div className="text-xs text-muted-foreground truncate">
+                {resume.situationTitle || resume.situationSlug}
+              </div>
+            </div>
+            <Button size="sm" onClick={() => navigate(`/iq/${resume.situationSlug}?mode=quiz`)}>
+              Resume
+            </Button>
+            <Button size="icon" variant="ghost" onClick={dismissResume} aria-label="Dismiss">
+              <X className="h-4 w-4" />
+            </Button>
+          </Card>
+        )}
 
         {dueCount > 0 && (
           <Card className="p-4 flex items-center gap-3 border-primary/30 bg-primary/5">

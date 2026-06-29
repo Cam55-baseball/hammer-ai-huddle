@@ -1,68 +1,97 @@
-## Goal
-Complete the deferred waves (3, 5, 7) end-to-end so Game IQ + Hammers Modality is fully certified, with owner authoring polished and a final E2E pass on the live preview.
+## Honest status
+
+The IQ system is **functionally complete but not yet E2E-elite**. What's shipped:
+
+- 94 published canonical situations across baseball/softball, both sports, all four lenses (defense / offense / pitching / baserunning).
+- Variant generator → effectively unlimited reps.
+- SM-2 spaced repetition with attempt + progress writeback.
+- Daily plan integration (`game_iq` modality, role-aware lens).
+- Weakest-lens insight on Progress Landing with deep-link CTA.
+- Owner authoring: wizard, Three B's validator, bulk JSON import, duplicate, soft-delete + restore, Deleted tab.
+- Athlete queries respect `deleted_at`.
+
+What's **missing for "elite + safe to exit anytime"**:
+
+1. **Quiz runner has no Save & Exit.** A mid-scenario exit loses the in-progress answer selection and (worse) can drop the attempt if the user closes the tab between "answered" and "graded". No resume.
+2. **Owner authoring wizard has no draft autosave.** A 9-actor + variants flow that crashes or gets auth-evicted starts over.
+3. **Bulk import dialog** accepts JSON but doesn't persist the paste buffer across reload.
+4. **No "Continue where you left off"** entry on the IQ landing — users have to re-find the situation.
+5. **Wave 3 Playwright regression sweep** never ran. Wave 7 cert never ran.
+6. **No analytics on dead-ends** (situation with zero attempts in 30d, lens with no published content for a sport/role combo).
 
 ---
 
-## Wave 5 — Owner authoring polish (ship first, unblocks Wave 7)
+## Plan to finish E2E
 
-Edit `src/pages/IqLibrary.tsx` and add small helpers under `src/lib/iq/authoring/`:
+### A. Bulletproof Save & Exit across every IQ surface
 
-1. **Bulk JSON import** — paste-area dialog; validate each entry against the canonical situation schema (sport, role, lens_tags, ≥1 source, 9-actor Three-B's matrix, ≥1 variant) before any insert; insert as `status='draft'`; show per-row pass/fail.
-2. **Duplicate situation** — row action that clones situation + 9 actors + variants with `(copy)` suffix, `status='draft'`, fresh ids.
-3. **Publish checklist diff modal** — pre-publish gate showing pass/fail for: 9 defenders with Three-B's filled, ≥1 source cited, ≥2 variants, sport+role tagged, lens tags present. Block publish until all green.
-4. **Soft delete + restore** — add `deleted_at timestamptz` to `iq_situations` via migration; filter it out of athlete-facing queries; owner list gets a "Deleted" tab with restore action. Never hard-delete published canonical rows.
+1. **Quiz runner resume** (`src/components/iq/IqScenarioRunner.tsx`)
+   - Persist `{situationId, scenarioId, selectedRole, startedAt}` to `localStorage` under `iq:run:<userId>` on every state change.
+   - On mount, if a run exists for the current situation, offer "Resume" vs "Restart".
+   - Wrap the answer-submit path so a network failure queues the attempt in `localStorage` and retries on next mount (idempotent via client-generated `attempt_id`).
+   - Mount `SaveAndExitBar` (existing component) — "Save & exit" snapshots state and routes to `/iq`.
 
-DB change: single additive migration adding `deleted_at` column + index; no RLS changes needed (existing owner policies cover it).
+2. **Owner wizard draft autosave** (`src/pages/owner/IqLibrary.tsx` editor path)
+   - Debounced (800 ms) save of the in-progress situation + actors + variants to a new `iq_situation_drafts` row keyed by `(owner_id, draft_key)`.
+   - "Save & exit" button persists immediately and routes to library list.
+   - On editor open, if a draft exists for this slug, prompt to resume or discard.
 
----
+3. **Bulk import paste persistence** — keep the textarea buffer in `sessionStorage` until a successful import clears it. Survives accidental refresh / auth blip.
 
-## Wave 3 — Full Playwright regression sweep
+4. **"Continue where you left off" tile** on `/iq` landing — reads the resume snapshot and deep-links straight back.
 
-Single script at `/tmp/browser/wave3/regression.py` driving the live preview at `http://localhost:8080`, restoring the managed Supabase session from `LOVABLE_BROWSER_SUPABASE_*` before each authenticated nav. Screenshots per step under `/tmp/browser/wave3/screenshots/`.
+### B. Auth-eviction hardening for IQ surfaces
 
-Surfaces covered (one scenario each, fail-fast):
+- Mark the quiz runner, wizard editor, and bulk import textarea with `data-protected-editing="true"` so `useRequireAuth` already-shipped guard refuses to evict mid-edit (already wired globally; just needs the attribute on these three containers).
 
-1. **Onboarding** — 5-category ranked goals → Save & Exit → resume → finish, incl. pitcher + softball branches.
-2. **Calendar import** — paste schedule text → AI extract → events created → clicking a date does NOT crash and does NOT evict to `/auth`.
-3. **Today Plan** — Add to gameplan, Answer Hammer drawers open and scroll, posture pill reflects an upcoming game.
-4. **Manage Events** — cancel + reschedule → daily plan + posture reflect change.
-5. **IQ daily micro-reps** — Start reps → SM-2 progress writes back → `iq_user_attempts` row appears.
-6. **Owner Library** — create draft (via Wave 5 wizard) → publish → next athlete pull surfaces it.
+### C. Schema (single additive migration)
 
-Each surfaced bug gets fixed in-turn before moving on. Likely fix surface: auth-eviction regressions, toolbar overflow, AI extract timeout under load.
+```sql
+create table public.iq_situation_drafts (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  draft_key text not null,           -- slug or "new:<uuid>"
+  payload jsonb not null,            -- {situation, actors, variants}
+  updated_at timestamptz not null default now(),
+  unique (owner_id, draft_key)
+);
+-- + GRANTs to authenticated/service_role, RLS owner_id = auth.uid(), updated_at trigger.
+```
 
-Output: `docs/asb/wave3-regression-report.md` listing pass/fail + screenshot paths per scenario.
+No changes to `iq_situations`, `iq_user_progress`, `iq_user_attempts`.
 
----
+### D. Wave 3 regression sweep (one Playwright run)
 
-## Wave 7 — Final E2E certification
+`/tmp/browser/wave3/regression.py` covering:
+- Onboarding resume
+- Calendar import + day click (no eviction)
+- Today Plan → Add to gameplan, Answer Hammer
+- Manage Events cancel/reschedule
+- IQ quiz: start → exit mid-scenario → resume → submit → progress row written
+- Owner: create draft → close tab → reopen → publish → athlete sees it
 
-One uninterrupted Playwright run at `/tmp/browser/wave7/cert.py`:
+Output: `docs/asb/wave3-regression-report.md`. Any bug surfaced gets fixed same turn.
 
-1. New athlete signs up → onboarding (ranked goals + pitcher branch).
-2. Imports schedule (text path; image path smoke-checked separately).
-3. Simulate 7 days of Today Plan completions + IQ reps + a posture-changing canceled game (writes directly via supabase client with that athlete's JWT to compress wall-clock).
-4. Progress dashboard shows ≥1 correlation card with `n ≥ MIN_SAMPLES` AND the IQ Insight card surfaces a weakest lens.
-5. Owner adds a new situation → athlete sees it on next pull.
+### E. Wave 7 final E2E cert
 
-Update `docs/asb/elite-readiness-wave7.md` from "deferred" to a real pass/fail-per-surface report with screenshot evidence.
+`/tmp/browser/wave7/cert.py` — new athlete → onboarding → schedule import → 7 simulated days of plan + IQ reps + a canceled game → Progress shows ≥1 correlation card AND IQ Insight surfaces a weakest lens → owner adds situation → athlete sees on next pull.
+
+Output: `docs/asb/elite-readiness-wave7.md` flipped from "deferred" to pass/fail per surface with screenshots.
+
+### F. Content-health observability (lightweight)
+
+- Owner library badge per situation: "0 attempts / 30d" so dead content is visible.
+- Empty-lens detector: if a sport+role has <5 published situations for a lens, owner library shows a "Gap" banner.
 
 ---
 
 ## Order of execution
 
-```text
-Wave 5 ──► Wave 3 ──► Wave 7
-authoring   regress    final
- polish     sweep     E2E cert
-```
+1. Migration for `iq_situation_drafts` (one approval).
+2. Quiz runner resume + SaveAndExitBar + protected-editing attrs.
+3. Owner wizard autosave + bulk-import buffer.
+4. Continue-where-you-left-off tile + content-health badges.
+5. Wave 3 sweep → fix any surfaced bugs.
+6. Wave 7 cert → ship report.
 
-Wave 5 first because Wave 7 step 5 ("owner adds a new situation") relies on the polished authoring flow. Wave 3 second to catch any regressions Wave 5 introduced before the final certification run.
-
-## Technical notes
-
-- Only schema change: `iq_situations.deleted_at` (additive, nullable, indexed).
-- All Playwright scripts live under `/tmp/browser/`, not in the repo.
-- Reports land under `docs/asb/` as the shipping artifact.
-- If Wave 3 or Wave 7 surfaces a real bug, fix it the same turn and re-run that scenario only.
-
+Estimated 3 focused turns end-to-end. After this the IQ system is the strongest in the market and genuinely safe to leave mid-rep on any screen.
