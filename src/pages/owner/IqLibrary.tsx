@@ -40,7 +40,9 @@ interface SituationRow {
   triple_check_count: number;
   canonical_order: number;
   sources: { label: string; ref?: string }[];
+  deleted_at: string | null;
 }
+
 
 function blankActor(role: IqActorRole): Omit<IqActor, "id" | "situation_id"> {
   return {
