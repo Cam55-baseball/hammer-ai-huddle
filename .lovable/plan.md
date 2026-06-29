@@ -1,38 +1,36 @@
-# Why analysis failed
+# Why offense looks empty
 
-Your clip was **320×568** (a compressed phone export). The backend's Phase-1 acceptance gate requires **≥480×480**, so it returned a 422 `reject_low_resolution`. The UI swallowed the structured reason and showed only "Edge Function returned a non-2xx status code".
+I queried `iq_situations` + `iq_scenarios`. The offense library is published but partially hollow:
 
-# Fix (two parts)
+- **Softball offense (7 situations)** — `courtesy-runner-pitcher-catcher`, `drop-third-strike-softball-r0`, `illegal-pitch-reaction-batter`, `re-entry-rule-pinch-hit`, `rise-ball-2-strike-approach`, `short-game-dp-flex-rule`, `slap-bunt-fake-swing` → **0 scenarios each**. These are what render as "empty" when a user opens them.
+- **Baseball + both-sport offense (17 situations)** — only **1 scenario apiece**. Functional, but shallow vs. the defense/pitching libraries (which carry 3–5 scenarios).
 
-### 1. Surface the real reason in the UI
-In `src/pages/AnalyzeVideo.tsx` (the `handleUploadAndAnalyze` catch block), parse the structured error payload from `supabase.functions.invoke` (it's on `error.context.response` / `FunctionsHttpError`) and map known reasons to friendly messages:
+The card list shows the situations, but tapping in lands on an empty quiz pane because `iq_scenarios` has no rows.
 
-- `reject_low_resolution` → "This clip is too small (e.g. 320×568). Please upload a higher-resolution version — at least 360×360. Re-exporting from your camera roll instead of sharing from a messaging app usually fixes this."
-- `reject_low_fps` → "Video frame rate is too low (need ≥24 fps)."
-- `reject_duration_out_of_bounds` → "Clip must be 0.5–60 seconds."
-- `reject_excessive_dropped_frames` → "Too many frames couldn't be read. Try re-exporting the clip."
-- `missing_video_sha256` / `missing_probe_metadata` → "Upload didn't finish probing — try again."
-- fallback → existing generic toast.
+# Fix
 
-Also add the reason to the `AnalysisProgressIndicator` failure card so users see it inline (not just a toast).
+One Supabase migration that seeds scenarios. No UI changes needed — the existing `useIqSituation` already renders whatever scenarios exist.
 
-### 2. Relax the resolution gate to match phone reality
-Both server and client mirror the threshold; lower both from 480 → **320** (still high enough for BlazePose Full to land reliable landmarks; the 480 ceiling was overly defensive). Files:
+### 1. Seed the 7 missing softball offense situations
+Insert 3 scenarios per situation into `iq_scenarios` (prompt, correct assignment, explanation, difficulty). Anchored to the existing `iq_situation_actors` for each row so the quiz binds correctly. Topics covered:
 
-- `supabase/functions/analyze-video/index.ts` — `PHASE1_MIN_WIDTH` and `PHASE1_MIN_HEIGHT` from `480` → `320`.
-- `src/lib/biomech/videoAcceptance.ts` — `MIN_WIDTH` and `MIN_HEIGHT` from `480` → `320`. (Keeps the constitutional invariant that client + server agree.)
+- Courtesy runner mechanics (when allowed, who can run, re-entry interaction)
+- Dropped third strike with R0 in softball (batter must run, rule nuances at lower levels)
+- Illegal pitch reaction (batter's choice: take result or accept ball+advance)
+- Re-entry rule for pinch hitters (starter vs. sub, one re-entry, original slot)
+- Rise ball 2-strike approach (lay off above the hands, eye discipline)
+- Short game with DP/Flex (lineup implications, who bats)
+- Slap-bunt / fake-swing read (corner depth, middle coverage)
 
-No changes to fps/duration/dropped-frame gates. Cache-fingerprint inputs are unaffected (resolution isn't part of the fingerprint).
+### 2. Deepen baseball + both-sport offense to 3 scenarios each
+Add 2 scenarios per situation (17 × 2 = 34 new rows) covering count variants, runner-state variants, and pitcher-handedness variants so reps don't feel one-and-done.
 
-### 3. Add a one-line preflight on the client
-Before invoking the edge function, check `videoWidth`/`videoHeight` against `MIN_WIDTH`/`MIN_HEIGHT` and short-circuit with the same friendly message — saves a server round-trip and a `rejected` audit row when the user could fix it locally.
+### 3. Verification
+- Post-migration query confirms every offense situation has ≥3 scenarios.
+- Open `/iq/off-rise-ball-2-strike-approach` (softball) → quiz renders.
+- Open any baseball offense card → 3 reps available.
 
-# What's untouched
-- Determinism / replay contract (audit row still written for every outcome).
-- Tempo/landmark pipelines.
-- All other scorecard logic, prompts, models.
-
-# Verification
-- Re-upload the same 320×568 clip → analysis runs to completion.
-- Upload a deliberately tiny 240×240 clip → user sees the friendly resolution message inline, not "non-2xx".
-- Typecheck passes; existing `videoAcceptance` tests updated to new thresholds.
+# Out of scope
+- No schema changes, no policy changes, no client code edits.
+- Defense/pitching libraries unchanged.
+- Spaced-repetition logic unchanged.
