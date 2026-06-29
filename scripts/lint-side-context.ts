@@ -61,8 +61,8 @@ function scan(): Violation[] {
 
       for (const tbl of SIDE_TABLES) {
         const re = new RegExp(
-          `\\.from\\(['"\`]${tbl}['"\`]\\)[\\s\\S]{0,400}?\\.(insert|upsert)\\s*\\(([\\s\\S]{0,600}?)\\)`,
-          "g",
+          `\\.from\\(['"\`]${tbl}['"\`]\\)[\\s\\S]{0,400}?\\.(insert|upsert)\\s*\\(([\\s\\S]{0,1200}?)\\)\\s*(?:\\.(select|then)|;|$)`,
+          "gm",
         );
         let m: RegExpExecArray | null;
         while ((m = re.exec(txt))) {
