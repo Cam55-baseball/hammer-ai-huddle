@@ -142,8 +142,9 @@ export function useAthleteGoals() {
           ...(updates.targetBodyFatPercent !== undefined && { target_body_fat_percent: updates.targetBodyFatPercent }),
           ...(updates.weeklyChangeRate !== undefined && { weekly_change_rate: updates.weeklyChangeRate }),
           ...(updates.targetDate !== undefined && { target_date: updates.targetDate }),
+          ...(updates.side !== undefined && { side: updates.side }),
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', goalId)
         .eq('user_id', user.id);
 
