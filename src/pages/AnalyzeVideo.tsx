@@ -22,10 +22,12 @@ import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
+import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
+import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 // Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
-// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper, AnalysisProgressIndicator,
-// TheScorecard) removed from athlete-facing analysis page. Only raw LLM
-// feedback/summary/drills + AnalysisCoachChat + VideoSuggestionsPanel remain.
+// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
+// TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
+// restored so users see live elapsed/countdown while the model runs.
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
@@ -251,6 +253,21 @@ export default function AnalyzeVideo() {
       videoRef.current.playbackRate = parseFloat(playbackRate);
     }
   }, [playbackRate]);
+
+  // Auth-eviction guard: while the video is uploading, frames are extracting,
+  // or analyze-video is running, hold the protected-editing heartbeat open so
+  // a transient auth/visibility blip cannot kick the user to /auth or /home
+  // mid-analysis. Matches the pattern used by SeasonScheduleImporterDialog.
+  useEffect(() => {
+    const busy = analyzing || uploading || extractingFrames;
+    if (!busy) return;
+    noteProtectedEditing(180_000); // refresh every tick up to the edge budget
+    const id = window.setInterval(() => noteProtectedEditing(180_000), 10_000);
+    return () => {
+      window.clearInterval(id);
+      clearProtectedEditing();
+    };
+  }, [analyzing, uploading, extractingFrames]);
 
   // Auto-recompute report card ONCE per video when metrics are missing/sparse.
   // Lineage-preserving: only mutates ai_analysis.metrics via the edge function.
@@ -894,7 +911,10 @@ export default function AnalyzeVideo() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full analysis-zoomable">
+      <div
+        className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full analysis-zoomable"
+        data-protected-editing="true"
+      >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
@@ -1113,9 +1133,15 @@ export default function AnalyzeVideo() {
               </Card>
             )}
 
-            {analyzing && (
+            {(analyzing || extractingFrames) && (
               <div className="space-y-4">
-                {/* Phase 49: AnalysisProgressIndicator removed (gated on report-card surface). */}
+                <AnalysisProgressIndicator
+                  stageLabel={
+                    extractingFrames
+                      ? t('videoAnalysis.extractingFrames', 'Extracting key frames for analysis…')
+                      : t('videoAnalysis.analyzing', 'Analyzing your video')
+                  }
+                />
                 <AnalysisResultSkeleton />
               </div>
             )}
