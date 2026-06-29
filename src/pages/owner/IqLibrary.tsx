@@ -159,9 +159,15 @@ export default function IqLibrary() {
               <h1 className="text-2xl font-bold">Game IQ Library</h1>
             </div>
           </div>
-          <Button onClick={() => setCreating(true)} className="gap-1">
-            <Plus className="h-4 w-4" /> New situation
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setBulkOpen(true)} className="gap-1">
+              <Upload className="h-4 w-4" /> Bulk import
+            </Button>
+            <Button onClick={() => setCreating(true)} className="gap-1">
+              <Plus className="h-4 w-4" /> New situation
+            </Button>
+          </div>
+
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
