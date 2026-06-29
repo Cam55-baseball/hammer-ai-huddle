@@ -25,6 +25,8 @@ export interface CreateGoalInput {
   targetBodyFatPercent?: number;
   weeklyChangeRate?: number;
   targetDate?: string;
+  /** Optional L/R/both scope for bilateral-relevant goals. */
+  side?: 'L' | 'R' | 'both';
 }
 
 export function useAthleteGoals() {
