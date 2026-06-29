@@ -110,6 +110,7 @@ export function BulkImportDialog({ open, onClose, onImported }: Props) {
           ? `Failed: ${summary.failed.map((f) => f.slug).join(", ")}`
           : "All entries inserted as drafts.",
       });
+      clearDraft();
       onImported();
       onClose();
     } catch (e) {
