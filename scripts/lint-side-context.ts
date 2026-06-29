@@ -60,21 +60,25 @@ function scan(): Violation[] {
       if (!sideAware) continue;
 
       for (const tbl of SIDE_TABLES) {
-        const re = new RegExp(
-          `\\.from\\(['"\`]${tbl}['"\`]\\)[\\s\\S]{0,400}?\\.(insert|upsert)\\s*\\(([\\s\\S]{0,1200}?)\\)\\s*(?:\\.(select|then)|;|$)`,
-          "gm",
+        // Anchor on `.from('table').insert|upsert(` then scan forward up
+        // to ~2000 chars (or until the next `.from(` call) looking for an
+        // accepted side marker. Regex paren-balancing is unreliable; this
+        // window-based scan is intentionally conservative.
+        const anchor = new RegExp(
+          `\\.from\\(['"\`]${tbl}['"\`]\\)[\\s\\S]{0,400}?\\.(insert|upsert)\\s*\\(`,
+          "g",
         );
         let m: RegExpExecArray | null;
-        while ((m = re.exec(txt))) {
-          const payload = m[2];
-          // Accept any of: literal `side:`, canonical sided columns on
-          // `videos` (`batting_side` / `throwing_hand`), or a spread that
-          // includes `side` (e.g. `...(side ? { side } : {})`).
+        while ((m = anchor.exec(txt))) {
+          const start = m.index + m[0].length;
+          const rest = txt.slice(start, start + 2000);
+          const nextFrom = rest.search(/\.from\(/);
+          const window = nextFrom > 0 ? rest.slice(0, nextFrom) : rest;
           if (
-            /\bside\b\s*:/.test(payload) ||
-            /\bbatting_side\b\s*:/.test(payload) ||
-            /\bthrowing_hand\b\s*:/.test(payload) ||
-            /\.\.\.[^)]*\bside\b/.test(payload)
+            /\bside\b\s*:/.test(window) ||
+            /\bbatting_side\b\s*:/.test(window) ||
+            /\bthrowing_hand\b\s*:/.test(window) ||
+            /\.\.\.[^;]*\bside\b/.test(window)
           ) continue;
           const idx = m.index;
           const line = txt.slice(0, idx).split("\n").length;
