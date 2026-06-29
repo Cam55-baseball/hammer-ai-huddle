@@ -373,6 +373,7 @@ const App = () => {
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
+    </SideContextProvider>
     </SportThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
