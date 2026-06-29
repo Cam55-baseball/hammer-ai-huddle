@@ -24,6 +24,8 @@ import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
 import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
+import { useSideContext } from "@/contexts/SideContext";
+import { SideContextPicker } from "@/components/shared/SideContextPicker";
 // Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
 // AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
 // TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
