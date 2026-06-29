@@ -948,6 +948,73 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       };
     }
 
+    case "game_iq": {
+      // Role/lens hint from athlete context (pitcher vs hitter vs two-way).
+      const roleStr = (ctx.get<string>("role")?.value as string | null) ?? null;
+      const isPitcher = roleStr === "pitcher" || roleStr === "two_way";
+      const isHitter = roleStr === "hitter" || roleStr === "position" || roleStr === "two_way" || roleStr === null;
+      const lensHint = isPitcher && !isHitter
+        ? "pitching"
+        : isHitter && !isPitcher
+          ? "offense"
+          : "all";
+      const inSeason = seasonPhase === "in";
+      const drills: DrillStep[] = [
+        {
+          name: "Daily IQ micro-reps",
+          dosage: inSeason ? "2 due scenarios (~2 min)" : "3–4 due scenarios (~3 min)",
+          cue: "Three B's — Ball, Bag, Backup. Read the situation BEFORE the pitch.",
+          stopIf: "Mental fatigue — stop after current scenario, don't grind.",
+        },
+        {
+          name: "One bonus rep on your weakest lens",
+          dosage: "1 scenario",
+          cue: lensHint === "pitching"
+            ? "Pitcher PFP / hold-runner reads."
+            : lensHint === "offense"
+              ? "Baserunning decision / first-and-third reads."
+              : "Whatever the system flags as weakest.",
+        },
+      ];
+      const route = `/iq/review?lens=${lensHint}`;
+      return {
+        modality,
+        title: inSeason ? "Game IQ — daily micro-reps" : "Game IQ — situational reps",
+        why:
+          "Decision speed wins games. SM-2 spaced repetition keeps every Ball/Bag/Backup situation fresh."
+          + (goal ? ` ${goal}` : ""),
+        roadmapReason: inSeason
+          ? "In-season — short, high-frequency reps keep the mental side sharp without adding load."
+          : "Off-season — build deep situational library while physical load is high.",
+        phase: "skill",
+        steps: drillsToSteps(drills),
+        drills,
+        cues: [
+          "Picture the play before the pitch.",
+          "Wrong answers are gold — they expose blind spots.",
+        ],
+        stopRules: [
+          "If you're guessing 3+ in a row, stop — review the situation page instead.",
+        ],
+        durationMin: inSeason ? 3 : 5,
+        route,
+        ctaLabel: "Start reps",
+        status: "ready",
+        missing: [],
+        missingContextKeys: [],
+        gamePlanTemplate: {
+          title: "Hammer — Game IQ micro-reps",
+          activityType: "short_practice",
+          icon: "brain",
+          color: "#6366f1",
+          durationMinutes: inSeason ? 3 : 5,
+          description: "Daily Three B's situational reps (spaced-repetition).",
+          checklist: drillsToChecklist(drills),
+          source: "hammer.daily.game_iq",
+        },
+      };
+    }
+
     case "fueling": {
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
