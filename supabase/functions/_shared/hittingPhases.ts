@@ -354,10 +354,12 @@ Phase 2 — HAND LOAD (style-permitted; FLAG when consequences appear)
 Phase 3 — STRIDE / LANDING (INVOLUNTARY — DO NOT CUE; v2 Arakawa)
   P3 is the involuntary landing that emerges when P1+P2+P4 are organized.
   Coach GRADES the landing (sideways, both feet down, chest square, core tensioned)
-  but the FIX always routes upstream to P1/P2/P4 — never instruct the athlete to
-  consciously stride, push the back hip through, or project the hip at release.
-  Failure symptoms (late, jammed, stuck on back side, can't reach outside) are
-  diagnostic signals that P1/P2/P4 needs re-cueing, not stride coaching prompts.
+  but the FIX always routes upstream to P1/P2/P4. Do NOT instruct the athlete
+  to volitionally produce the stride or to volitionally drive the hip toward
+  the pitcher or through the ball — see .lovable/p3-do-not-cue-rule.md for the
+  full ban list. Failure symptoms (late, jammed, stuck on back side, can't
+  reach outside) are diagnostic signals that P1/P2/P4 needs re-cueing, not
+  stride coaching prompts.
 
 Phase 4 — HITTER'S MOVE (NON-NEGOTIABLE — MOST IMPORTANT PHASE)
   Knob = fulcrum. Back elbow drives forward FIRST. Hands stay back, shoulders stay closed,
