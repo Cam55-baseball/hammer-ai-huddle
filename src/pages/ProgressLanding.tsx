@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/collapsible";
 import { TopicButtonGrid, type TopicTile } from "@/components/progress/TopicButtonGrid";
 import { TopicPanel } from "@/components/progress/TopicPanel";
+import { GpInGameSummaryCard } from "@/components/progress/GpInGameSummaryCard";
 import { IqInsightCard } from "@/components/progress/IqInsightCard";
 import { SideSplitsSection } from "@/components/progress/SideSplitsSection";
 import { PitchingPanel } from "@/components/progress/panels/PitchingPanel";
@@ -203,6 +204,8 @@ export default function ProgressLanding() {
         </div>
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
+
+        <GpInGameSummaryCard />
 
         <IqInsightCard />
 
