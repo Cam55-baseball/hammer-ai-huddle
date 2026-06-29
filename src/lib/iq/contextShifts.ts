@@ -6,7 +6,7 @@
 
 import type { IqActorRole } from "./types";
 
-export type ContextAxis = "batter_speed" | "swing_side" | "tendency" | "next_pitch" | "weather";
+export type ContextAxis = "batter_speed" | "swing_side" | "tendency" | "next_pitch" | "weather" | "baserunner_speed" | "outs";
 
 export const CONTEXT_AXIS_LABELS: Record<ContextAxis, string> = {
   batter_speed: "Batter speed",
@@ -14,6 +14,8 @@ export const CONTEXT_AXIS_LABELS: Record<ContextAxis, string> = {
   tendency: "Tendency",
   next_pitch: "Next pitch",
   weather: "Weather",
+  baserunner_speed: "Baserunner speed",
+  outs: "Outs",
 };
 
 export type ContextOption = { value: string; label: string; emoji?: string; softballOnly?: boolean };
@@ -52,6 +54,16 @@ export const CONTEXT_VALUES: Record<ContextAxis, ContextOption[]> = {
     { value: "sun_lf", label: "Sun in LF" },
     { value: "sun_rf", label: "Sun in RF" },
     { value: "hot_dry_carry", label: "Hot / dry (carry)" },
+  ],
+  baserunner_speed: [
+    { value: "burner", label: "Burner runner" },
+    { value: "average_runner", label: "Average" },
+    { value: "station_to_station", label: "Station-to-station" },
+  ],
+  outs: [
+    { value: "zero_out", label: "0 out" },
+    { value: "one_out", label: "1 out" },
+    { value: "two_out", label: "2 out" },
   ],
 };
 
@@ -218,7 +230,43 @@ const SHIFTS: Record<ContextAxis, Record<string, ShiftMap>> = {
       "RF": { dy: 3, note: "Hot dry air — ball carries 5-10 ft farther." },
     },
   },
+  baserunner_speed: {
+    burner: {
+      "C":  { note: "Burner on base — quicken footwork; consider pitchout." },
+      "P":  { note: "Vary holds and slide step; do not let burner time you." },
+      "1B": { dy: -2, note: "Hold closer; quicker release on throws around the horn." },
+      "SS": { dy: -1, note: "Cheat 1 step in for the back end of the DP turn." },
+      "2B": { dy: -1, note: "Cheat 1 step in; burner beats slow turns." },
+    },
+    station_to_station: {
+      "1B": { dy: 2, note: "Hold loose — runner won't steal; play your range." },
+      "SS": { dy: 2, note: "Normal DP depth; safe to play deeper." },
+      "2B": { dy: 2, note: "Normal DP depth; safe to play deeper." },
+    },
+    average_runner: {},
+  },
+  outs: {
+    zero_out: {
+      "SS": { dy: 1, note: "Double-play depth — get the lead, take what they give." },
+      "2B": { dy: 1, note: "Double-play depth." },
+      "1B": { dy: 0, note: "Hold runner; behind R1 only if no steal threat." },
+    },
+    one_out: {
+      "SS": { dy: 1, note: "Still DP depth — turn two ends the inning." },
+      "2B": { dy: 1, note: "Still DP depth — turn two ends the inning." },
+    },
+    two_out: {
+      "SS": { dy: 2, note: "Play deeper — extend range; force at any base." },
+      "2B": { dy: 2, note: "Play deeper — extend range; force at any base." },
+      "3B": { dy: 1, note: "Back up a half-step — guard the line; force at any base." },
+      "1B": { dy: 1, note: "Back up — get the routine grounder; force at any base." },
+      "LF": { dy: 2, note: "Play 'no doubles' — nothing over your head." },
+      "CF": { dy: 2, note: "Play 'no doubles' — nothing over your head." },
+      "RF": { dy: 2, note: "Play 'no doubles' — nothing over your head." },
+    },
+  },
 };
+
 
 export function computeRoleShifts(
   selection: ContextSelection,
