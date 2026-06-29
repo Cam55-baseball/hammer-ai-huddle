@@ -115,6 +115,11 @@ export default function AnalyzeVideo() {
   const [extractingFrames, setExtractingFrames] = useState(false);
   const { saveDrill, savedDrills } = useVault();
 
+  // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
+  const sideDiscipline: 'hit' | 'throw' = module === 'hitting' ? 'hit' : 'throw';
+  const { selectedSide, shouldShowPicker } = useSideContext();
+  const activeSide = selectedSide[sideDiscipline];
+
   // Track which drills are already saved
   useEffect(() => {
     if (savedDrills && analysis?.drills) {
