@@ -22,10 +22,12 @@ import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
+import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
+import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 // Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
-// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper, AnalysisProgressIndicator,
-// TheScorecard) removed from athlete-facing analysis page. Only raw LLM
-// feedback/summary/drills + AnalysisCoachChat + VideoSuggestionsPanel remain.
+// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
+// TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
+// restored so users see live elapsed/countdown while the model runs.
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
