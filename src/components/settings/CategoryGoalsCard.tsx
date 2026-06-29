@@ -57,6 +57,7 @@ function renderPane(sport: Sport, discipline: Discipline, dg: DisciplineGoals) {
             <span className="font-medium capitalize">{cat}:</span>{" "}
             {picks.map((p, i) => {
               const sg = findSubGoal(sport, discipline, cat, p.id);
+              const sideLabel = p.side && p.side !== "both" ? p.side : null;
               return (
                 <span key={p.id}>
                   {i > 0 && " · "}
@@ -64,7 +65,7 @@ function renderPane(sport: Sport, discipline: Discipline, dg: DisciplineGoals) {
                     {sg?.label ?? p.id}
                   </span>
                   <span className="ml-0.5 text-[10px] text-muted-foreground">
-                    ({p.rank === "primary" ? "70%" : "30%"})
+                    ({p.rank === "primary" ? "70%" : "30%"}{sideLabel ? ` · ${sideLabel}` : ""})
                   </span>
                 </span>
               );
