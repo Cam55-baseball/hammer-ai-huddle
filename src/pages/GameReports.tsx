@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { gp } from "@/lib/games/ledger";
+import { useGpRealtime } from "@/hooks/useGpRealtime";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,8 @@ export default function GameReports() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [side, setSide] = useState<Side>("all");
+  useGpRealtime(true);
+
 
   const pitches = useQuery({
     queryKey: ["gp-pitches-all", user?.id],
