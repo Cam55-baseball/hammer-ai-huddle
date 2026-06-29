@@ -1,43 +1,37 @@
+## Problem
 
-## Honest status of the previous Side Context slices
+"Importing a module script failed" fires when a lazy-loaded route chunk's hash no longer exists on the server — typically after a deploy while the browser is holding an older `index.html` reference (esp. on installed PWAs). The current `lazyWithRetry` in `src/App.tsx` retries the same broken URL 3× and then surrenders to the local `ErrorBoundary`, which is why "Try again" never recovers — the file at that hash is permanently gone.
 
-| Slice | Claim | Reality |
-|---|---|---|
-| 1. Capture (videos, goals, vault drills) | Done | ✅ Verified — writes stamp `side` |
-| 2. Render — Pitching split | Done | ✅ `SideViewTabs` mounted in `PitchingPanel.tsx` |
-| 2. Render — Hitting/Throwing split | Done | ❌ Not mounted (no Hitting/Throwing panel uses `SideViewTabs`) |
-| 2. Render — Differential card on Progress | Done | ❌ `SideDifferentialCard.tsx` exists but is not imported anywhere |
-| 3. Intelligence — dailyPlan biases reps to weaker side | Done | ❌ `dailyPlan.ts` never reads `sideDifferential` — only documented |
-| 4. Lint + RLS doc | Done | ✅ Files exist (structural, not runtime-verified) |
-| 5. E2E Playwright spec | Done | ⚠️ Scaffold only — never executed against the live app |
-| 6. CI workflow + preflight | Done | ✅ Files exist (not validated in this sandbox) |
+## Fix (global, swift)
 
-So no — it is **not** fully E2E yet. A switch hitter today would still see no differential card, no L/R split on Hitting or Throwing surfaces, and would not get weaker-side rep biasing in their daily plan.
+### 1. `src/App.tsx` — make `lazyWithRetry` self-healing
+- On the **final** retry failure for a chunk-load / module-import error, do a **one-shot hard reload** with a cache-bust param (`?_cb=<buildId>`), guarded by `sessionStorage` so we never loop:
+  - Detect via `error.name === 'ChunkLoadError'` OR `/Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(error.message)`.
+  - Key: `sessionStorage['chunkReload:' + importPath]`. If already set, fall through and throw (lets ErrorBoundary show its message instead of reload-looping).
+- Apply the same wrap to the two preloaded lazies (`Dashboard`, `ScoutDashboard`) so the preload path isn't an escape hatch.
 
-## Plan to actually close it (Slices 2R / 3R)
+### 2. `src/App.tsx` — global listeners catch chunk errors outside `lazy()`
+Add a `useEffect` in `App` that listens for:
+- `window.addEventListener('error', …)` filtering for the same message patterns
+- `window.addEventListener('unhandledrejection', …)` for promise rejections from dynamic `import()` calls anywhere in the app
 
-### Slice 2R — Render completion
-1. **Mount `SideDifferentialCard`** on the Progress Dashboard landing (`ProgressLanding.tsx`), gated by `isSwitchAthlete` so non-switch users see nothing.
-2. **Add `SideViewTabs` to Hitting and Throwing panels**:
-   - Create `src/components/progress/panels/HittingPanel.tsx` (or wire into the existing hitting surface if present) with the same L/All/R filter pattern used in `PitchingPanel.tsx`.
-   - Do the same for a `ThrowingPanel.tsx`.
-   - Filter the underlying query by `side` column when a side tab is active.
-3. **Vault & video list filters** — add a compact `SideContextPicker` filter to `useVault.ts` consumers and the video library list so switch athletes can scope views.
+…and routes them through the same `triggerChunkReload(importKey)` helper. This covers non-route dynamic imports (e.g. dialogs, drill detail sheets opened from "Open Baserunning").
 
-### Slice 3R — Intelligence layer (real, not documented)
-1. In `src/lib/hammer/prescription/dailyPlan.ts`, import `computeSideDifferential` and, for hitting/throwing/pitching blocks of a switch athlete, bias rep counts (+10–20%) toward the weaker side when sample threshold (≥3/side) is met and asymmetry exceeds a configured floor.
-2. Surface a small "Weaker side focus: L" pill in `HammerDailyPlan.tsx` when bias is applied, with a tooltip linking to the differential card.
-3. Add a unit test for the bias function covering: insufficient samples → no bias, symmetric → no bias, asymmetric → bias to weaker side, capped at +20%.
+### 3. `vite.config.ts` — keep workbox honest
+Already `globPatterns: ['**/*.{js,css}']` precaches JS — which is exactly what makes hashed chunks go stale post-deploy in installed PWAs. Change to **`globPatterns: ['**/*.css']` only** (or drop JS precache and add a `runtimeCaching` rule for `/assets/*.js` with `StaleWhileRevalidate` + short maxAgeSeconds). This stops the SW from serving a manifest of vanished hashes after an update.
 
-### Slice 5R — Actually run the E2E
-1. Run the existing `tests/e2e/side-context/switch-hitter.spec.ts` via Playwright in the sandbox against `http://localhost:8080`, fix any selector drift, and capture a screenshot of the differential card + biased plan as evidence.
+### 4. `src/registerSW.ts` (verify) — on `needRefresh`, prompt + `updateSW(true)`; on first uncaught chunk error, call `updateSW(true)` once before the cache-bust reload so the new SW takes over.
 
-### Out of scope (already real)
-Capture stamping, RLS inheritance doc, lint script, CI workflow file — leave as-is.
+### 5. `src/components/ErrorBoundary.tsx` — chunk-aware fallback
+When `componentDidCatch` sees a chunk-load message and the auto-reload guard is already tripped (so we can't reload again this session), render a friendlier panel with a "Reload app" button that clears the `chunkReload:` sentinels and calls `location.reload()` — instead of the "Try again" that just re-throws.
 
-## Risk / user impact if we skip this
-- Switch athletes get no visible value from the L/R system on Hitting/Throwing/Progress today.
-- The "weaker side gets more reps" promise is not actually delivered by the engine.
-- The E2E lock has never been exercised, so the CI regression net is theoretical.
+## Why this fixes the Baserunning click
+The Hammers daily "Open Baserunning" navigates to `/baserunning-iq` (lazy route) or opens a lazy dialog. After a deploy the old SHA-hashed chunk URL 404s; today's retry loop can't help. With (1)+(2) the first failure triggers a single clean reload against the new `index.html`, which fetches the current hashes — and (3) ensures the SW isn't the one feeding stale URLs in the first place.
 
-Approve and I'll execute 2R → 3R → 5R in order with verification screenshots at the end.
+## Files touched
+- `src/App.tsx` (modify `lazyWithRetry`, add global error listeners, wrap preloaded lazies)
+- `src/components/ErrorBoundary.tsx` (chunk-aware fallback + clear sentinels)
+- `vite.config.ts` (stop precaching JS; add runtime cache rule)
+- `src/registerSW.ts` (verify update-on-error path)
+
+No business logic changes. No DB changes.
