@@ -7,6 +7,8 @@ interface SideContextPickerProps {
   force?: boolean;
   className?: string;
   size?: "sm" | "md";
+  /** Icon-only, h-6 — for tight headers. Overrides `size` and `label`. */
+  compact?: boolean;
   /** Optional label prefix, e.g. "Hitting side" */
   label?: string;
 }
