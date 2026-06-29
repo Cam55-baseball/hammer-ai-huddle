@@ -150,7 +150,7 @@ export function CategoryGoalsCard() {
             {isAmbidextrousThrower && (
               <span className="font-semibold text-foreground">Throw: {selectedSide.throw}</span>
             )}
-            . Goals you set apply to both sides — Hammer tracks the differential separately.
+            . Tag each goal with a side (R / L / Both) in the editor so Hammer can dose your weaker side accordingly.
           </p>
         )}
         {loading ? (
