@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { scoreSkillLevers, normalizeCategoryGoalsV2 } from "./categoryGoals";
 
-const baseSamePayload = {
+const sidedPayload = {
   version: 2,
   updatedAt: new Date().toISOString(),
   baseball: {
     position: {
       hitting: [
-        { id: "bat_speed", rank: "primary", side: "L" },
-        { id: "barrel_control", rank: "secondary", side: "R" },
+        { id: "barrel_control", rank: "primary", side: "L" },
+        { id: "oppo_power", rank: "secondary", side: "R" },
       ],
     },
   },
@@ -16,16 +16,16 @@ const baseSamePayload = {
 
 describe("scoreSkillLevers — side scoping", () => {
   it("default call (no side) sums all picks regardless of side tag", () => {
-    const all = scoreSkillLevers(baseSamePayload);
-    expect(all.hitting_bat_speed).toBeGreaterThan(0);
-    expect(all.hitting_contact).toBeGreaterThan(0);
+    const all = scoreSkillLevers(sidedPayload);
+    expect((all.hitting_contact ?? 0)).toBeGreaterThan(0);
+    expect((all.hitting_oppo_power ?? 0)).toBeGreaterThan(0);
   });
 
   it("filters out picks tagged for the opposite side when side='L'", () => {
-    const left = scoreSkillLevers(baseSamePayload, { side: "L" });
-    // bat_speed (L, primary) contributes; barrel_control (R) is excluded.
-    expect(left.hitting_bat_speed).toBeGreaterThan(0);
-    expect(left.hitting_contact ?? 0).toBe(0);
+    const left = scoreSkillLevers(sidedPayload, { side: "L" });
+    // barrel_control (L) contributes; oppo_power (R) is excluded.
+    expect((left.hitting_contact ?? 0)).toBeGreaterThan(0);
+    expect(left.hitting_oppo_power ?? 0).toBe(0);
   });
 
   it("untagged / 'both' picks contribute on every side", () => {
@@ -35,18 +35,18 @@ describe("scoreSkillLevers — side scoping", () => {
       baseball: {
         position: {
           hitting: [
-            { id: "bat_speed", rank: "primary" }, // no side
-            { id: "barrel_control", rank: "secondary", side: "both" },
+            { id: "barrel_control", rank: "primary" },
+            { id: "oppo_power", rank: "secondary", side: "both" },
           ],
         },
       },
     };
     const left = scoreSkillLevers(payload, { side: "L" });
     const right = scoreSkillLevers(payload, { side: "R" });
-    expect(left.hitting_bat_speed).toBeGreaterThan(0);
-    expect(right.hitting_bat_speed).toBeGreaterThan(0);
-    expect(left.hitting_contact).toBeGreaterThan(0);
-    expect(right.hitting_contact).toBeGreaterThan(0);
+    expect((left.hitting_contact ?? 0)).toBeGreaterThan(0);
+    expect((right.hitting_contact ?? 0)).toBeGreaterThan(0);
+    expect((left.hitting_oppo_power ?? 0)).toBeGreaterThan(0);
+    expect((right.hitting_oppo_power ?? 0)).toBeGreaterThan(0);
   });
 
   it("normalize preserves legal side values and drops garbage", () => {
@@ -56,8 +56,8 @@ describe("scoreSkillLevers — side scoping", () => {
       baseball: {
         position: {
           hitting: [
-            { id: "bat_speed", rank: "primary", side: "L" },
-            { id: "barrel_control", rank: "secondary", side: "diagonal" },
+            { id: "barrel_control", rank: "primary", side: "L" },
+            { id: "oppo_power", rank: "secondary", side: "diagonal" },
           ],
         },
       },
