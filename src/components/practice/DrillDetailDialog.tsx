@@ -6,6 +6,7 @@ import type { ScoredDrill } from '@/utils/drillRecommendationEngine';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { getSideFor } from '@/lib/side/getSideFor';
 
 interface DrillInstructions {
   purpose?: string;
