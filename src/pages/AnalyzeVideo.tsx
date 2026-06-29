@@ -1133,9 +1133,15 @@ export default function AnalyzeVideo() {
               </Card>
             )}
 
-            {analyzing && (
+            {(analyzing || extractingFrames) && (
               <div className="space-y-4">
-                {/* Phase 49: AnalysisProgressIndicator removed (gated on report-card surface). */}
+                <AnalysisProgressIndicator
+                  stageLabel={
+                    extractingFrames
+                      ? t('videoAnalysis.extractingFrames', 'Extracting key frames for analysis…')
+                      : t('videoAnalysis.analyzing', 'Analyzing your video')
+                  }
+                />
                 <AnalysisResultSkeleton />
               </div>
             )}
