@@ -113,13 +113,14 @@ export default function GameIqSituation() {
                 )}
               </div>
               <div className="space-y-1.5">
-                {(Object.keys(CONTEXT_VALUES) as ContextAxis[]).map((axis) => (
+                {(Object.keys(ctxValues) as ContextAxis[]).map((axis) => (
                   <div key={axis} className="flex items-start gap-2 flex-wrap">
                     <div className="text-[10px] uppercase font-semibold text-muted-foreground w-24 mt-1.5 shrink-0">
                       {CONTEXT_AXIS_LABELS[axis]}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {CONTEXT_VALUES[axis].map((v) => {
+                      {ctxValues[axis].map((v) => {
+
                         const active = context[axis] === v.value;
                         return (
                           <button key={v.value} type="button"
