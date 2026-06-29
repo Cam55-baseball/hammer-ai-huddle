@@ -224,6 +224,22 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
     [],
   );
 
+  /** Set the L/R/both scope on a single picked sub-goal. */
+  const setPickSide = useCallback(
+    (paneId: PaneId, category: CategoryKey, subGoalId: string, side: GoalSide) => {
+      const key = paneKey(paneId);
+      setPicksByPane((s) => {
+        const pane: DisciplineGoals = s[key] ?? {};
+        const slot = (pane[category as keyof DisciplineGoals] as ReadonlyArray<SubGoalPick> | undefined) ?? [];
+        const nextSlot = slot.map((p) =>
+          p.id === subGoalId ? (side === "both" ? { id: p.id, rank: p.rank } : { id: p.id, rank: p.rank, side }) : p,
+        );
+        return { ...s, [key]: { ...pane, [category]: nextSlot } };
+      });
+    },
+    [],
+  );
+
   // ── Build V2 payload from current state ──────────────────────────────────
   const payload: CategoryGoalsPayloadV2 = useMemo(() => {
     const buckets: { baseball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals }; softball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals } } = {};
