@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -66,12 +66,21 @@ export default function PracticeHub() {
   const [activeModule, setActiveModule] = useState(prescribedModule || searchParams.get('module') || 'hitting');
   const [prescribedBanner, setPrescribedBanner] = useState<string | null>(null);
 
-  // Reset module selection when sport changes
+  // Reset module selection when sport *changes* (not on initial mount, and
+  // never override a module the user navigated in with via ?module=…).
+  const prevSportKeyRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (step === 'select_type') {
+    if (prevSportKeyRef.current === undefined) {
+      prevSportKeyRef.current = sportKey;
+      return;
+    }
+    if (prevSportKeyRef.current !== sportKey) {
+      prevSportKeyRef.current = sportKey;
       setActiveModule('hitting');
     }
   }, [sportKey]);
+
+
 
   // Auto-configure prescribed drill from HIE
   useEffect(() => {
