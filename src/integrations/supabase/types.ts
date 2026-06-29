@@ -724,6 +724,7 @@ export type Database = {
           goal_type: string
           id: string
           is_active: boolean | null
+          side: string | null
           started_at: string | null
           starting_weight_lbs: number | null
           target_body_fat_percent: number | null
@@ -739,6 +740,7 @@ export type Database = {
           goal_type: string
           id?: string
           is_active?: boolean | null
+          side?: string | null
           started_at?: string | null
           starting_weight_lbs?: number | null
           target_body_fat_percent?: number | null
@@ -754,6 +756,7 @@ export type Database = {
           goal_type?: string
           id?: string
           is_active?: boolean | null
+          side?: string | null
           started_at?: string | null
           starting_weight_lbs?: number | null
           target_body_fat_percent?: number | null
@@ -1406,6 +1409,36 @@ export type Database = {
           },
         ]
       }
+      athlete_side_preferences: {
+        Row: {
+          created_at: string
+          discipline: string
+          dominant_side: string | null
+          id: string
+          last_used_side: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discipline: string
+          dominant_side?: string | null
+          id?: string
+          last_used_side?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discipline?: string
+          dominant_side?: string | null
+          id?: string
+          last_used_side?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -1832,6 +1865,7 @@ export type Database = {
           related_id: string | null
           reminder_enabled: boolean | null
           reminder_minutes: number | null
+          side_focus: string | null
           sport: string | null
           start_time: string | null
           title: string
@@ -1850,6 +1884,7 @@ export type Database = {
           related_id?: string | null
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
+          side_focus?: string | null
           sport?: string | null
           start_time?: string | null
           title: string
@@ -1868,6 +1903,7 @@ export type Database = {
           related_id?: string | null
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
+          side_focus?: string | null
           sport?: string | null
           start_time?: string | null
           title?: string
@@ -2305,6 +2341,7 @@ export type Database = {
           check_date: string
           confirmed_at: string
           id: string
+          side_focus: string | null
           tier_at_confirm: string | null
           user_id: string
         }
@@ -2312,6 +2349,7 @@ export type Database = {
           check_date: string
           confirmed_at?: string
           id?: string
+          side_focus?: string | null
           tier_at_confirm?: string | null
           user_id: string
         }
@@ -2319,6 +2357,7 @@ export type Database = {
           check_date?: string
           confirmed_at?: string
           id?: string
+          side_focus?: string | null
           tier_at_confirm?: string | null
           user_id?: string
         }
@@ -2567,6 +2606,7 @@ export type Database = {
           id: string
           notes: string | null
           player_id: string
+          side: string | null
         }
         Insert: {
           assigned_at?: string | null
@@ -2577,6 +2617,7 @@ export type Database = {
           id?: string
           notes?: string | null
           player_id: string
+          side?: string | null
         }
         Update: {
           assigned_at?: string | null
@@ -2587,6 +2628,7 @@ export type Database = {
           id?: string
           notes?: string | null
           player_id?: string
+          side?: string | null
         }
         Relationships: [
           {
@@ -6355,6 +6397,7 @@ export type Database = {
           schema_version: number
           scoring_inputs: Json | null
           segment_pool: string | null
+          side: string | null
           sport: string
           tier_multiplier: number | null
           total_athletes_in_pool: number | null
@@ -6391,6 +6434,7 @@ export type Database = {
           schema_version?: number
           scoring_inputs?: Json | null
           segment_pool?: string | null
+          side?: string | null
           sport: string
           tier_multiplier?: number | null
           total_athletes_in_pool?: number | null
@@ -6427,6 +6471,7 @@ export type Database = {
           schema_version?: number
           scoring_inputs?: Json | null
           segment_pool?: string | null
+          side?: string | null
           sport?: string
           tier_multiplier?: number | null
           total_athletes_in_pool?: number | null
@@ -7037,6 +7082,7 @@ export type Database = {
           positions: string[] | null
           progression_level: number
           rejection_reason: string | null
+          side: string | null
           skill_target: string | null
           source: string
           sport: string
@@ -7053,6 +7099,7 @@ export type Database = {
           positions?: string[] | null
           progression_level?: number
           rejection_reason?: string | null
+          side?: string | null
           skill_target?: string | null
           source?: string
           sport?: string
@@ -7069,6 +7116,7 @@ export type Database = {
           positions?: string[] | null
           progression_level?: number
           rejection_reason?: string | null
+          side?: string | null
           skill_target?: string | null
           source?: string
           sport?: string
@@ -11135,6 +11183,7 @@ export type Database = {
           id: string
           module_origin: string
           saved_at: string | null
+          side: string | null
           sport: string
           user_id: string
         }
@@ -11144,6 +11193,7 @@ export type Database = {
           id?: string
           module_origin: string
           saved_at?: string | null
+          side?: string | null
           sport: string
           user_id: string
         }
@@ -11153,6 +11203,7 @@ export type Database = {
           id?: string
           module_origin?: string
           saved_at?: string | null
+          side?: string | null
           sport?: string
           user_id?: string
         }
@@ -12427,6 +12478,7 @@ export type Database = {
         Row: {
           ai_analysis: Json | null
           analysis_public: boolean | null
+          batting_side: string | null
           blurhash: string | null
           calibration_h_px: number | null
           contributes_to_progress: boolean
@@ -12451,6 +12503,7 @@ export type Database = {
           shared_with_scouts: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status: Database["public"]["Enums"]["video_status"]
+          throwing_hand: string | null
           thumbnail_sizes: Json | null
           thumbnail_url: string | null
           thumbnail_webp_url: string | null
@@ -12462,6 +12515,7 @@ export type Database = {
         Insert: {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
+          batting_side?: string | null
           blurhash?: string | null
           calibration_h_px?: number | null
           contributes_to_progress?: boolean
@@ -12486,6 +12540,7 @@ export type Database = {
           shared_with_scouts?: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
+          throwing_hand?: string | null
           thumbnail_sizes?: Json | null
           thumbnail_url?: string | null
           thumbnail_webp_url?: string | null
@@ -12497,6 +12552,7 @@ export type Database = {
         Update: {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
+          batting_side?: string | null
           blurhash?: string | null
           calibration_h_px?: number | null
           contributes_to_progress?: boolean
@@ -12521,6 +12577,7 @@ export type Database = {
           shared_with_scouts?: boolean | null
           sport?: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
+          throwing_hand?: string | null
           thumbnail_sizes?: Json | null
           thumbnail_url?: string | null
           thumbnail_webp_url?: string | null
