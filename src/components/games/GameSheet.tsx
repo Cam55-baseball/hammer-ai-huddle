@@ -39,6 +39,8 @@ import { BaserunLogger } from "./BaserunLogger";
 import { SubLogger } from "./SubLogger";
 import { PitchLogger } from "./PitchLogger";
 import { GameDocumentIngest } from "./GameDocumentIngest";
+import { GameTotalsHeader } from "./GameTotalsHeader";
+import { useGpRealtime } from "@/hooks/useGpRealtime";
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
 
@@ -53,6 +55,8 @@ export function GameSheet({
 }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  useGpRealtime(open);
+
 
   const game = useQuery({
     queryKey: ["gp-game", gameId],
@@ -144,6 +148,8 @@ export function GameSheet({
         {!g ? (
           <div className="p-6 text-sm text-muted-foreground">Loading…</div>
         ) : (
+          <>
+          <GameTotalsHeader gameId={gameId} />
           <div className="px-6 py-4">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="flex flex-wrap h-auto justify-start w-full">
@@ -220,6 +226,7 @@ export function GameSheet({
               </TabsContent>
             </Tabs>
           </div>
+          </>
         )}
       </SheetContent>
     </Sheet>
