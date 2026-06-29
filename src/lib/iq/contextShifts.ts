@@ -6,7 +6,7 @@
 
 import type { IqActorRole } from "./types";
 
-export type ContextAxis = "batter_speed" | "swing_side" | "tendency" | "next_pitch" | "weather";
+export type ContextAxis = "batter_speed" | "swing_side" | "tendency" | "next_pitch" | "weather" | "baserunner_speed" | "outs";
 
 export const CONTEXT_AXIS_LABELS: Record<ContextAxis, string> = {
   batter_speed: "Batter speed",
@@ -14,6 +14,8 @@ export const CONTEXT_AXIS_LABELS: Record<ContextAxis, string> = {
   tendency: "Tendency",
   next_pitch: "Next pitch",
   weather: "Weather",
+  baserunner_speed: "Baserunner speed",
+  outs: "Outs",
 };
 
 export type ContextOption = { value: string; label: string; emoji?: string; softballOnly?: boolean };
