@@ -25,6 +25,8 @@ export default function GameIqSituation() {
   const q = useIqSituation(slug ?? "", sport);
   const [hover, setHover] = useState<IqActorRole | null>(null);
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
+  const [context, setContext] = useState<ContextSelection>(NEUTRAL_SELECTION);
+
 
   if (q.isLoading) {
     return (
