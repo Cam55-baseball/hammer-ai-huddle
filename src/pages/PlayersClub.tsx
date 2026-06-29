@@ -15,7 +15,7 @@ import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, Boo
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
-import { GameSessionDetailDialog } from '@/components/GameSessionDetailDialog';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
@@ -533,7 +533,7 @@ export default function PlayersClub() {
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
             <span>Looking for something specific?</span>
             <Link to="/practice" className="text-primary hover:underline">Practice History →</Link>
-            <Link to="/game-scoring" className="text-primary hover:underline">Game Hub →</Link>
+            <Link to="/games" className="text-primary hover:underline">Games →</Link>
           </div>
         )}
 
@@ -660,12 +660,7 @@ export default function PlayersClub() {
           onClose={() => setSelectedPractice(null)}
         />
 
-        {/* Game Session Detail Dialog */}
-        <GameSessionDetailDialog
-          session={selectedGame}
-          open={!!selectedGame}
-          onClose={() => setSelectedGame(null)}
-        />
+        {/* Game detail moved to /games */}
 
         {/* Session Detail Dialog */}
         {selectedSession && (
