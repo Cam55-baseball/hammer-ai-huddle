@@ -230,7 +230,43 @@ const SHIFTS: Record<ContextAxis, Record<string, ShiftMap>> = {
       "RF": { dy: 3, note: "Hot dry air — ball carries 5-10 ft farther." },
     },
   },
+  baserunner_speed: {
+    burner: {
+      "C":  { note: "Burner on base — quicken footwork; consider pitchout." },
+      "P":  { note: "Vary holds and slide step; do not let burner time you." },
+      "1B": { dy: -2, note: "Hold closer; quicker release on throws around the horn." },
+      "SS": { dy: -1, note: "Cheat 1 step in for the back end of the DP turn." },
+      "2B": { dy: -1, note: "Cheat 1 step in; burner beats slow turns." },
+    },
+    station_to_station: {
+      "1B": { dy: 2, note: "Hold loose — runner won't steal; play your range." },
+      "SS": { dy: 2, note: "Normal DP depth; safe to play deeper." },
+      "2B": { dy: 2, note: "Normal DP depth; safe to play deeper." },
+    },
+    average_runner: {},
+  },
+  outs: {
+    zero_out: {
+      "SS": { dy: 1, note: "Double-play depth — get the lead, take what they give." },
+      "2B": { dy: 1, note: "Double-play depth." },
+      "1B": { dy: 0, note: "Hold runner; behind R1 only if no steal threat." },
+    },
+    one_out: {
+      "SS": { dy: 1, note: "Still DP depth — turn two ends the inning." },
+      "2B": { dy: 1, note: "Still DP depth — turn two ends the inning." },
+    },
+    two_out: {
+      "SS": { dy: 2, note: "Play deeper — extend range; force at any base." },
+      "2B": { dy: 2, note: "Play deeper — extend range; force at any base." },
+      "3B": { dy: 1, note: "Back up a half-step — guard the line; force at any base." },
+      "1B": { dy: 1, note: "Back up — get the routine grounder; force at any base." },
+      "LF": { dy: 2, note: "Play 'no doubles' — nothing over your head." },
+      "CF": { dy: 2, note: "Play 'no doubles' — nothing over your head." },
+      "RF": { dy: 2, note: "Play 'no doubles' — nothing over your head." },
+    },
+  },
 };
+
 
 export function computeRoleShifts(
   selection: ContextSelection,
