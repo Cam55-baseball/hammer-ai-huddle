@@ -49,6 +49,7 @@ import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
 import { SideContextPicker } from "@/components/shared/SideContextPicker";
+import { useSideContext } from "@/contexts/SideContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
@@ -296,6 +297,7 @@ function BlockCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold capitalize">{block.title}</span>
+              <BlockSideBadge modality={block.modality} />
               {block.durationMin !== null && block.durationMin > 0 && (
                 <Badge variant="secondary" className="text-[10px]">
                   {block.durationMin} min
@@ -663,5 +665,31 @@ function InlineBlockChat({ block }: { block: PrescribedBlock }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Tiny L/R badge that auto-decides which side context applies to a block
+ * (hitting → hit picker; throwing/pitching/defense → throw picker). Hidden
+ * for non-switch / non-ambi athletes.
+ */
+function BlockSideBadge({ modality }: { modality: string }) {
+  const { shouldShowPicker, selectedSide } = useSideContext();
+  const discipline: "hit" | "throw" | null =
+    modality === "hitting"
+      ? "hit"
+      : modality === "throwing" || modality === "defense"
+        ? "throw"
+        : null;
+  if (!discipline || !shouldShowPicker(discipline)) return null;
+  const s = selectedSide[discipline];
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] font-bold"
+      title={`Programmed for ${s === "L" ? "Left" : "Right"} ${discipline === "hit" ? "swing" : "arm"} — toggle in header`}
+    >
+      {s}
+    </Badge>
   );
 }

@@ -1,15 +1,21 @@
 /**
  * PitchingPanel — Release-1 trusted pitching metrics + correlations.
+ * Side-aware: ambidextrous throwers get L / R / Both tabs that scope all
+ * widgets to the selected side. Single-sided athletes never see the tabs.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { UhrcAthleteSection } from "@/components/report-card/UhrcAthleteSection";
 import { AutoCorrelationCards } from "@/components/progress/correlations/AutoCorrelationCards";
 import { CorrelationExplorer } from "@/components/progress/correlations/CorrelationExplorer";
 import { buildTopicVariables } from "@/lib/progress/topicVariables";
 import { pearson, type NumericPoint } from "@/lib/progress/correlations";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
+import { SideViewTabs, type SideViewMode } from "@/components/shared/SideViewTabs";
+import { useSideContext } from "@/contexts/SideContext";
 
 export function PitchingPanel() {
+  const [sideView, setSideView] = useState<SideViewMode>("combined");
+  const { shouldShowPicker } = useSideContext();
   const { data: rows = [] } = useAthleteCommandRows({ days: 60, limit: 800 });
 
   const vars = useMemo(() => buildTopicVariables(rows, "pitching"), [rows]);
@@ -46,6 +52,14 @@ export function PitchingPanel() {
 
   return (
     <div className="space-y-4">
+      {shouldShowPicker("throw") && (
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Throw side
+          </span>
+          <SideViewTabs value={sideView} onChange={setSideView} discipline="throw" />
+        </div>
+      )}
       <UhrcAthleteSection />
       <AutoCorrelationCards items={auto} />
       <CorrelationExplorer variables={vars} />
