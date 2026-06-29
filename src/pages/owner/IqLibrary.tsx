@@ -14,16 +14,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Brain, CheckCircle2, AlertTriangle, BookOpen, Library } from "lucide-react";
+import { ArrowLeft, Plus, Brain, CheckCircle2, AlertTriangle, BookOpen, Library, Upload, Copy, Trash2, RotateCcw } from "lucide-react";
 import { IqDiamond } from "@/components/iq/IqDiamond";
 import { validateThreeBs } from "@/lib/iq/threeBs";
 import {
   DEFENSIVE_ROLES, OFFENSIVE_ROLES, ROLE_LABELS, ASSIGNMENT_LABELS,
   type IqActor, type IqActorRole, type IqAssignment, type IqSport, type IqLens, type IqDifficulty, type IqStatus,
 } from "@/lib/iq/types";
+import { BulkImportDialog } from "@/components/owner/iq/BulkImportDialog";
+import { duplicateSituation, softDeleteSituation, restoreSituation } from "@/lib/iq/authoring/lifecycle";
 
 const ALL_ROLES: IqActorRole[] = [...DEFENSIVE_ROLES, ...OFFENSIVE_ROLES];
 const ASSIGNMENTS: IqAssignment[] = ["ball","bag","backup","read","execute","idle"];
+
 
 interface SituationRow {
   id: string;
@@ -37,7 +40,9 @@ interface SituationRow {
   triple_check_count: number;
   canonical_order: number;
   sources: { label: string; ref?: string }[];
+  deleted_at: string | null;
 }
+
 
 function blankActor(role: IqActorRole): Omit<IqActor, "id" | "situation_id"> {
   return {
@@ -57,10 +62,11 @@ export default function IqLibrary() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [sportFilter, setSportFilter] = useState<"all" | IqSport>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | IqStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | IqStatus | "deleted">("all");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<SituationRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isOwner) navigate("/dashboard", { replace: true });
@@ -71,13 +77,54 @@ export default function IqLibrary() {
     queryFn: async () => {
       let q = supabase.from("iq_situations").select("*").order("canonical_order");
       if (sportFilter !== "all") q = q.eq("sport", sportFilter);
-      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (statusFilter === "deleted") {
+        q = q.not("deleted_at", "is", null);
+      } else {
+        q = q.is("deleted_at", null);
+        if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      }
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as SituationRow[];
     },
     enabled: isOwner,
   });
+
+  const refreshAll = () => {
+    qc.invalidateQueries({ queryKey: ["iq-library"] });
+    qc.invalidateQueries({ queryKey: ["iq-situations"] });
+  };
+
+  const handleDuplicate = async (id: string, title: string) => {
+    try {
+      await duplicateSituation(id);
+      toast({ title: "Duplicated", description: `${title} → draft copy` });
+      refreshAll();
+    } catch (e) {
+      toast({ title: "Duplicate failed", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+    }
+  };
+
+  const handleSoftDelete = async (id: string, title: string) => {
+    try {
+      await softDeleteSituation(id);
+      toast({ title: "Hidden", description: `${title} hidden from athletes (restore from Deleted tab)` });
+      refreshAll();
+    } catch (e) {
+      toast({ title: "Hide failed", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+    }
+  };
+
+  const handleRestore = async (id: string, title: string) => {
+    try {
+      await restoreSituation(id);
+      toast({ title: "Restored", description: title });
+      refreshAll();
+    } catch (e) {
+      toast({ title: "Restore failed", description: e instanceof Error ? e.message : "Error", variant: "destructive" });
+    }
+  };
+
 
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -112,9 +159,15 @@ export default function IqLibrary() {
               <h1 className="text-2xl font-bold">Game IQ Library</h1>
             </div>
           </div>
-          <Button onClick={() => setCreating(true)} className="gap-1">
-            <Plus className="h-4 w-4" /> New situation
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setBulkOpen(true)} className="gap-1">
+              <Upload className="h-4 w-4" /> Bulk import
+            </Button>
+            <Button onClick={() => setCreating(true)} className="gap-1">
+              <Plus className="h-4 w-4" /> New situation
+            </Button>
+          </div>
+
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -151,27 +204,46 @@ export default function IqLibrary() {
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="deleted">Deleted</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
         </Card>
 
         <div className="space-y-2">
           {listQ.isLoading ? <div className="p-6 text-muted-foreground">Loading…</div> :
            rows.length === 0 ? <Card className="p-8 text-center text-muted-foreground">No situations match.</Card> :
            rows.map((r) => (
-            <Card key={r.id} className="p-4 flex items-center gap-3 hover:bg-muted/30 cursor-pointer" onClick={() => setEditing(r)}>
+            <Card key={r.id} className="p-4 flex items-center gap-3 hover:bg-muted/30">
               <Brain className="h-5 w-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
+              <button className="flex-1 min-w-0 text-left" onClick={() => setEditing(r)}>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="font-semibold truncate">{r.title}</span>
                   <Badge variant="outline" className="text-[10px]">{r.sport}</Badge>
                   <Badge variant="outline" className="text-[10px] capitalize">{r.difficulty}</Badge>
                   {r.lens_tags.map((l) => <Badge key={l} variant="secondary" className="text-[10px]">{l}</Badge>)}
                   <Badge className="text-[10px]" variant={r.status === "published" ? "default" : "secondary"}>{r.status}</Badge>
+                  {r.deleted_at && <Badge variant="destructive" className="text-[10px]">deleted</Badge>}
                   {r.triple_check_count >= 3 && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{r.summary}</div>
+              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                {r.deleted_at ? (
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleRestore(r.id, r.title); }} title="Restore">
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDuplicate(r.id, r.title); }} title="Duplicate">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSoftDelete(r.id, r.title); }} title="Hide from athletes">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
               </div>
             </Card>
           ))}
@@ -182,9 +254,11 @@ export default function IqLibrary() {
         <SituationEditor
           row={editing}
           onClose={() => { setEditing(null); setCreating(false); }}
-          onSaved={() => { qc.invalidateQueries({ queryKey: ["iq-library"] }); qc.invalidateQueries({ queryKey: ["iq-situations"] }); }}
+          onSaved={() => { refreshAll(); }}
         />
       )}
+      <BulkImportDialog open={bulkOpen} onClose={() => setBulkOpen(false)} onImported={refreshAll} />
+
     </DashboardLayout>
   );
 }
@@ -220,6 +294,8 @@ function SituationEditor({ row, onClose, onSaved }: EditorProps) {
     triple_check_count: 0,
     canonical_order: 999,
     sources: [],
+    deleted_at: null,
+
   });
   const [actors, setActors] = useState<Array<Omit<IqActor, "id" | "situation_id"> & { id?: string }>>([]);
   const [saving, setSaving] = useState(false);

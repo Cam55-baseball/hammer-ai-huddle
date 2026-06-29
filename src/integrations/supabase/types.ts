@@ -5381,6 +5381,7 @@ export type Database = {
         Row: {
           canonical_order: number
           created_at: string
+          deleted_at: string | null
           difficulty: string
           id: string
           lens_tags: string[]
@@ -5397,6 +5398,7 @@ export type Database = {
         Insert: {
           canonical_order?: number
           created_at?: string
+          deleted_at?: string | null
           difficulty?: string
           id?: string
           lens_tags?: string[]
@@ -5413,6 +5415,7 @@ export type Database = {
         Update: {
           canonical_order?: number
           created_at?: string
+          deleted_at?: string | null
           difficulty?: string
           id?: string
           lens_tags?: string[]

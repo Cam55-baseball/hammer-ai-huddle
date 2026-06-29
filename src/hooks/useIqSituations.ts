@@ -12,7 +12,9 @@ export function useIqSituations(sport: IqSport, lens?: IqLens) {
         .select("*")
         .in("sport", sportFilter)
         .eq("status", "published")
+        .is("deleted_at", null)
         .order("canonical_order", { ascending: true });
+
       const { data, error } = await q;
       if (error) throw error;
       const rows = (data ?? []) as unknown as IqSituation[];
@@ -32,7 +34,9 @@ export function useIqSituation(slug: string, sport: IqSport) {
         .in("sport", sportFilter)
         .eq("slug", slug)
         .eq("status", "published")
+        .is("deleted_at", null)
         .maybeSingle();
+
       if (error) throw error;
       if (!sit) return null;
 
