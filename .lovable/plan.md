@@ -1,53 +1,47 @@
-## Goal
+## Problem
 
-Let switch hitters / ambidextrous throwers tag each ranked sub-goal with a side (L, R, or Both) inside `CategoryGoalsStep` (onboarding) and `CategoryGoalsCard` (settings), persist it through the V2 payload, and feed it into the existing side-bias intelligence — without breaking non-switch athletes who should still see no picker.
+`/iq?lens=offense` shows "no situations published yet" for baseball. DB confirms: zero published `iq_situations` are tagged with the `offense` lens for `sport in ('baseball','both')`. Only softball has 7 offense-tagged rows. Defense and pitching are well covered (~70+ rows). The offense lens was never seeded for baseball.
 
-## Scope
+## Fix
 
-1. **Data model (`src/lib/hammer/goals/categoryGoals.ts`)**
-   - Extend `SubGoalPick` with `side?: 'L' | 'R' | 'both'`.
-   - `normalizePicks` accepts/sanitizes the `side` field (legal values only; default `undefined`, meaning "unscoped / both"). Fully back-compatible: legacy picks without `side` load unchanged.
-   - `scoreSkillLevers` extended to optionally accept `{ side?: 'L' | 'R' }`. When passed, picks tagged for the opposite side contribute 0; `both` / untagged picks contribute normally. Default call signature unchanged → no regression for existing callers.
-   - `v2ToV1` unchanged (side is detail, not rank).
+Ship a seed migration adding a Wave-O1 set of offense situations covering both sports (`sport = 'both'`) so baseball and softball players both see content, plus baseball-only entries where rules diverge from softball (lead-off timing, pickoffs, balks).
 
-2. **UI chip — onboarding (`CategoryGoalsStep.tsx`)**
-   - Gate on `useSideContext()`: only render the side chip for the relevant discipline (hit chip on hitting/power sub-goals when `isSwitchHitter`; throw chip on throwing/pitching sub-goals when `isAmbidextrousThrower`).
-   - Compact 3-segment toggle `R / L / Both` next to each selected sub-goal (primary + secondary), defaulting to the athlete's last-used side for that discipline, falling back to `both`.
-   - Toggling writes `side` into the pick within the V2 payload via the existing autosave path. No new save button required.
+### Content (≈18 situations, all `lens_tags` include `offense`; some also tag `baserunning`)
 
-3. **UI chip — settings (`CategoryGoalsCard.tsx`)**
-   - Mirror the same per-pick chip in the editable view. Read-only view shows a tiny `SideBadge` next to picks that have a side.
+At-bat / hitter IQ
+1. Hitter's count (2-0, 3-1) — sit on zone, drive the pitch
+2. Two-strike approach — shorten up, battle, foul off
+3. Runner on 3rd, <2 outs — contact / sac fly mindset
+4. Behind in count vs off-speed pitcher
+5. Leadoff at-bat of an inning — work the count
+6. Hit-and-run mechanics (hitter side) — protect the runner
+7. Bunt for a hit vs sac bunt read
 
-4. **Review surface (`ReviewAnswersStep.tsx`)**
-   - When rendering picks, append `SideBadge` if `side && side !== 'both'`.
+Baserunning IQ (offense)
+8. Primary + secondary lead off 1B
+9. Reading the ball off the bat from 1B (line drive freeze)
+10. Tag-up at 3B on fly ball — depth & angle
+11. First-and-third offense — delayed steal / read throw
+12. Stealing 2B — pitcher tells, jump timing
+13. Going first-to-third on a single to RF
+14. Scoring from 2nd on a single — picking up the 3B coach
+15. Avoiding the tag at home — slide angle / hand-swipe
+16. Rundown survival — stay alive, draw the throw
 
-5. **Intelligence wiring**
-   - `src/lib/hammer/prescription/dailyPlan.ts`: where it calls `scoreSkillLevers(...)`, when the current plan block is side-aware (hitting / throwing / pitching) and the athlete is switch/ambi, pass `{ side: activeSide }`. This makes per-side goals actually steer the per-side dosing already produced by `applySideBias`.
-   - `src/lib/side/sideBias.ts`: no signature change; goal-derived bias becomes a multiplier on the side already favored by performance differential (additive, never replaces the perf-based bias).
+Baseball-only (sport='baseball')
+17. Reading a LHP pickoff move at 1B (balk tells)
+18. Lead off 2B with pitcher in the stretch (sign relay awareness)
 
-6. **Non-switch safety**
-   - `SideContextPicker`-style gating: chip never renders, `side` field is never written, downstream `scoreSkillLevers()` default call path stays identical. Verified by reading `useSideContext().shouldShowPicker(discipline)`.
+Each row populated with: `slug`, `title`, `summary`, `lens_tags: ['offense']` (or `['offense','baserunning']`), `sport`, `difficulty`, `status='published'`, `canonical_order`, plus matching `iq_situation_actors` (Three B's where applicable — runner Bag/Backup, hitter Ball) and 2–3 `iq_scenarios` MCQ variants per situation following the existing schema used by Wave-C1.
 
-7. **Lint / regression**
-   - `scripts/lint-side-context.ts` already scans for side-aware writes on side-aware tables. `athlete_context.category_goals` is a JSON blob, not a side-aware row, so no new lint rule required — document this in `.lovable/side-context-mastery.md` (small append).
-   - Add 1 unit test against `scoreSkillLevers` proving: untagged picks score on both sides; `side:'L'` picks contribute only when called with `{side:'L'}`; default call (no side) sums everything (back-compat).
+### Files
 
-## Out of scope
+- `supabase/migrations/<ts>_iq_wave_o1_offense_seed.sql` — inserts situations + actors + scenarios. Idempotent via `ON CONFLICT (slug) DO NOTHING`.
 
-- No schema migration (V2 already lives in `athlete_context.category_goals` JSON).
-- No change to non-hitting / non-throwing categories' visual surface (Speed / Fielding stay side-less; chip won't render there).
-- No change to the V1-derived ranking used by legacy Hammer reads.
+### Verification
 
-## Files touched
+After migration, re-query `iq_situations` grouped by lens/sport and confirm offense rows exist for `baseball` and `both`. Load `/iq?lens=offense` in preview as baseball user and confirm cards render. No app code changes needed — `useIqSituations` already filters by lens once data exists.
 
-- `src/lib/hammer/goals/categoryGoals.ts` — type + normalizer + `scoreSkillLevers` overload
-- `src/components/onboarding/steps/CategoryGoalsStep.tsx` — chip per pick
-- `src/components/settings/CategoryGoalsCard.tsx` — chip per pick + read-only badge
-- `src/components/onboarding/steps/ReviewAnswersStep.tsx` — display badge
-- `src/lib/hammer/prescription/dailyPlan.ts` — pass active side when scoring
-- `src/lib/side/sideBias.test.ts` — add `scoreSkillLevers` side cases (new minimal block)
-- `.lovable/side-context-mastery.md` — append goal-payload note
+### Out of scope
 
-## Risk / rollback
-
-Pure additive. `side` is optional on `SubGoalPick`; missing field = legacy behavior. Default `scoreSkillLevers()` call unchanged. Reverting just removes the chip — existing rows keep working.
+No changes to filtering logic, no UI changes, no progress/SM-2 schema changes.
