@@ -45,11 +45,34 @@ const EXAMPLE = `[
   }
 ]`;
 
+const DRAFT_KEY = "iq:bulk-import:draft";
+
 export function BulkImportDialog({ open, onClose, onImported }: Props) {
-  const [json, setJson] = useState(EXAMPLE);
+  const [json, setJson] = useState<string>(() => {
+    try {
+      if (typeof window === "undefined") return EXAMPLE;
+      return window.sessionStorage.getItem(DRAFT_KEY) ?? EXAMPLE;
+    } catch {
+      return EXAMPLE;
+    }
+  });
   const [reports, setReports] = useState<BulkValidationResult[] | null>(null);
   const [parsed, setParsed] = useState<BulkSituationInput[] | null>(null);
   const [importing, setImporting] = useState(false);
+
+  // Persist the paste buffer across reloads / accidental dismissals.
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      if (json && json !== EXAMPLE) window.sessionStorage.setItem(DRAFT_KEY, json);
+    } catch {
+      // ignore
+    }
+  }, [json]);
+
+  const clearDraft = () => {
+    try { window.sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+  };
 
   const validate = () => {
     setReports(null);
