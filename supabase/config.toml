@@ -257,3 +257,6 @@ verify_jwt = true
 
 [functions.parse-season-schedule]
 verify_jwt = true
+
+[functions.gp-ingest-document]
+verify_jwt = true
