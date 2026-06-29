@@ -157,6 +157,7 @@ export default function AnalyzeVideo() {
       drill_description: fullDescription || null,
       module_origin: module || '',
       sport: sport,
+      side: shouldShowPicker(sideDiscipline) ? activeSide : null,
     });
 
     if (result.success) {
