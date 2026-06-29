@@ -9,12 +9,22 @@ export interface CompetitionLevel {
 
 export const softballCompetitionLevels: CompetitionLevel[] = [
   // Youth / Amateur (Pre-Collegiate)
+  { key: '6u', label: 'T-Ball / 6U', category: 'youth', competition_weight_multiplier: 0.20, league_difficulty_index: 0.10, pre_collegiate: true },
+  { key: '8u', label: '8U Coach Pitch', category: 'youth', competition_weight_multiplier: 0.25, league_difficulty_index: 0.15, pre_collegiate: true },
+  { key: '10u', label: '10U', category: 'youth', competition_weight_multiplier: 0.32, league_difficulty_index: 0.20, pre_collegiate: true },
+  { key: '12u', label: '12U', category: 'youth', competition_weight_multiplier: 0.40, league_difficulty_index: 0.25, pre_collegiate: true },
+  { key: '14u', label: '14U', category: 'youth', competition_weight_multiplier: 0.50, league_difficulty_index: 0.32, pre_collegiate: true },
+  { key: '16u', label: '16U', category: 'youth', competition_weight_multiplier: 0.60, league_difficulty_index: 0.42, pre_collegiate: true },
+  { key: '18u_gold', label: '18U Gold', category: 'youth', competition_weight_multiplier: 0.80, league_difficulty_index: 0.66, pre_collegiate: true },
   { key: 'little_league', label: 'Little League', category: 'youth', competition_weight_multiplier: 0.45, league_difficulty_index: 0.30, pre_collegiate: true },
   { key: 'rec', label: 'Recreational', category: 'youth', competition_weight_multiplier: 0.50, league_difficulty_index: 0.35, pre_collegiate: true },
-  { key: 'youth', label: 'Youth', category: 'youth', competition_weight_multiplier: 0.55, league_difficulty_index: 0.40, pre_collegiate: true },
+  { key: 'youth', label: 'Youth (Other)', category: 'youth', competition_weight_multiplier: 0.55, league_difficulty_index: 0.40, pre_collegiate: true },
+  { key: 'middle_school', label: 'Middle School', category: 'youth', competition_weight_multiplier: 0.60, league_difficulty_index: 0.45, pre_collegiate: true },
   { key: 'travel', label: 'Travel Ball', category: 'youth', competition_weight_multiplier: 0.70, league_difficulty_index: 0.55, pre_collegiate: true },
+  { key: 'hs_freshman', label: 'High School Freshman', category: 'youth', competition_weight_multiplier: 0.72, league_difficulty_index: 0.57, pre_collegiate: true },
   { key: 'hs_jv', label: 'High School JV', category: 'youth', competition_weight_multiplier: 0.75, league_difficulty_index: 0.60, pre_collegiate: true },
   { key: 'hs_varsity', label: 'High School Varsity', category: 'youth', competition_weight_multiplier: 0.82, league_difficulty_index: 0.68, pre_collegiate: true },
+  { key: 'showcase_pgf', label: 'Showcase / PGF', category: 'youth', competition_weight_multiplier: 0.85, league_difficulty_index: 0.72, pre_collegiate: true },
 
   // Collegiate
   { key: 'juco', label: 'JUCO', category: 'collegiate', competition_weight_multiplier: 0.85, league_difficulty_index: 0.72, pre_collegiate: false },

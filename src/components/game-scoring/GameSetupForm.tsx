@@ -18,6 +18,7 @@ import { useCoachPlayerPool } from '@/hooks/useCoachPlayerPool';
 import { useOrganization } from '@/hooks/useOrganization';
 import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
 import { PlayerSearchCombobox } from './PlayerSearchCombobox';
+import { CompetitionLevelPicker } from '@/components/shared/CompetitionLevelPicker';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -326,32 +327,16 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
             </div>
           </div>
 
-          {/* Competition Level */}
+          {/* Competition Level — unified picker (youth → MLB/AUSL) */}
           <div>
             <Label>Competition Level</Label>
-            <div className="space-y-2 mt-1.5">
-              {competitionCategories.map(cat => (
-                <div key={cat.category}>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{cat.label}</span>
-                  <div className="flex flex-wrap gap-1 mt-0.5">
-                    {cat.levels.map(l => (
-                      <button
-                        key={l.key}
-                        type="button"
-                        onClick={() => setCompetitionLevel(l.key)}
-                        className={cn(
-                          'rounded-md border px-2 py-1 text-xs font-medium transition-all',
-                          competitionLevel === l.key
-                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {l.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="mt-1.5">
+              <CompetitionLevelPicker
+                sport={sport}
+                value={competitionLevel}
+                onChange={setCompetitionLevel}
+                mode="full"
+              />
             </div>
           </div>
 

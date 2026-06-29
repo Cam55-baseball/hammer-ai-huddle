@@ -21,6 +21,7 @@ export type GapInputKind =
   | "select"
   | "multiselect"
   | "segmented"
+  | "competition_level"
   | "lifting_history"
   | "anthropometrics"
   | "injury";
@@ -84,27 +85,8 @@ const ATHLETE_GAPS: ReadonlyArray<KnowledgeGap> = [
     audience: "athlete",
     priority: 25,
     question: "What level do you compete at right now?",
-    helper: "Be specific — minor leagues count as pro, and college level matters.",
-    inputKind: "select",
-    options: [
-      { value: "youth_rec", label: "Youth rec / Little League" },
-      { value: "travel", label: "Travel ball" },
-      { value: "middle_school", label: "Middle school" },
-      { value: "hs_fr", label: "High school — freshman" },
-      { value: "hs_so", label: "High school — sophomore" },
-      { value: "hs_jr", label: "High school — junior" },
-      { value: "hs_sr", label: "High school — senior" },
-      { value: "juco", label: "JUCO" },
-      { value: "naia", label: "NAIA" },
-      { value: "ncaa_d3", label: "NCAA D3" },
-      { value: "ncaa_d2", label: "NCAA D2" },
-      { value: "ncaa_d1", label: "NCAA D1" },
-      { value: "indy_pro", label: "Independent pro" },
-      { value: "milb", label: "Affiliated MiLB" },
-      { value: "mlb_npb_kbo", label: "MLB / NPB / KBO" },
-      { value: "adult_amateur", label: "Adult amateur" },
-      { value: "out_of_sport", label: "Out of sport" },
-    ],
+    helper: "Pick the rung that matches you today — from T-Ball all the way to MLB / AUSL. We use this everywhere so be precise.",
+    inputKind: "competition_level",
     persistTo: "competition_level",
     topic: "onboarding.knowledge_gap_resolved",
   },

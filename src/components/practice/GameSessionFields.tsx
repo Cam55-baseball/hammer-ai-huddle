@@ -1,13 +1,6 @@
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-const opponentLevels = [
-  { value: 'rec', label: 'Recreational' },
-  { value: 'travel', label: 'Travel' },
-  { value: 'hs', label: 'High School' },
-  { value: 'college', label: 'College' },
-  { value: 'pro', label: 'Professional' },
-];
+import { useSportTheme } from '@/contexts/SportThemeContext';
+import { CompetitionLevelPicker } from '@/components/shared/CompetitionLevelPicker';
 
 interface GameSessionFieldsProps {
   opponentName: string;
@@ -16,9 +9,15 @@ interface GameSessionFieldsProps {
   onLevelChange: (level: string) => void;
 }
 
+/**
+ * GameSessionFields — practice-session opponent picker. Uses the unified
+ * competition-level catalog so the same level keys persist as everywhere
+ * else (onboarding, Tell Hammer, Game Setup).
+ */
 export function GameSessionFields({ opponentName, opponentLevel, onNameChange, onLevelChange }: GameSessionFieldsProps) {
+  const { sport } = useSportTheme();
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="space-y-3">
       <div>
         <label className="text-xs font-medium text-muted-foreground mb-1 block">
           Opponent Name <span className="text-destructive">*</span>
@@ -33,14 +32,12 @@ export function GameSessionFields({ opponentName, opponentLevel, onNameChange, o
         <label className="text-xs font-medium text-muted-foreground mb-1 block">
           Opponent Level <span className="text-destructive">*</span>
         </label>
-        <Select value={opponentLevel} onValueChange={onLevelChange}>
-          <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-          <SelectContent>
-            {opponentLevels.map(l => (
-              <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CompetitionLevelPicker
+          sport={sport}
+          value={opponentLevel}
+          onChange={onLevelChange}
+          mode="quick"
+        />
       </div>
     </div>
   );
