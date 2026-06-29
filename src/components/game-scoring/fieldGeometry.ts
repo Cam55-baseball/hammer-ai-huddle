@@ -129,27 +129,8 @@ export function getFieldGeometry(sport: 'baseball' | 'softball', size: number = 
     },
   };
 
-  // Normalize all positions to 0-1
 
-    '3B': lerp(third, diamondCenter, -0.25),
-    'LF': {
-      x: homeX - outfieldPx * 0.45 * Math.SQRT1_2,
-      y: homeY - outfieldPx * 0.45 * Math.SQRT1_2 - outfieldPx * 0.12,
-    },
-    'CF': {
-      x: homeX,
-      y: homeY - outfieldPx * 0.6,
-    },
-    'RF': {
-      x: homeX + outfieldPx * 0.45 * Math.SQRT1_2,
-      y: homeY - outfieldPx * 0.45 * Math.SQRT1_2 - outfieldPx * 0.12,
-    },
-  };
 
-  // Shift infielders slightly toward home for realism
-  for (const pos of ['2B', 'SS']) {
-    positions[pos] = lerp(positions[pos], home, 0.08);
-  }
 
   // Normalize all positions to 0-1
   const positionsNormalized: Record<string, Point> = {};
