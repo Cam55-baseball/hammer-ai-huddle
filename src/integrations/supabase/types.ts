@@ -5215,6 +5215,56 @@ export type Database = {
         }
         Relationships: []
       }
+      iq_actor_context_shifts: {
+        Row: {
+          coaching_note: string
+          context_axis: string
+          context_value: string
+          created_at: string
+          dx_pct: number
+          dy_pct: number
+          id: string
+          priority: number
+          role: string
+          situation_id: string
+          updated_at: string
+        }
+        Insert: {
+          coaching_note?: string
+          context_axis: string
+          context_value: string
+          created_at?: string
+          dx_pct?: number
+          dy_pct?: number
+          id?: string
+          priority?: number
+          role: string
+          situation_id: string
+          updated_at?: string
+        }
+        Update: {
+          coaching_note?: string
+          context_axis?: string
+          context_value?: string
+          created_at?: string
+          dx_pct?: number
+          dy_pct?: number
+          id?: string
+          priority?: number
+          role?: string
+          situation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_actor_context_shifts_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       iq_owner_review_log: {
         Row: {
           approved: boolean
