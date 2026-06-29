@@ -143,6 +143,9 @@ export function HammerDailyPlan() {
                 {plan.missingnessCount} needs input
               </Badge>
             )}
+            {/* Side context — only renders for switch hitters / ambidextrous throwers */}
+            <SideContextPicker discipline="hit" compact />
+            <SideContextPicker discipline="throw" compact />
             <Button
               size="sm"
               variant="ghost"
