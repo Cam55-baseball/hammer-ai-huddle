@@ -1137,6 +1137,7 @@ export interface HammerDailyPlanResult {
   readonly speedFocus: SpeedFocusDecision;
   readonly schedulePosture: SchedulePosture;
   readonly scheduleSignal: ScheduleSignal;
+  readonly sideBias: SideBiasForPlan | null;
 }
 
 
