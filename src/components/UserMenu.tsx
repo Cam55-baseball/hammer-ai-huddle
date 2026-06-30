@@ -62,7 +62,7 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/onboarding/athlete")}>
+        <DropdownMenuItem onClick={() => navigate("/onboarding/athlete?resume=1")}>
           <ListChecks className="mr-2 h-4 w-4" />
           <span>Setup</span>
           {showSetup && (
