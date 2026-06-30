@@ -152,11 +152,6 @@ export function GameSheet({
           <>
           <GameTotalsHeader gameId={gameId} />
           <div className="px-6 py-4">
-            {(() => {
-              const isToday = g.game_date === new Date().toISOString().slice(0, 10);
-              const [activeTab, setActiveTab] = [undefined, undefined]; // placeholder removed below
-              return null;
-            })()}
             <GameSheetTabs
               gameId={gameId}
               g={g}
