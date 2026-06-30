@@ -144,6 +144,15 @@ export default function Games() {
         className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
       >
         <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+            className="-ml-2 mb-1 gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to menu
+          </Button>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Trophy className="h-7 w-7 text-primary" />
             Games
