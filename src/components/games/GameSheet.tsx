@@ -283,6 +283,12 @@ function OverviewPanel({
   onPatch: (p: Record<string, any>) => void;
 }) {
   const [positions, setPositions] = useState<string[]>(game.my_positions ?? []);
+  const pitcherDossiers = usePitcherDossiers(game.sport);
+  const [editingPitcher, setEditingPitcher] = useState<any | null>(null);
+  const [newPitcherOpen, setNewPitcherOpen] = useState(false);
+  const currentPitcher = (pitcherDossiers.list.data ?? []).find(
+    (p) => p.id === game.probable_pitcher_dossier_id,
+  );
 
   const togglePos = (p: string) => {
     const next = positions.includes(p)
