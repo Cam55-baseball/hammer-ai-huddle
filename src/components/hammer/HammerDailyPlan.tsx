@@ -58,6 +58,7 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { WkLiftsSpeedSection } from "@/components/hammer/WkLiftsSpeedSection";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
@@ -222,6 +223,7 @@ export function HammerDailyPlan() {
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
+        <WkLiftsSpeedSection />
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
     </Card>

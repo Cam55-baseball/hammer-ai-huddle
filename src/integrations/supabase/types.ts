@@ -13514,6 +13514,326 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_cns_ledger: {
+        Row: {
+          breakdown: Json
+          created_at: string
+          id: string
+          ledger_date: string
+          units_cap: number
+          units_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          breakdown?: Json
+          created_at?: string
+          id?: string
+          ledger_date: string
+          units_cap?: number
+          units_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          breakdown?: Json
+          created_at?: string
+          id?: string
+          ledger_date?: string
+          units_cap?: number
+          units_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wk_movement_catalog: {
+        Row: {
+          category: string
+          cns_cost: number
+          contraindications: string[] | null
+          created_at: string
+          cue: string
+          default_load_pct: number | null
+          default_reps: number | null
+          default_sets: number | null
+          default_tempo: string | null
+          demo_video_url: string | null
+          id: string
+          min_competition_level: string | null
+          min_training_age_years: number
+          name: string
+          pattern: string | null
+          position_scope: string[] | null
+          progression_slug: string | null
+          regression_slug: string | null
+          slug: string
+          sport_scope: string
+          updated_at: string
+          variant: string | null
+          why_prescribed: string
+        }
+        Insert: {
+          category: string
+          cns_cost?: number
+          contraindications?: string[] | null
+          created_at?: string
+          cue: string
+          default_load_pct?: number | null
+          default_reps?: number | null
+          default_sets?: number | null
+          default_tempo?: string | null
+          demo_video_url?: string | null
+          id?: string
+          min_competition_level?: string | null
+          min_training_age_years?: number
+          name: string
+          pattern?: string | null
+          position_scope?: string[] | null
+          progression_slug?: string | null
+          regression_slug?: string | null
+          slug: string
+          sport_scope?: string
+          updated_at?: string
+          variant?: string | null
+          why_prescribed: string
+        }
+        Update: {
+          category?: string
+          cns_cost?: number
+          contraindications?: string[] | null
+          created_at?: string
+          cue?: string
+          default_load_pct?: number | null
+          default_reps?: number | null
+          default_sets?: number | null
+          default_tempo?: string | null
+          demo_video_url?: string | null
+          id?: string
+          min_competition_level?: string | null
+          min_training_age_years?: number
+          name?: string
+          pattern?: string | null
+          position_scope?: string[] | null
+          progression_slug?: string | null
+          regression_slug?: string | null
+          slug?: string
+          sport_scope?: string
+          updated_at?: string
+          variant?: string | null
+          why_prescribed?: string
+        }
+        Relationships: []
+      }
+      wk_periodization_blocks: {
+        Row: {
+          cns_unit_cap: number
+          compound_max_reps: number
+          compound_max_sets: number
+          compound_min_reps: number
+          compound_min_sets: number
+          compound_style: string
+          created_at: string
+          cross_sport_cadence: string
+          display_name: string
+          id: string
+          notes: string | null
+          phase: string
+          speed_cadence_hours: number
+          supplemental_style: string
+          updated_at: string
+        }
+        Insert: {
+          cns_unit_cap?: number
+          compound_max_reps?: number
+          compound_max_sets?: number
+          compound_min_reps?: number
+          compound_min_sets?: number
+          compound_style: string
+          created_at?: string
+          cross_sport_cadence?: string
+          display_name: string
+          id?: string
+          notes?: string | null
+          phase: string
+          speed_cadence_hours?: number
+          supplemental_style: string
+          updated_at?: string
+        }
+        Update: {
+          cns_unit_cap?: number
+          compound_max_reps?: number
+          compound_max_sets?: number
+          compound_min_reps?: number
+          compound_min_sets?: number
+          compound_style?: string
+          created_at?: string
+          cross_sport_cadence?: string
+          display_name?: string
+          id?: string
+          notes?: string | null
+          phase?: string
+          speed_cadence_hours?: number
+          supplemental_style?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wk_prescriptions: {
+        Row: {
+          cns_clamped: boolean
+          cns_cost: number
+          created_at: string
+          id: string
+          load_pct: number | null
+          movement_name: string
+          movement_slug: string
+          phase: string
+          plan_date: string
+          reps: number | null
+          sequence_order: number
+          sets: number | null
+          slot: string
+          status: string
+          substituted_from_slug: string | null
+          substitution_reason: string | null
+          tempo: string | null
+          updated_at: string
+          user_id: string
+          why_payload: Json
+        }
+        Insert: {
+          cns_clamped?: boolean
+          cns_cost?: number
+          created_at?: string
+          id?: string
+          load_pct?: number | null
+          movement_name: string
+          movement_slug: string
+          phase: string
+          plan_date: string
+          reps?: number | null
+          sequence_order?: number
+          sets?: number | null
+          slot: string
+          status?: string
+          substituted_from_slug?: string | null
+          substitution_reason?: string | null
+          tempo?: string | null
+          updated_at?: string
+          user_id: string
+          why_payload?: Json
+        }
+        Update: {
+          cns_clamped?: boolean
+          cns_cost?: number
+          created_at?: string
+          id?: string
+          load_pct?: number | null
+          movement_name?: string
+          movement_slug?: string
+          phase?: string
+          plan_date?: string
+          reps?: number | null
+          sequence_order?: number
+          sets?: number | null
+          slot?: string
+          status?: string
+          substituted_from_slug?: string | null
+          substitution_reason?: string | null
+          tempo?: string | null
+          updated_at?: string
+          user_id?: string
+          why_payload?: Json
+        }
+        Relationships: []
+      }
+      wk_recovery_acks: {
+        Row: {
+          ack_date: string
+          acknowledged_at: string
+          created_at: string
+          id: string
+          reduction_payload: Json
+          reduction_reason: string
+          user_id: string
+        }
+        Insert: {
+          ack_date: string
+          acknowledged_at?: string
+          created_at?: string
+          id?: string
+          reduction_payload?: Json
+          reduction_reason: string
+          user_id: string
+        }
+        Update: {
+          ack_date?: string
+          acknowledged_at?: string
+          created_at?: string
+          id?: string
+          reduction_payload?: Json
+          reduction_reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wk_session_logs: {
+        Row: {
+          bar_feel: string | null
+          created_at: string
+          id: string
+          load_used: number | null
+          movement_slug: string
+          notes: string | null
+          plan_date: string
+          prescription_id: string | null
+          reps_completed: number[] | null
+          rpe: number | null
+          sets_completed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bar_feel?: string | null
+          created_at?: string
+          id?: string
+          load_used?: number | null
+          movement_slug: string
+          notes?: string | null
+          plan_date: string
+          prescription_id?: string | null
+          reps_completed?: number[] | null
+          rpe?: number | null
+          sets_completed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bar_feel?: string | null
+          created_at?: string
+          id?: string
+          load_used?: number | null
+          movement_slug?: string
+          notes?: string | null
+          plan_date?: string
+          prescription_id?: string | null
+          reps_completed?: number[] | null
+          rpe?: number | null
+          sets_completed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wk_session_logs_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "wk_prescriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_blocks: {
         Row: {
           block_type: string
