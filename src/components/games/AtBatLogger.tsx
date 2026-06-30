@@ -394,6 +394,19 @@ function AtBatForm({
         <span className="font-mono">Esc</span> to cancel
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <Field label="Pitcher faced">
+          <Select value={f.opponent_pitcher_id || "__none"} onValueChange={(v) => set("opponent_pitcher_id", v === "__none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Pick / none" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">— None / unknown —</SelectItem>
+              {pitcherOptions.map((p: any) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name ?? "Pitcher"} {p.archetype ? `· ${p.archetype}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
         <Field label="Inning">
           <Input
             type="number"
