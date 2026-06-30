@@ -123,6 +123,16 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
 
       {show && <DefForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
+      {(list.data ?? []).length === 0 && !show && (
+        <Card className="p-5 text-center bg-muted/20 border-dashed">
+          <Shield className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm font-medium">No defensive plays logged yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Log every chance — putouts, assists, errors, shifts. Press <kbd className="px-1 rounded bg-muted">N</kbd> to add.
+          </p>
+        </Card>
+      )}
+
       <div className="space-y-2">
         {(list.data ?? []).map((p) => (
           <Card key={p.id} className="p-3">
