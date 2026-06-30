@@ -6,7 +6,8 @@
  * No-op-safe: simply edits rows in `wk_phase_blocks` keyed by `(user_id, phase)`.
  */
 import { useEffect, useMemo, useState } from "react";
-import AppShell from "@/components/layout/AppShell";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
