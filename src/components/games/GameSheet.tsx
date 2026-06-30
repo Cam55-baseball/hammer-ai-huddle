@@ -386,11 +386,10 @@ function OverviewPanel({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="in_progress">In progress</SelectItem>
-            <SelectItem value="final">Final</SelectItem>
-            <SelectItem value="canceled">Canceled</SelectItem>
+            <SelectItem value="scheduled">Upcoming — not played yet</SelectItem>
+            <SelectItem value="in_progress">Live now — logging in-game</SelectItem>
+            <SelectItem value="final">Played — final</SelectItem>
+            <SelectItem value="canceled">Canceled / rained out</SelectItem>
           </SelectContent>
         </Select>
       </div>
