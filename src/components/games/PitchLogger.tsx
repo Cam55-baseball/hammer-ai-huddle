@@ -134,6 +134,8 @@ function PitchForm({
   onCancel: () => void;
 }) {
   const [zoneVal, setZoneVal] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
+  const [intentZone, setIntentZone] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
+  const [showIntent, setShowIntent] = useState(false);
   const [f, setF] = useState<Record<string, any>>({
     inning: 1,
     pitch_no: 1,
@@ -147,8 +149,13 @@ function PitchForm({
     count_balls: 0,
     count_strikes: 0,
     notes: "",
+    contact: "",
+    spray: "",
+    hard_hit: false,
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
+  const isPitcher = perspective === "pitcher";
+  const showHitterOutcomes = f.result === "in_play" || f.result === "bunt_in_play";
 
   return (
     <Card className="p-4 bg-muted/30">
