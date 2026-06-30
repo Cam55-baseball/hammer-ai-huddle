@@ -1,24 +1,17 @@
 /**
  * gp-pregame-plan — generate an elite personal hitting/pitching plan.
  *
- * Input  : {
- *   sport: 'baseball' | 'softball',
- *   role: 'hitter' | 'pitcher',
- *   dossierId: uuid,           // pitcher_dossier or opponent_hitter
- *   gameId?: uuid,
- *   userContext?: { recent_form?: string, notes?: string },
- * }
+ * v2 schema — Elite Situational Intelligence:
+ *   pitcher_attack_on_me     how THIS pitcher tries to get YOU out
+ *   my_attack_on_pitcher     how YOU beat THIS pitcher (best zones/pitches/hot count)
+ *   sequence_reading         tells, ahead-in-count rules, behind-in-count survival
+ *   count_plan               per-count look/take/swing for 0-0..3-2
+ *   situational_hitting      per base/out state goal+pitch+zones+swing-shape
+ *   matchup_edges            platoon, velo-band response, spin-axis, tunneling pairs
+ *   headline/vibe/cues/in_game_triggers/mental_anchors/matchup_grade/confidence
  *
- * What it does:
- *   1. Loads the dossier (notes, tendencies, arsenal, archetype, attachments).
- *   2. Loads user's history vs this exact pitcher AND vs same archetype.
- *   3. Loads user planner_priors for that archetype (success-weighted advice).
- *   4. Loads recent gp_at_bats / pitches to gauge form.
- *   5. Calls Gemini with a structured prompt -> returns plan_json + plan_markdown.
- *   6. Saves to gp_pregame_plans, returns plan + plan_id.
- *
- * The plan_json shape is stable so the UI can render recommendations as
- * checkboxes that the user can mark "followed / worked" after the game.
+ * Inputs (B2): dossier, direct history, archetype history, planner priors,
+ * recent form, plus zone-aggregated pitch heatmaps and situational base rates.
  */
 // @ts-nocheck
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -31,29 +24,93 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ENGINE_VERSION = "pregame-plan/v1.0";
+const ENGINE_VERSION = "pregame-plan/v2.0-elite-situational";
 
-const SYSTEM_PROMPT = `You are an elite hitting/pitching strategist. You write plans the way a top-1% MLB advance scout writes for a hitter or pitcher facing a specific opponent. Your tone is calm, confident, conversational, surgically specific. You speak in cues, not jargon.
+const SITUATION_KEYS = [
+  "bases_empty_0out","bases_empty_1out","bases_empty_2out",
+  "runner_1B_0out","runner_1B_1out","runner_1B_2out",
+  "runner_2B_0out","runner_2B_1out","runner_2B_2out",
+  "runner_3B_0out","runner_3B_1out","runner_3B_2out",
+  "runners_1B_2B_0out","runners_1B_2B_1out","runners_1B_2B_2out",
+  "runners_1B_3B_0out","runners_1B_3B_1out","runners_1B_3B_2out",
+  "runners_2B_3B_0out","runners_2B_3B_1out","runners_2B_3B_2out",
+  "bases_loaded_0out","bases_loaded_1out","bases_loaded_2out",
+];
+
+const COUNT_KEYS = ["0-0","0-1","0-2","1-0","1-1","1-2","2-0","2-1","2-2","3-0","3-1","3-2"];
+
+const SYSTEM_PROMPT = `You are an elite advance scout writing a surgical matchup plan for ONE hitter against ONE pitcher (or vice versa). You speak in physical cues, not jargon. You answer EVERY question the athlete might ask: how this pitcher gets me out, the best way to beat him, how to read his sequencing to stay ahead, the best pitch to hunt, the best zones to attack, the worst zones, and what to do in every base/out situation.
 
 Hard rules:
-- Output STRICT JSON matching the schema below, no markdown fences, no prose outside JSON.
-- Reference EXACT facts from the dossier (release height, extension, ride, slot, FPS%, usage, whiff).
+- Output STRICT JSON matching the schema. No markdown fences, no prose outside JSON.
+- Reference EXACT facts from the dossier (release, extension, ride, slot, FPS%, usage, whiff, velo bands).
 - Translate facts into PHYSICAL cues ("see the ball up", "let it travel", "start your move early").
-- Use the user's historical performance vs this pitcher AND vs same archetype to personalize.
-- If a number is missing, do not invent it. Speak in tendency language instead.
-- One paragraph "vibe" at the top, then 5-8 concrete cues, then 3 in-game triggers, then 2 mental anchors.
+- Use the user's direct history vs this pitcher FIRST; fall back to archetype history when sparse.
+- Tag every situational/count entry with confidence (low|med|high) and source (direct_history|archetype|prior|ai_inference).
+- If a number is missing, do not invent it — speak in tendency language.
+- Sport-aware: baseball uses FB/SL/CB/CH/SI/FC/FS and 3x3 zones; softball uses FB/rise/drop/screw/change/curve with rise-emphasized top of zone.
+- Zones are 1..9 (1-3 top, 4-6 mid, 7-9 bottom; left→right from catcher's view). For RHB: inner = 3/6/9, outer = 1/4/7. For LHB: mirror.
 
-Schema:
+Schema (return EXACTLY this shape):
 {
-  "headline": string,                    // one-line summary
-  "vibe": string,                        // 2-4 sentence pregame paragraph
-  "cues": [{ "key": string, "text": string, "tag": "see"|"timing"|"zone"|"spin"|"mental"|"avoid" }],
-  "in_game_triggers": [{ "key": string, "if": string, "then": string }],
-  "mental_anchors": [string],
+  "headline": string,
+  "vibe": string,
   "matchup_grade": "lean_you"|"even"|"lean_them",
   "confidence": "low"|"medium"|"high",
-  "rationale_for_user_history": string   // short note explaining how their priors shaped this plan
-}`;
+  "rationale_for_user_history": string,
+
+  "pitcher_attack_on_me": {
+    "primary_sequence": [string],
+    "putaway_pitch": string,
+    "putaway_zone": string,
+    "early_count_tendency": string,
+    "two_strike_tendency": string,
+    "weakness_exploited": string
+  },
+  "my_attack_on_pitcher": {
+    "best_pitch_to_hunt": string,
+    "best_zones": [string],
+    "avoid_zones": [string],
+    "hot_count": string,
+    "count_plan": {
+      "0-0": { "look": string, "take": string, "swing": string, "note": string },
+      "0-1": {...}, "0-2": {...}, "1-0": {...}, "1-1": {...}, "1-2": {...},
+      "2-0": {...}, "2-1": {...}, "2-2": {...}, "3-0": {...}, "3-1": {...}, "3-2": {...}
+    }
+  },
+  "sequence_reading": {
+    "tells": [string],
+    "ahead_in_count_rules": string,
+    "behind_in_count_survival": string
+  },
+  "situational_hitting": {
+    "<situation_key>": {
+      "goal": string,
+      "pitch_to_hunt": string,
+      "zones": [string],
+      "avoid_zones": [string],
+      "swing_shape": string,
+      "avoid": string,
+      "confidence": "low"|"med"|"high",
+      "source": "direct_history"|"archetype"|"prior"|"ai_inference"
+    }
+  },
+  "matchup_edges": {
+    "platoon_split_note": string,
+    "velo_band_response": string,
+    "spin_axis_weakness": string,
+    "tunneling_pairs_to_watch": [string]
+  },
+
+  "cues": [{ "key": string, "text": string, "tag": "see"|"timing"|"zone"|"spin"|"mental"|"avoid" }],
+  "in_game_triggers": [{ "key": string, "if": string, "then": string }],
+  "mental_anchors": [string]
+}
+
+The situational_hitting object MUST include entries for these keys when relevant:
+${SITUATION_KEYS.join(", ")}.
+
+Example: for "runner_2B_0out" against a sinker/runner RHP, goal = "advance to 3B — hit ground ball or deep fly to RF/RF-gap"; pitch_to_hunt = "sinker outer-third or change away"; zones = ["3","6"] (outer for RHB); swing_shape = "stay through middle-away, oppo gap line drive"; avoid = "pulling inner-third heat — rolls over to SS".`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -84,68 +141,90 @@ serve(async (req) => {
     // 1. dossier
     const dossierTable = role === "pitcher" ? "gp_pitcher_dossiers" : "gp_opponent_hitters";
     const { data: dossier, error: dErr } = await admin
-      .from(dossierTable)
-      .select("*")
-      .eq("id", dossierId)
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .from(dossierTable).select("*").eq("id", dossierId).eq("user_id", user.id).maybeSingle();
     if (dErr || !dossier) {
       await hb.fail(dErr ?? new Error("dossier not found"));
       return json({ error: "dossier not found" }, 404);
     }
     const archetype = dossier.archetype ?? null;
 
-    // 2. user history vs this exact pitcher / hitter
+    // 2. direct history vs this pitcher (at-bats)
     const historyVsThis = role === "pitcher"
       ? await admin.from("gp_at_bats")
-          .select("inning,result,contact_quality,exit_velo,pitch_type,notes,created_at")
+          .select("inning,outs,base_state,result,contact_quality,exit_velo,pitch_type,balls,strikes,notes,created_at")
           .eq("user_id", user.id)
           .eq("opponent_pitcher_id", dossierId)
           .order("created_at", { ascending: false })
-          .limit(40)
+          .limit(80)
       : { data: [] };
 
-    // 3. user history vs same archetype
+    // 3. direct pitches vs this pitcher (zone heatmap input)
+    const abIds = (historyVsThis.data ?? []).map((a: any) => a.id).filter(Boolean);
+    const pitchesVsThis = abIds.length > 0
+      ? await admin.from("gp_pitches")
+          .select("zone,pitch_type,result,contact_quality,balls,strikes,velo")
+          .in("at_bat_id", abIds)
+          .limit(800)
+      : { data: [] };
+
+    // 4. archetype history (cold-start fallback)
     const historyVsArchetype = archetype
       ? await admin.from("gp_at_bats")
-          .select("inning,result,contact_quality,exit_velo,pitch_type,created_at")
+          .select("inning,outs,base_state,result,contact_quality,exit_velo,pitch_type,balls,strikes,created_at")
           .eq("user_id", user.id)
           .eq("pitcher_archetype_snapshot", archetype)
           .order("created_at", { ascending: false })
-          .limit(60)
+          .limit(120)
       : { data: [] };
 
-    // 4. planner priors
+    // 5. global zone tendencies — all user's recent pitches as hitter
+    const globalRecentPitches = await admin.from("gp_pitches")
+      .select("zone,pitch_type,result,contact_quality,velo")
+      .order("created_at", { ascending: false })
+      .limit(600);
+
+    // 6. planner priors (learning loop)
     const priors = archetype
       ? await admin.from("gp_planner_priors")
           .select("prior_json,sample_size")
           .eq("user_id", user.id)
           .eq("sport", sport)
-          .eq("role", role === "pitcher" ? "hitter" : "pitcher") // user's own role is opposite
+          .eq("role", role === "pitcher" ? "hitter" : "pitcher")
           .eq("archetype", archetype)
           .maybeSingle()
       : { data: null };
 
-    // 5. recent form
+    // 7. recent form
     const recent = await admin.from("gp_at_bats")
       .select("result,contact_quality,exit_velo,created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(25);
 
+    // ---- Aggregations (numerical inputs to the AI) ----
+    const zoneAggDirect = aggregateZones(pitchesVsThis.data ?? []);
+    const zoneAggGlobal = aggregateZones(globalRecentPitches.data ?? []);
+    const situationalBaseRates = aggregateSituational(historyVsArchetype.data ?? historyVsThis.data ?? []);
+    const veloBandSplits = aggregateVeloBands(globalRecentPitches.data ?? []);
+
     const inputs_snapshot = {
+      sport, role, archetype,
       dossier,
-      archetype,
-      history_vs_this: historyVsThis.data ?? [],
-      history_vs_archetype: historyVsArchetype.data ?? [],
+      history_vs_this_count: (historyVsThis.data ?? []).length,
+      history_vs_this_sample: (historyVsThis.data ?? []).slice(0, 25),
+      pitches_vs_this_count: (pitchesVsThis.data ?? []).length,
+      zone_agg_direct: zoneAggDirect,
+      zone_agg_global: zoneAggGlobal,
+      history_vs_archetype_count: (historyVsArchetype.data ?? []).length,
+      history_vs_archetype_sample: (historyVsArchetype.data ?? []).slice(0, 30),
+      situational_base_rates: situationalBaseRates,
+      velo_band_splits: veloBandSplits,
       planner_prior: priors?.data ?? null,
       recent_form: recent.data ?? [],
       user_context: userContext ?? {},
-      sport,
-      role,
     };
 
-    // 6. call Gemini
+    // ---- AI call ----
     const prompt = `${SYSTEM_PROMPT}\n\nINPUT:\n${JSON.stringify(inputs_snapshot).slice(0, 180_000)}`;
     const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -154,6 +233,7 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.4,
+        response_format: { type: "json_object" },
       }),
     });
     if (!ai.ok) {
@@ -168,7 +248,6 @@ serve(async (req) => {
 
     const plan_markdown = renderMarkdown(plan_json);
 
-    // 7. save
     const { data: saved, error: sErr } = await admin.from("gp_pregame_plans").insert({
       user_id: user.id,
       sport,
@@ -193,11 +272,59 @@ serve(async (req) => {
   }
 });
 
+// -------- Aggregation helpers --------
+
+function aggregateZones(pitches: any[]) {
+  const z: Record<string, { n: number; ok: number; miss: number; barrel: number }> = {};
+  for (const p of pitches) {
+    const key = String(p.zone ?? "").trim();
+    if (!/^[1-9]$/.test(key)) continue;
+    z[key] ??= { n: 0, ok: 0, miss: 0, barrel: 0 };
+    z[key].n += 1;
+    if (p.result === "swing_miss") z[key].miss += 1;
+    if (p.result === "in_play") {
+      if (p.contact_quality === "barrel") { z[key].barrel += 1; z[key].ok += 1; }
+      else if (p.contact_quality === "solid") z[key].ok += 1;
+    }
+  }
+  return z;
+}
+
+function aggregateSituational(atBats: any[]) {
+  const tally: Record<string, { n: number; on_base: number; hard_contact: number }> = {};
+  for (const ab of atBats) {
+    const k = ab.base_state ? `${ab.base_state}_${ab.outs ?? 0}out` : null;
+    if (!k) continue;
+    tally[k] ??= { n: 0, on_base: 0, hard_contact: 0 };
+    tally[k].n += 1;
+    if (["1B","2B","3B","HR","BB","HBP"].includes(ab.result)) tally[k].on_base += 1;
+    if (["barrel","solid"].includes(ab.contact_quality)) tally[k].hard_contact += 1;
+  }
+  return tally;
+}
+
+function aggregateVeloBands(pitches: any[]) {
+  const bands = { "<85": init(), "85-89": init(), "90-93": init(), "94+": init() };
+  function init() { return { n: 0, whiff: 0, hard: 0 }; }
+  for (const p of pitches) {
+    const v = Number(p.velo);
+    if (!Number.isFinite(v)) continue;
+    const b = v < 85 ? "<85" : v < 90 ? "85-89" : v < 94 ? "90-93" : "94+";
+    bands[b].n += 1;
+    if (p.result === "swing_miss") bands[b].whiff += 1;
+    if (p.contact_quality === "barrel" || p.contact_quality === "solid") bands[b].hard += 1;
+  }
+  return bands;
+}
+
 function renderMarkdown(p: any): string {
   try {
     const lines: string[] = [];
     if (p.headline) lines.push(`### ${p.headline}`);
     if (p.vibe) lines.push("", p.vibe);
+    if (p.my_attack_on_pitcher?.best_pitch_to_hunt) {
+      lines.push("", `**Hunt:** ${p.my_attack_on_pitcher.best_pitch_to_hunt}`);
+    }
     if (Array.isArray(p.cues) && p.cues.length) {
       lines.push("", "**Cues**");
       for (const c of p.cues) lines.push(`- ${c.text}`);
