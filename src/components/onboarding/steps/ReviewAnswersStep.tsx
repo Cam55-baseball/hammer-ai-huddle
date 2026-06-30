@@ -246,6 +246,62 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
         ))}
       </ul>
 
+      <section className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+        <div className="flex items-center gap-2">
+          <Dumbbell className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">Training inputs (Hammer reads these)</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          These directly tune today's Lifts/Speed prescriptions and unlock advanced movement progressions when appropriate.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="training-age" className="text-xs">Training age (years of consistent lifting)</Label>
+            <Input
+              id="training-age"
+              type="number"
+              min={0}
+              step={0.5}
+              inputMode="decimal"
+              value={trainingAge}
+              onChange={(e) => setTrainingAge(e.target.value)}
+              placeholder="e.g. 3"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2">
+            <div>
+              <Label htmlFor="pro-prospect" className="text-xs">Pro / Prospect</Label>
+              <p className="text-[10px] text-muted-foreground">Unlocks advanced library early</p>
+            </div>
+            <Switch
+              id="pro-prospect"
+              checked={isProProspect}
+              onCheckedChange={setIsProProspect}
+            />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1">
+            <Label htmlFor="rm-squat" className="text-xs">Back squat 1RM</Label>
+            <Input id="rm-squat" type="number" min={0} inputMode="decimal" value={oneRmSquat} onChange={(e) => setOneRmSquat(e.target.value)} placeholder="lbs or kg" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="rm-bench" className="text-xs">Bench 1RM</Label>
+            <Input id="rm-bench" type="number" min={0} inputMode="decimal" value={oneRmBench} onChange={(e) => setOneRmBench(e.target.value)} placeholder="lbs or kg" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="rm-dl" className="text-xs">Deadlift 1RM</Label>
+            <Input id="rm-dl" type="number" min={0} inputMode="decimal" value={oneRmDl} onChange={(e) => setOneRmDl(e.target.value)} placeholder="lbs or kg" />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={saveTrainingInputs} disabled={savingTraining}>
+            {savingTraining ? "Saving…" : "Save training inputs"}
+          </Button>
+        </div>
+      </section>
+
+
       {!hasCompletedOnboarding && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-xs">
           <Badge variant="outline" className="mr-1.5">Heads up</Badge>
