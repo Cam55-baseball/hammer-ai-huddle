@@ -19,6 +19,7 @@ import {
   Sparkles,
   BarChart3,
   Users,
+  ArrowLeft,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,11 +116,20 @@ export default function Games() {
     onError: (e: any) => toast.error(e?.message ?? "Could not create game"),
   });
 
+  const STATUS_BUCKETS: Record<string, string[]> = {
+    upcoming: ["draft", "scheduled"],
+    live: ["in_progress"],
+    done: ["final", "canceled"],
+  };
+
   const filtered = useMemo(() => {
     const rows = games.data ?? [];
     const q = search.trim().toLowerCase();
     return rows.filter((g) => {
-      if (filterStatus !== "all" && g.status !== filterStatus) return false;
+      if (filterStatus !== "all") {
+        const bucket = STATUS_BUCKETS[filterStatus] ?? [filterStatus];
+        if (!bucket.includes(g.status)) return false;
+      }
       if (!q) return true;
       const hay = [
         g.opponent_team,
@@ -143,6 +153,15 @@ export default function Games() {
         className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
       >
         <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+            className="-ml-2 mb-1 gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to menu
+          </Button>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Trophy className="h-7 w-7 text-primary" />
             Games
@@ -179,12 +198,10 @@ export default function Games() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="in_progress">In progress</SelectItem>
-            <SelectItem value="final">Final</SelectItem>
-            <SelectItem value="canceled">Canceled</SelectItem>
+            <SelectItem value="all">All games</SelectItem>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="live">Live now</SelectItem>
+            <SelectItem value="done">Played</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -193,20 +210,20 @@ export default function Games() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <HelperTile
           icon={<Sparkles className="h-5 w-5" />}
-          title="AI document import"
-          desc="Drop a Trackman / GameChanger / Rapsodo file or a scorebook photo — events get drafted, you confirm by inning."
+          title="Hammer document import"
+          desc="Drop a Trackman / GameChanger / Rapsodo file or a scorebook photo — Hammer drafts the events, you confirm by inning."
           onClick={() => toast.info("Open a game, then use the Import tab.")}
         />
         <HelperTile
           icon={<Users className="h-5 w-5" />}
-          title="Dossiers"
-          desc="Persistent notes on every pitcher and hitter you've faced. Pre-game strike-zone plan + post-game review."
+          title="Scouting profiles"
+          desc="Saved pages for pitchers you've faced and hitters you've pitched to. Pre-game plan + post-game notes that come back next time you see them."
           onClick={() => navigate("/games/dossiers")}
         />
         <HelperTile
           icon={<BarChart3 className="h-5 w-5" />}
           title="Reports"
-          desc="Heat maps, plate discipline, pitcher usage, defense and baserun — switch-side aware."
+          desc="Pick a topic — hitting, pitching, defense, baserunning — and Hammer builds the dashboard for it."
           onClick={() => navigate("/games/reports")}
         />
       </div>

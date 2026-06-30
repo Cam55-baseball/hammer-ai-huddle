@@ -183,9 +183,9 @@ function GameSheetTabs({
         {isToday && <TabsTrigger value="live">Live</TabsTrigger>}
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="atbats">At-Bats</TabsTrigger>
-        <TabsTrigger value="pitches">Pitches</TabsTrigger>
         <TabsTrigger value="defense">Defense</TabsTrigger>
         <TabsTrigger value="baserun">Baserun</TabsTrigger>
+        <TabsTrigger value="pitches">Pitching</TabsTrigger>
         <TabsTrigger value="subs">Subs</TabsTrigger>
         <TabsTrigger value="import">Import</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -208,7 +208,11 @@ function GameSheetTabs({
       <TabsContent value="atbats" className="pt-4">
         <AtBatLogger gameId={gameId} sport={g.sport} />
       </TabsContent>
-      <TabsContent value="pitches" className="pt-4">
+      <TabsContent value="pitches" className="pt-4 space-y-3">
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+          <strong>Hitters:</strong> log pitches inside each at-bat (under At-Bats).
+          This tab is for when <strong>you were pitching</strong> — log every pitch you threw, like a rep.
+        </div>
         <PitchLogger gameId={gameId} sport={g.sport} />
       </TabsContent>
       <TabsContent value="defense" className="pt-4">
@@ -382,11 +386,10 @@ function OverviewPanel({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="in_progress">In progress</SelectItem>
-            <SelectItem value="final">Final</SelectItem>
-            <SelectItem value="canceled">Canceled</SelectItem>
+            <SelectItem value="scheduled">Upcoming — not played yet</SelectItem>
+            <SelectItem value="in_progress">Live now — logging in-game</SelectItem>
+            <SelectItem value="final">Played — final</SelectItem>
+            <SelectItem value="canceled">Canceled / rained out</SelectItem>
           </SelectContent>
         </Select>
       </div>

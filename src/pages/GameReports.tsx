@@ -30,11 +30,18 @@ import {
 } from "@/components/ui/accordion";
 
 type Side = "all" | "L" | "R" | "S";
+type ReportCategory =
+  | "all"
+  | "hitting"
+  | "pitching"
+  | "defense"
+  | "baserunning";
 
 export default function GameReports() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [side, setSide] = useState<Side>("all");
+  const [category, setCategory] = useState<ReportCategory>("all");
   useGpRealtime(true);
 
 
@@ -202,101 +209,135 @@ export default function GameReports() {
         differentials honest.
       </p>
 
-      <div className="flex justify-end">
-        <Select value={side} onValueChange={(v) => setSide(v as Side)}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All sides</SelectItem>
-            <SelectItem value="L">Lefty only</SelectItem>
-            <SelectItem value="R">Righty only</SelectItem>
-            <SelectItem value="S">Switch tagged</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">
+            Report on
+          </label>
+          <Select value={category} onValueChange={(v) => setCategory(v as ReportCategory)}>
+            <SelectTrigger className="sm:w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Everything (full dashboard)</SelectItem>
+              <SelectItem value="hitting">Hitting</SelectItem>
+              <SelectItem value="pitching">Pitching</SelectItem>
+              <SelectItem value="defense">Defense</SelectItem>
+              <SelectItem value="baserunning">Baserunning</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">
+            Side filter
+          </label>
+          <Select value={side} onValueChange={(v) => setSide(v as Side)}>
+            <SelectTrigger className="sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All sides</SelectItem>
+              <SelectItem value="L">Lefty only</SelectItem>
+              <SelectItem value="R">Righty only</SelectItem>
+              <SelectItem value="S">Switch tagged</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Accordion type="multiple" defaultValue={["heat"]}>
-        <AccordionItem value="heat">
-          <AccordionTrigger>Pitch heat map ({heat.total} pitches seen)</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
-              <StrikeZoneGrid heat={heat.heatMap} heatLabels={heat.labels} readOnly size={240} />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>Each cell is colored by frequency seen in that zone.</p>
-                <p>Cooler blue = rare, hotter red = common.</p>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="discipline">
-          <AccordionTrigger>Plate discipline</AccordionTrigger>
-          <AccordionContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <Stat label="Swing %" value={`${discipline.swingPct}%`} />
-              <Stat label="Chase %" value={`${discipline.chasePct}%`} />
-              <Stat label="Whiff %" value={`${discipline.whiffPct}%`} />
-              <Stat label="Contact %" value={`${discipline.contactPct}%`} />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="usage">
-          <AccordionTrigger>Pitcher usage by count</AccordionTrigger>
-          <AccordionContent>
-            {Object.keys(usage).length === 0 && <p className="text-xs text-muted-foreground">No pitcher-perspective pitches yet.</p>}
-            {Object.entries(usage).map(([cnt, types]) => (
-              <div key={cnt} className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0">
-                <Badge variant="outline" className="w-12 justify-center">{cnt}</Badge>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, n]) => (
-                    <Badge key={t} variant="secondary">{t} × {n}</Badge>
-                  ))}
+      <Accordion type="multiple" defaultValue={["heat", "hitting", "usage", "defense", "baserun"]}>
+        {(category === "all" || category === "hitting") && (
+          <AccordionItem value="heat">
+            <AccordionTrigger>Pitch heat map ({heat.total} pitches seen)</AccordionTrigger>
+            <AccordionContent>
+              <div className="flex flex-col sm:flex-row gap-4 items-start">
+                <StrikeZoneGrid heat={heat.heatMap} heatLabels={heat.labels} readOnly size={240} />
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>Each cell is colored by frequency seen in that zone.</p>
+                  <p>Cooler blue = rare, hotter red = common.</p>
                 </div>
               </div>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="hitting">
-          <AccordionTrigger>Hitting outcomes</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.entries(hittingResults).sort((a, b) => b[1] - a[1]).map(([r, n]) => (
-                <Badge key={r} variant="secondary">{r} × {n}</Badge>
+        {(category === "all" || category === "hitting") && (
+          <AccordionItem value="discipline">
+            <AccordionTrigger>Plate discipline</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <Stat label="Swing %" value={`${discipline.swingPct}%`} />
+                <Stat label="Chase %" value={`${discipline.chasePct}%`} />
+                <Stat label="Whiff %" value={`${discipline.whiffPct}%`} />
+                <Stat label="Contact %" value={`${discipline.contactPct}%`} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {(category === "all" || category === "hitting") && (
+          <AccordionItem value="hitting">
+            <AccordionTrigger>Hitting outcomes</AccordionTrigger>
+            <AccordionContent>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(hittingResults).sort((a, b) => b[1] - a[1]).map(([r, n]) => (
+                  <Badge key={r} variant="secondary">{r} × {n}</Badge>
+                ))}
+                {Object.keys(hittingResults).length === 0 && <p className="text-xs text-muted-foreground">No at-bats yet.</p>}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {(category === "all" || category === "pitching") && (
+          <AccordionItem value="usage">
+            <AccordionTrigger>Pitcher usage by count</AccordionTrigger>
+            <AccordionContent>
+              {Object.keys(usage).length === 0 && <p className="text-xs text-muted-foreground">No pitcher-perspective pitches yet.</p>}
+              {Object.entries(usage).map(([cnt, types]) => (
+                <div key={cnt} className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0">
+                  <Badge variant="outline" className="w-12 justify-center">{cnt}</Badge>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, n]) => (
+                      <Badge key={t} variant="secondary">{t} × {n}</Badge>
+                    ))}
+                  </div>
+                </div>
               ))}
-              {Object.keys(hittingResults).length === 0 && <p className="text-xs text-muted-foreground">No at-bats yet.</p>}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="defense">
-          <AccordionTrigger>Defense ({defStats.total} plays)</AccordionTrigger>
-          <AccordionContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <Stat label="Total plays" value={String(defStats.total)} />
-              <Stat label="Errors" value={String(defStats.errors)} />
-              <Stat label="Positions" value={String(Object.keys(defStats.byPos).length)} />
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {Object.entries(defStats.byPos).map(([p, n]) => (
-                <Badge key={p} variant="outline">{p} × {n}</Badge>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+        {(category === "all" || category === "defense") && (
+          <AccordionItem value="defense">
+            <AccordionTrigger>Defense ({defStats.total} plays)</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <Stat label="Total plays" value={String(defStats.total)} />
+                <Stat label="Errors" value={String(defStats.errors)} />
+                <Stat label="Positions" value={String(Object.keys(defStats.byPos).length)} />
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {Object.entries(defStats.byPos).map(([p, n]) => (
+                  <Badge key={p} variant="outline">{p} × {n}</Badge>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="baserun">
-          <AccordionTrigger>Baserunning</AccordionTrigger>
-          <AccordionContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <Stat label="Events" value={String(brStats.total)} />
-              <Stat label="Steal attempts" value={String(brStats.steals)} />
-              <Stat label="Steal %" value={`${brStats.stealPct}%`} />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+        {(category === "all" || category === "baserunning") && (
+          <AccordionItem value="baserun">
+            <AccordionTrigger>Baserunning</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <Stat label="Events" value={String(brStats.total)} />
+                <Stat label="Steal attempts" value={String(brStats.steals)} />
+                <Stat label="Steal %" value={`${brStats.stealPct}%`} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
       </Accordion>
     </div>
   );
