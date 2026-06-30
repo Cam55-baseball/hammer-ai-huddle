@@ -3,6 +3,8 @@
 // calendar events using Lovable AI. AI is interpretive only — the client
 // persists rows after explicit athlete review.
 
+import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
