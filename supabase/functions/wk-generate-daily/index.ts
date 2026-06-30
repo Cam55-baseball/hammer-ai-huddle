@@ -120,9 +120,10 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Determine reductions --------
     const reductions: { reason: string; detail: string }[] = [];
     let cnsCap = block.cns_unit_cap;
-    const sleep = Number(dailyLog?.sleep_hours ?? 7);
-    const cnsReadiness = Number(dailyLog?.cns_readiness ?? 7); // 1..10
-    const soreness = Number(dailyLog?.soreness ?? 3);
+    const dl: any = dailyLog ?? {};
+    const sleep = Number(dl.sleep_hours ?? dl.sleep ?? 7);
+    const cnsReadiness = Number(dl.cns_readiness ?? dl.readiness ?? 7);
+    const soreness = Number(dl.soreness ?? 3);
     if (sleep < 6) {
       reductions.push({ reason: "sleep", detail: `Only ${sleep}h sleep — high-CNS work reduced.` });
       cnsCap = Math.max(1, cnsCap - 1);
