@@ -181,7 +181,7 @@ export function PregamePlanPanel({ role, dossierId, sport, archetype, videoUrls,
         </Button>
 
         {generate.data && (
-          <PlanView plan_json={generate.data.plan_json} markdown={generate.data.plan_markdown} />
+          <PlanView plan_json={generate.data.plan_json} markdown={generate.data.plan_markdown} sport={sport} />
         )}
       </Card>
 
