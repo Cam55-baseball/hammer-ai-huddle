@@ -13,6 +13,7 @@
  * deterministic per request.
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { startHeartbeat } from "../_shared/withHeartbeat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,10 +79,12 @@ CANONICAL_NEXT_STEP = ${nextJson}${focusBlock}`;
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const hb = startHeartbeat("hammer-chat", { intervalMs: 6_000 });
   try {
     const body: RequestBody = await req.json();
     const messages = Array.isArray(body.messages) ? body.messages : [];
     if (messages.length === 0) {
+      await hb.fail(new Error("messages_required"));
       return new Response(JSON.stringify({ error: "messages_required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -90,6 +93,7 @@ serve(async (req) => {
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
+      await hb.fail(new Error("missing_lovable_api_key"));
       return new Response(JSON.stringify({ error: "missing_lovable_api_key" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -120,6 +124,7 @@ serve(async (req) => {
 
     if (!resp.ok) {
       const text = await resp.text();
+      await hb.fail(new Error(`ai_gateway_${resp.status}`), { detail: text.slice(0, 200) });
       return new Response(JSON.stringify({ error: "ai_gateway_error", detail: text.slice(0, 400) }), {
         status: resp.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -131,10 +136,12 @@ serve(async (req) => {
       data?.choices?.[0]?.message?.content ??
       "I don't have enough to say yet — tell me what's going on and I'll work with you.";
 
+    await hb.success({ message_count: messages.length, reply_length: reply.length });
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    await hb.fail(e);
     return new Response(
       JSON.stringify({ error: "unexpected", detail: e instanceof Error ? e.message : String(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

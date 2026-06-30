@@ -26,6 +26,7 @@ import { TopicPanel } from "@/components/progress/TopicPanel";
 import { GpInGameSummaryCard } from "@/components/progress/GpInGameSummaryCard";
 import { IqInsightCard } from "@/components/progress/IqInsightCard";
 import { SideSplitsSection } from "@/components/progress/SideSplitsSection";
+import { DriftMarkersCard } from "@/components/progress/DriftMarkersCard";
 import { PitchingPanel } from "@/components/progress/panels/PitchingPanel";
 import { ReadinessPanel } from "@/components/progress/panels/ReadinessPanel";
 import { WorkloadPanel } from "@/components/progress/panels/WorkloadPanel";
@@ -206,6 +207,8 @@ export default function ProgressLanding() {
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
 
         <GpInGameSummaryCard />
+
+        <DriftMarkersCard />
 
         <IqInsightCard />
 

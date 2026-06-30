@@ -16,6 +16,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { startHeartbeat } from "../_shared/withHeartbeat.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -50,9 +51,11 @@ Rules:
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  const hb = startHeartbeat("gp-ingest-document", { intervalMs: 8_000 });
   try {
     const { documentId, gameId, sport, bucket, path } = await req.json();
     if (!documentId || !gameId || !bucket || !path) {
+      await hb.fail(new Error("missing fields"));
       return json({ error: "missing fields" }, 400);
     }
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -179,9 +182,11 @@ serve(async (req) => {
       parsed_events: { summary, failures: failed.length, raw: parsed },
     }).eq("id", documentId);
 
+    await hb.success({ ...summary, failures: failed.length, document_id: documentId });
     return json({ summary, failures: failed.length });
   } catch (e) {
     console.error("[gp-ingest-document]", e);
+    await hb.fail(e, { document_id: undefined });
     return json({ error: String(e?.message ?? e) }, 500);
   }
 });

@@ -3,6 +3,8 @@
 // calendar events using Lovable AI. AI is interpretive only — the client
 // persists rows after explicit athlete review.
 
+import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -82,9 +84,11 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const hb = startHeartbeat("parse-season-schedule", { intervalMs: 6_000 });
   try {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
+      await hb.fail(new Error("AI service not configured"));
       return json({ error: "AI service not configured" }, 500);
     }
 
@@ -156,9 +160,11 @@ Deno.serve(async (req) => {
     }
 
     const events = Array.isArray(parsed.events) ? parsed.events.slice(0, 200) : [];
+    await hb.success({ event_count: events.length, mode: body.mode });
     return json({ events, model: MODEL });
   } catch (e) {
     console.error("[parse-season-schedule] fatal:", e);
+    await hb.fail(e);
     return json(
       { error: e instanceof Error ? e.message : "Unknown error" },
       500,

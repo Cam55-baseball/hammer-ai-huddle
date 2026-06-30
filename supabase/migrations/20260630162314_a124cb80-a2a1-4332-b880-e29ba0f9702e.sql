@@ -1,0 +1,18 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_games TO authenticated;
+GRANT ALL ON public.gp_games TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_at_bats TO authenticated;
+GRANT ALL ON public.gp_at_bats TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_pitches TO authenticated;
+GRANT ALL ON public.gp_pitches TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_defense_plays TO authenticated;
+GRANT ALL ON public.gp_defense_plays TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_baserun_events TO authenticated;
+GRANT ALL ON public.gp_baserun_events TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_subs TO authenticated;
+GRANT ALL ON public.gp_subs TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_documents TO authenticated;
+GRANT ALL ON public.gp_documents TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_opponent_hitters TO authenticated;
+GRANT ALL ON public.gp_opponent_hitters TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.gp_pitcher_dossiers TO authenticated;
+GRANT ALL ON public.gp_pitcher_dossiers TO service_role;
