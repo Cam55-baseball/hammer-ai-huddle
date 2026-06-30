@@ -1,13 +1,15 @@
 /**
- * AdminPeriodization — owner-tunable phase-block dosing for wk_phase_blocks.
+ * AdminPeriodization — owner-tunable phase-block dosing for `wk_periodization_blocks`.
  *
- * Lets a privileged user (admins or themselves) override the 4-quarter
- * offseason + in-season + post-season targets used by `wk-generate-daily`.
- * No-op-safe: simply edits rows in `wk_phase_blocks` keyed by `(user_id, phase)`.
+ * The phase blocks are GLOBAL (one row per `phase`) — they describe how the
+ * `wk-generate-daily` engine doses each phase of the 4-quarter offseason +
+ * in-season + post-season model for every athlete on the platform.
+ *
+ * Gated behind `useOwnerAccess` so only an owner role can tune the engine.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,22 +17,22 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Save } from "lucide-react";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 
 type PhaseRow = {
   id?: string;
-  user_id?: string;
   phase: string;
-  compound_sets: number;
-  compound_reps_low: number;
-  compound_reps_high: number;
-  supplemental_sets: number;
-  speed_interval_hours: number;
-  cns_unit_cap: number;
-  lift_style: string;
-  supplemental_style: string;
-  conditioning_focus: string;
+  display_name?: string | null;
+  compound_style?: string | null;
+  supplemental_style?: string | null;
+  speed_cadence_hours?: number | null;
+  cross_sport_cadence?: string | null;
+  compound_min_sets?: number | null;
+  compound_max_sets?: number | null;
+  compound_min_reps?: number | null;
+  compound_max_reps?: number | null;
+  cns_unit_cap?: number | null;
+  notes?: string | null;
 };
 
 const PHASES = [
@@ -42,71 +44,90 @@ const PHASES = [
   { key: "post_season", label: "Post-Season — Restorative" },
 ];
 
+function seedFor(phase: string): PhaseRow {
+  const inSeason = phase === "in_season";
+  const earlyOff = phase === "off_q1" || phase === "off_q2";
+  const lateOff = phase === "off_q3" || phase === "off_q4";
+  return {
+    phase,
+    display_name: PHASES.find((p) => p.key === phase)?.label ?? phase,
+    compound_style: inSeason
+      ? "concentric"
+      : lateOff
+        ? "eccentric"
+        : "double_eccentric",
+    supplemental_style: earlyOff ? "kot_full_rom" : "functional_patterning",
+    speed_cadence_hours: earlyOff ? 48 : inSeason ? 96 : 72,
+    cross_sport_cadence: "daily",
+    compound_min_sets: inSeason ? 2 : 3,
+    compound_max_sets: inSeason ? 3 : 5,
+    compound_min_reps: 2,
+    compound_max_reps: 5,
+    cns_unit_cap: inSeason ? 6 : 9,
+    notes: null,
+  };
+}
+
 export default function AdminPeriodization() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const [rows, setRows] = useState<Record<string, PhaseRow>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (ownerLoading || !isOwner) return;
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("wk_phase_blocks" as any)
-        .select("*")
-        .eq("user_id", user.id);
+        .from("wk_periodization_blocks" as any)
+        .select("*");
       if (error) {
         toast.error("Could not load phase blocks");
         setLoading(false);
         return;
       }
       const map: Record<string, PhaseRow> = {};
-      (data ?? []).forEach((r: any) => { map[r.phase] = r as PhaseRow; });
-      // Seed defaults for any missing phase.
-      PHASES.forEach((p) => {
-        if (!map[p.key]) {
-          map[p.key] = {
-            phase: p.key,
-            compound_sets: p.key === "in_season" ? 3 : 4,
-            compound_reps_low: 2,
-            compound_reps_high: 5,
-            supplemental_sets: 3,
-            speed_interval_hours: p.key.startsWith("off_q1") || p.key === "off_q2" ? 48 : p.key === "in_season" ? 96 : 72,
-            cns_unit_cap: p.key === "in_season" ? 6 : 9,
-            lift_style: p.key === "in_season" ? "concentric" : p.key.startsWith("off_q3") || p.key === "off_q4" ? "eccentric" : "double_eccentric",
-            supplemental_style: p.key.startsWith("off_q1") || p.key === "off_q2" ? "kot_full_rom" : "functional_patterning",
-            conditioning_focus: p.key === "in_season" ? "inning_restart_intervals" : "aerobic_base_plus_cross_sport",
-          };
-        }
-      });
+      ((data ?? []) as any[]).forEach((r) => { map[r.phase] = r as PhaseRow; });
+      PHASES.forEach((p) => { if (!map[p.key]) map[p.key] = seedFor(p.key); });
       setRows(map);
       setLoading(false);
     })();
-  }, [user?.id]);
+  }, [isOwner, ownerLoading]);
 
   const save = async (phase: string) => {
-    if (!user?.id) return;
     setSaving(phase);
     const row = rows[phase];
     const { error } = await supabase
-      .from("wk_phase_blocks" as any)
-      .upsert(
-        { ...row, user_id: user.id, phase },
-        { onConflict: "user_id,phase" },
-      );
+      .from("wk_periodization_blocks" as any)
+      .upsert({ ...row, phase }, { onConflict: "phase" });
     setSaving(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success(`Saved ${phase}`);
   };
 
   const upd = (phase: string, patch: Partial<PhaseRow>) =>
     setRows((m) => ({ ...m, [phase]: { ...m[phase], ...patch } }));
 
-  const navigate = useNavigate();
+  if (ownerLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  }
+  if (!isOwner) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center">
+        <Lock className="h-6 w-6 text-muted-foreground" />
+        <div className="text-sm font-medium">Owner access required</div>
+        <p className="text-xs text-muted-foreground max-w-sm">
+          Periodization tuning is restricted to platform owners. Contact your administrator
+          if you need to adjust engine dosing.
+        </p>
+        <Button size="sm" variant="outline" onClick={() => navigate(-1)} className="gap-1">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto p-4 space-y-3">
@@ -117,8 +138,8 @@ export default function AdminPeriodization() {
           <h1 className="text-xl font-bold">Periodization tuning</h1>
           <p className="text-xs text-muted-foreground">
             Adjust the dosing the engine uses each phase. Quarters auto-resolve
-            from your Season Dates; these numbers control sets, reps, CNS caps,
-            speed cadence and styles per quarter.
+            from Season Dates; these numbers control sets, reps, CNS caps,
+            speed cadence and styles per quarter — globally across the platform.
           </p>
         </div>
         {loading ? (
@@ -136,15 +157,15 @@ export default function AdminPeriodization() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                  <NumField label="Compound sets" value={r.compound_sets} onChange={(v) => upd(p.key, { compound_sets: v })} />
-                  <NumField label="Reps low" value={r.compound_reps_low} onChange={(v) => upd(p.key, { compound_reps_low: v })} />
-                  <NumField label="Reps high" value={r.compound_reps_high} onChange={(v) => upd(p.key, { compound_reps_high: v })} />
-                  <NumField label="Supplemental sets" value={r.supplemental_sets} onChange={(v) => upd(p.key, { supplemental_sets: v })} />
-                  <NumField label="Speed every (h)" value={r.speed_interval_hours} onChange={(v) => upd(p.key, { speed_interval_hours: v })} />
-                  <NumField label="CNS cap" value={r.cns_unit_cap} onChange={(v) => upd(p.key, { cns_unit_cap: v })} />
-                  <TextField label="Lift style" value={r.lift_style} onChange={(v) => upd(p.key, { lift_style: v })} />
-                  <TextField label="Supplemental style" value={r.supplemental_style} onChange={(v) => upd(p.key, { supplemental_style: v })} />
-                  <TextField label="Conditioning focus" value={r.conditioning_focus} onChange={(v) => upd(p.key, { conditioning_focus: v })} />
+                  <NumField label="Compound min sets" value={r.compound_min_sets ?? 0} onChange={(v) => upd(p.key, { compound_min_sets: v })} />
+                  <NumField label="Compound max sets" value={r.compound_max_sets ?? 0} onChange={(v) => upd(p.key, { compound_max_sets: v })} />
+                  <NumField label="Reps low" value={r.compound_min_reps ?? 0} onChange={(v) => upd(p.key, { compound_min_reps: v })} />
+                  <NumField label="Reps high" value={r.compound_max_reps ?? 0} onChange={(v) => upd(p.key, { compound_max_reps: v })} />
+                  <NumField label="Speed every (h)" value={r.speed_cadence_hours ?? 0} onChange={(v) => upd(p.key, { speed_cadence_hours: v })} />
+                  <NumField label="CNS cap" value={r.cns_unit_cap ?? 0} onChange={(v) => upd(p.key, { cns_unit_cap: v })} />
+                  <TextField label="Compound style" value={r.compound_style ?? ""} onChange={(v) => upd(p.key, { compound_style: v })} />
+                  <TextField label="Supplemental style" value={r.supplemental_style ?? ""} onChange={(v) => upd(p.key, { supplemental_style: v })} />
+                  <TextField label="Cross-sport cadence" value={r.cross_sport_cadence ?? ""} onChange={(v) => upd(p.key, { cross_sport_cadence: v })} />
                   <div className="col-span-2 md:col-span-3 flex justify-end">
                     <Button size="sm" onClick={() => save(p.key)} disabled={saving === p.key} className="gap-1">
                       {saving === p.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}

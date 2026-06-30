@@ -8,10 +8,11 @@
  *   - Recovery-responsibility ack drawer when reductions trigger
  *   - One WkPrescriptionCard per movement with full transparency payload
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dumbbell, Wind, RefreshCw, ArrowUpDown, AlertTriangle, Loader2 } from "lucide-react";
 import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
@@ -19,12 +20,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const SEQ_KEY = "wk:batBeforeLifts";
+
 export function WkLiftsSpeedSection() {
   const { user } = useAuth();
   const { grouped, reductions, phaseDisplay, generate, generating, isLoading, data } = useWkDailyPrescriptions();
-  const [batBeforeLifts, setBatBeforeLifts] = useState(true);
+  const [batBeforeLifts, setBatBeforeLifts] = useState<boolean>(() => {
+    try { return localStorage.getItem(SEQ_KEY) !== "0"; } catch { return true; }
+  });
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(SEQ_KEY, batBeforeLifts ? "1" : "0"); } catch {}
+  }, [batBeforeLifts]);
 
   const ordered = useMemo(() => {
     if (batBeforeLifts) {
@@ -138,9 +147,14 @@ export function WkLiftsSpeedSection() {
         </div>
 
         {isLoading || (data && data.length === 0 && generating) ? (
-          <div className="text-xs text-muted-foreground py-4 text-center">
-            <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-            Generating today's elite plan…
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full rounded" />
+            <Skeleton className="h-16 w-full rounded" />
+            <Skeleton className="h-16 w-full rounded" />
+            <div className="text-[11px] text-muted-foreground text-center pt-1">
+              <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
+              Building your elite plan…
+            </div>
           </div>
         ) : ordered.length === 0 ? (
           <div className="text-xs text-muted-foreground py-4 text-center">
