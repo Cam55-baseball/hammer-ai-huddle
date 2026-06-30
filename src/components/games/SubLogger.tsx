@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
+import { RepCard } from "./RepCard";
+
 
 const TYPES = ["pinch_hit","pinch_run","def_replace","relief","position_swap","dh"];
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF","DH"];
