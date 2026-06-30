@@ -65,9 +65,17 @@ export function AtBatPitchPanel({ gameId, atBatId, inning, onTerminal }: Props) 
   };
 
   const handleDelete = (id: string) => {
+    const prev = (list.data ?? []).find((p) => p.id === id) ?? null;
     del.mutate(id, {
       onSuccess: () => {
-        toast.success("Pitch removed");
+        showUndoToast({
+          label: "Pitch removed",
+          undo: async () => {
+            if (!prev) return;
+            const { id: _id, created_at: _ca, pitch_no: _pn, ...restore } = prev as any;
+            await add.mutateAsync(restore);
+          },
+        });
       },
     });
   };
