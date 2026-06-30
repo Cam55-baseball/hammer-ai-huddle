@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Check, X as XIcon } from "lucide-react";
+import { Plus, Trash2, Check, X as XIcon, Footprints } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { showUndoToast } from "@/lib/games/undoToast";
 
 const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
@@ -38,28 +39,54 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
     },
   });
 
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["gp-run", gameId] });
+
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
-      const { error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("gp_baserun_events")
-        .insert({ ...row, user_id: user!.id, game_id: gameId });
+        .insert({ ...row, user_id: user!.id, game_id: gameId })
+        .select("id")
+        .single();
       if (error) throw error;
+      return data?.id as string | undefined;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gp-run", gameId] });
+    onSuccess: (id) => {
+      invalidate();
       setShow(false);
-      toast.success("Baserun event saved");
+      showUndoToast({
+        label: "Baserun event saved",
+        undo: async () => {
+          if (id) {
+            await (supabase as any).from("gp_baserun_events").delete().eq("id", id);
+            invalidate();
+          }
+        },
+      });
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => {
+      const prev = (list.data ?? []).find((r: any) => r.id === id) ?? null;
       const { error } = await (supabase as any)
         .from("gp_baserun_events").delete().eq("id", id);
       if (error) throw error;
+      return prev;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["gp-run", gameId] }),
+    onSuccess: (prev) => {
+      invalidate();
+      showUndoToast({
+        label: "Baserun event deleted",
+        undo: async () => {
+          if (!prev) return;
+          const { id: _i, created_at: _c, ...restore } = prev as any;
+          await (supabase as any).from("gp_baserun_events").insert(restore);
+          invalidate();
+        },
+      });
+    },
   });
 
   return (
@@ -74,6 +101,16 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
       </div>
 
       {show && <RunForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
+
+      {(list.data ?? []).length === 0 && !show && (
+        <Card className="p-5 text-center bg-muted/20 border-dashed">
+          <Footprints className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm font-medium">No baserun events yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Log steals, dirtball reads, pickoffs, tag-ups. Lead steps + pitcher time-to-home build your read-ability dossier.
+          </p>
+        </Card>
+      )}
 
       <div className="space-y-2">
         {(list.data ?? []).map((r) => (

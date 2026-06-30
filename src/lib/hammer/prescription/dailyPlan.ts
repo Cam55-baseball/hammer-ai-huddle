@@ -1138,6 +1138,8 @@ export interface HammerDailyPlanResult {
   readonly schedulePosture: SchedulePosture;
   readonly scheduleSignal: ScheduleSignal;
   readonly sideBias: SideBiasForPlan | null;
+  /** Rolling 7d game-performance bias tags applied to today's ordering. */
+  readonly gpBiasTags: ReadonlyArray<string>;
 }
 
 
@@ -1390,10 +1392,95 @@ function applySideBias(
   });
 }
 
+/**
+ * GpSignalForPlan — minimal rolling 7d game-performance projection consumed
+ * by the planner. Mirrors `GpSignal` (src/hooks/useGpSignal.ts) but kept as
+ * an inline interface so dailyPlan.ts has zero React-hook coupling and stays
+ * pure / replay-safe under test.
+ *
+ * Interpretive only — never authors organism truth, never removes blocks,
+ * never overrides schedule suppression or injury ceilings.
+ */
+export interface GpSignalForPlan {
+  readonly chasePct: number | null;       // 0–100 integer
+  readonly whiffPct: number | null;       // 0–100 integer
+  readonly miscueClusters: ReadonlyArray<{ position: string; errors: number }>;
+  readonly atBats: number;
+  readonly pitchesSeen: number;
+  readonly defensivePlays: number;
+}
+
+/**
+ * Bias rider: re-order ready blocks so modalities the rolling 7d signal
+ * flags get nudged to the front, and append a one-line rationale cue.
+ * Suppressed blocks are NEVER unsuppressed; ordering of suppressed tail
+ * is preserved; no block is removed; no volume ceiling is exceeded
+ * (we add cues, not extra drill sets).
+ */
+function applyGpSignalBias(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  gp: GpSignalForPlan | null,
+): { blocks: ReadonlyArray<PrescribedBlock>; tags: string[] } {
+  if (!gp) return { blocks, tags: [] };
+  // Confidence floor: skip entirely if the window is too thin to act on.
+  const enoughHittingSignal = gp.atBats >= 6 || gp.pitchesSeen >= 20;
+  const enoughDefenseSignal = gp.defensivePlays >= 6;
+  const tags: string[] = [];
+  const biased = new Set<ModalityKey>();
+
+  const annotated = blocks.map((b) => {
+    if (b.status === "suppressed") return b;
+    const extraCues: string[] = [];
+    if (
+      b.modality === "game_iq" &&
+      enoughHittingSignal &&
+      gp.chasePct !== null &&
+      gp.chasePct >= 32
+    ) {
+      extraCues.push(`Last 7d chase ${gp.chasePct}% — bias pitch-recognition reps today.`);
+      biased.add("game_iq");
+      tags.push(`gp:chase:${gp.chasePct}`);
+    }
+    if (
+      b.modality === "hitting" &&
+      enoughHittingSignal &&
+      gp.whiffPct !== null &&
+      gp.whiffPct >= 28
+    ) {
+      extraCues.push(`Last 7d whiff ${gp.whiffPct}% on swings — bat-path / contact emphasis.`);
+      biased.add("hitting");
+      tags.push(`gp:whiff:${gp.whiffPct}`);
+    }
+    if (
+      b.modality === "defense" &&
+      enoughDefenseSignal &&
+      gp.miscueClusters.length > 0
+    ) {
+      const lead = gp.miscueClusters[0];
+      extraCues.push(`${lead.errors} errors at ${lead.position} in last 7d — first-step / glove-side reps.`);
+      biased.add("defense");
+      tags.push(`gp:def:${lead.position}`);
+    }
+    if (extraCues.length === 0) return b;
+    return { ...b, cues: [...b.cues, ...extraCues] };
+  });
+
+  if (biased.size === 0) return { blocks: annotated, tags };
+
+  // Stable re-order: biased ready blocks first, other ready blocks next,
+  // suppressed blocks last (preserving their relative order).
+  const ready = annotated.filter((b) => b.status !== "suppressed");
+  const suppressed = annotated.filter((b) => b.status === "suppressed");
+  const biasedReady = ready.filter((b) => biased.has(b.modality));
+  const otherReady = ready.filter((b) => !biased.has(b.modality));
+  return { blocks: [...biasedReady, ...otherReady, ...suppressed], tags };
+}
+
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
   scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
   sideBias: SideBiasForPlan | null = null,
+  gpSignal: GpSignalForPlan | null = null,
 ): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
@@ -1406,9 +1493,13 @@ export function buildHammerDailyPlan(
   // further effect — those were already applied above and remain
   // dominant because suppressed blocks stay suppressed.
   const modulated = applyScheduleModulation(ordered, scheduleSignal);
-  // Side-bias rider runs LAST so suppressed blocks remain suppressed
+  // Side-bias rider runs after schedule so suppressed blocks remain suppressed
   // (no extra reps stacked on a game/tournament/injury suppression).
-  const blocks = applySideBias(modulated, sideBias);
+  const sided = applySideBias(modulated, sideBias);
+  // GP-signal bias runs LAST so it never overrides schedule suppression,
+  // injury ceilings, parent-supremacy, goal ordering, or side bias; it only
+  // promotes a few modalities to the front of the ready set + adds cues.
+  const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
   // Lineage breadcrumb (dev-only, harmless in prod): summarises which ranking drove ordering.
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -1420,6 +1511,10 @@ export function buildHammerDailyPlan(
       `[dailyPlan] schedule posture=${scheduleSignal.postureToday} — ${scheduleSignal.rationale}`,
     );
   }
+  if (gpBiasTags.length > 0 && typeof console !== "undefined" && import.meta.env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
+  }
   return {
     blocks,
     seasonPhase: proj.seasonPhase,
@@ -1428,6 +1523,8 @@ export function buildHammerDailyPlan(
     schedulePosture: scheduleSignal.postureToday,
     scheduleSignal,
     sideBias,
+    gpBiasTags,
   };
 }
+
 

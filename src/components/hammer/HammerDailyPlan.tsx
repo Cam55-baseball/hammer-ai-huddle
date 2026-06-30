@@ -59,6 +59,7 @@ import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
+import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
@@ -113,9 +114,29 @@ export function HammerDailyPlan() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [ctx],
   );
+  const gpSig = useGpSignal();
+  // Stable projection — avoid re-running planner on advisory-array identity changes.
+  const gpForPlan = useMemo(
+    () => ({
+      chasePct: gpSig.chasePct,
+      whiffPct: gpSig.whiffPct,
+      miscueClusters: gpSig.miscueClusters,
+      atBats: gpSig.atBats,
+      pitchesSeen: gpSig.pitchesSeen,
+      defensivePlays: gpSig.defensivePlays,
+    }),
+    [
+      gpSig.chasePct,
+      gpSig.whiffPct,
+      gpSig.miscueClusters,
+      gpSig.atBats,
+      gpSig.pitchesSeen,
+      gpSig.defensivePlays,
+    ],
+  );
   const plan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias),
-    [ctx, scheduleSignal, sideBias],
+    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan),
+    [ctx, scheduleSignal, sideBias, gpForPlan],
   );
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
@@ -145,6 +166,15 @@ export function HammerDailyPlan() {
                           : plan.schedulePosture === "travel"
                             ? "Travel day"
                             : plan.schedulePosture}
+              </Badge>
+            )}
+            {plan.gpBiasTags.length > 0 && (
+              <Badge
+                variant="outline"
+                className="text-[10px] border-amber-400/60 text-amber-700 dark:text-amber-300"
+                title={`Today's order reflects your last 7d of games: ${plan.gpBiasTags.join(", ")}`}
+              >
+                Game-shaped
               </Badge>
             )}
             {plan.missingnessCount > 0 && (

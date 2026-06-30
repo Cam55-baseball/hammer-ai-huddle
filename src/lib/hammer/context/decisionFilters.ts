@@ -435,9 +435,19 @@ export interface OrderedMilestone<T extends RoadmapMilestoneView> {
   readonly reasons: ReadonlyArray<string>;
 }
 
+/** Minimal rolling 7d game-performance hint for roadmap ordering. */
+export interface RoadmapGpHint {
+  readonly chasePct: number | null;
+  readonly whiffPct: number | null;
+  readonly miscueClusters: ReadonlyArray<{ position: string; errors: number }>;
+  readonly atBats: number;
+  readonly defensivePlays: number;
+}
+
 export function orderRoadmapMilestones<T extends RoadmapMilestoneView>(
   milestones: ReadonlyArray<T>,
   proj: AthleteContextProjection,
+  gp?: RoadmapGpHint | null,
 ): ReadonlyArray<OrderedMilestone<T>> {
   return milestones
     .map((m) => {
@@ -491,6 +501,35 @@ export function orderRoadmapMilestones<T extends RoadmapMilestoneView>(
       if (proj.seasonPhase === "off" && hay.includes("base")) {
         score += 10;
         reasons.push("offseason-emphasize-base");
+      }
+
+      // GP-signal tie-breaker bias (additive, small, never suppresses).
+      // Only applies if window is non-trivial; skipped when signal is null.
+      if (gp) {
+        if (
+          (gp.atBats >= 6) &&
+          gp.chasePct !== null && gp.chasePct >= 32 &&
+          /(pitch_recognition|chase|tex_vision|game_iq|plate_discipline)/.test(hay)
+        ) {
+          score += 6;
+          reasons.push(`gp-chase+${gp.chasePct}`);
+        }
+        if (
+          (gp.atBats >= 6) &&
+          gp.whiffPct !== null && gp.whiffPct >= 28 &&
+          /(bat_path|contact|hitting|swing)/.test(hay)
+        ) {
+          score += 6;
+          reasons.push(`gp-whiff+${gp.whiffPct}`);
+        }
+        if (
+          gp.defensivePlays >= 6 &&
+          gp.miscueClusters.length > 0 &&
+          /(defense|fielding|glove|first_step)/.test(hay)
+        ) {
+          score += 6;
+          reasons.push(`gp-def+${gp.miscueClusters[0].position}`);
+        }
       }
 
       return { milestone: m, score, suppressed, reasons };
