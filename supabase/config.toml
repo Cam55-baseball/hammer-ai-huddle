@@ -269,3 +269,7 @@ verify_jwt = true
 
 [functions.gp-analyze-ab-swing]
 verify_jwt = true
+
+[functions.gp-update-priors]
+verify_jwt = false
+
