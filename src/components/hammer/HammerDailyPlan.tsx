@@ -59,6 +59,7 @@ import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
+import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
@@ -113,9 +114,29 @@ export function HammerDailyPlan() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [ctx],
   );
+  const gpSig = useGpSignal();
+  // Stable projection — avoid re-running planner on advisory-array identity changes.
+  const gpForPlan = useMemo(
+    () => ({
+      chasePct: gpSig.chasePct,
+      whiffPct: gpSig.whiffPct,
+      miscueClusters: gpSig.miscueClusters,
+      atBats: gpSig.atBats,
+      pitchesSeen: gpSig.pitchesSeen,
+      defensivePlays: gpSig.defensivePlays,
+    }),
+    [
+      gpSig.chasePct,
+      gpSig.whiffPct,
+      gpSig.miscueClusters,
+      gpSig.atBats,
+      gpSig.pitchesSeen,
+      gpSig.defensivePlays,
+    ],
+  );
   const plan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias),
-    [ctx, scheduleSignal, sideBias],
+    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan),
+    [ctx, scheduleSignal, sideBias, gpForPlan],
   );
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
