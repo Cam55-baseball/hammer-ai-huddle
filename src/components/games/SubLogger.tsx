@@ -4,24 +4,24 @@
  */
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
-import { RepCard } from "./RepCard";
+import { RepCard, RepKeyboardHints } from "./RepCard";
 
 
 const TYPES = ["pinch_hit","pinch_run","def_replace","relief","position_swap","dh"];
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF","DH"];
+const LEVERAGE = ["low","medium","high","critical"];
 
 export function SubLogger({ gameId }: { gameId: string }) {
   const { user } = useAuth();
