@@ -106,9 +106,13 @@ export default function AdminPeriodization() {
   const upd = (phase: string, patch: Partial<PhaseRow>) =>
     setRows((m) => ({ ...m, [phase]: { ...m[phase], ...patch } }));
 
+  const navigate = useNavigate();
   return (
-    <AppShell>
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto p-4 space-y-3">
+        <Button variant="ghost" size="sm" className="gap-1 -ml-2" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
         <div>
           <h1 className="text-xl font-bold">Periodization tuning</h1>
           <p className="text-xs text-muted-foreground">
