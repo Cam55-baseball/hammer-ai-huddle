@@ -45,7 +45,7 @@ export function OnboardingResumeBanner() {
       </div>
       <div className="flex items-center gap-1">
         <Link
-          to="/onboarding/athlete"
+          to="/onboarding/athlete?resume=1"
           className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-amber-900 hover:bg-amber-500/20 dark:text-amber-100"
         >
           Resume <ArrowRight className="h-3 w-3" />

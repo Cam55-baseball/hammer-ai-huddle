@@ -18,7 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, ImagePlus, Wand2, Trash2, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useImportScheduleEvents, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
+import { useImportScheduleEvents, undoScheduleImport, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { logPasteImportPhase, watchAuthDuringPasteImport } from "@/lib/auth/authTelemetry";
 import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
@@ -220,7 +220,31 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
     try {
       const summary = await importMutation.mutateAsync(selected);
       if (summary.inserted > 0) {
-        toast.success(`Added ${summary.inserted} event${summary.inserted === 1 ? "" : "s"} to your calendar.`);
+        const undoDeadline = Date.now() + 24 * 60 * 60 * 1000;
+        toast.success(
+          `Added ${summary.inserted} event${summary.inserted === 1 ? "" : "s"} to your calendar.` +
+            (summary.skipped > 0 ? ` (${summary.skipped} duplicate${summary.skipped === 1 ? "" : "s"} skipped.)` : ""),
+          {
+            duration: 12_000,
+            action: {
+              label: "Undo",
+              onClick: async () => {
+                if (Date.now() > undoDeadline) {
+                  toast.error("Undo window expired (24h).");
+                  return;
+                }
+                const res = await undoScheduleImport({
+                  gameIds: summary.insertedGameIds,
+                  sessionIds: summary.insertedSessionIds,
+                });
+                if (res.errors.length) toast.error(`Undo: ${res.errors[0]}`);
+                else toast.success(`Removed ${res.removed} imported event${res.removed === 1 ? "" : "s"}.`);
+              },
+            },
+          },
+        );
+      } else if (summary.skipped > 0) {
+        toast.message(`All ${summary.skipped} event${summary.skipped === 1 ? "" : "s"} already on your calendar.`);
       }
       if (summary.failed > 0) {
         toast.error(`${summary.failed} couldn't be saved. ${summary.errors[0] ?? ""}`);

@@ -1,51 +1,43 @@
-## Deferred Audit Items — Execution Plan
+## Status of the 7 deferred audit items
 
-Shipping the 7 deferred items from the part-2 audit in dependency order. Each slice is independent and shippable.
+| # | Slice | Item | Status |
+|---|---|---|---|
+| 1 | A | RLS sweep + GRANTs on `gp_*` tables | ✅ Shipped (migration applied) |
+| 2 | A | Edge function heartbeats (`withHeartbeat`) | ✅ Shipped on `parse-season-schedule`, `gp-ingest-document`, `hammer-chat`; `analyze-video` already heartbeats |
+| 3 | B | GP → Roadmap deltas | ✅ Shipped (`roadmapDeltas.ts`, `useRoadmapDeltas.ts`) |
+| 4 | B | Side-context heatmaps in `GameReports.tsx` | ❌ Not done |
+| 5 | C | Schedule importer UX (preview/skip/dupe/undo) | ❌ Not done |
+| 6 | C | Onboarding `?resume=<stepId>` deep-link | ❌ Not done |
+| 7 | C | Drift markers card | ✅ Shipped (`DriftMarkersCard` mounted in `ProgressLanding`) |
 
-### Slice A — Backend hardening (data integrity first)
+**Honest answer: No — 4 of 7 shipped, 3 still open** (#4 side heatmaps, #5 importer UX, #6 onboarding deep-link).
 
-**1. RLS sweep on `gp_*` tables**
-- Audit policies on `gp_games`, `gp_at_bats`, `gp_pitches`, `gp_defense_plays`, `gp_baserun_events`, `gp_subs`, `gp_documents`, `gp_opponent_hitters`, `gp_pitcher_dossiers` (each currently shows 1 policy — likely permissive or missing per-action coverage).
-- Ensure every table has: owner-scoped SELECT/INSERT/UPDATE/DELETE via `auth.uid() = user_id`, plus `service_role` ALL, plus GRANTs.
-- Single migration, additive policies only (no destructive drops unless a policy is plainly wrong).
+## Proposed plan to finish E2E
 
-**2. Edge function heartbeats**
-- Add heartbeat emission to long-running edge functions (video analysis, schedule importer, scorebook ingest, ask-hammer) so the client's stale-chunk / timeout guards have a signal source.
-- Standardize via a tiny `withHeartbeat()` helper in each function; client `useHeartbeat` already exists from prior analysis fix.
+**#4 — Side-context heatmaps**
+- Read active `SideContext` (L/R) in `GameReports.tsx`.
+- Split spray/contact/pitch-location maps into hitter-side and pitcher-side panels; add a small toggle to view "All / L / R".
+- Pure presentation — no schema changes.
 
-### Slice B — Intelligence wiring
+**#5 — Schedule importer UX**
+- Extend `SeasonScheduleImporterDialog` with a 2-step flow: (1) AI parse → preview table with per-row edit + skip toggle, (2) commit.
+- Duplicate detection: query `gp_games` + `calendar_events` by `(date, opponent)` before commit; mark dupes with skip-default.
+- Success summary with 24h undo (store last batch id in localStorage; "Undo last import" deletes batch).
 
-**3. GP → Roadmap deltas**
-- `useRoadmapProgress.ts` already consumes `gpSignal`. Add explicit delta surfacing: when a game logs reveal a new weakness (e.g., breaking-ball whiff rate ↑, pop-time ↓), emit a roadmap milestone delta visible in The General + Hammer Daily Plan "Why today" line.
-- New: `src/lib/gp/roadmapDeltas.ts` + integration into `dailyPlan.ts` reasoning trace.
+**#6 — Onboarding deep-link**
+- `OnboardingResumeBanner` reads `?resume=<stepId>` and jumps directly to that step.
+- Update `UserMenu.tsx` "Setup" badge href + email/CTA links to include the unfinished step id (e.g. `?resume=injury`).
+- Map: `injury`, `categoryGoals`, `review`, etc.
 
-**4. Side-context heatmaps**
-- Extend `GameReports.tsx` heat maps to honor the active `SideContext` (L/R) — split spray/contact/pitch-location maps by hitter side and pitcher side.
-- Pure presentation change to existing heatmap component.
-
-### Slice C — UX polish
-
-**5. Schedule importer UX**
-- `SeasonScheduleImporterDialog`: add (a) preview-before-commit step showing parsed events with edit-in-place, (b) per-row skip toggle, (c) duplicate detection against existing `gp_games` + `calendar_events`, (d) success summary with undo (24h).
-
-**6. Onboarding deep-link**
-- `OnboardingResumeBanner` already exists. Add `?resume=<stepId>` deep-link support so emails / "Setup" badge can jump straight to the unfinished step (Injury, CategoryGoals, Review, etc.).
-- Wire into `UserMenu.tsx` Setup badge and the resume banner CTA.
-
-**7. Drift markers**
-- Surface "drift markers" in The General: visible flags when a user's logged reality (gp signals, side differential, injury status) diverges from their stated goals/onboarding answers — with a one-tap "reconcile" that opens the relevant editor.
-- New: `src/lib/general/driftMarkers.ts` + `DriftMarkersCard.tsx` rendered in `ProgressLanding.tsx`.
-
-### Order of shipment
-
-1. Slice A (#1 RLS migration → #2 heartbeats) — foundational, isolated
-2. Slice B (#3 deltas → #4 side heatmaps) — depends on stable data layer
-3. Slice C (#5 importer → #6 deep-link → #7 drift) — pure UX, ships last
+**Verification per item**
+- #4: visual check in Game Reports with a switch-hitter game logged.
+- #5: paste a sample schedule, confirm preview edits + dupe-skip + undo.
+- #6: open `/onboarding?resume=injury` from a fresh tab, confirm jump.
+- Re-run `bash scripts/preflight.sh` + `bunx tsgo --noEmit`.
 
 ### Out of scope
-
-- No schema changes beyond RLS adjustments unless a column is plainly missing.
 - No new tables.
-- Drift markers are read-only signals — no auto-mutation of user data.
+- No changes to `gp_*` schema.
+- Drift markers card stays read-only.
 
-Approve and I'll start with Slice A (RLS migration first, since it requires user approval before code can land on it).
+Approve and I'll ship #4 → #5 → #6 in that order.
