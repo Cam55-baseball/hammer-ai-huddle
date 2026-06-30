@@ -204,16 +204,11 @@ function GameSheetTabs({
         </TabsContent>
       )}
 
-      {!isToday && (
-        <TabsContent value="overview" className="pt-4 space-y-4">
-          <ActivePlanCard gameId={gameId} game={g} />
-        </TabsContent>
-      )}
-
-
       <TabsContent value="overview" className="space-y-4 pt-4">
+        <ActivePlanCard gameId={gameId} game={g} />
         <OverviewPanel game={g} onPatch={onPatch} />
       </TabsContent>
+
 
       <TabsContent value="atbats" className="pt-4">
         <AtBatLogger gameId={gameId} sport={g.sport} />
