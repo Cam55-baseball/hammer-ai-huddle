@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { StrikeZonePlanner } from "./StrikeZonePlanner";
+import { PregamePlanPanel } from "./PregamePlanPanel";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_quarter","side_arm","submarine","windmill"];
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
@@ -53,6 +55,13 @@ export function PitcherDossierDrawer({
             Pregame plan + postgame notes live forever. Reuse across games.
           </SheetDescription>
         </SheetHeader>
+
+        <Tabs defaultValue="profile" className="mt-4">
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="plan" disabled={!dossier?.id}>Plan & Intel</TabsTrigger>
+          </TabsList>
+          <TabsContent value="profile" className="mt-3">
 
         <div className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-3">
@@ -160,6 +169,17 @@ export function PitcherDossierDrawer({
             </Button>
           </div>
         </div>
+          </TabsContent>
+          <TabsContent value="plan" className="mt-3">
+            <PregamePlanPanel
+              role="pitcher"
+              dossierId={dossier?.id ?? null}
+              sport={(f.sport as string) ?? sport}
+              archetype={(dossier as any)?.archetype ?? null}
+              videoUrls={(dossier as any)?.video_urls ?? []}
+            />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );

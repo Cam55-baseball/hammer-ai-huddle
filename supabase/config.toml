@@ -260,3 +260,12 @@ verify_jwt = true
 
 [functions.gp-ingest-document]
 verify_jwt = true
+
+[functions.gp-pregame-plan]
+verify_jwt = true
+
+[functions.gp-ingest-dossier-asset]
+verify_jwt = true
+
+[functions.gp-analyze-ab-swing]
+verify_jwt = true

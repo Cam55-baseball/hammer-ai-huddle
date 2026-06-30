@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import { AtBatPitchPanel } from "./AtBatPitchPanel";
 import type { AtBatPitchTally } from "@/hooks/useAtBatPitches";
 import { RepCard, RepKeyboardHints } from "./RepCard";
+import { AbSwingPanel } from "./AbSwingPanel";
+import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 
 const RESULTS = [
   "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
@@ -56,11 +58,23 @@ const SHORTCUTS: Record<string, string> = {
   g: "GO",
 };
 
-export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: string }) {
+export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showNew, setShowNew] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const pitchers = usePitcherDossiers(sport);
+  const pitcherOptions = pitchers.list.data ?? [];
+
+  // Default pitcher from the game's probable pitcher (if set).
+  const probable = useQuery({
+    queryKey: ["gp-game-probable-pitcher", gameId],
+    queryFn: async () => {
+      const { data } = await gp("gp_games").select("probable_pitcher_dossier_id").eq("id", gameId).maybeSingle();
+      return (data as any)?.probable_pitcher_dossier_id as string | null;
+    },
+  });
+
 
   const list = useQuery({
     queryKey: ["gp-ab", gameId],
@@ -79,8 +93,14 @@ export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: 
 
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
+      // Snapshot pitcher archetype so historical lookups stay stable even if dossier later changes.
+      let pitcher_archetype_snapshot: string | null = null;
+      if (row.opponent_pitcher_id) {
+        const match = pitcherOptions.find((p: any) => p.id === row.opponent_pitcher_id);
+        pitcher_archetype_snapshot = (match as any)?.archetype ?? null;
+      }
       const { data, error } = await gp("gp_at_bats")
-        .insert({ ...row, user_id: user!.id, game_id: gameId })
+        .insert({ ...row, pitcher_archetype_snapshot, user_id: user!.id, game_id: gameId })
         .select("id")
         .single();
       if (error) throw error;
@@ -198,6 +218,8 @@ export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: 
           onCancel={() => setShowNew(false)}
           onSave={(row) => add.mutate(row)}
           submitting={add.isPending}
+          pitcherOptions={pitcherOptions as any[]}
+          defaultPitcherId={probable.data ?? null}
         />
       )}
 
@@ -246,12 +268,19 @@ export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: 
               onDelete={() => del.mutate(ab.id)}
             >
               {isOpen && (
-                <AtBatPitchPanel
-                  gameId={gameId}
-                  atBatId={ab.id}
-                  inning={ab.inning ?? null}
-                  onTerminal={(t) => handleTerminal(ab.id, t)}
-                />
+                <>
+                  <AtBatPitchPanel
+                    gameId={gameId}
+                    atBatId={ab.id}
+                    inning={ab.inning ?? null}
+                    onTerminal={(t) => handleTerminal(ab.id, t)}
+                  />
+                  <AbSwingPanel
+                    abId={ab.id}
+                    gameId={gameId}
+                    dossierId={ab.opponent_pitcher_id ?? probable.data ?? null}
+                  />
+                </>
               )}
             </RepCard>
           );
@@ -275,10 +304,14 @@ function AtBatForm({
   onSave,
   onCancel,
   submitting,
+  pitcherOptions = [],
+  defaultPitcherId = null,
 }: {
   onSave: (row: Record<string, any>) => void;
   onCancel: () => void;
   submitting?: boolean;
+  pitcherOptions?: any[];
+  defaultPitcherId?: string | null;
 }) {
   const [f, setF] = useState<Record<string, any>>({
     inning: 1,
@@ -298,6 +331,7 @@ function AtBatForm({
     h1_time_sec: "",
     is_pinch_hit: false,
     notes: "",
+    opponent_pitcher_id: defaultPitcherId ?? "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const containerRef = useRef<HTMLDivElement>(null);
@@ -347,6 +381,7 @@ function AtBatForm({
     if (!payload.pitch_type) payload.pitch_type = null;
     if (!payload.contact_quality) payload.contact_quality = null;
     if (!payload.exit_direction) payload.exit_direction = null;
+    if (!payload.opponent_pitcher_id) payload.opponent_pitcher_id = null;
     onSave(payload);
   };
 
@@ -359,6 +394,19 @@ function AtBatForm({
         <span className="font-mono">Esc</span> to cancel
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <Field label="Pitcher faced">
+          <Select value={f.opponent_pitcher_id || "__none"} onValueChange={(v) => set("opponent_pitcher_id", v === "__none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Pick / none" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">— None / unknown —</SelectItem>
+              {pitcherOptions.map((p: any) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name ?? "Pitcher"} {p.archetype ? `· ${p.archetype}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
         <Field label="Inning">
           <Input
             type="number"

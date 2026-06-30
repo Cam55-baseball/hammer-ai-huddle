@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PregamePlanPanel } from "./PregamePlanPanel";
 
 export function HitterDossierDrawer({
   open, onOpenChange, sport, dossier,
@@ -39,6 +41,12 @@ export function HitterDossierDrawer({
           <SheetDescription>How they swing, where they chase, where to attack.</SheetDescription>
         </SheetHeader>
 
+        <Tabs defaultValue="profile" className="mt-4">
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="plan" disabled={!dossier?.id}>Plan & Intel</TabsTrigger>
+          </TabsList>
+          <TabsContent value="profile" className="mt-3">
         <div className="space-y-3 mt-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Name">
@@ -102,6 +110,17 @@ export function HitterDossierDrawer({
             </Button>
           </div>
         </div>
+          </TabsContent>
+          <TabsContent value="plan" className="mt-3">
+            <PregamePlanPanel
+              role="hitter"
+              dossierId={dossier?.id ?? null}
+              sport={(f.sport as string) ?? sport}
+              archetype={(dossier as any)?.archetype ?? null}
+              videoUrls={(dossier as any)?.video_urls ?? []}
+            />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
