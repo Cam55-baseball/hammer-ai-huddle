@@ -1,47 +1,48 @@
-## Elite Lifts + Speed — Final Polish Pass
+## Status: Elite Lifts + Speed — E2E Closure Verification
 
-The core system shipped last turn (edge function, hook, cards, section in Hammer Today, admin page). This pass closes the remaining seams so it runs E2E with zero hiccups.
+The core system and polish pass shipped, but three plan items from `.lovable/plan.md` were **not fully completed** last turn. Here's the honest gap list and the plan to close them.
 
-### 1. Edge function correctness & resilience
-- Deploy `wk-generate-daily` and smoke-test via curl with an authed session. Confirm:
-  - Returns prescriptions for first-time users (auto-seeded phase block).
-  - Phase resolves correctly for users with and without `athlete_context` season dates (graceful fallback to `off_q2`).
-  - Injury swap fires when `user_injury_progress` has an acute row.
-  - CNS cap clamps and emits `reductions[]` payload visible to UI.
-- Verify GRANTs on `wk_prescriptions`, `wk_cns_ledger`, `wk_session_logs`, `wk_recovery_acks`, `wk_phase_blocks`, `wk_movement_catalog` (authenticated + service_role).
-- Confirm idempotency: re-invoking same `plan_date` replaces (not duplicates) rows.
+### What is DONE
+- Edge function `wk-generate-daily` deployed with phase resolution, injury swaps, CNS clamp, idempotency.
+- `wk_*` tables exist with GRANTs.
+- Frontend: `WkLiftsSpeedSection` (sequence toggle persisted to localStorage, skeleton loader, one-shot auto-generate), `WkPrescriptionCard` (logs to `wk_session_logs` on complete), `useWkDailyPrescriptions` (side-context threaded).
+- `AdminPeriodization` page wired to real `wk_periodization_blocks` schema with owner gate.
+- Typecheck + eternity guards green.
 
-### 2. Frontend wiring polish
-- `WkLiftsSpeedSection`: gate auto-generate to one attempt per mount to avoid loop if the function returns empty.
-- `WkPrescriptionCard`: when `status === "completed"`, persist a row in `wk_session_logs` (sets/reps actually performed defaulting to prescribed) so the Learning Loop has data — not just a status flip on `wk_prescriptions`.
-- Sequence toggle: persist preference per user (localStorage key `wk:batBeforeLifts`) so it sticks across days.
-- Skeleton shimmer while `isLoading || generating` (replace spinner-only state).
+### What is NOT done (gaps to close)
+1. **Cross-system correlation — Hammer skill blocks ignore CNS load.** `dailyPlan.ts` does not yet read today's `wk_prescriptions` CNS sum to clamp hitting/throwing intensity to "moderate" when Σ CNS ≥ 7.
+2. **Cross-system correlation — Game-day auto-suppression.** `useGpSignal` does not mark today's pending lift prescriptions as `skipped` with reason "Game day — auto-suppressed" when a game is logged.
+3. **Onboarding seam — personalization inputs missing.** `profiles` columns `training_age_years`, `is_pro_prospect`, `one_rm` are not added, and `ReviewAnswersStep` does not collect them. Edge function falls back to defaults for every user.
+4. **Admin entry point.** No link to `/admin/periodization` from the Hammer Today header overflow menu (admins must type the URL).
+5. **Smoke verification.** No curl against `wk-generate-daily` + Playwright screenshot of Hammer Today with the new section visible.
 
-### 3. Cross-system correlation (the "everything influences everything" requirement)
-- `dailyPlan.ts` (Hammer skill blocks): read today's `wk_prescriptions` CNS sum via a lightweight selector and reduce hitting/throwing intensity tags when CNS ≥ 7 — so hammer skill work respects lift load.
-- `gp_signal` (Game Performance): when a game is logged today via `useGpSignal`, mark today's lift prescriptions as `status: skipped` with `substitution_reason: "Game day — auto-suppressed"` if not yet completed.
-- Side-context (L/R) flows into bat-speed movement selection by passing `side` from `useSideContext` into the edge function body.
+### Closure plan
 
-### 4. Onboarding seam
-- Add three fields to onboarding `ReviewAnswersStep` (or a new tiny step) so the engine has real personalization inputs:
-  - `training_age_years` (slider 0–15)
-  - `is_pro_prospect` (toggle)
-  - One-RM quick-entry for back squat / bench / deadlift / trap-bar (optional)
-- Persist to `profiles` via a single migration adding those columns (with sane defaults so existing users aren't broken).
+**A. CNS-aware Hammer skill clamp** (`src/lib/hammer/dailyPlan.ts`)
+- Add a lightweight selector that sums today's `wk_prescriptions.cns_cost` for the user.
+- When Σ ≥ 7, clamp skill-block `intensity` to "moderate" and append a transparency chip `"Reduced — heavy lift CNS load today"` to the block's `why` payload.
 
-### 5. Admin page entry point
-- Add a "Periodization tuning" link inside the Hammer Today header overflow menu (visible only when `useUserRole().isAdmin === true` or owner check), routing to `/admin/periodization`.
+**B. Game-day lift suppression** (`src/hooks/useGpSignal.ts`)
+- On detection of a logged game today, update `wk_prescriptions` rows with `slot in ('lift','supplemental')` and `status='planned'` to `status='skipped'`, `substitution_reason='Game day — auto-suppressed'`.
+- Idempotent: only flips rows still planned.
 
-### 6. Eternity guards + final verification
-- Run `scripts/check-eternity-guards.sh` and `bunx tsgo --noEmit` after all edits.
-- Curl-test `wk-generate-daily` returning 200 with prescriptions array; tail edge function logs to confirm no errors.
-- Capture a Playwright screenshot of Hammer Today with the new section rendered and the "Why today" / Cue / CNS transparency visible.
+**C. Profiles personalization migration + onboarding capture**
+- Migration: `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS training_age_years int DEFAULT 0, ADD COLUMN IF NOT EXISTS is_pro_prospect boolean DEFAULT false, ADD COLUMN IF NOT EXISTS one_rm jsonb DEFAULT '{}'::jsonb;` (no GRANT change — profiles already granted).
+- Update `src/components/onboarding/ReviewAnswersStep.tsx` with a small "Training profile" block: slider for training age (0–15), toggle for Pro/Prospect, optional 1RM quick inputs (squat / bench / deadlift / trap-bar).
+- Persist on save through the existing profile upsert path.
+- Edge function already reads these defensively — once columns exist, real values flow.
 
-### Technical notes
-- Migration: `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS training_age_years int DEFAULT 0, ADD COLUMN IF NOT EXISTS is_pro_prospect boolean DEFAULT false, ADD COLUMN IF NOT EXISTS one_rm jsonb DEFAULT '{}'::jsonb;` — no GRANT change needed (existing).
-- `wk_session_logs` insert on completion: `{user_id, prescription_id, sets_done, reps_done, rpe: null, completed_at: now()}`.
-- CNS-aware skill reduction: clamp `intensity` field in `PrescribedBlock` to "moderate" when `Σ cns_cost ≥ 7`, surfacing a chip "Reduced — heavy lift CNS load today".
+**D. Admin link in Hammer Today header**
+- In the Hammer Today header overflow menu, add a "Periodization tuning" item gated by `useOwnerAccess().isOwner` (matches existing owner gate pattern) routing to `/admin/periodization`.
 
-### Out of scope
-- Coach-side prescription overrides (post-launch).
-- Wearable HRV ingestion driving `cns_readiness` (slated for the sensor-fusion megaphase already constitutionalized).
+**E. Smoke verification**
+- Curl `wk-generate-daily` with the preview session and confirm 200 + prescriptions array; tail logs for errors.
+- Playwright headless: load `/` (Hammer Today), screenshot the new section showing phase chip, "Why today" line, CNS transparency, and sequence toggle.
+- Run `bunx tsgo --noEmit` + `scripts/check-eternity-guards.sh` after edits.
+
+### Out of scope (already constitutionalized for later)
+- Coach-side prescription overrides.
+- Wearable HRV → `cns_readiness`.
+
+### Release-readiness answer
+**Not yet 100% E2E.** Items A–E above are the remaining gap between "core system shipped" and "every signal influences every signal as planned." Approve and I'll close them in one build pass.
