@@ -13,6 +13,7 @@
  * deterministic per request.
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { startHeartbeat } from "../_shared/withHeartbeat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
