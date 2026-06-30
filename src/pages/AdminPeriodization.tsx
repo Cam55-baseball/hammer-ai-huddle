@@ -1,9 +1,9 @@
 /**
- * AdminPeriodization — owner-tunable phase-block dosing for wk_phase_blocks.
+ * AdminPeriodization — owner-tunable phase-block dosing for wk_periodization_blocks.
  *
  * Lets a privileged user (admins or themselves) override the 4-quarter
  * offseason + in-season + post-season targets used by `wk-generate-daily`.
- * No-op-safe: simply edits rows in `wk_phase_blocks` keyed by `(user_id, phase)`.
+ * No-op-safe: simply edits rows in `wk_periodization_blocks` keyed by `(user_id, phase)`.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -53,7 +53,7 @@ export default function AdminPeriodization() {
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("wk_phase_blocks" as any)
+        .from("wk_periodization_blocks" as any)
         .select("*")
         .eq("user_id", user.id);
       if (error) {
@@ -90,7 +90,7 @@ export default function AdminPeriodization() {
     setSaving(phase);
     const row = rows[phase];
     const { error } = await supabase
-      .from("wk_phase_blocks" as any)
+      .from("wk_periodization_blocks" as any)
       .upsert(
         { ...row, user_id: user.id, phase },
         { onConflict: "user_id,phase" },
