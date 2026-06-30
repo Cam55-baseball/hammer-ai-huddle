@@ -18,12 +18,14 @@ import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
 
 const SEQ_KEY = "wk:batBeforeLifts";
 
 export function WkLiftsSpeedSection() {
   const { user } = useAuth();
+  const gp = useGpSignal();
   const { grouped, reductions, phaseDisplay, generate, generating, isLoading, data } = useWkDailyPrescriptions();
   const [batBeforeLifts, setBatBeforeLifts] = useState<boolean>(() => {
     try { return localStorage.getItem(SEQ_KEY) !== "0"; } catch { return true; }
@@ -77,6 +79,22 @@ export function WkLiftsSpeedSection() {
     setAckOpen(false);
     toast.success("Recovery is on you today. We've got your back.");
   };
+
+  if (gp.gameToday) {
+    return (
+      <Card className="border-amber-500/40 bg-amber-500/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Dumbbell className="h-4 w-4 text-amber-600" />
+            Lifts & Speed — skipped (game today)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs text-muted-foreground">
+          You've got a game on the schedule today. Hammer is suppressing lifts and high-velocity work to protect freshness. Warm-up and game-prep blocks above are live.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-primary/20">
