@@ -1,34 +1,32 @@
-## Final E2E Closure — Elite Pregame Plan, fully reachable & cross-correlated
+## Final E2E Verification — Elite Pregame Plan, release-ready sweep
 
-Re-issuing the approved plan unchanged so we can verify every item is shipped end-to-end and patch any gap found during the audit.
+Re-issuing the approved closure plan unchanged, plus an explicit release-readiness gate so I can tell you "ship it" with evidence, not vibes.
 
-### 1. Probable-pitcher picker on Game Overview
-`src/components/games/GameSheet.tsx` (`OverviewPanel`)
-- `usePitcherDossiers(game.sport)` lookup.
-- "Probable pitcher today" Select above Positions; "— None —" clears; "+ New scouting profile…" opens the dossier drawer.
-- On change → `onPatch({ probable_pitcher_dossier_id: value || null })`.
-- When set, chip "Plan + per-AB defaults use {pitcher.name}" with "Open profile" link.
+### 1. Re-verify every shipped item (read-only)
+- `src/components/games/GameSheet.tsx` `OverviewPanel` — Probable-pitcher Select (via `usePitcherDossiers`), "— None —" clears, "+ New scouting profile…" opens dossier drawer, on-change patches `probable_pitcher_dossier_id`, chip + "Open profile" link render when set.
+- `src/components/games/ActivePlanCard.tsx` — One-tap "Generate elite plan" wired to `usePregamePlans({role:"pitcher", dossierId}).generate.mutate({sport, gameId})`; spinner, disabled state, `generate.error?.message` surfaced (covers AI gateway 402/429); empty-state copy when no pitcher tagged; mounts on Overview AND Live tabs.
+- `src/components/games/AtBatLogger.tsx` — Reads `probable_pitcher_dossier_id` as default `opponent_pitcher_id`, snapshots `pitcher_archetype_snapshot`, propagates `dossierId` to `AbSwingPanel`.
+- `src/components/games/AbSwingPanel.tsx` — Receives `dossierId`, tags swing analyses with matchup context.
+- `supabase/functions/gp-pregame-plan` — V2 schema (My attack, Get me out, Counts, Situations, Sequencing, Edges, Cues) pulling direct AB history, direct pitch heatmap, archetype fallback, global zone tendencies, velo-band splits, priors, recent form, user context.
+- `supabase/functions/gp-update-priors` — EWMA learning loop fires on every cue / situational thumb.
+- `src/components/games/PregamePlanPanel.tsx` — All 7 V2 tabs render.
+- `src/pages/Dossiers.tsx` — Empty-state hint "Tag a pitcher on a game to unlock the elite plan."
 
-### 2. One-tap "Generate elite plan" inside ActivePlanCard
-`src/components/games/ActivePlanCard.tsx`
-- When `pitcherId` set but no plan exists → primary Button → `usePregamePlans({role:"pitcher", dossierId:pitcherId}).generate.mutate({ sport, gameId })`.
-- Spinner + disabled state; surface `generate.error?.message` (covers 402/429 from AI gateway).
-- Empty-state copy when no pitcher tagged. On success the existing `["active-plan", ...]` query invalidates and the full plan UI hydrates.
-
-### 3. Cross-correlation verification (read-only audit, patch any loose prop)
-- `AtBatLogger` reads `probable_pitcher_dossier_id` as default `opponent_pitcher_id` and snapshots `pitcher_archetype_snapshot`.
-- `AbSwingPanel` receives `dossierId` from the AB's pitcher (fallback to game's probable pitcher).
-- `gp-pregame-plan` edge fn already pulls direct AB history, direct pitch heatmap, archetype fallback, global zone tendencies, velo-band splits, priors, recent form, user context.
-- `useLogPlanOutcome` → `gp-update-priors` (EWMA) fires after every thumb up/down on cues + situational entries.
-- `PregamePlanPanel` renders all 7 V2 tabs (My attack, Get me out, Counts, Situations, Sequencing, Edges, Cues).
-
-### 4. Reachability polish
-- `GameSheet` Live tab: `ActivePlanCard` mounts even when no AB is open.
-- One-line empty-state hint on Scouting Profiles list: "Tag a pitcher on a game to unlock the elite plan."
-
-### Verification (build mode)
+### 2. Release-readiness gate (must all pass)
 - `bunx tsgo --noEmit` clean.
-- Headless Playwright run: open a game → tag a pitcher → tap "Generate elite plan" → confirm 7-tab plan renders → open an AB → confirm `opponent_pitcher_id` prefills → confirm `AbSwingPanel` receives the dossier id → thumb a cue → confirm `gp_plan_outcomes` row and `gp-update-priors` invocation.
+- `bash scripts/preflight.sh` clean (invariants + side-context lint + no-legacy-games + eternity guards + targeted vitest).
+- `bash scripts/check-eternity-guards.sh` PASSED (raw `lazy()`, "Progress Dashboard" drift, AuthContext drift, duplicate routes, raw `signOut`).
+- DB grants: re-confirm `gp_pregame_plans`, `gp_plan_outcomes`, `gp_planner_priors`, `gp_pitcher_dossiers`, `gp_opponent_hitters`, `gp_ab_swing_analyses` all have `authenticated` + `service_role` grants and RLS scoped to `auth.uid()`.
+- Edge function smoke: `supabase--curl_edge_functions` against `gp-pregame-plan` with a fixture body → 200 + V2 schema shape; `gp-update-priors` → 200; `gp-analyze-ab-swing` → 200.
+- Headless Playwright E2E (single script under `/tmp/browser/pregame-e2e/`): restore Supabase session → open a game → tag probable pitcher → tap "Generate elite plan" → assert 7 tabs render → open an AB → assert `opponent_pitcher_id` prefills → upload tiny swing clip → thumb a cue → query `gp_plan_outcomes` for the new row → screenshot each step.
+- `security--get_scan_results` shows no unresolved critical findings.
+- Website info preflight: title, meta description, OG, Twitter, favicon all match the app (patch any drift before publish).
+
+### 3. Patch only what the audit finds
+Any gap surfaced by steps 1–2 gets a minimal targeted fix (no scope expansion, no redesign). If everything passes, no code changes.
+
+### 4. Release call
+Once the gate is fully green, I'll tell you plainly: **"Release-ready — safe to publish"**, with the evidence list (typecheck, preflight, eternity guards, edge smoke, Playwright screenshots, security scan). If any check fails, I'll list the exact failures and the smallest fix for each before recommending publish.
 
 ### Out of scope
-Schema changes, edge function refactors, new dossier types, redesign of the 7-tab plan view.
+Schema changes, edge function refactors, new dossier types, redesign of the 7-tab plan view, any feature work beyond the approved closure plan.

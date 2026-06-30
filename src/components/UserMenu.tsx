@@ -1,6 +1,6 @@
 import { User, Settings, HelpCircle, LogOut, Pencil, ListChecks } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +22,13 @@ interface UserMenuProps {
 
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const { open: openQuickEdit } = useQuickEditProfile();
   const { hasCompletedOnboarding, loading: onboardingLoading } = useAthleteOnboardingState();
   const showSetup = !onboardingLoading && !hasCompletedOnboarding;
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try { await signOut(); } catch { /* AuthContext handles eviction guards */ }
     navigate("/auth", { replace: true });
   };
 
