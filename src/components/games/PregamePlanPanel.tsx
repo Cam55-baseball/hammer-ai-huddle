@@ -209,52 +209,143 @@ export function PregamePlanPanel({ role, dossierId, sport, archetype, videoUrls,
   );
 }
 
-function PlanView({ plan_json, markdown, compact = false }: { plan_json: any; markdown: string; compact?: boolean }) {
+function PlanView({
+  plan_json, markdown, compact = false, sport = "baseball",
+}: { plan_json: any; markdown: string; compact?: boolean; sport?: string }) {
   if (!plan_json) return <pre className="text-xs whitespace-pre-wrap">{markdown}</pre>;
+  const sportKey = (sport === "softball" ? "softball" : "baseball") as "baseball" | "softball";
+  const attack = plan_json.my_attack_on_pitcher ?? {};
+  const pitcher = plan_json.pitcher_attack_on_me ?? {};
+  const seq = plan_json.sequence_reading ?? {};
+  const edges = plan_json.matchup_edges ?? {};
+  const situational = plan_json.situational_hitting ?? {};
+  const countPlan = attack.count_plan ?? null;
+
   return (
-    <div className="space-y-2 text-sm">
-      {plan_json.headline && <div className="font-semibold">{plan_json.headline}</div>}
-      {plan_json.vibe && <p className="text-muted-foreground">{plan_json.vibe}</p>}
-      {Array.isArray(plan_json.cues) && plan_json.cues.length > 0 && (
-        <div className="space-y-1">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Cues</div>
-          {plan_json.cues.map((c: any, i: number) => (
-            <div key={i} className="flex items-start gap-2">
-              <Badge variant="outline" className="text-[10px] mt-0.5">{c.tag ?? "cue"}</Badge>
-              <span>{c.text}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {Array.isArray(plan_json.in_game_triggers) && plan_json.in_game_triggers.length > 0 && (
-        <div className="space-y-1">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">In-game triggers</div>
-          {plan_json.in_game_triggers.map((t: any, i: number) => (
-            <div key={i} className="text-xs">
-              <span className="font-medium">If</span> {t.if} → <span className="font-medium">then</span> {t.then}
-            </div>
-          ))}
-        </div>
-      )}
-      {Array.isArray(plan_json.mental_anchors) && plan_json.mental_anchors.length > 0 && !compact && (
-        <div className="space-y-1">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Mental anchors</div>
-          {plan_json.mental_anchors.map((m: string, i: number) => (
-            <div key={i} className="text-xs italic">"{m}"</div>
-          ))}
-        </div>
-      )}
-      {plan_json.matchup_grade && (
-        <div className="flex gap-2 pt-1">
-          <Badge variant="outline" className="text-[10px]">Matchup: {plan_json.matchup_grade}</Badge>
+    <div className="space-y-3 text-sm">
+      <div className="space-y-1">
+        {plan_json.headline && <div className="font-semibold text-base">{plan_json.headline}</div>}
+        {plan_json.vibe && <p className="text-muted-foreground">{plan_json.vibe}</p>}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {plan_json.matchup_grade && (
+            <Badge variant="outline" className="text-[10px]">Matchup: {plan_json.matchup_grade}</Badge>
+          )}
           {plan_json.confidence && (
             <Badge variant="outline" className="text-[10px]">Confidence: {plan_json.confidence}</Badge>
           )}
         </div>
-      )}
+      </div>
+
+      <Tabs defaultValue="attack" className="w-full">
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="attack" className="text-xs">My attack</TabsTrigger>
+          <TabsTrigger value="pitcher" className="text-xs">Get me out</TabsTrigger>
+          <TabsTrigger value="counts" className="text-xs">Counts</TabsTrigger>
+          <TabsTrigger value="situations" className="text-xs">Situations</TabsTrigger>
+          <TabsTrigger value="sequence" className="text-xs">Sequencing</TabsTrigger>
+          <TabsTrigger value="edges" className="text-xs">Edges</TabsTrigger>
+          <TabsTrigger value="cues" className="text-xs">Cues</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="attack" className="space-y-2 pt-2">
+          <Card className="p-3 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 text-xs">
+                <div><span className="text-muted-foreground">Hunt:</span> <strong>{attack.best_pitch_to_hunt ?? "—"}</strong></div>
+                <div><span className="text-muted-foreground">Hot count:</span> {attack.hot_count ?? "—"}</div>
+                <div><span className="text-muted-foreground">Best zones:</span> {(attack.best_zones ?? []).join(", ") || "—"}</div>
+                <div className="text-rose-600"><span className="text-muted-foreground">Avoid zones:</span> {(attack.avoid_zones ?? []).join(", ") || "—"}</div>
+              </div>
+              <StrikeZoneMini sport={sportKey} attack={attack.best_zones} avoid={attack.avoid_zones} />
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pitcher" className="space-y-2 pt-2">
+          <Card className="p-3 space-y-1 text-xs">
+            <div><span className="text-muted-foreground">Primary sequence:</span> {(pitcher.primary_sequence ?? []).join(" → ") || "—"}</div>
+            <div><span className="text-muted-foreground">Putaway:</span> {pitcher.putaway_pitch ?? "—"} @ {pitcher.putaway_zone ?? "—"}</div>
+            <div><span className="text-muted-foreground">Early count:</span> {pitcher.early_count_tendency ?? "—"}</div>
+            <div><span className="text-muted-foreground">Two-strike:</span> {pitcher.two_strike_tendency ?? "—"}</div>
+            <div className="text-rose-600"><span className="text-muted-foreground">Exploits:</span> {pitcher.weakness_exploited ?? "—"}</div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="counts" className="pt-2">
+          <CountPlanGrid plan={countPlan} />
+        </TabsContent>
+
+        <TabsContent value="situations" className="pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+            {SITUATION_MATRIX.map((s) => (
+              <SituationalPlanCard
+                key={s.key}
+                situationKey={s.key}
+                entry={situational[s.key]}
+                sport={sportKey}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sequence" className="space-y-2 pt-2">
+          <Card className="p-3 space-y-2 text-xs">
+            {Array.isArray(seq.tells) && seq.tells.length > 0 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Tells</div>
+                <ul className="list-disc pl-4">{seq.tells.map((t: string, i: number) => <li key={i}>{t}</li>)}</ul>
+              </div>
+            )}
+            <div><span className="text-muted-foreground">Ahead in count:</span> {seq.ahead_in_count_rules ?? "—"}</div>
+            <div><span className="text-muted-foreground">Behind in count:</span> {seq.behind_in_count_survival ?? "—"}</div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="edges" className="space-y-2 pt-2">
+          <Card className="p-3 space-y-1 text-xs">
+            <div><span className="text-muted-foreground">Platoon:</span> {edges.platoon_split_note ?? "—"}</div>
+            <div><span className="text-muted-foreground">Velo bands:</span> {edges.velo_band_response ?? "—"}</div>
+            <div><span className="text-muted-foreground">Spin axis:</span> {edges.spin_axis_weakness ?? "—"}</div>
+            {Array.isArray(edges.tunneling_pairs_to_watch) && edges.tunneling_pairs_to_watch.length > 0 && (
+              <div><span className="text-muted-foreground">Tunneling pairs:</span> {edges.tunneling_pairs_to_watch.join(" / ")}</div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="cues" className="space-y-2 pt-2">
+          {Array.isArray(plan_json.cues) && plan_json.cues.length > 0 && (
+            <Card className="p-3 space-y-1">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Physical cues</div>
+              {plan_json.cues.map((c: any, i: number) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <Badge variant="outline" className="text-[10px] mt-0.5">{c.tag ?? "cue"}</Badge>
+                  <span>{c.text}</span>
+                </div>
+              ))}
+            </Card>
+          )}
+          {Array.isArray(plan_json.in_game_triggers) && plan_json.in_game_triggers.length > 0 && (
+            <Card className="p-3 space-y-1">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">In-game triggers</div>
+              {plan_json.in_game_triggers.map((t: any, i: number) => (
+                <div key={i} className="text-xs"><span className="font-medium">If</span> {t.if} → <span className="font-medium">then</span> {t.then}</div>
+              ))}
+            </Card>
+          )}
+          {Array.isArray(plan_json.mental_anchors) && plan_json.mental_anchors.length > 0 && !compact && (
+            <Card className="p-3 space-y-1">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Mental anchors</div>
+              {plan_json.mental_anchors.map((m: string, i: number) => (
+                <div key={i} className="text-xs italic">"{m}"</div>
+              ))}
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
 
 function VideoRow({ path, idx }: { path: string; idx: number }) {
   const open = async () => {
