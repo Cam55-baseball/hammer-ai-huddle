@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
+import { RepCard, RepKeyboardHints } from "./RepCard";
+
 
 const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
@@ -91,10 +93,13 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          {(list.data ?? []).length} baserun event{(list.data ?? []).length === 1 ? "" : "s"}
-        </p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">
+            {(list.data ?? []).length} baserun event{(list.data ?? []).length === 1 ? "" : "s"}
+          </p>
+          <RepKeyboardHints hints={[{ key: "N", label: "new event" }]} />
+        </div>
         <Button size="sm" onClick={() => setShow(true)} className="gap-1">
           <Plus className="h-3.5 w-3.5" /> New event
         </Button>
@@ -107,44 +112,49 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
           <Footprints className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
           <p className="text-sm font-medium">No baserun events yet</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Log steals, dirtball reads, pickoffs, tag-ups. Lead steps + pitcher time-to-home build your read-ability dossier.
+            Each baserunning event is a rep. Press <kbd className="px-1 rounded bg-muted">N</kbd> to add.
           </p>
         </Card>
       )}
 
       <div className="space-y-2">
-        {(list.data ?? []).map((r) => (
-          <Card key={r.id} className="p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-wrap text-sm">
-                <Badge variant="outline">Inn {r.inning ?? "?"}</Badge>
-                <Badge variant="secondary">{r.event_type}</Badge>
-                {r.base_from != null && r.base_to != null && (
-                  <span className="text-muted-foreground">{r.base_from}→{r.base_to}</span>
-                )}
-                {r.success === true && <Check className="h-4 w-4 text-emerald-600" />}
-                {r.success === false && <XIcon className="h-4 w-4 text-rose-600" />}
-                {r.is_pinch_run && <Badge>PR</Badge>}
-              </div>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-rose-600"
-                onClick={() => del.mutate(r.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-              {r.lead_steps != null && <span>Lead: {r.lead_steps} steps</span>}
-              {r.pitcher_time_to_home_sec != null && <span>P→H: {r.pitcher_time_to_home_sec}s</span>}
-              {r.catcher_pop_time_sec != null && <span>Pop: {r.catcher_pop_time_sec}s</span>}
-              {r.pitcher_arm_side && <span>Arm: {r.pitcher_arm_side}</span>}
-              {r.pitch_type_ran_on && <span>Pitch: {r.pitch_type_ran_on}</span>}
-              {r.run_time_sec != null && <span>Run: {r.run_time_sec}s</span>}
-            </div>
-            {r.notes && <p className="text-xs mt-1.5">{r.notes}</p>}
-          </Card>
+        {(list.data ?? []).map((r, idx) => (
+          <RepCard
+            key={r.id}
+            accent="baserun"
+            repNumber={idx + 1}
+            title={
+              <span className="flex items-center gap-1.5">
+                {r.event_type}
+                {r.success === true && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                {r.success === false && <XIcon className="h-3.5 w-3.5 text-rose-600" />}
+              </span>
+            }
+            badges={[
+              { label: `Inn ${r.inning ?? "?"}` },
+              ...(r.base_from != null && r.base_to != null
+                ? [{ label: `${r.base_from}→${r.base_to}`, variant: "secondary" as const }]
+                : []),
+              ...(r.is_pinch_run ? [{ label: "PR" }] : []),
+            ]}
+            meta={
+              <>
+                {r.lead_steps != null && <span>Lead: {r.lead_steps} steps</span>}
+                {r.pitcher_time_to_home_sec != null && <span>P→H: {r.pitcher_time_to_home_sec}s</span>}
+                {r.catcher_pop_time_sec != null && <span>Pop: {r.catcher_pop_time_sec}s</span>}
+                {r.pitcher_arm_side && <span>Arm: {r.pitcher_arm_side}</span>}
+                {r.pitch_type_ran_on && <span>Pitch: {r.pitch_type_ran_on}</span>}
+                {r.run_time_sec != null && <span>Run: {r.run_time_sec}s</span>}
+              </>
+            }
+            notes={r.notes}
+            onDelete={() => del.mutate(r.id)}
+          />
         ))}
       </div>
     </div>
   );
+
 }
 
 function RunForm({ onSave, onCancel }: {

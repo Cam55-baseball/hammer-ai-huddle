@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { RepCard } from "./RepCard";
+
 
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
 const RESULTS = ["ball","called_strike","swinging_strike","foul","in_play","hbp","bunt_foul","bunt_in_play"];
@@ -55,7 +57,9 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
           )}
 
           <div className="space-y-2">
-            {rows.map((p) => <PitchCard key={p.id} p={p} onDelete={() => del.mutate(p.id)} />)}
+            {rows.map((p, idx) => (
+              <PitchCard key={p.id} p={p} idx={idx + 1} onDelete={() => del.mutate(p.id)} />
+            ))}
             {!list.isLoading && rows.length === 0 && !show && (
               <p className="text-xs text-muted-foreground text-center py-4">
                 No pitches yet. Tap "New pitch" above.
@@ -68,33 +72,31 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
   );
 }
 
-function PitchCard({ p, onDelete }: { p: GpPitchRow; onDelete: () => void }) {
+function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete: () => void }) {
   return (
-    <Card className="p-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap text-sm">
-          <Badge variant="outline">Inn {p.inning ?? "?"}</Badge>
-          {p.pitch_no != null && <Badge variant="secondary">P{p.pitch_no}</Badge>}
-          {p.pitch_type && <span className="font-medium">{p.pitch_type}</span>}
-          {p.pitch_velo != null && <span className="text-muted-foreground">{p.pitch_velo} mph</span>}
-          {p.location?.zone != null && <Badge variant="outline">Z{p.location.zone}</Badge>}
-          {p.location?.outZone && <Badge variant="outline">{p.location.outZone}</Badge>}
-          {p.result && <span className="text-muted-foreground">— {p.result}</span>}
-          {p.opponent_hitter_name && (
-            <span className="text-muted-foreground">vs {p.opponent_hitter_name}</span>
-          )}
-        </div>
-        <Button
-          size="icon" variant="ghost" className="h-7 w-7 text-rose-600"
-          onClick={onDelete}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-      {p.notes && <p className="text-xs text-muted-foreground mt-1.5">{p.notes}</p>}
-    </Card>
+    <RepCard
+      accent="pitching"
+      repNumber={idx}
+      title={p.pitch_type || "—"}
+      badges={[
+        { label: `Inn ${p.inning ?? "?"}` },
+        ...(p.pitch_no != null ? [{ label: `P${p.pitch_no}`, variant: "secondary" as const }] : []),
+        ...(p.location?.zone != null ? [{ label: `Z${p.location.zone}` }] : []),
+        ...(p.location?.outZone ? [{ label: p.location.outZone }] : []),
+      ]}
+      meta={
+        <>
+          {p.pitch_velo != null && <span>{p.pitch_velo} mph</span>}
+          {p.result && <span>{p.result}</span>}
+          {p.opponent_hitter_name && <span>vs {p.opponent_hitter_name}</span>}
+        </>
+      }
+      notes={p.notes}
+      onDelete={onDelete}
+    />
   );
 }
+
 
 function PitchForm({
   perspective, onSave, onCancel,

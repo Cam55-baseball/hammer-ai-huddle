@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
+import { RepCard } from "./RepCard";
+
 
 const TYPES = ["pinch_hit","pinch_run","def_replace","relief","position_swap","dh"];
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF","DH"];
@@ -108,25 +110,28 @@ export function SubLogger({ gameId }: { gameId: string }) {
       )}
 
       <div className="space-y-2">
-        {(list.data ?? []).map((s) => (
-          <Card key={s.id} className="p-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-wrap text-sm">
-              <Badge variant="outline">Inn {s.inning ?? "?"}</Badge>
-              <Badge variant="secondary">{s.sub_type}</Badge>
-              {s.out_position && <span className="text-muted-foreground">out: {s.out_position}</span>}
-              {s.in_position && <span className="text-muted-foreground">in: {s.in_position}</span>}
-              {s.notes && <span className="text-muted-foreground">— {s.notes}</span>}
-            </div>
-            <Button size="icon" variant="ghost" className="h-7 w-7 text-rose-600"
-              onClick={() => del.mutate(s.id)}>
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </Card>
+        {(list.data ?? []).map((s, idx) => (
+          <RepCard
+            key={s.id}
+            accent="sub"
+            repNumber={idx + 1}
+            title={s.sub_type}
+            badges={[{ label: `Inn ${s.inning ?? "?"}` }]}
+            meta={
+              <>
+                {s.out_position && <span>out: {s.out_position}</span>}
+                {s.in_position && <span>in: {s.in_position}</span>}
+              </>
+            }
+            notes={s.notes}
+            onDelete={() => del.mutate(s.id)}
+          />
         ))}
       </div>
     </div>
   );
 }
+
 
 function SubForm({ onSave, onCancel }: {
   onSave: (r: Record<string, any>) => void; onCancel: () => void;
