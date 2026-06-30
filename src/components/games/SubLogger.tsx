@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { showUndoToast } from "@/lib/games/undoToast";
 
 const TYPES = ["pinch_hit","pinch_run","def_replace","relief","position_swap","dh"];
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF","DH"];
@@ -36,26 +37,51 @@ export function SubLogger({ gameId }: { gameId: string }) {
     },
   });
 
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["gp-sub", gameId] });
+
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
-      const { error } = await (supabase as any)
-        .from("gp_subs").insert({ ...row, user_id: user!.id, game_id: gameId });
+      const { data, error } = await (supabase as any)
+        .from("gp_subs").insert({ ...row, user_id: user!.id, game_id: gameId })
+        .select("id").single();
       if (error) throw error;
+      return data?.id as string | undefined;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gp-sub", gameId] });
+    onSuccess: (id) => {
+      invalidate();
       setShow(false);
-      toast.success("Sub logged");
+      showUndoToast({
+        label: "Sub logged",
+        undo: async () => {
+          if (id) {
+            await (supabase as any).from("gp_subs").delete().eq("id", id);
+            invalidate();
+          }
+        },
+      });
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => {
+      const prev = (list.data ?? []).find((s: any) => s.id === id) ?? null;
       const { error } = await (supabase as any).from("gp_subs").delete().eq("id", id);
       if (error) throw error;
+      return prev;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["gp-sub", gameId] }),
+    onSuccess: (prev) => {
+      invalidate();
+      showUndoToast({
+        label: "Sub removed",
+        undo: async () => {
+          if (!prev) return;
+          const { id: _i, created_at: _c, ...restore } = prev as any;
+          await (supabase as any).from("gp_subs").insert(restore);
+          invalidate();
+        },
+      });
+    },
   });
 
   return (
