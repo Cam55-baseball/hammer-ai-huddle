@@ -1,51 +1,36 @@
-# Final E2E Closure — Pregame Plan reachable from the live game flow
+## Final E2E Closure — Elite Pregame Plan, fully reachable & cross-correlated
 
-Two surgical edits unlock the entire elite plan engine in real-world usage. Everything backing it (V2 schema, situational matrix, count grid, learning loop, AB swing analyzer, dossier ingest) is already shipped — but users can't reach it because the GameSheet never asks "who's pitching?" and the in-game card has no way to bootstrap a plan inline.
-
-## What changes
+The engine (V2 schema, situational matrix, count grid, archetype priors, AB swing analyzer, dossier ingest, learning loop) is shipped. This plan closes every remaining gap so a user can go from "who's pitching today?" → elite plan → live cues → per-AB tagging → swing analysis → priors update without ever leaving the game flow.
 
 ### 1. Probable-pitcher picker on Game Overview
-File: `src/components/games/GameSheet.tsx` (`OverviewPanel`)
-
+`src/components/games/GameSheet.tsx` (`OverviewPanel`)
 - Add `usePitcherDossiers(game.sport)` lookup.
-- Render a "Probable pitcher today" `Select` above the Positions row:
-  - Options = the user's pitcher dossiers for this sport, newest-faced first.
-  - "— None —" entry to clear.
-  - Footer "+ New scouting profile…" that opens the existing pitcher dossier creation flow (Scouting Profiles route) with sport pre-filled.
+- "Probable pitcher today" `Select` above Positions row; "— None —" clears; footer link "+ New scouting profile…" routes to Scouting Profiles with sport pre-filled.
 - On change → `onPatch({ probable_pitcher_dossier_id: value || null })`.
-- When set, show a chip beneath: "Plan + per-AB defaults use {pitcher.name}" with a small "Open profile" link.
+- When set, show chip "Plan + per-AB defaults use {pitcher.name}" with small "Open profile" link.
 
-Why it correlates: this single field unlocks `ActivePlanCard` (Live + Overview tabs), `AtBatLogger`'s per-AB default pitcher, every per-pitch zone aggregation in `gp-pregame-plan`, and the learning loop's archetype priors.
+### 2. One-tap "Generate elite plan" inside ActivePlanCard
+`src/components/games/ActivePlanCard.tsx`
+- When `pitcherId` set but no plan exists, render primary `Button` → `usePregamePlans({role:"pitcher", dossierId:pitcherId}).generate.mutate({ sport, gameId })`.
+- Spinner + disabled state; surface `generate.error?.message` (covers 402/429 from AI gateway clearly).
+- Keep "Open dossier" as secondary link. On success the existing `["active-plan", ...]` query invalidates and the full plan UI hydrates.
 
-### 2. One-tap "Generate plan now" inside ActivePlanCard
-File: `src/components/games/ActivePlanCard.tsx`
+### 3. Cross-correlation verification & one-line fixes
+Confirm every signal flows end-to-end; patch any loose prop in the same turn:
+- `AtBatLogger` reads `probable_pitcher_dossier_id` as default `opponent_pitcher_id` and snapshots `pitcher_archetype_snapshot` so historical lookups stay stable.
+- `AbSwingPanel` already receives `dossierId` — verify caller in `AtBatLogger` passes the AB's pitcher (fallback to game's probable pitcher).
+- `gp-pregame-plan` edge fn — already pulls direct AB history, direct pitch heatmap, archetype fallback, global zone tendencies, velo-band splits, priors, recent form, user context. No change.
+- `useLogPlanOutcome` → `gp-update-priors` (EWMA) fires after every thumb up/down on cues + situational entries.
+- `PregamePlanPanel` already renders all 7 V2 tabs.
 
-- When `pitcherId` is set but no plan exists, render a primary `Button` "Generate elite plan" that calls `usePregamePlans({ role: "pitcher", dossierId: pitcherId }).generate.mutate({ sport: game.sport, gameId })` with spinner + disabled state.
-- Surface `generate.error?.message` inline if it fails (covers 402/429 from the AI gateway clearly).
-- Keep the "Open dossier" hint as a small secondary link.
-- On success, the existing `["active-plan", ...]` query invalidates and the full plan UI hydrates in place.
+### 4. Quick reachability polish
+- `GameSheet` Live tab: ensure `ActivePlanCard` mounts even when no AB is open yet (it does — verify).
+- Add a one-line empty-state hint on the Scouting Profiles list: "Tag a pitcher on a game to unlock the elite plan."
 
-### 3. Cross-correlation verification (read-only)
+### Technical notes
+- No schema changes. `gp_games.probable_pitcher_dossier_id` + FK already exist.
+- No edge function changes. V2 prompt + learning loop already deployed.
+- Sport split already enforced inside `gp-pregame-plan` (baseball vs softball pitch families + rise/drop zone language).
 
-Verify and adjust if any wire is loose — all of these already exist; this step confirms the field flows end-to-end:
-
-- `AtBatLogger` → reads `probable_pitcher_dossier_id` for default `opponent_pitcher_id` and snapshots `pitcher_archetype_snapshot` so historical lookups stay stable.
-- `gp-pregame-plan` edge fn → pulls direct AB history, direct pitch heatmap, archetype-history fallback, global zone tendencies, velo-band splits, planner priors, recent form, user context — already wired.
-- `useLogPlanOutcome` → fires `gp-update-priors` (EWMA-decayed) after every thumb up/down on cues and situational entries.
-- `gp-analyze-ab-swing` → per-AB swing video analysis is reachable from `AbSwingPanel` inside each AB row; receives `dossierId` so the analysis is pitcher-aware.
-- `PregamePlanPanel` → already renders all 7 tabs (My attack, Get me out, Counts, Situations, Sequencing, Edges, Cues) from the V2 schema.
-
-If any of those reads are missing the new `probable_pitcher_dossier_id` (e.g. `AbSwingPanel` not passing `dossierId`), they get a one-line fix in the same turn so every signal correlates.
-
-## Technical notes
-
-- No schema changes. `gp_games.probable_pitcher_dossier_id` column + FK already exist.
-- No edge function changes. V2 prompt and learning loop are already deployed.
-- No new components. Two existing files get focused edits; verification step may add one or two `prop`-pass fixes.
-- Sport split is already enforced inside `gp-pregame-plan` (baseball vs softball pitch families + rise/drop zone language).
-
-## Out of scope
-
-- Refactoring the 7-tab plan view.
-- Adding new dossier types or sensors.
-- Any change to the migration files or RLS.
+### Out of scope
+Refactoring the 7-tab plan view, new dossier types/sensors, migration/RLS changes.
