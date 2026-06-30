@@ -41,7 +41,9 @@ import { PitchLogger } from "./PitchLogger";
 import { GameDocumentIngest } from "./GameDocumentIngest";
 import { GameTotalsHeader } from "./GameTotalsHeader";
 import { GameDayMode } from "./GameDayMode";
+import { ActivePlanCard } from "./ActivePlanCard";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
+
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
 
