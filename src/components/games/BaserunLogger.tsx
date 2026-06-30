@@ -102,6 +102,16 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
 
       {show && <RunForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
+      {(list.data ?? []).length === 0 && !show && (
+        <Card className="p-5 text-center bg-muted/20 border-dashed">
+          <Footprints className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm font-medium">No baserun events yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Log steals, dirtball reads, pickoffs, tag-ups. Lead steps + pitcher time-to-home build your read-ability dossier.
+          </p>
+        </Card>
+      )}
+
       <div className="space-y-2">
         {(list.data ?? []).map((r) => (
           <Card key={r.id} className="p-3">
