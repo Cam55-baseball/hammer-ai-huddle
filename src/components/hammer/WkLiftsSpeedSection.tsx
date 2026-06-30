@@ -8,10 +8,11 @@
  *   - Recovery-responsibility ack drawer when reductions trigger
  *   - One WkPrescriptionCard per movement with full transparency payload
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dumbbell, Wind, RefreshCw, ArrowUpDown, AlertTriangle, Loader2 } from "lucide-react";
 import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
@@ -19,12 +20,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const SEQ_KEY = "wk:batBeforeLifts";
+
 export function WkLiftsSpeedSection() {
   const { user } = useAuth();
   const { grouped, reductions, phaseDisplay, generate, generating, isLoading, data } = useWkDailyPrescriptions();
-  const [batBeforeLifts, setBatBeforeLifts] = useState(true);
+  const [batBeforeLifts, setBatBeforeLifts] = useState<boolean>(() => {
+    try { return localStorage.getItem(SEQ_KEY) !== "0"; } catch { return true; }
+  });
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(SEQ_KEY, batBeforeLifts ? "1" : "0"); } catch {}
+  }, [batBeforeLifts]);
 
   const ordered = useMemo(() => {
     if (batBeforeLifts) {
