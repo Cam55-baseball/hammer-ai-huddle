@@ -13,5 +13,6 @@ bunx vitest run \
   src/lib/runtime/__tests__ \
   src/lib/ops \
   src/lib/runtime/recovery \
+  src/lib/games/__tests__ \
   --reporter=dot 2>/dev/null || true
 echo "[preflight] PASSED"
