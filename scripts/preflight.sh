@@ -6,6 +6,8 @@ bash "$ROOT/scripts/check-invariants.sh"
 cd "$ROOT"
 # Side Context regression lock — fail fast if any side-aware write drops `side`.
 bun "$ROOT/scripts/lint-side-context.ts"
+# Game Performance ledger drift guard — no legacy `games` table writes.
+bash "$ROOT/scripts/check-no-legacy-games.sh"
 bunx vitest run \
   src/lib/asb/invariants/__tests__ \
   src/lib/runtime/__tests__ \
