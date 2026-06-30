@@ -97,10 +97,11 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
     ]);
 
-    const sport = (profile?.sport ?? "baseball") as "baseball" | "softball";
-    const position = profile?.primary_position ?? null;
-    const trainingAgeYears = Number(profile?.years_lifting ?? 0);
-    const isProProspect = !!profile?.is_pro_prospect;
+    const p: any = profile ?? {};
+    const sport = (p.sport ?? "baseball") as "baseball" | "softball";
+    const position = p.primary_position ?? p.position ?? null;
+    const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
+    const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
 
     // -------- Resolve phase quarter --------
