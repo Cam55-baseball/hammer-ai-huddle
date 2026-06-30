@@ -121,7 +121,7 @@ export function useGpSignal(windowDays = 7): GpSignal {
     if (!user) return EMPTY;
     const loading =
       recentGames.isLoading || atBats.isLoading || pitches.isLoading || defense.isLoading;
-    if (!hasGames) return { ...EMPTY, loading };
+    if (!hasGames) return { ...EMPTY, loading, gameToday };
 
     const abRows = atBats.data ?? [];
     const pchRows = (pitches.data ?? []).filter((p) => p.perspective === "hitter");
@@ -191,6 +191,7 @@ export function useGpSignal(windowDays = 7): GpSignal {
       atBats: abRows.length,
       pitchesSeen: pchRows.length,
       defensivePlays: defRows.length,
+      gameToday,
       whiffPct,
       chasePct,
       kRate,
@@ -200,6 +201,7 @@ export function useGpSignal(windowDays = 7): GpSignal {
   }, [
     user,
     hasGames,
+    gameToday,
     windowDays,
     recentGames.isLoading,
     atBats.isLoading,
