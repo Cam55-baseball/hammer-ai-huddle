@@ -116,11 +116,20 @@ export default function Games() {
     onError: (e: any) => toast.error(e?.message ?? "Could not create game"),
   });
 
+  const STATUS_BUCKETS: Record<string, string[]> = {
+    upcoming: ["draft", "scheduled"],
+    live: ["in_progress"],
+    done: ["final", "canceled"],
+  };
+
   const filtered = useMemo(() => {
     const rows = games.data ?? [];
     const q = search.trim().toLowerCase();
     return rows.filter((g) => {
-      if (filterStatus !== "all" && g.status !== filterStatus) return false;
+      if (filterStatus !== "all") {
+        const bucket = STATUS_BUCKETS[filterStatus] ?? [filterStatus];
+        if (!bucket.includes(g.status)) return false;
+      }
       if (!q) return true;
       const hay = [
         g.opponent_team,
