@@ -209,6 +209,15 @@ export function HammerDailyPlan() {
                 {plan.missingnessCount} needs input
               </Badge>
             )}
+            {cnsHigh && (
+              <Badge
+                variant="outline"
+                className="text-[10px] border-rose-400/60 text-rose-700 dark:text-rose-300"
+                title={`Today's elite Lifts/Speed plan totals ${totalCns} CNS — skill blocks held at maintenance to protect tomorrow.`}
+              >
+                CNS heavy · skill clamped
+              </Badge>
+            )}
             {(plan.sideBias?.hit || plan.sideBias?.throw) && (
               <Badge
                 variant="default"
@@ -234,6 +243,18 @@ export function HammerDailyPlan() {
               <HeartPulse className="mr-1 h-3.5 w-3.5" />
               Report injury
             </Button>
+            {isOwner && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-[11px]"
+                onClick={() => navigate("/admin/periodization")}
+                title="Owner-only: tune the periodization phase blocks"
+              >
+                <Sliders className="mr-1 h-3.5 w-3.5" />
+                Tuning
+              </Button>
+            )}
           </div>
         </CardTitle>
         {schedMsg && (
