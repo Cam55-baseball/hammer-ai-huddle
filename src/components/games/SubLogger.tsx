@@ -88,7 +88,7 @@ export function SubLogger({ gameId }: { gameId: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-xs text-muted-foreground">
           {(list.data ?? []).length} sub{(list.data ?? []).length === 1 ? "" : "s"}
         </p>
@@ -96,6 +96,14 @@ export function SubLogger({ gameId }: { gameId: string }) {
           <Plus className="h-3.5 w-3.5" /> New sub
         </Button>
       </div>
+      <RepKeyboardHints
+        hints={[
+          { key: "O", label: "offensive" },
+          { key: "D", label: "defensive" },
+          { key: "P", label: "pitching" },
+          { key: "R", label: "reason" },
+        ]}
+      />
 
       {show && <SubForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
