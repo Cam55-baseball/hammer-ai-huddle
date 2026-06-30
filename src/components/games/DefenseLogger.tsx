@@ -169,19 +169,43 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
 }
 
 
+/** Position groupings drive which fields appear — keeps the rep sheet
+ *  scoped to what's relevant for the role (C / IF / OF). All founder-protected
+ *  metrics remain available; they're just gated to the position that uses them.
+ */
+const INFIELD = new Set(["P", "1B", "2B", "3B", "SS"]);
+const OUTFIELD = new Set(["LF", "CF", "RF"]);
+const DIRECTIONS = ["LF", "LCF", "CF", "RCF", "RF", "3B", "SS", "2B", "1B", "P", "C"];
+const THROW_BASES = ["1B", "2B", "3B", "H", "cutoff", "no_throw"];
+const ROUTE_QUALITY = ["direct", "rounded", "drifted", "broke_late", "dove"];
+const IF_REP_TYPES = ["routine", "clean_pick", "backhand", "in_charge", "slow_roller", "double_play", "turn_only", "feed_only"];
+
 function DefForm({ onSave, onCancel }: {
   onSave: (r: Record<string, any>) => void; onCancel: () => void;
 }) {
   const [f, setF] = useState<Record<string, any>>({
     inning: 1, position: "SS", throwing_side: "R", play_type: "",
-    shift: "no_shift", result: "", error_flag: false,
-    time_to_first_sec: "", pop_time_sec: "", arm_velo: "", notes: "",
+    shift: "no_shift", result: "", error_flag: false, assist: false, putout: false,
+    time_to_first_sec: "", pop_time_sec: "", arm_velo: "",
+    spray_direction: "", batted_ball_type: "",
+    // UI-only extras folded into notes on save (column doesn't exist yet):
+    throw_base: "", route_quality: "", infield_rep_type: "", blocked: false,
+    notes: "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
 
+  const isCatcher = f.position === "C";
+  const isInfield = INFIELD.has(f.position);
+  const isOutfield = OUTFIELD.has(f.position);
+
   return (
-    <Card className="p-4 space-y-3 bg-muted/30">
+    <Card className="p-4 space-y-3 bg-muted/30 border-l-4 border-l-emerald-500">
+      <p className="text-[11px] text-muted-foreground">
+        Fields adjust to the position so you only see what matters for{" "}
+        <span className="font-medium">{f.position}</span>.
+      </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {/* Always shown */}
         <F label="Inning"><Input type="number" value={f.inning}
           onChange={(e) => set("inning", Number(e.target.value))} /></F>
         <F label="Position">
@@ -214,24 +238,99 @@ function DefForm({ onSave, onCancel }: {
           <Input placeholder="out / hit / E6 / 6-4-3…" value={f.result}
             onChange={(e) => set("result", e.target.value)} />
         </F>
-        <F label="Time to 1B (sec)">
-          <Input type="number" step="0.01" value={f.time_to_first_sec}
-            onChange={(e) => set("time_to_first_sec", e.target.value)} />
+
+        {/* Play direction — every fielding chance */}
+        <F label="Play direction">
+          <Select value={f.spray_direction} onValueChange={(v) => set("spray_direction", v)}>
+            <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+            <SelectContent>{DIRECTIONS.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}</SelectContent>
+          </Select>
         </F>
-        <F label="Pop time (sec)">
-          <Input type="number" step="0.01" value={f.pop_time_sec}
-            onChange={(e) => set("pop_time_sec", e.target.value)} />
-        </F>
-        <F label="Arm velo">
-          <Input type="number" value={f.arm_velo}
-            onChange={(e) => set("arm_velo", e.target.value)} />
-        </F>
+
+        {/* Catcher-only */}
+        {isCatcher && (
+          <>
+            <F label="Pop time (sec)">
+              <Input type="number" step="0.01" value={f.pop_time_sec}
+                onChange={(e) => set("pop_time_sec", e.target.value)} />
+            </F>
+            <F label="Throw base">
+              <Select value={f.throw_base} onValueChange={(v) => set("throw_base", v)}>
+                <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                <SelectContent>{THROW_BASES.map((b) => (<SelectItem key={b} value={b}>{b}</SelectItem>))}</SelectContent>
+              </Select>
+            </F>
+            <F label="Arm velo">
+              <Input type="number" value={f.arm_velo}
+                onChange={(e) => set("arm_velo", e.target.value)} />
+            </F>
+          </>
+        )}
+
+        {/* Infield-only */}
+        {isInfield && (
+          <>
+            <F label="Infield rep type">
+              <Select value={f.infield_rep_type} onValueChange={(v) => set("infield_rep_type", v)}>
+                <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                <SelectContent>{IF_REP_TYPES.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}</SelectContent>
+              </Select>
+            </F>
+            <F label="Time to 1B (sec)">
+              <Input type="number" step="0.01" value={f.time_to_first_sec}
+                onChange={(e) => set("time_to_first_sec", e.target.value)} />
+            </F>
+            <F label="Arm velo">
+              <Input type="number" value={f.arm_velo}
+                onChange={(e) => set("arm_velo", e.target.value)} />
+            </F>
+          </>
+        )}
+
+        {/* Outfield-only */}
+        {isOutfield && (
+          <>
+            <F label="Route quality">
+              <Select value={f.route_quality} onValueChange={(v) => set("route_quality", v)}>
+                <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                <SelectContent>{ROUTE_QUALITY.map((r) => (<SelectItem key={r} value={r}>{r}</SelectItem>))}</SelectContent>
+              </Select>
+            </F>
+            <F label="Throw base">
+              <Select value={f.throw_base} onValueChange={(v) => set("throw_base", v)}>
+                <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                <SelectContent>{THROW_BASES.map((b) => (<SelectItem key={b} value={b}>{b}</SelectItem>))}</SelectContent>
+              </Select>
+            </F>
+            <F label="Arm velo">
+              <Input type="number" value={f.arm_velo}
+                onChange={(e) => set("arm_velo", e.target.value)} />
+            </F>
+          </>
+        )}
       </div>
-      <div className="flex items-center gap-2">
-        <input id="err" type="checkbox" checked={f.error_flag}
-          onChange={(e) => set("error_flag", e.target.checked)} />
-        <Label htmlFor="err" className="text-xs">Error</Label>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-xs">
+          <input type="checkbox" checked={f.error_flag}
+            onChange={(e) => set("error_flag", e.target.checked)} /> Error
+        </label>
+        <label className="flex items-center gap-2 text-xs">
+          <input type="checkbox" checked={f.assist}
+            onChange={(e) => set("assist", e.target.checked)} /> Assist
+        </label>
+        <label className="flex items-center gap-2 text-xs">
+          <input type="checkbox" checked={f.putout}
+            onChange={(e) => set("putout", e.target.checked)} /> Putout
+        </label>
+        {isCatcher && (
+          <label className="flex items-center gap-2 text-xs">
+            <input type="checkbox" checked={f.blocked}
+              onChange={(e) => set("blocked", e.target.checked)} /> Blocked in dirt
+          </label>
+        )}
       </div>
+
       <F label="Notes"><Textarea rows={2} value={f.notes}
         onChange={(e) => set("notes", e.target.value)} /></F>
       <div className="flex justify-end gap-2">
@@ -243,8 +342,23 @@ function DefForm({ onSave, onCancel }: {
           });
           if (!payload.play_type) payload.play_type = null;
           if (!payload.result) payload.result = null;
+          if (!payload.spray_direction) payload.spray_direction = null;
+          // Fold UI-only extras into notes so we never lose them, since the
+          // dedicated columns aren't part of the canonical schema yet.
+          const extras: string[] = [];
+          if (payload.throw_base) extras.push(`throw→${payload.throw_base}`);
+          if (payload.route_quality) extras.push(`route:${payload.route_quality}`);
+          if (payload.infield_rep_type) extras.push(`rep:${payload.infield_rep_type}`);
+          if (payload.blocked) extras.push("blocked");
+          if (extras.length) {
+            payload.notes = [payload.notes, `[${extras.join(" · ")}]`].filter(Boolean).join(" ");
+          }
+          delete payload.throw_base;
+          delete payload.route_quality;
+          delete payload.infield_rep_type;
+          delete payload.blocked;
           onSave(payload);
-        }}>Save</Button>
+        }}>Save rep</Button>
       </div>
     </Card>
   );

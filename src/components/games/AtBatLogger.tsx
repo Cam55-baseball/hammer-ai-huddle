@@ -14,7 +14,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -33,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { AtBatPitchPanel } from "./AtBatPitchPanel";
 import type { AtBatPitchTally } from "@/hooks/useAtBatPitches";
+import { RepCard, RepKeyboardHints } from "./RepCard";
 
 const RESULTS = [
   "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
@@ -173,10 +173,20 @@ export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          {items.length} at-bat{items.length === 1 ? "" : "s"} logged
-        </p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">
+            {items.length} at-bat{items.length === 1 ? "" : "s"} logged
+          </p>
+          <RepKeyboardHints
+            hints={[
+              { key: "N", label: "new AB" },
+              { key: "1·2·3·4", label: "1B/2B/3B/HR" },
+              { key: "K·B·H", label: "K/BB/HBP" },
+              { key: "Enter", label: "save" },
+            ]}
+          />
+        </div>
         <Button size="sm" onClick={() => setShowNew(true)} className="gap-1">
           <Plus className="h-3.5 w-3.5" />
           New at-bat
@@ -192,44 +202,49 @@ export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: 
       )}
 
       <div className="space-y-2">
-        {items.map((ab) => {
+        {items.map((ab, idx) => {
           const isOpen = expanded.has(ab.id);
           return (
-            <Card key={ab.id} className="p-3">
-              <div className="flex items-center justify-between gap-2">
+            <RepCard
+              key={ab.id}
+              accent="hitting"
+              repNumber={idx + 1}
+              title={
                 <button
                   type="button"
-                  className="flex items-center gap-2 flex-wrap text-sm text-left flex-1 min-w-0"
+                  className="inline-flex items-center gap-1.5 text-left"
                   onClick={() => toggle(ab.id)}
                   aria-expanded={isOpen}
                 >
                   {isOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                   )}
-                  <Badge variant="outline">Inn {ab.inning ?? "?"}</Badge>
-                  {ab.batting_side && <Badge variant="secondary">{ab.batting_side}HB</Badge>}
-                  {ab.position_played && <Badge variant="outline">{ab.position_played}</Badge>}
-                  <span className="font-medium">{ab.result ?? "in progress"}</span>
-                  {ab.pitch_type && (
-                    <span className="text-muted-foreground">on {ab.pitch_type}</span>
-                  )}
-                  {ab.is_pinch_hit && <Badge>PH</Badge>}
+                  <span>{ab.result ?? "in progress"}</span>
                 </button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-rose-600"
-                  onClick={() => del.mutate(ab.id)}
-                  aria-label="Delete at-bat"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              {ab.notes && (
-                <p className="text-xs text-muted-foreground mt-1.5 pl-5">{ab.notes}</p>
-              )}
+              }
+              badges={[
+                { label: `Inn ${ab.inning ?? "?"}` },
+                ...(ab.batting_side ? [{ label: `${ab.batting_side}HB`, variant: "secondary" as const }] : []),
+                ...(ab.position_played ? [{ label: ab.position_played }] : []),
+                ...(ab.pitch_type ? [{ label: `vs ${ab.pitch_type}` }] : []),
+                ...(ab.is_pinch_hit ? [{ label: "PH", variant: "secondary" as const }] : []),
+                ...(ab.count_balls != null && ab.count_strikes != null
+                  ? [{ label: `${ab.count_balls}-${ab.count_strikes}`, variant: "outline" as const }]
+                  : []),
+              ]}
+              meta={
+                <>
+                  {ab.contact_quality && <span>Contact: {ab.contact_quality}</span>}
+                  {ab.exit_direction && <span>Dir: {ab.exit_direction}</span>}
+                  {ab.pitch_velo != null && <span>Velo: {ab.pitch_velo}</span>}
+                  {ab.rbi ? <span>RBI: {ab.rbi}</span> : null}
+                </>
+              }
+              notes={ab.notes}
+              onDelete={() => del.mutate(ab.id)}
+            >
               {isOpen && (
                 <AtBatPitchPanel
                   gameId={gameId}
@@ -238,17 +253,18 @@ export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: 
                   onTerminal={(t) => handleTerminal(ab.id, t)}
                 />
               )}
-            </Card>
+            </RepCard>
           );
         })}
         {!list.isLoading && items.length === 0 && !showNew && (
-          <div className="text-center py-8 px-4 border border-dashed rounded-lg text-muted-foreground">
-            <p className="text-sm font-medium text-foreground">No at-bats yet</p>
-            <p className="text-xs mt-1">
-              Tap <span className="font-medium">New at-bat</span> above. Use single-key shortcuts
-              (1·2·3·4·K·B·H) to log fast — walks and strikeouts auto-close the AB.
+          <Card className="p-5 text-center bg-muted/20 border-dashed">
+            <p className="text-sm font-medium">No at-bats yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tap <span className="font-medium">New at-bat</span> above. Each AB is a rep;
+              every pitch inside it is a child rep. Single-key shortcuts (1·2·3·4·K·B·H)
+              log fast — walks and strikeouts auto-close the AB.
             </p>
-          </div>
+          </Card>
         )}
       </div>
     </div>
