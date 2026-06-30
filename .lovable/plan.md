@@ -1,69 +1,31 @@
-# Elite Game Performance — Final Mastery Wave
+## Honest status — Final Mastery Wave
 
-The `gp_*` data layer, loggers, dossiers, reports, and AI ingest are in place. This final wave closes the loops that turn the system from "built" into "mastered": cross-referencing into Hammer's daily plan, Roadmap, and Progress Dashboard, plus the drift-proofing and UX polish that prevent regressions.
+Most of the plan landed, but **not 100% E2E**. Here's what's done vs. still open.
 
-## Scope (what "complete" means)
+### Done and wired
+- `gp_*` realtime publication + `useGpRealtime` subscribed in `GameSheet`, `Games`, `GameReports`.
+- Sticky `GameTotalsHeader` in `GameSheet`.
+- "Open today's game" CTA banner on `Games.tsx` (auto-detect via `useGameDayContext` reading the new `gp_games` ledger).
+- `useGpSignal` 7-day projection feeding `GpInGameAdvisoryStrip` (Hammer Daily Plan) and `GpInGameSummaryCard` (Progress Dashboard).
+- Drift guard `scripts/check-no-legacy-games.sh` — currently green.
 
-```text
-1. Cross-reference  →  Hammer · Roadmap · Progress Dashboard read gp_* truth
-2. Pitch ↔ At-Bat   →  in-AB pitch logging, count auto-advance, AB summary
-3. Game Day Mode    →  one-tap live logging surface, opens automatically on game day
-4. Realtime         →  drawer + reports react to inserts without refresh
-5. Drift guards     →  legacy table grep, schema lint, tests
-6. UX polish        →  empty states, keyboard, undo, sticky totals
-```
+### Not yet complete (gaps the prior turn claimed or implied)
+1. **Pitch ↔ At-Bat coupling** — `AtBatLogger` does not embed `PitchLogger`, no `useAtBatPitches(atBatId)` helper, no auto-advance on ball-4 / strike-3, no live pitch totals at the AB header.
+2. **Dedicated Game Day Mode surface** — only the CTA banner exists. The high-touch `GameDayMode.tsx` (large-touch 4-logger grid, live score/inning/outs) inside `GameSheet` was not built. Auto-create of a `gp_games` shell row on calendar-game start is also not implemented.
+3. **Drift guards** — `scripts/preflight.sh` does not call `check-no-legacy-games.sh`; the `src/lib/games/__tests__/ledger.spec.ts` vitest suite was not added.
+4. **UX polish** — no per-logger empty states, no single-key shortcuts in `AtBatLogger` (1B/2B/3B/HR/K/BB/HBP), no 10s undo toast on inserts.
+5. **Hammer Daily Plan ordering** — `useGpSignal` advisories render as a strip but are not yet fed into `dailyPlan.ts` to actually bias the Tex-Vision / fielding block selection (the plan called for additive modulation, not just a banner).
+6. **Roadmap `gp_signal` envelope** — `useRoadmapProgress` was not updated to consume the new signal for milestone ordering.
 
-## 1. Cross-reference into the rest of the organism
+### Proposed closure plan (in order, each slice validated before the next)
 
-- **Hammer Daily Plan** (`src/lib/hammer/dailyPlan.ts` + `scheduleContext.ts`):
-  read `gp_at_bats` + `gp_pitches` from the last 7 days. Surface 2 lineage-bound signals:
-  - **Plate discipline gap** (chase % > 35 on outside zones) → bias a Tex-Vision / pitch-recognition block.
-  - **Defense miscue cluster** (≥2 misplays at same position) → bias a fielding rep block.
-  - Always additive: never overrides survivability or freshness mode.
-- **Roadmap** (`useRoadmapProgress.ts`): emit a derived `gp_signal` envelope so milestone ordering can react to real game evidence (e.g., promote "2-strike approach" milestone when 2K% spikes).
-- **Progress Dashboard** (`HittingPanel`, `PitchingPanel`, `DefensePanel`): add an *In-Game* section that pulls from `gp_*` and runs through the existing `correlations.ts` engine (e.g., sleep vs. chase %, tempo vs. command %).
+1. **Coupling slice** — add `useAtBatPitches`, embed `PitchLogger` in `AtBatLogger`, auto-close AB on ball-4/strike-3/in-play with pre-filled outcome, live counts in the AB drawer header.
+2. **Game Day Mode slice** — `src/components/games/GameDayMode.tsx` rendered as the default tab inside `GameSheet` when the game is today; large-touch buttons for the 4 loggers, current score/inning/outs derived from the ledger. Add idempotent shell-row creation keyed on `calendar_event_id` (hook into `useGameDayContext`).
+3. **Hammer + Roadmap modulation** — pass `useGpSignal` output into `dailyPlan.ts` via `athleteContext.gpSignal`; bias skill block selection additively (never overrides survivability / freshness). Emit the same envelope to `useRoadmapProgress` for milestone ordering.
+4. **Drift guards** — append `bash scripts/check-no-legacy-games.sh` to `scripts/preflight.sh`; add `src/lib/games/__tests__/ledger.spec.ts` asserting every `GP_TABLES` key matches a generated Supabase type and that `gp(...)` is the only call path.
+5. **UX polish slice** — empty states in `AtBatLogger` / `PitchLogger` / `DefenseLogger` / `BaserunLogger` / `SubLogger`; single-key shortcuts in `AtBatLogger`; 10s `sonner` undo toast on every ledger insert with a `gp(...).delete().eq("id", ...)` rollback.
+6. **Verification pass** — typecheck, run preflight, manually exercise: open today's game from Hammer → log a pitch sequence → see AB auto-close → see totals tick → see advisory refresh on Progress without reload.
 
-## 2. Pitch ↔ At-Bat coupling
+No schema changes required. All work remains additive over `gp_*`.
 
-- `AtBatLogger` gains an inline `PitchLogger` strip scoped to the open AB. Logging a pitch auto-increments balls/strikes; ball 4 / strike 3 / in-play closes the AB with the resulting outcome pre-filled.
-- New helper `useAtBatPitches(atBatId)` in `useGamePitches.ts`.
-- Pitch totals (count, K, BB, whiffs) shown live at the top of the AB drawer.
-
-## 3. Game Day Mode
-
-- New `GameDayMode.tsx` surface inside `GameSheet`: large-touch buttons for the 4 loggers, current score, inning, and outs.
-- `useGameDayContext` already detects `isGameToday`; on the Today/Hammer header, surface a "Open today's game" CTA that deep-links into `GameSheet` for that `gp_games` row.
-- Auto-create a `gp_games` shell row when a calendar game starts (idempotent on `calendar_event_id`).
-
-## 4. Realtime
-
-- Subscribe `GameSheet` + `GameReports` to `postgres_changes` on the 5 ledger tables, scoped by `game_id` / `user_id`. Invalidate the matching React Query keys on insert/update/delete.
-- Reuse the auth-stable gating pattern from `Calendar.tsx` so reconnect storms don't evict typing users.
-
-## 5. Drift guards
-
-- `scripts/check-no-legacy-games.sh`: fail if any source file references the dropped legacy tables (`games`, `at_bats`, `pitches`, etc.) outside `src/lib/games/ledger.ts` and migration files.
-- `scripts/preflight.sh`: add the new check + a vitest suite that asserts every `gp_*` write goes through `gp(...)` from `ledger.ts`.
-- Lint: a `src/lib/games/__tests__/ledger.spec.ts` that enumerates `GP_TABLES` keys and confirms types match the Supabase generated types.
-
-## 6. UX polish
-
-- Empty states for every logger ("No at-bats yet — log your first PA").
-- Keyboard shortcuts in `AtBatLogger` (1B/2B/3B/HR/K/BB/HBP single-key).
-- Undo toast on every insert (10s window) using the existing `sonner` toast.
-- Sticky totals header in `GameSheet` (PA, AB, H, BB, K, RBI; IP, ER, K, BB for pitchers).
-
-## Technical notes
-
-- No schema changes. All work rides existing `gp_*` tables + `gp(...)` adapter.
-- Realtime requires the tables to be in the `supabase_realtime` publication; if not already, a tiny migration will `ALTER PUBLICATION supabase_realtime ADD TABLE ...` (additive-only, replay-safe).
-- Hammer cross-reference is additive and respects `applyScheduleModulation` (freshness mode + high-density ceilings still win).
-- Progress Dashboard widgets only render when `n ≥ MIN_SAMPLES`, matching the existing correlation contract.
-
-## Out of scope (explicit)
-
-- No legacy table revival, no parallel ledger.
-- No new AI surfaces beyond what `gp-ingest-document` already provides.
-- No changes to organism truth authoring — game data remains an interpretive signal, never authority.
-
-Approve and I'll execute in this order: drift guards → realtime → pitch/AB coupling → Game Day Mode → cross-reference → UX polish, validating each slice before moving on.
+Approve and I'll execute slices 1–6 in order.
