@@ -655,7 +655,6 @@ export function AppSidebar() {
               {[
                 { title: 'Practice Hub', url: '/practice', icon: Flame },
                 { title: 'Workout Plan', url: '/training-block', icon: Dumbbell },
-                { title: 'The General', url: '/progress', icon: BarChart3 },
               ].map((item, index) => (
                 <SidebarMenuItem key={item.title} className="sidebar-item">
                   <SidebarMenuButton
@@ -670,20 +669,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {(isOwner || isAdmin) && (
-                <SidebarMenuItem className="sidebar-item">
-                  <SidebarMenuButton
-                    onClick={() => navigate('/organization')}
-                    isActive={isActive('/organization')}
-                    tooltip="Organization"
-                    className="group sidebar-item-hover relative"
-                  >
-                    {isActive('/organization') && <span className="sidebar-active-indicator" />}
-                    <Building2 className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
-                    <span className="transition-colors duration-200">Organization</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -706,9 +691,24 @@ export function AppSidebar() {
                   <span className="transition-colors duration-200">Game Hub</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {(isOwner || isAdmin) && (
+                <SidebarMenuItem className="sidebar-item">
+                  <SidebarMenuButton
+                    onClick={() => navigate('/organization')}
+                    isActive={isActive('/organization')}
+                    tooltip="Organization"
+                    className="group sidebar-item-hover relative"
+                  >
+                    {isActive('/organization') && <span className="sidebar-active-indicator" />}
+                    <Building2 className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="transition-colors duration-200">Organization</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
 
         <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
