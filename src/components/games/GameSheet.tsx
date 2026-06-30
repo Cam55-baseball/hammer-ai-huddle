@@ -152,83 +152,121 @@ export function GameSheet({
           <>
           <GameTotalsHeader gameId={gameId} />
           <div className="px-6 py-4">
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="flex flex-wrap h-auto justify-start w-full">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="atbats">At-Bats</TabsTrigger>
-                <TabsTrigger value="pitches">Pitches</TabsTrigger>
-                <TabsTrigger value="defense">Defense</TabsTrigger>
-                <TabsTrigger value="baserun">Baserun</TabsTrigger>
-                <TabsTrigger value="subs">Subs</TabsTrigger>
-                <TabsTrigger value="import">Import</TabsTrigger>
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="space-y-4 pt-4">
-                <OverviewPanel
-                  game={g}
-                  onPatch={(p) => update.mutate(p)}
-                />
-              </TabsContent>
-
-              <TabsContent value="atbats" className="pt-4">
-                <AtBatLogger gameId={gameId} sport={g.sport} />
-              </TabsContent>
-              <TabsContent value="pitches" className="pt-4">
-                <PitchLogger gameId={gameId} sport={g.sport} />
-              </TabsContent>
-              <TabsContent value="defense" className="pt-4">
-                <DefenseLogger gameId={gameId} />
-              </TabsContent>
-              <TabsContent value="baserun" className="pt-4">
-                <BaserunLogger gameId={gameId} />
-              </TabsContent>
-              <TabsContent value="subs" className="pt-4">
-                <SubLogger gameId={gameId} />
-              </TabsContent>
-              <TabsContent value="import" className="pt-4">
-                <GameDocumentIngest gameId={gameId} sport={g.sport} />
-              </TabsContent>
-              <TabsContent value="notes" className="pt-4 space-y-3">
-                <Label>Philosophy — pre-game</Label>
-                <Textarea
-                  defaultValue={g.philosophy_pre ?? ""}
-                  placeholder="What's your approach today?"
-                  onBlur={(e) => update.mutate({ philosophy_pre: e.target.value })}
-                />
-                <Label>Philosophy — post-game</Label>
-                <Textarea
-                  defaultValue={g.philosophy_post ?? ""}
-                  placeholder="What worked, what didn't?"
-                  onBlur={(e) => update.mutate({ philosophy_post: e.target.value })}
-                />
-                <div className="space-y-1.5">
-                  <Label>Verdict</Label>
-                  <Select
-                    value={g.philosophy_verdict ?? ""}
-                    onValueChange={(v) => update.mutate({ philosophy_verdict: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Keep / tweak / can it" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="keep">Keep — this is the way</SelectItem>
-                      <SelectItem value="tweak">Tweak — close but adjust</SelectItem>
-                      <SelectItem value="can">Can it — start over</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Label>General notes</Label>
-                <Textarea
-                  defaultValue={g.general_notes ?? ""}
-                  rows={4}
-                  onBlur={(e) => update.mutate({ general_notes: e.target.value })}
-                />
-              </TabsContent>
-            </Tabs>
+            {(() => {
+              const isToday = g.game_date === new Date().toISOString().slice(0, 10);
+              const [activeTab, setActiveTab] = [undefined, undefined]; // placeholder removed below
+              return null;
+            })()}
+            <GameSheetTabs
+              gameId={gameId}
+              g={g}
+              onPatch={(p) => update.mutate(p)}
+            />
           </div>
           </>
         )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function GameSheetTabs({
+  gameId,
+  g,
+  onPatch,
+}: {
+  gameId: string;
+  g: any;
+  onPatch: (patch: Record<string, any>) => void;
+}) {
+  const isToday = g.game_date === new Date().toISOString().slice(0, 10);
+  const [tab, setTab] = useState<string>(isToday ? "live" : "overview");
+
+  return (
+    <Tabs value={tab} onValueChange={setTab} className="w-full">
+      <TabsList className="flex flex-wrap h-auto justify-start w-full">
+        {isToday && <TabsTrigger value="live">Live</TabsTrigger>}
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="atbats">At-Bats</TabsTrigger>
+        <TabsTrigger value="pitches">Pitches</TabsTrigger>
+        <TabsTrigger value="defense">Defense</TabsTrigger>
+        <TabsTrigger value="baserun">Baserun</TabsTrigger>
+        <TabsTrigger value="subs">Subs</TabsTrigger>
+        <TabsTrigger value="import">Import</TabsTrigger>
+        <TabsTrigger value="notes">Notes</TabsTrigger>
+      </TabsList>
+
+      {isToday && (
+        <TabsContent value="live" className="pt-4">
+          <GameDayMode
+            gameId={gameId}
+            game={g}
+            onNavigate={(target) => setTab(target)}
+          />
+        </TabsContent>
+      )}
+
+      <TabsContent value="overview" className="space-y-4 pt-4">
+        <OverviewPanel game={g} onPatch={onPatch} />
+      </TabsContent>
+
+      <TabsContent value="atbats" className="pt-4">
+        <AtBatLogger gameId={gameId} sport={g.sport} />
+      </TabsContent>
+      <TabsContent value="pitches" className="pt-4">
+        <PitchLogger gameId={gameId} sport={g.sport} />
+      </TabsContent>
+      <TabsContent value="defense" className="pt-4">
+        <DefenseLogger gameId={gameId} />
+      </TabsContent>
+      <TabsContent value="baserun" className="pt-4">
+        <BaserunLogger gameId={gameId} />
+      </TabsContent>
+      <TabsContent value="subs" className="pt-4">
+        <SubLogger gameId={gameId} />
+      </TabsContent>
+      <TabsContent value="import" className="pt-4">
+        <GameDocumentIngest gameId={gameId} sport={g.sport} />
+      </TabsContent>
+      <TabsContent value="notes" className="pt-4 space-y-3">
+        <Label>Philosophy — pre-game</Label>
+        <Textarea
+          defaultValue={g.philosophy_pre ?? ""}
+          placeholder="What's your approach today?"
+          onBlur={(e) => onPatch({ philosophy_pre: e.target.value })}
+        />
+        <Label>Philosophy — post-game</Label>
+        <Textarea
+          defaultValue={g.philosophy_post ?? ""}
+          placeholder="What worked, what didn't?"
+          onBlur={(e) => onPatch({ philosophy_post: e.target.value })}
+        />
+        <div className="space-y-1.5">
+          <Label>Verdict</Label>
+          <Select
+            value={g.philosophy_verdict ?? ""}
+            onValueChange={(v) => onPatch({ philosophy_verdict: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Keep / tweak / can it" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="keep">Keep — this is the way</SelectItem>
+              <SelectItem value="tweak">Tweak — close but adjust</SelectItem>
+              <SelectItem value="can">Can it — start over</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Label>General notes</Label>
+        <Textarea
+          defaultValue={g.general_notes ?? ""}
+          rows={4}
+          onBlur={(e) => onPatch({ general_notes: e.target.value })}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
       </SheetContent>
     </Sheet>
   );
