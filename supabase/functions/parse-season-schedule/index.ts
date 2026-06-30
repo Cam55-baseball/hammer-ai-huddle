@@ -160,9 +160,11 @@ Deno.serve(async (req) => {
     }
 
     const events = Array.isArray(parsed.events) ? parsed.events.slice(0, 200) : [];
+    await hb.success({ event_count: events.length, mode: body.mode });
     return json({ events, model: MODEL });
   } catch (e) {
     console.error("[parse-season-schedule] fatal:", e);
+    await hb.fail(e);
     return json(
       { error: e instanceof Error ? e.message : "Unknown error" },
       500,
