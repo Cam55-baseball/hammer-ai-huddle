@@ -19,6 +19,8 @@ export interface GpSignal {
   readonly atBats: number;
   readonly pitchesSeen: number;
   readonly defensivePlays: number;
+  /** True iff a gp_games row exists for today — used to suppress lifts. */
+  readonly gameToday: boolean;
   /** Whiff% on swings, last 7d. null if n<20 swings. */
   readonly whiffPct: number | null;
   /** Chase% (swings at out-of-zone), last 7d. null if n<20 out-of-zone pitches. */
@@ -40,6 +42,7 @@ const EMPTY: GpSignal = {
   atBats: 0,
   pitchesSeen: 0,
   defensivePlays: 0,
+  gameToday: false,
   whiffPct: null,
   chasePct: null,
   kRate: null,
@@ -55,21 +58,24 @@ export function useGpSignal(windowDays = 7): GpSignal {
   const { user } = useAuth();
   const sinceDate = isoDaysAgo(windowDays);
 
+  const todayIso = new Date().toISOString().slice(0, 10);
   const recentGames = useQuery({
     queryKey: ["gp-signal-games", user?.id, sinceDate],
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async () => {
       const { data } = await gp("gp_games")
-        .select("id")
+        .select("id,game_date")
         .eq("user_id", user!.id)
         .gte("game_date", sinceDate);
-      return ((data ?? []) as Array<{ id: string }>).map((g) => g.id);
+      return (data ?? []) as Array<{ id: string; game_date: string | null }>;
     },
   });
 
-  const gameIds = recentGames.data ?? [];
+  const gameRows = recentGames.data ?? [];
+  const gameIds = gameRows.map((g) => g.id);
   const hasGames = gameIds.length > 0;
+  const gameToday = gameRows.some((g) => g.game_date === todayIso);
 
   const atBats = useQuery({
     queryKey: ["gp-signal-ab", user?.id, sinceDate, gameIds.length],
