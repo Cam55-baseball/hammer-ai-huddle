@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
+import { RepCard, RepKeyboardHints } from "./RepCard";
+
 
 const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
