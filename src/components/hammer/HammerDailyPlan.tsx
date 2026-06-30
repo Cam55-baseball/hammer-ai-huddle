@@ -168,6 +168,15 @@ export function HammerDailyPlan() {
                             : plan.schedulePosture}
               </Badge>
             )}
+            {plan.gpBiasTags.length > 0 && (
+              <Badge
+                variant="outline"
+                className="text-[10px] border-amber-400/60 text-amber-700 dark:text-amber-300"
+                title={`Today's order reflects your last 7d of games: ${plan.gpBiasTags.join(", ")}`}
+              >
+                Game-shaped
+              </Badge>
+            )}
             {plan.missingnessCount > 0 && (
               <Badge variant="outline" className="text-[10px]">
                 {plan.missingnessCount} needs input
