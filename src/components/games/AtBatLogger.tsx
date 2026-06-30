@@ -381,6 +381,7 @@ function AtBatForm({
     if (!payload.pitch_type) payload.pitch_type = null;
     if (!payload.contact_quality) payload.contact_quality = null;
     if (!payload.exit_direction) payload.exit_direction = null;
+    if (!payload.opponent_pitcher_id) payload.opponent_pitcher_id = null;
     onSave(payload);
   };
 
