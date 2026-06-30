@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sparkles, Upload, FileText, Video, Star, Play, RefreshCw, Brain,
 } from "lucide-react";
@@ -29,6 +30,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { GP_DOSSIER_VIDEO_BUCKET } from "@/lib/games/ledger";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
+import { SITUATION_MATRIX } from "@/lib/games/situationalMatrix";
+import { StrikeZoneMini } from "./StrikeZoneMini";
+import { SituationalPlanCard } from "./SituationalPlanCard";
+import { CountPlanGrid } from "./CountPlanGrid";
+
 
 interface Props {
   role: "pitcher" | "hitter";
