@@ -1,14 +1,21 @@
 /**
- * AtBatLogger — V1 hitter at-bat logger.
- * Captures every elite input: result, count, contact, exit direction,
- * pitch location/type/velo, inning, RBI/LOB, position, batting side,
- * home-to-first time, pinch-hit flag, free-text notes.
- * Persisted in gp_at_bats. Switch-hitter aware via batting_side.
+ * AtBatLogger — V2 with inline pitch coupling + keyboard shortcuts + undo.
+ *
+ * - Each AB row expands to reveal an inline `AtBatPitchPanel` for
+ *   pitch-by-pitch entry. Walks / strikeouts / HBP auto-populate the AB
+ *   result via the panel's `onTerminal` callback.
+ * - New-AB form supports single-key shortcuts: 1/2/3/4 → 1B/2B/3B/HR,
+ *   K → K_swinging, B → BB, H → HBP, Enter → save.
+ * - All inserts and deletes show a 10-second `sonner` undo toast.
+ * - Empty state guides first-time users.
+ *
+ * Switch-hitter aware via `batting_side`. Position-open. Replay-safe writes
+ * route through `gp("gp_at_bats")`.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { AtBatPitchPanel } from "./AtBatPitchPanel";
+import type { AtBatPitchTally } from "@/hooks/useAtBatPitches";
 
 const RESULTS = [
   "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
@@ -34,67 +43,139 @@ const PITCH_TYPES = ["FB", "2-seam", "CT", "SL", "CB", "CH", "SP", "KN", "rise",
 const DIRECTIONS = ["LF", "LCF", "CF", "RCF", "RF", "3B", "SS", "2B", "1B", "P", "C"];
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH"];
 
-export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }) {
+/** Single-key shortcut → AB result code. */
+const SHORTCUTS: Record<string, string> = {
+  "1": "1B",
+  "2": "2B",
+  "3": "3B",
+  "4": "HR",
+  k: "K_swinging",
+  b: "BB",
+  h: "HBP",
+  f: "FO",
+  g: "GO",
+};
+
+export function AtBatLogger({ gameId, sport: _sport }: { gameId: string; sport: string }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showNew, setShowNew] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const list = useQuery({
     queryKey: ["gp-ab", gameId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("gp_at_bats")
+      const { data, error } = await gp("gp_at_bats")
         .select("*")
         .eq("game_id", gameId)
         .order("inning", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data as any[];
+      return (data ?? []) as any[];
     },
   });
 
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["gp-ab", gameId] });
+
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
-      const { error } = await (supabase as any)
-        .from("gp_at_bats")
-        .insert({ ...row, user_id: user!.id, game_id: gameId });
+      const { data, error } = await gp("gp_at_bats")
+        .insert({ ...row, user_id: user!.id, game_id: gameId })
+        .select("id")
+        .single();
       if (error) throw error;
+      return data?.id as string | undefined;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gp-ab", gameId] });
+    onSuccess: (id) => {
+      invalidate();
       setShowNew(false);
-      toast.success("At-bat saved");
+      if (id) {
+        setExpanded((prev) => new Set(prev).add(id));
+      }
+      toast.success("At-bat saved", {
+        action: id
+          ? {
+              label: "Undo",
+              onClick: async () => {
+                await gp("gp_at_bats").delete().eq("id", id);
+                invalidate();
+              },
+            }
+          : undefined,
+        duration: 10_000,
+      });
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
   const update = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, any> }) => {
-      const { error } = await (supabase as any)
-        .from("gp_at_bats")
-        .update(patch)
-        .eq("id", id);
+      const { error } = await gp("gp_at_bats").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["gp-ab", gameId] }),
+    onSuccess: invalidate,
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase as any)
-        .from("gp_at_bats")
-        .delete()
-        .eq("id", id);
+      const prev = (list.data ?? []).find((r) => r.id === id) ?? null;
+      const { error } = await gp("gp_at_bats").delete().eq("id", id);
       if (error) throw error;
+      return prev;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["gp-ab", gameId] }),
+    onSuccess: (prev) => {
+      invalidate();
+      toast.success("At-bat deleted", {
+        action: prev
+          ? {
+              label: "Undo",
+              onClick: async () => {
+                const { id: _id, created_at: _ca, ...restore } = prev as any;
+                await gp("gp_at_bats").insert(restore);
+                invalidate();
+              },
+            }
+          : undefined,
+        duration: 10_000,
+      });
+    },
   });
+
+  const toggle = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleTerminal = (abId: string, tally: AtBatPitchTally) => {
+    if (!tally.suggestedResult) return;
+    const row = (list.data ?? []).find((r) => r.id === abId);
+    if (!row) return;
+    if (row.result) return; // never overwrite an existing AB result
+    update.mutate({
+      id: abId,
+      patch: {
+        result: tally.suggestedResult,
+        count_balls: tally.balls,
+        count_strikes: tally.strikes,
+      },
+    });
+    toast.message(`AB auto-closed: ${tally.suggestedResult}`, {
+      description: "Tap to edit the result if needed.",
+      duration: 6_000,
+    });
+  };
+
+  const items = list.data ?? [];
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          {(list.data ?? []).length} at-bat{(list.data ?? []).length === 1 ? "" : "s"} logged
+          {items.length} at-bat{items.length === 1 ? "" : "s"} logged
         </p>
         <Button size="sm" onClick={() => setShowNew(true)} className="gap-1">
           <Plus className="h-3.5 w-3.5" />
@@ -104,44 +185,70 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 
       {showNew && (
         <AtBatForm
-          sport={sport}
           onCancel={() => setShowNew(false)}
           onSave={(row) => add.mutate(row)}
+          submitting={add.isPending}
         />
       )}
 
       <div className="space-y-2">
-        {(list.data ?? []).map((ab) => (
-          <Card key={ab.id} className="p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-wrap text-sm">
-                <Badge variant="outline">Inn {ab.inning ?? "?"}</Badge>
-                {ab.batting_side && <Badge variant="secondary">{ab.batting_side}HB</Badge>}
-                {ab.position_played && <Badge variant="outline">{ab.position_played}</Badge>}
-                <span className="font-medium">{ab.result ?? "—"}</span>
-                {ab.pitch_type && (
-                  <span className="text-muted-foreground">on {ab.pitch_type}</span>
-                )}
-                {ab.is_pinch_hit && <Badge>PH</Badge>}
+        {items.map((ab) => {
+          const isOpen = expanded.has(ab.id);
+          return (
+            <Card key={ab.id} className="p-3">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 flex-wrap text-sm text-left flex-1 min-w-0"
+                  onClick={() => toggle(ab.id)}
+                  aria-expanded={isOpen}
+                >
+                  {isOpen ? (
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  )}
+                  <Badge variant="outline">Inn {ab.inning ?? "?"}</Badge>
+                  {ab.batting_side && <Badge variant="secondary">{ab.batting_side}HB</Badge>}
+                  {ab.position_played && <Badge variant="outline">{ab.position_played}</Badge>}
+                  <span className="font-medium">{ab.result ?? "in progress"}</span>
+                  {ab.pitch_type && (
+                    <span className="text-muted-foreground">on {ab.pitch_type}</span>
+                  )}
+                  {ab.is_pinch_hit && <Badge>PH</Badge>}
+                </button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-rose-600"
+                  onClick={() => del.mutate(ab.id)}
+                  aria-label="Delete at-bat"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7 text-rose-600"
-                onClick={() => del.mutate(ab.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            {ab.notes && (
-              <p className="text-xs text-muted-foreground mt-1.5">{ab.notes}</p>
-            )}
-          </Card>
-        ))}
-        {!list.isLoading && (list.data ?? []).length === 0 && !showNew && (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No at-bats yet. Tap "New at-bat" above.
-          </p>
+              {ab.notes && (
+                <p className="text-xs text-muted-foreground mt-1.5 pl-5">{ab.notes}</p>
+              )}
+              {isOpen && (
+                <AtBatPitchPanel
+                  gameId={gameId}
+                  atBatId={ab.id}
+                  inning={ab.inning ?? null}
+                  onTerminal={(t) => handleTerminal(ab.id, t)}
+                />
+              )}
+            </Card>
+          );
+        })}
+        {!list.isLoading && items.length === 0 && !showNew && (
+          <div className="text-center py-8 px-4 border border-dashed rounded-lg text-muted-foreground">
+            <p className="text-sm font-medium text-foreground">No at-bats yet</p>
+            <p className="text-xs mt-1">
+              Tap <span className="font-medium">New at-bat</span> above. Use single-key shortcuts
+              (1·2·3·4·K·B·H) to log fast — walks and strikeouts auto-close the AB.
+            </p>
+          </div>
         )}
       </div>
     </div>
@@ -149,13 +256,13 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 }
 
 function AtBatForm({
-  sport,
   onSave,
   onCancel,
+  submitting,
 }: {
-  sport: string;
   onSave: (row: Record<string, any>) => void;
   onCancel: () => void;
+  submitting?: boolean;
 }) {
   const [f, setF] = useState<Record<string, any>>({
     inning: 1,
@@ -177,9 +284,64 @@ function AtBatForm({
     notes: "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard shortcuts — active when the form is open and the focus is not
+  // inside an editable field (so we never steal typing in the notes box).
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isField =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+      if (isField) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (key === "Enter") {
+        e.preventDefault();
+        submit();
+        return;
+      }
+      if (key === "Escape") {
+        e.preventDefault();
+        onCancel();
+        return;
+      }
+      const result = SHORTCUTS[key];
+      if (result) {
+        e.preventDefault();
+        setF((p) => ({ ...p, result }));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const submit = () => {
+    const payload: Record<string, any> = { ...f };
+    ["pitch_velo", "h1_time_sec"].forEach((k) => {
+      payload[k] = payload[k] === "" ? null : Number(payload[k]);
+    });
+    if (!payload.result) payload.result = null;
+    if (!payload.position_played) payload.position_played = null;
+    if (!payload.pitch_type) payload.pitch_type = null;
+    if (!payload.contact_quality) payload.contact_quality = null;
+    if (!payload.exit_direction) payload.exit_direction = null;
+    onSave(payload);
+  };
 
   return (
-    <Card className="p-4 space-y-3 bg-muted/30">
+    <Card ref={containerRef} className="p-4 space-y-3 bg-muted/30">
+      <p className="text-[11px] text-muted-foreground">
+        Shortcuts: <span className="font-mono">1·2·3·4</span> = 1B/2B/3B/HR ·{" "}
+        <span className="font-mono">K</span> = strikeout · <span className="font-mono">B</span> = walk ·{" "}
+        <span className="font-mono">H</span> = HBP · <span className="font-mono">Enter</span> to save ·{" "}
+        <span className="font-mono">Esc</span> to cancel
+      </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Field label="Inning">
           <Input
@@ -288,22 +450,7 @@ function AtBatForm({
       </Field>
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button
-          size="sm"
-          onClick={() => {
-            const payload: Record<string, any> = { ...f };
-            // Coerce numerics that should not be sent as ""
-            ["pitch_velo", "h1_time_sec"].forEach((k) => {
-              payload[k] = payload[k] === "" ? null : Number(payload[k]);
-            });
-            if (!payload.result) payload.result = null;
-            if (!payload.position_played) payload.position_played = null;
-            if (!payload.pitch_type) payload.pitch_type = null;
-            if (!payload.contact_quality) payload.contact_quality = null;
-            if (!payload.exit_direction) payload.exit_direction = null;
-            onSave(payload);
-          }}
-        >
+        <Button size="sm" onClick={submit} disabled={submitting}>
           Save at-bat
         </Button>
       </div>
