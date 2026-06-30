@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { RepCard } from "./RepCard";
+
 
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
 const RESULTS = ["ball","called_strike","swinging_strike","foul","in_play","hbp","bunt_foul","bunt_in_play"];
