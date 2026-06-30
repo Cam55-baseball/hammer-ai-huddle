@@ -363,4 +363,14 @@ function clamp(n: number, lo: number, hi: number) { return Math.max(lo, Math.min
 function todayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function json(b: unknown, status = 200) { return new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
 
-Deno.serve(withHeartbeat("wk-generate-daily", handler));
+Deno.serve(async (req) => {
+  const hb = startHeartbeat("wk-generate-daily", {});
+  try {
+    const res = await handler(req);
+    await hb.success({ status: res.status });
+    return res;
+  } catch (e) {
+    await hb.fail(e as Error);
+    throw e;
+  }
+});
