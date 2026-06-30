@@ -120,17 +120,26 @@ export function AtBatPitchPanel({ gameId, atBatId, inning, onTerminal }: Props) 
           {(list.data ?? []).map((p, idx) => (
             <li
               key={p.id}
-              className="flex items-center justify-between text-[11px] text-muted-foreground bg-muted/40 rounded px-2 py-1"
+              className="flex items-center justify-between gap-2 text-xs bg-muted/30 rounded px-2 py-1.5 border-l-2 border-l-sky-500"
             >
-              <span>
-                <span className="font-mono mr-2">#{p.pitch_no ?? idx + 1}</span>
-                {p.result ?? "—"}
-                {p.pitch_type ? ` · ${p.pitch_type}` : ""}
-              </span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex h-5 min-w-[1.5rem] items-center justify-center rounded bg-sky-500/15 px-1 text-[10px] font-semibold text-sky-700 dark:text-sky-300 font-mono">
+                  #{p.pitch_no ?? idx + 1}
+                </span>
+                <Badge variant="outline" className="text-[10px]">
+                  {p.result ?? "—"}
+                </Badge>
+                {p.pitch_type && (
+                  <span className="text-muted-foreground">{p.pitch_type}</span>
+                )}
+                {p.location?.zone != null && (
+                  <span className="text-muted-foreground">zone {p.location.zone}</span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => handleDelete(p.id)}
-                className="text-rose-500 hover:text-rose-600"
+                className="text-rose-500 hover:text-rose-600 shrink-0"
                 aria-label="Delete pitch"
               >
                 <Trash2 className="h-3 w-3" />
