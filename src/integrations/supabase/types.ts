@@ -4441,6 +4441,76 @@ export type Database = {
           },
         ]
       }
+      gp_ab_swing_analyses: {
+        Row: {
+          ab_id: string
+          created_at: string
+          cues: string[] | null
+          drills: string[] | null
+          game_id: string | null
+          id: string
+          mechanics_json: Json | null
+          model: string | null
+          pitcher_context: Json | null
+          pitcher_dossier_id: string | null
+          summary: string | null
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          ab_id: string
+          created_at?: string
+          cues?: string[] | null
+          drills?: string[] | null
+          game_id?: string | null
+          id?: string
+          mechanics_json?: Json | null
+          model?: string | null
+          pitcher_context?: Json | null
+          pitcher_dossier_id?: string | null
+          summary?: string | null
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          ab_id?: string
+          created_at?: string
+          cues?: string[] | null
+          drills?: string[] | null
+          game_id?: string | null
+          id?: string
+          mechanics_json?: Json | null
+          model?: string | null
+          pitcher_context?: Json | null
+          pitcher_dossier_id?: string | null
+          summary?: string | null
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_ab_swing_analyses_ab_id_fkey"
+            columns: ["ab_id"]
+            isOneToOne: false
+            referencedRelation: "gp_at_bats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_ab_swing_analyses_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_ab_swing_analyses_pitcher_dossier_id_fkey"
+            columns: ["pitcher_dossier_id"]
+            isOneToOne: false
+            referencedRelation: "gp_pitcher_dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gp_at_bats: {
         Row: {
           ab_order: number | null
@@ -4467,6 +4537,7 @@ export type Database = {
           pitch_movement: Json | null
           pitch_type: string | null
           pitch_velo: number | null
+          pitcher_archetype_snapshot: string | null
           position_played: string | null
           rbi: number | null
           result: string | null
@@ -4499,6 +4570,7 @@ export type Database = {
           pitch_movement?: Json | null
           pitch_type?: string | null
           pitch_velo?: number | null
+          pitcher_archetype_snapshot?: string | null
           position_played?: string | null
           rbi?: number | null
           result?: string | null
@@ -4531,6 +4603,7 @@ export type Database = {
           pitch_movement?: Json | null
           pitch_type?: string | null
           pitch_velo?: number | null
+          pitcher_archetype_snapshot?: string | null
           position_played?: string | null
           rbi?: number | null
           result?: string | null
@@ -4771,6 +4844,7 @@ export type Database = {
           philosophy_post: string | null
           philosophy_pre: string | null
           philosophy_verdict: string | null
+          probable_pitcher_dossier_id: string | null
           scheduled_time: string | null
           sport: string
           status: string
@@ -4796,6 +4870,7 @@ export type Database = {
           philosophy_post?: string | null
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
+          probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
           sport: string
           status?: string
@@ -4821,6 +4896,7 @@ export type Database = {
           philosophy_post?: string | null
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
+          probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
           sport?: string
           status?: string
@@ -4829,10 +4905,20 @@ export type Database = {
           venue?: string | null
           weather?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gp_games_probable_pitcher_dossier_id_fkey"
+            columns: ["probable_pitcher_dossier_id"]
+            isOneToOne: false
+            referencedRelation: "gp_pitcher_dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gp_opponent_hitters: {
         Row: {
+          archetype: string | null
+          attachments: Json | null
           bats: string | null
           created_at: string
           id: string
@@ -4844,8 +4930,11 @@ export type Database = {
           tendencies: Json | null
           updated_at: string
           user_id: string
+          video_urls: string[] | null
         }
         Insert: {
+          archetype?: string | null
+          attachments?: Json | null
           bats?: string | null
           created_at?: string
           id?: string
@@ -4857,8 +4946,11 @@ export type Database = {
           tendencies?: Json | null
           updated_at?: string
           user_id: string
+          video_urls?: string[] | null
         }
         Update: {
+          archetype?: string | null
+          attachments?: Json | null
           bats?: string | null
           created_at?: string
           id?: string
@@ -4870,15 +4962,19 @@ export type Database = {
           tendencies?: Json | null
           updated_at?: string
           user_id?: string
+          video_urls?: string[] | null
         }
         Relationships: []
       }
       gp_pitcher_dossiers: {
         Row: {
+          archetype: string | null
           arm_slot: string | null
+          attachments: Json | null
           created_at: string
           id: string
           last_faced: string | null
+          league_avg_context: Json | null
           name: string
           notes_postgame: string | null
           notes_pregame: string | null
@@ -4890,12 +4986,16 @@ export type Database = {
           throws: string | null
           updated_at: string
           user_id: string
+          video_urls: string[] | null
         }
         Insert: {
+          archetype?: string | null
           arm_slot?: string | null
+          attachments?: Json | null
           created_at?: string
           id?: string
           last_faced?: string | null
+          league_avg_context?: Json | null
           name: string
           notes_postgame?: string | null
           notes_pregame?: string | null
@@ -4907,12 +5007,16 @@ export type Database = {
           throws?: string | null
           updated_at?: string
           user_id: string
+          video_urls?: string[] | null
         }
         Update: {
+          archetype?: string | null
           arm_slot?: string | null
+          attachments?: Json | null
           created_at?: string
           id?: string
           last_faced?: string | null
+          league_avg_context?: Json | null
           name?: string
           notes_postgame?: string | null
           notes_pregame?: string | null
@@ -4924,6 +5028,7 @@ export type Database = {
           throws?: string | null
           updated_at?: string
           user_id?: string
+          video_urls?: string[] | null
         }
         Relationships: []
       }
@@ -5007,6 +5112,175 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_plan_outcomes: {
+        Row: {
+          ab_id: string | null
+          created_at: string
+          evidence: Json | null
+          followed: boolean | null
+          id: string
+          plan_id: string
+          recommendation_key: string
+          recommendation_text: string | null
+          user_id: string
+          user_note: string | null
+          worked: boolean | null
+        }
+        Insert: {
+          ab_id?: string | null
+          created_at?: string
+          evidence?: Json | null
+          followed?: boolean | null
+          id?: string
+          plan_id: string
+          recommendation_key: string
+          recommendation_text?: string | null
+          user_id: string
+          user_note?: string | null
+          worked?: boolean | null
+        }
+        Update: {
+          ab_id?: string | null
+          created_at?: string
+          evidence?: Json | null
+          followed?: boolean | null
+          id?: string
+          plan_id?: string
+          recommendation_key?: string
+          recommendation_text?: string | null
+          user_id?: string
+          user_note?: string | null
+          worked?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_plan_outcomes_ab_id_fkey"
+            columns: ["ab_id"]
+            isOneToOne: false
+            referencedRelation: "gp_at_bats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_plan_outcomes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "gp_pregame_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_planner_priors: {
+        Row: {
+          archetype: string
+          id: string
+          prior_json: Json
+          role: string
+          sample_size: number
+          sport: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archetype: string
+          id?: string
+          prior_json?: Json
+          role: string
+          sample_size?: number
+          sport: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archetype?: string
+          id?: string
+          prior_json?: Json
+          role?: string
+          sample_size?: number
+          sport?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gp_pregame_plans: {
+        Row: {
+          created_at: string
+          dossier_kind: string
+          engine_version: string | null
+          game_id: string | null
+          hitter_dossier_id: string | null
+          id: string
+          inputs_snapshot: Json | null
+          model: string | null
+          pitcher_dossier_id: string | null
+          plan_json: Json
+          plan_markdown: string | null
+          sport: string
+          updated_at: string
+          user_feedback: string | null
+          user_id: string
+          user_rating: number | null
+        }
+        Insert: {
+          created_at?: string
+          dossier_kind: string
+          engine_version?: string | null
+          game_id?: string | null
+          hitter_dossier_id?: string | null
+          id?: string
+          inputs_snapshot?: Json | null
+          model?: string | null
+          pitcher_dossier_id?: string | null
+          plan_json?: Json
+          plan_markdown?: string | null
+          sport: string
+          updated_at?: string
+          user_feedback?: string | null
+          user_id: string
+          user_rating?: number | null
+        }
+        Update: {
+          created_at?: string
+          dossier_kind?: string
+          engine_version?: string | null
+          game_id?: string | null
+          hitter_dossier_id?: string | null
+          id?: string
+          inputs_snapshot?: Json | null
+          model?: string | null
+          pitcher_dossier_id?: string | null
+          plan_json?: Json
+          plan_markdown?: string | null
+          sport?: string
+          updated_at?: string
+          user_feedback?: string | null
+          user_id?: string
+          user_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_pregame_plans_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_pregame_plans_hitter_dossier_id_fkey"
+            columns: ["hitter_dossier_id"]
+            isOneToOne: false
+            referencedRelation: "gp_opponent_hitters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_pregame_plans_pitcher_dossier_id_fkey"
+            columns: ["pitcher_dossier_id"]
+            isOneToOne: false
+            referencedRelation: "gp_pitcher_dossiers"
             referencedColumns: ["id"]
           },
         ]
