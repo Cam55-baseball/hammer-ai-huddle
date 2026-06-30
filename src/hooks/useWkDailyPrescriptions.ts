@@ -4,10 +4,11 @@
  * Reads from `wk_prescriptions`. If the user has no rows for `planDate`, it
  * invokes the `wk-generate-daily` edge function to produce them, then refetches.
  */
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
