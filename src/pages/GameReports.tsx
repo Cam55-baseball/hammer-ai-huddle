@@ -30,11 +30,18 @@ import {
 } from "@/components/ui/accordion";
 
 type Side = "all" | "L" | "R" | "S";
+type ReportCategory =
+  | "all"
+  | "hitting"
+  | "pitching"
+  | "defense"
+  | "baserunning";
 
 export default function GameReports() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [side, setSide] = useState<Side>("all");
+  const [category, setCategory] = useState<ReportCategory>("all");
   useGpRealtime(true);
 
 
