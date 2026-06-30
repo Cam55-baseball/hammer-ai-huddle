@@ -84,9 +84,11 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const hb = startHeartbeat("parse-season-schedule", { intervalMs: 6_000 });
   try {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
+      await hb.fail(new Error("AI service not configured"));
       return json({ error: "AI service not configured" }, 500);
     }
 
