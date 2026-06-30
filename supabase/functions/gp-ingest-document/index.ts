@@ -51,9 +51,11 @@ Rules:
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  const hb = startHeartbeat("gp-ingest-document", { intervalMs: 8_000 });
   try {
     const { documentId, gameId, sport, bucket, path } = await req.json();
     if (!documentId || !gameId || !bucket || !path) {
+      await hb.fail(new Error("missing fields"));
       return json({ error: "missing fields" }, 400);
     }
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
