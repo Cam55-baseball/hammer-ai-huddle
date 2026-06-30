@@ -1,5 +1,13 @@
 // Force rebuild to clear stale module references - Dec 2025
-import { Suspense, lazy, useEffect, ComponentType } from "react";
+import { Suspense, useEffect, ComponentType } from "react";
+import {
+  lazyWithRetry,
+  isChunkLoadError,
+  triggerChunkReload,
+  clearChunkReloadGuard,
+} from "@/utils/lazyWithRetry";
+// Re-export for backward compatibility with existing imports.
+export { isChunkLoadError, triggerChunkReload };
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
