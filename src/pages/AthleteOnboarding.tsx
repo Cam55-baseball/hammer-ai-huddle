@@ -19,7 +19,7 @@ import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
-import { writeDraftSlot } from "@/lib/onboarding/draftStore";
+import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
 
 
 const STEPS = [
@@ -116,6 +116,7 @@ export default function AthleteOnboarding() {
     if (urlRoutedRef.current) return;
     const editKey = searchParams.get("edit") as ReviewEditKey | null;
     const stepParam = searchParams.get("step");
+    const resume = searchParams.get("resume");
     if (editKey && editKey in EDIT_TARGETS) {
       urlRoutedRef.current = true;
       setStep(EDIT_TARGETS[editKey]);
@@ -123,8 +124,26 @@ export default function AthleteOnboarding() {
     } else if (stepParam === "review") {
       urlRoutedRef.current = true;
       setStep(STEP_REVIEW);
+    } else if (resume === "1" && user?.id) {
+      urlRoutedRef.current = true;
+      (async () => {
+        try {
+          const draft = await readDraftSlot<{ stepIndex?: number; dayType?: DayType }>(
+            user.id,
+            "onboarding-step",
+          );
+          if (draft) {
+            if (typeof draft.stepIndex === "number") {
+              setStep(Math.min(Math.max(draft.stepIndex, 0), STEPS.length - 1));
+            }
+            if (draft.dayType) setDayType(draft.dayType);
+          }
+        } catch {
+          /* resume is best-effort */
+        }
+      })();
     }
-  }, [searchParams]);
+  }, [searchParams, user?.id]);
 
   // Skip the flow only when the athlete already finished it AND we're not
   // explicitly reviewing/editing. This lets completed users come back via
