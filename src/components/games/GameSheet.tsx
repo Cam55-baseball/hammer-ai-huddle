@@ -267,10 +267,7 @@ function GameSheetTabs({
     </Tabs>
   );
 }
-      </SheetContent>
-    </Sheet>
-  );
-}
+
 
 function OverviewPanel({
   game,
