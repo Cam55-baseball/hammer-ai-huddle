@@ -47,6 +47,17 @@ if [ -n "$dupe" ]; then
   fail=1
 fi
 
+# 5) raw supabase.auth.signOut() outside AuthContext — must route through
+#    the verified sign-out path so spurious 401s don't evict typing users.
+bad_signout=$(rg -n --no-heading 'supabase\.auth\.signOut\(' src \
+  | grep -v 'contexts/AuthContext' \
+  || true)
+if [ -n "$bad_signout" ]; then
+  echo "[eternity-guard] raw supabase.auth.signOut() outside AuthContext — use signOut() from useAuth():"
+  echo "$bad_signout"
+  fail=1
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "[eternity-guard] FAILED"
   exit 1
