@@ -54,12 +54,12 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
       supabase.from("wk_session_logs" as any).insert({
         user_id: user.id,
         prescription_id: rx.id,
+        plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
-        sets_done: rx.sets ?? null,
-        reps_done: rx.reps ?? null,
-        load_pct_done: rx.load_pct ?? null,
+        sets_completed: rx.sets ?? null,
+        reps_completed: rx.sets && rx.reps ? Array.from({ length: rx.sets }, () => rx.reps as number) : null,
+        load_used: rx.load_pct ?? null,
         rpe: null,
-        completed_at: new Date().toISOString(),
       }).then(({ error: logErr }) => {
         if (logErr) console.warn("wk_session_logs insert failed", logErr);
       });
