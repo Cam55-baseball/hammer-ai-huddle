@@ -9,11 +9,13 @@ import {
   type RoadmapMilestoneView,
   type OrderedMilestone,
 } from '@/lib/hammer/context/decisionFilters';
+import { useGpSignal } from '@/hooks/useGpSignal';
 
 export function useRoadmapProgress(sport?: string, module?: string) {
   const { user } = useAuth();
   // P0-3 (RFL-031): spine-driven roadmap ordering.
   const athleteCtx = useHammerAthleteContext();
+  const gpSig = useGpSignal();
 
   const milestones = useQuery({
     queryKey: ['roadmap-milestones', sport, module],
@@ -52,8 +54,14 @@ export function useRoadmapProgress(sport?: string, module?: string) {
       lifecycleBands: m.lifecycle_bands ?? undefined,
       milestoneOrder: m.milestone_order ?? null,
     }));
-    return orderRoadmapMilestones(items, proj);
-  }, [milestones.data, athleteCtx]);
+    return orderRoadmapMilestones(items, proj, {
+      chasePct: gpSig.chasePct,
+      whiffPct: gpSig.whiffPct,
+      miscueClusters: gpSig.miscueClusters,
+      atBats: gpSig.atBats,
+      defensivePlays: gpSig.defensivePlays,
+    });
+  }, [milestones.data, athleteCtx, gpSig.chasePct, gpSig.whiffPct, gpSig.miscueClusters, gpSig.atBats, gpSig.defensivePlays]);
 
   return { milestones, progress, orderedMilestones };
 }
