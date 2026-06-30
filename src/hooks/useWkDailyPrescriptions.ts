@@ -52,6 +52,14 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
+  const autoTried = useRef(false);
+  let sideHit: string | undefined;
+  let sideThrow: string | undefined;
+  try {
+    const sc = useSideContext();
+    sideHit = sc?.selectedSide?.hit ?? undefined;
+    sideThrow = sc?.selectedSide?.throw ?? undefined;
+  } catch { /* SideContext optional */ }
 
   const query = useQuery({
     queryKey: ["wk-rx", user?.id, planDate],
@@ -74,7 +82,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     setGenerating(true);
     try {
       const { error } = await supabase.functions.invoke("wk-generate-daily", {
-        body: { plan_date: planDate },
+        body: { plan_date: planDate, side_hit: sideHit, side_throw: sideThrow },
       });
       if (error) throw error;
       await qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
@@ -84,14 +92,16 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     } finally {
       setGenerating(false);
     }
-  }, [user?.id, planDate, qc, generating]);
+  }, [user?.id, planDate, qc, generating, sideHit, sideThrow]);
 
-  // Auto-generate once on first empty fetch.
+  // Auto-generate exactly once per mount if empty.
   useEffect(() => {
-    if (!query.isLoading && query.data && query.data.length === 0 && !generating) {
+    if (!query.isLoading && query.data && query.data.length === 0 && !generating && !autoTried.current) {
+      autoTried.current = true;
       generate();
     }
   }, [query.isLoading, query.data, generate, generating]);
+
 
   const grouped = useMemo(() => {
     const rxs = query.data ?? [];
