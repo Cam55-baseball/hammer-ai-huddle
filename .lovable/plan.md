@@ -1,57 +1,50 @@
-## Goal
-Close the two gaps from last turn so the Elite Game Performance system is 100% shipped:
-1. **Slice 3** — Wire `useGpSignal` into `dailyPlan.ts` and `useRoadmapProgress.ts` as an additive, survivability-bound bias.
-2. **Slice 5 (remainder)** — Bring `DefenseLogger`, `BaserunLogger`, and `SubLogger` up to the same UX bar as `AtBatLogger` (empty states + 10s undo toasts; shortcuts where they fit).
+# Elite Quiz Feedback for Game IQ 101
 
-No new tables, no schema changes, no auth changes. Frontend + one hook only.
+Today the post-submit screen shows one line ("Correct" or "Actually: Bag") plus a single generic `scenario.explanation`. That isn't a learning moment — users don't see *why* their answer was wrong, *why* the right one is right, or what the rest of the field is doing.
 
----
+We already store rich per-actor teaching content (`coaching_note`, `secondary_read`, `communication_call`, `common_mistake`, `elite_cue`) on every situation. We'll compose those into a structured, role-aware rationale — no DB changes required.
 
-## Slice 3 — Hammer + Roadmap signal modulation
+## What changes
 
-### `src/lib/hammer/prescription/dailyPlan.ts`
-- Extend the planner's athlete-context input to accept an optional `gpSignal` field (rolling 7-day: `chasePct`, `whiffPct`, `zSwingPct`, `errorsByPos`, `baseRunningOuts`, `sampleSize`, `confidence`).
-- Add `applyGpSignalBias(blocks, gpSignal)` as the **last** modulator, after `applyScheduleModulation`. Rules (all additive, all clamped, all skipped when `sampleSize < 8` or `confidence === 'low'`):
-  - `chasePct ≥ 0.32` → +1 priority on Tex-Vision pitch-recognition block, append rationale tag `"gp:chase"`.
-  - `whiffPct ≥ 0.28` → +1 priority on contact/Bat-Path block, tag `"gp:whiff"`.
-  - `errorsByPos[primary] ≥ 2` → +1 priority on Fielding block for that position, tag `"gp:def"`.
-  - `baseRunningOuts ≥ 2` → +1 priority on Baserunning IQ block, tag `"gp:br"`.
-  - Never *removes* blocks, never overrides schedule suppression, never exceeds existing per-day volume ceiling.
-- Surface the applied tags on the returned plan so `GpInGameAdvisoryStrip` can show "Today's plan reflects your last 7 days."
+Only the post-submit feedback block in `src/components/iq/IqScenarioRunner.tsx`. Everything before "Lock it in" stays as-is.
 
-### `src/hooks/useRoadmapProgress.ts`
-- In `orderRoadmapMilestones`, accept optional `gpSignal` and apply a tie-breaker bias (±0.5 rank weight, clamped) when two milestones share the same base priority, biasing toward the milestone whose `category` matches the weakest GP signal axis.
-- Pure additive: if `gpSignal` is absent or low-confidence, ordering is byte-identical to today.
+### New feedback layout
 
-### Wiring
-- `src/components/hammer/HammerDailyPlan.tsx`: pass `gpSignal` from `useGpSignal()` into the daily plan call.
-- `src/pages/Roadmap.tsx` (or wherever `useRoadmapProgress` is consumed): pass `gpSignal` through.
-
----
-
-## Slice 5 (remainder) — Logger UX parity
-
-For each of `DefenseLogger.tsx`, `BaserunLogger.tsx`, `SubLogger.tsx`:
-
-- **Empty state**: replace the bare "No plays yet" with a guided callout matching the AtBatLogger pattern (icon + one-line prompt + "what gets logged here" hint).
-- **Undo toast**: every insert and delete fires a `sonner` toast with a 10s `action: "Undo"` that performs the inverse mutation, mirroring `AtBatLogger`'s pattern via a small shared helper `src/lib/games/undoToast.ts` (so we don't duplicate the logic four times).
-- **Defense-only shortcuts**: `E` = error, `P` = putout, `A` = assist, `D` = double play (only when no input is focused). Baserun/Sub do not get shortcuts (low value, easy to misfire).
+1. **Verdict banner** — Correct / Incorrect with the correct assignment label (kept).
+2. **Why the right answer is right** — built from the actor object for the user's chosen position:
+   - One-sentence "Your job on this play" (uses `coaching_note`).
+   - "What to read" (`secondary_read`).
+   - "What to call out" (`communication_call`).
+   - "Elite cue" (`elite_cue`) — shown as a highlighted pull-quote.
+3. **Why your answer missed** (only when incorrect) — generated explainer that contrasts the chosen assignment with the correct one in plain language, e.g. *"You chose Bag, but on a ball in the right-center gap the SS is the cutoff — covering 2B leaves no relay and the runner from 1st scores."* Pulls from `common_mistake` when present.
+4. **Scenario context** — existing `scenario.explanation`, reframed under a "Big picture" heading.
+5. **What the rest of the field is doing** — collapsible list of every other actor with role · assignment · one-line note. Lets the user learn the full play, not just their slot.
+6. Existing "Try another position" / "Back to library" buttons stay.
 
 ### New helper
-- `src/lib/games/undoToast.ts` — `withUndo({ label, doMutation, undoMutation })` returning a promise; centralizes the sonner pattern.
 
----
+`src/lib/iq/feedback.ts` — pure function `buildScenarioFeedback({ scenario, actors, chosenRole, chosenAnswer })` returning a typed structure (`yourJob`, `read`, `call`, `eliteCue`, `whyWrong`, `othersOnField[]`). Keeps `IqScenarioRunner` thin and makes the rationale unit-testable.
 
-## Verification
-- `tsgo` clean.
-- `scripts/preflight.sh` green (already includes ledger drift + game tests from last turn).
-- Manual: log a defensive error → undo within 10s → row removed. Log a sub → undo → removed. Confirm `HammerDailyPlan` shows a "gp:" rationale chip when a synthetic high-chase signal is injected.
+### Wrong-answer rationale generation
+
+Deterministic, no AI call. Templates keyed on `(chosenAssignment → correctAssignment)` pairs, e.g.:
+- `bag → ball`: "You went to cover a base, but no one else can field this — your glove is the play."
+- `ball → backup`: "You broke for the ball, but another fielder has a better angle. Your job is to back them up so a misplay doesn't compound."
+- `backup → bag`: "You set up to back up, but with this runner advancing you're needed at the base to receive the throw."
+- `read → execute`, `execute → read`, etc.
+
+When `common_mistake` is set on the chosen actor, it is appended verbatim as "Coach's note".
+
+## Technical details
+
+- Files touched: `src/components/iq/IqScenarioRunner.tsx` (replace the `{submitted && …}` block).
+- Files added: `src/lib/iq/feedback.ts`.
+- No schema, no migration, no new queries — all data is already on `actors` and `scenario`.
+- Styling uses existing tokens (`bg-green-500/10`, `bg-destructive/10`, `text-muted-foreground`, `border-border`). No hardcoded colors.
+- Collapsible "rest of the field" uses the existing shadcn `Collapsible` primitive to keep the card compact on mobile (current route is 402px wide).
 
 ## Out of scope
-- No changes to `gp_*` schemas, RLS, or realtime.
-- No redesign of the daily plan UI beyond the rationale chip already supported by `GpInGameAdvisoryStrip`.
-- No new analytics surfaces.
 
-## Risk / drift guards
-- `applyGpSignalBias` is a pure function with a unit test in `src/lib/hammer/prescription/__tests__/dailyPlan.gpSignal.spec.ts` covering: (a) low-confidence no-op, (b) high-chase +1 on Tex-Vision, (c) clamp at volume ceiling, (d) never overrides schedule suppression.
-- `undoToast` has a unit test for the happy path and the "toast dismissed → no undo fires" path.
+- No AI "Ask Hammer follow-up" button this turn (can layer on later via `useWhyExplanation`-style hook).
+- No edits to scenario/actor seed data — if a situation has thin `coaching_note`/`elite_cue` fields, the UI gracefully omits those rows.
+- No changes to spaced-repetition scoring or attempt recording.

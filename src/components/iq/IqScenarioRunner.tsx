@@ -5,13 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
 import { toast } from "@/hooks/use-toast";
 import type { IqActor, IqActorRole, IqScenario, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_LABELS, ROLE_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
 import { quizResume, pendingAttempts } from "@/lib/iq/resumeStore";
+import { buildScenarioFeedback } from "@/lib/iq/feedback";
 
 interface Props {
   situationId: string;
@@ -178,23 +180,116 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
         </>
       )}
 
-      {submitted && (
-        <div className={"rounded-lg p-4 flex items-start gap-3 " + (correct ? "bg-green-500/10 border border-green-500/30" : "bg-destructive/10 border border-destructive/30")}>
-          {correct ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> : <XCircle className="h-5 w-5 text-destructive shrink-0" />}
-          <div className="flex-1 space-y-2">
-            <div className="font-semibold">
-              {correct ? "Correct" : `Actually: ${ASSIGNMENT_LABELS[scenario.correct_actor_assignments[position!]]}`}
+      {submitted && position && answer && (() => {
+        const fb = buildScenarioFeedback({ scenario, actors, chosenRole: position, chosenAnswer: answer });
+        return (
+          <div className="space-y-3">
+            {/* Verdict */}
+            <div className={"rounded-lg p-4 flex items-start gap-3 " + (fb.correct ? "bg-green-500/10 border border-green-500/30" : "bg-destructive/10 border border-destructive/30")}>
+              {fb.correct
+                ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                : <XCircle className="h-5 w-5 text-destructive shrink-0" />}
+              <div className="flex-1">
+                <div className="font-semibold">
+                  {fb.correct ? "Correct" : `Not quite — the right call was ${fb.correctAssignmentLabel}`}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  You played: <span className="font-medium">{fb.chosenAssignmentLabel}</span> · As the {fb.roleLabel}
+                </div>
+              </div>
             </div>
-            {scenario.explanation && (
-              <p className="text-sm text-muted-foreground">{scenario.explanation}</p>
+
+            {/* Why your answer missed */}
+            {!fb.correct && fb.whyWrong && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                  <AlertTriangle className="h-4 w-4" /> Why "{fb.chosenAssignmentLabel}" wasn't the play
+                </div>
+                <p className="text-sm leading-relaxed">{fb.whyWrong}</p>
+                {fb.coachNote && (
+                  <p className="text-xs text-muted-foreground border-l-2 border-destructive/40 pl-3 mt-2">
+                    <span className="font-semibold text-foreground">Coach's note: </span>{fb.coachNote}
+                  </p>
+                )}
+              </div>
             )}
-            <div className="flex gap-2">
+
+            {/* Why the right answer is right */}
+            <div className="rounded-lg border bg-card p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                Why "{fb.correctAssignmentLabel}" is right for the {fb.roleLabel}
+              </div>
+              <div className="space-y-2.5 text-sm">
+                {fb.yourJob && (
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Your job</div>
+                    <p>{fb.yourJob}</p>
+                  </div>
+                )}
+                {fb.read && (
+                  <div className="flex gap-2">
+                    <Eye className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">What to read</div>
+                      <p>{fb.read}</p>
+                    </div>
+                  </div>
+                )}
+                {fb.call && (
+                  <div className="flex gap-2">
+                    <Megaphone className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">What to call</div>
+                      <p>{fb.call}</p>
+                    </div>
+                  </div>
+                )}
+                {fb.eliteCue && (
+                  <div className="rounded-md bg-primary/10 border border-primary/30 p-3 flex gap-2">
+                    <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-sm italic">{fb.eliteCue}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Big picture */}
+            {fb.bigPicture && (
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Big picture</div>
+                <p className="text-sm leading-relaxed">{fb.bigPicture}</p>
+              </div>
+            )}
+
+            {/* Rest of the field */}
+            {fb.othersOnField.length > 0 && (
+              <Collapsible>
+                <CollapsibleTrigger className="w-full flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-sm font-semibold hover:bg-accent transition-colors">
+                  <span className="flex items-center gap-2"><Users className="h-4 w-4" /> What everyone else is doing ({fb.othersOnField.length})</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-2">
+                  {fb.othersOnField.map((o) => (
+                    <div key={o.role} className="rounded-md border bg-card/50 p-3">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-sm font-semibold">{o.roleLabel}</span>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted">{o.assignmentLabel}</span>
+                      </div>
+                      {o.note && <p className="text-xs text-muted-foreground leading-relaxed">{o.note}</p>}
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            <div className="flex gap-2 pt-1">
               <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
               <Button size="sm" variant="ghost" onClick={() => navigate("/iq")}>Back to library</Button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </Card>
   );
 }
