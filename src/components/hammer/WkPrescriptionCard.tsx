@@ -48,6 +48,22 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
       toast.error("Could not update");
       return;
     }
+    // On completion, persist a session log row so the Learning Loop has real
+    // execution data (not just a status flip). Best-effort, non-blocking.
+    if (status === "completed") {
+      supabase.from("wk_session_logs" as any).insert({
+        user_id: user.id,
+        prescription_id: rx.id,
+        movement_slug: rx.movement_slug,
+        sets_done: rx.sets ?? null,
+        reps_done: rx.reps ?? null,
+        load_pct_done: rx.load_pct ?? null,
+        rpe: null,
+        completed_at: new Date().toISOString(),
+      }).then(({ error: logErr }) => {
+        if (logErr) console.warn("wk_session_logs insert failed", logErr);
+      });
+    }
     toast.success(status === "completed" ? "Logged — nice work." : "Skipped");
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
   };
