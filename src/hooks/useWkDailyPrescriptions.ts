@@ -53,13 +53,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const autoTried = useRef(false);
-  let sideHit: string | undefined;
-  let sideThrow: string | undefined;
-  try {
-    const sc = useSideContext();
-    sideHit = sc?.selectedSide?.hit ?? undefined;
-    sideThrow = sc?.selectedSide?.throw ?? undefined;
-  } catch { /* SideContext optional */ }
+  const sideCtx = useSideContext();
+  const sideHit = sideCtx.selectedSide?.hit;
+  const sideThrow = sideCtx.selectedSide?.throw;
 
   const query = useQuery({
     queryKey: ["wk-rx", user?.id, planDate],
