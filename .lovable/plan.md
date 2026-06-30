@@ -133,3 +133,36 @@ plan_json: {
 - Real-time in-AB pitch prediction overlay (would need live pitch ingest mid-game).
 - Video auto-clipping of every past AB vs this pitcher (storage cost).
 - Opponent catcher sequencing tells (needs catcher dossier — not built yet).
+
+---
+
+## Part C — Final E2E closure (this turn)
+
+After auditing the wiring, two integration gaps remain that prevent the elite plan engine from being reachable in the live game flow. Both are small UI edits, no schema/edge changes.
+
+### C1. Probable-pitcher picker on `GameSheet` Overview tab
+- **File**: `src/components/games/GameSheet.tsx` — `OverviewPanel`.
+- **Why**: `ActivePlanCard` keys on `game.probable_pitcher_dossier_id`, but there is currently no UI to set it. Without it, the Live/Overview "Active plan" surface is permanently empty and the AtBatLogger's per-AB default pitcher never resolves.
+- **What**:
+  - Add a `usePitcherDossiers(game.sport)` lookup.
+  - Render a `Select` ("Probable pitcher today") above the Positions row. Options = the user's pitcher dossiers for that sport; include an "— None —" entry; include a "+ New dossier…" footer item that routes to Scouting Profiles for the same sport (or opens the existing dossier sheet if available).
+  - On change → `onPatch({ probable_pitcher_dossier_id: value || null })`.
+  - Show a subtle hint chip when set: "Plan + per-AB defaults will use {pitcher.name}".
+
+### C2. One-tap "Generate plan now" inside `ActivePlanCard`
+- **File**: `src/components/games/ActivePlanCard.tsx`.
+- **Why**: Today the empty state tells the user to leave the game, open the dossier, and tap Generate. Friction kills usage.
+- **What**:
+  - When `pitcherId` is set but `planQ.data` is null, render a `Button` that calls `usePregamePlans({ role: "pitcher", dossierId: pitcherId }).generate.mutate({ sport: game.sport, gameId })` inline with a spinner state.
+  - On success, the existing query invalidation already refetches the active plan.
+  - Keep the existing "open dossier" hint as a secondary link for power users.
+
+### C3. Verify cross-links
+- `AtBatLogger` already reads `probable_pitcher_dossier_id` for its per-AB default — C1 unblocks it automatically.
+- `gp-update-priors` is registered and invoked on outcome insert in `useLogPlanOutcome` — no change.
+- `PregamePlanPanel` tabs already render every field of the V2 schema — no change.
+
+### Out-of-scope for this turn
+- New schema columns, new edge functions, new components beyond the two edits above.
+- Any refactor of the existing 7-tab plan view.
+
