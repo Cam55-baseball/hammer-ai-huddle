@@ -190,9 +190,10 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Clean up cache-bust param on successful load
+  // Clean up cache-bust param + release the one-shot reload guard on successful load.
   useEffect(() => {
     cleanupCacheBustParam();
+    clearChunkReloadGuard();
   }, []);
 
   // Global catcher for stale dynamic-import failures that escape lazy() —
