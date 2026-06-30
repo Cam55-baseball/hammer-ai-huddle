@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { useAtBatPitches } from "@/hooks/useAtBatPitches";
 import type { AtBatPitchTally } from "@/hooks/useAtBatPitches";
+import { showUndoToast } from "@/lib/games/undoToast";
 import { toast } from "sonner";
 
 interface Props {
