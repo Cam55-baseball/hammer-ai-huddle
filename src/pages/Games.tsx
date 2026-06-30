@@ -198,12 +198,10 @@ export default function Games() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="in_progress">In progress</SelectItem>
-            <SelectItem value="final">Final</SelectItem>
-            <SelectItem value="canceled">Canceled</SelectItem>
+            <SelectItem value="all">All games</SelectItem>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="live">Live now</SelectItem>
+            <SelectItem value="done">Played</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -212,20 +210,20 @@ export default function Games() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <HelperTile
           icon={<Sparkles className="h-5 w-5" />}
-          title="AI document import"
-          desc="Drop a Trackman / GameChanger / Rapsodo file or a scorebook photo — events get drafted, you confirm by inning."
+          title="Hammer document import"
+          desc="Drop a Trackman / GameChanger / Rapsodo file or a scorebook photo — Hammer drafts the events, you confirm by inning."
           onClick={() => toast.info("Open a game, then use the Import tab.")}
         />
         <HelperTile
           icon={<Users className="h-5 w-5" />}
-          title="Dossiers"
-          desc="Persistent notes on every pitcher and hitter you've faced. Pre-game strike-zone plan + post-game review."
+          title="Scouting profiles"
+          desc="Saved pages for pitchers you've faced and hitters you've pitched to. Pre-game plan + post-game notes that come back next time you see them."
           onClick={() => navigate("/games/dossiers")}
         />
         <HelperTile
           icon={<BarChart3 className="h-5 w-5" />}
           title="Reports"
-          desc="Heat maps, plate discipline, pitcher usage, defense and baserun — switch-side aware."
+          desc="Pick a topic — hitting, pitching, defense, baserunning — and Hammer builds the dashboard for it."
           onClick={() => navigate("/games/reports")}
         />
       </div>
