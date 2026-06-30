@@ -376,6 +376,45 @@ function OverviewPanel({
         </div>
       </div>
 
+      <div className="space-y-1.5 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+        <Label className="text-xs uppercase tracking-wide">Probable pitcher today</Label>
+        <Select
+          value={game.probable_pitcher_dossier_id ?? "__none"}
+          onValueChange={(v) => {
+            if (v === "__new") { setNewPitcherOpen(true); return; }
+            onPatch({ probable_pitcher_dossier_id: v === "__none" ? null : v });
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Pick a pitcher to unlock the elite plan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none">— None —</SelectItem>
+            {(pitcherDossiers.list.data ?? []).map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}{p.team ? ` · ${p.team}` : ""}{p.throws ? ` · ${p.throws}HP` : ""}
+              </SelectItem>
+            ))}
+            <SelectItem value="__new">+ New scouting profile…</SelectItem>
+          </SelectContent>
+        </Select>
+        {currentPitcher && (
+          <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <span>Plan + per-AB defaults use <strong>{currentPitcher.name}</strong></span>
+            <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setEditingPitcher(currentPitcher)}>
+              Open profile
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <PitcherDossierDrawer
+        open={!!editingPitcher || newPitcherOpen}
+        onOpenChange={(o) => { if (!o) { setEditingPitcher(null); setNewPitcherOpen(false); } }}
+        sport={game.sport}
+        dossier={editingPitcher}
+      />
+
       <div className="space-y-1.5">
         <Label>Positions played (tap to toggle — multiple ok)</Label>
         <div className="flex flex-wrap gap-1.5">
