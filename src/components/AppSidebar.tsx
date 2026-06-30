@@ -653,7 +653,7 @@ export function AppSidebar() {
               {[
                 { title: 'Practice Hub', url: '/practice', icon: Flame },
                 { title: 'Workout Plan', url: '/training-block', icon: Dumbbell },
-                { title: 'Progress Dashboard', url: '/progress', icon: BarChart3 },
+                { title: 'The General', url: '/progress', icon: BarChart3 },
               ].map((item, index) => (
                 <SidebarMenuItem key={item.title} className="sidebar-item">
                   <SidebarMenuButton
