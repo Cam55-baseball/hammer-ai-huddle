@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
+import { RepCard, RepKeyboardHints } from "./RepCard";
+
 
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF"];
 const PLAY_TYPES = [
