@@ -117,8 +117,9 @@ export default function Dossiers() {
             </Card>
           ))}
           {!pitchers.list.isLoading && pRows.length === 0 && (
-            <Card className="p-6 text-sm text-muted-foreground text-center">
-              No pitchers yet. Add one to start building plans.
+            <Card className="p-6 text-sm text-muted-foreground text-center space-y-1">
+              <div>No pitchers yet. Add one to start building plans.</div>
+              <div className="text-xs">Tag a pitcher on a game's Overview tab to unlock the elite plan.</div>
             </Card>
           )}
         </TabsContent>
