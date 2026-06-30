@@ -97,6 +97,16 @@ export function SubLogger({ gameId }: { gameId: string }) {
 
       {show && <SubForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
+      {(list.data ?? []).length === 0 && !show && (
+        <Card className="p-5 text-center bg-muted/20 border-dashed">
+          <Users className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm font-medium">No subs recorded</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Log pinch hits, defensive replacements, relief, and position swaps so usage data stays aligned with at-bats and defensive plays.
+          </p>
+        </Card>
+      )}
+
       <div className="space-y-2">
         {(list.data ?? []).map((s) => (
           <Card key={s.id} className="p-3 flex items-center justify-between gap-2">
