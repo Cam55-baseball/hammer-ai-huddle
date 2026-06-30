@@ -5,7 +5,7 @@
  * Tap the 9-zone grid to set location.zone, or the surrounding out-bands.
  */
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useGamePitches, type GpPitchRow } from "@/hooks/useGamePitches";
 import { StrikeZoneGrid, type Zone, type OutZone } from "./StrikeZoneGrid";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { RepCard } from "./RepCard";
+import { RepCard, RepKeyboardHints } from "./RepCard";
+import { showUndoToast } from "@/lib/games/undoToast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
+const CONTACTS = ["weak","medium","hard","barrel","mishit"];
+const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
 
 
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
