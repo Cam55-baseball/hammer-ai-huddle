@@ -31,11 +31,25 @@ const RESULTS = ["ball","called_strike","swinging_strike","foul","in_play","hbp"
 const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_quarter","side_arm","submarine","windmill"];
 
 export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }) {
+export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }) {
   const { list, add, del } = useGamePitches(gameId);
+  const qc = useQueryClient();
   const [tab, setTab] = useState<"pitcher" | "hitter">("hitter");
   const [show, setShow] = useState(false);
 
   const rows = (list.data ?? []).filter((p) => p.perspective === tab);
+
+  const handleDelete = async (p: GpPitchRow) => {
+    await del.mutateAsync(p.id);
+    showUndoToast({
+      label: "Pitch removed",
+      undo: async () => {
+        const { id: _i, created_at: _c, ...rest } = p as any;
+        await (supabase as any).from("gp_pitches").insert(rest);
+        qc.invalidateQueries({ queryKey: ["gp-pitches", gameId] });
+      },
+    });
+  };
 
   return (
     <div className="space-y-3">
@@ -45,7 +59,7 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
           <TabsTrigger value="pitcher">As pitcher</TabsTrigger>
         </TabsList>
         <TabsContent value={tab} className="pt-3 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-xs text-muted-foreground">
               {rows.length} pitch{rows.length === 1 ? "" : "es"} logged
             </p>
@@ -53,6 +67,15 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
               <Plus className="h-3.5 w-3.5" /> New pitch
             </Button>
           </div>
+          <RepKeyboardHints
+            hints={[
+              { key: "B", label: "ball" },
+              { key: "C", label: "called strike" },
+              { key: "S", label: "swing strike" },
+              { key: "F", label: "foul" },
+              { key: "I", label: "in play" },
+            ]}
+          />
 
           {show && (
             <PitchForm
@@ -64,7 +87,7 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
 
           <div className="space-y-2">
             {rows.map((p, idx) => (
-              <PitchCard key={p.id} p={p} idx={idx + 1} onDelete={() => del.mutate(p.id)} />
+              <PitchCard key={p.id} p={p} idx={idx + 1} onDelete={() => handleDelete(p)} />
             ))}
             {!list.isLoading && rows.length === 0 && !show && (
               <p className="text-xs text-muted-foreground text-center py-4">
