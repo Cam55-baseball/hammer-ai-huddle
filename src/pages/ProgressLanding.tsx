@@ -208,6 +208,8 @@ export default function ProgressLanding() {
 
         <GpInGameSummaryCard />
 
+        <DriftMarkersCard />
+
         <IqInsightCard />
 
         <SideSplitsSection />
