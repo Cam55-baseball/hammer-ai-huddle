@@ -3,7 +3,7 @@
  *
  * Reads the last 7 days of at-bats, pitches (as hitter), and defensive
  * plays for the current user and returns a small projection the Hammer
- * daily plan + Progress Dashboard can consume.
+ * daily plan + The General can consume.
  *
  * Interpretive only — never authors organism truth. Missingness is
  * preserved (everything starts null until threshold n is met).

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * Thin, passive inline banner showing today's outcome at the top of
- * Progress Dashboard. NOT a card — single-line visibility only.
+ * The General. NOT a card — single-line visibility only.
  * Sources from the same hook as the Nightly Check-In verdict so the
  * two cannot drift.
  */
