@@ -32,7 +32,11 @@ export interface ParsedScheduleEvent {
 export interface ImportSummary {
   inserted: number;
   failed: number;
+  skipped: number;
   errors: string[];
+  /** IDs of rows just inserted, for 24h undo. */
+  insertedGameIds: string[];
+  insertedSessionIds: string[];
 }
 
 export function useImportScheduleEvents() {
@@ -43,7 +47,14 @@ export function useImportScheduleEvents() {
     mutationFn: async (events: ParsedScheduleEvent[]): Promise<ImportSummary> => {
       if (!user?.id) throw new Error("Sign in required to import a schedule.");
       const uid = user.id;
-      const summary: ImportSummary = { inserted: 0, failed: 0, errors: [] };
+      const summary: ImportSummary = {
+        inserted: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        insertedGameIds: [],
+        insertedSessionIds: [],
+      };
 
       const gameRows: Array<Record<string, unknown>> = [];
       const sessionRows: Array<Record<string, unknown>> = [];
@@ -53,14 +64,36 @@ export function useImportScheduleEvents() {
         imported_at: new Date().toISOString(),
       };
 
-      // Resolve athlete defaults once. The `games` table requires team_name,
-      // league_level, and field distances NOT NULL — none are captured by the
-      // importer UI, so fall back to safe athlete-scoped defaults.
-      const [{ data: profile }, { data: settings }] = await Promise.all([
-        (supabase as any).from("profiles").select("full_name").eq("id", uid).maybeSingle(),
+      const [{ data: settings }] = await Promise.all([
         (supabase as any).from("athlete_mpi_settings").select("sport").eq("user_id", uid).maybeSingle(),
       ]);
       const defaultSport = settings?.sport || "baseball";
+
+      // ---------- Duplicate detection ----------
+      // Pull every existing row whose date falls inside the imported window.
+      const dates = Array.from(new Set(events.map((e) => e.start_date).filter(Boolean)));
+      const dupGames = new Set<string>();
+      const dupSessions = new Set<string>();
+      if (dates.length) {
+        const [existingGames, existingSessions] = await Promise.all([
+          (supabase as any)
+            .from("gp_games")
+            .select("game_date,opponent_team")
+            .eq("user_id", uid)
+            .in("game_date", dates),
+          (supabase as any)
+            .from("scheduled_practice_sessions")
+            .select("scheduled_date,title")
+            .eq("user_id", uid)
+            .in("scheduled_date", dates),
+        ]);
+        for (const g of existingGames?.data ?? []) {
+          dupGames.add(`${g.game_date}::${(g.opponent_team ?? "").toLowerCase().trim()}`);
+        }
+        for (const s of existingSessions?.data ?? []) {
+          dupSessions.add(`${s.scheduled_date}::${(s.title ?? "").toLowerCase().trim()}`);
+        }
+      }
 
       for (const ev of events) {
         const day = ev.start_date;
@@ -70,6 +103,12 @@ export function useImportScheduleEvents() {
           continue;
         }
         if (ev.kind === "game" || ev.kind === "tournament_day") {
+          const key = `${day}::${(ev.opponent ?? ev.title ?? "").toLowerCase().trim()}`;
+          if (dupGames.has(key)) {
+            summary.skipped += 1;
+            continue;
+          }
+          dupGames.add(key);
           gameRows.push({
             user_id: uid,
             game_date: day,
@@ -88,6 +127,12 @@ export function useImportScheduleEvents() {
             },
           });
         } else {
+          const key = `${day}::${(ev.title ?? "").toLowerCase().trim()}`;
+          if (dupSessions.has(key)) {
+            summary.skipped += 1;
+            continue;
+          }
+          dupSessions.add(key);
           const module_ =
             ev.kind === "practice" ? "practice" :
             ev.kind === "travel" ? "note" : "note";
@@ -111,23 +156,33 @@ export function useImportScheduleEvents() {
       }
 
       if (gameRows.length) {
-        const { error } = await (supabase as any).from("gp_games").insert(gameRows);
+        const { data, error } = await (supabase as any)
+          .from("gp_games")
+          .insert(gameRows)
+          .select("id");
         if (error) {
           summary.failed += gameRows.length;
           summary.errors.push(`Games: ${error.message}`);
         } else {
           summary.inserted += gameRows.length;
+          for (const r of (data ?? []) as Array<{ id: string }>) {
+            if (r?.id) summary.insertedGameIds.push(r.id);
+          }
         }
       }
       if (sessionRows.length) {
-        const { error } = await (supabase as any)
+        const { data, error } = await (supabase as any)
           .from("scheduled_practice_sessions")
-          .insert(sessionRows);
+          .insert(sessionRows)
+          .select("id");
         if (error) {
           summary.failed += sessionRows.length;
           summary.errors.push(`Sessions: ${error.message}`);
         } else {
           summary.inserted += sessionRows.length;
+          for (const r of (data ?? []) as Array<{ id: string }>) {
+            if (r?.id) summary.insertedSessionIds.push(r.id);
+          }
         }
       }
 
@@ -142,4 +197,33 @@ export function useImportScheduleEvents() {
       qc.invalidateQueries({ queryKey: ["season-status"] });
     },
   });
+}
+
+/**
+ * Undo a recent import within the 24h window. Hard-deletes by ID. RLS
+ * still enforces ownership, so a stolen ID list can't be misused.
+ */
+export async function undoScheduleImport(input: {
+  gameIds: string[];
+  sessionIds: string[];
+}): Promise<{ removed: number; errors: string[] }> {
+  const errors: string[] = [];
+  let removed = 0;
+  if (input.gameIds.length) {
+    const { error, count } = await (supabase as any)
+      .from("gp_games")
+      .delete({ count: "exact" })
+      .in("id", input.gameIds);
+    if (error) errors.push(`Games: ${error.message}`);
+    else removed += count ?? 0;
+  }
+  if (input.sessionIds.length) {
+    const { error, count } = await (supabase as any)
+      .from("scheduled_practice_sessions")
+      .delete({ count: "exact" })
+      .in("id", input.sessionIds);
+    if (error) errors.push(`Sessions: ${error.message}`);
+    else removed += count ?? 0;
+  }
+  return { removed, errors };
 }
