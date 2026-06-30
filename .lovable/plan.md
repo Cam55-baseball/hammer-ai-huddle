@@ -1,53 +1,32 @@
-## Scope (this approval slice)
+## Slice 2 — AtBat rep-card refit + Defense position-conditional fields
 
-Two deliverables. Approve to ship; I will then ask for the next continuation slice until zero fragments remain.
+### 1. AtBatLogger → rep-card format
+- Wrap each at-bat in `<RepCard accent="hitting">` with numbered rep header, badges (inning, side, count, result), `RepKeyboardHints` ("N" new AB, "P" toggle pitch panel, "U" undo).
+- Render the inline `AtBatPitchPanel` as **child reps**: each pitch a mini rep row (#1, #2, …) with accent stripe, pitch result badge, zone chip, delete affordance — matching Practice Hub fill-out look.
+- Hitter-vs-pitcher gating: when the user's role this game = hitter, surface swing decision / contact quality / exit direction / pitch type / velocity band / ABS guess / location / pitcher spot intent / batter side. All founder-protected fields preserved — none removed.
+- Add `undoToast` parity on pitch deletes inside the panel.
 
-### 1. Sidebar reorganization
-- Move **The General** into the **Main navigation** group (top section with Home, Hammer, Calendar, IQ).
-- Move **Organization** into the **Game Hub** group (alongside Games, Reports, Scouting Profiles).
-- Single edit in `src/components/AppSidebar.tsx`. No route changes, no behavior changes — pure grouping. Active-state and collapsed/icon mode preserved.
+### 2. DefenseLogger → position-conditional rep fields
+- Drive the new-play form via `getContextFields(module="fielding", position, sport, sessionType)` from `src/data/contextAppropriatenessEngine.ts`.
+- Conditional field groups inside the form:
+  - **C** → pop time, transfer, throw base, blocking
+  - **Infield (P/1B/2B/3B/SS)** → infield rep type (DP / clean-pick), play direction, throw fields
+  - **OF (LF/CF/RF)** → play direction, throw fields, route quality
+- Keep all founder-protected metrics (pop_time, transfer, throw_base, time_to_first, arm_velo, play_direction, infield rep type) — show/hide only, never delete.
+- Rep card visuals already shipped in slice 1; this slice only changes the **form**.
 
-### 2. Game Hub loggers → Practice Hub "rep sheet" format
-
-Goal: every logged event in a game looks and feels like a Practice Hub rep card — one card per rep, role/position-conditional fields, founder-protected metrics intact, keyboard-driven, undo on every rep.
-
-Per-logger work:
-
-**AtBatLogger** (`src/components/games/AtBatLogger.tsx`)
-- Reformat each at-bat as a **rep card** with the inline pitch panel rendered as **pitch-reps inside the at-bat** (1 pitch = 1 rep, matching Practice Hub visual treatment).
-- Hitter-only fields surface when the user's role this game = hitter; pitcher-facing fields hidden.
-- Keep all founder-protected metrics: swing decision, contact quality, exit direction, pitch type, velocity band, ABS guess, location, pitcher spot intent, batter side.
-
-**PitchLogger** (`src/components/games/PitchLogger.tsx`)
-- Pitcher-only rep sheet: 1 pitch = 1 rep card with location grid, intent vs result, velocity, spin direction, hitter outcome block (gated by `contextAppropriatenessEngine` `showPitcherHitterOutcomes`).
-- Inline keyboard shortcuts + undo toast parity with AtBat.
-
-**DefenseLogger** (`src/components/games/DefenseLogger.tsx`)
-- Position-conditional rep cards driven by `getContextFields(module, position, sport, sessionType)`:
-  - C → pop time, transfer, throw base, blocking
-  - Infield (P/1B/2B/3B/SS) → infield rep type, play direction, throw fields
-  - OF → play direction, throw fields, route quality
-- Each fielding chance = one rep card.
-
-**BaserunLogger** (`src/components/games/BaserunLogger.tsx`)
-- Each baserunning event = one rep card: lead type, jump quality, read, outcome, base reached, pitcher/catcher pressure context.
-- Keyboard + undo parity.
-
-**SubLogger** (`src/components/games/SubLogger.tsx`)
-- Keep simple but bring to the rep-card visual language so the Game Hub feels uniform.
-
-Cross-cutting:
-- Shared `<RepCard>` shell extracted to `src/components/games/RepCard.tsx` so all 5 loggers share spacing, header, undo affordance, and keyboard hint row — the Practice Hub look in one component.
-- All conditional fields routed through existing `getContextFields()` so logic stays in one place; no founder-protected field is removed.
-- `undoToast` already wired in Defense/Baserun/Sub — extend to inline-pitch reps inside AtBat.
+### Files touched
+- `src/components/games/AtBatLogger.tsx` (rep-card refit + child-pitch reps)
+- `src/components/games/AtBatPitchPanel.tsx` (mini-rep visual treatment, undo toast)
+- `src/components/games/DefenseLogger.tsx` (position-conditional form)
+- No schema changes, no route changes, no founder-protected field removed.
 
 ### Verification
 - `bunx tsgo --noEmit` clean.
-- `bash scripts/preflight.sh` green (includes eternity guards).
-- Playwright smoke under `/tmp/browser/game-hub-reps/`: open a game, log 1 at-bat with 4 pitches, 1 defensive chance per role, 1 baserunning event, 1 sub — screenshot every rep card.
+- `bash scripts/preflight.sh` green.
+- Playwright smoke: open a game → log 1 AB with 4 pitches (auto-close on K) → log defensive chances for C, SS, CF and screenshot the conditional fields.
 
-### Out of scope this slice (next continuation slices)
-- Deferred items from part-2 audit (RLS sweep, edge heartbeats, GP→roadmap per-skill deltas, side-context heatmaps, importer UX, onboarding resume deep-link). I'll bring each as its own slice for approval until zero fragments.
-
-## Size
-~8 files touched, 1 new shared component, no schema changes, no route changes.
+### Out of scope (next continuation slices)
+1. PitchLogger pitcher-only rep sheet with location grid (standalone-pitcher view polish).
+2. SubLogger field polish to match.
+3. The 7 deferred audit items (RLS sweep, edge heartbeats, GP→roadmap per-skill deltas, side-context heatmaps, importer UX, onboarding resume deep-link, drift markers) — each as its own approval slice until zero fragments.
