@@ -172,6 +172,7 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
+    { title: 'The General', url: '/progress', icon: BarChart3 },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
     { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
@@ -180,6 +181,7 @@ export function AppSidebar() {
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
+
 
   // Nutrition lives under a single collapsible group so users pick Hub vs. Tips
   // from one entry instead of two competing top-level items.
