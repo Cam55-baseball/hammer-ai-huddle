@@ -222,6 +222,7 @@ export function HammerDailyPlan() {
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
+        <WkLiftsSpeedSection />
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
     </Card>
