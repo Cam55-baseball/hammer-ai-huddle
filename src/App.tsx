@@ -1,5 +1,13 @@
 // Force rebuild to clear stale module references - Dec 2025
-import { Suspense, lazy, useEffect, ComponentType } from "react";
+import { Suspense, useEffect, ComponentType } from "react";
+import {
+  lazyWithRetry,
+  isChunkLoadError,
+  triggerChunkReload,
+  clearChunkReloadGuard,
+} from "@/utils/lazyWithRetry";
+// Re-export for backward compatibility with existing imports.
+export { isChunkLoadError, triggerChunkReload };
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,70 +40,10 @@ const cleanupCacheBustParam = () => {
   }
 };
 
-// Detect failures that mean "the JS chunk URL no longer exists" — typically
-// a stale index.html holding hashes that vanished after a deploy.
-export function isChunkLoadError(error: unknown): boolean {
-  if (!error) return false;
-  const e = error as { name?: string; message?: string };
-  if (e.name === 'ChunkLoadError') return true;
-  const msg = String(e.message ?? error);
-  return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|Loading chunk \d+ failed|Loading CSS chunk/i.test(
-    msg,
-  );
-}
+// Chunk recovery + lazy-with-retry helpers live in @/utils/lazyWithRetry.
+// They are imported at the top of this file and re-exported for backward
+// compatibility with any module that still imports them from "@/App".
 
-// One-shot, sessionStorage-guarded hard reload with cache-bust. Safe to call
-// from multiple sites — only the first call per session actually reloads.
-const RELOAD_GUARD_KEY = '__chunk_reload_once';
-export function triggerChunkReload(reason: string) {
-  try {
-    if (sessionStorage.getItem(RELOAD_GUARD_KEY) === '1') return false;
-    sessionStorage.setItem(RELOAD_GUARD_KEY, '1');
-  } catch {
-    /* storage disabled — fall through and still try the reload */
-  }
-  console.warn('[chunk-recovery] reloading once due to:', reason);
-  try {
-    const url = new URL(window.location.href);
-    url.searchParams.set('_cb', Date.now().toString(36));
-    window.location.replace(url.toString());
-  } catch {
-    window.location.reload();
-  }
-  return true;
-}
-
-// Helper function to retry dynamic imports with cache-busting + self-healing
-// reload as the final fallback for stale chunk errors.
-const lazyWithRetry = <T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>,
-  retries = 3
-) => {
-  return lazy(async () => {
-    let lastError: unknown;
-    for (let i = 0; i < retries; i++) {
-      try {
-        return await componentImport();
-      } catch (error) {
-        lastError = error;
-        console.warn(`Dynamic import failed (attempt ${i + 1}/${retries}):`, error);
-        if (i === retries - 1) break;
-        await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
-      }
-    }
-    // Stale chunk → trigger a single recovery reload before surrendering to
-    // the ErrorBoundary. If the guard is already tripped, we just throw and
-    // let the boundary render its chunk-aware fallback.
-    if (isChunkLoadError(lastError)) {
-      if (triggerChunkReload('lazyWithRetry exhausted')) {
-        // Hand back a never-resolving promise so Suspense keeps the skeleton
-        // visible during the reload instead of flashing the error UI.
-        return await new Promise<{ default: T }>(() => {});
-      }
-    }
-    throw lastError ?? new Error('Failed to load module after retries');
-  });
-};
 
 
 // Lazy components that resolve from the already-in-flight preload, with
@@ -242,9 +190,10 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Clean up cache-bust param on successful load
+  // Clean up cache-bust param + release the one-shot reload guard on successful load.
   useEffect(() => {
     cleanupCacheBustParam();
+    clearChunkReloadGuard();
   }, []);
 
   // Global catcher for stale dynamic-import failures that escape lazy() —

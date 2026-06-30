@@ -1,6 +1,6 @@
 /**
  * GpInGameSummaryCard — compact "from the field" view at the top of the
- * Progress Dashboard. Renders nothing when no games have been logged.
+ * The General. Renders nothing when no games have been logged.
  */
 import { useNavigate } from "react-router-dom";
 import { Trophy, ArrowRight } from "lucide-react";

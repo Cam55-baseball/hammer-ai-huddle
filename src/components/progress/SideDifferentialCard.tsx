@@ -3,7 +3,7 @@
  * enough samples (MIN_PER_SIDE). Below threshold, renders nothing —
  * trust-first, never invents data.
  *
- * Consumed by Progress Dashboard + Hammer "Ask" surfaces. Pure render
+ * Consumed by The General + Hammer "Ask" surfaces. Pure render
  * over `computeSideDifferential`.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

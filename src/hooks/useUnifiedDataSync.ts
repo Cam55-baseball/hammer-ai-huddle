@@ -130,6 +130,13 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
   const tabIdRef = useRef(TAB_ID);
+  // Guards against the "CLOSED triggers reconnect during cleanup" loop that
+  // hammered the realtime endpoint every few seconds. Set true when the
+  // hook is tearing down so status callbacks become no-ops.
+  const teardownRef = useRef(false);
+  // Stable refs so the realtime effect does not resubscribe on every render.
+  const onDataChangeRef = useRef(onDataChange);
+  useEffect(() => { onDataChangeRef.current = onDataChange; }, [onDataChange]);
 
   // ── PER-ROW DEDUP ──
   const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {
@@ -164,120 +171,106 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
     }
   }, [queryClient, broadcastInvalidate]);
 
-  const handleDatabaseChange = useCallback((payload: {
-    eventType: string;
-    table: string;
-    new: any;
-    old: any;
-  }) => {
-    const { table } = payload;
-    const rowId = payload.new?.id || payload.old?.id || '';
-
-    if (!shouldProcessEvent(table, payload.eventType, rowId)) return;
-
-    invalidateRelatedQueries(table);
-
-    if (onDataChange) {
-      onDataChange(table, payload);
-    }
-  }, [shouldProcessEvent, invalidateRelatedQueries, onDataChange]);
-
-  const setupChannel = useCallback(() => {
-    if (!user) return null;
-
-    const channel = supabase.channel(`unified-sync-${user.id}`);
-    const tablesToWatch = Object.keys(TABLE_QUERY_MAPPINGS);
-
-    tablesToWatch.forEach(table => {
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table,
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => handleDatabaseChange({
-          ...payload,
-          table,
-          eventType: payload.eventType,
-          new: payload.new,
-          old: payload.old,
-        })
-      );
-    });
-
-    return channel;
-  }, [user, handleDatabaseChange]);
-
-  const attemptReconnect = useCallback(() => {
-    const MAX_ATTEMPTS = 5;
-    if (reconnectAttemptRef.current >= MAX_ATTEMPTS) {
-      console.warn('[UnifiedDataSync] Max reconnect attempts reached, invalidating critical keys');
-      CRITICAL_KEYS.forEach(key => {
-        queryClient.invalidateQueries({ queryKey: key });
-        broadcastInvalidate(key);
-      });
-      reconnectAttemptRef.current = 0;
-      return;
-    }
-
-    const delay = Math.pow(2, reconnectAttemptRef.current) * 1000;
-    reconnectAttemptRef.current += 1;
-
-    reconnectTimerRef.current = setTimeout(() => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
-      const newChannel = setupChannel();
-      if (newChannel) {
-        newChannel.subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('[UnifiedDataSync] Reconnected successfully');
-            reconnectAttemptRef.current = 0;
-            if (reconnectTimerRef.current) {
-              clearTimeout(reconnectTimerRef.current);
-              reconnectTimerRef.current = null;
-            }
-          } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-            attemptReconnect();
-          }
-        });
-        channelRef.current = newChannel;
-      }
-    }, delay);
-  }, [setupChannel, queryClient, broadcastInvalidate]);
-
   // ── MAIN REALTIME SUBSCRIPTION ──
+  // Single effect, depends only on user.id + enabled. All callbacks live in
+  // refs so this never resubscribes mid-session.
   useEffect(() => {
     if (!user || !enabled) return;
+    teardownRef.current = false;
+    reconnectAttemptRef.current = 0;
 
-    const channel = setupChannel();
-    if (!channel) return;
+    const buildChannel = () => {
+      const channel = supabase.channel(`unified-sync-${user.id}`);
+      const tablesToWatch = Object.keys(TABLE_QUERY_MAPPINGS);
+      tablesToWatch.forEach(table => {
+        channel.on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table,
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload: any) => {
+            const rowId = payload?.new?.id || payload?.old?.id || '';
+            if (!shouldProcessEvent(table, payload.eventType, rowId)) return;
+            invalidateRelatedQueries(table);
+            try { onDataChangeRef.current?.(table, payload); } catch { /* ignore */ }
+          },
+        );
+      });
+      return channel;
+    };
 
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('[UnifiedDataSync] Subscribed to cross-module sync');
+    const scheduleReconnect = () => {
+      if (teardownRef.current) return;
+      const MAX_ATTEMPTS = 5;
+      if (reconnectAttemptRef.current >= MAX_ATTEMPTS) {
+        console.warn('[UnifiedDataSync] Max reconnect attempts reached, invalidating critical keys');
+        CRITICAL_KEYS.forEach(key => {
+          queryClient.invalidateQueries({ queryKey: key });
+          broadcastInvalidate(key);
+        });
         reconnectAttemptRef.current = 0;
-      } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-        console.warn('[UnifiedDataSync] Channel error/closed, attempting reconnect');
-        attemptReconnect();
+        return;
       }
-    });
+      const delay = Math.min(30_000, Math.pow(2, reconnectAttemptRef.current) * 1000);
+      reconnectAttemptRef.current += 1;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = setTimeout(() => {
+        if (teardownRef.current) return;
+        if (channelRef.current) {
+          try { supabase.removeChannel(channelRef.current); } catch { /* ignore */ }
+          channelRef.current = null;
+        }
+        subscribe();
+      }, delay);
+    };
 
-    channelRef.current = channel;
+    const subscribe = () => {
+      if (teardownRef.current) return;
+      const channel = buildChannel();
+      channelRef.current = channel;
+      channel.subscribe((status) => {
+        if (teardownRef.current) return; // ignore status that fires during teardown
+        if (status === 'SUBSCRIBED') {
+          if (reconnectAttemptRef.current > 0) {
+            console.log('[UnifiedDataSync] Reconnected successfully');
+          } else {
+            console.log('[UnifiedDataSync] Subscribed to cross-module sync');
+          }
+          reconnectAttemptRef.current = 0;
+          if (reconnectTimerRef.current) {
+            clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = null;
+          }
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          // Only reconnect on genuine error/timeout — never on CLOSED, which
+          // is what fires when we tear the channel down ourselves.
+          console.warn('[UnifiedDataSync] Channel error/timeout, attempting reconnect');
+          scheduleReconnect();
+        }
+      });
+    };
+
+    subscribe();
 
     return () => {
+      teardownRef.current = true;
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
       }
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        try { supabase.removeChannel(channelRef.current); } catch { /* ignore */ }
         channelRef.current = null;
       }
     };
-  }, [user, enabled, setupChannel, attemptReconnect]);
+    // Intentionally only depends on user.id + enabled. shouldProcessEvent,
+    // invalidateRelatedQueries, broadcastInvalidate, queryClient are all
+    // stable in practice; onDataChange is read through a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, enabled]);
 
   // ── MULTI-TAB BROADCAST CHANNEL ──
   useEffect(() => {

@@ -8,6 +8,8 @@ cd "$ROOT"
 bun "$ROOT/scripts/lint-side-context.ts"
 # Game Performance ledger drift guard — no legacy `games` table writes.
 bash "$ROOT/scripts/check-no-legacy-games.sh"
+# Eternity guards — raw lazy(), legacy strings, AuthContext drift, dupe routes.
+bash "$ROOT/scripts/check-eternity-guards.sh"
 bunx vitest run \
   src/lib/asb/invariants/__tests__ \
   src/lib/runtime/__tests__ \

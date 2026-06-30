@@ -1,12 +1,14 @@
-import { ComponentType, lazy } from 'react';
+import { ComponentType } from 'react';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import GenericModuleDemo from './shells/GenericModuleDemo';
 
-// Custom hand-built shells.
-const HittingAnalysisDemo = lazy(() => import('./shells/HittingAnalysisDemo'));
-const IronBambinoDemo = lazy(() => import('./shells/IronBambinoDemo'));
-const VaultDemo = lazy(() => import('./shells/VaultDemo'));
-const AskTheCoachDemo = lazy(() => import('./shells/AskTheCoachDemo'));
-const ScoutFeedDemo = lazy(() => import('./shells/ScoutFeedDemo'));
+// Custom hand-built shells — routed through lazyWithRetry so stale chunks
+// self-heal after a deploy instead of dumping the user to a white screen.
+const HittingAnalysisDemo = lazyWithRetry(() => import('./shells/HittingAnalysisDemo'));
+const IronBambinoDemo = lazyWithRetry(() => import('./shells/IronBambinoDemo'));
+const VaultDemo = lazyWithRetry(() => import('./shells/VaultDemo'));
+const AskTheCoachDemo = lazyWithRetry(() => import('./shells/AskTheCoachDemo'));
+const ScoutFeedDemo = lazyWithRetry(() => import('./shells/ScoutFeedDemo'));
 
 // Generic shells: one wrapper per component_key, all backed by GenericModuleDemo + per-key config.
 const generic = (key: string): ComponentType => {
