@@ -114,10 +114,13 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          {(list.data ?? []).length} play{(list.data ?? []).length === 1 ? "" : "s"}
-        </p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">
+            {(list.data ?? []).length} play{(list.data ?? []).length === 1 ? "" : "s"}
+          </p>
+          <RepKeyboardHints hints={[{ key: "N", label: "new play" }]} />
+        </div>
         <Button size="sm" onClick={() => setShow(true)} className="gap-1">
           <Plus className="h-3.5 w-3.5" /> New play
         </Button>
@@ -130,37 +133,41 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
           <Shield className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
           <p className="text-sm font-medium">No defensive plays logged yet</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Log every chance — putouts, assists, errors, shifts. Press <kbd className="px-1 rounded bg-muted">N</kbd> to add.
+            Each fielding chance is a rep. Press <kbd className="px-1 rounded bg-muted">N</kbd> to add.
           </p>
         </Card>
       )}
 
       <div className="space-y-2">
-        {(list.data ?? []).map((p) => (
-          <Card key={p.id} className="p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-wrap text-sm">
-                <Badge variant="outline">Inn {p.inning ?? "?"}</Badge>
-                <Badge variant="secondary">{p.position}</Badge>
-                <span className="font-medium">{p.play_type ?? "—"}</span>
-                {p.shift && p.shift !== "no_shift" && (
-                  <Badge variant="outline">shift: {p.shift}</Badge>
-                )}
-                {p.error_flag && <Badge variant="destructive">Error</Badge>}
-                {p.result && <span className="text-muted-foreground">{p.result}</span>}
-              </div>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-rose-600"
-                onClick={() => del.mutate(p.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            {p.notes && <p className="text-xs text-muted-foreground mt-1.5">{p.notes}</p>}
-          </Card>
+        {(list.data ?? []).map((p, idx) => (
+          <RepCard
+            key={p.id}
+            accent="defense"
+            repNumber={idx + 1}
+            title={p.play_type ?? "—"}
+            badges={[
+              { label: `Inn ${p.inning ?? "?"}` },
+              { label: p.position, variant: "secondary" },
+              ...(p.shift && p.shift !== "no_shift" ? [{ label: `shift: ${p.shift}` }] : []),
+              ...(p.error_flag ? [{ label: "Error", variant: "destructive" as const }] : []),
+            ]}
+            meta={
+              <>
+                {p.result && <span>Result: {p.result}</span>}
+                {p.time_to_first_sec != null && <span>To 1B: {p.time_to_first_sec}s</span>}
+                {p.pop_time_sec != null && <span>Pop: {p.pop_time_sec}s</span>}
+                {p.arm_velo != null && <span>Arm: {p.arm_velo}</span>}
+              </>
+            }
+            notes={p.notes}
+            onDelete={() => del.mutate(p.id)}
+          />
         ))}
       </div>
     </div>
   );
 }
+
 
 function DefForm({ onSave, onCancel }: {
   onSave: (r: Record<string, any>) => void; onCancel: () => void;
