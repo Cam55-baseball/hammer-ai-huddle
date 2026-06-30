@@ -1,31 +1,57 @@
-## Honest status — Final Mastery Wave
+## Goal
+Close the two gaps from last turn so the Elite Game Performance system is 100% shipped:
+1. **Slice 3** — Wire `useGpSignal` into `dailyPlan.ts` and `useRoadmapProgress.ts` as an additive, survivability-bound bias.
+2. **Slice 5 (remainder)** — Bring `DefenseLogger`, `BaserunLogger`, and `SubLogger` up to the same UX bar as `AtBatLogger` (empty states + 10s undo toasts; shortcuts where they fit).
 
-Most of the plan landed, but **not 100% E2E**. Here's what's done vs. still open.
+No new tables, no schema changes, no auth changes. Frontend + one hook only.
 
-### Done and wired
-- `gp_*` realtime publication + `useGpRealtime` subscribed in `GameSheet`, `Games`, `GameReports`.
-- Sticky `GameTotalsHeader` in `GameSheet`.
-- "Open today's game" CTA banner on `Games.tsx` (auto-detect via `useGameDayContext` reading the new `gp_games` ledger).
-- `useGpSignal` 7-day projection feeding `GpInGameAdvisoryStrip` (Hammer Daily Plan) and `GpInGameSummaryCard` (Progress Dashboard).
-- Drift guard `scripts/check-no-legacy-games.sh` — currently green.
+---
 
-### Not yet complete (gaps the prior turn claimed or implied)
-1. **Pitch ↔ At-Bat coupling** — `AtBatLogger` does not embed `PitchLogger`, no `useAtBatPitches(atBatId)` helper, no auto-advance on ball-4 / strike-3, no live pitch totals at the AB header.
-2. **Dedicated Game Day Mode surface** — only the CTA banner exists. The high-touch `GameDayMode.tsx` (large-touch 4-logger grid, live score/inning/outs) inside `GameSheet` was not built. Auto-create of a `gp_games` shell row on calendar-game start is also not implemented.
-3. **Drift guards** — `scripts/preflight.sh` does not call `check-no-legacy-games.sh`; the `src/lib/games/__tests__/ledger.spec.ts` vitest suite was not added.
-4. **UX polish** — no per-logger empty states, no single-key shortcuts in `AtBatLogger` (1B/2B/3B/HR/K/BB/HBP), no 10s undo toast on inserts.
-5. **Hammer Daily Plan ordering** — `useGpSignal` advisories render as a strip but are not yet fed into `dailyPlan.ts` to actually bias the Tex-Vision / fielding block selection (the plan called for additive modulation, not just a banner).
-6. **Roadmap `gp_signal` envelope** — `useRoadmapProgress` was not updated to consume the new signal for milestone ordering.
+## Slice 3 — Hammer + Roadmap signal modulation
 
-### Proposed closure plan (in order, each slice validated before the next)
+### `src/lib/hammer/prescription/dailyPlan.ts`
+- Extend the planner's athlete-context input to accept an optional `gpSignal` field (rolling 7-day: `chasePct`, `whiffPct`, `zSwingPct`, `errorsByPos`, `baseRunningOuts`, `sampleSize`, `confidence`).
+- Add `applyGpSignalBias(blocks, gpSignal)` as the **last** modulator, after `applyScheduleModulation`. Rules (all additive, all clamped, all skipped when `sampleSize < 8` or `confidence === 'low'`):
+  - `chasePct ≥ 0.32` → +1 priority on Tex-Vision pitch-recognition block, append rationale tag `"gp:chase"`.
+  - `whiffPct ≥ 0.28` → +1 priority on contact/Bat-Path block, tag `"gp:whiff"`.
+  - `errorsByPos[primary] ≥ 2` → +1 priority on Fielding block for that position, tag `"gp:def"`.
+  - `baseRunningOuts ≥ 2` → +1 priority on Baserunning IQ block, tag `"gp:br"`.
+  - Never *removes* blocks, never overrides schedule suppression, never exceeds existing per-day volume ceiling.
+- Surface the applied tags on the returned plan so `GpInGameAdvisoryStrip` can show "Today's plan reflects your last 7 days."
 
-1. **Coupling slice** — add `useAtBatPitches`, embed `PitchLogger` in `AtBatLogger`, auto-close AB on ball-4/strike-3/in-play with pre-filled outcome, live counts in the AB drawer header.
-2. **Game Day Mode slice** — `src/components/games/GameDayMode.tsx` rendered as the default tab inside `GameSheet` when the game is today; large-touch buttons for the 4 loggers, current score/inning/outs derived from the ledger. Add idempotent shell-row creation keyed on `calendar_event_id` (hook into `useGameDayContext`).
-3. **Hammer + Roadmap modulation** — pass `useGpSignal` output into `dailyPlan.ts` via `athleteContext.gpSignal`; bias skill block selection additively (never overrides survivability / freshness). Emit the same envelope to `useRoadmapProgress` for milestone ordering.
-4. **Drift guards** — append `bash scripts/check-no-legacy-games.sh` to `scripts/preflight.sh`; add `src/lib/games/__tests__/ledger.spec.ts` asserting every `GP_TABLES` key matches a generated Supabase type and that `gp(...)` is the only call path.
-5. **UX polish slice** — empty states in `AtBatLogger` / `PitchLogger` / `DefenseLogger` / `BaserunLogger` / `SubLogger`; single-key shortcuts in `AtBatLogger`; 10s `sonner` undo toast on every ledger insert with a `gp(...).delete().eq("id", ...)` rollback.
-6. **Verification pass** — typecheck, run preflight, manually exercise: open today's game from Hammer → log a pitch sequence → see AB auto-close → see totals tick → see advisory refresh on Progress without reload.
+### `src/hooks/useRoadmapProgress.ts`
+- In `orderRoadmapMilestones`, accept optional `gpSignal` and apply a tie-breaker bias (±0.5 rank weight, clamped) when two milestones share the same base priority, biasing toward the milestone whose `category` matches the weakest GP signal axis.
+- Pure additive: if `gpSignal` is absent or low-confidence, ordering is byte-identical to today.
 
-No schema changes required. All work remains additive over `gp_*`.
+### Wiring
+- `src/components/hammer/HammerDailyPlan.tsx`: pass `gpSignal` from `useGpSignal()` into the daily plan call.
+- `src/pages/Roadmap.tsx` (or wherever `useRoadmapProgress` is consumed): pass `gpSignal` through.
 
-Approve and I'll execute slices 1–6 in order.
+---
+
+## Slice 5 (remainder) — Logger UX parity
+
+For each of `DefenseLogger.tsx`, `BaserunLogger.tsx`, `SubLogger.tsx`:
+
+- **Empty state**: replace the bare "No plays yet" with a guided callout matching the AtBatLogger pattern (icon + one-line prompt + "what gets logged here" hint).
+- **Undo toast**: every insert and delete fires a `sonner` toast with a 10s `action: "Undo"` that performs the inverse mutation, mirroring `AtBatLogger`'s pattern via a small shared helper `src/lib/games/undoToast.ts` (so we don't duplicate the logic four times).
+- **Defense-only shortcuts**: `E` = error, `P` = putout, `A` = assist, `D` = double play (only when no input is focused). Baserun/Sub do not get shortcuts (low value, easy to misfire).
+
+### New helper
+- `src/lib/games/undoToast.ts` — `withUndo({ label, doMutation, undoMutation })` returning a promise; centralizes the sonner pattern.
+
+---
+
+## Verification
+- `tsgo` clean.
+- `scripts/preflight.sh` green (already includes ledger drift + game tests from last turn).
+- Manual: log a defensive error → undo within 10s → row removed. Log a sub → undo → removed. Confirm `HammerDailyPlan` shows a "gp:" rationale chip when a synthetic high-chase signal is injected.
+
+## Out of scope
+- No changes to `gp_*` schemas, RLS, or realtime.
+- No redesign of the daily plan UI beyond the rationale chip already supported by `GpInGameAdvisoryStrip`.
+- No new analytics surfaces.
+
+## Risk / drift guards
+- `applyGpSignalBias` is a pure function with a unit test in `src/lib/hammer/prescription/__tests__/dailyPlan.gpSignal.spec.ts` covering: (a) low-confidence no-op, (b) high-chase +1 on Tex-Vision, (c) clamp at volume ceiling, (d) never overrides schedule suppression.
+- `undoToast` has a unit test for the happy path and the "toast dismissed → no undo fires" path.
