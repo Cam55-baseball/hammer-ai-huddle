@@ -13,11 +13,11 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
-import { useLogPlanOutcome } from "@/hooks/usePregamePlan";
+import { useLogPlanOutcome, usePregamePlans } from "@/hooks/usePregamePlan";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Sparkles, Loader2 } from "lucide-react";
 import { SITUATION_MATRIX } from "@/lib/games/situationalMatrix";
 
 export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) {
