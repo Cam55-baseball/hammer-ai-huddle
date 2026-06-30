@@ -12,8 +12,8 @@
 // Idempotent for (user_id, plan_date, sequence_field).
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { withHeartbeat } from "../_shared/withHeartbeat.ts";
-import { resolveWkPhase, type WkPhase } from "../_shared/wkPhaseQuarter.ts";
+import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+import { resolveWkPhase } from "../_shared/wkPhaseQuarter.ts";
 
 interface MovementRow {
   slug: string;
