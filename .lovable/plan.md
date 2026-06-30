@@ -1,32 +1,46 @@
-## Slice 2 — AtBat rep-card refit + Defense position-conditional fields
+## Slice 3 — PitchLogger pitcher rep sheet + SubLogger polish
 
-### 1. AtBatLogger → rep-card format
-- Wrap each at-bat in `<RepCard accent="hitting">` with numbered rep header, badges (inning, side, count, result), `RepKeyboardHints` ("N" new AB, "P" toggle pitch panel, "U" undo).
-- Render the inline `AtBatPitchPanel` as **child reps**: each pitch a mini rep row (#1, #2, …) with accent stripe, pitch result badge, zone chip, delete affordance — matching Practice Hub fill-out look.
-- Hitter-vs-pitcher gating: when the user's role this game = hitter, surface swing decision / contact quality / exit direction / pitch type / velocity band / ABS guess / location / pitcher spot intent / batter side. All founder-protected fields preserved — none removed.
-- Add `undoToast` parity on pitch deletes inside the panel.
+### Scope
+Bring the remaining two Game Hub loggers up to Practice-Hub `RepCard` parity, then unblock the 7 deferred audit items.
 
-### 2. DefenseLogger → position-conditional rep fields
-- Drive the new-play form via `getContextFields(module="fielding", position, sport, sessionType)` from `src/data/contextAppropriatenessEngine.ts`.
-- Conditional field groups inside the form:
-  - **C** → pop time, transfer, throw base, blocking
-  - **Infield (P/1B/2B/3B/SS)** → infield rep type (DP / clean-pick), play direction, throw fields
-  - **OF (LF/CF/RF)** → play direction, throw fields, route quality
-- Keep all founder-protected metrics (pop_time, transfer, throw_base, time_to_first, arm_velo, play_direction, infield rep type) — show/hide only, never delete.
-- Rep card visuals already shipped in slice 1; this slice only changes the **form**.
+### 1. PitchLogger — pitcher-only rep sheet
+Refit `src/components/games/PitchLogger.tsx` so each logged pitch is a numbered child rep inside the outing context:
 
-### Files touched
-- `src/components/games/AtBatLogger.tsx` (rep-card refit + child-pitch reps)
-- `src/components/games/AtBatPitchPanel.tsx` (mini-rep visual treatment, undo toast)
-- `src/components/games/DefenseLogger.tsx` (position-conditional form)
-- No schema changes, no route changes, no founder-protected field removed.
+- Wrap each pitch row in `RepCard` with sky/pitching accent stripe and rep number.
+- Header badges: inning, pitch # of PA, pitch type, velo, result (ball/called/swinging/foul/in-play).
+- Meta row: zone, spin, intent vs result delta, batter side, count before pitch.
+- Form gating via `showPitcherHitterOutcomes` flag:
+  - Always: pitch type, intent zone, actual zone, velo, spin, result.
+  - When hitter-outcomes on: contact type, exit direction, hard-hit flag.
+- `RepKeyboardHints` for fast logging (B/C/S/F/I shortcuts).
+- `showUndoToast` on pitch delete (mirror AtBatPitchPanel pattern).
+- Preserve every founder-protected column; fold UI-only extras into `notes` if no column exists yet.
+
+### 2. SubLogger field polish
+Update `src/components/games/SubLogger.tsx` to match the rep-sheet visual language:
+
+- `RepCard` with neutral/slate accent.
+- Badges: inning, sub type (offensive/defensive/pitching), in/out player, position.
+- Meta row: reason, leverage, runners-on state.
+- `RepKeyboardHints` (O/D/P/R shortcuts).
+- Undo on delete.
+
+### 3. Then the 7 deferred audit items
+After loggers ship, work through in order:
+
+1. RLS sweep across `gp_*` tables — confirm policies + GRANTs.
+2. Edge function heartbeats for long-running analyses.
+3. GP → roadmap per-skill delta wiring in `useGpSignal.ts`.
+4. Side-context heatmaps in `GameReports.tsx` (L/R split).
+5. SeasonScheduleImporter UX polish (preview diff, dedupe).
+6. Onboarding resume deep-link by step ID.
+7. Drift markers in `scripts/check-eternity-guards.sh`.
 
 ### Verification
-- `bunx tsgo --noEmit` clean.
-- `bash scripts/preflight.sh` green.
-- Playwright smoke: open a game → log 1 AB with 4 pitches (auto-close on K) → log defensive chances for C, SS, CF and screenshot the conditional fields.
+- `tsgo` typecheck after each logger.
+- Manual smoke via preview: log a pitch, undo, log a sub, undo.
+- Confirm founder-protected columns still written (read back via `supabase--read_query`).
 
-### Out of scope (next continuation slices)
-1. PitchLogger pitcher-only rep sheet with location grid (standalone-pitcher view polish).
-2. SubLogger field polish to match.
-3. The 7 deferred audit items (RLS sweep, edge heartbeats, GP→roadmap per-skill deltas, side-context heatmaps, importer UX, onboarding resume deep-link, drift markers) — each as its own approval slice until zero fragments.
+### Out of scope
+- No schema migrations this slice (extras → notes as stopgap, same as DefenseLogger).
+- No changes to AtBatLogger or DefenseLogger.

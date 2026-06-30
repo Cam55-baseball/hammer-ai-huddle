@@ -5,7 +5,7 @@
  * Tap the 9-zone grid to set location.zone, or the surrounding out-bands.
  */
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useGamePitches, type GpPitchRow } from "@/hooks/useGamePitches";
 import { StrikeZoneGrid, type Zone, type OutZone } from "./StrikeZoneGrid";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { RepCard } from "./RepCard";
+import { RepCard, RepKeyboardHints } from "./RepCard";
+import { showUndoToast } from "@/lib/games/undoToast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
+const CONTACTS = ["weak","medium","hard","barrel","mishit"];
+const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
 
 
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
@@ -26,10 +32,23 @@ const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_qu
 
 export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }) {
   const { list, add, del } = useGamePitches(gameId);
+  const qc = useQueryClient();
   const [tab, setTab] = useState<"pitcher" | "hitter">("hitter");
   const [show, setShow] = useState(false);
 
   const rows = (list.data ?? []).filter((p) => p.perspective === tab);
+
+  const handleDelete = async (p: GpPitchRow) => {
+    await del.mutateAsync(p.id);
+    showUndoToast({
+      label: "Pitch removed",
+      undo: async () => {
+        const { id: _i, created_at: _c, ...rest } = p as any;
+        await (supabase as any).from("gp_pitches").insert(rest);
+        qc.invalidateQueries({ queryKey: ["gp-pitches", gameId] });
+      },
+    });
+  };
 
   return (
     <div className="space-y-3">
@@ -39,7 +58,7 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
           <TabsTrigger value="pitcher">As pitcher</TabsTrigger>
         </TabsList>
         <TabsContent value={tab} className="pt-3 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-xs text-muted-foreground">
               {rows.length} pitch{rows.length === 1 ? "" : "es"} logged
             </p>
@@ -47,6 +66,15 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
               <Plus className="h-3.5 w-3.5" /> New pitch
             </Button>
           </div>
+          <RepKeyboardHints
+            hints={[
+              { key: "B", label: "ball" },
+              { key: "C", label: "called strike" },
+              { key: "S", label: "swing strike" },
+              { key: "F", label: "foul" },
+              { key: "I", label: "in play" },
+            ]}
+          />
 
           {show && (
             <PitchForm
@@ -58,7 +86,7 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
 
           <div className="space-y-2">
             {rows.map((p, idx) => (
-              <PitchCard key={p.id} p={p} idx={idx + 1} onDelete={() => del.mutate(p.id)} />
+              <PitchCard key={p.id} p={p} idx={idx + 1} onDelete={() => handleDelete(p)} />
             ))}
             {!list.isLoading && rows.length === 0 && !show && (
               <p className="text-xs text-muted-foreground text-center py-4">
@@ -106,6 +134,8 @@ function PitchForm({
   onCancel: () => void;
 }) {
   const [zoneVal, setZoneVal] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
+  const [intentZone, setIntentZone] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
+  const [showIntent, setShowIntent] = useState(false);
   const [f, setF] = useState<Record<string, any>>({
     inning: 1,
     pitch_no: 1,
@@ -119,14 +149,41 @@ function PitchForm({
     count_balls: 0,
     count_strikes: 0,
     notes: "",
+    contact: "",
+    spray: "",
+    hard_hit: false,
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
+  const isPitcher = perspective === "pitcher";
+  const showHitterOutcomes = f.result === "in_play" || f.result === "bunt_in_play";
 
   return (
-    <Card className="p-4 bg-muted/30">
+    <Card className="p-4 bg-muted/30 border-l-4 border-l-sky-500">
       <div className="grid grid-cols-1 sm:grid-cols-[auto,1fr] gap-4">
-        <div className="flex justify-center sm:justify-start">
+        <div className="flex flex-col items-center gap-2 sm:items-start">
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Actual location
+          </div>
           <StrikeZoneGrid value={zoneVal} onChange={setZoneVal} size={200} />
+          {isPitcher && (
+            <>
+              <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <Checkbox
+                  checked={showIntent}
+                  onCheckedChange={(v) => setShowIntent(Boolean(v))}
+                />
+                Log intent zone
+              </label>
+              {showIntent && (
+                <>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Intent
+                  </div>
+                  <StrikeZoneGrid value={intentZone} onChange={setIntentZone} size={140} />
+                </>
+              )}
+            </>
+          )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <F label="Inn"><Input type="number" value={f.inning}
@@ -185,6 +242,35 @@ function PitchForm({
             <Input value={f.opponent_hitter_name}
               onChange={(e) => set("opponent_hitter_name", e.target.value)} />
           </F>
+          {isPitcher && showHitterOutcomes && (
+            <>
+              <F label="Contact">
+                <Select value={f.contact} onValueChange={(v) => set("contact", v)}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    {CONTACTS.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Spray">
+                <Select value={f.spray} onValueChange={(v) => set("spray", v)}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    {SPRAY.map((s) => (<SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Hard hit?">
+                <label className="flex items-center gap-2 h-9">
+                  <Checkbox
+                    checked={f.hard_hit}
+                    onCheckedChange={(v) => set("hard_hit", Boolean(v))}
+                  />
+                  <span className="text-xs text-muted-foreground">≥ hard / barrel</span>
+                </label>
+              </F>
+            </>
+          )}
           <F label="Notes" className="col-span-2 sm:col-span-3">
             <Input value={f.notes} onChange={(e) => set("notes", e.target.value)} />
           </F>
@@ -193,6 +279,20 @@ function PitchForm({
       <div className="flex justify-end gap-2 mt-3">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
         <Button size="sm" onClick={() => {
+          const extras: string[] = [];
+          if (isPitcher && showIntent && (intentZone.zone || intentZone.outZone)) {
+            const intentLabel = intentZone.zone ?? intentZone.outZone;
+            const actualLabel = zoneVal.zone ?? zoneVal.outZone ?? "—";
+            extras.push(`intent:${intentLabel}→actual:${actualLabel}`);
+          }
+          if (isPitcher && showHitterOutcomes) {
+            if (f.contact) extras.push(`contact:${f.contact}`);
+            if (f.spray) extras.push(`spray:${f.spray}`);
+            if (f.hard_hit) extras.push("hard_hit");
+          }
+          const mergedNotes = extras.length
+            ? [f.notes, `[${extras.join(" · ")}]`].filter(Boolean).join(" ")
+            : f.notes;
           const payload: Record<string, any> = {
             ...f,
             perspective,
@@ -201,9 +301,12 @@ function PitchForm({
             result: f.result || null,
             pitcher_arm_slot: f.pitcher_arm_slot || null,
             opponent_hitter_name: f.opponent_hitter_name || null,
-            notes: f.notes || null,
+            notes: mergedNotes || null,
             location: zoneVal.zone || zoneVal.outZone ? zoneVal : null,
           };
+          delete payload.contact;
+          delete payload.spray;
+          delete payload.hard_hit;
           onSave(payload);
         }}>Save pitch</Button>
       </div>

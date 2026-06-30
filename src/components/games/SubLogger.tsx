@@ -4,24 +4,24 @@
  */
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
-import { RepCard } from "./RepCard";
+import { RepCard, RepKeyboardHints } from "./RepCard";
 
 
 const TYPES = ["pinch_hit","pinch_run","def_replace","relief","position_swap","dh"];
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF","DH"];
+const LEVERAGE = ["low","medium","high","critical"];
 
 export function SubLogger({ gameId }: { gameId: string }) {
   const { user } = useAuth();
@@ -88,7 +88,7 @@ export function SubLogger({ gameId }: { gameId: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-xs text-muted-foreground">
           {(list.data ?? []).length} sub{(list.data ?? []).length === 1 ? "" : "s"}
         </p>
@@ -96,6 +96,14 @@ export function SubLogger({ gameId }: { gameId: string }) {
           <Plus className="h-3.5 w-3.5" /> New sub
         </Button>
       </div>
+      <RepKeyboardHints
+        hints={[
+          { key: "O", label: "offensive" },
+          { key: "D", label: "defensive" },
+          { key: "P", label: "pitching" },
+          { key: "R", label: "reason" },
+        ]}
+      />
 
       {show && <SubForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
@@ -137,12 +145,16 @@ function SubForm({ onSave, onCancel }: {
   onSave: (r: Record<string, any>) => void; onCancel: () => void;
 }) {
   const [f, setF] = useState<Record<string, any>>({
-    inning: 1, sub_type: "def_replace", in_position: "", out_position: "", notes: "",
+    inning: 1, sub_type: "def_replace",
+    in_position: "", out_position: "",
+    in_player: "", out_player: "",
+    reason: "", leverage: "",
+    notes: "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
 
   return (
-    <Card className="p-4 space-y-3 bg-muted/30">
+    <Card className="p-4 space-y-3 bg-muted/30 border-l-4 border-l-slate-500">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <F label="Inning"><Input type="number" value={f.inning}
           onChange={(e) => set("inning", Number(e.target.value))} /></F>
@@ -164,15 +176,45 @@ function SubForm({ onSave, onCancel }: {
             <SelectContent>{POSITIONS.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent>
           </Select>
         </F>
+        <F label="Player out">
+          <Input value={f.out_player} placeholder="name"
+            onChange={(e) => set("out_player", e.target.value)} />
+        </F>
+        <F label="Player in">
+          <Input value={f.in_player} placeholder="name"
+            onChange={(e) => set("in_player", e.target.value)} />
+        </F>
+        <F label="Reason">
+          <Input value={f.reason} placeholder="matchup / fatigue / injury"
+            onChange={(e) => set("reason", e.target.value)} />
+        </F>
+        <F label="Leverage">
+          <Select value={f.leverage} onValueChange={(v) => set("leverage", v)}>
+            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectContent>{LEVERAGE.map((l) => (<SelectItem key={l} value={l}>{l}</SelectItem>))}</SelectContent>
+          </Select>
+        </F>
       </div>
       <F label="Notes"><Input value={f.notes}
         onChange={(e) => set("notes", e.target.value)} /></F>
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
         <Button size="sm" onClick={() => {
-          const payload: Record<string, any> = { ...f };
-          if (!payload.in_position) payload.in_position = null;
-          if (!payload.out_position) payload.out_position = null;
+          const extras: string[] = [];
+          if (f.out_player) extras.push(`out:${f.out_player}`);
+          if (f.in_player) extras.push(`in:${f.in_player}`);
+          if (f.reason) extras.push(`why:${f.reason}`);
+          if (f.leverage) extras.push(`lev:${f.leverage}`);
+          const mergedNotes = extras.length
+            ? [f.notes, `[${extras.join(" · ")}]`].filter(Boolean).join(" ")
+            : f.notes;
+          const payload: Record<string, any> = {
+            inning: f.inning,
+            sub_type: f.sub_type,
+            in_position: f.in_position || null,
+            out_position: f.out_position || null,
+            notes: mergedNotes || null,
+          };
           onSave(payload);
         }}>Save</Button>
       </div>
