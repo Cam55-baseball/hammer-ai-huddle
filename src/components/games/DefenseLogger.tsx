@@ -2,9 +2,9 @@
  * DefenseLogger — defensive play entry. Position, shift (L/R/extreme/in/back),
  * play type, error flag, time-to-first, pop time, arm velo, notes.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { showUndoToast } from "@/lib/games/undoToast";
 
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF"];
 const PLAY_TYPES = [
@@ -45,29 +46,69 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
     },
   });
 
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["gp-def", gameId] });
+
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
-      const { error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("gp_defense_plays")
-        .insert({ ...row, user_id: user!.id, game_id: gameId });
+        .insert({ ...row, user_id: user!.id, game_id: gameId })
+        .select("id")
+        .single();
       if (error) throw error;
+      return data?.id as string | undefined;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gp-def", gameId] });
+    onSuccess: (id) => {
+      invalidate();
       setShow(false);
-      toast.success("Defensive play saved");
+      showUndoToast({
+        label: "Defensive play saved",
+        undo: async () => {
+          if (id) {
+            await (supabase as any).from("gp_defense_plays").delete().eq("id", id);
+            invalidate();
+          }
+        },
+      });
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => {
+      const prev = (list.data ?? []).find((r: any) => r.id === id) ?? null;
       const { error } = await (supabase as any)
         .from("gp_defense_plays").delete().eq("id", id);
       if (error) throw error;
+      return prev;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["gp-def", gameId] }),
+    onSuccess: (prev) => {
+      invalidate();
+      showUndoToast({
+        label: "Defensive play deleted",
+        undo: async () => {
+          if (!prev) return;
+          const { id: _i, created_at: _c, ...restore } = prev as any;
+          await (supabase as any).from("gp_defense_plays").insert(restore);
+          invalidate();
+        },
+      });
+    },
   });
+
+  // Single-key shortcuts (only when no input/textarea/select is focused).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      if (t && t.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === "n") { setShow(true); e.preventDefault(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="space-y-3">
