@@ -8332,12 +8332,14 @@ export type Database = {
           is_ambidextrous_thrower: boolean | null
           is_foreign_player: boolean | null
           is_free_agent: boolean | null
+          is_pro_prospect: boolean | null
           is_professional: boolean | null
           is_switch_hitter: boolean | null
           is_system_account: boolean
           last_name: string | null
           mlb_affiliate: string | null
           ncaa_id: string | null
+          one_rm: Json | null
           position: string | null
           preferred_language: string | null
           primary_batting_side: string | null
@@ -8358,6 +8360,7 @@ export type Database = {
           state: string | null
           team_affiliation: string | null
           throwing_hand: Database["public"]["Enums"]["throwing_hand"] | null
+          training_age_years: number | null
           tutorial_completed: boolean | null
           updated_at: string | null
           weight: string | null
@@ -8394,12 +8397,14 @@ export type Database = {
           is_ambidextrous_thrower?: boolean | null
           is_foreign_player?: boolean | null
           is_free_agent?: boolean | null
+          is_pro_prospect?: boolean | null
           is_professional?: boolean | null
           is_switch_hitter?: boolean | null
           is_system_account?: boolean
           last_name?: string | null
           mlb_affiliate?: string | null
           ncaa_id?: string | null
+          one_rm?: Json | null
           position?: string | null
           preferred_language?: string | null
           primary_batting_side?: string | null
@@ -8420,6 +8425,7 @@ export type Database = {
           state?: string | null
           team_affiliation?: string | null
           throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
+          training_age_years?: number | null
           tutorial_completed?: boolean | null
           updated_at?: string | null
           weight?: string | null
@@ -8456,12 +8462,14 @@ export type Database = {
           is_ambidextrous_thrower?: boolean | null
           is_foreign_player?: boolean | null
           is_free_agent?: boolean | null
+          is_pro_prospect?: boolean | null
           is_professional?: boolean | null
           is_switch_hitter?: boolean | null
           is_system_account?: boolean
           last_name?: string | null
           mlb_affiliate?: string | null
           ncaa_id?: string | null
+          one_rm?: Json | null
           position?: string | null
           preferred_language?: string | null
           primary_batting_side?: string | null
@@ -8482,6 +8490,7 @@ export type Database = {
           state?: string | null
           team_affiliation?: string | null
           throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
+          training_age_years?: number | null
           tutorial_completed?: boolean | null
           updated_at?: string | null
           weight?: string | null

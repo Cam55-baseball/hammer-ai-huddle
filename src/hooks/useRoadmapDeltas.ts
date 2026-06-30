@@ -113,6 +113,7 @@ function usePriorWindowSignal(): GpSignal | null {
       atBats: ab.length,
       pitchesSeen: pch.length,
       defensivePlays: def.length,
+      gameToday: false,
       whiffPct,
       chasePct,
       kRate,

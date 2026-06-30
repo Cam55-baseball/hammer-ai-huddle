@@ -9,7 +9,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Pencil, CheckCircle2, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { ArrowRight, Pencil, CheckCircle2, AlertCircle, Dumbbell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -75,13 +79,23 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
   const [dob, setDob] = useState<string | null>(null);
   const [goals, setGoals] = useState<CategoryGoalsPayloadV2 | null>(null);
   const [latestSchedule, setLatestSchedule] = useState<string | null>(null);
+  const [trainingAge, setTrainingAge] = useState<string>("");
+  const [isProProspect, setIsProProspect] = useState<boolean>(false);
+  const [oneRmSquat, setOneRmSquat] = useState<string>("");
+  const [oneRmBench, setOneRmBench] = useState<string>("");
+  const [oneRmDl, setOneRmDl] = useState<string>("");
+  const [savingTraining, setSavingTraining] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
     setEmail(user.email ?? "—");
     (async () => {
       const [{ data: prof }, { data: ctx }, { data: sched }] = await Promise.all([
-        supabase.from("profiles").select("date_of_birth").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("date_of_birth, training_age_years, is_pro_prospect, one_rm")
+          .eq("id", user.id)
+          .maybeSingle(),
         supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle(),
         supabase
           .from("asb_events")
@@ -92,12 +106,60 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
           .limit(1)
           .maybeSingle(),
       ]);
-      setDob((prof as { date_of_birth: string | null } | null)?.date_of_birth ?? null);
+      const profRow = prof as {
+        date_of_birth: string | null;
+        training_age_years: number | null;
+        is_pro_prospect: boolean | null;
+        one_rm: Record<string, number> | null;
+      } | null;
+      setDob(profRow?.date_of_birth ?? null);
+      setTrainingAge(
+        profRow?.training_age_years != null ? String(profRow.training_age_years) : "",
+      );
+      setIsProProspect(!!profRow?.is_pro_prospect);
+      const rm = profRow?.one_rm ?? {};
+      setOneRmSquat(rm.back_squat != null ? String(rm.back_squat) : "");
+      setOneRmBench(rm.bench != null ? String(rm.bench) : "");
+      setOneRmDl(rm.deadlift != null ? String(rm.deadlift) : "");
       setGoals(getV2((ctx as { category_goals?: unknown } | null)?.category_goals));
       const payload = (sched as { payload?: { event_type?: string } } | null)?.payload;
       setLatestSchedule(payload?.event_type ?? null);
     })();
   }, [user?.id, user?.email]);
+
+  const saveTrainingInputs = async () => {
+    if (!user?.id) return;
+    setSavingTraining(true);
+    try {
+      const oneRm: Record<string, number> = {};
+      const parseNum = (s: string) => {
+        const n = Number(s);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      };
+      const sq = parseNum(oneRmSquat);
+      const bn = parseNum(oneRmBench);
+      const dl = parseNum(oneRmDl);
+      if (sq) oneRm.back_squat = sq;
+      if (bn) oneRm.bench = bn;
+      if (dl) oneRm.deadlift = dl;
+      const ageNum = parseNum(trainingAge);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          training_age_years: ageNum,
+          is_pro_prospect: isProProspect,
+          one_rm: oneRm,
+        } as never)
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("Training inputs saved. Hammer will re-dose your next plan.");
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not save training inputs.");
+    } finally {
+      setSavingTraining(false);
+    }
+  };
 
   const rows: Array<{
     label: string;
@@ -183,6 +245,62 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
           </li>
         ))}
       </ul>
+
+      <section className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+        <div className="flex items-center gap-2">
+          <Dumbbell className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">Training inputs (Hammer reads these)</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          These directly tune today's Lifts/Speed prescriptions and unlock advanced movement progressions when appropriate.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="training-age" className="text-xs">Training age (years of consistent lifting)</Label>
+            <Input
+              id="training-age"
+              type="number"
+              min={0}
+              step={0.5}
+              inputMode="decimal"
+              value={trainingAge}
+              onChange={(e) => setTrainingAge(e.target.value)}
+              placeholder="e.g. 3"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2">
+            <div>
+              <Label htmlFor="pro-prospect" className="text-xs">Pro / Prospect</Label>
+              <p className="text-[10px] text-muted-foreground">Unlocks advanced library early</p>
+            </div>
+            <Switch
+              id="pro-prospect"
+              checked={isProProspect}
+              onCheckedChange={setIsProProspect}
+            />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1">
+            <Label htmlFor="rm-squat" className="text-xs">Back squat 1RM</Label>
+            <Input id="rm-squat" type="number" min={0} inputMode="decimal" value={oneRmSquat} onChange={(e) => setOneRmSquat(e.target.value)} placeholder="lbs or kg" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="rm-bench" className="text-xs">Bench 1RM</Label>
+            <Input id="rm-bench" type="number" min={0} inputMode="decimal" value={oneRmBench} onChange={(e) => setOneRmBench(e.target.value)} placeholder="lbs or kg" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="rm-dl" className="text-xs">Deadlift 1RM</Label>
+            <Input id="rm-dl" type="number" min={0} inputMode="decimal" value={oneRmDl} onChange={(e) => setOneRmDl(e.target.value)} placeholder="lbs or kg" />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={saveTrainingInputs} disabled={savingTraining}>
+            {savingTraining ? "Saving…" : "Save training inputs"}
+          </Button>
+        </div>
+      </section>
+
 
       {!hasCompletedOnboarding && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-xs">
