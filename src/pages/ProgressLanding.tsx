@@ -196,7 +196,7 @@ export default function ProgressLanding() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Progress</h1>
+          <h1 className="text-3xl font-bold text-foreground">The General</h1>
           <p className="text-muted-foreground">
             Pick a topic to see your data, what correlates, and ask Hammer.
             {sport ? ` Ordered for your ${sport} profile.` : ""}
@@ -243,7 +243,7 @@ export default function ProgressLanding() {
                   <div>
                     <h3 className="font-semibold text-sm">All sections (classic view)</h3>
                     <p className="text-[11px] text-muted-foreground">
-                      Every legacy Progress Dashboard widget, unchanged.
+                      Every legacy dashboard widget, unchanged.
                     </p>
                   </div>
                   <ChevronDown

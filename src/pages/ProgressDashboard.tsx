@@ -91,7 +91,7 @@ Confidence: ${snapshot.development_confidence}%
         <DailyOutcomeInlineBanner />
 
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Progress Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground">The General</h1>
           <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>
         </div>
 
