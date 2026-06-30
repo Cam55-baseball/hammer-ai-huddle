@@ -31,7 +31,6 @@ const RESULTS = ["ball","called_strike","swinging_strike","foul","in_play","hbp"
 const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_quarter","side_arm","submarine","windmill"];
 
 export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }) {
-export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }) {
   const { list, add, del } = useGamePitches(gameId);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"pitcher" | "hitter">("hitter");
