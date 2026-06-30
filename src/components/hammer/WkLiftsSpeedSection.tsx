@@ -147,9 +147,14 @@ export function WkLiftsSpeedSection() {
         </div>
 
         {isLoading || (data && data.length === 0 && generating) ? (
-          <div className="text-xs text-muted-foreground py-4 text-center">
-            <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-            Generating today's elite plan…
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full rounded" />
+            <Skeleton className="h-16 w-full rounded" />
+            <Skeleton className="h-16 w-full rounded" />
+            <div className="text-[11px] text-muted-foreground text-center pt-1">
+              <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
+              Building your elite plan…
+            </div>
           </div>
         ) : ordered.length === 0 ? (
           <div className="text-xs text-muted-foreground py-4 text-center">
