@@ -61,8 +61,11 @@ import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { WkLiftsSpeedSection } from "@/components/hammer/WkLiftsSpeedSection";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
+import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { Sliders } from "lucide-react";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -135,10 +138,33 @@ export function HammerDailyPlan() {
       gpSig.defensivePlays,
     ],
   );
-  const plan = useMemo(
+  const rawPlan = useMemo(
     () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan),
     [ctx, scheduleSignal, sideBias, gpForPlan],
   );
+  // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
+  // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
+  // hitting/throwing volume doesn't compound the neural cost.
+  const wkRx = useWkDailyPrescriptions();
+  const totalCns = useMemo(
+    () => (wkRx.data ?? []).reduce((s, r) => s + (Number(r.cns_cost) || 0), 0),
+    [wkRx.data],
+  );
+  const cnsHigh = totalCns >= 7;
+  const plan = useMemo(() => {
+    if (!cnsHigh) return rawPlan;
+    const clampedBlocks = rawPlan.blocks.map((b) => {
+      if (b.modality !== "hitting" && b.modality !== "throwing" && b.modality !== "defense") return b;
+      if (b.phase !== "build" && b.phase !== "sharpen") return b;
+      return {
+        ...b,
+        phase: "maintain" as const,
+        roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
+      };
+    });
+    return { ...rawPlan, blocks: clampedBlocks };
+  }, [rawPlan, cnsHigh]);
+  const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
 
