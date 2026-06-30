@@ -199,7 +199,7 @@ export function PregamePlanPanel({ role, dossierId, sport, archetype, videoUrls,
                     onChange={(v) => rate.mutate({ id: p.id, rating: v })}
                   />
                 </div>
-                <PlanView plan_json={p.plan_json} markdown={p.plan_markdown ?? ""} compact />
+                <PlanView plan_json={p.plan_json} markdown={p.plan_markdown ?? ""} compact sport={sport} />
               </li>
             ))}
           </ul>
