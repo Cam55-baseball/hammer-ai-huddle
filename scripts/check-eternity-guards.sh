@@ -31,7 +31,7 @@ if [ -n "$drift" ]; then
 fi
 
 # 3) AuthContext canonical path
-bad_auth=$(rg -n --no-heading "from ['\"](?!@/contexts/AuthContext)[^'\"]*AuthContext['\"]" src || true)
+bad_auth=$(rg -n --no-heading --pcre2 "from ['\"](?!@/contexts/AuthContext)[^'\"]*AuthContext['\"]" src || true)
 if [ -n "$bad_auth" ]; then
   echo "[eternity-guard] non-canonical AuthContext import:"
   echo "$bad_auth"
