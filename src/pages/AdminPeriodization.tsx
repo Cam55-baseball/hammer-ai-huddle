@@ -157,7 +157,7 @@ export default function AdminPeriodization() {
           })
         )}
       </div>
-    </AppShell>
+    </div>
   );
 }
 
