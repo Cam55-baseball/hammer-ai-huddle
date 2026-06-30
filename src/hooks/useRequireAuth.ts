@@ -2,25 +2,22 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { isProtectedEditingActive } from "@/lib/auth/protectedEditing";
+import { canEvictNow } from "@/lib/auth/canEvict";
 
 /**
  * Auth-stable guard for protected pages.
  *
- * Hardened (Phase 57 calendar-stability): eviction is the LAST resort. Before
- * any redirect to `/auth`, the guard must satisfy ALL of:
+ * Eviction is the LAST resort. The guard requires:
  *
- *  1. Auth context has settled (`!loading && isAuthStable`).
- *  2. Tab is visible.
- *  3. No active text input / contenteditable has focus (user isn't typing).
- *  4. `supabase.auth.getSession()` returns no session after a 1500 ms grace
- *     window (covers Supabase WS reconnects + token-refresh races on mobile).
- *  5. No Supabase `sb-*-auth-token` entry exists in `localStorage` (defends
- *     against a transient in-memory context blip while the persisted token
- *     is still valid — rehydration will catch up on the next tick).
+ *  1. Auth context settled (`!loading && isAuthStable`).
+ *  2. `canEvictNow()` returns ok (tab visible, online, not typing, no persisted
+ *     token, no recent token refresh).
+ *  3. TWO consecutive failed `supabase.auth.getSession()` checks, 1.5s apart,
+ *     after an initial 5s grace window. Token refreshes on slow mobile networks
+ *     routinely take 2–4s — anything shorter false-positives evicts users.
+ *  4. One last attempted `refreshSession()` before pulling the trigger.
  *
- * Anything less is a no-op. This is intentionally conservative: a missed
- * redirect is recoverable, a false eviction mid-typing is not.
+ * A missed redirect is recoverable. A false eviction mid-session is not.
  */
 export function useRequireAuth(enabled = true) {
   const { user, session, loading, isAuthStable } = useAuth();
@@ -30,44 +27,45 @@ export function useRequireAuth(enabled = true) {
   useEffect(() => {
     if (!enabled) return;
     if (loading || !isAuthStable) return;
-    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
-    if (isProtectedEditingActive()) return;
     if (user || session) return;
+    if (!canEvictNow().ok) return;
 
     let cancelled = false;
     const t = setTimeout(async () => {
       if (cancelled) return;
-      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      if (!canEvictNow().ok) return;
 
-      // Rule 3 — never evict a typing/editing user.
-      if (isProtectedEditingActive()) return;
+      // First live recheck.
+      const first = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (first?.data?.session?.user) return;
 
-      // Rule 5 — if a persisted Supabase token is on disk, never evict. The
-      // context will rehydrate from it on the next auth tick.
+      // Wait 1.5s and recheck again — covers mid-flight refreshes.
+      await new Promise((r) => setTimeout(r, 1500));
+      if (cancelled) return;
+      if (!canEvictNow().ok) return;
+
+      const second = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (second?.data?.session?.user) return;
+
+      // Last-chance refresh.
       try {
-        if (typeof window !== "undefined" && window.localStorage) {
-          for (let i = 0; i < window.localStorage.length; i++) {
-            const k = window.localStorage.key(i);
-            if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) {
-              const v = window.localStorage.getItem(k);
-              if (v && v.length > 20) return;
-            }
-          }
-        }
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        if (cancelled) return;
+        if (refreshed?.session?.user) return;
       } catch {
-        // ignore storage errors
+        // fall through
       }
 
-      // Rule 4 — live recheck.
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (data?.session?.user) return;
-
+      if (!canEvictNow().ok) return;
+      // eslint-disable-next-line no-console
+      console.warn("[useRequireAuth] redirecting to /auth after verified no-session");
       navigate("/auth", {
         replace: true,
         state: { returnTo: location.pathname + location.search },
       });
-    }, 1500);
+    }, 5000);
 
     return () => {
       cancelled = true;
