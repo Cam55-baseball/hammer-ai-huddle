@@ -40,6 +40,7 @@ export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) 
   });
 
   const log = useLogPlanOutcome();
+  const { generate } = usePregamePlans({ role: "pitcher", dossierId: pitcherId });
 
   const cues = useMemo<any[]>(() => planQ.data?.plan_json?.cues ?? [], [planQ.data]);
   const situational = planQ.data?.plan_json?.situational_hitting ?? {};
@@ -55,8 +56,29 @@ export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) 
   if (planQ.isLoading) return <Card className="p-3 text-xs">Loading plan…</Card>;
   if (!planQ.data) {
     return (
-      <Card className="p-3 text-xs">
-        No plan generated yet. Open the pitcher dossier and tap <strong>Generate elite plan</strong>.
+      <Card className="p-3 space-y-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Sparkles className="h-4 w-4 text-primary" /> Elite plan not generated yet
+        </div>
+        <div className="text-xs text-muted-foreground">
+          One tap pulls direct history, archetype priors, zone heatmaps, count & situational
+          tendencies, and your recent form into a personal hitting plan for this pitcher.
+        </div>
+        <Button
+          size="sm"
+          className="w-full"
+          disabled={generate.isPending}
+          onClick={() => generate.mutate({ sport: game?.sport, gameId })}
+        >
+          {generate.isPending ? (
+            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Generating…</>
+          ) : (
+            <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Generate elite plan</>
+          )}
+        </Button>
+        {generate.error && (
+          <div className="text-[11px] text-rose-600">{(generate.error as any)?.message ?? "Could not generate plan"}</div>
+        )}
       </Card>
     );
   }
