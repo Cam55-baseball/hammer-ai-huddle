@@ -182,9 +182,11 @@ serve(async (req) => {
       parsed_events: { summary, failures: failed.length, raw: parsed },
     }).eq("id", documentId);
 
+    await hb.success({ ...summary, failures: failed.length, document_id: documentId });
     return json({ summary, failures: failed.length });
   } catch (e) {
     console.error("[gp-ingest-document]", e);
+    await hb.fail(e, { document_id: undefined });
     return json({ error: String(e?.message ?? e) }, 500);
   }
 });
