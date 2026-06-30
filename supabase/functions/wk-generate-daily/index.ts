@@ -91,10 +91,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Load athlete context --------
     const [{ data: profile }, { data: ctx }, { data: injuries }, { data: dailyLog }] = await Promise.all([
-      admin.from("profiles").select("sport, primary_position, side, age, years_lifting, competition_level, is_pro_prospect").eq("id", user.id).maybeSingle(),
-      admin.from("athlete_context").select("preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date, season_status").eq("user_id", user.id).maybeSingle(),
+      admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
-      admin.from("athlete_daily_log").select("sleep_hours, cns_readiness, soreness").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
+      admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
     ]);
 
     const sport = (profile?.sport ?? "baseball") as "baseball" | "softball";
