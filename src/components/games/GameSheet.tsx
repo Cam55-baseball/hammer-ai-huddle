@@ -41,7 +41,9 @@ import { PitchLogger } from "./PitchLogger";
 import { GameDocumentIngest } from "./GameDocumentIngest";
 import { GameTotalsHeader } from "./GameTotalsHeader";
 import { GameDayMode } from "./GameDayMode";
+import { ActivePlanCard } from "./ActivePlanCard";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
+
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
 
@@ -192,7 +194,8 @@ function GameSheetTabs({
       </TabsList>
 
       {isToday && (
-        <TabsContent value="live" className="pt-4">
+        <TabsContent value="live" className="pt-4 space-y-4">
+          <ActivePlanCard gameId={gameId} game={g} />
           <GameDayMode
             gameId={gameId}
             game={g}
@@ -202,8 +205,10 @@ function GameSheetTabs({
       )}
 
       <TabsContent value="overview" className="space-y-4 pt-4">
+        <ActivePlanCard gameId={gameId} game={g} />
         <OverviewPanel game={g} onPatch={onPatch} />
       </TabsContent>
+
 
       <TabsContent value="atbats" className="pt-4">
         <AtBatLogger gameId={gameId} sport={g.sport} />

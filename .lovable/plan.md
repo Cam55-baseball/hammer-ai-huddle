@@ -1,96 +1,135 @@
-# Elite Pregame Dossier & Personal Hitting/Pitching Plan Engine
 
-A .01% pregame planning headquarters inside Game Hub. Build dossiers on opposing pitchers (and for pitchers — opposing hitters), generate a fully personalized pregame plan grounded in **your career history vs that pitcher, your history vs that archetype, your current tendencies, and live form**, tag the dossier on the Game and every at-bat, then close the loop post-game with Plan-vs-Reality + per-AB swing analysis. Sport-aware (baseball vs softball) and subscription-aware (hitter, pitcher, two-way).
+# Finish Pregame Plan + Elite Situational Hitting Intelligence
 
----
-
-## 1. Dossier intake (works for new or known opponents)
-
-In Game Hub → "Scouting profiles", **New / Edit dossier** accepts:
-
-- **Free-text notes & tendencies** — arm slot, release height, extension, arsenal + usage%, velo bands, IVB/HB, zone map, whiff% per pitch, ahead/behind tendencies, first-pitch behavior, confidence/last-start state, runners-on patterns.
-- **File uploads** — TrackMan / Rapsodo / GameChanger CSV + PDF. Gemini parses release_height, extension, IVB/HB, spin, zone%, whiff% per pitch.
-- **Image uploads** — TrackMan screenshots, scout cards, spray charts. Gemini Vision extracts the same fields.
-- **Video uploads** — bullpen / live AB clips of the pitcher (or hitter, mirrored). Stored on the dossier, watchable from the plan, and feed AI's "what to expect visually" notes.
-
-All extractions write into a structured `tendencies` JSON so the engine has typed fields (release_height_in, extension_ft, arsenal[], zone_usage, whiff_by_pitch, first_pitch_strike%, etc.) instead of just prose.
-
-## 2. Personal plan generator (the elite text you described)
-
-Press **Generate plan** on a dossier → AI ("Hammer") produces a pregame plan that reads like the example in the request. Inputs blended:
-
-1. **Pitcher fingerprint** — release vs league avg, extension → perceived velo, arsenal + usage, zone tendencies, whiff zones, count behavior, confidence state.
-2. **My career vs THIS pitcher** — every `gp_at_bat` previously tagged with this `pitcher_dossier_id`, outcomes by pitch type and zone.
-3. **My history vs this ARCHETYPE** — pitcher archetype tag (e.g. high-slot RHP ride-FB + back-foot SL); pulls all my ABs vs that archetype.
-4. **My current swing tendencies** — first-pitch swing%, chase%, hot/cold zones, performance by pitch type from `gp_at_bats` + `gp_pitches`.
-5. **Live form** — last 7–14d `gpSignal`.
-
-Output sections: **Read** (release/extension/perceived velo, what to see), **Attack zones** (where to hunt vs avoid, per pitch), **Count plan** (0-0, ahead, behind, 2-strike), **Matchup edge** (where you out-leverage him, where he out-leverages you), **Pregame cues** (3–5 short cues), **Pregame drills** (1–3 tee/soft-toss/vision drills from the existing drill catalog matched to his arsenal + your weak zones), **Confidence frame** (mental cue based on his last-start state and your form).
-
-Pitcher-mirror generates the same shape against a hitter dossier: hot/cold zones, chase tendencies, count attack plan, pitch-sequence recommendations, "best put-away" suggestion, pregame bullpen focus.
-
-## 3. Game-time linkage
-
-- Game creation: **Probable pitcher** field selects an existing dossier or creates a new one. The plan can be opened from the Game Hub header.
-- Every new `gp_at_bat` inherits `pitcher_dossier_id` + archetype tag automatically.
-- Per-AB **video upload** field (already partly exists) ties the clip to that AB + dossier.
-
-## 4. Post-game Plan-vs-Reality + per-AB swing analysis
-
-After the game:
-
-- **Plan-vs-Reality report** — AI compares each plan claim ("he'll attack first-pitch in zone", "back-foot SL with two strikes") to what actually happened from `gp_pitches`. Scores plan accuracy 0–100 and flags which recommendations helped vs hurt.
-- **Per-AB swing analysis** — for each uploaded AB clip, AI grades mechanics in the context of that pitch (pitch type, location, count) AND in the context of this pitcher archetype. Output: what broke down, why this pitcher type caused it, **drills + cues** to fix it before the next matchup of that archetype.
-- **Game roll-up** — how the plan + your swing matched up vs this archetype overall; updates your archetype performance ledger.
-
-## 5. Learning loop (.01% planner improvement)
-
-Each plan + outcome pair writes to a `plan_outcomes` ledger: which recommendations were followed, which worked, which failed, plus any user notes ("the back-foot SL read was wrong, he hung it middle"). The generator pulls the user's last N plans as few-shot context and re-weights archetype priors per user (e.g. "for THIS hitter, 'be patient early' under-performs vs high-slot RHPs — bias toward 'ambush first-pitch FB'"). Sport- and role-specific (baseball-hitter, baseball-pitcher, softball-hitter, softball-pitcher) so learning never crosses contexts.
-
-## 6. Sport & subscription awareness
-
-- Baseball-only users see baseball pitch types, distances, archetypes (e.g. ride FB, sweeper, splitter).
-- Softball-only users see riseball, drop, screw, change; underhand release geometry; shorter distance perceived-velo math.
-- Two-way + appropriate subscription unlocks the pitcher-side mirror automatically.
+Two parts: (A) close out the in-flight integration that was left half-done last turn, then (B) extend the plan engine to answer every situational question you listed with maximum accuracy.
 
 ---
 
-## Technical details
+## Part A — Finish the previous plan (still incomplete)
 
-### Data model (additive — extends existing `gp_*` ledger)
+The Game Sheet was never wired to display/track plans. Finish it:
 
-Reuses `gp_pitcher_dossiers` and `gp_opponent_hitters`; adds:
+1. **`GameSheet.tsx`** — add a "Today's Plan" header section that:
+   - Shows the active `gp_pregame_plans` row tied to the game's probable pitcher.
+   - Renders the structured plan (zones-to-attack/avoid, sequencing reads, in-game triggers, situational notes).
+   - Per-bullet checkboxes that write `gp_plan_outcomes` rows (followed: y/n, worked: y/n, note).
+   - "Regenerate" + "Open dossier" actions.
 
-- `tendencies` already JSON — formalize a typed sub-schema (release_height_in, extension_ft, arsenal[], usage_pct, velo_band, ivb, hb, zone_usage, whiff_by_pitch, fps_pct, ahead_pattern, behind_pattern, confidence_state, last_start_summary, archetype_tags[]).
-- New columns: `archetype` text, `video_urls` text[], `attachments` jsonb (CSV/PDF/image refs in `gp-documents` bucket).
-- New table `gp_pregame_plans` (id, user_id, sport, game_id, dossier_id, dossier_kind 'pitcher'|'hitter', plan_json, plan_markdown, model, engine_version, created_at).
-- New table `gp_plan_outcomes` (plan_id, ab_id nullable, recommendation_key, followed bool, worked bool, evidence jsonb, user_note text).
-- New table `gp_ab_swing_analyses` (ab_id, video_url, mechanics_json, pitcher_context jsonb, drills text[], cues text[], created_at).
-- `gp_at_bats` already has the pitcher link via dossier; ensure `archetype` snapshot stored on the AB at creation time.
-- `gp_games`: add `probable_pitcher_dossier_id`.
+2. **`gp-pregame-plan` edge function** — confirm it returns the full structured schema Part B needs; if not, extend it (additive).
 
-All new tables: GRANT to authenticated + service_role, RLS scoped to `auth.uid()`.
+3. **Learning loop wiring** — confirm `gp_planner_priors` is updated from `gp_plan_outcomes` (re-weight archetype advice). If the cron/trigger isn't there, add a lightweight post-game aggregator inside `gp-pregame-plan` (read priors on generate, write priors on outcome submit via a tiny `gp-update-priors` edge function).
 
-### Edge functions
+---
 
-- `gp-extract-dossier-fields` — Gemini Vision/PDF/CSV parser → fills `tendencies` from uploads.
-- `gp-generate-pregame-plan` — Gemini call assembling pitcher fingerprint + my-vs-this-pitcher + my-vs-archetype + tendencies + form + last-N learned plans → structured plan JSON + markdown. `withHeartbeat` wrapped.
-- `gp-plan-vs-reality` — post-game diff of plan claims vs `gp_pitches`/`gp_at_bats`.
-- `gp-analyze-ab-swing` — extends current `analyze-video` with pitcher-archetype context + at-bat metadata; returns mechanics + drills + cues.
-- `gp-update-learning-priors` — nightly cron: re-weights per-user archetype priors from `gp_plan_outcomes`.
+## Part B — Elite Situational Hitting Intelligence
 
-### UI
+Answer every question you asked, per-pitcher, per-count, per-situation, per-sport. All of this gets generated by `gp-pregame-plan` and rendered in `PregamePlanPanel` + the new GameSheet plan view.
 
-- `src/components/games/DossierEditor.tsx` — tabbed editor: Notes · Files · Images · Videos · Tendencies (typed form auto-filled by extraction).
-- `src/components/games/PregamePlan.tsx` — renders plan sections, drill chips link into the existing drill runner, "Save & tag game" button.
-- `src/components/games/PlanVsRealityReport.tsx` — per-claim scorecard.
-- Per-AB row in `AtBatLogger.tsx` gets an "Analyze swing" upload + drawer wiring `gp-analyze-ab-swing`.
-- `GameSheet.tsx` header: "Probable pitcher" picker → dossier + plan.
+### B1. Expanded plan schema (additive — new JSON shape on `gp_pregame_plans.plan_json`)
 
-### Sport split
+```text
+plan_json: {
+  pitcher_attack_on_me: {           // how THIS pitcher tries to get YOU out
+    primary_sequence: ["FB up","SL away","CH down"],
+    putaway_pitch: "SL low-away",
+    putaway_zone: "9",              // 3x3 zone id
+    early_count_tendency: "...",
+    two_strike_tendency: "...",
+    weakness_exploited: "chase low-away"  // tied to user's own miss pattern
+  },
+  my_attack_on_pitcher: {           // how YOU beat THIS pitcher
+    best_pitch_to_hunt: "FB middle-in",
+    best_zones: ["5","4","2"],      // green zones on 3x3
+    avoid_zones: ["9","7"],
+    hot_count: "1-0, 2-1",
+    count_plan: {                   // per-count approach
+      "0-0": {look:"FB mid",take:"breaking down"},
+      "0-1": {...}, "1-0": {...}, ... "3-2": {...}
+    }
+  },
+  sequence_reading: {               // how to get ahead in the AB
+    tells: ["1st-pitch FB 72%","SL after FB strike 58%"],
+    ahead_in_count_rules: "...",
+    behind_in_count_survival: "..."
+  },
+  situational_hitting: {            // every base-out state
+    "man_on_2B_0out": {
+      goal: "advance to 3B — right side, ground or deep fly RF/RF-gap",
+      pitch_to_hunt: "FB outer-third or CH away",
+      zones: ["3","6"],            // outer column
+      swing_shape: "stay through middle-away, oppo-gap",
+      avoid: "pulling inner-third heat"
+    },
+    "man_on_3B_<2out": {...},       // contact/SF plan
+    "RISP_2out": {...},
+    "runner_1B_hit_and_run": {...},
+    "bases_loaded_<2out": {...},
+    "tying_run_on_late": {...},
+    // ... full 24-state base/out matrix where it matters
+  },
+  matchup_edges: {                  // elite tier
+    platoon_split_note: "...",
+    velo_band_response: "...",      // your xBA vs 88-91 / 92-95 / 96+
+    spin_axis_weakness: "...",      // softball: vs riseball / drop
+    tunneling_pairs_to_watch: ["FB up + SL away"]
+  }
+}
+```
 
-`src/lib/games/archetypes.baseball.ts` and `archetypes.softball.ts` define archetype detection rules + plan language packs; selector by user sport.
+### B2. Inputs the generator uses (maximum accuracy)
 
-### Storage
+- **Pitcher dossier**: `gp_pitcher_dossiers` (repertoire, usage, velo, tendencies, archetype, ingested Trackman/PDF/video extracts).
+- **Your history vs this pitcher**: all `gp_at_bats` + `gp_pitches` where `opponent_pitcher_id` matches → result distribution, swing/miss zones, contact zones.
+- **Your history vs this archetype**: same query filtered by `pitcher_archetype_snapshot` when no direct history (cold-start fix).
+- **Your global tendencies**: zone heatmaps from `gp_pitches` (chase %, whiff zones, barrel zones) — already used by `GameReports.tsx` side-context heatmaps.
+- **Situational base rates**: aggregate by base/out state from your at-bats to learn YOUR situational strengths.
+- **Sport priors**: baseball pitch families (FB/SL/CB/CH/SI/FC/FS) vs softball (riseball/drop/screw/change/curve) — already in `src/data/{baseball,softball}/pitchTypes.ts`. Generator selects sport-appropriate language, zones (3×3 vs softball rise/drop emphasis), and tunneling logic.
+- **Archetype priors**: `gp_planner_priors` re-weighted by past plan outcomes (learning loop).
 
-Reuses `gp-documents` bucket for files/images and a new `gp-dossier-videos` bucket for pitcher/hitter clips (private, signed-URL playback).
+### B3. New/updated files
+
+- `supabase/functions/gp-pregame-plan/index.ts` — expand Gemini prompt + structured-output schema to emit the full `plan_json` above. Pull all inputs in B2. Sport-branch the prompt template.
+- `src/lib/games/situationalMatrix.ts` *(new)* — canonical 24-state base/out keys + helper to compute "which states matter for this game" (skip empty bases when no runners log exists yet → show all).
+- `src/lib/games/zoneMath.ts` *(new)* — 3×3 zone IDs, hot/cold computation from `gp_pitches` heatmaps, sport-aware zone labels (baseball strike zone vs softball rise-emphasis zone).
+- `src/components/games/PregamePlanPanel.tsx` — new tabs inside the plan view:
+  - **Get me out** (pitcher_attack_on_me)
+  - **My attack** (my_attack_on_pitcher + zone heatmap overlay using existing `StrikeZoneGrid`)
+  - **Sequencing** (sequence_reading + count_plan grid 0-0…3-2)
+  - **Situations** (situational_hitting — selectable base/out chips, each shows goal/pitch/zone/swing-shape)
+  - **Edges** (matchup_edges)
+- `src/components/games/SituationalPlanCard.tsx` *(new)* — renders one base/out state as a card with zone overlay + cue list.
+- `src/components/games/CountPlanGrid.tsx` *(new)* — 12-cell count grid with look/take/swing-shape per count.
+- `src/components/games/GameSheet.tsx` — Part A integration + a "Situation now" chip that auto-selects the matching `situational_hitting` entry based on current `gp_baserun_events` state.
+- `src/hooks/usePregamePlan.ts` — extend types for the new `plan_json` shape; add `useSituationalPlan(planId, baseOutKey)` selector.
+- `src/lib/games/archetypes.ts` — add `archetypeSituationalPriors` (e.g. "high-slot ride FB → tough to lift to RF with RISP, plan oppo line drive on outer third").
+- `supabase/functions/gp-update-priors/index.ts` *(new, small)* — invoked after `gp_plan_outcomes` insert; bumps `gp_planner_priors` weights for the archetype+situation combos that worked vs failed.
+- `supabase/config.toml` — register `gp-update-priors`.
+
+### B4. Sport split (explicit)
+
+- Baseball: standard 3×3 strike zone, FB/SL/CB/CH/SI/FC/FS, tunneling pairs, velo bands 85–100.
+- Softball: rise-emphasized zone (top third weighted), riseball/drop/screw/change/curve, spin-axis cues, slap/short-game variants in `situational_hitting` for slappers (uses existing `SideContext`).
+- Selection driven by `gp_pitcher_dossiers.sport` + user's `SportThemeContext`.
+
+### B5. Accuracy guards
+
+- If sample size < N for direct matchup, AI must say "low-confidence, archetype-based" and lean on archetype priors + `gp_planner_priors`.
+- Every cue carries a `confidence: low|med|high` and a `source: direct_history|archetype|prior|ai_inference` tag rendered as a small badge — keeps the user from over-trusting cold-start guesses.
+- Plan regeneration is cheap; "Refresh after last AB" button re-runs with new data appended.
+
+---
+
+## Technical notes
+
+- All new tables/columns are additive on existing `gp_pregame_plans.plan_json` (JSONB) — **no migration required** unless we want indexed situational queries (we don't yet).
+- Edge function uses Gemini 2.5 Flash with structured output schema matching `plan_json` exactly.
+- Learning loop stays bounded (priors capped, EWMA decay) so one bad game doesn't tank advice.
+- All reads continue through `gp()` ledger adapter.
+
+---
+
+## Out of scope (ask if you want them)
+
+- Real-time in-AB pitch prediction overlay (would need live pitch ingest mid-game).
+- Video auto-clipping of every past AB vs this pitcher (storage cost).
+- Opponent catcher sequencing tells (needs catcher dossier — not built yet).

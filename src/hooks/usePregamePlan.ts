@@ -220,7 +220,10 @@ export function useLogPlanOutcome() {
         user_note: input.user_note ?? null,
       });
       if (error) throw error;
+      // Fire-and-forget learning-loop update — never blocks the UI.
+      try { await supabase.functions.invoke("gp-update-priors", { body: { planId: input.planId } }); } catch {}
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not log outcome"),
   });
 }
+
