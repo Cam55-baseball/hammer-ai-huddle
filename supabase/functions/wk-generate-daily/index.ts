@@ -216,6 +216,29 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
+    const adaptationDecision: AdaptationDecision = selectAdaptation({
+      phase: phaseRes.phase,
+      isGameDay,
+      isPracticeDay: false,
+      cnsReadiness,
+      sleepHours: sleep,
+      soreness,
+      ageYears: Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null,
+      trainingAgeYears,
+      hoursSinceSpeed: 9999,
+      hoursSinceLift: 9999,
+      injuriesActive: injurySlugs.size > 0,
+    });
+    const engineForSlotRole = (slot: Slot, role: SequenceRole): WicEngine => {
+      if (slot === "speed") return "sprint";
+      if (slot === "bat_speed") return "bat_speed";
+      if (slot === "conditioning") return "conditioning";
+      if (slot === "cross_sport") return "cross_sport";
+      if (role === "arm_care") return "arm_care";
+      return "strength";
+    };
+
     // -------- Load 72h lift history + active overrides (drift guards) --------
     const threeDaysAgo = new Date(planDate + "T00:00:00");
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
