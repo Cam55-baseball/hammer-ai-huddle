@@ -169,7 +169,6 @@ export function WkLiftsCard() {
             </div>
           </details>
         )}
-        )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
       </CardContent>
 
