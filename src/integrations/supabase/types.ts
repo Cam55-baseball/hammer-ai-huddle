@@ -13590,6 +13590,7 @@ export type Database = {
           determinism_trace: Json | null
           duplicate_count: number
           engine_execution_order: string[] | null
+          engine_signature_hashes: Json | null
           errors: Json
           exercise_count: number
           exercise_governance_version: string | null
@@ -13597,6 +13598,7 @@ export type Database = {
           generation_id: string
           generation_ms: number | null
           generator_version: string
+          global_invariant_status: string | null
           global_validator_status: string | null
           governance_catalog_hash: string | null
           id: string
@@ -13628,11 +13630,15 @@ export type Database = {
           speed_substitution_completeness: number | null
           speed_template_id: string | null
           speed_validation_status: string | null
+          system_state: Json | null
+          system_state_hash: string | null
           training_age_version: string | null
           user_id: string
           validation_status: string
+          validator_aggregate_hash: string | null
           warnings: Json
           why_v2_completeness_score: number | null
+          why_v2_hash: string | null
         }
         Insert: {
           adaptation?: string | null
@@ -13667,6 +13673,7 @@ export type Database = {
           determinism_trace?: Json | null
           duplicate_count?: number
           engine_execution_order?: string[] | null
+          engine_signature_hashes?: Json | null
           errors?: Json
           exercise_count?: number
           exercise_governance_version?: string | null
@@ -13674,6 +13681,7 @@ export type Database = {
           generation_id?: string
           generation_ms?: number | null
           generator_version: string
+          global_invariant_status?: string | null
           global_validator_status?: string | null
           governance_catalog_hash?: string | null
           id?: string
@@ -13705,11 +13713,15 @@ export type Database = {
           speed_substitution_completeness?: number | null
           speed_template_id?: string | null
           speed_validation_status?: string | null
+          system_state?: Json | null
+          system_state_hash?: string | null
           training_age_version?: string | null
           user_id: string
           validation_status: string
+          validator_aggregate_hash?: string | null
           warnings?: Json
           why_v2_completeness_score?: number | null
+          why_v2_hash?: string | null
         }
         Update: {
           adaptation?: string | null
@@ -13744,6 +13756,7 @@ export type Database = {
           determinism_trace?: Json | null
           duplicate_count?: number
           engine_execution_order?: string[] | null
+          engine_signature_hashes?: Json | null
           errors?: Json
           exercise_count?: number
           exercise_governance_version?: string | null
@@ -13751,6 +13764,7 @@ export type Database = {
           generation_id?: string
           generation_ms?: number | null
           generator_version?: string
+          global_invariant_status?: string | null
           global_validator_status?: string | null
           governance_catalog_hash?: string | null
           id?: string
@@ -13782,11 +13796,15 @@ export type Database = {
           speed_substitution_completeness?: number | null
           speed_template_id?: string | null
           speed_validation_status?: string | null
+          system_state?: Json | null
+          system_state_hash?: string | null
           training_age_version?: string | null
           user_id?: string
           validation_status?: string
+          validator_aggregate_hash?: string | null
           warnings?: Json
           why_v2_completeness_score?: number | null
+          why_v2_hash?: string | null
         }
         Relationships: []
       }

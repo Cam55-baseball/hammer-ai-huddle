@@ -52,7 +52,12 @@ import {
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
 import { aggregateValidatorReports, type EngineReport } from "../_shared/wic/validation/globalValidatorRegistry.ts";
 import { resolveCrossEngineConflicts } from "../_shared/wic/conflictResolver/crossEngineConflictResolver.ts";
-import { buildUnifiedWhyRoot, mergeUnifiedWhy, computeWhyCompleteness } from "../_shared/wic/whyV2/unifiedWhy.ts";
+import { buildUnifiedWhyRoot, mergeUnifiedWhy, computeWhyCompleteness, freezeWhyV2, hashWhyV2 } from "../_shared/wic/whyV2/unifiedWhy.ts";
+// Phase 12+ — System Freeze v1 (state compression, invariants, engine contract, telemetry).
+import { compressSystemState, systemStateHash } from "../_shared/wic/stateCompression/systemStateCompressor.ts";
+import { checkGlobalInvariants } from "../_shared/wic/invariants/globalInvariantChecker.ts";
+import { computeEngineSignature } from "../_shared/wic/engineContract/engineContractVFinal.ts";
+import { emitSystemState } from "../_shared/wic/telemetry/minimalTelemetryEmitter.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
   CONTEXT_VERSION as CTX_VERSION,
@@ -1277,6 +1282,72 @@ const handler = async (req: Request): Promise<Response> => {
     });
     const p1112_immutability = assertImmutable(p1112_snapshotHash, p1112_snapshotHash);
 
+    // ================= Phase 12+ — System Freeze v1 =================
+    // (a) Engine contract V-Final signatures for all seven engines.
+    const p12_engineSignatures = [
+      computeEngineSignature("lift", liftCertification as any),
+      computeEngineSignature("speed", speedCertification as any),
+      computeEngineSignature("bat_speed", batSpeedCertification as any),
+      computeEngineSignature("conditioning", conditioningCertification as any),
+      computeEngineSignature("cross_sport", crossSportCertification as any),
+      computeEngineSignature("recovery", recoveryCertification as any),
+      computeEngineSignature("arm_care", armCareCertification as any),
+    ];
+    const p12_engineSignatureMap: Record<string, unknown> = {};
+    for (const s of p12_engineSignatures) p12_engineSignatureMap[s.engine] = s;
+
+    // (b) why_v2 normalization lock — freeze root, freeze each merged row, then hash.
+    const p12_whyRootFrozen = freezeWhyV2(p1112_whyRoot);
+    for (const rx of finalRxs as any[]) rx.why_v2 = freezeWhyV2(rx.why_v2);
+    const p12_whyV2Hash = hashWhyV2({
+      root: p12_whyRootFrozen,
+      rows: (finalRxs as any[]).map((r) => r.why_v2 ?? null),
+    });
+
+    // (c) Aggregate validator hash.
+    const p12_validatorAggHash = fnv1a64Hex(canonicalJson(p1112_aggReport));
+
+    // (d) Compress the entire run into a single SystemStateV1 fingerprint.
+    const p12_systemState = compressSystemState({
+      seed: p1112_seed,
+      engineExecutionOrder: ENGINE_EXECUTION_ORDER,
+      governanceHash: p1112_govHash,
+      snapshotHash: p1112_snapshotHash,
+      validatorAggregate: p1112_aggReport,
+      whyV2Root: p12_whyRootFrozen,
+      determinismTrace: p1112_determinismTrace,
+    });
+    const p12_systemStateHash = systemStateHash(p12_systemState);
+
+    // (e) Global invariant checker — final authority layer.
+    const p12_invariant = checkGlobalInvariants({
+      systemState: p12_systemState,
+      rxs: finalRxs as any,
+      diag: {
+        generator_version: WIC_VERSION,
+        resolved_season_phase: trainingContext.season_phase,
+        resolved_day_type: trainingContext.day_type,
+        determinism_seed: p1112_seed,
+        governance_catalog_hash: p1112_govHash,
+      },
+      governanceRows: lib as unknown as Array<Record<string, unknown>>,
+      whyV2CompletenessScore: p1112_whyMinScore,
+      validatorFatals: p1112_aggReport.fatal ?? [],
+      lockedExecutionOrder: ENGINE_EXECUTION_ORDER,
+      determinismSeedInputs: { videoId: null, athleteId: user.id, contextHash: p1112_contextHash },
+    });
+    const p12_globalInvariantStatus = p12_invariant.ok ? "ok" : "fatal";
+    if (!p12_invariant.ok) {
+      for (const f of p12_invariant.failures) {
+        validatorReport.issues.push({ code: `global_invariant_failure:${f.code}`, severity: "fatal", message: f.detail });
+      }
+      (validatorReport as any).ok = false;
+    }
+
+    // (f) Minimal telemetry emission.
+    try { emitSystemState(p12_systemState); } catch (_) { /* telemetry never blocks */ }
+
+
     const generationMs = Date.now() - generationStartedAt;
     const cardsProduced = {
       lift: finalRxs.filter((r) => r.slot === "lift").length,
@@ -1374,6 +1445,14 @@ const handler = async (req: Request): Promise<Response> => {
             snapshot_integrity_status: p1112_immutability.status,
             governance_catalog_hash: p1112_govHash,
             why_v2_completeness_score: p1112_whyMinScore,
+            // Phase 12+ — System Freeze v1 diagnostics
+            system_state: p12_systemState,
+            system_state_hash: p12_systemStateHash,
+            engine_signature_hashes: p12_engineSignatureMap,
+            why_v2_hash: p12_whyV2Hash,
+            expected_why_v2_hash: p12_whyV2Hash,
+            validator_aggregate_hash: p12_validatorAggHash,
+            global_invariant_status: p12_globalInvariantStatus,
           },
         });
       } catch (diagErr) {
@@ -1496,6 +1575,14 @@ const handler = async (req: Request): Promise<Response> => {
         snapshot_integrity_status: p1112_immutability.status,
         governance_catalog_hash: p1112_govHash,
         why_v2_completeness_score: p1112_whyMinScore,
+        // Phase 12+ — System Freeze v1 diagnostics
+        system_state: p12_systemState,
+        system_state_hash: p12_systemStateHash,
+        engine_signature_hashes: p12_engineSignatureMap,
+        why_v2_hash: p12_whyV2Hash,
+        expected_why_v2_hash: p12_whyV2Hash,
+        validator_aggregate_hash: p12_validatorAggHash,
+        global_invariant_status: p12_globalInvariantStatus,
       },
     });
     if (rpcErr) throw rpcErr;

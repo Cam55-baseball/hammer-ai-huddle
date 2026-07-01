@@ -76,3 +76,35 @@ export function mergeUnifiedWhy(
 ): Record<string, unknown> {
   return { ...(perRow ?? {}), ...root } as Record<string, unknown>;
 }
+
+// Phase 12+ — Final Normalization Lock ------------------------------------
+
+import { canonicalJson, fnv1a64Hex } from "../determinism/globalDeterminismLock.ts";
+
+/** Deep-freeze a why_v2 payload post-generation (recursive). */
+export function freezeWhyV2<T>(value: T): T {
+  if (value === null || value === undefined) return value;
+  if (typeof value !== "object") return value;
+  if (Object.isFrozen(value)) return value;
+  for (const k of Object.keys(value as Record<string, unknown>)) {
+    freezeWhyV2((value as Record<string, unknown>)[k]);
+  }
+  return Object.freeze(value);
+}
+
+/** Canonical hash across the recursively-sorted why_v2 payload. */
+export function hashWhyV2(w: unknown): string {
+  return fnv1a64Hex(canonicalJson(w));
+}
+
+export class WhyV2MutationDetected extends Error {
+  constructor(detail: string) {
+    super(`why_v2_mutation_detected: ${detail}`);
+    this.name = "WhyV2MutationDetected";
+  }
+}
+
+/** Compare pre/post hash; throws on drift. */
+export function assertWhyV2Immutable(expected: string, actual: string): void {
+  if (expected !== actual) throw new WhyV2MutationDetected(`expected=${expected} actual=${actual}`);
+}
