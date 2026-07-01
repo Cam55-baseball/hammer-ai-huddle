@@ -13558,6 +13558,8 @@ export type Database = {
       }
       wk_movement_catalog: {
         Row: {
+          bat_compatible: boolean | null
+          bias: string | null
           category: string
           cns_cost: number
           contraindications: string[] | null
@@ -13568,27 +13570,48 @@ export type Database = {
           default_sets: number | null
           default_tempo: string | null
           demo_video_url: string | null
+          duplicate_group: string | null
+          elastic_emphasis: boolean | null
+          equipment: string[] | null
           evidence_note: string | null
           family: string | null
+          game_day_eligible: boolean | null
           id: string
           intensity_class: string | null
           is_eccentric_dominant: boolean
+          joint_stress: number | null
+          min_age_years: number | null
           min_competition_level: string | null
           min_training_age_years: number
+          movement_pattern: string | null
           name: string
           pattern: string | null
           phase_allow: string[]
           position_scope: string[] | null
+          power_emphasis: boolean | null
+          primary_adaptation: string | null
           progression_slug: string | null
+          recovery_cost: number | null
+          recovery_window_hours: number | null
           regression_slug: string | null
+          replacement_pool: string[] | null
+          season_eligibility: string[] | null
+          secondary_adaptation: string | null
           slug: string
           source_philosophy: string | null
+          speed_emphasis: boolean | null
           sport_scope: string
+          sprint_compatible: boolean | null
+          throw_compatible: boolean | null
           updated_at: string
           variant: string | null
+          volume_cost: number | null
           why_prescribed: string
+          wic_metadata_complete: boolean | null
         }
         Insert: {
+          bat_compatible?: boolean | null
+          bias?: string | null
           category: string
           cns_cost?: number
           contraindications?: string[] | null
@@ -13599,27 +13622,48 @@ export type Database = {
           default_sets?: number | null
           default_tempo?: string | null
           demo_video_url?: string | null
+          duplicate_group?: string | null
+          elastic_emphasis?: boolean | null
+          equipment?: string[] | null
           evidence_note?: string | null
           family?: string | null
+          game_day_eligible?: boolean | null
           id?: string
           intensity_class?: string | null
           is_eccentric_dominant?: boolean
+          joint_stress?: number | null
+          min_age_years?: number | null
           min_competition_level?: string | null
           min_training_age_years?: number
+          movement_pattern?: string | null
           name: string
           pattern?: string | null
           phase_allow?: string[]
           position_scope?: string[] | null
+          power_emphasis?: boolean | null
+          primary_adaptation?: string | null
           progression_slug?: string | null
+          recovery_cost?: number | null
+          recovery_window_hours?: number | null
           regression_slug?: string | null
+          replacement_pool?: string[] | null
+          season_eligibility?: string[] | null
+          secondary_adaptation?: string | null
           slug: string
           source_philosophy?: string | null
+          speed_emphasis?: boolean | null
           sport_scope?: string
+          sprint_compatible?: boolean | null
+          throw_compatible?: boolean | null
           updated_at?: string
           variant?: string | null
+          volume_cost?: number | null
           why_prescribed: string
+          wic_metadata_complete?: boolean | null
         }
         Update: {
+          bat_compatible?: boolean | null
+          bias?: string | null
           category?: string
           cns_cost?: number
           contraindications?: string[] | null
@@ -13630,25 +13674,44 @@ export type Database = {
           default_sets?: number | null
           default_tempo?: string | null
           demo_video_url?: string | null
+          duplicate_group?: string | null
+          elastic_emphasis?: boolean | null
+          equipment?: string[] | null
           evidence_note?: string | null
           family?: string | null
+          game_day_eligible?: boolean | null
           id?: string
           intensity_class?: string | null
           is_eccentric_dominant?: boolean
+          joint_stress?: number | null
+          min_age_years?: number | null
           min_competition_level?: string | null
           min_training_age_years?: number
+          movement_pattern?: string | null
           name?: string
           pattern?: string | null
           phase_allow?: string[]
           position_scope?: string[] | null
+          power_emphasis?: boolean | null
+          primary_adaptation?: string | null
           progression_slug?: string | null
+          recovery_cost?: number | null
+          recovery_window_hours?: number | null
           regression_slug?: string | null
+          replacement_pool?: string[] | null
+          season_eligibility?: string[] | null
+          secondary_adaptation?: string | null
           slug?: string
           source_philosophy?: string | null
+          speed_emphasis?: boolean | null
           sport_scope?: string
+          sprint_compatible?: boolean | null
+          throw_compatible?: boolean | null
           updated_at?: string
           variant?: string | null
+          volume_cost?: number | null
           why_prescribed?: string
+          wic_metadata_complete?: boolean | null
         }
         Relationships: []
       }
@@ -13741,9 +13804,12 @@ export type Database = {
       }
       wk_prescriptions: {
         Row: {
+          adaptation: string | null
           cns_clamped: boolean
           cns_cost: number
           created_at: string
+          engine: string | null
+          generator_version: string | null
           id: string
           load_pct: number | null
           movement_name: string
@@ -13762,12 +13828,17 @@ export type Database = {
           tempo: string | null
           updated_at: string
           user_id: string
+          validator_report: Json | null
           why_payload: Json
+          why_v2: Json | null
         }
         Insert: {
+          adaptation?: string | null
           cns_clamped?: boolean
           cns_cost?: number
           created_at?: string
+          engine?: string | null
+          generator_version?: string | null
           id?: string
           load_pct?: number | null
           movement_name: string
@@ -13786,12 +13857,17 @@ export type Database = {
           tempo?: string | null
           updated_at?: string
           user_id: string
+          validator_report?: Json | null
           why_payload?: Json
+          why_v2?: Json | null
         }
         Update: {
+          adaptation?: string | null
           cns_clamped?: boolean
           cns_cost?: number
           created_at?: string
+          engine?: string | null
+          generator_version?: string | null
           id?: string
           load_pct?: number | null
           movement_name?: string
@@ -13810,7 +13886,9 @@ export type Database = {
           tempo?: string | null
           updated_at?: string
           user_id?: string
+          validator_report?: Json | null
           why_payload?: Json
+          why_v2?: Json | null
         }
         Relationships: []
       }
