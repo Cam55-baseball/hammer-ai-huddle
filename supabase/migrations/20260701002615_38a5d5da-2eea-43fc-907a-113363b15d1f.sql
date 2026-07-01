@@ -1,0 +1,10 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wk_prescriptions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wk_session_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wk_recovery_acks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wk_cns_ledger TO authenticated;
+GRANT SELECT ON public.wk_periodization_blocks TO authenticated;
+GRANT ALL ON public.wk_prescriptions TO service_role;
+GRANT ALL ON public.wk_session_logs TO service_role;
+GRANT ALL ON public.wk_recovery_acks TO service_role;
+GRANT ALL ON public.wk_cns_ledger TO service_role;
+GRANT ALL ON public.wk_periodization_blocks TO service_role;
