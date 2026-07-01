@@ -428,5 +428,6 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     overrideMovement,
     snapshotIdentity,
     dayKind,
+    trainingContext,
   };
 }
