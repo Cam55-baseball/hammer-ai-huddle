@@ -1,70 +1,80 @@
+# Phase 1 — Hammers Today Reality Audit
 
-# Phase XX (WIC) — Completion Audit
+Read-only, evidence-only. No code, UI, or architecture changes. The single deliverable is a constitutional audit document that maps every workout-generation surface as it exists today.
 
-**Short answer: No, not 100%.** The constitutional scaffolding, governance wrapper, adaptation selector, six-question `why_v2`, schema migration, publication validator, audit script, and docs all shipped. But the WIC mission called for more, and several pieces are still gaps.
+## Deliverable
 
----
+`docs/audits/hammers-today-reality-audit.md` — one long document with every section below. Every finding cites `path/file.ts:line` and quotes the relevant lines. Nothing is inferred.
 
-## What is fully shipped (✅)
+Companion machine-readable index:
+- `docs/audits/hammers-today/dependency-map.json` — nodes = files/functions/tables/edge functions; edges = calls/reads/writes.
+- `docs/audits/hammers-today/variables-matrix.csv` — one row per athlete variable × (collected / stored / consumed / ignored).
+- `docs/audits/hammers-today/fragments.csv` — dead, duplicate, disconnected surfaces.
 
-- Constitutional authority module + 12-engine registry (`_shared/wic/constitution.ts`, `src/lib/wic/constitution.ts`).
-- Adaptation selector — one adaptation chosen per day *before* any exercise is picked.
-- Six-question `why_v2` builder + completeness gate.
-- Publication validator: duplicate slug/name (fatal), duplicate sets×reps (warn), game-day forbidden slots (fatal), missing `why_v2` (fatal), missing full-body role (warn).
-- Canonical day-structure module (normal + game day) and sequence helper.
-- Schema migration: 16 metadata columns on `wk_movement_catalog`; `adaptation / engine / why_v2 / validator_report / generator_version` on `wk_prescriptions`.
-- `wk-generate-daily` refactored to run adaptation → generate → validate → publish. Fatal validator failure returns HTTP 422 and blocks the write.
-- `generator_version` bumped to `wic_v1` on both server + client hook.
-- `docs/wic/constitution.md` doctrine file.
-- `scripts/audits/wic-audit.ts` metadata-gap + legacy-version audit.
+## Investigation scope (verified starting set — will be expanded from evidence, not assumed)
 
----
+Server / generation
+- `supabase/functions/wk-generate-daily/index.ts` (783 lines) — primary generator
+- `supabase/functions/_shared/wic/{constitution,adaptationSelector,dayStructure,rationale,validator}.ts`
+- `supabase/functions/_shared/wic/engines/{strength,sprint,batSpeed,conditioning,crossSport,reserved}.ts`
+- `supabase/functions/generate-warmup/index.ts`
+- `supabase/functions/generate-block-workout`, `generate-elite-layer`, `generate-training-block`, `recommend-workout`, `generate-drills` — check whether they still feed Hammers Today or are legacy
 
-## Gaps still open (❌)
+Client / consumption
+- `src/hooks/useWkDailyPrescriptions.ts`, `useWarmupGenerator.ts`, `useBlockedLiftMovements.ts`, `useReadinessState.ts`, `useEliteWorkout.ts`, `useHammerState.ts`, `useHammerNextStep.ts`, `useScheduledPracticeSessions.ts`, `useImportScheduleEvents.ts`, `useRescheduleEngine.ts`, `useWorkoutRecommendations.ts`, `useWorkoutPresets.ts`, `useBlockWorkoutGenerator.ts`
+- `src/components/hammer/*` — `HammerDailyPlan.tsx` (824 lines), `WkLiftsCard`, `WkSpeedBatCard`, `WkConditioningCard`, `WkPrescriptionCard`, `HammerWarmupDialog`, `HammerScheduleStrip`, `ReadinessChip`, `HammerStateBadge`
+- `src/lib/hammer/prescription/dailyPlan.ts` (1530 lines), `throwingSelector.ts`, `context/athleteContext.ts`, `goals/*`, `injury/reportInjury.ts`
+- `src/lib/wic/constitution.ts`
 
-1. **12 independent engines are not real modules.** The registry exists; the generator still runs the single legacy pipeline wrapped in WIC governance. `movement_prep`, `warmup`, `power`, `recovery`, `mobility`, `arm_care`, `return_to_play` have no dedicated engine files.
-2. **Catalog metadata not backfilled.** The new columns have permissive defaults; existing rows have `wic_metadata_complete=false` and nothing blocks them from being prescribed.
-3. **Validator is intentionally light.** It doesn't yet enforce seasonal legality (defers to generator's `IN_SEASON_BLOCKED_SLUGS`), min-age, equipment availability, cross-day `recovery_window_hours`, or adaptation↔movement `primary_adaptation` compatibility.
-4. **UI is still 4 cards, not 12.** No dedicated cards for Movement Prep, Warm-up, Power, Recovery, Mobility, Arm Care, Return-to-Play. `why_v2` is persisted but not surfaced anywhere.
-5. **Open policy questions never confirmed.** From the last turn: (a) staged vs. full-ship, (b) hard-block vs. soft-warn for incomplete metadata, (c) overrides scope under WIC. I proceeded with pragmatic defaults.
-6. **No end-to-end test.** I only typechecked; no live invocation of `wk-generate-daily` was run to prove the WIC pipeline publishes a full day for a real profile.
+Database
+- `wk_movement_catalog`, `wk_prescriptions`, `wk_session_logs`, `wk_cns_ledger`, `wk_periodization_blocks`, `wk_recovery_acks`, `wk_movement_overrides`
+- Reads against `training_preferences`, `athlete_context`, `profiles`, `calendar_events`, `gp_games`, `scheduled_practice_sessions`, `athlete_side_preferences`, `athlete_body_goals`, `athlete_daily_log`, `athlete_load_tracking`, `athlete_recruiting_consent`, plus `get_athlete_context_envelope` RPC
 
----
+## Audit document structure
 
-## Proposed plan to reach 100%
+1. Workout Intelligence Architecture Map — annotated diagram of server → validator → DB → hook → card, per surface.
+2. Dependency Map — file/function graph with call directions.
+3. Canonical Data Flow — actual (not idealized) flow from user profile → rendered card, with the exact functions each hop passes through.
+4. Personalization Audit — variable-by-variable matrix (age, biological stage, training age, position, pitcher/two-way, handedness, season phase, today's schedule, practice/game/tournament, recovery/soreness/readiness, CNS, fatigue, injuries, restrictions, equipment, facility, time, goals, experience, previous workouts, historical workload, anthropometrics, limb proportions, compliance). For each: collected where, stored where, consumed where, ignored where.
+5. Exercise Selection Audit — how the generator + engines pick, filter, categorize, dedupe, progress/regress; season/goal/age/equipment gates; substitution + override paths.
+6. Card Generation Audit — per card (Warm-Up, Speed, Bat Speed, Lift, Conditioning, Cross Sport, Recovery, Arm Care, Mobility, Mental, Nutrition): builder, location, trigger, inputs, outputs.
+7. Ordering Audit — where order is set, determinism, drift risks, duplicate risk.
+8. Season Intelligence Audit — how in-season/off/pre/transition are decided, quarter labels, drift vs athlete context.
+9. Duplicate Detection Audit — root cause(s) for reported duplicate exercises/cards/prescriptions.
+10. Formatting Audit — card/exercise/set/rep/title/description/season-label/spacing/rendering consistency.
+11. Regression Audit — surfaces most likely to break under future edits.
+12. Fragment Audit — dead/legacy/duplicate/disconnected generators, prompts, libraries, selectors, validators, seasonal logic, personalization logic.
+13. User-Report Traceback — each recent user complaint (all-lower-body lift, duplicate exercises, in-season Nordic curls, ordering, kicked-out glitches, "spinning" analysis) mapped to file:line root cause or explicitly marked "requires further investigation."
+14. Prioritized Implementation Plan — ranked by user impact × technical dependency, with regression risk per item.
 
-Staged, additive, each stage independently shippable and validator-gated.
+## Evidence rules
 
-### Stage 1 — Engine extraction (server)
-Create `supabase/functions/_shared/wic/engines/` with one file per engine:
-`sprint.ts · batSpeed.ts · strength.ts · power.ts · conditioning.ts · crossSport.ts · recovery.ts · armCare.ts · mobility.ts · movementPrep.ts · warmup.ts · returnToPlay.ts`.
-Each engine exports `plan(ctx) → Prescription[]` and owns its selection rules. Refactor `wk-generate-daily/index.ts` into a thin composer: `for engine of NORMAL_DAY_ORDER: engine.plan(ctx)`. Legacy `push()` becomes a per-engine helper.
+Every finding row:
+```
+Finding: <one line>
+File: path/file.ts:line-range
+Function: name
+Current behavior: <quote>
+Dependencies: <list>
+Regression risk: low/med/high + why
+```
 
-### Stage 2 — Catalog completion
-- Backfill migration to set `movement_pattern`, `primary_adaptation`, `season_eligibility`, `equipment`, `joint_stress`, `recovery_cost`, `volume_cost`, `bias`, `duplicate_group`, `recovery_window_hours`, and `wic_metadata_complete=true` for the current ~60-movement library.
-- Turn on **hard-block** in the generator: any row with `wic_metadata_complete=false` is filtered out (constitution.ts flag).
+## Method
 
-### Stage 3 — Validator hardening
-Add fatal checks: seasonal legality (`season_eligibility` mismatch), min-age, equipment absent, adaptation mismatch (movement's `primary_adaptation` must match today's decision or be a declared compatible neighbor). Add cross-day check: no repeat within `recovery_window_hours`.
+1. Trace `wk-generate-daily/index.ts` top-to-bottom; catalog every DB read/write, engine call, validator call, insert into `wk_prescriptions`, `wk_cns_ledger` write.
+2. Trace `dailyPlan.ts` (1530 lines) — determine whether it still authors any prescriptions or is legacy alongside WIC.
+3. Trace `useWkDailyPrescriptions` → `HammerDailyPlan` → the four Wk cards to record exact grouping + ordering rules.
+4. Grep every table above for readers/writers to build the dependency map.
+5. Run SQL against `wk_movement_catalog` and recent `wk_prescriptions` to record real seasonal eligibility distribution, duplicate incidence, `generator_version` mix, and whether `why_v2` is populated end-to-end.
+6. Cross-check legacy generators (`generate-block-workout`, `generate-elite-layer`, `recommend-workout`, `generate-training-block`) for live callers vs dead code.
+7. Compile fragments, regressions, and prioritized roadmap.
 
-### Stage 4 — UI expansion (frontend only)
-Add cards for the missing engines and split the Lifts card into `Strength` + `Power`. Surface the `why_v2` six answers in a "Why this?" drawer on `WkPrescriptionCard`. All engine cards read from the same `wk_prescriptions` rows, filtered by `engine`.
+## Constraints
 
-### Stage 5 — Live verification
-Curl `wk-generate-daily` for a seeded athlete in each season phase and on a game day. Assert: `validator_report.ok=true`, every row has complete `why_v2`, engine coverage matches canonical order, no duplicates.
+- No file edits, no schema changes, no UI changes.
+- No guessing language ("likely", "should", "probably"). If unknown → labeled "requires further investigation" with the exact next probe.
+- Document is self-contained: a future phase can be planned from it without re-reading the codebase.
 
----
+## Out of scope (explicitly)
 
-## Technical notes
-
-- Stages 1 → 3 are the constitutional gaps. Stages 4 → 5 are surfacing + proof.
-- Stage 2 introduces a hard cutover risk: turning on `wic_metadata_complete` filtering with an incomplete backfill will empty a user's day. The backfill must land in the same migration that flips the flag.
-- All stages remain additive to `wk_prescriptions`; no destructive schema changes.
-
----
-
-## Decisions I need before building
-
-1. **Ship order:** run Stages 1 → 5 sequentially in one build session, or approve Stage 1 first and re-plan after?
-2. **Hard-block policy (Stage 2):** hard-block incomplete-metadata movements immediately after backfill (safer, tighter pool), or keep soft-warn for one release cycle?
-3. **Overrides under WIC:** keep the user "Request Override" path, restrict it to medical/coach roles only, or remove it entirely?
+Workout rewrite, UI redesign, architectural change, catalog edits, WIC rule changes. Those are downstream phases informed by this audit.
