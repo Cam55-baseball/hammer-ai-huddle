@@ -1,134 +1,101 @@
+## Phase 8 — Elite Lift Intelligence & Exercise Governance
 
-# Phases 5–7 — Athlete Context, Personalization, Training Age Engines
+Scope-locked to the **Lift engine only**. Speed, Bat Speed, Conditioning, Cross-Sport, Recovery engines, all cards, and all UI are frozen and will not be touched. This is additive on top of Phases 1–7 (Training / Athlete / Personalization / Training Age contexts).
 
-Additive constitutional overlay on Phase 4's `TrainingContext`. No workout philosophy, catalog, or UI rewrites — only immutable inputs every future engine will consume.
+### 1. Exercise Governance Registry (`wk_movement_catalog` extension)
 
-## Scope Boundaries (Do Not Touch)
+Add constitutional metadata columns via a single migration (nullable, backfilled, then validator-enforced):
 
-- Lift/Speed/Bat Speed/Conditioning/Cross Sport/Recovery generators
-- Movement catalog / exercise selection
-- Coaching philosophy
-- Card UI, ordering, or CardMeta layout
+- `movement_category` (enum-like text): `compound_lower | compound_upper_push | compound_upper_pull | single_leg | rotation | anti_rotation | carry | core | arm_care | mobility | jump_landing | posterior_chain | hip | shoulder | foot_ankle`
+- `primary_adaptation`, `secondary_adaptation`
+- `season_legality jsonb` — `{ os_q1..q4, preseason, in_season, post_season, rtp: bool }`
+- `training_age_legality jsonb` — `{ beginner, developing, intermediate, advanced, elite, pro }`
+- `equipment_requirements text[]`
+- `recovery_demand int` (1–5)
+- `unilateral bool`, `rotational bool`
+- `eccentric_profile`, `concentric_profile`, `elastic_profile` (`low|moderate|high`)
+- `pap_compatible bool`
+- `substitution_family text` (movements sharing a family are interchangeable)
+- `aliases text[]`
+- `governance_version text` (stamped `"gov_v1"` when normalized)
 
-## Phase 5 — Athlete Context Engine
+Normalization pass (data migration, not manual rewrite): derive each field from existing columns (`category`, `pattern`, `intensity_class`, `phase_allow`, `contraindications`, `regression_slug`, `source_philosophy`). Any row that cannot be normalized is flagged `governance_version = null` and surfaced in diagnostics as `missing_governance_fields`.
 
-**New:** `src/lib/wic/athleteContext.ts` + server mirror `supabase/functions/_shared/wic/athleteContext.ts`
+### 2. Canonical Lift Templates (`supabase/functions/_shared/wic/lift/templates.ts`)
 
-Immutable `AthleteContext` object with 8 sub-domains, each *wire existing data only* — no new calculations:
+Deterministic registry — every lift session resolves **exactly one** template ID before selection:
 
-1. **Identity** — athlete_id, sport (baseball/softball), throwing_side, hitting_side, primary_position, secondary_position, two_way (from `profiles`, `athlete_side_preferences`)
-2. **Development** — chronological_age, training_age (Phase 7), biological_stage (nullable), competitive_level, organizational_level (Youth/MS/HS/College/Pro) — from `profiles`, `league_classifications`, `athlete_professional_status`
-3. **Anthropometrics** — height, weight, body_composition, limb_proportions, dominant_side — from `profiles`, `weight_entries` (nullable when absent; never invented)
-4. **Environment** — equipment[], facility, indoor_outdoor, available_time_min, weather_dependency, substitution_capability — from `athlete_equipment_context`, `training_preferences`
-5. **Schedule** — game_today, practice_today, tournament, travel, bullpen, throwing_day, off_day, recovery_day — from existing `scheduleContext.ts` + `calendar_events`
-6. **Goals** — unified list from `athlete_body_goals` + category goals (speed/power/throwing/hitting/fielding) with ranks — read-only unifier
-7. **Readiness** — cns_load, soreness, fatigue, sleep, workload, compliance — from `wk_cns_ledger`, `wk_recovery_acks`, `athlete_daily_log`
-8. **Injury Status** — active_restrictions[], modified_movements[], return_to_play — from `user_injury_progress`, `athlete_context`
+- `full_body_strength`
+- `full_body_power`
+- `full_body_force_production`
+- `full_body_elastic_strength`
+- `full_body_in_season_maintenance`
+- `full_body_recovery`
+- `full_body_return_to_play` (structure only, not activated)
 
-**Resolver:** `resolveAthleteContext(userId, date, supabase)` returns frozen object + `completeness_score` + `missing_fields[]`. Runs once per generation.
+Each template declares required movement-category slots, dose envelopes (sets/reps ranges), CNS budget share, and category-order. **No lower-body-only default.** Template resolution is a pure function of `(TrainingContext.phase, AthleteContext.schedule, PersonalizationContext.priority_stack, TrainingAgeContext.classification)`.
 
-## Phase 6 — Personalization Engine
+### 3. Session Builder Pipeline (`supabase/functions/_shared/wic/lift/sessionBuilder.ts`)
 
-**New:** `src/lib/wic/personalizationContext.ts` + server mirror
+Replaces free-form lift construction inside `wk-generate-daily/index.ts`. Fixed non-skippable chain:
 
-Immutable `PersonalizationContext` capturing the *deterministic priority stack*:
-
+```text
+AthleteCtx → TrainingCtx → PersonalizationCtx → TrainingAge
+  → SessionObjective → Template → CategorySlots
+  → ExerciseSelection → Validation → Publication
 ```
-Safety → Season → Schedule → Readiness → Injury → Training Age →
-Goals → Position → Equipment → Preferences → Variation
-```
 
-Fields:
-- `priorityStack: PersonalizationLayer[]` (ordered, frozen)
-- `variableRegistry: Record<VarName, { source, status: 'collected'|'stored'|'consumed'|'unused'|'unknown' }>` — eliminates hidden personalization
-- `substitutionFramework: { equipment, environment, injury, time, coach_override }` — **structure only**, populated by later phases
-- `version: string` (semver-pinned)
+Selection rule per category slot: filter catalog by `movement_category` + `season_legality[phase]` + `training_age_legality[classification]` + `equipment_requirements ⊆ AthleteCtx.environment.equipment` + not-in `injury.modified_movements`, then rank by (goal alignment → recovery demand fit → PAP compatibility → 72h freshness → deterministic tiebreak by slug hash of `planDate`).
 
-## Phase 7 — Training Age Engine
+### 4. Movement Category Engine (`supabase/functions/_shared/wic/lift/movementCategories.ts`)
 
-**New:** `src/lib/wic/trainingAge.ts` + server mirror
+Exclusive category assignment + coverage checker. Utilities: `categoryOf(slug)`, `coverageOf(prescriptions)`, `missingCategories(template, prescriptions)`, `duplicateCategories(prescriptions)`.
 
-- `TrainingAge` enum: Beginner | Developing | Intermediate | Advanced | Elite | Professional
-- `resolveTrainingAge(profile, history)` — deterministic classifier (uses existing signals: months_training, session_count, competitive_level; no new philosophy)
-- `RecoveryWindowLookup: Record<TrainingAge, { minHours, deloadFreq }>` — placeholder table, values wired but not authoritative yet
-- `LoadTolerance` placeholder: `{ volume, intensity, frequency, eccentric, elastic, power }` — all `null` until later phases populate
+### 5. Substitution Pathways (`supabase/functions/_shared/wic/lift/substitutions.ts`)
 
-## Snapshot Extension
+Every prescribed exercise resolves a **substitution ladder** (persisted into `why_payload.substitutions`):
+- `equipment_unavailable` → next member of `substitution_family` whose equipment set fits
+- `facility_unavailable` → indoor/outdoor alternate in family
+- `injury_restriction` → existing `regression_slug` (already wired)
+- `time_restriction` → shorter dose variant in family
+- `coach_override` → any family member (already wired via `wk_movement_overrides`)
 
-`HammersTodayProvider.tsx` snapshot gains three immutable fields:
-```ts
-{
-  trainingContext,      // Phase 4 (existing)
-  athleteContext,       // Phase 5 (new)
-  personalizationContext, // Phase 6 (new)
-  trainingAgeContext,   // Phase 7 (new)
-}
-```
-Every card reads from the same snapshot — no card resolves independently.
+Fatal validator error if a prescribed movement has an empty ladder for a category with known alternates.
 
-## Generator Integration
+### 6. Validator Extensions (`supabase/functions/_shared/wic/validator.ts`)
 
-`supabase/functions/wk-generate-daily/index.ts`:
-1. Resolve `TrainingContext` (existing)
-2. Resolve `AthleteContext` (new)
-3. Resolve `PersonalizationContext` (new)
-4. Resolve `TrainingAgeContext` (new)
-5. Stamp all four into every prescription's `why_payload.contexts`
-6. Existing engines continue unchanged — they now *receive* the objects but don't yet consume new fields
+Add fatal codes: `lift_not_full_body`, `lift_missing_compound_lower`, `lift_missing_upper_push`, `lift_missing_upper_pull`, `lift_missing_core`, `lift_missing_rotational_demand`, `lift_duplicate_category`, `lift_illegal_season`, `lift_illegal_training_age`, `lift_illegal_equipment`, `lift_unresolved_substitution`, `lift_template_unresolved`, `lift_governance_missing`. Existing `duplicate_slug` / `duplicate_name` remain fatal.
 
-## Validator Extensions
+### 7. Diagnostics (`wk_generation_diagnostics`)
 
-`supabase/functions/_shared/wic/validator.ts` — new fatal codes:
-- `athlete_context_missing`
-- `multiple_athlete_contexts`
-- `multiple_personalization_contexts`
-- `training_age_unresolved`
-- `goal_resolution_inconsistent`
-- `handedness_inconsistent`
-- `position_inconsistent`
+Add columns: `lift_template_id`, `lift_category_coverage jsonb`, `lift_full_body_ok bool`, `lift_duplicate_check_ok bool`, `lift_substitution_completeness numeric`, `exercise_governance_version text`. Update `wk_persist_prescriptions_atomic` RPC to accept and persist them.
 
-## Diagnostics Extensions
+### 8. Explainability
 
-Migration to add columns on `wk_generation_diagnostics`:
-- `athlete_context_version text`
-- `personalization_version text`
-- `training_age_version text`
-- `missing_context_fields text[]`
-- `context_completeness_score numeric`
+Extend existing `why_v2` (no UI change) with `why_category`, `why_template`, `why_substitution_ladder`. Copy sourced from existing rationale strings — no redesign.
 
-Update `wk_persist_prescriptions_atomic` RPC to persist them.
+### 9. Regression Evidence (`scripts/audits/lift-governance-audit.ts`)
 
-## Client Surface
+Deterministic script proving, across a matrix of `(phase × training_age × equipment × injury × goal_stack)`:
+- 0 duplicate slugs, 0 duplicate categories
+- every session hits full-body coverage
+- 100% of prescribed movements carry `governance_version = "gov_v1"`
+- every prescription traces to Athlete/Training/Personalization/TrainingAge context IDs
+- output CSV `docs/audits/lift-governance-matrix.csv` + PASS/FAIL summary
 
-`useWkDailyPrescriptions.ts` exposes:
-```ts
-{ ...existing, athleteContext, personalizationContext, trainingAgeContext }
-```
-Cards may read these but need not consume yet (deferred to next wave).
+### 10. Guardrails
 
-## Regression Evidence
+Touched files (Lift only):
+- `supabase/functions/wk-generate-daily/index.ts` — lift section only (lines ~421 onward); game-day cross-sport primer, warm-up, speed, bat-speed, conditioning, recovery, arm-care-outside-lift blocks untouched
+- `supabase/functions/_shared/wic/engines/strength.ts` — deprecated in favor of `lift/sessionBuilder.ts` (kept as thin re-export for backward compat)
+- `supabase/functions/_shared/wic/validator.ts`
+- New: `_shared/wic/lift/{templates,sessionBuilder,movementCategories,substitutions}.ts` + client mirror in `src/lib/wic/lift/`
+- Migrations: catalog columns + diagnostics columns + RPC signature bump
 
-- Server log: single resolution per generation, versions stamped on every row
-- Client assert (dev-only): all cards receive referentially identical context objects (`Object.is` check via provider ref)
-- Diagnostics row shows completeness score + missing_fields for every generation
+Untouched: `WkSpeedCard`, `WkBatSpeedCard`, `WkConditioningCard`, `WkSportBlockCard`, `WkRecoveryCard`, `HammersTodayProvider`, `cardRegistry`, adaptation selector, all UI.
 
-## Files Touched
+### Deliverables
 
-**New (6):**
-- `src/lib/wic/athleteContext.ts`
-- `src/lib/wic/personalizationContext.ts`
-- `src/lib/wic/trainingAge.ts`
-- `supabase/functions/_shared/wic/athleteContext.ts`
-- `supabase/functions/_shared/wic/personalizationContext.ts`
-- `supabase/functions/_shared/wic/trainingAge.ts`
+Lift engine architecture, exercise governance registry, movement category engine, validator additions, diagnostics additions, updated dependency graph (`docs/wic/lift-engine-v1.md`), before/after generated-lift examples, regression evidence CSV, and an explicit deferred-work log for Speed / Bat Speed / Conditioning / Cross-Sport engines.
 
-**Modified (5):**
-- `supabase/functions/wk-generate-daily/index.ts` — resolve + stamp
-- `supabase/functions/_shared/wic/validator.ts` — 7 new fatal codes
-- `src/components/hammer/HammersTodayProvider.tsx` — snapshot extension
-- `src/hooks/useWkDailyPrescriptions.ts` — expose new contexts
-- Migration — diagnostics columns + RPC update
-
-## Explicitly Deferred
-
-Lifts, Speed, Bat Speed, Conditioning, Cross Sport, Recovery programming, movement catalog, coaching philosophy — all consume these contexts in the next wave.
+Phase 8 is complete only when every generated lift is deterministic, full-body, season-legal, training-age-legal, equipment-legal, duplicate-free, template-resolved, substitution-complete, governance-stamped, and fully traceable through Phases 1–7 contexts.
