@@ -524,6 +524,10 @@ const handler = async (req: Request): Promise<Response> => {
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
           // Phase 4 — every card reads the same TrainingContext from here.
           training_context: trainingContext,
+          // Phases 5–7 — Athlete / Personalization / Training Age contexts.
+          athlete_context: athleteContext,
+          personalization_context: personalizationContext,
+          training_age_context: trainingAgeContext,
           ...meta,
         },
         rationale,
