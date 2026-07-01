@@ -54,6 +54,7 @@ export interface WkRx {
   cns_clamped: boolean;
   substituted_from_slug: string | null;
   substitution_reason: string | null;
+  rationale: string | null;
   why_payload: {
     phase?: string;
     phase_display?: string;
@@ -64,6 +65,8 @@ export interface WkRx {
     reductions?: { reason: string; detail: string }[];
     training_age_years?: number;
     is_pro_prospect?: boolean;
+    intensity_class?: string;
+    source_philosophy?: string;
   };
   status: "planned" | "completed" | "skipped";
 }
