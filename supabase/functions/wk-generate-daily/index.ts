@@ -215,15 +215,6 @@ const handler = async (req: Request): Promise<Response> => {
     const isGameDay = (gamesToday ?? []).length > 0;
     const isPracticeDay = (practicesToday ?? []).length > 0;
 
-    const p: any = profile ?? {};
-    const sport = (p.sport ?? "baseball") as "baseball" | "softball";
-    const position = p.primary_position ?? p.position ?? null;
-    const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
-    const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
-    const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
-    const isGameDay = (gamesToday ?? []).length > 0;
-    const isPracticeDay = (practicesToday ?? []).length > 0;
-
     // -------- Resolve phase quarter --------
     const phaseRes = resolveWkPhase(ctx ?? null);
     const isOffseason = phaseRes.phase.startsWith("os_");
@@ -232,20 +223,47 @@ const handler = async (req: Request): Promise<Response> => {
     const isPostSeason = phaseRes.phase === "post_season";
 
     // -------- Phase 4: Canonical Training Context --------
-    // Single deterministic resolver. Every downstream engine and every
-    // prescription row consumes this exact object. No engine may override.
     const trainingContext: TrainingContext = resolveTrainingContext({
       planDate,
       legacyPhase: phaseRes.phase,
       isGameDay,
       isPracticeDay,
-      // Future phases can plug in tournament/travel/off/recovery signals.
       isTournamentDay: false,
       isTravelDay: false,
       isRecoveryDay: false,
       isOffDay: false,
       isDeloadDay: false,
-      generationId: null, // stamped post-persist by row id if needed
+      generationId: null,
+    });
+
+    // -------- Phase 7: Training Age Context --------
+    const trainingAgeContext: TrainingAgeContext = resolveTrainingAge({
+      yearsLifting: trainingAgeYears,
+      isProProspect,
+      competitiveLevel: p.competitive_level ?? p.level ?? null,
+    });
+
+    // -------- Phase 5: Athlete Context --------
+    const athleteContext: AthleteContext = resolveAthleteContext({
+      userId: user.id,
+      profile,
+      athleteContext: ctx,
+      sidePreference: sidePref,
+      equipmentContext: equipmentCtx,
+      trainingPreferences: trainingPrefs,
+      latestWeight,
+      bodyGoals: bodyGoals ?? [],
+      dailyLog,
+      injuries: injuries ?? [],
+      gamesToday: gamesToday ?? [],
+      practicesToday: practicesToday ?? [],
+      trainingAgeCtx: trainingAgeContext,
+    });
+
+    // -------- Phase 6: Personalization Context --------
+    const personalizationContext: PersonalizationContext = resolvePersonalizationContext({
+      athleteContext,
+      trainingAgeContext,
     });
 
     // -------- Load phase block + catalog --------
