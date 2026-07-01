@@ -243,6 +243,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     return first?.why_payload?.phase_display ?? null;
   }, [query.data]);
 
+  const phaseKey = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    return first?.why_payload?.phase ?? null;
+  }, [query.data]);
+
   // Effective CNS = skipped rows contribute 0, everything else contributes
   // full cns_cost. Keeps the "CNS heavy" clamp honest to actuals.
   const effectiveCnsTotal = useMemo(
