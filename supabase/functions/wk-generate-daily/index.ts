@@ -35,6 +35,22 @@ import {
   resolveTrainingContext,
   type TrainingContext,
 } from "../_shared/wic/trainingContext.ts";
+// Phases 5–7 — Athlete / Personalization / Training-Age Contexts.
+import {
+  ATHLETE_CONTEXT_VERSION,
+  resolveAthleteContext,
+  type AthleteContext,
+} from "../_shared/wic/athleteContext.ts";
+import {
+  PERSONALIZATION_VERSION,
+  resolvePersonalizationContext,
+  type PersonalizationContext,
+} from "../_shared/wic/personalizationContext.ts";
+import {
+  TRAINING_AGE_VERSION,
+  resolveTrainingAge,
+  type TrainingAgeContext,
+} from "../_shared/wic/trainingAge.ts";
 
 interface MovementRow {
   slug: string;
