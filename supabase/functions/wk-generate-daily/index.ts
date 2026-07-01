@@ -33,6 +33,11 @@ import { certifyLift } from "../_shared/wic/lift/sessionBuilder.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
+// Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
+import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
+import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
+import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
+import { certifyArmCare } from "../_shared/wic/armCare/sessionBuilder.ts";
 import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
@@ -861,6 +866,151 @@ const handler = async (req: Request): Promise<Response> => {
     for (const w of batSpeedCertification.warn) {
       validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
     }
+
+    // -------- Phase 10 — Performance Support Engines --------
+    // Conditioning → Cross-Sport → Recovery → Arm Care. Each certifier receives
+    // the same constitutional inputs, stamps governance metadata onto matching
+    // rows, and blocks publication on fatal issues via the shared validator.
+    const trainingAgeClassCtx = (trainingAgeContext as any)?.classification;
+    const positionCtx = (athleteContext as any)?.position ?? (athleteContext as any)?.primary_position;
+    const isPitcherCtx = String(positionCtx ?? "").toLowerCase().includes("pitcher");
+    const isTwoWayCtx = Boolean((athleteContext as any)?.two_way || (athleteContext as any)?.is_two_way);
+    const isStarterCtx = Boolean((athleteContext as any)?.pitcher_role === "starter");
+    const isRelieverCtx = Boolean((athleteContext as any)?.pitcher_role === "reliever");
+    const isRecoveryDayCtx = (trainingContext as any)?.day_type === "recovery";
+
+    const conditioningCertification = certifyConditioning({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: trainingAgeClassCtx,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isPracticeDay: isPracticeDayCtx,
+        isTournamentDay: false,
+        isRecoveryDay: isRecoveryDayCtx,
+        isReturnToPlay: false,
+        isPitcher: isPitcherCtx,
+      },
+      availableEquipment: availableEquipmentCtx,
+      environment: environmentCtx,
+      trainingAgeClass: trainingAgeClassCtx,
+    });
+
+    const crossSportCertification = certifyCrossSport({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: trainingAgeClassCtx,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isRecoveryDay: isRecoveryDayCtx,
+      },
+      availableEquipment: availableEquipmentCtx,
+      environment: environmentCtx,
+      trainingAgeClass: trainingAgeClassCtx,
+    });
+
+    const recoveryCertification = certifyRecovery({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isPostGame: Boolean((trainingContext as any)?.is_post_game),
+        isTravelDay: Boolean((trainingContext as any)?.is_travel_day),
+        isDeloadWeek: Boolean((trainingContext as any)?.is_deload_week),
+        isRecoveryDay: isRecoveryDayCtx,
+        cnsFatigue: (athleteContext as any)?.cns_fatigue,
+        tissueFatigue: (athleteContext as any)?.tissue_fatigue,
+      },
+      availableEquipment: availableEquipmentCtx,
+      environment: environmentCtx,
+      trainingAgeClass: trainingAgeClassCtx,
+    });
+
+    const armCareCertification = certifyArmCare({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: trainingAgeClassCtx,
+        primaryAdaptation: adaptationDecision.primary,
+        position: positionCtx,
+        isPitcher: isPitcherCtx,
+        isTwoWay: isTwoWayCtx,
+        isStarter: isStarterCtx,
+        isReliever: isRelieverCtx,
+        isThrowingDay: Boolean((trainingContext as any)?.is_throwing_day) || isGameDay || isPracticeDayCtx,
+        isBullpenDay: Boolean((trainingContext as any)?.is_bullpen_day),
+        isRecoveryDay: isRecoveryDayCtx,
+        isReturnToPlay: false,
+        workloadUnitsLast72h: (athleteContext as any)?.throwing_workload_72h,
+        hasInjuryRestriction: Boolean((athleteContext as any)?.arm_injury_active),
+      },
+      availableEquipment: availableEquipmentCtx,
+      environment: environmentCtx,
+      trainingAgeClass: trainingAgeClassCtx,
+    });
+
+    // Stamp Phase 10 governance onto matching prescription rows.
+    const PHASE10_STAMPS: Array<{
+      slots: readonly string[];
+      key: string;
+      cert: { governanceVersion: string; stamps: Map<string, any> };
+    }> = [
+      { slots: ["conditioning"],                key: "conditioning_governance", cert: conditioningCertification },
+      { slots: ["sport_block", "cross_sport"],  key: "cross_sport_governance",  cert: crossSportCertification },
+      { slots: ["recovery", "mobility"],        key: "recovery_governance",     cert: recoveryCertification },
+      { slots: ["arm_care", "throwing"],        key: "arm_care_governance",     cert: armCareCertification },
+    ];
+    for (const rx of finalRxs) {
+      for (const bucket of PHASE10_STAMPS) {
+        if (!bucket.slots.includes(rx.slot)) continue;
+        const stamp = bucket.cert.stamps.get(rx.movement_slug);
+        if (!stamp) continue;
+        const wp = ((rx as any).why_payload ?? {}) as Record<string, unknown>;
+        wp[bucket.key] = {
+          template_id: stamp.template_id,
+          template_name: stamp.template_name,
+          category: stamp.category,
+          substitution_family: stamp.substitution_family,
+          substitution_ladder: stamp.substitution_ladder,
+          substitution_ladder_score: stamp.ladder_score,
+          governance_version: bucket.cert.governanceVersion,
+        };
+        (rx as any).why_payload = wp;
+        const wv = ((rx as any).why_v2 ?? {}) as Record<string, unknown>;
+        wv.why_template = stamp.why_template ?? wv.why_template;
+        wv.why_athlete = stamp.why_athlete ?? wv.why_athlete;
+        wv.why_season = stamp.why_season ?? wv.why_season;
+        wv.why_recovery = stamp.why_recovery ?? wv.why_recovery;
+        wv.why_readiness = stamp.why_readiness ?? wv.why_readiness;
+        wv.why_substitution = stamp.why_substitution ?? wv.why_substitution;
+        wv.why_category = stamp.why_category ?? wv.why_category;
+        (rx as any).why_v2 = wv;
+      }
+    }
+
+    // Promote Phase 10 fatal / warn issues into the shared validator report.
+    for (const cert of [conditioningCertification, crossSportCertification, recoveryCertification, armCareCertification]) {
+      for (const f of cert.fatal) {
+        validatorReport.issues.push({ code: f.code, severity: "fatal", message: f.message, slug: f.slug });
+        (validatorReport as any).ok = false;
+      }
+      for (const w of cert.warn) {
+        validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
+      }
+    }
+
+
 
 
     // Phase 2 Fix 7 — Canonical validation pass. Additional structural checks

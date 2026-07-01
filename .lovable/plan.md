@@ -1,143 +1,91 @@
 
-## Phase 9 — Explosive Performance Engine
+# Phase 10 — Performance Support Engine
 
-Speed and Bat Speed are upgraded in one phase because they share the Phase 8 constitutional architecture but resolve independently. No prescription crossover, no shared template, no shared exercise. Additive-only over sealed Phases 1–8.
+Additive-only implementation of the four remaining daily-performance engines using the constitutional architecture already sealed in Phases 8 and 9. No changes to Lift, Speed, Bat Speed, UI, Card Registry, HammersTodayProvider, or the snapshot architecture.
 
-## Architecture (mirrors Phase 8 Lift)
+## 1. Database Migration (one migration, additive-only)
 
-```text
-wk-generate-daily/index.ts
-  ├── _shared/wic/speed/sessionBuilder.ts     (certifySpeed)
-  │     ├── _shared/wic/speed/templates.ts    (SPEED_TEMPLATES, resolveSpeedTemplate)
-  │     ├── _shared/wic/speed/movementCategories.ts
-  │     └── _shared/wic/speed/substitutions.ts
-  └── _shared/wic/batSpeed/sessionBuilder.ts  (certifyBatSpeed)
-        ├── _shared/wic/batSpeed/templates.ts
-        ├── _shared/wic/batSpeed/movementCategories.ts
-        └── _shared/wic/batSpeed/substitutions.ts
+Extend `wk_movement_catalog` (governance metadata, all nullable, backfilled per slot):
+- `conditioning_category`, `cross_sport_category`, `recovery_category`, `arm_care_category`
+- `energy_system` (`alactic` / `lactic` / `aerobic_base` / `aerobic_power` / `mixed`)
+- `recovery_class` (`cns` / `tissue` / `mobility` / `regeneration` / `deload`)
+- `throwing_phase` (`throwing_day` / `non_throwing_day` / `bullpen` / `long_toss` / `recovery` / `rtp`)
+- `movement_transfer` (`fascial` / `footwork` / `explosive` / `balance` / `visual` / `reflex` / `coordination` / `rotational` / `low_impact` / `recovery`)
+- `sport_transfer` (jsonb array of contributing sports)
+- `travel_friendly`, `indoor_legal`, `outdoor_legal` (booleans)
+
+Extend `wk_generation_diagnostics` with, per engine:
+- `<engine>_template_id`
+- `<engine>_category_coverage` (jsonb)
+- `<engine>_validation_status`
+- `<engine>_substitution_completeness`
+- `<engine>_governance_version`
+
+Update `wk_persist_prescriptions_atomic` RPC to persist the new diagnostic columns. Data backfill for catalog governance runs via the `supabase--insert` tool after the migration lands.
+
+## 2. Shared engine modules
+
+Mirror Phase 8/9 shape for each engine:
+
+```
+supabase/functions/_shared/wic/conditioning/{movementCategories,templates,substitutions,sessionBuilder}.ts
+supabase/functions/_shared/wic/crossSport/{movementCategories,templates,substitutions,sessionBuilder}.ts
+supabase/functions/_shared/wic/recovery/{movementCategories,templates,substitutions,sessionBuilder}.ts
+supabase/functions/_shared/wic/armCare/{movementCategories,templates,substitutions,sessionBuilder}.ts
 ```
 
-Each pipeline runs: AthleteCtx → TrainingCtx → PersonalizationCtx → TrainingAge → SessionObjective → Template → CategorySlots → ExerciseSelection → Validation → Publication.
+Each `sessionBuilder` exports a `certify<Engine>` function that returns the same result shape used by Lift/Speed/BatSpeed (templateId, categoryCoverage, substitutionCompleteness, validationStatus, governanceVersion, stamps map, fatal[], warn[]).
 
-## Speed Template Registry
+### Templates per engine
 
-`SPEED_TEMPLATES` (deterministic, resolved from `season_phase × day_type × primary_adaptation × isGameDay × isRecoveryDay`):
+- **Conditioning:** `aerobic_base`, `repeated_sprint`, `baseball_game_day`, `pitcher_conditioning`, `recovery_flush`, `tournament_day`, `practice_day`, `off_day`, `return_to_conditioning`. Each carries objective, CNS budget, metabolic budget, tissue budget, interval profile, required categories.
+- **Cross-Sport:** `fascial_rotation`, `footwork`, `explosive_transfer`, `recovery_transfer`, `balance_transfer`, `visual_reaction`, `reflex`, `coordination`, `rotational_power`, `low_impact`. Resolver honors season legality, schedule legality, available time, equipment, facilities.
+- **Recovery:** `cns_recovery`, `tissue_recovery`, `mobility`, `regeneration`, `deload`, `post_game`, `travel`, `sleep_optimization`. Fully deterministic from TrainingContext + readiness.
+- **Arm Care:** `throwing_day`, `non_throwing_day`, `bullpen`, `starter`, `reliever`, `position_player`, `two_way`, `recovery`, `return_to_throwing`. Consumes throwing schedule, training age, position, workload, readiness, injury context.
 
-- `speed.acceleration` — 10–20yd starts, sled drives; CNS budget: high, PAP: heavy, top-speed emphasis: low
-- `speed.top_speed` — fly-ins, wickets, max-velocity runs; CNS: high, PAP: moderate, top-speed emphasis: max
-- `speed.mixed` — accel + top-speed contrast; CNS: high, PAP: moderate
-- `speed.elastic` — bounds, pogo, reactive plyos; CNS: moderate, PAP: light
-- `speed.game_day_primer` — 3–4 crisp reps, sub-95%; CNS: low
-- `speed.practice_day` — technical, short volume; CNS: low-moderate
-- `speed.recovery` — tempo runs, mobility flow; CNS: minimal, recovery budget: high
-- `speed.return_to_run` — progression skeleton only (no exercise selection this phase)
+Substitution ladders on all four engines use the same five rungs: equipment / environment / injury / time / coach-override.
 
-Each declares: `slots`, `requiredCategories`, `cnsBudget`, `papBudget`, `accelerationEmphasis`, `topSpeedEmphasis`, `recoveryBudget`, `categoryOrdering`.
+## 3. Generator integration
 
-## Bat Speed Template Registry
+`supabase/functions/wk-generate-daily/index.ts`:
+1. Import the four `certify*` functions.
+2. After the existing Lift → Speed → BatSpeed certification block, run them in fixed order: Conditioning → Cross-Sport → Recovery → Arm Care.
+3. Each certifier receives the same constitutional inputs already resolved for the request (TrainingContext, AthleteContext, PersonalizationContext, TrainingAgeContext, availableEquipment, environment, isGameDay/isPracticeDay/isRecoveryDay, throwing schedule).
+4. Stamp `why_payload.<engine>_governance` and `why_v2.{why_category, why_template, why_athlete, why_season, why_recovery, why_readiness, why_substitution}` on matching rows by `slot`.
+5. Promote each engine's `fatal[]` into the existing `validatorReport` (same all-or-nothing publication gate). Promote `warn[]` as warnings.
+6. Add all Phase 10 diagnostics fields to both diagnostics-write sites (async catch site and RPC-payload site).
 
-`BAT_SPEED_TEMPLATES`:
+## 4. Validator fatal codes (added inline via certifier fatals)
 
-- `bs.max` — max bat speed, competition implement
-- `bs.elastic` — reactive rotational, band-assisted turns
-- `bs.overload` — heavy-bat / heavy-ball rotations
-- `bs.underload` — light-bat / underweight overspeed
-- `bs.mixed_pap` — over/under contrast with PAP pairing
-- `bs.game_day_primer` — 6–10 primer swings, sub-max
-- `bs.recovery` — PVC/mobility rotational reset
-- `bs.return_to_swing` — progression skeleton only
+- Conditioning: `cond_illegal_category`, `cond_duplicate_category`, `cond_unresolved_template`, `cond_unresolved_substitution`, `cond_governance_missing`
+- Cross-Sport: `xs_illegal_transfer`, `xs_duplicate_category`, `xs_unresolved_template`, `xs_unresolved_substitution`, `xs_governance_missing`
+- Recovery: `rec_conflicting_recovery`, `rec_illegal_recovery`, `rec_unresolved_template`, `rec_governance_missing`
+- Arm Care: `ac_illegal_throwing_phase`, `ac_duplicate_category`, `ac_unresolved_template`, `ac_governance_missing`
 
-Each declares: `slots`, `requiredCategories`, `overloadBudget`, `underloadBudget`, `papBudget`, `rotationalDemand`, `recoveryBudget`.
+## 5. Regression audit
 
-## Movement Categories
+`scripts/audits/performance-support-audit.ts` — Deno script exercising the matrix (12 season phases × training-age classes × equipment × indoor/outdoor × practice/game/tournament/travel/recovery × position/pitcher/two-way). Verifies deterministic generation, legal substitutions, governance completeness, validator clean, explainability populated, diagnostics populated. Fail-fast summary suitable for CI.
 
-Speed: `acceleration`, `top_speed`, `elastic`, `overspeed`, `resisted`, `reactive`, `deceleration`, `change_of_direction`, `plyometric`, `pap`, `mobility`.
+## 6. Documentation
 
-Bat Speed: `overload`, `underload`, `elastic_rotation`, `rotational_strength`, `pap`, `med_ball`, `band`, `pvc`, `heavy_implement`, `light_implement`, `recovery_swing`.
-
-Exclusive per session — no duplicate category inside one session.
-
-## Governance Metadata (additive to `wk_movement_catalog`)
-
-New columns (nullable, default NULL, backfilled by migration):
-
-`speed_category`, `bat_speed_category`, `speed_adaptation`, `bat_speed_adaptation`, `game_day_legal`, `practice_day_legal`, `pap_classification`, `movement_velocity`, `transfer_group`. `season_legality` and `training_age_legality` already exist from Phase 8 and are reused.
-
-Backfill covers only rows where `category IN ('speed','bat_speed')` plus any plyo/med-ball/rotational supplementals already in catalog. Lift rows untouched.
-
-## Substitutions
-
-`resolveSpeedSubstitutionLadder` / `resolveBatSpeedSubstitutionLadder` mirror Phase 8. Ladders per movement: `equipment_unavailable`, `environment_unavailable` (indoor/outdoor swap), `injury_restriction`, `time_restriction`, `coach_override`. Validators reject any unresolved ladder.
-
-## Explainability
-
-Stamped onto each Speed / Bat Speed prescription:
-
-- `why_v2.why_template`, `why_category`, `why_athlete`, `why_season`, `why_pap`, `why_substitution_ladder`
-- `why_payload.speed_governance` / `why_payload.bat_speed_governance`
-
-No UI change — reuses existing `why_payload` reader.
-
-## Validator (fatal additions)
-
-Speed: `speed_duplicate_category`, `speed_illegal_season`, `speed_illegal_equipment`, `speed_illegal_training_age`, `speed_missing_acceleration`, `speed_missing_recovery_balance`, `speed_unresolved_template`, `speed_unresolved_substitution`.
-
-Bat Speed: `bs_duplicate_category`, `bs_illegal_season`, `bs_illegal_equipment`, `bs_illegal_training_age`, `bs_missing_rotational_demand`, `bs_missing_pap_balance`, `bs_unresolved_template`, `bs_unresolved_substitution`.
-
-Non-fatal: illegal equipment when a valid substitution resolves it → warn.
-
-## Diagnostics (columns added to `wk_generation_diagnostics`)
-
-Speed: `speed_template_id`, `speed_category_coverage`, `speed_pap_score`, `speed_substitution_completeness`, `speed_validation_status`.
-Bat Speed: `bat_speed_template_id`, `bat_speed_category_coverage`, `bat_speed_pap_score`, `bat_speed_substitution_completeness`, `bat_speed_validation_status`.
-Shared: `explosive_governance_version = "explosive_v1"`.
-
-`wk_persist_prescriptions_atomic` RPC extended to persist these fields.
-
-## Generator Integration (`wk-generate-daily/index.ts`)
-
-After existing speed / bat-speed selection blocks (~lines 614–650), certify:
-
-```typescript
-const speedCert = certifySpeed({ prescriptions, catalog, template, availableEquipment, environment, trainingAgeClass });
-const batCert   = certifyBatSpeed({ prescriptions, catalog, template, availableEquipment, trainingAgeClass });
-```
-
-Fatal issues merge into existing `validatorReport` and block publication under the current all-or-nothing gate. Both diag payloads (lines 939, 1017) receive the new fields.
-
-## Regression Harness
-
-`scripts/audits/explosive-governance-audit.ts`:
-
-Matrix dimensions: Season (12 phases) × TrainingAge (5 classes) × Equipment (indoor, outdoor, gym-only, field-only, none) × DayType (practice, game, tournament, off, recovery) × Injury flag × Goal priority (speed-first vs power-first vs hitting-first).
-
-Verifies per generated day:
-1. Deterministic re-run yields identical prescriptions
-2. No duplicate exercise slugs within session
-3. No duplicate categories within session
-4. Template resolved (not null)
-5. Substitution ladders 100% resolved
-6. All `why_v2` fields present
-7. Governance version stamped
-8. Fatal validator count = 0 for legal contexts
-
-Emits `docs/audits/explosive-governance-matrix.csv`. Exits non-zero on any failure.
-
-## Deliverables Checklist
-
-- Speed + Bat Speed engine architecture (modules above)
-- Template registries (SPEED_TEMPLATES, BAT_SPEED_TEMPLATES)
-- Governance metadata columns + backfill migration
-- Validator fatal codes wired into `_shared/wic/validator.ts` fatal list
-- Diagnostics columns + RPC update
-- Updated dependency graph in `docs/wic/explosive-engine-v1.md`
-- Regression audit script + CSV
-- Before/after examples captured in the docs page
-
-## Explicit Deferred Work
-
-Conditioning, Cross-Sport, Recovery, Arm Care remain untouched and are scheduled for their own future phases. Lift Engine, Card Architecture, UI, and existing exercise catalog rows outside speed/bat-speed metadata are frozen.
+`docs/wic/performance-support-v1.md` — templates, categories, validator codes, diagnostics, `why_v2` fields, dependency graph, before/after prescription examples.
 
 ## Guardrails
 
-Additive-only. No modification to `_shared/wic/lift/**`, `_shared/wic/engines/conditioning.ts`, `_shared/wic/engines/crossSport.ts`, recovery paths, `_shared/wic/cardRegistry.ts`, or any `Wk*Card.tsx`. Phase 8's `certifyLift` continues to run unchanged.
+- No edits to Lift, Speed, Bat Speed shared modules.
+- No edits to card registry, provider, snapshots, or any UI.
+- No new tables; only additive columns on `wk_movement_catalog` and `wk_generation_diagnostics`.
+- No changes to RLS beyond persisting new diagnostic columns via the existing RPC.
+- Additive columns are nullable and backfilled — existing prescriptions remain valid.
+
+## Acceptance gate
+
+Complete when every performance-support engine is deterministic, consumes the same immutable constitutional contexts, is explainable, governance-stamped, substitution-complete, validator-clean, diagnostics-complete, and the regression audit passes across every supported seasonal context.
+
+## Order of execution once approved
+
+1. Run one `supabase--migration` (schema + RPC update).
+2. Backfill governance metadata via `supabase--insert` UPDATEs (grouped by slot).
+3. Write the 16 shared engine module files in parallel.
+4. Wire `wk-generate-daily/index.ts`.
+5. Write audit script + docs.
