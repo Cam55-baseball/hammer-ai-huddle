@@ -495,7 +495,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Cross-sport (its own slot, appended) --------
     const cross = lib.find((m) => m.category === "cross_sport" && eligible(m));
-    if (cross && isOffseason) {
+    if (cross && isOffseason && !isGameDay) {
       push(
         "cross_sport",
         "cross_sport",
