@@ -13560,6 +13560,11 @@ export type Database = {
         Row: {
           adaptation: string | null
           adaptation_profile_id: string | null
+          arm_care_category_coverage: Json | null
+          arm_care_governance_version: string | null
+          arm_care_substitution_completeness: number | null
+          arm_care_template_id: string | null
+          arm_care_validation_status: string | null
           athlete_context_version: string | null
           bat_speed_category_coverage: Json | null
           bat_speed_pap_score: number | null
@@ -13567,10 +13572,20 @@ export type Database = {
           bat_speed_template_id: string | null
           bat_speed_validation_status: string | null
           cards_produced: Json
+          conditioning_category_coverage: Json | null
+          conditioning_governance_version: string | null
+          conditioning_substitution_completeness: number | null
+          conditioning_template_id: string | null
+          conditioning_validation_status: string | null
           context_completeness_score: number | null
           context_validation_outcome: string | null
           context_version: string | null
           created_at: string
+          cross_sport_category_coverage: Json | null
+          cross_sport_governance_version: string | null
+          cross_sport_substitution_completeness: number | null
+          cross_sport_template_id: string | null
+          cross_sport_validation_status: string | null
           duplicate_count: number
           errors: Json
           exercise_count: number
@@ -13589,9 +13604,15 @@ export type Database = {
           metadata_complete: boolean
           missing_context_fields: string[] | null
           ordering_ok: boolean
+          performance_support_governance_version: string | null
           personalization_version: string | null
           plan_date: string
+          recovery_category_coverage: Json | null
+          recovery_governance_version: string | null
           recovery_profile_id: string | null
+          recovery_substitution_completeness: number | null
+          recovery_template_id: string | null
+          recovery_validation_status: string | null
           resolved_day_type: string | null
           resolved_season_phase: string | null
           season_phase: string | null
@@ -13608,6 +13629,11 @@ export type Database = {
         Insert: {
           adaptation?: string | null
           adaptation_profile_id?: string | null
+          arm_care_category_coverage?: Json | null
+          arm_care_governance_version?: string | null
+          arm_care_substitution_completeness?: number | null
+          arm_care_template_id?: string | null
+          arm_care_validation_status?: string | null
           athlete_context_version?: string | null
           bat_speed_category_coverage?: Json | null
           bat_speed_pap_score?: number | null
@@ -13615,10 +13641,20 @@ export type Database = {
           bat_speed_template_id?: string | null
           bat_speed_validation_status?: string | null
           cards_produced?: Json
+          conditioning_category_coverage?: Json | null
+          conditioning_governance_version?: string | null
+          conditioning_substitution_completeness?: number | null
+          conditioning_template_id?: string | null
+          conditioning_validation_status?: string | null
           context_completeness_score?: number | null
           context_validation_outcome?: string | null
           context_version?: string | null
           created_at?: string
+          cross_sport_category_coverage?: Json | null
+          cross_sport_governance_version?: string | null
+          cross_sport_substitution_completeness?: number | null
+          cross_sport_template_id?: string | null
+          cross_sport_validation_status?: string | null
           duplicate_count?: number
           errors?: Json
           exercise_count?: number
@@ -13637,9 +13673,15 @@ export type Database = {
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
+          performance_support_governance_version?: string | null
           personalization_version?: string | null
           plan_date: string
+          recovery_category_coverage?: Json | null
+          recovery_governance_version?: string | null
           recovery_profile_id?: string | null
+          recovery_substitution_completeness?: number | null
+          recovery_template_id?: string | null
+          recovery_validation_status?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
@@ -13656,6 +13698,11 @@ export type Database = {
         Update: {
           adaptation?: string | null
           adaptation_profile_id?: string | null
+          arm_care_category_coverage?: Json | null
+          arm_care_governance_version?: string | null
+          arm_care_substitution_completeness?: number | null
+          arm_care_template_id?: string | null
+          arm_care_validation_status?: string | null
           athlete_context_version?: string | null
           bat_speed_category_coverage?: Json | null
           bat_speed_pap_score?: number | null
@@ -13663,10 +13710,20 @@ export type Database = {
           bat_speed_template_id?: string | null
           bat_speed_validation_status?: string | null
           cards_produced?: Json
+          conditioning_category_coverage?: Json | null
+          conditioning_governance_version?: string | null
+          conditioning_substitution_completeness?: number | null
+          conditioning_template_id?: string | null
+          conditioning_validation_status?: string | null
           context_completeness_score?: number | null
           context_validation_outcome?: string | null
           context_version?: string | null
           created_at?: string
+          cross_sport_category_coverage?: Json | null
+          cross_sport_governance_version?: string | null
+          cross_sport_substitution_completeness?: number | null
+          cross_sport_template_id?: string | null
+          cross_sport_validation_status?: string | null
           duplicate_count?: number
           errors?: Json
           exercise_count?: number
@@ -13685,9 +13742,15 @@ export type Database = {
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
+          performance_support_governance_version?: string | null
           personalization_version?: string | null
           plan_date?: string
+          recovery_category_coverage?: Json | null
+          recovery_governance_version?: string | null
           recovery_profile_id?: string | null
+          recovery_substitution_completeness?: number | null
+          recovery_template_id?: string | null
+          recovery_validation_status?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
@@ -13706,6 +13769,7 @@ export type Database = {
       wk_movement_catalog: {
         Row: {
           aliases: string[] | null
+          arm_care_category: string | null
           bat_compatible: boolean | null
           bat_speed_adaptation: string | null
           bat_speed_category: string | null
@@ -13713,8 +13777,10 @@ export type Database = {
           category: string
           cns_cost: number
           concentric_profile: string | null
+          conditioning_category: string | null
           contraindications: string[] | null
           created_at: string
+          cross_sport_category: string | null
           cue: string
           default_load_pct: number | null
           default_reps: number | null
@@ -13725,6 +13791,7 @@ export type Database = {
           eccentric_profile: string | null
           elastic_emphasis: boolean | null
           elastic_profile: string | null
+          energy_system: string | null
           equipment: string[] | null
           equipment_requirements: string[] | null
           evidence_note: string | null
@@ -13733,6 +13800,7 @@ export type Database = {
           game_day_legal: boolean | null
           governance_version: string | null
           id: string
+          indoor_legal: boolean | null
           intensity_class: string | null
           is_eccentric_dominant: boolean
           joint_stress: number | null
@@ -13741,8 +13809,10 @@ export type Database = {
           min_training_age_years: number
           movement_category: string | null
           movement_pattern: string | null
+          movement_transfer: string | null
           movement_velocity: string | null
           name: string
+          outdoor_legal: boolean | null
           pap_classification: string | null
           pap_compatible: boolean | null
           pattern: string | null
@@ -13752,6 +13822,8 @@ export type Database = {
           practice_day_legal: boolean | null
           primary_adaptation: string | null
           progression_slug: string | null
+          recovery_category: string | null
+          recovery_class: string | null
           recovery_cost: number | null
           recovery_demand: number | null
           recovery_window_hours: number | null
@@ -13767,11 +13839,14 @@ export type Database = {
           speed_category: string | null
           speed_emphasis: boolean | null
           sport_scope: string
+          sport_transfer: Json | null
           sprint_compatible: boolean | null
           substitution_family: string | null
           throw_compatible: boolean | null
+          throwing_phase: string | null
           training_age_legality: Json | null
           transfer_group: string | null
+          travel_friendly: boolean | null
           unilateral: boolean | null
           updated_at: string
           variant: string | null
@@ -13781,6 +13856,7 @@ export type Database = {
         }
         Insert: {
           aliases?: string[] | null
+          arm_care_category?: string | null
           bat_compatible?: boolean | null
           bat_speed_adaptation?: string | null
           bat_speed_category?: string | null
@@ -13788,8 +13864,10 @@ export type Database = {
           category: string
           cns_cost?: number
           concentric_profile?: string | null
+          conditioning_category?: string | null
           contraindications?: string[] | null
           created_at?: string
+          cross_sport_category?: string | null
           cue: string
           default_load_pct?: number | null
           default_reps?: number | null
@@ -13800,6 +13878,7 @@ export type Database = {
           eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
           elastic_profile?: string | null
+          energy_system?: string | null
           equipment?: string[] | null
           equipment_requirements?: string[] | null
           evidence_note?: string | null
@@ -13808,6 +13887,7 @@ export type Database = {
           game_day_legal?: boolean | null
           governance_version?: string | null
           id?: string
+          indoor_legal?: boolean | null
           intensity_class?: string | null
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
@@ -13816,8 +13896,10 @@ export type Database = {
           min_training_age_years?: number
           movement_category?: string | null
           movement_pattern?: string | null
+          movement_transfer?: string | null
           movement_velocity?: string | null
           name: string
+          outdoor_legal?: boolean | null
           pap_classification?: string | null
           pap_compatible?: boolean | null
           pattern?: string | null
@@ -13827,6 +13909,8 @@ export type Database = {
           practice_day_legal?: boolean | null
           primary_adaptation?: string | null
           progression_slug?: string | null
+          recovery_category?: string | null
+          recovery_class?: string | null
           recovery_cost?: number | null
           recovery_demand?: number | null
           recovery_window_hours?: number | null
@@ -13842,11 +13926,14 @@ export type Database = {
           speed_category?: string | null
           speed_emphasis?: boolean | null
           sport_scope?: string
+          sport_transfer?: Json | null
           sprint_compatible?: boolean | null
           substitution_family?: string | null
           throw_compatible?: boolean | null
+          throwing_phase?: string | null
           training_age_legality?: Json | null
           transfer_group?: string | null
+          travel_friendly?: boolean | null
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
@@ -13856,6 +13943,7 @@ export type Database = {
         }
         Update: {
           aliases?: string[] | null
+          arm_care_category?: string | null
           bat_compatible?: boolean | null
           bat_speed_adaptation?: string | null
           bat_speed_category?: string | null
@@ -13863,8 +13951,10 @@ export type Database = {
           category?: string
           cns_cost?: number
           concentric_profile?: string | null
+          conditioning_category?: string | null
           contraindications?: string[] | null
           created_at?: string
+          cross_sport_category?: string | null
           cue?: string
           default_load_pct?: number | null
           default_reps?: number | null
@@ -13875,6 +13965,7 @@ export type Database = {
           eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
           elastic_profile?: string | null
+          energy_system?: string | null
           equipment?: string[] | null
           equipment_requirements?: string[] | null
           evidence_note?: string | null
@@ -13883,6 +13974,7 @@ export type Database = {
           game_day_legal?: boolean | null
           governance_version?: string | null
           id?: string
+          indoor_legal?: boolean | null
           intensity_class?: string | null
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
@@ -13891,8 +13983,10 @@ export type Database = {
           min_training_age_years?: number
           movement_category?: string | null
           movement_pattern?: string | null
+          movement_transfer?: string | null
           movement_velocity?: string | null
           name?: string
+          outdoor_legal?: boolean | null
           pap_classification?: string | null
           pap_compatible?: boolean | null
           pattern?: string | null
@@ -13902,6 +13996,8 @@ export type Database = {
           practice_day_legal?: boolean | null
           primary_adaptation?: string | null
           progression_slug?: string | null
+          recovery_category?: string | null
+          recovery_class?: string | null
           recovery_cost?: number | null
           recovery_demand?: number | null
           recovery_window_hours?: number | null
@@ -13917,11 +14013,14 @@ export type Database = {
           speed_category?: string | null
           speed_emphasis?: boolean | null
           sport_scope?: string
+          sport_transfer?: Json | null
           sprint_compatible?: boolean | null
           substitution_family?: string | null
           throw_compatible?: boolean | null
+          throwing_phase?: string | null
           training_age_legality?: Json | null
           transfer_group?: string | null
+          travel_friendly?: boolean | null
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
