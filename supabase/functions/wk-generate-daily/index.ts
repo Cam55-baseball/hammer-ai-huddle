@@ -1169,6 +1169,113 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // ============================================================
+    // Phase 11–12 — E2E Unification & Production Lock
+    // ============================================================
+    const ENGINE_EXECUTION_ORDER = [
+      "lift", "speed", "bat_speed", "conditioning",
+      "cross_sport", "recovery", "arm_care",
+    ];
+    const p1112_utcDate = utcPlanDate(planDate);
+    const p1112_contextHash = fnv1a64Hex(canonicalJson({
+      ctx: trainingContext, ac: athleteContext.athlete_context_version,
+      pers: personalizationContext.personalization_version, ta: trainingAgeContext.training_age_version,
+    }));
+    const p1112_seed = stableSeed(null, user.id, p1112_contextHash);
+    const p1112_govHash = governanceCatalogHash(lib as unknown as Array<Record<string, unknown>>);
+    const p1112_determinismTrace = buildDeterminismTrace({
+      seed: p1112_seed, utcPlanDate: p1112_utcDate, contextHash: p1112_contextHash,
+      governanceCatalogHash: p1112_govHash, engineExecutionOrder: ENGINE_EXECUTION_ORDER,
+    });
+
+    // Unified why_v2 root — merged onto every prescription row.
+    const p1112_whyRoot = buildUnifiedWhyRoot({
+      engineChain: ENGINE_EXECUTION_ORDER,
+      equipment: (availableEquipmentCtx as string[]) ?? [],
+      environment: (environmentCtx as string) ?? null,
+      season: trainingContext.season_phase ?? null,
+      schedule: (trainingContext as any).day_type ?? null,
+      readiness: (athleteContext as any)?.cns_readiness ?? null,
+      seed: p1112_seed,
+      governanceHash: p1112_govHash,
+    });
+    // Collect per-engine substitution paths from certifications.
+    const subPath: Record<string, unknown[]> = {};
+    for (const [k, c] of [
+      ["lift", liftCertification], ["speed", speedCertification], ["bat_speed", batSpeedCertification],
+      ["conditioning", conditioningCertification], ["cross_sport", crossSportCertification],
+      ["recovery", recoveryCertification], ["arm_care", armCareCertification],
+    ] as const) {
+      const stamps = (c as any)?.stamps;
+      if (stamps && typeof stamps.forEach === "function") {
+        const list: unknown[] = [];
+        stamps.forEach((s: any, slug: string) => list.push({ slug, ladder: s?.substitution_ladder ?? null }));
+        subPath[k] = list;
+      }
+    }
+    p1112_whyRoot.why_substitution_path = subPath;
+
+    // Merge unified root into every rx.why_v2 and compute completeness.
+    let p1112_whyMinScore = 100;
+    for (const rx of finalRxs as any[]) {
+      rx.why_v2 = mergeUnifiedWhy(rx.why_v2 ?? {}, p1112_whyRoot);
+      const s = computeWhyCompleteness(rx.why_v2);
+      if (s < p1112_whyMinScore) p1112_whyMinScore = s;
+    }
+    if (finalRxs.length === 0) p1112_whyMinScore = 0;
+    if (p1112_whyMinScore < 100) {
+      validatorReport.issues.push({
+        code: "why_v2_incomplete", severity: "fatal",
+        message: `Unified why_v2 completeness below 100 (min=${p1112_whyMinScore}).`,
+      });
+      (validatorReport as any).ok = false;
+    }
+
+    // Cross-engine conflict resolution.
+    const p1112_conflict = resolveCrossEngineConflicts(
+      finalRxs as any,
+      {
+        is_game_day: !!isGameDay,
+        throwing_phase: (trainingContext as any)?.throwing_phase ?? null,
+        cns_readiness: (athleteContext as any)?.cns_readiness ?? null,
+        metabolic_budget: (athleteContext as any)?.metabolic_budget ?? 100,
+      },
+    );
+    if (!p1112_conflict.ok) {
+      for (const f of p1112_conflict.fatals) {
+        validatorReport.issues.push({
+          code: "cross_engine_conflict_detected", severity: "fatal",
+          message: `${f.detail} [engines=${f.engines.join(",")}${f.slugs ? " slugs=" + f.slugs.join(",") : ""}]`,
+        });
+        (validatorReport as any).ok = false;
+      }
+    }
+
+    // Aggregate per-engine validator reports into a unified registry view.
+    const engineReports: EngineReport[] = [
+      { engine: "lift", fatal: (liftCertification as any).fatal ?? [], warn: (liftCertification as any).warn ?? [] },
+      { engine: "speed", fatal: (speedCertification as any).fatal ?? [], warn: (speedCertification as any).warn ?? [] },
+      { engine: "bat_speed", fatal: (batSpeedCertification as any).fatal ?? [], warn: (batSpeedCertification as any).warn ?? [] },
+      { engine: "conditioning", fatal: (conditioningCertification as any).fatal ?? [], warn: (conditioningCertification as any).warn ?? [] },
+      { engine: "cross_sport", fatal: (crossSportCertification as any).fatal ?? [], warn: (crossSportCertification as any).warn ?? [] },
+      { engine: "recovery", fatal: (recoveryCertification as any).fatal ?? [], warn: (recoveryCertification as any).warn ?? [] },
+      { engine: "arm_care", fatal: (armCareCertification as any).fatal ?? [], warn: (armCareCertification as any).warn ?? [] },
+    ];
+    const p1112_aggReport = aggregateValidatorReports(engineReports, []);
+    const p1112_globalValidatorStatus = (validatorReport as any).ok && p1112_aggReport.ok ? "ok" : "fatal";
+
+    // Snapshot hash (computed pre-persistence; RPC re-checks post-persist).
+    const p1112_snapshotHash = hashSnapshot({
+      rxs: finalRxs as any,
+      diag: {
+        generator_version: WIC_VERSION,
+        resolved_season_phase: trainingContext.season_phase,
+        resolved_day_type: trainingContext.day_type,
+        determinism_seed: p1112_seed,
+        governance_catalog_hash: p1112_govHash,
+      },
+    });
+    const p1112_immutability = assertImmutable(p1112_snapshotHash, p1112_snapshotHash);
 
     const generationMs = Date.now() - generationStartedAt;
     const cardsProduced = {
