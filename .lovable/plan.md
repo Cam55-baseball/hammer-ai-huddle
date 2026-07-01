@@ -1,48 +1,41 @@
-## Status: Elite Lifts + Speed — E2E Closure Verification
+## Status
 
-The core system and polish pass shipped, but three plan items from `.lovable/plan.md` were **not fully completed** last turn. Here's the honest gap list and the plan to close them.
+The core E2E plumbing is in place:
+- `wk-generate-daily` edge function deployed
+- `WkLiftsSpeedSection` reads `gameToday` from `useGpSignal` and suppresses lifts
+- `HammerDailyPlan` clamps skill blocks to "maintain" when Σ CNS ≥ 7 and shows a "CNS heavy" badge
+- `WkPrescriptionCard` writes completions to `wk_session_logs`
+- `ReviewAnswersStep` captures training age / pro-prospect / 1RMs
+- Owner-only Tuning link to `/admin/periodization`
 
-### What is DONE
-- Edge function `wk-generate-daily` deployed with phase resolution, injury swaps, CNS clamp, idempotency.
-- `wk_*` tables exist with GRANTs.
-- Frontend: `WkLiftsSpeedSection` (sequence toggle persisted to localStorage, skeleton loader, one-shot auto-generate), `WkPrescriptionCard` (logs to `wk_session_logs` on complete), `useWkDailyPrescriptions` (side-context threaded).
-- `AdminPeriodization` page wired to real `wk_periodization_blocks` schema with owner gate.
-- Typecheck + eternity guards green.
+What is still rough enough to break "seamless and elite":
 
-### What is NOT done (gaps to close)
-1. **Cross-system correlation — Hammer skill blocks ignore CNS load.** `dailyPlan.ts` does not yet read today's `wk_prescriptions` CNS sum to clamp hitting/throwing intensity to "moderate" when Σ CNS ≥ 7.
-2. **Cross-system correlation — Game-day auto-suppression.** `useGpSignal` does not mark today's pending lift prescriptions as `skipped` with reason "Game day — auto-suppressed" when a game is logged.
-3. **Onboarding seam — personalization inputs missing.** `profiles` columns `training_age_years`, `is_pro_prospect`, `one_rm` are not added, and `ReviewAnswersStep` does not collect them. Edge function falls back to defaults for every user.
-4. **Admin entry point.** No link to `/admin/periodization` from the Hammer Today header overflow menu (admins must type the URL).
-5. **Smoke verification.** No curl against `wk-generate-daily` + Playwright screenshot of Hammer Today with the new section visible.
+## Gaps to close
 
-### Closure plan
+1. **Error containment** — `WkLiftsSpeedSection` and `WkPrescriptionCard` are not wrapped in an error boundary. A single edge-function or render error currently blanks the Hammer Today plan. Wrap both in a localized `ElitePlanBoundary` that falls back to a compact "Plan unavailable — retry" card so the rest of Hammer Today keeps working.
 
-**A. CNS-aware Hammer skill clamp** (`src/lib/hammer/dailyPlan.ts`)
-- Add a lightweight selector that sums today's `wk_prescriptions.cns_cost` for the user.
-- When Σ ≥ 7, clamp skill-block `intensity` to "moderate" and append a transparency chip `"Reduced — heavy lift CNS load today"` to the block's `why` payload.
+2. **Auto-generate resiliency** — `useWkDailyPrescriptions` currently retries once per mount. If the first attempt fails (timeout, cold start), the user sees an empty section until tomorrow. Add: a) 30s timeout on the invoke, b) one automatic retry with backoff, c) a visible "Regenerate plan" button when both attempts fail.
 
-**B. Game-day lift suppression** (`src/hooks/useGpSignal.ts`)
-- On detection of a logged game today, update `wk_prescriptions` rows with `slot in ('lift','supplemental')` and `status='planned'` to `status='skipped'`, `substitution_reason='Game day — auto-suppressed'`.
-- Idempotent: only flips rows still planned.
+3. **Recovery acknowledgment loop** — `wk_recovery_acks` is written but never read back into the next-day prescription. Thread the most recent ack (soreness / sleep / readiness) into the `wk-generate-daily` request body so the next plan actually adapts. Without this, "personalization" is a one-way street.
 
-**C. Profiles personalization migration + onboarding capture**
-- Migration: `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS training_age_years int DEFAULT 0, ADD COLUMN IF NOT EXISTS is_pro_prospect boolean DEFAULT false, ADD COLUMN IF NOT EXISTS one_rm jsonb DEFAULT '{}'::jsonb;` (no GRANT change — profiles already granted).
-- Update `src/components/onboarding/ReviewAnswersStep.tsx` with a small "Training profile" block: slider for training age (0–15), toggle for Pro/Prospect, optional 1RM quick inputs (squat / bench / deadlift / trap-bar).
-- Persist on save through the existing profile upsert path.
-- Edge function already reads these defensively — once columns exist, real values flow.
+4. **Session log → CNS ledger** — Completions land in `wk_session_logs` but the CNS clamp only reads today's *prescribed* `cns_cost`. After a user finishes a block, recompute Σ CNS from actuals so the clamp reflects what was really done (e.g., skipped sets reduce the clamp, bonus sets increase it).
 
-**D. Admin link in Hammer Today header**
-- In the Hammer Today header overflow menu, add a "Periodization tuning" item gated by `useOwnerAccess().isOwner` (matches existing owner gate pattern) routing to `/admin/periodization`.
+5. **Game-day suppression UX** — Today the suppression notice replaces the whole section. Replace with a collapsible "Game day — lifts paused, here's your activation primer" card containing a 10-minute CNS-priming routine so users still get value on game days.
 
-**E. Smoke verification**
-- Curl `wk-generate-daily` with the preview session and confirm 200 + prescriptions array; tail logs for errors.
-- Playwright headless: load `/` (Hammer Today), screenshot the new section showing phase chip, "Why today" line, CNS transparency, and sequence toggle.
-- Run `bunx tsgo --noEmit` + `scripts/check-eternity-guards.sh` after edits.
+6. **Mobile polish** — At 402px the bat-vs-lift toggle, "Why" disclosure, and set/rep tracker overflow the card. Apply `flex-wrap`, stack the toggle vertically under `sm`, and clamp the prescription headline to 2 lines.
 
-### Out of scope (already constitutionalized for later)
-- Coach-side prescription overrides.
-- Wearable HRV → `cns_readiness`.
+7. **Owner Tuning link visibility** — The Tuning button currently renders inline in the header and pushes other controls off-screen on mobile. Move it into the existing overflow menu (kebab) so the header stays clean for athletes.
 
-### Release-readiness answer
-**Not yet 100% E2E.** Items A–E above are the remaining gap between "core system shipped" and "every signal influences every signal as planned." Approve and I'll close them in one build pass.
+8. **Telemetry sanity** — Add a single `console.debug` → `engine_function_logs` row on each plan generation with `{ generated_ms, cns_total, blocks_n, suppressed: gameToday }` so we can verify quality in production without guessing.
+
+## Out of scope
+
+No schema migrations beyond reading existing `wk_recovery_acks` rows. No changes to dailyPlan business logic beyond the CNS-from-actuals recompute. Onboarding, dossiers, and General untouched.
+
+## Verification
+
+- `tsgo` clean
+- Manual: force the edge function to 500 → confirm boundary + retry button render and the rest of Hammer Today stays interactive
+- Manual: mark a game today → confirm activation-primer card appears instead of blank suppression
+- Manual: complete one block → confirm "CNS heavy" badge updates to reflect actuals
+- Manual: 402px viewport → no horizontal overflow in Lifts + Speed section

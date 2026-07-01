@@ -65,7 +65,14 @@ import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
-import { Sliders } from "lucide-react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Sliders } from "lucide-react";
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -146,10 +153,8 @@ export function HammerDailyPlan() {
   // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
   // hitting/throwing volume doesn't compound the neural cost.
   const wkRx = useWkDailyPrescriptions();
-  const totalCns = useMemo(
-    () => (wkRx.data ?? []).reduce((s, r) => s + (Number(r.cns_cost) || 0), 0),
-    [wkRx.data],
-  );
+  // Prefer actuals over prescribed so the clamp reflects what the athlete did.
+  const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;
   const plan = useMemo(() => {
     if (!cnsHigh) return rawPlan;
@@ -244,16 +249,24 @@ export function HammerDailyPlan() {
               Report injury
             </Button>
             {isOwner && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-[11px]"
-                onClick={() => navigate("/admin/periodization")}
-                title="Owner-only: tune the periodization phase blocks"
-              >
-                <Sliders className="mr-1 h-3.5 w-3.5" />
-                Tuning
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0"
+                    title="Owner tools"
+                  >
+                    <MoreVertical className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/admin/periodization")}>
+                    <Sliders className="mr-2 h-3.5 w-3.5" />
+                    Tuning
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </CardTitle>
@@ -270,7 +283,9 @@ export function HammerDailyPlan() {
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
-        <WkLiftsSpeedSection />
+        <ErrorBoundary label="wk-lifts-speed">
+          <WkLiftsSpeedSection />
+        </ErrorBoundary>
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
     </Card>

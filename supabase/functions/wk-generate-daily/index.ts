@@ -86,8 +86,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const body = (await req.json().catch(() => ({}))) as { plan_date?: string };
+    const body = (await req.json().catch(() => ({}))) as {
+      plan_date?: string;
+      recent_ack?: { reduction_reason?: string; reduction_payload?: unknown; acknowledged_at?: string } | null;
+    };
     const planDate = body.plan_date ?? todayStr();
+    const recentAck = body.recent_ack ?? null;
 
     // -------- Load athlete context --------
     const [{ data: profile }, { data: ctx }, { data: injuries }, { data: dailyLog }] = await Promise.all([
@@ -134,6 +138,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
     if (soreness >= 8) {
       reductions.push({ reason: "soreness", detail: `Reported soreness ${soreness}/10 — substituting regressions where possible.` });
+    }
+
+    // Learning-loop: if the athlete acknowledged an under-recovery reduction in
+    // the last 48h, keep the CNS ceiling one notch below the raw block cap so
+    // the next plan actually adapts (not a one-way personalization).
+    if (recentAck?.acknowledged_at) {
+      const ackAgeH = (Date.now() - new Date(recentAck.acknowledged_at).getTime()) / 3600000;
+      if (ackAgeH >= 0 && ackAgeH <= 48) {
+        cnsCap = Math.max(1, cnsCap - 1);
+        reductions.push({
+          reason: "learning_loop",
+          detail: `Recent recovery ack (${recentAck.reduction_reason ?? "mixed"}) — holding CNS cap conservative for one more day.`,
+        });
+      }
     }
 
     // -------- Movement filters --------
@@ -337,6 +355,16 @@ const handler = async (req: Request): Promise<Response> => {
       breakdown: { lift: 1, speed: rxs.filter((r) => r.slot === "speed").length, bat_speed: rxs.filter((r) => r.slot === "bat_speed").length },
     }, { onConflict: "user_id,ledger_date" });
 
+    console.info("[wk-generate-daily] ok", {
+      user_id: user.id,
+      plan_date: planDate,
+      phase: phaseRes.phase,
+      cns_used: cnsUsed,
+      cns_cap: cnsCap,
+      blocks_n: rows.length,
+      had_ack: !!recentAck,
+      reductions_n: reductions.length,
+    });
     return json({
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
