@@ -30,6 +30,9 @@ import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift } from "../_shared/wic/lift/sessionBuilder.ts";
+// Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
+import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
+import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
