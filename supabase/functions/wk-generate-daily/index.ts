@@ -1445,6 +1445,14 @@ const handler = async (req: Request): Promise<Response> => {
             snapshot_integrity_status: p1112_immutability.status,
             governance_catalog_hash: p1112_govHash,
             why_v2_completeness_score: p1112_whyMinScore,
+            // Phase 12+ — System Freeze v1 diagnostics
+            system_state: p12_systemState,
+            system_state_hash: p12_systemStateHash,
+            engine_signature_hashes: p12_engineSignatureMap,
+            why_v2_hash: p12_whyV2Hash,
+            expected_why_v2_hash: p12_whyV2Hash,
+            validator_aggregate_hash: p12_validatorAggHash,
+            global_invariant_status: p12_globalInvariantStatus,
           },
         });
       } catch (diagErr) {
