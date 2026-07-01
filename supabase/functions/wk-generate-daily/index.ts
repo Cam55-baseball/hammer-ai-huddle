@@ -466,6 +466,7 @@ const handler = async (req: Request): Promise<Response> => {
           // Phase 4 — every card reads the same TrainingContext from here.
           training_context: trainingContext,
           ...meta,
+        },
         rationale,
         adaptation: adaptationDecision.primary,
         engine: wicEngine,
