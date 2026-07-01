@@ -199,13 +199,33 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   const grouped = useMemo(() => {
     const rxs = query.data ?? [];
+    const byRoleOrder = (a: WkRx, b: WkRx) => {
+      const ai = a.sequence_role ? LIFT_ROLE_ORDER.indexOf(a.sequence_role) : 999;
+      const bi = b.sequence_role ? LIFT_ROLE_ORDER.indexOf(b.sequence_role) : 999;
+      if (ai !== bi) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      return a.sequence_order - b.sequence_order;
+    };
     return {
-      lift: rxs.filter((r) => r.slot === "lift"),
+      // Legacy buckets (kept for anything still importing them)
+      lift: rxs.filter((r) => r.slot === "lift").sort(byRoleOrder),
       supplemental: rxs.filter((r) => r.slot === "supplemental"),
       speed: rxs.filter((r) => r.slot === "speed"),
       bat_speed: rxs.filter((r) => r.slot === "bat_speed"),
       conditioning: rxs.filter((r) => r.slot === "conditioning"),
       cross_sport: rxs.filter((r) => r.slot === "cross_sport"),
+      // New card-scoped buckets
+      speedBat: [
+        ...rxs.filter((r) => r.slot === "bat_speed"),
+        ...rxs.filter((r) => r.slot === "speed"),
+      ],
+      lifts: [
+        ...rxs.filter((r) => r.slot === "lift").sort(byRoleOrder),
+        ...rxs.filter((r) => r.slot === "supplemental"),
+      ],
+      conditioningCard: [
+        ...rxs.filter((r) => r.slot === "conditioning"),
+        ...rxs.filter((r) => r.slot === "cross_sport"),
+      ],
     };
   }, [query.data]);
 
