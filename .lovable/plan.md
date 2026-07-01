@@ -1,9 +1,8 @@
-## Close the wk_* GRANT gap and re-verify E2E
+## Final E2E verification pass on the Lifts + Speed plan system
 
-### Steps
-1. Submit a migration that grants the required privileges on the five `wk_*` tables:
-   - `authenticated`: `SELECT, INSERT, UPDATE, DELETE` on `wk_prescriptions`, `wk_session_logs`, `wk_recovery_acks`, `wk_cns_ledger`; `SELECT` on `wk_periodization_blocks`.
-   - `service_role`: `ALL` on all five tables.
-2. After you approve the migration, re-query `information_schema.role_table_grants` to confirm grants are present.
-3. Smoke-test `wk-generate-daily` with the injected session to confirm read/write works end-to-end.
-4. Report the final 100% verdict.
+### Checks
+1. **DB grants** — re-query `pg_class`/`aclexplode` for all five `wk_*` tables to confirm `authenticated` (CRUD, SELECT for periodization) and `service_role` (ALL) are still present.
+2. **Edge function** — hit `wk-generate-daily` with the injected preview session; confirm it returns a plan and writes `wk_prescriptions` rows without permission errors.
+3. **Client wiring** — spot-check `useWkDailyPrescriptions.ts`, `WkLiftsSpeedSection.tsx`, and `HammerDailyPlan.tsx` for: auto-generate gating, game-day suppression, CNS clamp using `effectiveCnsTotal`, ErrorBoundary wrap, and Regenerate button.
+4. **Types** — run `tsgo` to confirm a clean typecheck.
+5. **Verdict** — report 100% complete or list remaining gaps with the exact fix.
