@@ -22,11 +22,27 @@ import { toast } from "sonner";
 
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
 
+export type WkSequenceRole =
+  | "arm_care"
+  | "trunk_primer"
+  | "compound_lower"
+  | "unilateral_lower"
+  | "upper_push"
+  | "upper_pull"
+  | "carry_antirotation"
+  | "trunk_finisher"
+  | "supplemental"
+  | "speed"
+  | "bat_speed"
+  | "conditioning"
+  | "cross_sport";
+
 export interface WkRx {
   id: string;
   plan_date: string;
   slot: WkSlot;
   sequence_order: number;
+  sequence_role: WkSequenceRole | null;
   movement_slug: string;
   movement_name: string;
   phase: string;
@@ -51,6 +67,18 @@ export interface WkRx {
   };
   status: "planned" | "completed" | "skipped";
 }
+
+const LIFT_ROLE_ORDER: WkSequenceRole[] = [
+  "arm_care",
+  "trunk_primer",
+  "compound_lower",
+  "unilateral_lower",
+  "upper_push",
+  "upper_pull",
+  "carry_antirotation",
+  "trunk_finisher",
+  "supplemental",
+];
 
 function todayStr(): string {
   const d = new Date();
