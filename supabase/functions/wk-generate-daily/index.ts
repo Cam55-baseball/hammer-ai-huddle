@@ -171,7 +171,19 @@ const handler = async (req: Request): Promise<Response> => {
     const recentAck = body.recent_ack ?? null;
 
     // -------- Load athlete context --------
-    const [{ data: profile }, { data: ctx }, { data: injuries }, { data: dailyLog }, { data: gamesToday }, { data: practicesToday }] = await Promise.all([
+    const [
+      { data: profile },
+      { data: ctx },
+      { data: injuries },
+      { data: dailyLog },
+      { data: gamesToday },
+      { data: practicesToday },
+      { data: sidePref },
+      { data: equipmentCtx },
+      { data: trainingPrefs },
+      { data: latestWeight },
+      { data: bodyGoals },
+    ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
@@ -182,13 +194,26 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("game_date", planDate)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
         .limit(1),
-      // Phase 2 — wire real practice-day signal (was hardcoded false).
       admin.from("scheduled_practice_sessions")
         .select("id")
         .eq("user_id", user.id)
         .eq("session_date", planDate)
         .limit(1),
+      admin.from("athlete_side_preferences").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("weight_entries").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }).limit(1).maybeSingle(),
+      admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
     ]);
+
+    const p: any = profile ?? {};
+    const sport = (p.sport ?? "baseball") as "baseball" | "softball";
+    const position = p.primary_position ?? p.position ?? null;
+    const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
+    const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
+    const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
+    const isGameDay = (gamesToday ?? []).length > 0;
+    const isPracticeDay = (practicesToday ?? []).length > 0;
 
     const p: any = profile ?? {};
     const sport = (p.sport ?? "baseball") as "baseball" | "softball";
