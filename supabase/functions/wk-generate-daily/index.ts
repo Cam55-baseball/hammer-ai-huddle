@@ -235,6 +235,20 @@ const handler = async (req: Request): Promise<Response> => {
     let seq = 0;
     let cnsUsed = 0;
 
+    const humanizeClass = (c: string | null) => {
+      switch (c) {
+        case "max_effort_compound": return "max-effort compound";
+        case "eccentric_compound": return "eccentric-focus compound";
+        case "compound": return "compound";
+        case "unilateral": return "unilateral / single-leg";
+        case "arm_care": return "arm-care";
+        case "trunk": return "trunk / anti-rotation";
+        case "carry": return "loaded carry";
+        default: return c ?? "supplemental";
+      }
+    };
+    const humanizePhilosophy = (p: string | null) => p ? p.replace(/_/g, " ") : null;
+
     const push = (
       slot: Slot,
       role: SequenceRole,
@@ -243,21 +257,35 @@ const handler = async (req: Request): Promise<Response> => {
       why: string = "",
     ) => {
       const s = swap(m);
-      // Session dedupe: skip if this slug was already emitted today
       if (usedThisSession.has(s.movement.slug)) return;
       usedThisSession.add(s.movement.slug);
       const setsBase = overrides.sets ?? s.movement.default_sets ?? null;
       const repsBase = overrides.reps ?? s.movement.default_reps ?? null;
       const clamped = (cnsUsed + s.movement.cns_cost) > cnsCap;
       cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
-      const rationaleParts: string[] = [
-        `Phase: ${phaseRes.displayName}`,
-        `Training age: ${trainingAgeYears}y${isProProspect ? " (pro prospect)" : ""}`,
-        s.movement.intensity_class ? `Class: ${s.movement.intensity_class}` : "",
-        s.movement.source_philosophy ? `Source: ${s.movement.source_philosophy}` : "",
-        why || s.movement.why_prescribed,
-        reductions.length ? `Reductions: ${reductions.map((r) => r.reason).join(", ")}` : "",
-      ].filter(Boolean);
+
+      // Override provenance
+      const phaseBlocked = !!(s.movement.phase_allow && s.movement.phase_allow.length > 0 && !s.movement.phase_allow.includes(phaseRes.phase));
+      const overrideRow = phaseBlocked ? (activeOverrides ?? []).find((o: any) => o.movement_slug === s.movement.slug) : null;
+      const overrideMeta = overrideRow
+        ? { reason: (overrideRow as any).reason ?? null, actor_role: "self", expires_at: (overrideRow as any).expires_at }
+        : null;
+
+      // Plain-English rationale
+      const philo = humanizePhilosophy(s.movement.source_philosophy);
+      const cls = humanizeClass(s.movement.intensity_class);
+      const ageStr = trainingAgeYears > 0 ? `${trainingAgeYears}-year training age` : "beginner training age";
+      const proStr = isProProspect ? " (pro prospect)" : "";
+      const reasonPiece = why || s.movement.why_prescribed || `${cls} pick for today`;
+      const reductionsPiece = reductions.length
+        ? ` Volume trimmed today because ${reductions.map((r) => r.detail.toLowerCase()).join(" and ")}.`
+        : "";
+      const overridePiece = overrideMeta
+        ? ` Unlocked for this session by your override — reason: "${overrideMeta.reason ?? "not stated"}".`
+        : "";
+      const philoPiece = philo ? ` Doctrine: ${philo}.` : "";
+      const rationale = `Chosen because you're in ${phaseRes.displayName} with a ${ageStr}${proStr}, and this is a ${cls}. ${reasonPiece}.${philoPiece}${overridePiece}${reductionsPiece}`.replace(/\s+/g, " ").trim();
+
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
@@ -278,8 +306,9 @@ const handler = async (req: Request): Promise<Response> => {
           cue: s.movement.cue,
           rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
           reductions,
+          override: overrideMeta,
         },
-        rationale: rationaleParts.join(" • "),
+        rationale,
       } as any);
     };
 

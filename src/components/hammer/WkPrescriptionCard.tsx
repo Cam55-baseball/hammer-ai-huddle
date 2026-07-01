@@ -100,6 +100,11 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
                   <ShieldCheck className="h-3 w-3" /> Injury-swap
                 </Badge>
               )}
+              {rx.why_payload?.override && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-violet-500/50 text-violet-700 dark:text-violet-300">
+                  Override — 1 session
+                </Badge>
+              )}
             </div>
             <div className="mt-1 font-semibold text-sm line-clamp-2 break-words">{rx.movement_name}</div>
             <div className="text-xs text-muted-foreground mt-0.5 break-words">{dosage}</div>

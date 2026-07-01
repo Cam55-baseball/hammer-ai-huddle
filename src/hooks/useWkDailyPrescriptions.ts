@@ -67,6 +67,7 @@ export interface WkRx {
     is_pro_prospect?: boolean;
     intensity_class?: string;
     source_philosophy?: string;
+    override?: { reason: string | null; actor_role: string; expires_at: string } | null;
   };
   status: "planned" | "completed" | "skipped";
 }
@@ -242,6 +243,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     return first?.why_payload?.phase_display ?? null;
   }, [query.data]);
 
+  const phaseKey = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    return first?.why_payload?.phase ?? null;
+  }, [query.data]);
+
   // Effective CNS = skipped rows contribute 0, everything else contributes
   // full cns_cost. Keeps the "CNS heavy" clamp honest to actuals.
   const effectiveCnsTotal = useMemo(
@@ -272,6 +278,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     grouped,
     reductions,
     phaseDisplay,
+    phaseKey,
     generate,
     generating,
     failed,

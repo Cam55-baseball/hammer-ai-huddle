@@ -1,22 +1,29 @@
 /**
  * WkLiftsCard — full-body elite lift template.
  *
- * Renders slot="lift" and slot="supplemental" in canonical sequence_role order:
- *   arm care → trunk primer → compound → unilateral → upper push → upper pull
- *   → carry / anti-rotation → trunk finisher → supplemental.
+ * Renders slot="lift" and slot="supplemental" in canonical sequence_role order
+ * (arm care → trunk primer → compound → unilateral → upper push → upper pull
+ * → carry / anti-rotation → trunk finisher → supplemental).
  *
- * Phase modulation happens server-side in wk-generate-daily.
- * Game-day: paused with a short explanation (activation lives on the Speed card).
+ * Also surfaces movements that were HARD-BLOCKED for the current WK phase
+ * (e.g. OS-only eccentrics in-season) with a "Request 1-session override"
+ * affordance so the athlete can see WHY something was withheld and unlock it
+ * for one session if they truly need it.
  */
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Dumbbell, Loader2, RefreshCw } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { AlertTriangle, Dumbbell, Loader2, RefreshCw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
+import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from "@/hooks/useBlockedLiftMovements";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
@@ -25,10 +32,14 @@ export function WkLiftsCard() {
   const { user } = useAuth();
   const gp = useGpSignal();
   const {
-    grouped, reductions, phaseDisplay, generate, generating, isLoading, failed, retry,
+    grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement,
   } = useWkDailyPrescriptions();
+  const blocked = useBlockedLiftMovements(phaseKey);
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);
+  const [overrideTarget, setOverrideTarget] = useState<BlockedMovement | null>(null);
+  const [overrideReason, setOverrideReason] = useState("");
+  const [overrideSubmitting, setOverrideSubmitting] = useState(false);
 
   const submitAck = async () => {
     if (!user?.id) return;
@@ -41,6 +52,18 @@ export function WkLiftsCard() {
     if (error) return toast.error("Could not record acknowledgment");
     setAcked(true); setAckOpen(false);
     toast.success("Recovery is on you today. We've got your back.");
+  };
+
+  const confirmOverride = async () => {
+    if (!overrideTarget || !overrideReason.trim()) return;
+    setOverrideSubmitting(true);
+    try {
+      await overrideMovement(overrideTarget.slug, overrideReason.trim());
+      setOverrideTarget(null);
+      setOverrideReason("");
+    } finally {
+      setOverrideSubmitting(false);
+    }
   };
 
   if (gp.gameToday) {
@@ -60,6 +83,7 @@ export function WkLiftsCard() {
   }
 
   const items = grouped.lifts;
+  const blockedItems = blocked.data ?? [];
 
   return (
     <Card className="border-blue-500/30">
@@ -111,7 +135,63 @@ export function WkLiftsCard() {
         ) : (
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
+
+        {phaseKey && blockedItems.length > 0 && (
+          <details className="rounded-md border border-violet-500/30 bg-violet-500/5 p-2 text-xs">
+            <summary className="cursor-pointer font-medium flex items-center gap-1.5 text-violet-800 dark:text-violet-200">
+              <Lock className="h-3 w-3" />
+              {blockedItems.length} movement{blockedItems.length === 1 ? "" : "s"} blocked this phase
+            </summary>
+            <div className="mt-2 space-y-1.5">
+              {blockedItems.slice(0, 12).map((m) => (
+                <div key={m.slug} className="flex items-start justify-between gap-2 rounded border border-border/50 bg-background p-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{m.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{explainWhyBlocked(m, phaseKey)}</div>
+                  </div>
+                  <Button size="sm" variant="outline" className="h-7 text-[11px] shrink-0" onClick={() => setOverrideTarget(m)}>
+                    Request override
+                  </Button>
+                </div>
+              ))}
+              {blockedItems.length > 12 && (
+                <div className="text-[11px] text-muted-foreground">+{blockedItems.length - 12} more…</div>
+              )}
+            </div>
+          </details>
+        )}
       </CardContent>
+
+      <Dialog open={!!overrideTarget} onOpenChange={(o) => { if (!o) { setOverrideTarget(null); setOverrideReason(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request 1-session override</DialogTitle>
+            <DialogDescription>
+              {overrideTarget?.name} was blocked for the current phase. Overrides last for today only and are logged with your reason so the plan learns.
+            </DialogDescription>
+          </DialogHeader>
+          {overrideTarget && phaseKey && (
+            <div className="mb-2 text-xs">
+              <Badge variant="outline" className="border-violet-500/50 text-violet-700 dark:text-violet-300">
+                {explainWhyBlocked(overrideTarget, phaseKey)}
+              </Badge>
+            </div>
+          )}
+          <Textarea
+            placeholder="Why do you need this today? (e.g. coach programmed it, testing week, personal max attempt…)"
+            value={overrideReason}
+            onChange={(e) => setOverrideReason(e.target.value)}
+            rows={3}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOverrideTarget(null)}>Cancel</Button>
+            <Button onClick={confirmOverride} disabled={!overrideReason.trim() || overrideSubmitting}>
+              {overrideSubmitting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+              Confirm override
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
