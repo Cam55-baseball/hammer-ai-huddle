@@ -779,6 +779,64 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Phases 5–7 — Athlete / Personalization / Training-Age validation.
+    // Every prescription must reference exactly one identical instance of each.
+    if (finalRxs.length > 0) {
+      const seenAcVer = new Set<string>();
+      const seenPersVer = new Set<string>();
+      const seenTaClass = new Set<string>();
+      const seenHand = new Set<string>();
+      const seenPos = new Set<string>();
+      const seenGoalCount = new Set<number>();
+      let acMissingCount = 0;
+      let taMissingCount = 0;
+      for (const r of finalRxs) {
+        const wp: any = (r as any)?.why_payload ?? {};
+        const ac = wp.athlete_context;
+        const pers = wp.personalization_context;
+        const ta = wp.training_age_context;
+        if (!ac) { acMissingCount++; }
+        else {
+          if (ac.athlete_context_version) seenAcVer.add(ac.athlete_context_version);
+          if (ac.identity?.throwing_side) seenHand.add(String(ac.identity.throwing_side));
+          if (ac.identity?.primary_position) seenPos.add(String(ac.identity.primary_position));
+          if (Array.isArray(ac.goals)) seenGoalCount.add(ac.goals.length);
+        }
+        if (pers?.personalization_version) seenPersVer.add(pers.personalization_version);
+        if (!ta || !ta.classification) taMissingCount++;
+        else seenTaClass.add(String(ta.classification));
+      }
+      if (acMissingCount > 0) {
+        validatorReport.issues.push({ code: "athlete_context_missing", severity: "fatal", message: `athlete_context missing on ${acMissingCount} row(s).` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenAcVer.size > 1) {
+        validatorReport.issues.push({ code: "multiple_athlete_contexts", severity: "fatal", message: `Multiple athlete_context versions detected: ${[...seenAcVer].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenPersVer.size > 1) {
+        validatorReport.issues.push({ code: "multiple_personalization_contexts", severity: "fatal", message: `Multiple personalization_context versions detected: ${[...seenPersVer].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (taMissingCount > 0 || seenTaClass.size > 1) {
+        validatorReport.issues.push({ code: "training_age_unresolved", severity: "fatal", message: `training_age not uniformly resolved (missing=${taMissingCount}, distinct=${seenTaClass.size}).` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenGoalCount.size > 1) {
+        validatorReport.issues.push({ code: "goal_resolution_inconsistent", severity: "fatal", message: `Goal list length inconsistent across rows: ${[...seenGoalCount].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenHand.size > 1) {
+        validatorReport.issues.push({ code: "handedness_inconsistent", severity: "fatal", message: `Handedness inconsistent across rows: ${[...seenHand].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenPos.size > 1) {
+        validatorReport.issues.push({ code: "position_inconsistent", severity: "fatal", message: `Primary position inconsistent across rows: ${[...seenPos].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+    }
+
+
     const generationMs = Date.now() - generationStartedAt;
     const cardsProduced = {
       lift: finalRxs.filter((r) => r.slot === "lift").length,
