@@ -288,17 +288,28 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Movement filters --------
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
       if (!m) return false;
+      // WIC Stage 2 — hard-block movements missing constitutional metadata.
+      if (m.wic_metadata_complete === false) return false;
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
-      // Phase legality — hard-block eccentric/OS-only movements outside legal phases, unless override
+      // WIC Stage 3 — seasonal legality via season_eligibility array.
+      if (m.season_eligibility && m.season_eligibility.length > 0 && !m.season_eligibility.includes(phaseRes.phase)) {
+        if (!overrideSlugs.has(m.slug)) return false;
+      }
+      // Legacy phase legality — hard-block eccentric/OS-only movements outside legal phases, unless override.
       if (isPhaseHardBlocked(m)) {
         if (!overrideSlugs.has(m.slug)) return false;
       }
-      // Session dedupe — no movement twice in a day
+      // Session dedupe — no movement twice in a day.
       if (usedThisSession.has(m.slug)) return false;
       if (usedNamesThisSession.has(normalizeName(m.name))) return false;
-      // 72h non-repeat for compound lifts
+      // 72h non-repeat for compound lifts.
       if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return false;
+      // WIC Stage 3 — day-adaptation compatibility.
+      if (decision?.primaryAdaptation && m.primary_adaptation) {
+        if (!adaptationsCompatible(decision.primaryAdaptation, m.primary_adaptation)) return false;
+      }
       return true;
     };
     const swap = (m: MovementRow) => {
