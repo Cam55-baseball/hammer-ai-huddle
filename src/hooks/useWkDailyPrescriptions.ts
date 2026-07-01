@@ -107,7 +107,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [failed, setFailed] = useState(false);
-  const autoTried = useRef(false);
+  const autoTriedKey = useRef<string | null>(null);
   const sideCtx = useSideContext();
   const gp = useGpSignal();
   const sideHit = sideCtx.selectedSide?.hit;
@@ -192,21 +192,29 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const first = query.data?.[0];
     const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
     const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== gp.gameToday;
-    const needsRefresh = !!query.data && (query.data.length === 0 || staleVersion || staleGameDay);
+    const refreshKey = !query.data
+      ? null
+      : query.data.length === 0
+        ? "empty"
+        : staleVersion
+          ? `version:${first?.why_payload?.generator_version ?? "missing"}`
+          : staleGameDay
+            ? `game:${String(first?.why_payload?.game_day)}->${String(gp.gameToday)}`
+            : null;
     if (
       !query.isLoading &&
-      needsRefresh &&
+      refreshKey &&
       !generating &&
       !failed &&
-      (!autoTried.current || staleVersion || staleGameDay)
+      autoTriedKey.current !== refreshKey
     ) {
-      autoTried.current = true;
+      autoTriedKey.current = refreshKey;
       generate();
     }
   }, [query.isLoading, query.data, gp.gameToday, generate, generating, failed]);
 
   const retry = useCallback(() => {
-    autoTried.current = false;
+    autoTriedKey.current = null;
     setFailed(false);
     generate();
   }, [generate]);
