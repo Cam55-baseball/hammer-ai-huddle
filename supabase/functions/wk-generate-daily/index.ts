@@ -1486,6 +1486,16 @@ const handler = async (req: Request): Promise<Response> => {
         arm_care_substitution_completeness: armCareCertification.substitutionCompleteness,
         arm_care_governance_version: armCareCertification.governanceVersion,
         performance_support_governance_version: "performance_support_v1",
+        // Phase 11–12 — Unification & Production Lock diagnostics
+        determinism_seed: p1112_seed,
+        determinism_trace: p1112_determinismTrace,
+        engine_execution_order: ENGINE_EXECUTION_ORDER,
+        global_validator_status: p1112_globalValidatorStatus,
+        snapshot_hash: p1112_snapshotHash,
+        expected_snapshot_hash: p1112_snapshotHash,
+        snapshot_integrity_status: p1112_immutability.status,
+        governance_catalog_hash: p1112_govHash,
+        why_v2_completeness_score: p1112_whyMinScore,
       },
     });
     if (rpcErr) throw rpcErr;
