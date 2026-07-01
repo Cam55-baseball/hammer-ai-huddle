@@ -190,6 +190,23 @@ const handler = async (req: Request): Promise<Response> => {
     const isInSeason = phaseRes.phase === "in_season";
     const isPostSeason = phaseRes.phase === "post_season";
 
+    // -------- Phase 4: Canonical Training Context --------
+    // Single deterministic resolver. Every downstream engine and every
+    // prescription row consumes this exact object. No engine may override.
+    const trainingContext: TrainingContext = resolveTrainingContext({
+      planDate,
+      legacyPhase: phaseRes.phase,
+      isGameDay,
+      isPracticeDay,
+      // Future phases can plug in tournament/travel/off/recovery signals.
+      isTournamentDay: false,
+      isTravelDay: false,
+      isRecoveryDay: false,
+      isOffDay: false,
+      isDeloadDay: false,
+      generationId: null, // stamped post-persist by row id if needed
+    });
+
     // -------- Load phase block + catalog --------
     const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }] = await Promise.all([
       admin.from("wk_periodization_blocks").select("*").eq("phase", phaseRes.phase).maybeSingle() as unknown as Promise<{ data: BlockRow | null; error: any }>,
