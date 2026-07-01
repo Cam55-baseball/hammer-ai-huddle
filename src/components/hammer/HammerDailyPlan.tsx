@@ -58,7 +58,9 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
-import { WkLiftsSpeedSection } from "@/components/hammer/WkLiftsSpeedSection";
+import { WkSpeedBatCard } from "@/components/hammer/WkSpeedBatCard";
+import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
+import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
@@ -280,11 +282,17 @@ export function HammerDailyPlan() {
       <CardContent className="space-y-2">
         <HammerScheduleStrip />
         <GpInGameAdvisoryStrip />
+        <ErrorBoundary label="wk-speed-bat">
+          <WkSpeedBatCard />
+        </ErrorBoundary>
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
-        <ErrorBoundary label="wk-lifts-speed">
-          <WkLiftsSpeedSection />
+        <ErrorBoundary label="wk-lifts">
+          <WkLiftsCard />
+        </ErrorBoundary>
+        <ErrorBoundary label="wk-conditioning">
+          <WkConditioningCard />
         </ErrorBoundary>
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />

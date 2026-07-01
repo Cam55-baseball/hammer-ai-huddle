@@ -13701,6 +13701,7 @@ export type Database = {
           plan_date: string
           reps: number | null
           sequence_order: number
+          sequence_role: string | null
           sets: number | null
           slot: string
           status: string
@@ -13723,6 +13724,7 @@ export type Database = {
           plan_date: string
           reps?: number | null
           sequence_order?: number
+          sequence_role?: string | null
           sets?: number | null
           slot: string
           status?: string
@@ -13745,6 +13747,7 @@ export type Database = {
           plan_date?: string
           reps?: number | null
           sequence_order?: number
+          sequence_role?: string | null
           sets?: number | null
           slot?: string
           status?: string

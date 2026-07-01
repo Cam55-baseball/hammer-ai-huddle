@@ -1,45 +1,82 @@
-## Full-App Bug, Brokenness & Fragmentation Sweep
+# Workout Rebuild — Elite Full-Body Lifts, Correct Sequencing, Split Cards
 
-### Scope
-Audit the entire app for runtime crashes, dead buttons, broken routes, auth-eviction glitches, missing GRANTs, unhandled promise rejections, lazy-load import failures, and E2E gaps between UI → hook → edge function → DB.
+## Problems being fixed
 
-### Investigation phases
+1. Speed + Lifts + Conditioning are jammed into one `WkLiftsSpeedSection` card — looks novice, hides sequencing.
+2. Lifts default to a single-pattern day (squat OR hinge OR push OR pull) — users experience them as "weak / non-beneficial / oddly structured." Elite reference sessions are full-body, unilateral-heavy, with trunk work, carries, and dedicated arm care.
+3. In-season vs off-season doctrine exists in the periodization block but the actual movement selection doesn't reflect it — same 1 compound + 3 supplementals regardless of phase.
+4. CNS-fresh work (bat-speed, sprint speed) should run BEFORE lifts, not be bundled next to them. Conditioning belongs with practice; sport work goes at end of day (or as a short in-season warm-up).
 
-**1. Static / structural audit**
-- `tsgo --noEmit` — zero-error baseline.
-- `rg` sweep for known glitch patterns: raw `signOut(` outside guard, `throw new Error` in render paths, missing `ErrorBoundary` wraps on lazy routes, `import(` without `lazyWithRetry`, `useAuth()` called without `useOptionalAuth` fallback, `.single()` without error handling, `navigate("/auth")` on non-auth failures.
-- Verify every top-level route in `App.tsx` is wrapped in an `ErrorBoundary`.
+## Deliverables
 
-**2. Database & permissions audit**
-- Query `pg_class`/`aclexplode` for every `public.*` table used by the client — flag any missing `authenticated`/`service_role` grants.
-- Check RLS: enabled + at least one policy per user-facing table.
-- Run Supabase linter and record ERROR-level items.
+### 1. Split the single card into three sibling cards in `HammerDailyPlan.tsx`
+Rendered in strict order so the sequencing itself teaches the athlete:
 
-**3. Edge function health**
-- List all deployed functions, curl each critical one (`wk-generate-daily`, `compute-hammer-state`, `hie-refresh-worker`, `evaluate-advice-effectiveness`, video analysis, schedule import, ask-hammer, ingest doc) and check for 5xx / boot failures in logs.
+```text
+[Warm-up card — already exists]
+[Speed & Bat-Speed]   ← NEW card, CNS-fresh, pre-lift
+[Lifts]               ← NEW full-body card
+[Practice + Conditioning] ← conditioning moves here, next to practice
+[Sport work]          ← end-of-day (or "short warm-up" chip in-season)
+```
 
-**4. Auth eviction glitch audit**
-- Grep `AuthContext.tsx` `canEvictNow()` guards.
-- Confirm `protectedEditing.ts` focus guards are wired into every text/textarea that previously kicked the user out (Add Event, calendar dialogs, onboarding steps, dossier notes).
-- Check `SIGNED_OUT` handler doesn't fire on token refresh.
+- Delete the merged `WkLiftsSpeedSection` UI (keep the hook).
+- New components: `WkSpeedBatCard.tsx`, `WkLiftsCard.tsx`, `WkConditioningCard.tsx`, `WkSportBlockCard.tsx`.
+- Each card gets its own phase chip, its own reductions callout, its own regenerate button.
+- The bat/speed-before-lifts toggle is removed — sequencing is now enforced by card order, not a user switch.
 
-**5. Interactive smoke test (Playwright, authenticated preview session)**
-Run headless Chromium through the critical journeys and screenshot each step:
-- Landing → Hammer Today Plan render.
-- Open Baserunning / Hitting / Throwing / Defense / Speed / Lifts drawers.
-- Calendar view → click a date → open Add Event → type in text field (must NOT kick to login).
-- Season dates / Add Game importer.
-- Cancel/Reschedule event.
-- Onboarding resume, category goals ranked, Save & Exit.
-- Game Hub → pregame dossier → generate plan.
-- Progress "The General" dashboard.
-- IQ 101 scenario open.
-- Video upload flow — confirm skeleton + countdown appear, no eviction.
-- Report Injury dialog.
-- User menu → sign out (only path that should evict).
+### 2. Rebuild `wk-generate-daily` around a full-body lift template
+Replace the "pick 1 compound by day-of-week pattern" logic with a phase-driven full-body template. Every offseason lift day emits this canonical block, matching the elite reference sessions:
 
-**6. Consolidated fix pass**
-For every real bug found, apply the smallest correct fix, re-run the affected smoke step, then re-run `tsgo`.
+```text
+1. Arm Care (Crossover Symmetry list OR JBand chart)  — always
+2. Trunk primer (Trap-Bar Trunk Twist × 10)           — always
+3. Compound A: lower push (squat pattern, phase variant)
+4. Compound B: unilateral lower (lateral DB step-up / KOT lunge / slide lunge / SL DL with fat grips)
+5. Upper push unilateral (SA DB chest press / landmine row-to-press)
+6. Upper pull (SA standing cable row / renegade row / weighted pull-up)
+7. Loaded carry OR anti-rotation (waiter carry / paloff / standing cable hip flexor)
+8. Trunk finisher (Heavy Russian Twists × 10)
+```
 
-### Deliverable
-A single report per area: **PASS** / **FIXED (what+why)** / **KNOWN LIMITATION (owner action needed)**, plus a final verdict.
+Phase modulation applied to that template:
+- **OS Q1–Q2** — double-eccentric compound variants, 2×3 heavy, full 8 blocks.
+- **OS Q3–Q4** — eccentric → concentric power variants, drops to 6 blocks (skip block 5 or 7 to protect elastic work).
+- **In-Season** — concentric-primer only, 4 blocks (arm care + trunk primer + 1 compound + 1 unilateral), keeps output without DOMS. Sport work becomes the day's warm-up chip.
+- **Post-Season** — decompress: arm care + mobility carry + light concentric.
+
+Sequencing telemetry emitted per prescription so the UI can render the "why this order" chip: `sequence_role: warmup_care | trunk_primer | compound | unilateral | upper_push | upper_pull | carry | trunk_finisher`.
+
+Speed/bat-speed/conditioning are still generated by the same edge function but returned under distinct slot buckets so the three new cards can each pull their own.
+
+### 3. Expand `wk_movement_catalog` with the elite reference movements
+New migration inserting (idempotent on slug):
+`sa_db_chest_press`, `sa_standing_cable_row`, `renegade_row`, `lateral_db_step_up`, `slide_lunge`, `kot_lunge`, `sl_deadlift_fat_grips`, `landmine_row_to_press`, `standing_cable_hip_flexor`, `waiter_carry`, `trap_bar_trunk_twist`, `heavy_russian_twist`, `crossover_symmetry_full`, `jband_full_chart`. Each with pattern/variant tags, CNS cost, cue, why_prescribed, injury contraindications, sensible defaults (`2×3`, `10 reps`, `20s hold`, etc.) matching the reference sessions.
+
+### 4. Sequencing enforcement in code (not a toggle)
+- `WkSpeedBatCard` renders `bat_speed + speed` slots only.
+- `WkLiftsCard` renders `lift + supplemental + arm_care + trunk + carry` slots ordered by `sequence_role`.
+- `WkConditioningCard` renders `conditioning + cross_sport` and mounts adjacent to the practice card in `HammerDailyPlan`.
+- Game day: Speed/Bat card still shows activation primer; Lifts card shows "paused" state; Conditioning card hides.
+- In-season: Sport block card shows "Short warm-up — do this before the game" copy; other phases show "End of day."
+
+### 5. Files touched
+
+| File | Change |
+|---|---|
+| `supabase/functions/wk-generate-daily/index.ts` | Rewrite selection to full-body template with `sequence_role` + phase modulation |
+| `supabase/migrations/<new>.sql` | Seed elite movements + add `sequence_role` column to `wk_prescriptions` |
+| `src/hooks/useWkDailyPrescriptions.ts` | Expose `speedBat`, `lifts`, `conditioning`, `sport` grouped selectors |
+| `src/components/hammer/WkSpeedBatCard.tsx` | New |
+| `src/components/hammer/WkLiftsCard.tsx` | New (renders full-body template in role order) |
+| `src/components/hammer/WkConditioningCard.tsx` | New |
+| `src/components/hammer/WkSportBlockCard.tsx` | New (end-of-day vs in-season warm-up copy) |
+| `src/components/hammer/HammerDailyPlan.tsx` | Replace single `WkLiftsSpeedSection` mount with the four cards in the new order |
+| `src/components/hammer/WkLiftsSpeedSection.tsx` | Delete after cutover |
+
+### 6. Verification
+- Typecheck.
+- Manual: generate today's plan on OS Q1, OS Q4, In-Season, Post-Season fixtures and confirm the four cards render in order with correct movement counts.
+- Snapshot a Playwright pass on `/index` confirming the three sibling cards render and no card contains movements from a foreign slot.
+
+Approve to build.
