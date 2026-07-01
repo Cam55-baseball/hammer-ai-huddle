@@ -26,19 +26,17 @@ export type CanonicalRole =
   | "conditioning"
   | "cross_sport";
 
+// Phase 3 — SLOT_ORDER derived from canonical card registry.
 // Constitutional day order — Warm-up → Cross activation (game-day only) →
-// Speed / Bat-speed → Lift (full-body sequence) → Practice/Game → Conditioning →
-// Cross-sport (offseason back-end only).
-const SLOT_ORDER: readonly CanonicalSlot[] = [
-  "warmup",
-  "cross_sport", // in the early_activation placement only
-  "bat_speed",
-  "speed",
-  "lift",
-  "supplemental",
-  "conditioning",
-  "recovery",
-];
+// Speed → Bat Speed → Lift (full-body sequence) → Practice/Game → Conditioning →
+// Cross-sport (offseason back-end only) → Recovery.
+import { CARD_REGISTRY } from "./cardRegistry.ts";
+
+const SLOT_ORDER: readonly CanonicalSlot[] = CARD_REGISTRY
+  .flatMap((c) => c.slots as readonly string[])
+  .filter((s): s is CanonicalSlot =>
+    ["warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
+  );
 
 const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
   "arm_care",
