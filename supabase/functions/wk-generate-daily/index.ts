@@ -288,13 +288,10 @@ const handler = async (req: Request): Promise<Response> => {
     const isCompoundMovement = (m: MovementRow) =>
       m.category === "compound" || (m.intensity_class ?? "").includes("compound");
 
-    const isPhaseHardBlocked = (m: MovementRow) => {
-      if (!isOffseason && OS_ONLY_ECCENTRIC_SLUGS.has(m.slug)) return true;
-      if (isInSeason && IN_SEASON_BLOCKED_SLUGS.has(m.slug)) return true;
-      if (m.is_eccentric_dominant && !isOffseason) return true;
-      if (m.phase_allow && m.phase_allow.length > 0 && !m.phase_allow.includes(phaseRes.phase)) return true;
-      return false;
-    };
+    // Phase 2 Fix 6 — single canonical season authority. Both the old
+    // hard-block list and the catalog's `season_eligibility` array are
+    // consulted inside `isMovementSeasonLegal` in `_shared/wic/season.ts`.
+    const seasonCtx = seasonContextFromPhase(phaseRes.phase);
 
     // -------- Movement filters --------
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
@@ -304,14 +301,9 @@ const handler = async (req: Request): Promise<Response> => {
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
-      // WIC Stage 3 — seasonal legality via season_eligibility array.
-      if (m.season_eligibility && m.season_eligibility.length > 0 && !m.season_eligibility.includes(phaseRes.phase)) {
-        if (!overrideSlugs.has(m.slug)) return false;
-      }
-      // Legacy phase legality — hard-block eccentric/OS-only movements outside legal phases, unless override.
-      if (isPhaseHardBlocked(m)) {
-        if (!overrideSlugs.has(m.slug)) return false;
-      }
+      // Single canonical seasonal legality gate — overrides may unlock.
+      const legality = isMovementSeasonLegal(seasonCtx, m);
+      if (!legality.legal && !overrideSlugs.has(m.slug)) return false;
       // Session dedupe — no movement twice in a day.
       if (usedThisSession.has(m.slug)) return false;
       if (usedNamesThisSession.has(normalizeName(m.name))) return false;
