@@ -358,6 +358,46 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     await generate();
   }, [user?.id, planDate, generate]);
 
+  // Phase 3 — unified snapshot identity. Every card stamps this so cross-card
+  // consistency is provable at render time; a card carrying a different
+  // identity is by definition stale and must refetch.
+  const snapshotIdentity = useMemo(() => {
+    const rxs = query.data ?? [];
+    const first = rxs[0];
+    const generatedAt =
+      rxs.reduce<string | null>((min, r: any) => {
+        const c = r?.created_at ?? null;
+        if (!c) return min;
+        return !min || c < min ? c : min;
+      }, null) ?? null;
+    const generatorVersion = (first as any)?.generator_version ?? first?.why_payload?.generator_version ?? null;
+    const seasonPhase = first?.why_payload?.phase ?? null;
+    const generationId =
+      user?.id && generatedAt
+        ? `${user.id}:${planDate}:${generatorVersion ?? "na"}:${generatedAt}`
+        : null;
+    return {
+      generation_id: generationId,
+      generated_at: generatedAt,
+      generator_version: generatorVersion,
+      season_phase: seasonPhase,
+      season_display: (first?.why_payload?.phase_display as string | undefined) ?? null,
+      plan_date: planDate,
+    };
+  }, [query.data, user?.id, planDate]);
+
+  // Phase 3 — day kind. Derived from the SAME sources the generator uses
+  // (gp_games + scheduled_practice_sessions) so the daily flow accurately
+  // reflects the athlete's schedule.
+  const dayKind: "game" | "practice" | "both" | "neither" = useMemo(() => {
+    const g = !!gameDayQuery.data;
+    const p = !!practiceDayQuery.data;
+    if (g && p) return "both";
+    if (g) return "game";
+    if (p) return "practice";
+    return "neither";
+  }, [gameDayQuery.data, practiceDayQuery.data]);
+
   return {
     ...query,
     grouped,
@@ -370,5 +410,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     retry,
     effectiveCnsTotal,
     overrideMovement,
+    snapshotIdentity,
+    dayKind,
   };
 }
