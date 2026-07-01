@@ -32,6 +32,8 @@ function invalidateScheduleQueries(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["gameday-recent-games"] });
   qc.invalidateQueries({ queryKey: ["game-day-context"] });
   qc.invalidateQueries({ queryKey: ["hammer-daily-plan"] });
+  qc.invalidateQueries({ queryKey: ["wk-rx"] });
+  qc.invalidateQueries({ queryKey: ["wk-rx-game-day"] });
   qc.invalidateQueries({ queryKey: ["calendar-projection"] });
   qc.invalidateQueries({ queryKey: ["season-status"] });
 }
