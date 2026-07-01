@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
+import type { TrainingContext } from "@/lib/wic/trainingContext";
 
 const WK_GENERATOR_VERSION = "wic_v1";
 
