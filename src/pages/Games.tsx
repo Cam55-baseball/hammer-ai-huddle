@@ -109,6 +109,10 @@ export default function Games() {
     },
     onSuccess: (id) => {
       qc.invalidateQueries({ queryKey: ["gp-games-list"] });
+      qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
+      qc.invalidateQueries({ queryKey: ["gp-signal-games"] });
+      qc.invalidateQueries({ queryKey: ["wk-rx"] });
+      qc.invalidateQueries({ queryKey: ["wk-rx-game-day"] });
       setNewDialogOpen(false);
       setOpenSheet(id);
       toast.success("Game created — fill it in as you go.");
@@ -350,6 +354,10 @@ function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
     onSuccess: (id) => {
       qc.invalidateQueries({ queryKey: ["gp-games-list"] });
       qc.invalidateQueries({ queryKey: ["gp-today-game"] });
+      qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
+      qc.invalidateQueries({ queryKey: ["gp-signal-games"] });
+      qc.invalidateQueries({ queryKey: ["wk-rx"] });
+      qc.invalidateQueries({ queryKey: ["wk-rx-game-day"] });
       onOpen(id);
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not open today's game"),
