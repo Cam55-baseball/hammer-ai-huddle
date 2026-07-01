@@ -278,6 +278,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     grouped,
     reductions,
     phaseDisplay,
+    phaseKey,
     generate,
     generating,
     failed,
