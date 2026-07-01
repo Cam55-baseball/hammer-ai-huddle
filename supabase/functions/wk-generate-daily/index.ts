@@ -15,6 +15,11 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolveWkPhase } from "../_shared/wkPhaseQuarter.ts";
+// Workout Intelligence Constitution (WIC) — see supabase/functions/_shared/wic/*
+import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
+import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
+import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
+import { validate as wicValidate } from "../_shared/wic/validator.ts";
 
 interface MovementRow {
   slug: string;
@@ -91,6 +96,11 @@ interface Prescription {
   substitution_reason: string | null;
   why_payload: Record<string, unknown>;
   rationale?: string;
+  // WIC constitutional fields — required for publication.
+  adaptation?: string;
+  engine?: WicEngine;
+  why_v2?: WhyV2;
+  generator_version?: string;
 }
 
 const OS_ONLY_ECCENTRIC_SLUGS = new Set([
@@ -205,6 +215,29 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
     }
+
+    // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
+    const adaptationDecision: AdaptationDecision = selectAdaptation({
+      phase: phaseRes.phase,
+      isGameDay,
+      isPracticeDay: false,
+      cnsReadiness,
+      sleepHours: sleep,
+      soreness,
+      ageYears: Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null,
+      trainingAgeYears,
+      hoursSinceSpeed: 9999,
+      hoursSinceLift: 9999,
+      injuriesActive: injurySlugs.size > 0,
+    });
+    const engineForSlotRole = (slot: Slot, role: SequenceRole): WicEngine => {
+      if (slot === "speed") return "sprint";
+      if (slot === "bat_speed") return "bat_speed";
+      if (slot === "conditioning") return "conditioning";
+      if (slot === "cross_sport") return "cross_sport";
+      if (role === "arm_care") return "arm_care";
+      return "strength";
+    };
 
     // -------- Load 72h lift history + active overrides (drift guards) --------
     const threeDaysAgo = new Date(planDate + "T00:00:00");
@@ -336,10 +369,27 @@ const handler = async (req: Request): Promise<Response> => {
       const philoPiece = philo ? ` Doctrine: ${philo}.` : "";
       const rationale = `Chosen because you're in ${phaseRes.displayName} with a ${ageStr}${proStr}, and this is a ${cls}. ${reasonPiece}.${philoPiece}${overridePiece}${reductionsPiece}`.replace(/\s+/g, " ").trim();
 
+      // WIC — required constitutional payload
+      const wicEngine = engineForSlotRole(slot, role);
+      const finalSets = clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase;
+      const setsRepsStr = finalSets != null && repsBase != null ? `${finalSets}×${repsBase}` : "prescribed dose";
+      const orderStr = `Sequence #${seq + 1} — ${role.replace(/_/g, " ")} keeps the constitutional day order intact.`;
+      const recoveryStr = `${s.movement.cns_cost} CNS units; expect ~${Math.max(24, s.movement.cns_cost * 12)}h before repeating this pattern.`;
+      const why_v2: WhyV2 = buildWhy({
+        why_today: adaptationDecision.reason,
+        why_athlete: `${adaptationDecision.reason_athlete} (${trainingAgeYears || 0}-yr training age${isProProspect ? ", pro prospect" : ""}).`,
+        why_exercise: why || s.movement.why_prescribed || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
+        why_volume: `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
+        why_order: orderStr,
+        why_recovery: recoveryStr,
+        adaptation: adaptationDecision.primary,
+        engine: wicEngine,
+        generator_version: WIC_VERSION,
+      });
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
-        sets: clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase,
+        sets: finalSets,
         reps: repsBase,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
@@ -349,7 +399,7 @@ const handler = async (req: Request): Promise<Response> => {
         substitution_reason: s.reason,
         why_payload: {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
-          generator_version: "full_body_game_day_v3",
+          generator_version: WIC_VERSION,
           game_day: isGameDay,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
@@ -362,9 +412,14 @@ const handler = async (req: Request): Promise<Response> => {
           rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
           reductions,
           override: overrideMeta,
+          wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
           ...meta,
         },
         rationale,
+        adaptation: adaptationDecision.primary,
+        engine: wicEngine,
+        why_v2,
+        generator_version: WIC_VERSION,
       } as any);
       return true;
     };
@@ -508,9 +563,50 @@ const handler = async (req: Request): Promise<Response> => {
 
     const finalRxs = dedupePrescriptions(rxs);
 
+    // -------- WIC Validation Engine — no publication without a passing report --------
+    const validatorReport = wicValidate({
+      phase: phaseRes.phase,
+      isGameDay,
+      prescriptions: finalRxs.map((r) => ({
+        engine: (r as any).engine,
+        slot: r.slot,
+        sequence_role: r.sequence_role,
+        movement_slug: r.movement_slug,
+        movement_name: r.movement_name,
+        sets: r.sets,
+        reps: r.reps,
+        why_v2: (r as any).why_v2,
+      })),
+    });
+    const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
+    if (!allWhysComplete) {
+      validatorReport.issues.push({
+        code: "missing_why_v2",
+        severity: "fatal",
+        message: "One or more prescriptions are missing constitutional why answers.",
+      });
+      (validatorReport as any).ok = false;
+    }
+
+    if (!validatorReport.ok) {
+      console.error("[wk-generate-daily] WIC validation failed", { user_id: user.id, plan_date: planDate, issues: validatorReport.issues });
+      return json({
+        error: "wic_validation_failed",
+        adaptation: adaptationDecision.primary,
+        phase: phaseRes.phase,
+        validator_report: validatorReport,
+      }, 422);
+    }
+
     // -------- Persist --------
     await admin.from("wk_prescriptions").delete().eq("user_id", user.id).eq("plan_date", planDate);
-    const rows = finalRxs.map((r) => ({ user_id: user.id, plan_date: planDate, phase: phaseRes.phase, ...r }));
+    const rows = finalRxs.map((r) => ({
+      user_id: user.id,
+      plan_date: planDate,
+      phase: phaseRes.phase,
+      ...r,
+      validator_report: validatorReport,
+    }));
     if (rows.length) {
       const { error: insErr } = await admin.from("wk_prescriptions").insert(rows);
       if (insErr) throw insErr;
@@ -528,17 +624,22 @@ const handler = async (req: Request): Promise<Response> => {
       },
     }, { onConflict: "user_id,ledger_date" });
 
-    console.info("[wk-generate-daily] ok v2", {
-      user_id: user.id, plan_date: planDate, phase: phaseRes.phase,
+    console.info("[wk-generate-daily] ok WIC", {
+      user_id: user.id, plan_date: planDate, phase: phaseRes.phase, adaptation: adaptationDecision.primary,
       cns_used: cnsUsed, cns_cap: cnsCap, blocks_n: rows.length, game_day: isGameDay,
+      validator_ok: validatorReport.ok, validator_warns: validatorReport.issues.filter((i) => i.severity === "warn").length,
     });
     return json({
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
+      adaptation: adaptationDecision.primary,
+      adaptation_reason: adaptationDecision.reason,
+      generator_version: WIC_VERSION,
       game_day: isGameDay,
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,
+      validator_report: validatorReport,
       prescriptions: rows,
     });
   } catch (e) {

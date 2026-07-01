@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
-const WK_GENERATOR_VERSION = "full_body_game_day_v3";
+const WK_GENERATOR_VERSION = "wic_v1";
 
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
 
