@@ -100,6 +100,52 @@ export function validate(input: ValidatorInput): ValidatorReport {
     }
   }
 
+  // Phase 3 — Card orchestration validation.
+  // Every prescription must resolve to a registered card, and its slot's
+  // canonical display order must be strictly non-decreasing across the plan
+  // (registry ordering is the ONLY ordering authority).
+  let lastOrder = -Infinity;
+  const seenCardTypes = new Set<string>();
+  const cardTypeSlots = new Map<string, Set<string>>();
+  for (const rx of input.prescriptions) {
+    const cardType = slotToCardType(rx.slot);
+    if (!cardType) {
+      issues.push({
+        code: "unregistered_slot",
+        severity: "fatal",
+        message: `Slot "${rx.slot}" is not owned by any card in the Phase 3 registry.`,
+        slug: rx.movement_slug,
+      });
+      continue;
+    }
+    const order = displayOrderForSlot(rx.slot);
+    if (order < lastOrder) {
+      issues.push({
+        code: "ordering_violation",
+        severity: "fatal",
+        message: `Slot "${rx.slot}" (order ${order}) appears after a later card (order ${lastOrder}).`,
+        slug: rx.movement_slug,
+      });
+    }
+    lastOrder = Math.max(lastOrder, order);
+    seenCardTypes.add(cardType);
+    if (!cardTypeSlots.has(cardType)) cardTypeSlots.set(cardType, new Set());
+    cardTypeSlots.get(cardType)!.add(rx.slot);
+  }
+  // Card Responsibility Law — a card must not host slots owned by another card.
+  for (const [cardType, slots] of cardTypeSlots) {
+    for (const s of slots) {
+      const owner = slotToCardType(s);
+      if (owner && owner !== cardType) {
+        issues.push({
+          code: "responsibility_violation",
+          severity: "fatal",
+          message: `Slot "${s}" (owner: ${owner}) leaked into card "${cardType}".`,
+        });
+      }
+    }
+  }
+
   const ok = !issues.some((i) => i.severity === "fatal");
   return { ok, issues, buckets };
 }

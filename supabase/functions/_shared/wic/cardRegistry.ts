@@ -58,6 +58,12 @@ export function displayOrderForSlot(slot: string): number {
   return card?.displayOrder ?? Number.MAX_SAFE_INTEGER;
 }
 
+/** Slot → owning card_type. Single-responsibility law: only one card per slot. */
+export function slotToCardType(slot: string): CardType | null {
+  const owners = CARD_REGISTRY.filter((c) => c.slots.includes(slot));
+  return (owners[0]?.cardType as CardType) ?? null;
+}
+
 export function seasonDisplayLabel(phase: string): string {
   switch (phase) {
     case "os_q1": return "Offseason Quarter 1";
