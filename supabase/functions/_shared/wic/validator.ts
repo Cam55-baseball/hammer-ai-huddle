@@ -2,6 +2,7 @@
 // validation before publication. Fatal errors block publication.
 
 import type { WicEngine } from "./constitution.ts";
+import { CARD_REGISTRY, displayOrderForSlot, slotToCardType } from "./cardRegistry.ts";
 
 export interface ValidationIssue {
   code: string;
