@@ -696,7 +696,59 @@ const handler = async (req: Request): Promise<Response> => {
       (validatorReport as any).ok = false;
     }
 
-    // Phase 2 Fix 7 — Canonical validation pass. Additional structural checks
+    // -------- Phase 8 — Elite Lift Intelligence certification --------
+    // Runs after lift rows are built. Resolves a single canonical template,
+    // stamps every lift row with governance metadata + substitution ladder,
+    // and blocks publication on fatal issues (not full body, illegal season,
+    // illegal training age, duplicate category, unresolved substitution, etc.).
+    const liftCertification = certifyLift({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: (trainingAgeContext as any)?.classification,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isReturnToPlay: false,
+      },
+      availableEquipment: (athleteContext as any)?.environment?.equipment ?? undefined,
+      trainingAgeClass: (trainingAgeContext as any)?.classification,
+    });
+    // Attach governance stamp to each lift row's why_v2 + why_payload.
+    for (const rx of finalRxs) {
+      if (rx.slot !== "lift") continue;
+      const stamp = liftCertification.stamps.get(rx.movement_slug);
+      if (!stamp) continue;
+      const wp = ((rx as any).why_payload ?? {}) as Record<string, unknown>;
+      wp.lift_governance = {
+        template_id: stamp.template_id,
+        template_name: stamp.template_name,
+        movement_category: stamp.category,
+        substitution_family: stamp.substitution_family,
+        substitution_ladder: stamp.substitution_ladder,
+        substitution_ladder_score: stamp.ladder_score,
+        governance_version: liftCertification.governanceVersion,
+      };
+      (rx as any).why_payload = wp;
+      const wv = ((rx as any).why_v2 ?? {}) as Record<string, unknown>;
+      wv.why_category = stamp.why_category;
+      wv.why_template = stamp.why_template;
+      wv.why_substitution_ladder = stamp.why_substitution_ladder;
+      (rx as any).why_v2 = wv;
+    }
+    // Promote Phase 8 fatal issues into the validator report so publication
+    // is blocked all-or-nothing under the same gate.
+    for (const f of liftCertification.fatal) {
+      validatorReport.issues.push({ code: f.code, severity: "fatal", message: f.message, slug: f.slug });
+      (validatorReport as any).ok = false;
+    }
+    for (const w of liftCertification.warn) {
+      validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
+    }
+
+
     // that the shared validator does not know about (duplicates, metadata
     // completeness) are enforced here so publication is all-or-nothing.
     const slugCounts = new Map<string, number>();
