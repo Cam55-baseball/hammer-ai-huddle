@@ -15,6 +15,11 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolveWkPhase } from "../_shared/wkPhaseQuarter.ts";
+// Workout Intelligence Constitution (WIC) — see supabase/functions/_shared/wic/*
+import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
+import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
+import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
+import { validate as wicValidate } from "../_shared/wic/validator.ts";
 
 interface MovementRow {
   slug: string;
