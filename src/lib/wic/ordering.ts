@@ -27,16 +27,18 @@ export type CanonicalRole =
   | "conditioning"
   | "cross_sport";
 
-const SLOT_ORDER: readonly CanonicalSlot[] = [
-  "warmup",
-  "cross_sport",
-  "bat_speed",
-  "speed",
-  "lift",
-  "supplemental",
-  "conditioning",
-  "recovery",
-];
+// Phase 3 — SLOT_ORDER is derived from the canonical card registry so
+// ordering can never drift from card orchestration. Speed precedes Bat Speed
+// per Phase 3 canonical training flow.
+import { CARD_REGISTRY } from "./cardRegistry";
+
+const REGISTRY_SLOTS: readonly CanonicalSlot[] = CARD_REGISTRY
+  .flatMap((c) => c.slots as readonly string[])
+  .filter((s): s is CanonicalSlot =>
+    ["warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
+  );
+
+const SLOT_ORDER: readonly CanonicalSlot[] = REGISTRY_SLOTS;
 
 const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
   "arm_care",
