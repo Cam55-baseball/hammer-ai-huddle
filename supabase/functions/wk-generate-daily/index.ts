@@ -877,6 +877,12 @@ const handler = async (req: Request): Promise<Response> => {
             recovery_profile_id: trainingContext.recovery_profile_id,
             adaptation_profile_id: trainingContext.adaptation_profile_id,
             context_validation_outcome: contextValidationOutcome,
+            // Phases 5–7 diagnostics
+            athlete_context_version: athleteContext.athlete_context_version,
+            personalization_version: personalizationContext.personalization_version,
+            training_age_version: trainingAgeContext.training_age_version,
+            missing_context_fields: athleteContext.missing_fields,
+            context_completeness_score: athleteContext.completeness_score,
           },
         });
       } catch (diagErr) {
