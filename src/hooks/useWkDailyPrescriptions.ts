@@ -203,6 +203,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
             : null;
     if (
       !query.isLoading &&
+      !gp.loading &&
       refreshKey &&
       !generating &&
       !failed &&
@@ -211,7 +212,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       autoTriedKey.current = refreshKey;
       generate();
     }
-  }, [query.isLoading, query.data, gp.gameToday, generate, generating, failed]);
+  }, [query.isLoading, query.data, gp.loading, gp.gameToday, generate, generating, failed]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
