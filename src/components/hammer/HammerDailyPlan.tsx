@@ -282,11 +282,17 @@ export function HammerDailyPlan() {
       <CardContent className="space-y-2">
         <HammerScheduleStrip />
         <GpInGameAdvisoryStrip />
+        <ErrorBoundary label="wk-speed-bat">
+          <WkSpeedBatCard />
+        </ErrorBoundary>
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
-        <ErrorBoundary label="wk-lifts-speed">
-          <WkLiftsSpeedSection />
+        <ErrorBoundary label="wk-lifts">
+          <WkLiftsCard />
+        </ErrorBoundary>
+        <ErrorBoundary label="wk-conditioning">
+          <WkConditioningCard />
         </ErrorBoundary>
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
