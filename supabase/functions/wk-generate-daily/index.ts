@@ -666,6 +666,56 @@ const handler = async (req: Request): Promise<Response> => {
       (validatorReport as any).ok = false;
     }
 
+    // Phase 4 — Constitutional TrainingContext validation.
+    // Every prescription must reference exactly one identical training_context.
+    let contextValidationOutcome: "ok" | "missing" | "conflicting" | "row_missing" = "ok";
+    if (finalRxs.length > 0) {
+      const seenPhases = new Set<string>();
+      const seenDayTypes = new Set<string>();
+      const seenLegality = new Set<string>();
+      const seenRecovery = new Set<string>();
+      const seenAdaptation = new Set<string>();
+      const seenCtxVersion = new Set<string>();
+      let rowMissing = false;
+      for (const r of finalRxs) {
+        const tc: any = (r as any)?.why_payload?.training_context;
+        if (!tc) { rowMissing = true; continue; }
+        if (tc.season_phase) seenPhases.add(tc.season_phase);
+        if (tc.day_type) seenDayTypes.add(tc.day_type);
+        if (tc.legality_profile_id) seenLegality.add(tc.legality_profile_id);
+        if (tc.recovery_profile_id) seenRecovery.add(tc.recovery_profile_id);
+        if (tc.adaptation_profile_id) seenAdaptation.add(tc.adaptation_profile_id);
+        if (tc.context_version) seenCtxVersion.add(tc.context_version);
+      }
+      if (rowMissing) {
+        contextValidationOutcome = "row_missing";
+        validatorReport.issues.push({ code: "row_missing_training_context", severity: "fatal", message: "One or more prescriptions are missing training_context." });
+        (validatorReport as any).ok = false;
+      }
+      const anyConflict =
+        seenPhases.size > 1 || seenDayTypes.size > 1 || seenLegality.size > 1 ||
+        seenRecovery.size > 1 || seenAdaptation.size > 1 || seenCtxVersion.size > 1;
+      if (anyConflict) {
+        contextValidationOutcome = "conflicting";
+        validatorReport.issues.push({
+          code: "conflicting_training_context",
+          severity: "fatal",
+          message: `Conflicting training_context detected — phases:${seenPhases.size} days:${seenDayTypes.size} legality:${seenLegality.size} recovery:${seenRecovery.size} adaptation:${seenAdaptation.size} version:${seenCtxVersion.size}`,
+        });
+        (validatorReport as any).ok = false;
+      }
+      // Sanity: resolved context must match the phases we just wrote.
+      if (!seenPhases.has(trainingContext.season_phase)) {
+        contextValidationOutcome = "missing";
+        validatorReport.issues.push({
+          code: "context_row_phase_mismatch",
+          severity: "fatal",
+          message: `Resolved context phase (${trainingContext.season_phase}) not present on any prescription row.`,
+        });
+        (validatorReport as any).ok = false;
+      }
+    }
+
     const generationMs = Date.now() - generationStartedAt;
     const cardsProduced = {
       lift: finalRxs.filter((r) => r.slot === "lift").length,
