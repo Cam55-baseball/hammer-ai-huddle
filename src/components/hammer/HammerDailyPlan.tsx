@@ -63,7 +63,7 @@ import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
-import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
+import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
@@ -115,7 +115,21 @@ function scheduleLine(sched: ReturnType<typeof useScheduleWindow>): string | nul
   return null;
 }
 
+/**
+ * Phase 2 doctrine: HammerDailyPlan is wrapped in <HammersTodayProvider> so
+ * every Wk* card, warm-up card, and downstream widget consumes the SAME
+ * canonical prescription snapshot. No card is allowed to instantiate
+ * useWkDailyPrescriptions directly.
+ */
 export function HammerDailyPlan() {
+  return (
+    <HammersTodayProvider>
+      <HammerDailyPlanBody />
+    </HammersTodayProvider>
+  );
+}
+
+function HammerDailyPlanBody() {
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
@@ -154,7 +168,7 @@ export function HammerDailyPlan() {
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
   // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
   // hitting/throwing volume doesn't compound the neural cost.
-  const wkRx = useWkDailyPrescriptions();
+  const wkRx = useHammersToday();
   // Prefer actuals over prescribed so the clamp reflects what the athlete did.
   const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;

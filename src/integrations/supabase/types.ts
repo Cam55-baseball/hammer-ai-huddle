@@ -13556,6 +13556,66 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_generation_diagnostics: {
+        Row: {
+          adaptation: string | null
+          cards_produced: Json
+          created_at: string
+          duplicate_count: number
+          errors: Json
+          exercise_count: number
+          generation_id: string
+          generation_ms: number | null
+          generator_version: string
+          id: string
+          metadata_complete: boolean
+          ordering_ok: boolean
+          plan_date: string
+          season_phase: string | null
+          user_id: string
+          validation_status: string
+          warnings: Json
+        }
+        Insert: {
+          adaptation?: string | null
+          cards_produced?: Json
+          created_at?: string
+          duplicate_count?: number
+          errors?: Json
+          exercise_count?: number
+          generation_id?: string
+          generation_ms?: number | null
+          generator_version: string
+          id?: string
+          metadata_complete?: boolean
+          ordering_ok?: boolean
+          plan_date: string
+          season_phase?: string | null
+          user_id: string
+          validation_status: string
+          warnings?: Json
+        }
+        Update: {
+          adaptation?: string | null
+          cards_produced?: Json
+          created_at?: string
+          duplicate_count?: number
+          errors?: Json
+          exercise_count?: number
+          generation_id?: string
+          generation_ms?: number | null
+          generator_version?: string
+          id?: string
+          metadata_complete?: boolean
+          ordering_ok?: boolean
+          plan_date?: string
+          season_phase?: string | null
+          user_id?: string
+          validation_status?: string
+          warnings?: Json
+        }
+        Relationships: []
+      }
       wk_movement_catalog: {
         Row: {
           bat_compatible: boolean | null
@@ -14539,6 +14599,10 @@ export type Database = {
       wic_adaptations_compatible: {
         Args: { day_adaptation: string; movement_adaptation: string }
         Returns: boolean
+      }
+      wk_persist_prescriptions_atomic: {
+        Args: { p_date: string; p_diag: Json; p_rows: Json; p_user: string }
+        Returns: string
       }
     }
     Enums: {

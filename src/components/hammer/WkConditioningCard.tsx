@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, Loader2, RefreshCw } from "lucide-react";
-import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
+import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 
 export function WkConditioningCard() {
   const gp = useGpSignal();
-  const { grouped, generate, generating, isLoading, failed, retry } = useWkDailyPrescriptions();
+  // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
+  const { grouped, generate, generating, isLoading, failed, retry } = useHammersToday();
 
   if (gp.gameToday) return null;
 

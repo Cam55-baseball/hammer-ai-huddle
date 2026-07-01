@@ -20,6 +20,9 @@ import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
+// Phase 2 Fix 5 / 6 — canonical shared modules.
+import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
+import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
 // WIC engine modules — canonical slug pools per engine.
 import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
 import { sprintSlugs } from "../_shared/wic/engines/sprint.ts";
@@ -116,30 +119,14 @@ interface Prescription {
   generator_version?: string;
 }
 
-const OS_ONLY_ECCENTRIC_SLUGS = new Set([
-  "back_squat_double_ecc",
-  "front_squat_double_ecc",
-  "bench_press_double_ecc",
-  "incline_bench_double_ecc",
-  "hip_thrust_double_ecc",
-  "rdl_double_ecc",
-  "trap_bar_dl_double_ecc",
-  "weighted_pullup_double_ecc",
-  "nordic_curl",
-  "reverse_nordic",
-  "copenhagen_adduction_ecc",
-  "plyo_depth_jump",
-]);
-
-const IN_SEASON_BLOCKED_SLUGS = new Set([
-  ...OS_ONLY_ECCENTRIC_SLUGS,
-  "atg_split_squat",
-  "sissy_squat",
-  "slide_lunge",
-]);
+// Phase 2 Fix 6 — legacy slug sets moved to `_shared/wic/season.ts`.
+// This local re-export is intentional so any residual reference keeps working
+// while the canonical authority lives in the shared module.
+import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const generationStartedAt = Date.now();
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -162,7 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
     const recentAck = body.recent_ack ?? null;
 
     // -------- Load athlete context --------
-    const [{ data: profile }, { data: ctx }, { data: injuries }, { data: dailyLog }, { data: gamesToday }] = await Promise.all([
+    const [{ data: profile }, { data: ctx }, { data: injuries }, { data: dailyLog }, { data: gamesToday }, { data: practicesToday }] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
@@ -173,6 +160,12 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("game_date", planDate)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
         .limit(1),
+      // Phase 2 — wire real practice-day signal (was hardcoded false).
+      admin.from("scheduled_practice_sessions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("session_date", planDate)
+        .limit(1),
     ]);
 
     const p: any = profile ?? {};
@@ -182,6 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
     const isGameDay = (gamesToday ?? []).length > 0;
+    const isPracticeDay = (practicesToday ?? []).length > 0;
 
     // -------- Resolve phase quarter --------
     const phaseRes = resolveWkPhase(ctx ?? null);
@@ -233,7 +227,7 @@ const handler = async (req: Request): Promise<Response> => {
     const adaptationDecision: AdaptationDecision = selectAdaptation({
       phase: phaseRes.phase,
       isGameDay,
-      isPracticeDay: false,
+      isPracticeDay,
       cnsReadiness,
       sleepHours: sleep,
       soreness,
@@ -294,13 +288,10 @@ const handler = async (req: Request): Promise<Response> => {
     const isCompoundMovement = (m: MovementRow) =>
       m.category === "compound" || (m.intensity_class ?? "").includes("compound");
 
-    const isPhaseHardBlocked = (m: MovementRow) => {
-      if (!isOffseason && OS_ONLY_ECCENTRIC_SLUGS.has(m.slug)) return true;
-      if (isInSeason && IN_SEASON_BLOCKED_SLUGS.has(m.slug)) return true;
-      if (m.is_eccentric_dominant && !isOffseason) return true;
-      if (m.phase_allow && m.phase_allow.length > 0 && !m.phase_allow.includes(phaseRes.phase)) return true;
-      return false;
-    };
+    // Phase 2 Fix 6 — single canonical season authority. Both the old
+    // hard-block list and the catalog's `season_eligibility` array are
+    // consulted inside `isMovementSeasonLegal` in `_shared/wic/season.ts`.
+    const seasonCtx = seasonContextFromPhase(phaseRes.phase);
 
     // -------- Movement filters --------
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
@@ -310,14 +301,9 @@ const handler = async (req: Request): Promise<Response> => {
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
-      // WIC Stage 3 — seasonal legality via season_eligibility array.
-      if (m.season_eligibility && m.season_eligibility.length > 0 && !m.season_eligibility.includes(phaseRes.phase)) {
-        if (!overrideSlugs.has(m.slug)) return false;
-      }
-      // Legacy phase legality — hard-block eccentric/OS-only movements outside legal phases, unless override.
-      if (isPhaseHardBlocked(m)) {
-        if (!overrideSlugs.has(m.slug)) return false;
-      }
+      // Single canonical seasonal legality gate — overrides may unlock.
+      const legality = isMovementSeasonLegal(seasonCtx, m);
+      if (!legality.legal && !overrideSlugs.has(m.slug)) return false;
       // Session dedupe — no movement twice in a day.
       if (usedThisSession.has(m.slug)) return false;
       if (usedNamesThisSession.has(normalizeName(m.name))) return false;
@@ -589,7 +575,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const finalRxs = dedupePrescriptions(rxs);
+    // Phase 2 Fix 5 — deterministic canonical ordering. This is the ONLY
+    // place sequence_order is assigned. Cards render by this key; no
+    // component-level ordering is allowed.
+    const orderedRxs = assignSequenceOrder(dedupePrescriptions(rxs));
+    const finalRxs = orderedRxs;
 
     // -------- WIC Validation Engine — no publication without a passing report --------
     const validatorReport = wicValidate({
@@ -616,8 +606,78 @@ const handler = async (req: Request): Promise<Response> => {
       (validatorReport as any).ok = false;
     }
 
+    // Phase 2 Fix 7 — Canonical validation pass. Additional structural checks
+    // that the shared validator does not know about (duplicates, metadata
+    // completeness) are enforced here so publication is all-or-nothing.
+    const slugCounts = new Map<string, number>();
+    for (const r of finalRxs) slugCounts.set(r.movement_slug, (slugCounts.get(r.movement_slug) ?? 0) + 1);
+    const duplicateCount = [...slugCounts.values()].reduce((s, n) => s + (n > 1 ? n - 1 : 0), 0);
+    if (duplicateCount > 0) {
+      validatorReport.issues.push({
+        code: "duplicate_movement_slug",
+        severity: "fatal",
+        message: `Publication rejected — ${duplicateCount} duplicate movement slug(s) detected in the prescription set.`,
+      });
+      (validatorReport as any).ok = false;
+    }
+    const orderingOk = finalRxs.every((r, i) => r.sequence_order === i);
+    if (!orderingOk) {
+      validatorReport.issues.push({
+        code: "sequence_order_gap",
+        severity: "fatal",
+        message: "Publication rejected — sequence_order is not monotonic across the prescription set.",
+      });
+      (validatorReport as any).ok = false;
+    }
+    const metadataComplete = finalRxs.every(
+      (r) => !!(r as any).adaptation && !!(r as any).engine && !!(r as any).why_v2 && !!(r as any).generator_version,
+    );
+    if (!metadataComplete) {
+      validatorReport.issues.push({
+        code: "missing_wic_metadata",
+        severity: "fatal",
+        message: "Publication rejected — one or more prescriptions are missing WIC metadata (adaptation / engine / why_v2 / generator_version).",
+      });
+      (validatorReport as any).ok = false;
+    }
+
+    const generationMs = Date.now() - generationStartedAt;
+    const cardsProduced = {
+      lift: finalRxs.filter((r) => r.slot === "lift").length,
+      speed: finalRxs.filter((r) => r.slot === "speed").length,
+      bat_speed: finalRxs.filter((r) => r.slot === "bat_speed").length,
+      conditioning: finalRxs.filter((r) => r.slot === "conditioning").length,
+      cross_sport: finalRxs.filter((r) => r.slot === "cross_sport").length,
+      supplemental: finalRxs.filter((r) => r.slot === "supplemental").length,
+    };
+
+    // Fatal validation → reject publication entirely; still record diagnostics so
+    // the failure is auditable (Fix 7 + Fix 10).
     if (!validatorReport.ok) {
       console.error("[wk-generate-daily] WIC validation failed", { user_id: user.id, plan_date: planDate, issues: validatorReport.issues });
+      try {
+        await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+          p_user: user.id,
+          p_date: planDate,
+          p_rows: [],
+          p_diag: {
+            generator_version: WIC_VERSION,
+            season_phase: phaseRes.phase,
+            adaptation: adaptationDecision.primary,
+            generation_ms: generationMs,
+            validation_status: "rejected",
+            exercise_count: 0,
+            duplicate_count: duplicateCount,
+            ordering_ok: orderingOk,
+            metadata_complete: metadataComplete,
+            cards_produced: {},
+            warnings: validatorReport.issues.filter((i: any) => i.severity === "warn"),
+            errors: validatorReport.issues.filter((i: any) => i.severity === "fatal"),
+          },
+        });
+      } catch (diagErr) {
+        console.error("[wk-generate-daily] diagnostics-write failed", diagErr);
+      }
       return json({
         error: "wic_validation_failed",
         adaptation: adaptationDecision.primary,
@@ -626,36 +686,65 @@ const handler = async (req: Request): Promise<Response> => {
       }, 422);
     }
 
-    // -------- Persist --------
-    await admin.from("wk_prescriptions").delete().eq("user_id", user.id).eq("plan_date", planDate);
+    // -------- Persist — Phase 2 Fix 2 & Fix 8 — atomic RPC with full metadata --------
+    // Explicit column mapping (no spread) so every WIC column is populated on every row.
     const rows = finalRxs.map((r) => ({
-      user_id: user.id,
-      plan_date: planDate,
+      slot: r.slot,
+      sequence_order: r.sequence_order,
+      sequence_role: r.sequence_role ?? null,
+      movement_slug: r.movement_slug,
+      movement_name: r.movement_name,
       phase: phaseRes.phase,
-      ...r,
+      sets: r.sets,
+      reps: r.reps,
+      tempo: r.tempo ?? null,
+      load_pct: r.load_pct ?? null,
+      cns_cost: r.cns_cost,
+      cns_clamped: r.cns_clamped,
+      substituted_from_slug: r.substituted_from_slug ?? null,
+      substitution_reason: r.substitution_reason ?? null,
+      why_payload: r.why_payload ?? {},
+      rationale: r.rationale ?? null,
+      adaptation: (r as any).adaptation ?? adaptationDecision.primary,
+      engine: (r as any).engine ?? null,
+      why_v2: (r as any).why_v2 ?? null,
       validator_report: validatorReport,
+      generator_version: (r as any).generator_version ?? WIC_VERSION,
+      status: "planned",
     }));
-    if (rows.length) {
-      const { error: insErr } = await admin.from("wk_prescriptions").insert(rows);
-      if (insErr) throw insErr;
-    }
+
+    const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+      p_user: user.id,
+      p_date: planDate,
+      p_rows: rows,
+      p_diag: {
+        generator_version: WIC_VERSION,
+        season_phase: phaseRes.phase,
+        adaptation: adaptationDecision.primary,
+        generation_ms: generationMs,
+        validation_status: "published",
+        exercise_count: rows.length,
+        duplicate_count: duplicateCount,
+        ordering_ok: orderingOk,
+        metadata_complete: metadataComplete,
+        cards_produced: cardsProduced,
+        warnings: validatorReport.issues.filter((i: any) => i.severity === "warn"),
+        errors: [],
+      },
+    });
+    if (rpcErr) throw rpcErr;
 
     await admin.from("wk_cns_ledger").upsert({
       user_id: user.id, ledger_date: planDate,
       units_spent: cnsUsed, units_cap: cnsCap,
-      breakdown: {
-        lift: finalRxs.filter((r) => r.slot === "lift").length,
-        speed: finalRxs.filter((r) => r.slot === "speed").length,
-        bat_speed: finalRxs.filter((r) => r.slot === "bat_speed").length,
-        conditioning: finalRxs.filter((r) => r.slot === "conditioning").length,
-        cross_sport: finalRxs.filter((r) => r.slot === "cross_sport").length,
-      },
+      breakdown: cardsProduced,
     }, { onConflict: "user_id,ledger_date" });
 
     console.info("[wk-generate-daily] ok WIC", {
       user_id: user.id, plan_date: planDate, phase: phaseRes.phase, adaptation: adaptationDecision.primary,
-      cns_used: cnsUsed, cns_cap: cnsCap, blocks_n: rows.length, game_day: isGameDay,
+      cns_used: cnsUsed, cns_cap: cnsCap, blocks_n: rows.length, game_day: isGameDay, practice_day: isPracticeDay,
       validator_ok: validatorReport.ok, validator_warns: validatorReport.issues.filter((i) => i.severity === "warn").length,
+      generation_ms: generationMs, diagnostics_id: diagId,
     });
     return json({
       phase: phaseRes.phase,
@@ -664,10 +753,13 @@ const handler = async (req: Request): Promise<Response> => {
       adaptation_reason: adaptationDecision.reason,
       generator_version: WIC_VERSION,
       game_day: isGameDay,
+      practice_day: isPracticeDay,
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,
       validator_report: validatorReport,
+      diagnostics_id: diagId,
+      generation_ms: generationMs,
       prescriptions: rows,
     });
   } catch (e) {

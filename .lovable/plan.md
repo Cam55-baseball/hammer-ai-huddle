@@ -1,80 +1,117 @@
-# Phase 1 — Hammers Today Reality Audit
 
-Read-only, evidence-only. No code, UI, or architecture changes. The single deliverable is a constitutional audit document that maps every workout-generation surface as it exists today.
+# Phase 2 — Canonical Prescription Pipeline & Generation Stabilization
 
-## Deliverable
+Scope discipline: no workout redesign, no catalog changes, no coaching-philosophy changes, no UI redesign. Architectural stabilization only. Every change below maps 1:1 to a Critical Fix from the brief and to a Phase 1 audit finding.
 
-`docs/audits/hammers-today-reality-audit.md` — one long document with every section below. Every finding cites `path/file.ts:line` and quotes the relevant lines. Nothing is inferred.
+---
 
-Companion machine-readable index:
-- `docs/audits/hammers-today/dependency-map.json` — nodes = files/functions/tables/edge functions; edges = calls/reads/writes.
-- `docs/audits/hammers-today/variables-matrix.csv` — one row per athlete variable × (collected / stored / consumed / ignored).
-- `docs/audits/hammers-today/fragments.csv` — dead, duplicate, disconnected surfaces.
+## 1. Architectural target state
 
-## Investigation scope (verified starting set — will be expanded from evidence, not assumed)
-
-Server / generation
-- `supabase/functions/wk-generate-daily/index.ts` (783 lines) — primary generator
-- `supabase/functions/_shared/wic/{constitution,adaptationSelector,dayStructure,rationale,validator}.ts`
-- `supabase/functions/_shared/wic/engines/{strength,sprint,batSpeed,conditioning,crossSport,reserved}.ts`
-- `supabase/functions/generate-warmup/index.ts`
-- `supabase/functions/generate-block-workout`, `generate-elite-layer`, `generate-training-block`, `recommend-workout`, `generate-drills` — check whether they still feed Hammers Today or are legacy
-
-Client / consumption
-- `src/hooks/useWkDailyPrescriptions.ts`, `useWarmupGenerator.ts`, `useBlockedLiftMovements.ts`, `useReadinessState.ts`, `useEliteWorkout.ts`, `useHammerState.ts`, `useHammerNextStep.ts`, `useScheduledPracticeSessions.ts`, `useImportScheduleEvents.ts`, `useRescheduleEngine.ts`, `useWorkoutRecommendations.ts`, `useWorkoutPresets.ts`, `useBlockWorkoutGenerator.ts`
-- `src/components/hammer/*` — `HammerDailyPlan.tsx` (824 lines), `WkLiftsCard`, `WkSpeedBatCard`, `WkConditioningCard`, `WkPrescriptionCard`, `HammerWarmupDialog`, `HammerScheduleStrip`, `ReadinessChip`, `HammerStateBadge`
-- `src/lib/hammer/prescription/dailyPlan.ts` (1530 lines), `throwingSelector.ts`, `context/athleteContext.ts`, `goals/*`, `injury/reportInjury.ts`
-- `src/lib/wic/constitution.ts`
-
-Database
-- `wk_movement_catalog`, `wk_prescriptions`, `wk_session_logs`, `wk_cns_ledger`, `wk_periodization_blocks`, `wk_recovery_acks`, `wk_movement_overrides`
-- Reads against `training_preferences`, `athlete_context`, `profiles`, `calendar_events`, `gp_games`, `scheduled_practice_sessions`, `athlete_side_preferences`, `athlete_body_goals`, `athlete_daily_log`, `athlete_load_tracking`, `athlete_recruiting_consent`, plus `get_athlete_context_envelope` RPC
-
-## Audit document structure
-
-1. Workout Intelligence Architecture Map — annotated diagram of server → validator → DB → hook → card, per surface.
-2. Dependency Map — file/function graph with call directions.
-3. Canonical Data Flow — actual (not idealized) flow from user profile → rendered card, with the exact functions each hop passes through.
-4. Personalization Audit — variable-by-variable matrix (age, biological stage, training age, position, pitcher/two-way, handedness, season phase, today's schedule, practice/game/tournament, recovery/soreness/readiness, CNS, fatigue, injuries, restrictions, equipment, facility, time, goals, experience, previous workouts, historical workload, anthropometrics, limb proportions, compliance). For each: collected where, stored where, consumed where, ignored where.
-5. Exercise Selection Audit — how the generator + engines pick, filter, categorize, dedupe, progress/regress; season/goal/age/equipment gates; substitution + override paths.
-6. Card Generation Audit — per card (Warm-Up, Speed, Bat Speed, Lift, Conditioning, Cross Sport, Recovery, Arm Care, Mobility, Mental, Nutrition): builder, location, trigger, inputs, outputs.
-7. Ordering Audit — where order is set, determinism, drift risks, duplicate risk.
-8. Season Intelligence Audit — how in-season/off/pre/transition are decided, quarter labels, drift vs athlete context.
-9. Duplicate Detection Audit — root cause(s) for reported duplicate exercises/cards/prescriptions.
-10. Formatting Audit — card/exercise/set/rep/title/description/season-label/spacing/rendering consistency.
-11. Regression Audit — surfaces most likely to break under future edits.
-12. Fragment Audit — dead/legacy/duplicate/disconnected generators, prompts, libraries, selectors, validators, seasonal logic, personalization logic.
-13. User-Report Traceback — each recent user complaint (all-lower-body lift, duplicate exercises, in-season Nordic curls, ordering, kicked-out glitches, "spinning" analysis) mapped to file:line root cause or explicitly marked "requires further investigation."
-14. Prioritized Implementation Plan — ranked by user impact × technical dependency, with regression risk per item.
-
-## Evidence rules
-
-Every finding row:
-```
-Finding: <one line>
-File: path/file.ts:line-range
-Function: name
-Current behavior: <quote>
-Dependencies: <list>
-Regression risk: low/med/high + why
+```text
+                 ┌────────────────────────────────────────────┐
+                 │  HammersTodayProvider  (single per render) │
+                 │  - resolves athlete + schedule + season    │
+                 │  - owns ONE generation request             │
+                 │  - owns ONE prescription snapshot          │
+                 └───────────────┬────────────────────────────┘
+                                 │  snapshot (immutable)
+       ┌───────────┬─────────────┼─────────────┬───────────┐
+       ▼           ▼             ▼             ▼           ▼
+   Warm-up      Speed/Bat      Lifts       Conditioning  Cross/Recovery/
+                                                         ArmCare/Nutr/
+                                                         Mental/Mobility
+   (all cards are pure consumers of snapshot.cards[kind])
 ```
 
-## Method
+Server side:
+```text
+client → wk-generate-daily
+           1. resolveSeasonContext()      ← single authority
+           2. buildAthleteContext()
+           3. runEngines() (WIC)
+           4. orderPipeline()             ← single authority
+           5. validatePipeline()          ← single authority (fatal → reject)
+           6. persistAtomic()             ← single RPC, transactional
+           7. emit diagnostics row
+         ← returns { generation_id, snapshot }
+```
 
-1. Trace `wk-generate-daily/index.ts` top-to-bottom; catalog every DB read/write, engine call, validator call, insert into `wk_prescriptions`, `wk_cns_ledger` write.
-2. Trace `dailyPlan.ts` (1530 lines) — determine whether it still authors any prescriptions or is legacy alongside WIC.
-3. Trace `useWkDailyPrescriptions` → `HammerDailyPlan` → the four Wk cards to record exact grouping + ordering rules.
-4. Grep every table above for readers/writers to build the dependency map.
-5. Run SQL against `wk_movement_catalog` and recent `wk_prescriptions` to record real seasonal eligibility distribution, duplicate incidence, `generator_version` mix, and whether `why_v2` is populated end-to-end.
-6. Cross-check legacy generators (`generate-block-workout`, `generate-elite-layer`, `recommend-workout`, `generate-training-block`) for live callers vs dead code.
-7. Compile fragments, regressions, and prioritized roadmap.
+---
 
-## Constraints
+## 2. Files to modify (surgical, no rewrites)
 
-- No file edits, no schema changes, no UI changes.
-- No guessing language ("likely", "should", "probably"). If unknown → labeled "requires further investigation" with the exact next probe.
-- Document is self-contained: a future phase can be planned from it without re-reading the codebase.
+Client
+- `src/components/hammer/HammersTodayProvider.tsx` — NEW. Single provider that calls `useWkDailyPrescriptions` exactly once, memoizes an immutable `snapshot`, exposes `useHammersToday()`.
+- `src/hooks/useWkDailyPrescriptions.ts` — stabilize `generate` identity (extract to module-scope function, pass args; remove closure deps), gate auto-generate on a coarse `generationKey = hash(userId, localDate, schedule_rev, readiness_rev, season_rev)`, single in-flight lock via `useRef`, drop `generatorVersion` polling from other cards.
+- `src/components/hammer/HammerDailyPlan.tsx` — wrap subtree in `HammersTodayProvider`; remove the 3 other `useWkDailyPrescriptions` mounts.
+- `src/components/hammer/WkSpeedBatCard.tsx`, `WkLiftsCard.tsx`, `WkConditioningCard.tsx`, `WkPrescriptionCard.tsx` — convert to pure consumers via `useHammersToday()`. Delete any local generate/refresh/mutation logic. No card-level ordering.
+- `src/lib/wic/ordering.ts` — NEW. Single canonical ordering authority (bucket → position). Both server (mirrored) and client import from here for display; server writes `position` and client renders by it.
+- `src/lib/wic/season.ts` — NEW. Single `resolveSeasonContext(userId, date)` used by client display strings. Server mirror in `_shared/wic/season.ts` (below).
 
-## Out of scope (explicitly)
+Server
+- `supabase/functions/_shared/wic/season.ts` — NEW canonical season resolver. Replaces `IN_SEASON_BLOCKED_SLUGS` path AND catalog `season_eligibility` reads inside the generator by centralizing both into one function that returns `{ phase, legalSlugs, blockedSlugs, reasonMap }`.
+- `supabase/functions/_shared/wic/ordering.ts` — NEW canonical ordering (mirror of client `ordering.ts` shape). Assigns deterministic `slot_order` and `card_kind`.
+- `supabase/functions/_shared/wic/validator.ts` — extend with the ten checks in Fix 7. Any fatal error → reject prescription; nothing persisted.
+- `supabase/functions/wk-generate-daily/index.ts` — refactor into linear pipeline (context → season → engines → order → validate → persist). Remove `isPracticeDay = false` hardcode (read from schedule). Wire `side_hit` / `side_throw`. Call new atomic RPC. Write full WIC metadata columns on every row.
+- `supabase/functions/_shared/wic/persist.ts` — NEW. Calls `rpc('wk_persist_prescriptions_atomic', { p_user, p_date, p_rows, p_diag })`.
+- `supabase/functions/wk-warmup/index.ts` (or wherever warm-up is generated) — bring warm-up into the same generation call: warm-up rows are appended to the same snapshot and persisted in the same atomic RPC. No warm-up programming changes.
 
-Workout rewrite, UI redesign, architectural change, catalog edits, WIC rule changes. Those are downstream phases informed by this audit.
+Database (single migration)
+- New RPC `public.wk_persist_prescriptions_atomic(p_user uuid, p_date date, p_rows jsonb, p_diag jsonb)` — `SECURITY DEFINER`, `BEGIN; DELETE ... WHERE user_id=p_user AND local_date=p_date; INSERT ... SELECT FROM jsonb_to_recordset(p_rows); INSERT INTO wk_generation_diagnostics ...; COMMIT;` wrapped so partial state is impossible.
+- New table `public.wk_generation_diagnostics` (Fix 10): `id, user_id, local_date, generation_id, generator_version, season_phase, generation_ms, validation_status, exercise_count, duplicate_count, ordering_ok, metadata_complete, cards_produced jsonb, warnings jsonb, errors jsonb, created_at`. GRANTs + RLS (owner-read, service_role-all).
+- New unique constraint on `wk_prescriptions (user_id, local_date, slot_key)` to make duplicate inserts impossible at the storage layer.
+- Backfill: none. Read-only migration otherwise.
+
+Observability
+- `src/lib/wic/diagnostics.ts` — client helper to fetch latest diagnostics row for the current day (debug drawer only; no UI redesign).
+
+---
+
+## 3. Mapping — Critical Fix → change
+
+| Fix | Change |
+|---|---|
+| 1 Single generation | `HammersTodayProvider` + removal of 3 duplicate hook mounts + in-flight ref lock |
+| 2 Atomic writes | `wk_persist_prescriptions_atomic` RPC + unique constraint |
+| 3 Stable generate identity | Module-scope `generate()`, `generationKey` gate, remove unstable deps |
+| 4 Read-only cards | Cards refactored to `useHammersToday()` pure consumers |
+| 5 Deterministic ordering | `_shared/wic/ordering.ts` + `slot_order` column write; client renders by `position` |
+| 6 Canonical season | `_shared/wic/season.ts` sole authority; delete inline `IN_SEASON_BLOCKED_SLUGS` branch |
+| 7 Validation pass | Extended `validator.ts`, fatal-on-fail, no partial publish |
+| 8 WIC metadata | Persist path writes `generator_version, engine, adaptation, validator_report, why_v2, season_context, generation_timestamp, validation_status` on every row (fixes C-2) |
+| 9 Warm-up integration | Warm-up rows join same snapshot + same atomic RPC |
+| 10 Observability | `wk_generation_diagnostics` row per generation |
+
+---
+
+## 4. Regression evidence plan
+
+For each user-reported issue, capture before/after via SQL + a scripted refresh:
+
+1. **Duplicate exercises** — `SELECT slug, count(*) FROM wk_prescriptions WHERE user_id=$U AND local_date=$D GROUP BY 1 HAVING count(*)>1;` expected empty; unique constraint guarantees it.
+2. **Multiple generation passes** — `SELECT count(*) FROM wk_generation_diagnostics WHERE user_id=$U AND local_date=$D AND created_at > now()-interval '2 min';` expected `= 1` per refresh.
+3. **Card disagreement** — snapshot identity check in provider (single object reference logged).
+4. **Ordering drift** — `slot_order` monotonic per card kind; assertion in validator.
+5. **Missing WIC metadata** — `SELECT count(*) FROM wk_prescriptions WHERE local_date=$D AND (generator_version IS NULL OR why_v2 IS NULL);` expected `0`.
+6. **Partial writes** — kill-switch test: force validator failure → assert 0 rows written and 1 diagnostics row with `validation_status='rejected'`.
+7. **Season disagreement** — single `season.ts` import; grep confirms no other seasonal branches remain.
+
+---
+
+## 5. Explicit non-changes (guardrails)
+
+No changes to: exercise catalog rows, movement selection heuristics inside engines, dosing formulas, coaching cues, card visual design, personalization inputs beyond wiring already-collected `side_hit`/`side_throw`/`isPracticeDay` that the generator was ignoring, or the "Why this?" copy. Warm-up programming untouched — only its lifecycle joins the snapshot.
+
+---
+
+## 6. Known limitations after Phase 2
+
+- Personalization gaps for handedness/equipment/anthropometrics beyond what already flows in (broader consumption is Phase 3).
+- Warm-up content itself remains as-authored; only lifecycle is unified.
+- Diagnostics surface is a debug drawer, not a user-facing dashboard.
+
+---
+
+## 7. Acceptance gate
+
+Phase 2 is complete only when a single Hammers Today refresh, verified via `wk_generation_diagnostics`, shows: exactly one diagnostics row, `validation_status='published'`, zero duplicate slugs in `wk_prescriptions` for that `(user, date)`, all rows have non-NULL `generator_version / engine / adaptation / why_v2 / season_context`, and every visible card in the UI reads from the same snapshot object (provider identity check logged once).
