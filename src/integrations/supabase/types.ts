@@ -13560,7 +13560,9 @@ export type Database = {
         Row: {
           adaptation: string | null
           adaptation_profile_id: string | null
+          athlete_context_version: string | null
           cards_produced: Json
+          context_completeness_score: number | null
           context_validation_outcome: string | null
           context_version: string | null
           created_at: string
@@ -13573,12 +13575,15 @@ export type Database = {
           id: string
           legality_profile_id: string | null
           metadata_complete: boolean
+          missing_context_fields: string[] | null
           ordering_ok: boolean
+          personalization_version: string | null
           plan_date: string
           recovery_profile_id: string | null
           resolved_day_type: string | null
           resolved_season_phase: string | null
           season_phase: string | null
+          training_age_version: string | null
           user_id: string
           validation_status: string
           warnings: Json
@@ -13586,7 +13591,9 @@ export type Database = {
         Insert: {
           adaptation?: string | null
           adaptation_profile_id?: string | null
+          athlete_context_version?: string | null
           cards_produced?: Json
+          context_completeness_score?: number | null
           context_validation_outcome?: string | null
           context_version?: string | null
           created_at?: string
@@ -13599,12 +13606,15 @@ export type Database = {
           id?: string
           legality_profile_id?: string | null
           metadata_complete?: boolean
+          missing_context_fields?: string[] | null
           ordering_ok?: boolean
+          personalization_version?: string | null
           plan_date: string
           recovery_profile_id?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
+          training_age_version?: string | null
           user_id: string
           validation_status: string
           warnings?: Json
@@ -13612,7 +13622,9 @@ export type Database = {
         Update: {
           adaptation?: string | null
           adaptation_profile_id?: string | null
+          athlete_context_version?: string | null
           cards_produced?: Json
+          context_completeness_score?: number | null
           context_validation_outcome?: string | null
           context_version?: string | null
           created_at?: string
@@ -13625,12 +13637,15 @@ export type Database = {
           id?: string
           legality_profile_id?: string | null
           metadata_complete?: boolean
+          missing_context_fields?: string[] | null
           ordering_ok?: boolean
+          personalization_version?: string | null
           plan_date?: string
           recovery_profile_id?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
+          training_age_version?: string | null
           user_id?: string
           validation_status?: string
           warnings?: Json
