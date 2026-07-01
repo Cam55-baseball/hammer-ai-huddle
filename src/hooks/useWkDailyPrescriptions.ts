@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
+import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
 
 const WK_GENERATOR_VERSION = "full_body_game_day_v3";
@@ -108,6 +109,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const [failed, setFailed] = useState(false);
   const autoTried = useRef(false);
   const sideCtx = useSideContext();
+  const gp = useGpSignal();
   const sideHit = sideCtx.selectedSide?.hit;
   const sideThrow = sideCtx.selectedSide?.throw;
 
@@ -189,18 +191,19 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   useEffect(() => {
     const first = query.data?.[0];
     const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
+    const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== gp.gameToday;
+    const needsRefresh = !!query.data && (query.data.length === 0 || staleVersion || staleGameDay);
     if (
       !query.isLoading &&
-      query.data &&
-      (query.data.length === 0 || staleVersion) &&
+      needsRefresh &&
       !generating &&
       !failed &&
-      !autoTried.current
+      (!autoTried.current || staleVersion || staleGameDay)
     ) {
       autoTried.current = true;
       generate();
     }
-  }, [query.isLoading, query.data, generate, generating, failed]);
+  }, [query.isLoading, query.data, gp.gameToday, generate, generating, failed]);
 
   const retry = useCallback(() => {
     autoTried.current = false;
