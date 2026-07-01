@@ -1,91 +1,110 @@
+## Phase 11–12 — E2E Unification & Production Lock
 
-# Phase 10 — Performance Support Engine
+Additive-only unification of Phases 1–10 into a single deterministic execution surface. No UI, no schema rewrites beyond explicit additive columns.
 
-Additive-only implementation of the four remaining daily-performance engines using the constitutional architecture already sealed in Phases 8 and 9. No changes to Lift, Speed, Bat Speed, UI, Card Registry, HammersTodayProvider, or the snapshot architecture.
+### 1. New shared modules (backend-only)
 
-## 1. Database Migration (one migration, additive-only)
+Under `supabase/functions/_shared/wic/`:
 
-Extend `wk_movement_catalog` (governance metadata, all nullable, backfilled per slot):
-- `conditioning_category`, `cross_sport_category`, `recovery_category`, `arm_care_category`
-- `energy_system` (`alactic` / `lactic` / `aerobic_base` / `aerobic_power` / `mixed`)
-- `recovery_class` (`cns` / `tissue` / `mobility` / `regeneration` / `deload`)
-- `throwing_phase` (`throwing_day` / `non_throwing_day` / `bullpen` / `long_toss` / `recovery` / `rtp`)
-- `movement_transfer` (`fascial` / `footwork` / `explosive` / `balance` / `visual` / `reflex` / `coordination` / `rotational` / `low_impact` / `recovery`)
-- `sport_transfer` (jsonb array of contributing sports)
-- `travel_friendly`, `indoor_legal`, `outdoor_legal` (booleans)
+- `determinism/globalDeterminismLock.ts`
+  - `stableSeed(videoId, athleteId, contextHash)` → deterministic hash
+  - UTC temporal normalizer
+  - Canonical sort helpers for templates / substitutions / category resolution
+  - Rejects undefined runtime fallback paths (throws `determinism_seed_divergence`)
+  - Emits `determinism_trace` object
+- `snapshots/snapshotImmutabilityGuard.ts`
+  - `hashSnapshot(rxs, diag)`, `assertImmutable(preHash, postHash)`
+  - Fatal: `snapshot_mutation_detected`
+- `validation/globalValidatorRegistry.ts`
+  - Registers every engine's fatal codes (Lift/Speed/Bat/Cond/XS/Rec/AC)
+  - Adds global fatals: `system_governance_mismatch`, `determinism_seed_divergence`, `snapshot_mutation_detected`, `cross_engine_conflict_detected`, `why_v2_incomplete`, `diagnostic_invariant_failure`
+  - `aggregate(reports[])` → single `validatorReport`
+- `conflictResolver/crossEngineConflictResolver.ts`
+  - Detects metabolic-load conflicts, arm-care vs throwing-phase mismatch, XS illegal transfer on game day, fatigue-readiness contradictions
+  - Returns `{ resolved: Rx[] }` or fatal
+- `whyV2/unifiedWhy.ts`
+  - Merges per-engine `why_v2` into a single root with additive keys: `why_engine_chain`, `why_global_constraints`, `why_determinism_seed`, `why_governance_snapshot`, `why_substitution_path`
+  - `computeCompleteness(why)` → 0–100 deterministic score
 
-Extend `wk_generation_diagnostics` with, per engine:
-- `<engine>_template_id`
-- `<engine>_category_coverage` (jsonb)
-- `<engine>_validation_status`
-- `<engine>_substitution_completeness`
-- `<engine>_governance_version`
+### 2. Additive migration — `wk_generation_diagnostics`
 
-Update `wk_persist_prescriptions_atomic` RPC to persist the new diagnostic columns. Data backfill for catalog governance runs via the `supabase--insert` tool after the migration lands.
+Add nullable columns:
+- `determinism_seed text`
+- `determinism_trace jsonb`
+- `engine_execution_order text[]`
+- `global_validator_status text`
+- `snapshot_hash text`
+- `snapshot_integrity_status text`
+- `governance_catalog_hash text`
+- `why_v2_completeness_score int`
 
-## 2. Shared engine modules
+Update `wk_persist_prescriptions_atomic` to persist these fields and to invoke `assertImmutable(p_diag->>'snapshot_hash', computed_hash)` — mismatch aborts with `snapshot_mutation_detected`.
 
-Mirror Phase 8/9 shape for each engine:
+### 3. Orchestration patch — `wk-generate-daily/index.ts`
 
+Locked, non-branching pipeline:
+
+```text
+1  Lift (P8)
+2  Speed (P9)
+3  Bat Speed (P9)
+4  Conditioning (P10)
+5  Cross-Sport (P10)
+6  Recovery (P10)
+7  Arm Care (P10)
+8  globalDeterminismLock.validate()
+9  globalValidatorRegistry.aggregate()
+10 snapshotImmutabilityGuard.assert()
+11 wk_persist_prescriptions_atomic (only path)
 ```
-supabase/functions/_shared/wic/conditioning/{movementCategories,templates,substitutions,sessionBuilder}.ts
-supabase/functions/_shared/wic/crossSport/{movementCategories,templates,substitutions,sessionBuilder}.ts
-supabase/functions/_shared/wic/recovery/{movementCategories,templates,substitutions,sessionBuilder}.ts
-supabase/functions/_shared/wic/armCare/{movementCategories,templates,substitutions,sessionBuilder}.ts
-```
 
-Each `sessionBuilder` exports a `certify<Engine>` function that returns the same result shape used by Lift/Speed/BatSpeed (templateId, categoryCoverage, substitutionCompleteness, validationStatus, governanceVersion, stamps map, fatal[], warn[]).
+- Compute `stableSeed` once at top; pass to every certifier via context.
+- Run `crossEngineConflictResolver` between step 7 and 8.
+- All certify* engines receive one shared `whyV2Root` accumulator instead of writing isolated payloads.
+- No `catch → soft continue` after step 8; fatals abort and still persist partial diagnostics with core fields populated.
 
-### Templates per engine
+### 4. Certifier updates (import + hook only)
 
-- **Conditioning:** `aerobic_base`, `repeated_sprint`, `baseball_game_day`, `pitcher_conditioning`, `recovery_flush`, `tournament_day`, `practice_day`, `off_day`, `return_to_conditioning`. Each carries objective, CNS budget, metabolic budget, tissue budget, interval profile, required categories.
-- **Cross-Sport:** `fascial_rotation`, `footwork`, `explosive_transfer`, `recovery_transfer`, `balance_transfer`, `visual_reaction`, `reflex`, `coordination`, `rotational_power`, `low_impact`. Resolver honors season legality, schedule legality, available time, equipment, facilities.
-- **Recovery:** `cns_recovery`, `tissue_recovery`, `mobility`, `regeneration`, `deload`, `post_game`, `travel`, `sleep_optimization`. Fully deterministic from TrainingContext + readiness.
-- **Arm Care:** `throwing_day`, `non_throwing_day`, `bullpen`, `starter`, `reliever`, `position_player`, `two_way`, `recovery`, `return_to_throwing`. Consumes throwing schedule, training age, position, workload, readiness, injury context.
+For `certifyLift`, `certifySpeed`, `certifyBatSpeed`, `certifyConditioning`, `certifyCrossSport`, `certifyRecovery`, `certifyArmCare`:
+- Accept `{ seed, whyV2Root, governanceHash }` in context.
+- Append into `whyV2Root` (no per-engine root writes).
+- Return fatals into a shared `EngineReport` shape consumed by the global registry.
 
-Substitution ladders on all four engines use the same five rungs: equipment / environment / injury / time / coach-override.
+No behavioral changes to selection logic.
 
-## 3. Generator integration
+### 5. CI regression — `scripts/audits/performance-support-audit.ts`
 
-`supabase/functions/wk-generate-daily/index.ts`:
-1. Import the four `certify*` functions.
-2. After the existing Lift → Speed → BatSpeed certification block, run them in fixed order: Conditioning → Cross-Sport → Recovery → Arm Care.
-3. Each certifier receives the same constitutional inputs already resolved for the request (TrainingContext, AthleteContext, PersonalizationContext, TrainingAgeContext, availableEquipment, environment, isGameDay/isPracticeDay/isRecoveryDay, throwing schedule).
-4. Stamp `why_payload.<engine>_governance` and `why_v2.{why_category, why_template, why_athlete, why_season, why_recovery, why_readiness, why_substitution}` on matching rows by `slot`.
-5. Promote each engine's `fatal[]` into the existing `validatorReport` (same all-or-nothing publication gate). Promote `warn[]` as warnings.
-6. Add all Phase 10 diagnostics fields to both diagnostics-write sites (async catch site and RPC-payload site).
+Append Phase 11–12 suite:
+- Deterministic replay: 1000 runs of `wk-generate-daily` against a fixture → identical `snapshot_hash`.
+- Engine ordering invariance test.
+- Substitution ladder determinism (per engine).
+- Governance catalog hash stability.
+- Snapshot immutability stress (mutate post-hash → expect fatal).
+- Cross-engine conflict detection matrix.
+- Full-season simulation replay parity (12 phases × 9 day types).
+- Any variance → `Deno.exit(1)`.
 
-## 4. Validator fatal codes (added inline via certifier fatals)
+### 6. Architectural freeze rules (docs)
 
-- Conditioning: `cond_illegal_category`, `cond_duplicate_category`, `cond_unresolved_template`, `cond_unresolved_substitution`, `cond_governance_missing`
-- Cross-Sport: `xs_illegal_transfer`, `xs_duplicate_category`, `xs_unresolved_template`, `xs_unresolved_substitution`, `xs_governance_missing`
-- Recovery: `rec_conflicting_recovery`, `rec_illegal_recovery`, `rec_unresolved_template`, `rec_governance_missing`
-- Arm Care: `ac_illegal_throwing_phase`, `ac_duplicate_category`, `ac_unresolved_template`, `ac_governance_missing`
+Add `docs/wic/system-freeze-v1.md`:
+- New engines require globalValidatorRegistry + engine_execution_order update.
+- New validators must register in globalValidatorRegistry.
+- New diagnostic fields require additive migration.
+- Zero runtime fallback logic tolerated inside WIC.
 
-## 5. Regression audit
+### Execution order
 
-`scripts/audits/performance-support-audit.ts` — Deno script exercising the matrix (12 season phases × training-age classes × equipment × indoor/outdoor × practice/game/tournament/travel/recovery × position/pitcher/two-way). Verifies deterministic generation, legal substitutions, governance completeness, validator clean, explainability populated, diagnostics populated. Fail-fast summary suitable for CI.
+1. Migration (additive columns + RPC update).
+2. New shared modules (determinism / snapshot / validator registry / conflict resolver / unifiedWhy).
+3. Patch `wk-generate-daily/index.ts` orchestration.
+4. Update seven certifiers (imports + hooks).
+5. Expand audit script with Phase 11–12 matrix.
+6. Update `docs/wic/constitution.md` + add `docs/wic/system-freeze-v1.md`.
 
-## 6. Documentation
+### Success criteria
 
-`docs/wic/performance-support-v1.md` — templates, categories, validator codes, diagnostics, `why_v2` fields, dependency graph, before/after prescription examples.
-
-## Guardrails
-
-- No edits to Lift, Speed, Bat Speed shared modules.
-- No edits to card registry, provider, snapshots, or any UI.
-- No new tables; only additive columns on `wk_movement_catalog` and `wk_generation_diagnostics`.
-- No changes to RLS beyond persisting new diagnostic columns via the existing RPC.
-- Additive columns are nullable and backfilled — existing prescriptions remain valid.
-
-## Acceptance gate
-
-Complete when every performance-support engine is deterministic, consumes the same immutable constitutional contexts, is explainable, governance-stamped, substitution-complete, validator-clean, diagnostics-complete, and the regression audit passes across every supported seasonal context.
-
-## Order of execution once approved
-
-1. Run one `supabase--migration` (schema + RPC update).
-2. Backfill governance metadata via `supabase--insert` UPDATEs (grouped by slot).
-3. Write the 16 shared engine module files in parallel.
-4. Wire `wk-generate-daily/index.ts`.
-5. Write audit script + docs.
+- 1000× replay produces identical snapshot_hash.
+- Zero unresolved cross-engine conflicts on the full matrix.
+- `why_v2_completeness_score` = 100 on every generated row in the audit.
+- Governance hash stable across identical inputs.
+- CI audit exits 0.
