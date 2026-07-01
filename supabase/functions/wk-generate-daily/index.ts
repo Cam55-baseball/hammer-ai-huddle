@@ -1,18 +1,19 @@
 // supabase/functions/wk-generate-daily/index.ts
 // Hammer Workout & Speed — elite daily prescription generator.
 //
-// Generates today's Lifts + Speed + Conditioning + Bat-Speed prescriptions for
-// the authenticated user, with full transparency payload:
-//   - Phase quarter (auto-resolved from Season Dates)
-//   - Movement selection bounded by training age / competition level / injury
-//   - CNS unit accounting (caps total high-CNS units across modalities)
-//   - "Why this lift today" reasoning + reductions when sleep/CNS/heat clamps fire
-//   - Sport-split speed work (BB vs SB)
+// v2 rewrite:
+//   - FULL-BODY lift template (not a single-pattern day)
+//   - Phase modulation (OS Q1-Q2, OS Q3-Q4, In-Season, Post-Season)
+//   - sequence_role tagged per prescription so the UI can render lifts
+//     in the canonical order (arm care → trunk primer → compound →
+//     unilateral → upper push → upper pull → carry → trunk finisher)
+//   - Speed / Bat-Speed / Conditioning kept as distinct slots so the app
+//     can render them in three separate cards (Speed & Bat before lifts,
+//     conditioning next to practice)
 //
 // Idempotent for (user_id, plan_date, sequence_field).
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { startHeartbeat } from "../_shared/withHeartbeat.ts";
 import { resolveWkPhase } from "../_shared/wkPhaseQuarter.ts";
 
 interface MovementRow {
@@ -52,9 +53,27 @@ interface BlockRow {
   notes: string | null;
 }
 
+type Slot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
+
+type SequenceRole =
+  | "arm_care"
+  | "trunk_primer"
+  | "compound_lower"
+  | "unilateral_lower"
+  | "upper_push"
+  | "upper_pull"
+  | "carry_antirotation"
+  | "trunk_finisher"
+  | "supplemental"
+  | "speed"
+  | "bat_speed"
+  | "conditioning"
+  | "cross_sport";
+
 interface Prescription {
-  slot: "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
+  slot: Slot;
   sequence_order: number;
+  sequence_role: SequenceRole;
   movement_slug: string;
   movement_name: string;
   sets: number | null;
@@ -75,9 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return json({ error: "Missing Authorization" }, 401);
-    }
+    if (!authHeader) return json({ error: "Missing Authorization" }, 401);
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -139,10 +156,6 @@ const handler = async (req: Request): Promise<Response> => {
     if (soreness >= 8) {
       reductions.push({ reason: "soreness", detail: `Reported soreness ${soreness}/10 — substituting regressions where possible.` });
     }
-
-    // Learning-loop: if the athlete acknowledged an under-recovery reduction in
-    // the last 48h, keep the CNS ceiling one notch below the raw block cap so
-    // the next plan actually adapts (not a one-way personalization).
     if (recentAck?.acknowledged_at) {
       const ackAgeH = (Date.now() - new Date(recentAck.acknowledged_at).getTime()) / 3600000;
       if (ackAgeH >= 0 && ackAgeH <= 48) {
@@ -155,87 +168,144 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // -------- Movement filters --------
-    const eligible = (m: MovementRow): boolean => {
+    const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
+      if (!m) return false;
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
       return true;
     };
-    const withInjurySwap = (m: MovementRow): { movement: MovementRow; substitutedFrom?: string; reason?: string } => {
-      if (!m.contraindications?.some((c) => injurySlugs.has(c))) return { movement: m };
+    const swap = (m: MovementRow) => {
+      if (!m.contraindications?.some((c) => injurySlugs.has(c))) return { movement: m, substitutedFrom: null as string | null, reason: null as string | null };
       if (m.regression_slug) {
         const reg = lib.find((x) => x.slug === m.regression_slug);
         if (reg) return { movement: reg, substitutedFrom: m.slug, reason: `Contraindicated by reported injury — regressed to ${reg.name}.` };
       }
-      return { movement: m };
+      return { movement: m, substitutedFrom: null, reason: null };
     };
+    const pickFirst = (slugs: string[]): MovementRow | undefined => {
+      for (const s of slugs) {
+        const m = lib.find((x) => x.slug === s);
+        if (eligible(m)) return m;
+      }
+      return undefined;
+    };
+    const pickCat = (cat: string): MovementRow | undefined =>
+      lib.find((m) => m.category === cat && eligible(m));
 
-    // -------- Select prescriptions --------
+    // -------- Rotate unilateral lower / upper push across the week --------
+    const dayOfWeek = new Date(planDate + "T00:00:00").getDay(); // 0..6
+
+    // -------- Build full-body lift template (phase-modulated) --------
     const rxs: Prescription[] = [];
     let seq = 0;
     let cnsUsed = 0;
 
-    // 1) Lift block — pick 1 compound that matches phase compound_style + the pattern rotation for this day.
-    const dayOfWeek = new Date(planDate + "T00:00:00").getDay();
-    const patternRotation: Array<MovementRow["pattern"]> = ["squat", "hinge", "push", "pull"];
-    const targetPattern = patternRotation[dayOfWeek % 4];
-    const compoundCandidates = lib.filter((m) =>
-      m.category === "compound" &&
-      m.pattern === targetPattern &&
-      (m.variant === block.compound_style ||
-        (block.compound_style === "concentric" && m.variant === "concentric") ||
-        (block.compound_style === "eccentric" && (m.variant === "double_eccentric" || m.variant === "eccentric"))) &&
-      eligible(m),
-    );
-    const compound = compoundCandidates[0] ?? lib.find((m) => m.category === "compound" && m.pattern === targetPattern && eligible(m));
-    if (compound) {
-      const swap = withInjurySwap(compound);
-      const sets = clamp(swap.movement.default_sets ?? 3, block.compound_min_sets, block.compound_max_sets);
-      const reps = clamp(swap.movement.default_reps ?? 3, block.compound_min_reps, block.compound_max_reps);
-      const clamped = (cnsUsed + swap.movement.cns_cost) > cnsCap;
-      cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : swap.movement.cns_cost;
+    const push = (
+      slot: Slot,
+      role: SequenceRole,
+      m: MovementRow,
+      overrides: Partial<Prescription> = {},
+      why: string = "",
+    ) => {
+      const s = swap(m);
+      const setsBase = overrides.sets ?? s.movement.default_sets ?? null;
+      const repsBase = overrides.reps ?? s.movement.default_reps ?? null;
+      const clamped = (cnsUsed + s.movement.cns_cost) > cnsCap;
+      cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
       rxs.push({
-        slot: "lift", sequence_order: seq++,
-        movement_slug: swap.movement.slug, movement_name: swap.movement.name,
-        sets: clamped ? Math.max(1, sets - 1) : sets, reps,
-        tempo: swap.movement.default_tempo, load_pct: swap.movement.default_load_pct,
-        cns_cost: swap.movement.cns_cost, cns_clamped: clamped,
-        substituted_from_slug: swap.substitutedFrom ?? null,
-        substitution_reason: swap.reason ?? null,
+        slot, sequence_order: seq++, sequence_role: role,
+        movement_slug: s.movement.slug, movement_name: s.movement.name,
+        sets: clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase,
+        reps: repsBase,
+        tempo: overrides.tempo ?? s.movement.default_tempo,
+        load_pct: overrides.load_pct ?? s.movement.default_load_pct,
+        cns_cost: s.movement.cns_cost,
+        cns_clamped: clamped,
+        substituted_from_slug: s.substitutedFrom,
+        substitution_reason: s.reason,
         why_payload: {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
-          why: `${block.display_name}: ${block.compound_style.replace("_", " ")} compound, ${targetPattern} pattern day. ${swap.movement.why_prescribed}`,
-          cue: swap.movement.cue,
+          why: why || s.movement.why_prescribed,
+          cue: s.movement.cue,
           rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
           reductions,
         },
       });
+    };
+
+    const isOffseason = phaseRes.phase.startsWith("os_");
+    const isDeep = phaseRes.phase === "os_q1" || phaseRes.phase === "os_q2";
+    const isInSeason = phaseRes.phase === "in_season";
+    const isPostSeason = phaseRes.phase === "post_season";
+
+    // 1) Arm care — every session, non-negotiable
+    const armCare = pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
+    if (armCare) push("lift", "arm_care", armCare, { sets: 1, reps: 1 }, "Non-negotiable shoulder prep. Every session opens here.");
+
+    // 2) Trunk primer — every session
+    const trunkPrimer = pickFirst(["trap_bar_trunk_twist"]);
+    if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, { sets: 1, reps: 10 }, "Loaded rotation primer — wakes obliques + preps swing plane.");
+
+    // 3) Compound A — lower push (squat pattern, phase variant)
+    const compoundSlugsByPhase = isDeep
+      ? ["back_squat_double_ecc", "front_squat_double_ecc"]
+      : phaseRes.phase === "os_q3" || phaseRes.phase === "os_q4"
+        ? ["front_squat_double_ecc", "back_squat_concentric"]
+        : ["back_squat_concentric"];
+    const compound = pickFirst(compoundSlugsByPhase) ?? pickCat("compound");
+    if (compound) {
+      const sets = clamp(2, block.compound_min_sets, block.compound_max_sets);
+      const reps = clamp(3, block.compound_min_reps, block.compound_max_reps);
+      push("lift", "compound_lower", compound, { sets, reps }, `${block.display_name}: ${block.compound_style.replace("_", " ")} compound — foundation of the day.`);
     }
 
-    // 2) Supplemental — phase-bound (KOT or FP)
-    const suppCat = block.supplemental_style === "kot" ? "kot" : block.supplemental_style === "functional_patterning" ? "functional_patterning" : null;
-    const supps = (suppCat ? lib.filter((m) => m.category === suppCat && eligible(m)) : lib.filter((m) => (m.category === "kot" || m.category === "functional_patterning") && eligible(m)))
-      .slice(0, 3);
-    for (const s of supps) {
-      const swap = withInjurySwap(s);
-      rxs.push({
-        slot: "supplemental", sequence_order: seq++,
-        movement_slug: swap.movement.slug, movement_name: swap.movement.name,
-        sets: swap.movement.default_sets, reps: swap.movement.default_reps,
-        tempo: swap.movement.default_tempo, load_pct: null,
-        cns_cost: swap.movement.cns_cost, cns_clamped: false,
-        substituted_from_slug: swap.substitutedFrom ?? null,
-        substitution_reason: swap.reason ?? null,
-        why_payload: {
-          phase: phaseRes.phase, phase_display: phaseRes.displayName,
-          why: `${block.supplemental_style === "kot" ? "Knees-Over-Toes" : "Functional Patterning"} pre-practice supplemental: ${swap.movement.why_prescribed}`,
-          cue: swap.movement.cue, reductions,
-        },
-      });
-      cnsUsed += Math.min(swap.movement.cns_cost, Math.max(0, cnsCap - cnsUsed));
+    // 4) Unilateral lower — rotate across the week to build all planes
+    const unilateralRotation = ["lateral_db_step_up", "kot_lunge", "slide_lunge", "sl_deadlift_fat_grips"];
+    const uniLower = pickFirst([unilateralRotation[dayOfWeek % unilateralRotation.length], ...unilateralRotation]);
+    if (uniLower) push("lift", "unilateral_lower", uniLower, { sets: 2, reps: 3 }, "Single-leg dominance — closes L/R imbalances the compound hides.");
+
+    if (!isPostSeason) {
+      // 5) Upper push — unilateral / integrated (skip in post-season)
+      const upperPush = pickFirst([
+        dayOfWeek % 2 === 0 ? "sa_db_chest_press" : "landmine_row_to_press",
+        "sa_db_chest_press",
+        "landmine_row_to_press",
+        "bench_press_concentric",
+      ]);
+      if (upperPush) push("lift", "upper_push", upperPush, { sets: 2, reps: 3 }, "Anti-rotation press — shoulder + trunk coupling under load.");
+
+      // 6) Upper pull — unilateral / weighted
+      const upperPull = pickFirst([
+        dayOfWeek % 3 === 0 ? "renegade_row" : dayOfWeek % 3 === 1 ? "sa_standing_cable_row" : "weighted_pullup_full",
+        "sa_standing_cable_row",
+        "renegade_row",
+        "weighted_pullup_full",
+        "weighted_pullup_concentric",
+      ]);
+      if (upperPull) push("lift", "upper_pull", upperPull, { sets: 2, reps: 3 }, "Pulling volume — throwing decel + posture anchor.");
     }
 
-    // 3) Speed work — sport-split, cadence-gated
+    // 7) Carry / anti-rotation — skip in-season & post-season to keep sessions short
+    if (isDeep || phaseRes.phase === "os_q3") {
+      const carry = pickFirst(["waiter_carry", "standing_cable_hip_flexor", "paloff_press"]);
+      if (carry) push("lift", "carry_antirotation", carry, {}, "Carry / anti-rotation — trunk gets the last hard word.");
+    }
+
+    // 8) Trunk finisher — offseason only (in-season stays fresh)
+    if (isOffseason && !isInSeason) {
+      const finisher = pickFirst(["heavy_russian_twist"]);
+      if (finisher) push("lift", "trunk_finisher", finisher, { sets: 1, reps: 10 }, "Loaded trunk finisher — locks the rotational strength from above.");
+    }
+
+    // -------- Bat-speed (its own card, always pre-lift) --------
+    const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
+    const bat = batSpeedPool.find((m) => m.slug === "med_ball_shot_put") ?? batSpeedPool[0];
+    if (bat) {
+      push("bat_speed", "bat_speed", bat, {}, "Rotational power primer — direct bat-speed transfer. Do BEFORE lifts while CNS is fresh.");
+    }
+
+    // -------- Speed work (its own card, cadence-gated, pre-lift) --------
     const lastSpeed = await admin
       .from("wk_prescriptions")
       .select("plan_date")
@@ -248,122 +318,55 @@ const handler = async (req: Request): Promise<Response> => {
       ? Math.floor((new Date(planDate + "T00:00:00").getTime() - new Date(lastSpeed.data.plan_date + "T00:00:00").getTime()) / 3600000)
       : 9999;
     if (hoursSinceSpeed >= block.speed_cadence_hours - 6) {
-      const speedSet = [
+      const speedSet: MovementRow[] = [
         lib.find((m) => m.slug === "accel_10_30y" && eligible(m)),
         lib.find((m) => m.slug === (sport === "baseball" ? "lateral_first_step" : "slap_runner_crossover") && eligible(m)),
         lib.find((m) => m.slug === (sport === "baseball" ? "repeat_90ft_bb" : "repeat_43ft_sb") && eligible(m)),
       ].filter(Boolean) as MovementRow[];
       for (const m of speedSet) {
-        const swap = withInjurySwap(m);
-        const clamped = (cnsUsed + swap.movement.cns_cost) > cnsCap;
-        cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : swap.movement.cns_cost;
-        rxs.push({
-          slot: "speed", sequence_order: seq++,
-          movement_slug: swap.movement.slug, movement_name: swap.movement.name,
-          sets: clamped && swap.movement.default_sets ? Math.max(1, (swap.movement.default_sets ?? 3) - 2) : swap.movement.default_sets,
-          reps: swap.movement.default_reps, tempo: null, load_pct: null,
-          cns_cost: swap.movement.cns_cost, cns_clamped: clamped,
-          substituted_from_slug: swap.substitutedFrom ?? null,
-          substitution_reason: swap.reason ?? null,
-          why_payload: {
-            phase: phaseRes.phase, phase_display: phaseRes.displayName,
-            why: `${sport === "baseball" ? "Baseball" : "Softball"}-default Speed Lab — cadence every ${block.speed_cadence_hours}h. ${swap.movement.why_prescribed}`,
-            cue: swap.movement.cue, sport, reductions,
-          },
-        });
+        push("speed", "speed", m, {}, `${sport === "baseball" ? "Baseball" : "Softball"} Speed Lab — cadence every ${block.speed_cadence_hours}h.`);
       }
     }
 
-    // 4) Bat-speed — always include 1 rotational power piece before lifts (CNS-permitting)
-    const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
-    const bat = batSpeedPool.find((m) => m.slug === "med_ball_shot_put") ?? batSpeedPool[0];
-    if (bat) {
-      const swap = withInjurySwap(bat);
-      const clamped = (cnsUsed + swap.movement.cns_cost) > cnsCap;
-      cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : swap.movement.cns_cost;
-      rxs.push({
-        slot: "bat_speed", sequence_order: seq++,
-        movement_slug: swap.movement.slug, movement_name: swap.movement.name,
-        sets: swap.movement.default_sets, reps: swap.movement.default_reps,
-        tempo: null, load_pct: null,
-        cns_cost: swap.movement.cns_cost, cns_clamped: clamped,
-        substituted_from_slug: swap.substitutedFrom ?? null,
-        substitution_reason: swap.reason ?? null,
-        why_payload: {
-          phase: phaseRes.phase, phase_display: phaseRes.displayName,
-          why: `Rotational power primer — direct bat-speed transfer. ${swap.movement.why_prescribed}`,
-          cue: swap.movement.cue, sequencing_hint: "Default: do BEFORE lifts to protect CNS targets for bat speed.",
-          reductions,
-        },
-      });
+    // -------- Conditioning (its own card, placed next to practice) --------
+    if (!isPostSeason) {
+      const conditioning: MovementRow[] = [
+        lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
+        conditioningForPosition(lib, position, eligible),
+      ].filter(Boolean) as MovementRow[];
+      for (const m of conditioning) {
+        push("conditioning", "conditioning", m, {}, "Conditioning belongs next to practice — inning-restart + position-specific.");
+      }
     }
 
-    // 5) Conditioning — inning-restart + 1 position-specific piece
-    const conditioning = [
-      lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
-      conditioningForPosition(lib, position),
-    ].filter(Boolean) as MovementRow[];
-    for (const m of conditioning) {
-      const swap = withInjurySwap(m);
-      rxs.push({
-        slot: "conditioning", sequence_order: seq++,
-        movement_slug: swap.movement.slug, movement_name: swap.movement.name,
-        sets: swap.movement.default_sets, reps: swap.movement.default_reps,
-        tempo: null, load_pct: null,
-        cns_cost: swap.movement.cns_cost, cns_clamped: false,
-        substituted_from_slug: swap.substitutedFrom ?? null,
-        substitution_reason: swap.reason ?? null,
-        why_payload: {
-          phase: phaseRes.phase, phase_display: phaseRes.displayName,
-          why: `Conditioning targets the hardest part of in-season: sitting between innings and re-firing. ${swap.movement.why_prescribed}`,
-          cue: swap.movement.cue, reductions,
-        },
-      });
-    }
-
-    // 6) Cross-sport — append per cadence (daily in-season, daily post-practice OS)
+    // -------- Cross-sport (its own slot, appended) --------
     const cross = lib.find((m) => m.category === "cross_sport" && eligible(m));
-    if (cross) {
-      rxs.push({
-        slot: "cross_sport", sequence_order: seq++,
-        movement_slug: cross.slug, movement_name: cross.name,
-        sets: 1, reps: 1, tempo: null, load_pct: null,
-        cns_cost: cross.cns_cost, cns_clamped: false,
-        substituted_from_slug: null, substitution_reason: null,
-        why_payload: {
-          phase: phaseRes.phase, phase_display: phaseRes.displayName,
-          why: `Cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns while training the same energy systems.`,
-          cue: cross.cue,
-        },
-      });
+    if (cross && !isInSeason) {
+      push("cross_sport", "cross_sport", cross, { sets: 1, reps: 1 }, `Cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns.`);
     }
 
-    // -------- Persist (idempotent: delete + insert for this user/date) --------
+    // -------- Persist --------
     await admin.from("wk_prescriptions").delete().eq("user_id", user.id).eq("plan_date", planDate);
-    const rows = rxs.map((r) => ({
-      user_id: user.id, plan_date: planDate, phase: phaseRes.phase, ...r,
-    }));
+    const rows = rxs.map((r) => ({ user_id: user.id, plan_date: planDate, phase: phaseRes.phase, ...r }));
     if (rows.length) {
       const { error: insErr } = await admin.from("wk_prescriptions").insert(rows);
       if (insErr) throw insErr;
     }
 
-    // Persist CNS ledger
     await admin.from("wk_cns_ledger").upsert({
       user_id: user.id, ledger_date: planDate,
       units_spent: cnsUsed, units_cap: cnsCap,
-      breakdown: { lift: 1, speed: rxs.filter((r) => r.slot === "speed").length, bat_speed: rxs.filter((r) => r.slot === "bat_speed").length },
+      breakdown: {
+        lift: rxs.filter((r) => r.slot === "lift").length,
+        speed: rxs.filter((r) => r.slot === "speed").length,
+        bat_speed: rxs.filter((r) => r.slot === "bat_speed").length,
+        conditioning: rxs.filter((r) => r.slot === "conditioning").length,
+      },
     }, { onConflict: "user_id,ledger_date" });
 
-    console.info("[wk-generate-daily] ok", {
-      user_id: user.id,
-      plan_date: planDate,
-      phase: phaseRes.phase,
-      cns_used: cnsUsed,
-      cns_cap: cnsCap,
-      blocks_n: rows.length,
-      had_ack: !!recentAck,
-      reductions_n: reductions.length,
+    console.info("[wk-generate-daily] ok v2", {
+      user_id: user.id, plan_date: planDate, phase: phaseRes.phase,
+      cns_used: cnsUsed, cns_cap: cnsCap, blocks_n: rows.length,
     });
     return json({
       phase: phaseRes.phase,
@@ -379,28 +382,35 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function conditioningForPosition(lib: MovementRow[], position: string | null) {
-  if (!position) return lib.find((m) => m.slug === "bases_1st_3rd");
-  const p = position.toLowerCase();
-  if (p.includes("catch")) return lib.find((m) => m.slug === "catcher_up_downs");
-  if (p.includes("of") || p.includes("outfield")) return lib.find((m) => m.slug === "of_read_and_go");
-  if (p.includes("if") || p.includes("infield") || p.includes("ss") || p.includes("2b")) return lib.find((m) => m.slug === "if_lateral_repeat");
-  if (p.includes("pitch")) return lib.find((m) => m.slug === "pitcher_field_and_cover");
-  return lib.find((m) => m.slug === "bases_1st_3rd");
+function conditioningForPosition(
+  lib: MovementRow[],
+  position: string | null,
+  eligible: (m: MovementRow | undefined | null) => m is MovementRow,
+): MovementRow | undefined {
+  const pos = (position ?? "").toLowerCase();
+  const findEligible = (slug: string) => {
+    const m = lib.find((x) => x.slug === slug);
+    return eligible(m) ? m : undefined;
+  };
+  if (pos.includes("catch")) return findEligible("catcher_up_downs");
+  if (pos.includes("pitch")) return findEligible("pitcher_field_and_cover");
+  if (pos.includes("of") || pos.includes("outfield")) return findEligible("of_read_and_go");
+  if (pos === "ss" || pos === "2b" || pos.includes("mid") || pos.includes("infield")) return findEligible("mif_turn_and_fire");
+  if (pos.includes("if")) return findEligible("if_lateral_repeat");
+  return findEligible("bases_1st_3rd");
 }
 
-function clamp(n: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, n)); }
-function todayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
-function json(b: unknown, status = 200) { return new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
 
-Deno.serve(async (req) => {
-  const hb = startHeartbeat("wk-generate-daily", {});
-  try {
-    const res = await handler(req);
-    await hb.success({ status: res.status });
-    return res;
-  } catch (e) {
-    await hb.fail(e as Error);
-    throw e;
-  }
-});
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}
+
+Deno.serve(handler);
