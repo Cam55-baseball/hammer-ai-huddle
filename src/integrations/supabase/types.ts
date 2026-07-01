@@ -13586,7 +13586,10 @@ export type Database = {
           cross_sport_substitution_completeness: number | null
           cross_sport_template_id: string | null
           cross_sport_validation_status: string | null
+          determinism_seed: string | null
+          determinism_trace: Json | null
           duplicate_count: number
+          engine_execution_order: string[] | null
           errors: Json
           exercise_count: number
           exercise_governance_version: string | null
@@ -13594,6 +13597,8 @@ export type Database = {
           generation_id: string
           generation_ms: number | null
           generator_version: string
+          global_validator_status: string | null
+          governance_catalog_hash: string | null
           id: string
           legality_profile_id: string | null
           lift_category_coverage: Json | null
@@ -13616,6 +13621,8 @@ export type Database = {
           resolved_day_type: string | null
           resolved_season_phase: string | null
           season_phase: string | null
+          snapshot_hash: string | null
+          snapshot_integrity_status: string | null
           speed_category_coverage: Json | null
           speed_pap_score: number | null
           speed_substitution_completeness: number | null
@@ -13625,6 +13632,7 @@ export type Database = {
           user_id: string
           validation_status: string
           warnings: Json
+          why_v2_completeness_score: number | null
         }
         Insert: {
           adaptation?: string | null
@@ -13655,7 +13663,10 @@ export type Database = {
           cross_sport_substitution_completeness?: number | null
           cross_sport_template_id?: string | null
           cross_sport_validation_status?: string | null
+          determinism_seed?: string | null
+          determinism_trace?: Json | null
           duplicate_count?: number
+          engine_execution_order?: string[] | null
           errors?: Json
           exercise_count?: number
           exercise_governance_version?: string | null
@@ -13663,6 +13674,8 @@ export type Database = {
           generation_id?: string
           generation_ms?: number | null
           generator_version: string
+          global_validator_status?: string | null
+          governance_catalog_hash?: string | null
           id?: string
           legality_profile_id?: string | null
           lift_category_coverage?: Json | null
@@ -13685,6 +13698,8 @@ export type Database = {
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
+          snapshot_hash?: string | null
+          snapshot_integrity_status?: string | null
           speed_category_coverage?: Json | null
           speed_pap_score?: number | null
           speed_substitution_completeness?: number | null
@@ -13694,6 +13709,7 @@ export type Database = {
           user_id: string
           validation_status: string
           warnings?: Json
+          why_v2_completeness_score?: number | null
         }
         Update: {
           adaptation?: string | null
@@ -13724,7 +13740,10 @@ export type Database = {
           cross_sport_substitution_completeness?: number | null
           cross_sport_template_id?: string | null
           cross_sport_validation_status?: string | null
+          determinism_seed?: string | null
+          determinism_trace?: Json | null
           duplicate_count?: number
+          engine_execution_order?: string[] | null
           errors?: Json
           exercise_count?: number
           exercise_governance_version?: string | null
@@ -13732,6 +13751,8 @@ export type Database = {
           generation_id?: string
           generation_ms?: number | null
           generator_version?: string
+          global_validator_status?: string | null
+          governance_catalog_hash?: string | null
           id?: string
           legality_profile_id?: string | null
           lift_category_coverage?: Json | null
@@ -13754,6 +13775,8 @@ export type Database = {
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
+          snapshot_hash?: string | null
+          snapshot_integrity_status?: string | null
           speed_category_coverage?: Json | null
           speed_pap_score?: number | null
           speed_substitution_completeness?: number | null
@@ -13763,6 +13786,7 @@ export type Database = {
           user_id?: string
           validation_status?: string
           warnings?: Json
+          why_v2_completeness_score?: number | null
         }
         Relationships: []
       }
