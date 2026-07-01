@@ -1,8 +1,11 @@
 /**
  * wk-dedupe-check — audits the last 30 days of wk_prescriptions and reports:
- *   (a) compound movements repeated within 72h for the same user (no override)
- *   (b) OS-only / eccentric-dominant movements emitted in in/pre/post season
+ *   (a) exact movement/name duplicates inside a single workout
+ *   (b) compound movements repeated within 72h for the same user (no override)
+ *   (c) OS-only / eccentric-dominant movements emitted in in/pre/post season
  *       without a matching wk_movement_overrides row
+ *   (d) non-game-day lifts missing the required full-body roles
+ *   (e) cross-sport work placed on the back end outside the offseason
  *
  * Report-only. Non-zero exit on violations so it can gate CI.
  *
@@ -40,7 +43,7 @@ const sinceStr = since.toISOString().slice(0, 10);
 
 const { data: rows, error } = await supabase
   .from("wk_prescriptions")
-  .select("user_id, plan_date, movement_slug, phase, slot, why_payload")
+  .select("user_id, plan_date, movement_slug, movement_name, phase, slot, sets, reps, sequence_order, sequence_role, why_payload")
   .gte("plan_date", sinceStr)
   .order("user_id", { ascending: true })
   .order("plan_date", { ascending: true });
@@ -57,7 +60,32 @@ const overrideKey = (uid: string, slug: string, d: string) => `${uid}::${slug}::
 const overrideSet = new Set((overrides ?? []).map((o: any) => overrideKey(o.user_id, o.movement_slug, o.ack_date)));
 
 const dupes: string[] = [];
+const sameDayDupes: string[] = [];
 const inseasonEcc: string[] = [];
+const missingFullBody: string[] = [];
+const misplacedCrossSport: string[] = [];
+
+const REQUIRED_FULL_BODY_ROLES = [
+  "arm_care",
+  "trunk_primer",
+  "compound_lower",
+  "unilateral_lower",
+  "upper_push",
+  "upper_pull",
+];
+
+function normalizeName(name: string | null | undefined): string {
+  return String(name ?? "")
+    .toLowerCase()
+    .replace(/[—–-].*$/g, "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function isOffseason(phase: string | null | undefined): boolean {
+  return String(phase ?? "").startsWith("os_");
+}
 
 // Group by user
 const byUser = new Map<string, any[]>();
@@ -68,6 +96,46 @@ for (const r of rows ?? []) {
 }
 
 for (const [uid, list] of byUser) {
+  const byDay = new Map<string, any[]>();
+  for (const r of list) {
+    const dayRows = byDay.get(r.plan_date) ?? [];
+    dayRows.push(r);
+    byDay.set(r.plan_date, dayRows);
+  }
+
+  for (const [day, dayRows] of byDay) {
+    const seenExact = new Map<string, any>();
+    for (const r of dayRows) {
+      const exactKey = `${r.movement_slug}::${normalizeName(r.movement_name)}::${r.sets ?? ""}x${r.reps ?? ""}`;
+      const prior = seenExact.get(exactKey);
+      if (prior) {
+        sameDayDupes.push(`${uid} — ${day}: duplicate ${r.movement_name ?? r.movement_slug} (${r.sets ?? "?"}x${r.reps ?? "?"})`);
+      } else {
+        seenExact.set(exactKey, r);
+      }
+    }
+
+    const gameDay = dayRows.some((r) => r.why_payload?.game_day === true);
+    const liftRows = dayRows.filter((r) => r.slot === "lift");
+    if (!gameDay && liftRows.length > 0) {
+      const roles = new Set(liftRows.map((r) => r.sequence_role).filter(Boolean));
+      const missing = REQUIRED_FULL_BODY_ROLES.filter((role) => !roles.has(role));
+      if (missing.length) {
+        missingFullBody.push(`${uid} — ${day}: missing ${missing.join(", ")}`);
+      }
+    }
+
+    for (const r of dayRows.filter((row) => row.slot === "cross_sport")) {
+      const placement = r.why_payload?.placement ?? null;
+      if (!isOffseason(r.phase) && placement !== "early_activation") {
+        misplacedCrossSport.push(`${uid} — ${day}: ${r.movement_slug} phase=${r.phase} placement=${placement ?? "missing"}`);
+      }
+      if (placement === "early_activation" && Number(r.sequence_order ?? 999) > 1) {
+        misplacedCrossSport.push(`${uid} — ${day}: early activation sequence_order=${r.sequence_order}, expected at the front`);
+      }
+    }
+  }
+
   // (a) 72h compound repeat check — compound slot only
   const lifts = list.filter((r) => r.slot === "lift");
   for (let i = 0; i < lifts.length; i++) {
@@ -93,8 +161,16 @@ for (const [uid, list] of byUser) {
 }
 
 console.log(`[wk-dedupe-check] scanned ${rows?.length ?? 0} prescriptions over last 30 days`);
-console.log(`  duplicate compounds within 72h: ${dupes.length}`);
-console.log(`  OS-only in-season violations:   ${inseasonEcc.length}`);
+console.log(`  duplicate movements same workout: ${sameDayDupes.length}`);
+console.log(`  duplicate compounds within 72h:   ${dupes.length}`);
+console.log(`  OS-only in-season violations:     ${inseasonEcc.length}`);
+console.log(`  missing full-body roles:          ${missingFullBody.length}`);
+console.log(`  misplaced cross-sport:            ${misplacedCrossSport.length}`);
+if (sameDayDupes.length) {
+  console.log("\n-- Same-day duplicate movements --");
+  sameDayDupes.slice(0, 25).forEach((d) => console.log(`  ${d}`));
+  if (sameDayDupes.length > 25) console.log(`  … +${sameDayDupes.length - 25} more`);
+}
 if (dupes.length) {
   console.log("\n-- 72h duplicate compounds --");
   dupes.slice(0, 25).forEach((d) => console.log(`  ${d}`));
@@ -105,8 +181,18 @@ if (inseasonEcc.length) {
   inseasonEcc.slice(0, 25).forEach((d) => console.log(`  ${d}`));
   if (inseasonEcc.length > 25) console.log(`  … +${inseasonEcc.length - 25} more`);
 }
+if (missingFullBody.length) {
+  console.log("\n-- Missing full-body roles --");
+  missingFullBody.slice(0, 25).forEach((d) => console.log(`  ${d}`));
+  if (missingFullBody.length > 25) console.log(`  … +${missingFullBody.length - 25} more`);
+}
+if (misplacedCrossSport.length) {
+  console.log("\n-- Misplaced cross-sport work --");
+  misplacedCrossSport.slice(0, 25).forEach((d) => console.log(`  ${d}`));
+  if (misplacedCrossSport.length > 25) console.log(`  … +${misplacedCrossSport.length - 25} more`);
+}
 
-if (dupes.length || inseasonEcc.length) {
+if (sameDayDupes.length || dupes.length || inseasonEcc.length || missingFullBody.length || misplacedCrossSport.length) {
   console.error("[wk-dedupe-check] VIOLATIONS DETECTED — exiting 1");
   process.exit(1);
 }
