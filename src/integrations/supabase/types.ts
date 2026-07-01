@@ -14536,6 +14536,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      wic_adaptations_compatible: {
+        Args: { day_adaptation: string; movement_adaptation: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "coach" | "player" | "recruiter" | "scout"
