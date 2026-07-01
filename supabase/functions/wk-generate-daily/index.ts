@@ -355,6 +355,16 @@ const handler = async (req: Request): Promise<Response> => {
       breakdown: { lift: 1, speed: rxs.filter((r) => r.slot === "speed").length, bat_speed: rxs.filter((r) => r.slot === "bat_speed").length },
     }, { onConflict: "user_id,ledger_date" });
 
+    console.info("[wk-generate-daily] ok", {
+      user_id: user.id,
+      plan_date: planDate,
+      phase: phaseRes.phase,
+      cns_used: cnsUsed,
+      cns_cap: cnsCap,
+      blocks_n: rows.length,
+      had_ack: !!recentAck,
+      reductions_n: reductions.length,
+    });
     return json({
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
