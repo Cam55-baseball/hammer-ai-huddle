@@ -1,44 +1,58 @@
-## Status of the Elite Lifts Rebuild
+## Plan: Elite Lift Correction
 
-**Complete:**
-- DB taxonomy (`family`, `intensity_class`, `phase_allow`, `is_eccentric_dominant`, `source_philosophy`) on `wk_movement_catalog`
-- `wk_movement_overrides` table with owner-only RLS + grants
-- `rationale` column on `wk_prescriptions`
-- `wk-generate-daily` rewritten: session dedupe, 72h non-repeat memory, phase-allow enforcement, override-honoring, rationale writes
-- `WkPrescriptionCard` renders rationale + source philosophy
-- `useWkDailyPrescriptions.overrideMovement()` helper exists
-- `scripts/check-no-inseason-eccentric.ts` drift guard exists
+### 1. Enforce a true full-body lift template
+- Update the daily workout generator so every non-game-day lift must include these required buckets before saving:
+  - Arm care / shoulder prep
+  - Trunk primer
+  - Lower compound or lower strength primer
+  - Unilateral lower
+  - Upper push
+  - Upper pull
+  - Carry or anti-rotation when phase-legal
+- Add a validation pass that rejects “all lower-body” output and swaps in missing upper/trunk categories before rows are inserted.
 
-**Still missing — this plan closes them:**
+### 2. Make in-season prescriptions actually in-season
+- Tighten in-season rules so the generator uses low-volume, high-quality maintenance/primer work only.
+- Block offseason-only eccentric and high-soreness movements from in-season unless an explicit one-session override exists.
+- Keep in-season lift prescriptions before practice/game but after speed/bat-speed/crossover activation.
 
-### 1. Wire "Request Override" UI
-`overrideMovement` is exported from the hook but no button calls it. When a card was blocked in `wk-generate-daily` it never renders (it was filtered out), so the athlete has no way to request an unlock. Add a small "Blocked movements today" affordance in `WkLiftsCard` (and `WkConditioningCard`) that:
-- Fetches movements whose `phase_allow` excludes the current phase and are in-family for today's slot
-- Shows name + why-blocked chip ("OS-only eccentric — blocked in-season")
-- "Request 1-session override" button opens a reason dialog → calls `overrideMovement(slug, reason)` → plan regenerates and the movement appears with a rationale suffix "Override: {reason}"
+### 3. Eliminate same-workout duplicates completely
+- Expand dedupe from slug-only to:
+  - movement slug
+  - movement display name
+  - movement family/pattern
+  - identical sets/reps/tempo duplicates in the same role group
+- Add a final same-session duplicate audit before persistence so duplicate rows are dropped or replaced, not shown to users.
 
-### 2. Surface override provenance in the card
-When a prescription came from an override, `WkPrescriptionCard` should show a distinct badge ("Override — 1 session") pulled from a new `why_payload.override` field written by the edge function.
+### 4. Fix game-day ordering and crossover placement
+- On game days, suppress regular lifts and conditioning.
+- Generate/show a short sports crossover activation at the beginning of the day after warm-up, before game/practice.
+- Prevent cross-sport work from appearing at the back end on game days or in-season.
+- Allow back-end cross-sport only in offseason, where it belongs.
 
-### 3. Enforce sequence in the UI
-The four cards exist but nothing pins their order. Add a fixed render order in the Hammer Daily Plan container: **Warm-up → Speed/Bat-Speed → Lifts → Practice/Game → Conditioning → Sport Block** (in-season demotes Sport Block to a short AM primer). Add a visual "Do in this order" rail so athletes cannot mistake sequencing.
+### 5. Update UI grouping and labels
+- Update Hammer Today Plan order rail to reflect phase/game-day reality:
+  - Normal/in-season training day: Warm-up → Speed/Bat-Speed → Lifts → Practice/Game → Conditioning
+  - Game day: Warm-up → Short Crossover Activation → Game
+  - Offseason: Warm-up → Speed/Bat-Speed → Lifts → Conditioning → Cross-Sport
+- Move any `cross_sport` rows out of the Conditioning card when they are intended as early activation.
 
-### 4. Session-dedupe test + drift-guard in CI
-- Add `scripts/audits/wk-dedupe-check.ts` that generates 7 sequential days for a synthetic user and asserts (a) no compound slug repeats within 72h, (b) no OS-only slug is emitted with `phase in (in_season, pre_season, post_season)` without an override row.
-- Wire both `check-no-inseason-eccentric.ts` and the new dedupe check into a single `bun run audit:wk` npm script so we can invoke it on demand.
+### 6. Add guardrails so this does not drift again
+- Extend the workout audit script to fail if:
+  - same-day duplicate movement slug/name appears
+  - a lift day lacks upper push or upper pull without a game-day/post-season reason
+  - in-season includes offseason-only eccentric work without override
+  - game-day cross-sport appears after practice/game instead of early activation
 
-### 5. Backfill audit for existing prescriptions
-Run a one-time read-only audit against `wk_prescriptions` for the last 30 days and report any historical violations (in-season eccentric, same-day dupes). Report-only — no destructive backfill.
+### Technical files to update
+- `supabase/functions/wk-generate-daily/index.ts`
+- `src/hooks/useWkDailyPrescriptions.ts`
+- `src/components/hammer/WkSpeedBatCard.tsx`
+- `src/components/hammer/WkConditioningCard.tsx`
+- `src/components/hammer/HammerDailyPlan.tsx`
+- `scripts/audits/wk-dedupe-check.ts`
 
-### 6. Confirm rationale is user-legible
-Current rationale joins with " • " and includes internal terms ("Class: max_effort_compound"). Rewrite the assembly in `wk-generate-daily` to produce a plain-English sentence: *"Chosen because you're in Off-Season, 2y training age, and this is a max-effort compound from Westside doctrine — you haven't done a heavy squat pattern in 4 days."*
-
-### Technical notes
-- No new tables required.
-- Add `why_payload.override: { reason, actor_role, ack_date }` in the edge function when an override is consumed.
-- The dedupe audit script uses the service-role client already available to `scripts/audits/*`.
-- UI additions stay inside `src/components/hammer/`; no routing changes.
-
-### Out of scope
-- Coach-side override approval flow (single-session self-override is sufficient for now).
-- Any change to speed/bat-speed selection (already elite-tagged).
+### Validation
+- Run the WK audit script after changes.
+- Verify one in-season training day returns full-body, no duplicates.
+- Verify one game day returns only short early activation plus game/practice flow, with regular lifts suppressed.
