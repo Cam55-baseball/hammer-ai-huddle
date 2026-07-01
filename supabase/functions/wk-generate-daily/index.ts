@@ -90,6 +90,7 @@ interface Prescription {
   substituted_from_slug: string | null;
   substitution_reason: string | null;
   why_payload: Record<string, unknown>;
+  rationale?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
