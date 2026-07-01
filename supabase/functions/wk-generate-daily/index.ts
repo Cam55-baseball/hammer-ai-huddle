@@ -28,6 +28,8 @@ import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
 import { sprintSlugs } from "../_shared/wic/engines/sprint.ts";
 import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
+// Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
+import { certifyLift } from "../_shared/wic/lift/sessionBuilder.ts";
 import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
