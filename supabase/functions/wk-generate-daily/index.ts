@@ -574,4 +574,77 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[—–-].*$/g, "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function dedupePrescriptions(rxs: Prescription[]): Prescription[] {
+  const seenSlug = new Set<string>();
+  const seenName = new Set<string>();
+  return rxs.filter((rx) => {
+    const nameKey = normalizeName(rx.movement_name);
+    if (seenSlug.has(rx.movement_slug) || seenName.has(nameKey)) return false;
+    seenSlug.add(rx.movement_slug);
+    seenName.add(nameKey);
+    return true;
+  });
+}
+
+function ensureFullBodyLift(
+  rxs: Prescription[],
+  pickFirst: (slugs: string[]) => MovementRow | undefined,
+  push: (
+    slot: Slot,
+    role: SequenceRole,
+    m: MovementRow,
+    overrides?: Partial<Prescription>,
+    why?: string,
+    meta?: Record<string, unknown>,
+  ) => boolean,
+  isInSeason: boolean,
+) {
+  const liftRoles = new Set(rxs.filter((r) => r.slot === "lift").map((r) => r.sequence_role));
+
+  if (!liftRoles.has("arm_care")) {
+    const m = pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
+    if (m) push("lift", "arm_care", m, { sets: 1, reps: 1 }, "Full-body guardrail: arm care is mandatory, not optional.");
+  }
+
+  if (!liftRoles.has("trunk_primer")) {
+    const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl"]);
+    if (m) push("lift", "trunk_primer", m, { sets: 1, reps: isInSeason ? 6 : 10 }, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
+  }
+
+  if (!liftRoles.has("compound_lower")) {
+    const m = pickFirst(isInSeason
+      ? ["hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"]
+      : ["back_squat_double_ecc", "front_squat_double_ecc", "trap_bar_dl_double_ecc", "hip_thrust_concentric", "back_squat_concentric"]);
+    if (m) push("lift", "compound_lower", m, { sets: isInSeason ? 2 : 3, reps: 3 }, "Full-body guardrail: one legal lower-body compound anchors the session.");
+  }
+
+  if (!liftRoles.has("unilateral_lower")) {
+    const m = pickFirst(isInSeason ? ["lateral_db_step_up", "sl_deadlift_fat_grips"] : ["lateral_db_step_up", "kot_lunge", "sl_deadlift_fat_grips"]);
+    if (m) push("lift", "unilateral_lower", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
+  }
+
+  if (!liftRoles.has("upper_push")) {
+    const m = pickFirst(isInSeason
+      ? ["push_press_concentric", "bench_press_concentric", "sa_db_chest_press", "landmine_row_to_press"]
+      : ["sa_db_chest_press", "landmine_row_to_press", "bench_press_concentric", "push_press_concentric"]);
+    if (m) push("lift", "upper_push", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
+  }
+
+  if (!liftRoles.has("upper_pull")) {
+    const m = pickFirst(isInSeason
+      ? ["sa_standing_cable_row", "weighted_pullup_concentric", "renegade_row"]
+      : ["weighted_pullup_full", "sa_standing_cable_row", "weighted_pullup_concentric", "renegade_row"]);
+    if (m) push("lift", "upper_pull", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
+  }
+}
+
 Deno.serve(handler);
