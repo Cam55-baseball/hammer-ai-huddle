@@ -180,8 +180,18 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     );
   }, [user, planDate, sideHit, sideThrow]);
 
+  // Phase 2 Fix 3 — stable generate identity + in-flight lock.
+  // Using a ref instead of state removes `generating` from the callback deps,
+  // so the identity of `generate` no longer flips every time we start/finish.
+  // Any second concurrent call while the first is in-flight is a no-op.
+  const inFlightRef = useRef(false);
   const generate = useCallback(async () => {
-    if (!user?.id || generating) return;
+    if (!user?.id) return;
+    if (inFlightRef.current) {
+      console.debug("[wk-generate-daily] skipped — already in flight");
+      return;
+    }
+    inFlightRef.current = true;
     setGenerating(true);
     setFailed(false);
     const started = Date.now();
@@ -196,7 +206,6 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         } catch (e) {
           lastErr = e;
           if (attempt === 0) {
-            // Backoff before the single retry
             await new Promise((r) => setTimeout(r, 1500));
           }
         }
@@ -209,9 +218,10 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       setFailed(true);
       toast.error("Elite plan couldn't build. Tap Regenerate.");
     } finally {
+      inFlightRef.current = false;
       setGenerating(false);
     }
-  }, [user?.id, planDate, qc, generating, invokeOnce]);
+  }, [user?.id, planDate, qc, invokeOnce]);
 
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {

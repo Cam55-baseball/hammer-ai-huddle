@@ -22,7 +22,7 @@ import {
 import { AlertTriangle, Dumbbell, Loader2, RefreshCw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
+import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from "@/hooks/useBlockedLiftMovements";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
@@ -31,9 +31,10 @@ import { toast } from "sonner";
 export function WkLiftsCard() {
   const { user } = useAuth();
   const gp = useGpSignal();
+  // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
     grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement,
-  } = useWkDailyPrescriptions();
+  } = useHammersToday();
   const blocked = useBlockedLiftMovements(phaseKey);
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);

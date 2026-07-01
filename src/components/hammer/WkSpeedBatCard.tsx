@@ -11,14 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, RefreshCw, Zap } from "lucide-react";
-import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
+import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 
 export function WkSpeedBatCard() {
   const gp = useGpSignal();
-  const { grouped, phaseDisplay, generate, generating, isLoading, failed, retry } =
-    useWkDailyPrescriptions();
+  // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
+  const { grouped, phaseDisplay, generate, generating, isLoading, failed, retry } = useHammersToday();
   const items = grouped.speedBat;
 
   if (gp.gameToday) {
