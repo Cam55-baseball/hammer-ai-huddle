@@ -35,6 +35,22 @@ import {
   resolveTrainingContext,
   type TrainingContext,
 } from "../_shared/wic/trainingContext.ts";
+// Phases 5–7 — Athlete / Personalization / Training-Age Contexts.
+import {
+  ATHLETE_CONTEXT_VERSION,
+  resolveAthleteContext,
+  type AthleteContext,
+} from "../_shared/wic/athleteContext.ts";
+import {
+  PERSONALIZATION_VERSION,
+  resolvePersonalizationContext,
+  type PersonalizationContext,
+} from "../_shared/wic/personalizationContext.ts";
+import {
+  TRAINING_AGE_VERSION,
+  resolveTrainingAge,
+  type TrainingAgeContext,
+} from "../_shared/wic/trainingAge.ts";
 
 interface MovementRow {
   slug: string;
@@ -155,7 +171,19 @@ const handler = async (req: Request): Promise<Response> => {
     const recentAck = body.recent_ack ?? null;
 
     // -------- Load athlete context --------
-    const [{ data: profile }, { data: ctx }, { data: injuries }, { data: dailyLog }, { data: gamesToday }, { data: practicesToday }] = await Promise.all([
+    const [
+      { data: profile },
+      { data: ctx },
+      { data: injuries },
+      { data: dailyLog },
+      { data: gamesToday },
+      { data: practicesToday },
+      { data: sidePref },
+      { data: equipmentCtx },
+      { data: trainingPrefs },
+      { data: latestWeight },
+      { data: bodyGoals },
+    ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
@@ -166,12 +194,16 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("game_date", planDate)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
         .limit(1),
-      // Phase 2 — wire real practice-day signal (was hardcoded false).
       admin.from("scheduled_practice_sessions")
         .select("id")
         .eq("user_id", user.id)
         .eq("session_date", planDate)
         .limit(1),
+      admin.from("athlete_side_preferences").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("weight_entries").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }).limit(1).maybeSingle(),
+      admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
     ]);
 
     const p: any = profile ?? {};
@@ -191,20 +223,47 @@ const handler = async (req: Request): Promise<Response> => {
     const isPostSeason = phaseRes.phase === "post_season";
 
     // -------- Phase 4: Canonical Training Context --------
-    // Single deterministic resolver. Every downstream engine and every
-    // prescription row consumes this exact object. No engine may override.
     const trainingContext: TrainingContext = resolveTrainingContext({
       planDate,
       legacyPhase: phaseRes.phase,
       isGameDay,
       isPracticeDay,
-      // Future phases can plug in tournament/travel/off/recovery signals.
       isTournamentDay: false,
       isTravelDay: false,
       isRecoveryDay: false,
       isOffDay: false,
       isDeloadDay: false,
-      generationId: null, // stamped post-persist by row id if needed
+      generationId: null,
+    });
+
+    // -------- Phase 7: Training Age Context --------
+    const trainingAgeContext: TrainingAgeContext = resolveTrainingAge({
+      yearsLifting: trainingAgeYears,
+      isProProspect,
+      competitiveLevel: p.competitive_level ?? p.level ?? null,
+    });
+
+    // -------- Phase 5: Athlete Context --------
+    const athleteContext: AthleteContext = resolveAthleteContext({
+      userId: user.id,
+      profile,
+      athleteContext: ctx,
+      sidePreference: sidePref,
+      equipmentContext: equipmentCtx,
+      trainingPreferences: trainingPrefs,
+      latestWeight,
+      bodyGoals: bodyGoals ?? [],
+      dailyLog,
+      injuries: injuries ?? [],
+      gamesToday: gamesToday ?? [],
+      practicesToday: practicesToday ?? [],
+      trainingAgeCtx: trainingAgeContext,
+    });
+
+    // -------- Phase 6: Personalization Context --------
+    const personalizationContext: PersonalizationContext = resolvePersonalizationContext({
+      athleteContext,
+      trainingAgeContext,
     });
 
     // -------- Load phase block + catalog --------
@@ -465,6 +524,10 @@ const handler = async (req: Request): Promise<Response> => {
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
           // Phase 4 — every card reads the same TrainingContext from here.
           training_context: trainingContext,
+          // Phases 5–7 — Athlete / Personalization / Training Age contexts.
+          athlete_context: athleteContext,
+          personalization_context: personalizationContext,
+          training_age_context: trainingAgeContext,
           ...meta,
         },
         rationale,
@@ -716,6 +779,64 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Phases 5–7 — Athlete / Personalization / Training-Age validation.
+    // Every prescription must reference exactly one identical instance of each.
+    if (finalRxs.length > 0) {
+      const seenAcVer = new Set<string>();
+      const seenPersVer = new Set<string>();
+      const seenTaClass = new Set<string>();
+      const seenHand = new Set<string>();
+      const seenPos = new Set<string>();
+      const seenGoalCount = new Set<number>();
+      let acMissingCount = 0;
+      let taMissingCount = 0;
+      for (const r of finalRxs) {
+        const wp: any = (r as any)?.why_payload ?? {};
+        const ac = wp.athlete_context;
+        const pers = wp.personalization_context;
+        const ta = wp.training_age_context;
+        if (!ac) { acMissingCount++; }
+        else {
+          if (ac.athlete_context_version) seenAcVer.add(ac.athlete_context_version);
+          if (ac.identity?.throwing_side) seenHand.add(String(ac.identity.throwing_side));
+          if (ac.identity?.primary_position) seenPos.add(String(ac.identity.primary_position));
+          if (Array.isArray(ac.goals)) seenGoalCount.add(ac.goals.length);
+        }
+        if (pers?.personalization_version) seenPersVer.add(pers.personalization_version);
+        if (!ta || !ta.classification) taMissingCount++;
+        else seenTaClass.add(String(ta.classification));
+      }
+      if (acMissingCount > 0) {
+        validatorReport.issues.push({ code: "athlete_context_missing", severity: "fatal", message: `athlete_context missing on ${acMissingCount} row(s).` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenAcVer.size > 1) {
+        validatorReport.issues.push({ code: "multiple_athlete_contexts", severity: "fatal", message: `Multiple athlete_context versions detected: ${[...seenAcVer].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenPersVer.size > 1) {
+        validatorReport.issues.push({ code: "multiple_personalization_contexts", severity: "fatal", message: `Multiple personalization_context versions detected: ${[...seenPersVer].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (taMissingCount > 0 || seenTaClass.size > 1) {
+        validatorReport.issues.push({ code: "training_age_unresolved", severity: "fatal", message: `training_age not uniformly resolved (missing=${taMissingCount}, distinct=${seenTaClass.size}).` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenGoalCount.size > 1) {
+        validatorReport.issues.push({ code: "goal_resolution_inconsistent", severity: "fatal", message: `Goal list length inconsistent across rows: ${[...seenGoalCount].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenHand.size > 1) {
+        validatorReport.issues.push({ code: "handedness_inconsistent", severity: "fatal", message: `Handedness inconsistent across rows: ${[...seenHand].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+      if (seenPos.size > 1) {
+        validatorReport.issues.push({ code: "position_inconsistent", severity: "fatal", message: `Primary position inconsistent across rows: ${[...seenPos].join(", ")}` });
+        (validatorReport as any).ok = false;
+      }
+    }
+
+
     const generationMs = Date.now() - generationStartedAt;
     const cardsProduced = {
       lift: finalRxs.filter((r) => r.slot === "lift").length,
@@ -756,6 +877,12 @@ const handler = async (req: Request): Promise<Response> => {
             recovery_profile_id: trainingContext.recovery_profile_id,
             adaptation_profile_id: trainingContext.adaptation_profile_id,
             context_validation_outcome: contextValidationOutcome,
+            // Phases 5–7 diagnostics
+            athlete_context_version: athleteContext.athlete_context_version,
+            personalization_version: personalizationContext.personalization_version,
+            training_age_version: trainingAgeContext.training_age_version,
+            missing_context_fields: athleteContext.missing_fields,
+            context_completeness_score: athleteContext.completeness_score,
           },
         });
       } catch (diagErr) {
@@ -821,6 +948,12 @@ const handler = async (req: Request): Promise<Response> => {
         recovery_profile_id: trainingContext.recovery_profile_id,
         adaptation_profile_id: trainingContext.adaptation_profile_id,
         context_validation_outcome: contextValidationOutcome,
+        // Phases 5–7 diagnostics
+        athlete_context_version: athleteContext.athlete_context_version,
+        personalization_version: personalizationContext.personalization_version,
+        training_age_version: trainingAgeContext.training_age_version,
+        missing_context_fields: athleteContext.missing_fields,
+        context_completeness_score: athleteContext.completeness_score,
       },
     });
     if (rpcErr) throw rpcErr;
@@ -852,6 +985,9 @@ const handler = async (req: Request): Promise<Response> => {
       diagnostics_id: diagId,
       generation_ms: generationMs,
       training_context: trainingContext,
+      athlete_context: athleteContext,
+      personalization_context: personalizationContext,
+      training_age_context: trainingAgeContext,
       prescriptions: rows,
     });
   } catch (e) {

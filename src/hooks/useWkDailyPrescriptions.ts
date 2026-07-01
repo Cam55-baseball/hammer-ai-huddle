@@ -20,6 +20,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 import type { TrainingContext } from "@/lib/wic/trainingContext";
+import type { AthleteContext } from "@/lib/wic/athleteContext";
+import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
+import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 
 const WK_GENERATOR_VERSION = "wic_v1";
 
@@ -75,6 +78,9 @@ export interface WkRx {
     source_philosophy?: string;
     override?: { reason: string | null; actor_role: string; expires_at: string } | null;
     training_context?: TrainingContext | null;
+    athlete_context?: AthleteContext | null;
+    personalization_context?: PersonalizationContext | null;
+    training_age_context?: TrainingAgeContext | null;
   };
   // WIC constitutional fields
   adaptation?: string | null;
@@ -413,6 +419,23 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     } as TrainingContext;
   }, [query.data, snapshotIdentity.generation_id]);
 
+  // Phases 5–7 — Athlete / Personalization / Training-Age contexts.
+  // Sourced from the first prescription's why_payload; generator is the single
+  // authority. Every card reads referentially-identical objects.
+  const athleteContext: AthleteContext | null = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    return (first?.why_payload?.athlete_context as AthleteContext | undefined) ?? null;
+  }, [query.data]);
+
+  const personalizationContext: PersonalizationContext | null = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    return (first?.why_payload?.personalization_context as PersonalizationContext | undefined) ?? null;
+  }, [query.data]);
+
+  const trainingAgeContext: TrainingAgeContext | null = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    return (first?.why_payload?.training_age_context as TrainingAgeContext | undefined) ?? null;
+  }, [query.data]);
 
   return {
     ...query,
@@ -429,5 +452,8 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     snapshotIdentity,
     dayKind,
     trainingContext,
+    athleteContext,
+    personalizationContext,
+    trainingAgeContext,
   };
 }

@@ -1,113 +1,134 @@
 
-# Phase 4 — Canonical Season Intelligence & Periodization Engine
+# Phases 5–7 — Athlete Context, Personalization, Training Age Engines
 
-Establishes one constitutional authority for training context. No engine may infer season, day type, legality, recovery, or adaptation independently — every card consumes the same resolved `trainingContext` from the snapshot.
+Additive constitutional overlay on Phase 4's `TrainingContext`. No workout philosophy, catalog, or UI rewrites — only immutable inputs every future engine will consume.
 
-**Guardrails honored:** No changes to exercise catalog, movement selection, lift/speed/bat-speed/conditioning/cross-sport programming, or coaching philosophy. This phase only defines and wires context.
+## Scope Boundaries (Do Not Touch)
 
----
+- Lift/Speed/Bat Speed/Conditioning/Cross Sport/Recovery generators
+- Movement catalog / exercise selection
+- Coaching philosophy
+- Card UI, ordering, or CardMeta layout
 
-## 1. Canonical Season Registry (new)
+## Phase 5 — Athlete Context Engine
 
-Create shared, dual-mirrored registry as the sole source of season truth.
+**New:** `src/lib/wic/athleteContext.ts` + server mirror `supabase/functions/_shared/wic/athleteContext.ts`
 
-- `src/lib/wic/seasonRegistry.ts` + `supabase/functions/_shared/wic/seasonRegistry.ts`
-- Enumerates all 12 canonical phases:
-  `os_q1`, `os_q2`, `os_q3`, `os_q4`, `transition`, `preseason`, `spring_training`, `regular_season`, `tournament_block`, `postseason`, `recovery_week`, `deload_week`
-- Each phase exposes: `displayLabel`, `constitutionalObjective`, `permittedEmphasis[]`, `restrictedEmphasis[]`, `recoveryPriority`, `defaultConditioningProfile`, `defaultPracticeRelationship`
-- `seasonDisplayLabel()` in `src/lib/wic/seasonDisplay.ts` is refactored to read from this registry (no duplicate mapping).
-- Existing `WkPhase` in `phaseQuarter.ts` and `SeasonPhase` in `seasonPhase.ts` remain — resolver output is mapped INTO the canonical phase enum via a single adapter (no logic rewrite).
+Immutable `AthleteContext` object with 8 sub-domains, each *wire existing data only* — no new calculations:
 
-## 2. Canonical Day Type Registry (new)
+1. **Identity** — athlete_id, sport (baseball/softball), throwing_side, hitting_side, primary_position, secondary_position, two_way (from `profiles`, `athlete_side_preferences`)
+2. **Development** — chronological_age, training_age (Phase 7), biological_stage (nullable), competitive_level, organizational_level (Youth/MS/HS/College/Pro) — from `profiles`, `league_classifications`, `athlete_professional_status`
+3. **Anthropometrics** — height, weight, body_composition, limb_proportions, dominant_side — from `profiles`, `weight_entries` (nullable when absent; never invented)
+4. **Environment** — equipment[], facility, indoor_outdoor, available_time_min, weather_dependency, substitution_capability — from `athlete_equipment_context`, `training_preferences`
+5. **Schedule** — game_today, practice_today, tournament, travel, bullpen, throwing_day, off_day, recovery_day — from existing `scheduleContext.ts` + `calendar_events`
+6. **Goals** — unified list from `athlete_body_goals` + category goals (speed/power/throwing/hitting/fielding) with ranks — read-only unifier
+7. **Readiness** — cns_load, soreness, fatigue, sleep, workload, compliance — from `wk_cns_ledger`, `wk_recovery_acks`, `athlete_daily_log`
+8. **Injury Status** — active_restrictions[], modified_movements[], return_to_play — from `user_injury_progress`, `athlete_context`
 
-`src/lib/wic/dayTypeRegistry.ts` + server mirror.
-- Enumerates: `game_day`, `practice_day`, `practice_plus_game`, `tournament_day`, `recovery_day`, `off_day`, `travel_day`, `deload_day`, `standard_training_day`
-- Each type declares: `displayLabel`, `permittedEmphasis[]`, `restrictedEmphasis[]`, `defaultOrderingHint`
+**Resolver:** `resolveAthleteContext(userId, date, supabase)` returns frozen object + `completeness_score` + `missing_fields[]`. Runs once per generation.
 
-## 3. Deterministic Context Resolution Pipeline (new)
+## Phase 6 — Personalization Engine
 
-`src/lib/wic/contextResolver.ts` + `supabase/functions/_shared/wic/contextResolver.ts`
+**New:** `src/lib/wic/personalizationContext.ts` + server mirror
 
-Single function `resolveTrainingContext(inputs) → TrainingContext` consuming:
-- today's date, athlete season settings (existing), calendar events, games, practices (existing `scheduled_practice_sessions`), tournaments, org schedule (if present), manual overrides, travel status, recovery state, readiness, previous workload
+Immutable `PersonalizationContext` capturing the *deterministic priority stack*:
 
-Deterministic — same inputs → same output. Resolves exactly one `seasonPhase` and one `dayType`. No engine calls this on its own; provider calls once.
-
-## 4. Recovery / Adaptation / Legality Profiles (new, wiring only)
-
-Three sibling registries — declared but not populated with new coaching logic:
-
-- `src/lib/wic/recoveryProfiles.ts` — one profile per seasonal phase: `id`, `cnsRecoveryProfile`, `tissueRecoveryProfile`, `schedulingPriority`
-- `src/lib/wic/adaptationProfiles.ts` — reuses existing `PrimaryAdaptation` enum from `constitution.ts`; maps phase → default adaptation menu
-- `src/lib/wic/legalityFramework.ts` — every movement category resolves to `Allowed | Restricted | Discouraged | Prohibited` given a `TrainingContext`. Wraps (does not replace) the existing `isMovementSeasonLegal` — that function becomes one input into the framework.
-
-Existing scattered legality checks (`isPhaseHardBlocked`, in-season eccentric guards) are refactored to call the framework; behavior preserved 1:1.
-
-## 5. TrainingContext Object Definition
-
-```ts
-interface TrainingContext {
-  seasonPhase: CanonicalSeasonPhase;
-  seasonDisplay: string;
-  dayType: CanonicalDayType;
-  recoveryProfileId: string;
-  adaptationProfileId: string;
-  legalityProfileId: string;
-  conditioningProfile: string;
-  practiceRelationship: 'none' | 'supplement' | 'replace' | 'prime';
-  contextVersion: string;   // e.g. "ctx_v1"
-  generationId: string;     // ties to snapshotIdentity
-}
+```
+Safety → Season → Schedule → Readiness → Injury → Training Age →
+Goals → Position → Equipment → Preferences → Variation
 ```
 
-## 6. Snapshot Wiring
+Fields:
+- `priorityStack: PersonalizationLayer[]` (ordered, frozen)
+- `variableRegistry: Record<VarName, { source, status: 'collected'|'stored'|'consumed'|'unused'|'unknown' }>` — eliminates hidden personalization
+- `substitutionFramework: { equipment, environment, injury, time, coach_override }` — **structure only**, populated by later phases
+- `version: string` (semver-pinned)
 
-- `HammersTodayProvider.tsx`: after generation, call `resolveTrainingContext` once and attach `trainingContext` to the snapshot.
-- `useWkDailyPrescriptions.ts`: expose `trainingContext` on the returned object (read-only for cards).
-- `useHammersToday()` consumers (`WkLiftsCard`, `WkSpeedCard`, `WkBatSpeedCard`, `WkConditioningCard`, `WkSportBlockCard`, `WkPrescriptionCard`, warmup surface) read `ctx.trainingContext` — no card resolves season/day itself.
-- `wk-generate-daily`: calls the shared server `resolveTrainingContext` first; every downstream engine receives it as a parameter. Engines are NOT rewritten — they simply accept and pass through the context.
+## Phase 7 — Training Age Engine
 
-## 7. Validator Extensions
+**New:** `src/lib/wic/trainingAge.ts` + server mirror
 
-`supabase/functions/_shared/wic/validator.ts` — add fatal checks:
-- exactly one resolved `seasonPhase`
-- exactly one resolved `dayType`
-- every persisted prescription row references the same `contextVersion` + `generationId`
-- no conflicting legality profiles across cards in the same snapshot
-- no conflicting recovery profiles
-- no conflicting adaptation profiles
-- publication rejected if `resolveTrainingContext` returns `unresolved`
+- `TrainingAge` enum: Beginner | Developing | Intermediate | Advanced | Elite | Professional
+- `resolveTrainingAge(profile, history)` — deterministic classifier (uses existing signals: months_training, session_count, competitive_level; no new philosophy)
+- `RecoveryWindowLookup: Record<TrainingAge, { minHours, deloadFreq }>` — placeholder table, values wired but not authoritative yet
+- `LoadTolerance` placeholder: `{ volume, intensity, frequency, eccentric, elastic, power }` — all `null` until later phases populate
 
-## 8. Diagnostics Extension (migration)
+## Snapshot Extension
 
-Extend `wk_generation_diagnostics` with columns:
-- `resolved_season_phase text`
-- `resolved_day_type text`
-- `context_version text`
-- `legality_profile_id text`
-- `recovery_profile_id text`
-- `adaptation_profile_id text`
-- `context_validation_outcome text`
+`HammersTodayProvider.tsx` snapshot gains three immutable fields:
+```ts
+{
+  trainingContext,      // Phase 4 (existing)
+  athleteContext,       // Phase 5 (new)
+  personalizationContext, // Phase 6 (new)
+  trainingAgeContext,   // Phase 7 (new)
+}
+```
+Every card reads from the same snapshot — no card resolves independently.
 
-Structural metadata only. Backfill nullable; new rows populated by generator.
+## Generator Integration
 
-## 9. Files touched
+`supabase/functions/wk-generate-daily/index.ts`:
+1. Resolve `TrainingContext` (existing)
+2. Resolve `AthleteContext` (new)
+3. Resolve `PersonalizationContext` (new)
+4. Resolve `TrainingAgeContext` (new)
+5. Stamp all four into every prescription's `why_payload.contexts`
+6. Existing engines continue unchanged — they now *receive* the objects but don't yet consume new fields
 
-**New (client):** `seasonRegistry.ts`, `dayTypeRegistry.ts`, `contextResolver.ts`, `recoveryProfiles.ts`, `adaptationProfiles.ts`, `legalityFramework.ts`, `trainingContext.ts` (types)
+## Validator Extensions
 
-**New (server mirrors):** same six under `supabase/functions/_shared/wic/`
+`supabase/functions/_shared/wic/validator.ts` — new fatal codes:
+- `athlete_context_missing`
+- `multiple_athlete_contexts`
+- `multiple_personalization_contexts`
+- `training_age_unresolved`
+- `goal_resolution_inconsistent`
+- `handedness_inconsistent`
+- `position_inconsistent`
 
-**Modified:** `HammersTodayProvider.tsx`, `useWkDailyPrescriptions.ts`, `wk-generate-daily/index.ts`, `_shared/wic/validator.ts`, `seasonDisplay.ts` (delegates to registry), all Wk*Card components (read `trainingContext` from snapshot only — no logic changes)
+## Diagnostics Extensions
 
-**Migration:** additive columns on `wk_generation_diagnostics`.
+Migration to add columns on `wk_generation_diagnostics`:
+- `athlete_context_version text`
+- `personalization_version text`
+- `training_age_version text`
+- `missing_context_fields text[]`
+- `context_completeness_score numeric`
 
-## 10. Evidence deliverable
+Update `wk_persist_prescriptions_atomic` RPC to persist them.
 
-A brief `docs/wic/phase-4-training-context.md` documenting:
-- the canonical phase + day-type enums
-- the resolver decision table
-- a snapshot dump proving every rendered card in one Hammers Today render references identical `contextVersion` + `generationId` + `seasonPhase` + `dayType`.
+## Client Surface
 
----
+`useWkDailyPrescriptions.ts` exposes:
+```ts
+{ ...existing, athleteContext, personalizationContext, trainingAgeContext }
+```
+Cards may read these but need not consume yet (deferred to next wave).
 
-**Explicitly deferred to later phases:** populating recovery/adaptation profiles with real coaching content, rewriting engines to actually consume `permittedEmphasis`, and any change to prescribed movements or programming.
+## Regression Evidence
+
+- Server log: single resolution per generation, versions stamped on every row
+- Client assert (dev-only): all cards receive referentially identical context objects (`Object.is` check via provider ref)
+- Diagnostics row shows completeness score + missing_fields for every generation
+
+## Files Touched
+
+**New (6):**
+- `src/lib/wic/athleteContext.ts`
+- `src/lib/wic/personalizationContext.ts`
+- `src/lib/wic/trainingAge.ts`
+- `supabase/functions/_shared/wic/athleteContext.ts`
+- `supabase/functions/_shared/wic/personalizationContext.ts`
+- `supabase/functions/_shared/wic/trainingAge.ts`
+
+**Modified (5):**
+- `supabase/functions/wk-generate-daily/index.ts` — resolve + stamp
+- `supabase/functions/_shared/wic/validator.ts` — 7 new fatal codes
+- `src/components/hammer/HammersTodayProvider.tsx` — snapshot extension
+- `src/hooks/useWkDailyPrescriptions.ts` — expose new contexts
+- Migration — diagnostics columns + RPC update
+
+## Explicitly Deferred
+
+Lifts, Speed, Bat Speed, Conditioning, Cross Sport, Recovery programming, movement catalog, coaching philosophy — all consume these contexts in the next wave.
