@@ -112,11 +112,20 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
-          {why.why && (
+          {rx.rationale && (
+            <div className="rounded border border-primary/30 bg-primary/5 p-2">
+              <div className="font-medium mb-0.5 flex items-center gap-1"><Info className="h-3 w-3" /> Why this movement</div>
+              <div className="text-muted-foreground">{rx.rationale}</div>
+            </div>
+          )}
+          {why.why && !rx.rationale && (
             <div className="rounded bg-muted/30 p-2">
               <div className="font-medium mb-0.5 flex items-center gap-1"><Info className="h-3 w-3" /> Why today</div>
               <div className="text-muted-foreground">{why.why}</div>
             </div>
+          )}
+          {why.source_philosophy && (
+            <div className="text-[11px] text-muted-foreground italic">Source: {why.source_philosophy}</div>
           )}
           {why.cue && (
             <div className="rounded border border-primary/20 p-2">
