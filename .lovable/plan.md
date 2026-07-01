@@ -1,104 +1,70 @@
-## Phase XX — Workout Intelligence Constitution (WIC)
 
-Replace the current workout generator with a constitutional Workout Intelligence Engine that prescribes adaptations first and exercises last, governed end-to-end by the WIC doctrine.
+# Phase XX (WIC) — Completion Audit
 
----
-
-### 1. Constitutional core (new)
-
-Create `src/lib/wic/` as the permanent authority layer:
-
-- `constitution.ts` — encodes the 15-layer priority hierarchy (Safety → Recovery → Medical → Schedule → Season → CNS → Objective → Position → Training Age → Movement Quality → Strength/Speed/Bat-Speed Deficiencies → Throw/Hit Workload → Equipment → Time).
-- `pipeline.ts` — the fixed decision pipeline (Athlete → Identity → Training Age → Maturation → Season → Games → Practice → Recovery → CNS → Testing → Deficiencies → Goals → Equipment → Environment → **Adaptation** → Generation → Validation → Publication). Exercises are only chosen after `Adaptation` is set.
-- `adaptationSelector.ts` — determines "today's primary adaptation" answering the six mandatory questions (Why today / athlete / exercise / volume / order / recovery). If any answer is null, generation aborts.
-- `rationale.ts` — structured `why_payload` schema surfaced to the UI.
-
-### 2. Independent engines (one module each)
-
-Replace the monolithic generator with 12 engines under `src/lib/wic/engines/`, each owning its own rules and never authoring for another:
-
-`movementPrep`, `warmup`, `sprint`, `batSpeed`, `strength`, `power`, `conditioning`, `crossSport`, `recovery`, `armCare`, `mobility`, `returnToPlay`.
-
-Each exports `plan(ctx) -> EngineBlock[]` and `validate(block)`.
-
-### 3. Exercise Intelligence catalog
-
-Extend `wk_movement_catalog` with full metadata (movement pattern, family, primary/secondary adaptation, season eligibility, age eligibility, training-age eligibility, equipment, joint stress, CNS load, recovery cost, volume cost, concentric/eccentric bias, power/speed/elastic emphasis, throw/bat/sprint compatibility, duplicate group, replacement pool, progression, regression, injury contraindications, game-day eligibility, recovery window).
-
-- Migration adds missing columns.
-- Backfill script tags every existing movement. Untagged movements become ineligible for prescription (hard rule).
-- Seed elite catalog covering full-body coverage across all seasons/ages.
-
-### 4. Seasonal Intelligence
-
-`src/lib/wic/seasonal.ts` encodes Early-OS, Mid-OS, Late-OS, Preseason, In-Season rules:
-
-- Sprint cadence (48h / 48h / 72h / intent / 96h) with CNS-adjusted deltas.
-- Eccentric bias curve (high → low → banned in-season unless medical override).
-- Concentric dominance and Functional Patterning supplementals in-season.
-- Youth bands (0–7 movement literacy, 8–13 PAP + bodyweight, 14+ progressive lifting) with biological maturation override.
-
-### 5. Full-Body Lift Constitution
-
-Every non-rehab/non-specialized lift must contain: lower compound + upper push + upper pull + unilateral + rotational/anti-rotational core + carry/brace/isometric + arm care + recovery. Enforced in `strength` engine and re-checked by validator.
-
-### 6. Workout Structure
-
-`src/lib/wic/dayStructure.ts` enforces canonical order:
-
-Normal: MovementPrep → Activation → Sprint → BatSpeed → PowerPrep → Strength → Practice/Comp → Conditioning → Recovery → Mobility → ArmCare → CrossSport(OS only).
-
-Game day: MovementPrep → Short Cross-Sport Neural Primer → Sprint Prep (if OK) → BatSpeed Prep → Pregame → Competition → Recovery. Regular lifts and conditioning suppressed.
-
-Hard rule: conditioning, sprint, and bat-speed each render as separate cards, never merged into the lifting card.
-
-### 7. Sprint, Bat Speed, Conditioning, Cross-Sport, Isometric engines
-
-Each engine chooses an adaptation category from its enumerated list (per the constitution) before selecting movements. Bat speed defaults to pre-lift placement (fresh CNS). Conditioning modes are baseball/softball-specific (repeated explosive, sit-explode-recover, base-run repeatability, pitcher/catcher/position, heat, recovery). Cross-sport is a full session in OS and a short neural primer in-season. Isometric selection (yielding/overcoming/functional/reactive/long-duration/short-duration/joint-angle) driven by season + adaptation.
-
-### 8. Personalization inputs
-
-`src/lib/wic/context.ts` aggregates every required input (season, schedules, ages, maturation, anthropometrics, assessments, workloads, recovery/sleep/nutrition/hydration, travel, environment, equipment, goals, history, trends, readiness, CNS, injury, restrictions, time). Missing values become explicit signals (`missing: true`) that influence adaptation choice — never silently ignored.
-
-### 9. Workout Validation Engine
-
-`src/lib/wic/validator.ts` runs before publication. Blocks on: duplicates (slug/name/family/pattern), duplicate sets/reps in-session, wrong season phase, wrong adaptation, invalid recovery window, invalid game-day mod, wrong order, conflicting fatigue, OS-eccentric-in-season without override, invalid equipment, invalid age, rehab conflicts, workload overflow, missing upper/lower/trunk/arm-care buckets. Failures return structured errors; the generator retries with fixes; on 2nd failure, publication is blocked and a diagnostic row is written.
-
-### 10. Edge function rewrite
-
-Rewrite `supabase/functions/wk-generate-daily/index.ts` around the WIC pipeline. Bump `generator_version` to `wic_v1`. Delete legacy branches. Persist `why_payload`, `adaptation`, `phase`, `validator_report` on every `wk_prescriptions` row.
-
-### 11. UI surfacing
-
-- Split cards already exist (`WkSpeedBatCard`, `WkLiftsCard`, `WkConditioningCard`, `WkSportBlockCard`) — add `WkMovementPrepCard`, `WkRecoveryCard`, `WkMobilityCard`, `WkArmCareCard`, `WkCrossSportCard`.
-- Each card renders the "why" (adaptation, athlete reason, exercise reason, volume reason, order reason, recovery-window reason).
-- `HammerDailyPlan.tsx` renders in canonical order pulled from `dayStructure.ts` — not hard-coded in the component.
-
-### 12. Repo-wide audit + reliability sweep
-
-- Enumerate every workout-generation code path; delete duplicates and legacy fallbacks.
-- Remove stale caches and legacy prompts.
-- Invalidate queries on schedule/game/recovery/injury mutations.
-- Add `scripts/audits/wic-audit.ts` verifying: full-body coverage, no duplicates, season legality, game-day suppression, sprint cadence, bat-speed placement, cross-sport placement, arm-care presence, per-age eligibility, per-training-age eligibility. Runs against production data samples per season phase and age band.
-
-### 13. Success gate
-
-No engine ships until the audit passes for: Early-OS / Mid-OS / Late-OS / Preseason / In-Season × Youth / 8–13 / 14+ / HS / College / Pro × Game day / Practice day / Recovery day. Evidence written to `docs/wic/audit-evidence.md`.
+**Short answer: No, not 100%.** The constitutional scaffolding, governance wrapper, adaptation selector, six-question `why_v2`, schema migration, publication validator, audit script, and docs all shipped. But the WIC mission called for more, and several pieces are still gaps.
 
 ---
 
-### Technical file map
+## What is fully shipped (✅)
 
-- New: `src/lib/wic/{constitution,pipeline,adaptationSelector,rationale,seasonal,dayStructure,context,validator}.ts`
-- New: `src/lib/wic/engines/{movementPrep,warmup,sprint,batSpeed,strength,power,conditioning,crossSport,recovery,armCare,mobility,returnToPlay}.ts`
-- New: `src/components/hammer/{WkMovementPrepCard,WkRecoveryCard,WkMobilityCard,WkArmCareCard,WkCrossSportCard}.tsx`
-- Rewrite: `supabase/functions/wk-generate-daily/index.ts`
-- Update: `src/components/hammer/HammerDailyPlan.tsx`, `src/hooks/useWkDailyPrescriptions.ts`
-- Migration: extend `wk_movement_catalog` metadata; add `adaptation`, `why_payload`, `validator_report`, `phase`, `generator_version` to `wk_prescriptions` if missing
-- New: `scripts/audits/wic-audit.ts`, `docs/wic/*`
+- Constitutional authority module + 12-engine registry (`_shared/wic/constitution.ts`, `src/lib/wic/constitution.ts`).
+- Adaptation selector — one adaptation chosen per day *before* any exercise is picked.
+- Six-question `why_v2` builder + completeness gate.
+- Publication validator: duplicate slug/name (fatal), duplicate sets×reps (warn), game-day forbidden slots (fatal), missing `why_v2` (fatal), missing full-body role (warn).
+- Canonical day-structure module (normal + game day) and sequence helper.
+- Schema migration: 16 metadata columns on `wk_movement_catalog`; `adaptation / engine / why_v2 / validator_report / generator_version` on `wk_prescriptions`.
+- `wk-generate-daily` refactored to run adaptation → generate → validate → publish. Fatal validator failure returns HTTP 422 and blocks the write.
+- `generator_version` bumped to `wic_v1` on both server + client hook.
+- `docs/wic/constitution.md` doctrine file.
+- `scripts/audits/wic-audit.ts` metadata-gap + legacy-version audit.
 
-### Clarifying questions before build
+---
 
-1. Scope of the initial ship: build the full 12-engine constitution end-to-end in one pass, or stage it (Strength + Sprint + BatSpeed + Conditioning + CrossSport first, then Recovery/Mobility/ArmCare/RTP)?
-2. Catalog policy: should movements missing new metadata be **hard-blocked** from prescription immediately (safer, may shrink pool during transition), or **soft-warned** until backfill completes?
-3. Overrides: keep the existing user "Request Override" path for blocked movements, or lock it fully to medical/coach role only under WIC?
+## Gaps still open (❌)
+
+1. **12 independent engines are not real modules.** The registry exists; the generator still runs the single legacy pipeline wrapped in WIC governance. `movement_prep`, `warmup`, `power`, `recovery`, `mobility`, `arm_care`, `return_to_play` have no dedicated engine files.
+2. **Catalog metadata not backfilled.** The new columns have permissive defaults; existing rows have `wic_metadata_complete=false` and nothing blocks them from being prescribed.
+3. **Validator is intentionally light.** It doesn't yet enforce seasonal legality (defers to generator's `IN_SEASON_BLOCKED_SLUGS`), min-age, equipment availability, cross-day `recovery_window_hours`, or adaptation↔movement `primary_adaptation` compatibility.
+4. **UI is still 4 cards, not 12.** No dedicated cards for Movement Prep, Warm-up, Power, Recovery, Mobility, Arm Care, Return-to-Play. `why_v2` is persisted but not surfaced anywhere.
+5. **Open policy questions never confirmed.** From the last turn: (a) staged vs. full-ship, (b) hard-block vs. soft-warn for incomplete metadata, (c) overrides scope under WIC. I proceeded with pragmatic defaults.
+6. **No end-to-end test.** I only typechecked; no live invocation of `wk-generate-daily` was run to prove the WIC pipeline publishes a full day for a real profile.
+
+---
+
+## Proposed plan to reach 100%
+
+Staged, additive, each stage independently shippable and validator-gated.
+
+### Stage 1 — Engine extraction (server)
+Create `supabase/functions/_shared/wic/engines/` with one file per engine:
+`sprint.ts · batSpeed.ts · strength.ts · power.ts · conditioning.ts · crossSport.ts · recovery.ts · armCare.ts · mobility.ts · movementPrep.ts · warmup.ts · returnToPlay.ts`.
+Each engine exports `plan(ctx) → Prescription[]` and owns its selection rules. Refactor `wk-generate-daily/index.ts` into a thin composer: `for engine of NORMAL_DAY_ORDER: engine.plan(ctx)`. Legacy `push()` becomes a per-engine helper.
+
+### Stage 2 — Catalog completion
+- Backfill migration to set `movement_pattern`, `primary_adaptation`, `season_eligibility`, `equipment`, `joint_stress`, `recovery_cost`, `volume_cost`, `bias`, `duplicate_group`, `recovery_window_hours`, and `wic_metadata_complete=true` for the current ~60-movement library.
+- Turn on **hard-block** in the generator: any row with `wic_metadata_complete=false` is filtered out (constitution.ts flag).
+
+### Stage 3 — Validator hardening
+Add fatal checks: seasonal legality (`season_eligibility` mismatch), min-age, equipment absent, adaptation mismatch (movement's `primary_adaptation` must match today's decision or be a declared compatible neighbor). Add cross-day check: no repeat within `recovery_window_hours`.
+
+### Stage 4 — UI expansion (frontend only)
+Add cards for the missing engines and split the Lifts card into `Strength` + `Power`. Surface the `why_v2` six answers in a "Why this?" drawer on `WkPrescriptionCard`. All engine cards read from the same `wk_prescriptions` rows, filtered by `engine`.
+
+### Stage 5 — Live verification
+Curl `wk-generate-daily` for a seeded athlete in each season phase and on a game day. Assert: `validator_report.ok=true`, every row has complete `why_v2`, engine coverage matches canonical order, no duplicates.
+
+---
+
+## Technical notes
+
+- Stages 1 → 3 are the constitutional gaps. Stages 4 → 5 are surfacing + proof.
+- Stage 2 introduces a hard cutover risk: turning on `wic_metadata_complete` filtering with an incomplete backfill will empty a user's day. The backfill must land in the same migration that flips the flag.
+- All stages remain additive to `wk_prescriptions`; no destructive schema changes.
+
+---
+
+## Decisions I need before building
+
+1. **Ship order:** run Stages 1 → 5 sequentially in one build session, or approve Stage 1 first and re-plan after?
+2. **Hard-block policy (Stage 2):** hard-block incomplete-metadata movements immediately after backfill (safer, tighter pool), or keep soft-warn for one release cycle?
+3. **Overrides under WIC:** keep the user "Request Override" path, restrict it to medical/coach roles only, or remove it entirely?
