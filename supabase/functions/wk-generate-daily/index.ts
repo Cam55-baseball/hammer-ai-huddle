@@ -172,11 +172,40 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // -------- Load 72h lift history + active overrides (drift guards) --------
+    const threeDaysAgo = new Date(planDate + "T00:00:00");
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const threeDaysAgoStr = threeDaysAgo.toISOString().slice(0, 10);
+    const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
+      admin.from("wk_prescriptions")
+        .select("movement_slug, plan_date, slot")
+        .eq("user_id", user.id)
+        .eq("slot", "lift")
+        .gte("plan_date", threeDaysAgoStr)
+        .lt("plan_date", planDate),
+      admin.from("wk_movement_overrides")
+        .select("movement_slug, expires_at")
+        .eq("user_id", user.id)
+        .eq("ack_date", planDate)
+        .gt("expires_at", new Date().toISOString()),
+    ]);
+    const recentCompoundSlugs = new Set((recentLifts ?? []).map((r: any) => r.movement_slug as string));
+    const overrideSlugs = new Set((activeOverrides ?? []).map((r: any) => r.movement_slug as string));
+    const usedThisSession = new Set<string>();
+
     // -------- Movement filters --------
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
       if (!m) return false;
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
+      // Phase legality — hard-block eccentric/OS-only movements outside legal phases, unless override
+      if (m.phase_allow && m.phase_allow.length > 0 && !m.phase_allow.includes(phaseRes.phase)) {
+        if (!overrideSlugs.has(m.slug)) return false;
+      }
+      // Session dedupe — no movement twice in a day
+      if (usedThisSession.has(m.slug)) return false;
+      // 72h non-repeat for compound lifts
+      if (m.intensity_class === "compound" && recentCompoundSlugs.has(m.slug)) return false;
       return true;
     };
     const swap = (m: MovementRow) => {
