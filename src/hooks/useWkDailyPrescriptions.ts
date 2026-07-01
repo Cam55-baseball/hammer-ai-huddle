@@ -78,6 +78,9 @@ export interface WkRx {
     source_philosophy?: string;
     override?: { reason: string | null; actor_role: string; expires_at: string } | null;
     training_context?: TrainingContext | null;
+    athlete_context?: AthleteContext | null;
+    personalization_context?: PersonalizationContext | null;
+    training_age_context?: TrainingAgeContext | null;
   };
   // WIC constitutional fields
   adaptation?: string | null;
