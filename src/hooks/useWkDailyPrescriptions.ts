@@ -20,6 +20,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
+const WK_GENERATOR_VERSION = "full_body_game_day_v3";
+
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
 
 export type WkSequenceRole =
@@ -62,6 +64,9 @@ export interface WkRx {
     cue?: string;
     rep_rule?: string;
     sequencing_hint?: string;
+    placement?: string;
+    generator_version?: string;
+    game_day?: boolean;
     reductions?: { reason: string; detail: string }[];
     training_age_years?: number;
     is_pro_prospect?: boolean;
@@ -182,10 +187,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
+    const first = query.data?.[0];
+    const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
     if (
       !query.isLoading &&
       query.data &&
-      query.data.length === 0 &&
+      (query.data.length === 0 || staleVersion) &&
       !generating &&
       !failed &&
       !autoTried.current
@@ -219,6 +226,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       cross_sport: rxs.filter((r) => r.slot === "cross_sport"),
       // New card-scoped buckets
       speedBat: [
+        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
         ...rxs.filter((r) => r.slot === "bat_speed"),
         ...rxs.filter((r) => r.slot === "speed"),
       ],
@@ -228,7 +236,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       ],
       conditioningCard: [
         ...rxs.filter((r) => r.slot === "conditioning"),
-        ...rxs.filter((r) => r.slot === "cross_sport"),
+        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement !== "early_activation"),
       ],
     };
   }, [query.data]);
