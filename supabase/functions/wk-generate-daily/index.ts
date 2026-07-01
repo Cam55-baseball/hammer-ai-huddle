@@ -20,6 +20,12 @@ import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
+// WIC engine modules — canonical slug pools per engine.
+import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
+import { sprintSlugs } from "../_shared/wic/engines/sprint.ts";
+import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
+import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
+import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
 
 interface MovementRow {
   slug: string;
