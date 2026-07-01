@@ -33,8 +33,9 @@ export function WkLiftsCard() {
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement,
+    grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
+  const entry = getCard("lift")!;
   const blocked = useBlockedLiftMovements(phaseKey);
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);
