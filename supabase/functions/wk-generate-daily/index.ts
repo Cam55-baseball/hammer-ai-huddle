@@ -748,7 +748,7 @@ const handler = async (req: Request): Promise<Response> => {
       validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
     }
 
-
+    // Phase 2 Fix 7 — Canonical validation pass. Additional structural checks
     // that the shared validator does not know about (duplicates, metadata
     // completeness) are enforced here so publication is all-or-nothing.
     const slugCounts = new Map<string, number>();
