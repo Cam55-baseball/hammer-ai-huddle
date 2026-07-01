@@ -282,15 +282,19 @@ export function HammerDailyPlan() {
       <CardContent className="space-y-2">
         <HammerScheduleStrip />
         <GpInGameAdvisoryStrip />
+        <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
+          <span className="font-medium text-foreground">Do in this order:</span>{" "}
+          Warm-up → Speed / Bat-Speed → Lifts → Practice / Game → Conditioning → Sport Block
+        </div>
         <ErrorBoundary label="wk-speed-bat">
           <WkSpeedBatCard />
+        </ErrorBoundary>
+        <ErrorBoundary label="wk-lifts">
+          <WkLiftsCard />
         </ErrorBoundary>
         {plan.blocks.map((b) => (
           <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
         ))}
-        <ErrorBoundary label="wk-lifts">
-          <WkLiftsCard />
-        </ErrorBoundary>
         <ErrorBoundary label="wk-conditioning">
           <WkConditioningCard />
         </ErrorBoundary>
