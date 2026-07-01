@@ -154,6 +154,25 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
           {rx.substitution_reason && (
             <div className="text-[11px] text-rose-700 dark:text-rose-300">{rx.substitution_reason}</div>
           )}
+          {rx.why_v2 && (
+            <div className="rounded border border-primary/20 bg-background p-2">
+              <div className="font-medium mb-1 flex items-center gap-1"><Info className="h-3 w-3" /> Why this? (six answers)</div>
+              <ul className="space-y-1 text-[11px] text-muted-foreground">
+                {rx.why_v2.why_today && <li><span className="text-foreground">Today —</span> {rx.why_v2.why_today}</li>}
+                {rx.why_v2.why_athlete && <li><span className="text-foreground">You —</span> {rx.why_v2.why_athlete}</li>}
+                {rx.why_v2.why_exercise && <li><span className="text-foreground">Exercise —</span> {rx.why_v2.why_exercise}</li>}
+                {rx.why_v2.why_volume && <li><span className="text-foreground">Volume —</span> {rx.why_v2.why_volume}</li>}
+                {rx.why_v2.why_order && <li><span className="text-foreground">Order —</span> {rx.why_v2.why_order}</li>}
+                {rx.why_v2.why_recovery && <li><span className="text-foreground">Recovery —</span> {rx.why_v2.why_recovery}</li>}
+              </ul>
+              {(rx.adaptation || rx.engine) && (
+                <div className="mt-1 text-[10px] text-muted-foreground">
+                  {rx.engine && <>engine: <span className="text-foreground">{rx.engine}</span></>}
+                  {rx.adaptation && <> · adaptation: <span className="text-foreground">{rx.adaptation}</span></>}
+                </div>
+              )}
+            </div>
+          )}
           {reductions.length > 0 && (
             <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
               <div className="font-medium mb-0.5">Why reduced today</div>
