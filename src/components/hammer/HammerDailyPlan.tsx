@@ -58,7 +58,8 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
-import { WkSpeedBatCard } from "@/components/hammer/WkSpeedBatCard";
+import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
+import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
@@ -300,10 +301,14 @@ function HammerDailyPlanBody() {
           <span className="font-medium text-foreground">Do in this order:</span>{" "}
           {gpSig.gameToday
             ? "Warm-up → Short crossover activation → Game"
-            : "Warm-up → Speed / Bat-Speed → Lifts → Practice → Conditioning → Sport Block"}
+            : "Warm-up → Speed → Bat Speed → Lifts → Practice → Conditioning → Sport Block"}
         </div>
-        <ErrorBoundary label="wk-speed-bat">
-          <WkSpeedBatCard />
+        {/* Phase 3 — Speed and Bat Speed are constitutionally separate cards. */}
+        <ErrorBoundary label="wk-speed">
+          <WkSpeedCard />
+        </ErrorBoundary>
+        <ErrorBoundary label="wk-bat-speed">
+          <WkBatSpeedCard />
         </ErrorBoundary>
         <ErrorBoundary label="wk-lifts">
           <WkLiftsCard />
