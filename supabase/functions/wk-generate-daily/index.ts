@@ -985,6 +985,9 @@ const handler = async (req: Request): Promise<Response> => {
       diagnostics_id: diagId,
       generation_ms: generationMs,
       training_context: trainingContext,
+      athlete_context: athleteContext,
+      personalization_context: personalizationContext,
+      training_age_context: trainingAgeContext,
       prescriptions: rows,
     });
   } catch (e) {
