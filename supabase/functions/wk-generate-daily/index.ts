@@ -29,6 +29,12 @@ import { sprintSlugs } from "../_shared/wic/engines/sprint.ts";
 import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
+// Phase 4 — Canonical Training Context (constitutional authority).
+import {
+  CONTEXT_VERSION as CTX_VERSION,
+  resolveTrainingContext,
+  type TrainingContext,
+} from "../_shared/wic/trainingContext.ts";
 
 interface MovementRow {
   slug: string;
@@ -183,6 +189,23 @@ const handler = async (req: Request): Promise<Response> => {
     const isDeep = phaseRes.phase === "os_q1" || phaseRes.phase === "os_q2";
     const isInSeason = phaseRes.phase === "in_season";
     const isPostSeason = phaseRes.phase === "post_season";
+
+    // -------- Phase 4: Canonical Training Context --------
+    // Single deterministic resolver. Every downstream engine and every
+    // prescription row consumes this exact object. No engine may override.
+    const trainingContext: TrainingContext = resolveTrainingContext({
+      planDate,
+      legacyPhase: phaseRes.phase,
+      isGameDay,
+      isPracticeDay,
+      // Future phases can plug in tournament/travel/off/recovery signals.
+      isTournamentDay: false,
+      isTravelDay: false,
+      isRecoveryDay: false,
+      isOffDay: false,
+      isDeloadDay: false,
+      generationId: null, // stamped post-persist by row id if needed
+    });
 
     // -------- Load phase block + catalog --------
     const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }] = await Promise.all([
@@ -440,6 +463,8 @@ const handler = async (req: Request): Promise<Response> => {
           reductions,
           override: overrideMeta,
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
+          // Phase 4 — every card reads the same TrainingContext from here.
+          training_context: trainingContext,
           ...meta,
         },
         rationale,
@@ -641,6 +666,56 @@ const handler = async (req: Request): Promise<Response> => {
       (validatorReport as any).ok = false;
     }
 
+    // Phase 4 — Constitutional TrainingContext validation.
+    // Every prescription must reference exactly one identical training_context.
+    let contextValidationOutcome: "ok" | "missing" | "conflicting" | "row_missing" = "ok";
+    if (finalRxs.length > 0) {
+      const seenPhases = new Set<string>();
+      const seenDayTypes = new Set<string>();
+      const seenLegality = new Set<string>();
+      const seenRecovery = new Set<string>();
+      const seenAdaptation = new Set<string>();
+      const seenCtxVersion = new Set<string>();
+      let rowMissing = false;
+      for (const r of finalRxs) {
+        const tc: any = (r as any)?.why_payload?.training_context;
+        if (!tc) { rowMissing = true; continue; }
+        if (tc.season_phase) seenPhases.add(tc.season_phase);
+        if (tc.day_type) seenDayTypes.add(tc.day_type);
+        if (tc.legality_profile_id) seenLegality.add(tc.legality_profile_id);
+        if (tc.recovery_profile_id) seenRecovery.add(tc.recovery_profile_id);
+        if (tc.adaptation_profile_id) seenAdaptation.add(tc.adaptation_profile_id);
+        if (tc.context_version) seenCtxVersion.add(tc.context_version);
+      }
+      if (rowMissing) {
+        contextValidationOutcome = "row_missing";
+        validatorReport.issues.push({ code: "row_missing_training_context", severity: "fatal", message: "One or more prescriptions are missing training_context." });
+        (validatorReport as any).ok = false;
+      }
+      const anyConflict =
+        seenPhases.size > 1 || seenDayTypes.size > 1 || seenLegality.size > 1 ||
+        seenRecovery.size > 1 || seenAdaptation.size > 1 || seenCtxVersion.size > 1;
+      if (anyConflict) {
+        contextValidationOutcome = "conflicting";
+        validatorReport.issues.push({
+          code: "conflicting_training_context",
+          severity: "fatal",
+          message: `Conflicting training_context detected — phases:${seenPhases.size} days:${seenDayTypes.size} legality:${seenLegality.size} recovery:${seenRecovery.size} adaptation:${seenAdaptation.size} version:${seenCtxVersion.size}`,
+        });
+        (validatorReport as any).ok = false;
+      }
+      // Sanity: resolved context must match the phases we just wrote.
+      if (!seenPhases.has(trainingContext.season_phase)) {
+        contextValidationOutcome = "missing";
+        validatorReport.issues.push({
+          code: "context_row_phase_mismatch",
+          severity: "fatal",
+          message: `Resolved context phase (${trainingContext.season_phase}) not present on any prescription row.`,
+        });
+        (validatorReport as any).ok = false;
+      }
+    }
+
     const generationMs = Date.now() - generationStartedAt;
     const cardsProduced = {
       lift: finalRxs.filter((r) => r.slot === "lift").length,
@@ -673,6 +748,14 @@ const handler = async (req: Request): Promise<Response> => {
             cards_produced: {},
             warnings: validatorReport.issues.filter((i: any) => i.severity === "warn"),
             errors: validatorReport.issues.filter((i: any) => i.severity === "fatal"),
+            // Phase 4 — canonical context diagnostics
+            resolved_season_phase: trainingContext.season_phase,
+            resolved_day_type: trainingContext.day_type,
+            context_version: trainingContext.context_version,
+            legality_profile_id: trainingContext.legality_profile_id,
+            recovery_profile_id: trainingContext.recovery_profile_id,
+            adaptation_profile_id: trainingContext.adaptation_profile_id,
+            context_validation_outcome: contextValidationOutcome,
           },
         });
       } catch (diagErr) {
@@ -730,6 +813,14 @@ const handler = async (req: Request): Promise<Response> => {
         cards_produced: cardsProduced,
         warnings: validatorReport.issues.filter((i: any) => i.severity === "warn"),
         errors: [],
+        // Phase 4 — canonical context diagnostics
+        resolved_season_phase: trainingContext.season_phase,
+        resolved_day_type: trainingContext.day_type,
+        context_version: trainingContext.context_version,
+        legality_profile_id: trainingContext.legality_profile_id,
+        recovery_profile_id: trainingContext.recovery_profile_id,
+        adaptation_profile_id: trainingContext.adaptation_profile_id,
+        context_validation_outcome: contextValidationOutcome,
       },
     });
     if (rpcErr) throw rpcErr;
@@ -760,6 +851,7 @@ const handler = async (req: Request): Promise<Response> => {
       validator_report: validatorReport,
       diagnostics_id: diagId,
       generation_ms: generationMs,
+      training_context: trainingContext,
       prescriptions: rows,
     });
   } catch (e) {

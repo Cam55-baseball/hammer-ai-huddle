@@ -13559,7 +13559,10 @@ export type Database = {
       wk_generation_diagnostics: {
         Row: {
           adaptation: string | null
+          adaptation_profile_id: string | null
           cards_produced: Json
+          context_validation_outcome: string | null
+          context_version: string | null
           created_at: string
           duplicate_count: number
           errors: Json
@@ -13568,9 +13571,13 @@ export type Database = {
           generation_ms: number | null
           generator_version: string
           id: string
+          legality_profile_id: string | null
           metadata_complete: boolean
           ordering_ok: boolean
           plan_date: string
+          recovery_profile_id: string | null
+          resolved_day_type: string | null
+          resolved_season_phase: string | null
           season_phase: string | null
           user_id: string
           validation_status: string
@@ -13578,7 +13585,10 @@ export type Database = {
         }
         Insert: {
           adaptation?: string | null
+          adaptation_profile_id?: string | null
           cards_produced?: Json
+          context_validation_outcome?: string | null
+          context_version?: string | null
           created_at?: string
           duplicate_count?: number
           errors?: Json
@@ -13587,9 +13597,13 @@ export type Database = {
           generation_ms?: number | null
           generator_version: string
           id?: string
+          legality_profile_id?: string | null
           metadata_complete?: boolean
           ordering_ok?: boolean
           plan_date: string
+          recovery_profile_id?: string | null
+          resolved_day_type?: string | null
+          resolved_season_phase?: string | null
           season_phase?: string | null
           user_id: string
           validation_status: string
@@ -13597,7 +13611,10 @@ export type Database = {
         }
         Update: {
           adaptation?: string | null
+          adaptation_profile_id?: string | null
           cards_produced?: Json
+          context_validation_outcome?: string | null
+          context_version?: string | null
           created_at?: string
           duplicate_count?: number
           errors?: Json
@@ -13606,9 +13623,13 @@ export type Database = {
           generation_ms?: number | null
           generator_version?: string
           id?: string
+          legality_profile_id?: string | null
           metadata_complete?: boolean
           ordering_ok?: boolean
           plan_date?: string
+          recovery_profile_id?: string | null
+          resolved_day_type?: string | null
+          resolved_season_phase?: string | null
           season_phase?: string | null
           user_id?: string
           validation_status?: string

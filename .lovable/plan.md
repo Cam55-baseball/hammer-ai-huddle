@@ -1,107 +1,113 @@
 
-# Phase 3 — Canonical Daily Training Architecture & Card Orchestration
+# Phase 4 — Canonical Season Intelligence & Periodization Engine
 
-Structural-only. No exercise, dosage, periodization, or programming changes.
+Establishes one constitutional authority for training context. No engine may infer season, day type, legality, recovery, or adaptation independently — every card consumes the same resolved `trainingContext` from the snapshot.
 
-## 1. Canonical Card Registry (new)
+**Guardrails honored:** No changes to exercise catalog, movement selection, lift/speed/bat-speed/conditioning/cross-sport programming, or coaching philosophy. This phase only defines and wires context.
 
-Create `src/lib/wic/cardRegistry.ts` + `supabase/functions/_shared/wic/cardRegistry.ts` (shape-parity, same pattern as `ordering.ts`/`season.ts`).
+---
 
-Single source of truth for the daily flow. One entry per card type with structural metadata only:
+## 1. Canonical Season Registry (new)
 
-```text
-order | card_type            | responsibility            | source
-------+----------------------+---------------------------+-------------------
-  1   | readiness            | readiness summary         | athlete_daily_log
-  2   | warmup               | movement prep             | warmup engine
-  3   | speed                | running speed             | wk_prescriptions.slot=speed
-  4   | bat_speed            | rotational velocity       | wk_prescriptions.slot=bat_speed
-  5   | lift                 | strength/power            | wk_prescriptions.slot in (lift, supplemental)
-  6   | practice_or_game     | practice / game awareness | gp_games + scheduled_practice_sessions
-  7   | conditioning         | conditioning              | wk_prescriptions.slot=conditioning
-  8   | cross_sport          | athletic transfer         | wk_prescriptions.slot=cross_sport
-  9   | recovery             | recovery                  | future
- 10   | nutrition            | nutrition                 | existing surface
- 11   | mental               | mental training           | existing surface
-```
+Create shared, dual-mirrored registry as the sole source of season truth.
 
-Each registry entry carries: `card_type`, `display_order`, `training_objective`, `estimated_duration_min?`, `intensity?`, `recovery_demand?`, `required_equipment?`, `location?`, `substitution_available`, `enabled_when(ctx)`, and empty context-message field keys (`focus`, `why_today`, `recovery_reminder`, `equipment_note`) — declared, not populated.
+- `src/lib/wic/seasonRegistry.ts` + `supabase/functions/_shared/wic/seasonRegistry.ts`
+- Enumerates all 12 canonical phases:
+  `os_q1`, `os_q2`, `os_q3`, `os_q4`, `transition`, `preseason`, `spring_training`, `regular_season`, `tournament_block`, `postseason`, `recovery_week`, `deload_week`
+- Each phase exposes: `displayLabel`, `constitutionalObjective`, `permittedEmphasis[]`, `restrictedEmphasis[]`, `recoveryPriority`, `defaultConditioningProfile`, `defaultPracticeRelationship`
+- `seasonDisplayLabel()` in `src/lib/wic/seasonDisplay.ts` is refactored to read from this registry (no duplicate mapping).
+- Existing `WkPhase` in `phaseQuarter.ts` and `SeasonPhase` in `seasonPhase.ts` remain — resolver output is mapped INTO the canonical phase enum via a single adapter (no logic rewrite).
 
-Update `src/lib/wic/ordering.ts` + `supabase/functions/_shared/wic/ordering.ts` `SLOT_ORDER` to derive from the registry (speed before bat_speed to match spec) so ordering can never drift from the registry.
+## 2. Canonical Day Type Registry (new)
 
-## 2. Card-Responsibility Law — split Speed and Bat Speed
+`src/lib/wic/dayTypeRegistry.ts` + server mirror.
+- Enumerates: `game_day`, `practice_day`, `practice_plus_game`, `tournament_day`, `recovery_day`, `off_day`, `travel_day`, `deload_day`, `standard_training_day`
+- Each type declares: `displayLabel`, `permittedEmphasis[]`, `restrictedEmphasis[]`, `defaultOrderingHint`
 
-- Delete the merged `WkSpeedBatCard.tsx` (single card owning two responsibilities).
-- Create `WkSpeedCard.tsx` — filters snapshot to `slot === "speed"` only.
-- Create `WkBatSpeedCard.tsx` — filters snapshot to `slot === "bat_speed"` only.
-- Both are pure consumers of `useHammersToday()` (no new hook instances).
-- Each card reads its `card_type` + display order from the registry — no inline ordering.
+## 3. Deterministic Context Resolution Pipeline (new)
 
-`HammerDailyPlan.tsx` renders cards by iterating the registry in `display_order` and mounting the component bound to each enabled `card_type`. Removes the possibility of manual reordering.
+`src/lib/wic/contextResolver.ts` + `supabase/functions/_shared/wic/contextResolver.ts`
 
-## 3. Unified Snapshot Identity (cross-card consistency)
+Single function `resolveTrainingContext(inputs) → TrainingContext` consuming:
+- today's date, athlete season settings (existing), calendar events, games, practices (existing `scheduled_practice_sessions`), tournaments, org schedule (if present), manual overrides, travel status, recovery state, readiness, previous workload
 
-Extend `HammersTodayProvider` snapshot to expose a `snapshotIdentity`:
+Deterministic — same inputs → same output. Resolves exactly one `seasonPhase` and one `dayType`. No engine calls this on its own; provider calls once.
+
+## 4. Recovery / Adaptation / Legality Profiles (new, wiring only)
+
+Three sibling registries — declared but not populated with new coaching logic:
+
+- `src/lib/wic/recoveryProfiles.ts` — one profile per seasonal phase: `id`, `cnsRecoveryProfile`, `tissueRecoveryProfile`, `schedulingPriority`
+- `src/lib/wic/adaptationProfiles.ts` — reuses existing `PrimaryAdaptation` enum from `constitution.ts`; maps phase → default adaptation menu
+- `src/lib/wic/legalityFramework.ts` — every movement category resolves to `Allowed | Restricted | Discouraged | Prohibited` given a `TrainingContext`. Wraps (does not replace) the existing `isMovementSeasonLegal` — that function becomes one input into the framework.
+
+Existing scattered legality checks (`isPhaseHardBlocked`, in-season eccentric guards) are refactored to call the framework; behavior preserved 1:1.
+
+## 5. TrainingContext Object Definition
 
 ```ts
-{ generation_id, generated_at, season_phase, season_display, readiness_hash, engine_version, reasoning_version }
+interface TrainingContext {
+  seasonPhase: CanonicalSeasonPhase;
+  seasonDisplay: string;
+  dayType: CanonicalDayType;
+  recoveryProfileId: string;
+  adaptationProfileId: string;
+  legalityProfileId: string;
+  conditioningProfile: string;
+  practiceRelationship: 'none' | 'supplement' | 'replace' | 'prime';
+  contextVersion: string;   // e.g. "ctx_v1"
+  generationId: string;     // ties to snapshotIdentity
+}
 ```
 
-`generation_id` = `wk_generation_diagnostics.id` returned by `wk-generate-daily` (already persisted Phase 2). Every card receives it via context and stamps its rendered header (dev-only visible attribute `data-generation-id` for regression proof).
+## 6. Snapshot Wiring
 
-Any card whose local data references a different `generation_id` renders a stale-badge and forces a snapshot refetch — prevents split-brain across cards.
-
-## 4. Practice / Game Awareness
-
-Add `dayKind: "game" | "practice" | "both" | "neither"` to the snapshot, derived from the same `gp_games` + `scheduled_practice_sessions` queries the generator already runs (Phase 2). Exposed to the `practice_or_game` card and to the registry's `enabled_when` predicates. No prescription logic changes.
-
-## 5. Seasonal Display Integrity
-
-Replace ad-hoc phase strings in all cards with a single `seasonDisplayLabel(phase)` in the shared `season.ts` (already the canonical authority from Phase 2). Every card reads its label from the snapshot, not from local mapping. Guarantees no label drift.
-
-## 6. Card Metadata (structural only)
-
-Every rendered card exposes the registry metadata via props: `cardType`, `displayOrder`, `trainingObjective`, `estimatedDurationMin`, `intensity`, `recoveryDemand`, `requiredEquipment`, `location`, `substitutionAvailable`, `rationaleSource`. Rendered inside a shared `<CardMeta />` slot (empty message fields left blank for future phases to populate).
+- `HammersTodayProvider.tsx`: after generation, call `resolveTrainingContext` once and attach `trainingContext` to the snapshot.
+- `useWkDailyPrescriptions.ts`: expose `trainingContext` on the returned object (read-only for cards).
+- `useHammersToday()` consumers (`WkLiftsCard`, `WkSpeedCard`, `WkBatSpeedCard`, `WkConditioningCard`, `WkSportBlockCard`, `WkPrescriptionCard`, warmup surface) read `ctx.trainingContext` — no card resolves season/day itself.
+- `wk-generate-daily`: calls the shared server `resolveTrainingContext` first; every downstream engine receives it as a parameter. Engines are NOT rewritten — they simply accept and pass through the context.
 
 ## 7. Validator Extensions
 
-Extend `supabase/functions/_shared/wic/validator.ts` with Phase 3 structural checks that run alongside Phase 2 rules. Fatal on any of:
+`supabase/functions/_shared/wic/validator.ts` — add fatal checks:
+- exactly one resolved `seasonPhase`
+- exactly one resolved `dayType`
+- every persisted prescription row references the same `contextVersion` + `generationId`
+- no conflicting legality profiles across cards in the same snapshot
+- no conflicting recovery profiles
+- no conflicting adaptation profiles
+- publication rejected if `resolveTrainingContext` returns `unresolved`
 
-- duplicate `card_type` in the enabled set
-- duplicate `display_order`
-- ordering violation (rendered order ≠ registry order)
-- missing required metadata on any enabled card
-- season label ≠ canonical `seasonDisplayLabel(phase)`
-- any card referencing a `generation_id` other than the snapshot's
+## 8. Diagnostics Extension (migration)
 
-Persisted into `wk_generation_diagnostics.errors` via the existing atomic RPC — no schema change.
+Extend `wk_generation_diagnostics` with columns:
+- `resolved_season_phase text`
+- `resolved_day_type text`
+- `context_version text`
+- `legality_profile_id text`
+- `recovery_profile_id text`
+- `adaptation_profile_id text`
+- `context_validation_outcome text`
 
-## 8. Files Touched
+Structural metadata only. Backfill nullable; new rows populated by generator.
 
-New:
-- `src/lib/wic/cardRegistry.ts`
-- `supabase/functions/_shared/wic/cardRegistry.ts`
-- `src/components/hammer/WkSpeedCard.tsx`
-- `src/components/hammer/WkBatSpeedCard.tsx`
-- `src/components/hammer/cards/CardMeta.tsx`
+## 9. Files touched
 
-Edited:
-- `src/lib/wic/ordering.ts`, `supabase/functions/_shared/wic/ordering.ts` — derive SLOT_ORDER from registry, put speed before bat_speed
-- `src/components/hammer/HammersTodayProvider.tsx` — expose `snapshotIdentity`, `dayKind`, `seasonDisplay`
-- `src/components/hammer/HammerDailyPlan.tsx` — render via registry loop, drop manual card ordering
-- `src/components/hammer/WkLiftsCard.tsx`, `WkConditioningCard.tsx` — consume registry metadata + snapshot identity
-- `supabase/functions/_shared/wic/validator.ts` — Phase 3 checks
-- `supabase/functions/wk-generate-daily/index.ts` — thread structural checks into the diagnostics payload
+**New (client):** `seasonRegistry.ts`, `dayTypeRegistry.ts`, `contextResolver.ts`, `recoveryProfiles.ts`, `adaptationProfiles.ts`, `legalityFramework.ts`, `trainingContext.ts` (types)
 
-Deleted:
-- `src/components/hammer/WkSpeedBatCard.tsx`
+**New (server mirrors):** same six under `supabase/functions/_shared/wic/`
 
-## 9. Regression Evidence
+**Modified:** `HammersTodayProvider.tsx`, `useWkDailyPrescriptions.ts`, `wk-generate-daily/index.ts`, `_shared/wic/validator.ts`, `seasonDisplay.ts` (delegates to registry), all Wk*Card components (read `trainingContext` from snapshot only — no logic changes)
 
-- Playwright pass on `/index` capturing Hammers Today with `data-generation-id` attributes: prove Speed and Bat Speed render as separate cards, one instance each, in registry order, all sharing one `generation_id`.
-- `wk_generation_diagnostics` row for the test user shows `cards_produced` map with `speed` and `bat_speed` counted separately and Phase 3 validator section empty.
-- Rebuild + tsgo pass.
+**Migration:** additive columns on `wk_generation_diagnostics`.
 
-## 10. Explicit Non-Goals (deferred)
+## 10. Evidence deliverable
 
-Exercise selection, dosages, workout quality, lift/speed/bat-speed/conditioning/cross-sport programming, periodization, and coaching philosophy are untouched. Context-message copy is not written — only the fields are declared. Recovery and Mental cards are registry-only placeholders in this phase unless already implemented.
+A brief `docs/wic/phase-4-training-context.md` documenting:
+- the canonical phase + day-type enums
+- the resolver decision table
+- a snapshot dump proving every rendered card in one Hammers Today render references identical `contextVersion` + `generationId` + `seasonPhase` + `dayType`.
+
+---
+
+**Explicitly deferred to later phases:** populating recovery/adaptation profiles with real coaching content, rewriting engines to actually consume `permittedEmphasis`, and any change to prescribed movements or programming.
