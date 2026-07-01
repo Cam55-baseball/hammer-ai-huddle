@@ -324,8 +324,8 @@ const handler = async (req: Request): Promise<Response> => {
       // 72h non-repeat for compound lifts.
       if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return false;
       // WIC Stage 3 — day-adaptation compatibility.
-      if (decision?.primaryAdaptation && m.primary_adaptation) {
-        if (!adaptationsCompatible(decision.primaryAdaptation, m.primary_adaptation)) return false;
+      if (decision?.primary && m.primary_adaptation) {
+        if (!adaptationsCompatible(decision.primary, m.primary_adaptation)) return false;
       }
       return true;
     };
