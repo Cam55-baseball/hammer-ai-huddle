@@ -748,6 +748,14 @@ const handler = async (req: Request): Promise<Response> => {
             cards_produced: {},
             warnings: validatorReport.issues.filter((i: any) => i.severity === "warn"),
             errors: validatorReport.issues.filter((i: any) => i.severity === "fatal"),
+            // Phase 4 — canonical context diagnostics
+            resolved_season_phase: trainingContext.season_phase,
+            resolved_day_type: trainingContext.day_type,
+            context_version: trainingContext.context_version,
+            legality_profile_id: trainingContext.legality_profile_id,
+            recovery_profile_id: trainingContext.recovery_profile_id,
+            adaptation_profile_id: trainingContext.adaptation_profile_id,
+            context_validation_outcome: contextValidationOutcome,
           },
         });
       } catch (diagErr) {
