@@ -449,7 +449,8 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     if (isGameDay) {
-      const primer = pickFirst(["contralateral_cross_crawl", "frc_cars_full_body", "fp_arm_line_spiral"]);
+      // WIC cross-sport engine
+      const primer = pickFirst(GAME_DAY_PRIMER_SLUGS);
       if (primer) {
         push(
           "cross_sport",
@@ -463,20 +464,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!isGameDay) {
+      // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable
-      const armCare = pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
+      const armCare = pickFirst(StrengthEngine.ARM_CARE_SLUGS);
       if (armCare) push("lift", "arm_care", armCare, { sets: 1, reps: 1 }, "Non-negotiable shoulder prep. Every session opens here.");
 
       // 2) Trunk primer — every session
-      const trunkPrimer = pickFirst(["trap_bar_trunk_twist", "paloff_press"]);
+      const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, { sets: 1, reps: isInSeason ? 6 : 10 }, "Loaded rotation primer — wakes obliques + preps swing plane.");
 
       // 3) Compound A — lower strength primer, phase legal
-      const compoundSlugsByPhase = isDeep
-        ? ["back_squat_double_ecc", "front_squat_double_ecc", "trap_bar_dl_double_ecc"]
-        : phaseRes.phase === "os_q3" || phaseRes.phase === "os_q4"
-          ? ["front_squat_double_ecc", "hip_thrust_concentric", "back_squat_concentric"]
-          : ["goblet_squat", "hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"];
+      const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase);
       const compound = pickFirst(compoundSlugsByPhase) ?? lib.find((m) => m.category === "compound" && eligible(m) && ["squat", "hinge"].includes(m.pattern ?? ""));
       if (compound) {
         const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
@@ -485,60 +483,51 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // 4) Unilateral lower — rotate across the week to build all planes
-      const unilateralRotation = isInSeason
-        ? ["lateral_db_step_up", "sl_deadlift_fat_grips"]
-        : ["lateral_db_step_up", "kot_lunge", "slide_lunge", "sl_deadlift_fat_grips"];
-      const uniLower = pickFirst([unilateralRotation[dayOfWeek % unilateralRotation.length], ...unilateralRotation]);
-      if (uniLower) push("lift", "unilateral_lower", uniLower, { sets: isInSeason ? 1 : 2, reps: 3 }, "Single-leg dominance — closes L/R imbalances the compound hides.");
+      const uniLower = pickFirst(StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek));
+      if (uniLower) {
+        const d = StrengthEngine.unilateralDose(isInSeason);
+        push("lift", "unilateral_lower", uniLower, { sets: d.sets, reps: d.reps }, "Single-leg dominance — closes L/R imbalances the compound hides.");
+      }
 
-      // 5) Upper push — unilateral / integrated (skip in post-season)
-      const upperPush = pickFirst([
-        isInSeason ? "push_press_concentric" : dayOfWeek % 2 === 0 ? "sa_db_chest_press" : "landmine_row_to_press",
-        "db_bench",
-        "push_press_concentric",
-        "bench_press_concentric",
-        "sa_db_chest_press",
-        "landmine_row_to_press",
-      ]);
-      if (upperPush) push("lift", "upper_push", upperPush, { sets: isInSeason ? 1 : 2, reps: 3 }, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
+      // 5) Upper push — unilateral / integrated
+      const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
+      if (upperPush) {
+        const d = StrengthEngine.upperDose(isInSeason);
+        push("lift", "upper_push", upperPush, { sets: d.sets, reps: d.reps }, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
+      }
 
       // 6) Upper pull — unilateral / weighted
-      const upperPull = pickFirst([
-        isInSeason ? "sa_standing_cable_row" : dayOfWeek % 3 === 0 ? "renegade_row" : dayOfWeek % 3 === 1 ? "sa_standing_cable_row" : "weighted_pullup_full",
-        "sa_standing_cable_row",
-        "lat_pulldown",
-        "db_row_bench",
-        "weighted_pullup_concentric",
-        "renegade_row",
-        "weighted_pullup_full",
-      ]);
-      if (upperPull) push("lift", "upper_pull", upperPull, { sets: isInSeason ? 1 : 2, reps: 3 }, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
+      const upperPull = pickFirst(StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek));
+      if (upperPull) {
+        const d = StrengthEngine.upperDose(isInSeason);
+        push("lift", "upper_pull", upperPull, { sets: d.sets, reps: d.reps }, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
+      }
 
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
-        const carry = pickFirst(isInSeason ? ["paloff_press", "standing_cable_hip_flexor"] : ["waiter_carry", "standing_cable_hip_flexor", "paloff_press"]);
+        const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason));
         if (carry) push("lift", "carry_antirotation", carry, { sets: isInSeason ? 1 : undefined, reps: isInSeason ? 6 : undefined }, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
       }
 
       // 8) Trunk finisher — offseason only (in-season stays fresh)
       if (isOffseason) {
-        const finisher = pickFirst(["heavy_russian_twist"]);
+        const finisher = pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
         if (finisher) push("lift", "trunk_finisher", finisher, { sets: 1, reps: 10 }, "Loaded trunk finisher — locks the rotational strength from above.");
       }
 
       ensureFullBodyLift(rxs, pickFirst, push, isInSeason);
     }
 
-    // -------- Bat-speed (its own card, always pre-lift) --------
+    // -------- Bat-speed engine (its own card, always pre-lift) --------
     if (!isGameDay) {
       const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
-      const bat = batSpeedPool.find((m) => m.slug === "med_ball_shot_put") ?? batSpeedPool[0];
+      const bat = batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
       if (bat) {
         push("bat_speed", "bat_speed", bat, {}, "Rotational power primer — direct bat-speed transfer. Do BEFORE lifts while CNS is fresh.");
       }
     }
 
-    // -------- Speed work (its own card, cadence-gated, pre-lift) --------
+    // -------- Sprint engine (its own card, cadence-gated, pre-lift) --------
     const lastSpeed = !isGameDay ? await admin
       .from("wk_prescriptions")
       .select("plan_date")
@@ -551,11 +540,9 @@ const handler = async (req: Request): Promise<Response> => {
       ? Math.floor((new Date(planDate + "T00:00:00").getTime() - new Date(lastSpeed.data.plan_date + "T00:00:00").getTime()) / 3600000)
       : 9999;
     if (!isGameDay && hoursSinceSpeed >= block.speed_cadence_hours - 6) {
-      const speedSet: MovementRow[] = [
-        lib.find((m) => m.slug === "accel_10_30y" && eligible(m)),
-        lib.find((m) => m.slug === (sport === "baseball" ? "lateral_first_step" : "slap_runner_crossover") && eligible(m)),
-        lib.find((m) => m.slug === (sport === "baseball" ? "repeat_90ft_bb" : "repeat_43ft_sb") && eligible(m)),
-      ].filter(Boolean) as MovementRow[];
+      const speedSet: MovementRow[] = sprintSlugs(sport)
+        .map((s) => lib.find((m) => m.slug === s && eligible(m)))
+        .filter(Boolean) as MovementRow[];
       for (const m of speedSet) {
         push("speed", "speed", m, {}, `${sport === "baseball" ? "Baseball" : "Softball"} Speed Lab — cadence every ${block.speed_cadence_hours}h.`);
       }
