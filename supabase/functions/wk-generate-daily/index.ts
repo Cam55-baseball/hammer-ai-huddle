@@ -36,6 +36,11 @@ interface MovementRow {
   default_reps: number | null;
   default_tempo: string | null;
   default_load_pct: number | null;
+  family: string | null;
+  intensity_class: string | null;
+  phase_allow: string[] | null;
+  is_eccentric_dominant: boolean | null;
+  source_philosophy: string | null;
 }
 
 interface BlockRow {
