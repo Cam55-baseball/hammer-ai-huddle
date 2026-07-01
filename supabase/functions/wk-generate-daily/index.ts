@@ -39,6 +39,20 @@ import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
 import { certifyArmCare } from "../_shared/wic/armCare/sessionBuilder.ts";
 import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
+// Phase 11–12 — Global determinism, snapshot immutability, validator registry,
+// unified why_v2, and cross-engine conflict resolution.
+import {
+  stableSeed,
+  utcPlanDate,
+  governanceCatalogHash,
+  buildDeterminismTrace,
+  fnv1a64Hex,
+  canonicalJson,
+} from "../_shared/wic/determinism/globalDeterminismLock.ts";
+import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
+import { aggregateValidatorReports, type EngineReport } from "../_shared/wic/validation/globalValidatorRegistry.ts";
+import { resolveCrossEngineConflicts } from "../_shared/wic/conflictResolver/crossEngineConflictResolver.ts";
+import { buildUnifiedWhyRoot, mergeUnifiedWhy, computeWhyCompleteness } from "../_shared/wic/whyV2/unifiedWhy.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
   CONTEXT_VERSION as CTX_VERSION,
