@@ -96,6 +96,11 @@ interface Prescription {
   substitution_reason: string | null;
   why_payload: Record<string, unknown>;
   rationale?: string;
+  // WIC constitutional fields — required for publication.
+  adaptation?: string;
+  engine?: WicEngine;
+  why_v2?: WhyV2;
+  generator_version?: string;
 }
 
 const OS_ONLY_ECCENTRIC_SLUGS = new Set([
