@@ -397,7 +397,7 @@ const handler = async (req: Request): Promise<Response> => {
         ? ["back_squat_double_ecc", "front_squat_double_ecc", "trap_bar_dl_double_ecc"]
         : phaseRes.phase === "os_q3" || phaseRes.phase === "os_q4"
           ? ["front_squat_double_ecc", "hip_thrust_concentric", "back_squat_concentric"]
-          : ["hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"];
+          : ["goblet_squat", "hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"];
       const compound = pickFirst(compoundSlugsByPhase) ?? lib.find((m) => m.category === "compound" && eligible(m) && ["squat", "hinge"].includes(m.pattern ?? ""));
       if (compound) {
         const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
@@ -415,6 +415,7 @@ const handler = async (req: Request): Promise<Response> => {
       // 5) Upper push — unilateral / integrated (skip in post-season)
       const upperPush = pickFirst([
         isInSeason ? "push_press_concentric" : dayOfWeek % 2 === 0 ? "sa_db_chest_press" : "landmine_row_to_press",
+        "db_bench",
         "push_press_concentric",
         "bench_press_concentric",
         "sa_db_chest_press",
@@ -426,6 +427,8 @@ const handler = async (req: Request): Promise<Response> => {
       const upperPull = pickFirst([
         isInSeason ? "sa_standing_cable_row" : dayOfWeek % 3 === 0 ? "renegade_row" : dayOfWeek % 3 === 1 ? "sa_standing_cable_row" : "weighted_pullup_full",
         "sa_standing_cable_row",
+        "lat_pulldown",
+        "db_row_bench",
         "weighted_pullup_concentric",
         "renegade_row",
         "weighted_pullup_full",
@@ -623,7 +626,7 @@ function ensureFullBodyLift(
 
   if (!liftRoles.has("compound_lower")) {
     const m = pickFirst(isInSeason
-      ? ["hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"]
+      ? ["goblet_squat", "hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "trap_bar_dl_double_ecc", "hip_thrust_concentric", "back_squat_concentric"]);
     if (m) push("lift", "compound_lower", m, { sets: isInSeason ? 2 : 3, reps: 3 }, "Full-body guardrail: one legal lower-body compound anchors the session.");
   }
@@ -635,15 +638,15 @@ function ensureFullBodyLift(
 
   if (!liftRoles.has("upper_push")) {
     const m = pickFirst(isInSeason
-      ? ["push_press_concentric", "bench_press_concentric", "sa_db_chest_press", "landmine_row_to_press"]
-      : ["sa_db_chest_press", "landmine_row_to_press", "bench_press_concentric", "push_press_concentric"]);
+      ? ["db_bench", "push_press_concentric", "bench_press_concentric", "sa_db_chest_press", "landmine_row_to_press"]
+      : ["sa_db_chest_press", "landmine_row_to_press", "db_bench", "bench_press_concentric", "push_press_concentric"]);
     if (m) push("lift", "upper_push", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
   }
 
   if (!liftRoles.has("upper_pull")) {
     const m = pickFirst(isInSeason
-      ? ["sa_standing_cable_row", "weighted_pullup_concentric", "renegade_row"]
-      : ["weighted_pullup_full", "sa_standing_cable_row", "weighted_pullup_concentric", "renegade_row"]);
+      ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "renegade_row"]
+      : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "renegade_row"]);
     if (m) push("lift", "upper_pull", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
   }
 }
