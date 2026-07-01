@@ -1,0 +1,24 @@
+surface,file,fragment_type,note
+generate-training-block,supabase/functions/generate-training-block/index.ts,legacy-generator,Invoked from /training-block page only; not part of Hammers Today
+generate-block-workout,supabase/functions/generate-block-workout/index.ts,legacy-generator,Invoked from useBlockWorkoutGenerator; not part of Hammers Today
+generate-elite-layer,supabase/functions/generate-elite-layer/index.ts,internal-generator,Called by compute-hammer-state; not by Hammers Today UI
+recommend-workout,supabase/functions/recommend-workout/index.ts,legacy-generator,Called by useWorkoutRecommendations
+generate-drills,supabase/functions/generate-drills/index.ts,owner-only,Not user-facing
+generate-warmup,supabase/functions/generate-warmup/index.ts,disconnected,Only reached from HammerWarmupDialog CTA; never writes wk_prescriptions
+useEliteWorkout,src/hooks/useEliteWorkout.ts,unused,No importer among Hammers Today or Wk cards
+wic:engine.conditioning.conditioningSlugFor,supabase/functions/_shared/wic/engines/conditioning.ts,unused-export,Generator inlines equivalent logic at lines 679-694
+wic:engine.reserved,supabase/functions/_shared/wic/engines/reserved.ts,placeholder,4 LOC no live consumer
+wk_movement_overrides.actor_role,src/hooks/useWkDailyPrescriptions.ts:316,partial-schema,Always written as 'self' regardless of coach/medical
+wk_session_logs.rpe,src/components/hammer/WkPrescriptionCard.tsx:62,partial-schema,Always null on insert
+wk_prescriptions.generator_version,supabase/functions/wk-generate-daily/index.ts:463,partial-persistence,Set in code but NULL in DB for 100% of last 14d rows (81/81)
+wk_prescriptions.adaptation,same,partial-persistence,NULL in DB for 81/81 last 14d rows
+wk_prescriptions.engine,same,partial-persistence,NULL in DB for 81/81 last 14d rows
+wk_prescriptions.why_v2,same,partial-persistence,NULL in DB for 81/81 last 14d rows; blocks Why-this six-answers panel
+wk_prescriptions.validator_report,supabase/functions/wk-generate-daily/index.ts:636,partial-persistence,NULL in DB for 81/81 last 14d rows
+side_hit / side_throw,src/hooks/useWkDailyPrescriptions.ts:173-174,dead-payload,Passed to invoke body but generator does not read them
+isPracticeDay,supabase/functions/wk-generate-daily/index.ts:236,hardcoded,Always false; practice signal never modulates plan
+progression_slug,wk_movement_catalog,unused-column,Only regression_slug is read by generator
+IN_SEASON_BLOCKED_SLUGS,supabase/functions/wk-generate-daily/index.ts:134-139,dual-gate,Overlaps season_eligibility metadata; drift risk (C-6)
+banner_do_in_this_order,src/components/hammer/HammerDailyPlan.tsx:285-290,text-vs-layout-drift,Banner text does not match actual JSX child order
+lift_role_order_client,src/hooks/useWkDailyPrescriptions.ts:91-101,duplicate-enum,Duplicates server SequenceRole set with no shared source
+slot_label_slot_tone,src/components/hammer/WkPrescriptionCard.tsx:18-34,duplicate-enum,Duplicates generator slot union; silently ignores new slots
