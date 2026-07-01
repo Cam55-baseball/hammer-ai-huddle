@@ -52,7 +52,12 @@ import {
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
 import { aggregateValidatorReports, type EngineReport } from "../_shared/wic/validation/globalValidatorRegistry.ts";
 import { resolveCrossEngineConflicts } from "../_shared/wic/conflictResolver/crossEngineConflictResolver.ts";
-import { buildUnifiedWhyRoot, mergeUnifiedWhy, computeWhyCompleteness } from "../_shared/wic/whyV2/unifiedWhy.ts";
+import { buildUnifiedWhyRoot, mergeUnifiedWhy, computeWhyCompleteness, freezeWhyV2, hashWhyV2 } from "../_shared/wic/whyV2/unifiedWhy.ts";
+// Phase 12+ — System Freeze v1 (state compression, invariants, engine contract, telemetry).
+import { compressSystemState, systemStateHash } from "../_shared/wic/stateCompression/systemStateCompressor.ts";
+import { checkGlobalInvariants } from "../_shared/wic/invariants/globalInvariantChecker.ts";
+import { computeEngineSignature } from "../_shared/wic/engineContract/engineContractVFinal.ts";
+import { emitSystemState } from "../_shared/wic/telemetry/minimalTelemetryEmitter.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
   CONTEXT_VERSION as CTX_VERSION,
