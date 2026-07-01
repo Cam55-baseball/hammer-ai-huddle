@@ -76,7 +76,7 @@ export function WkLiftsCard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-xs text-muted-foreground">
-          Heavy work is suppressed. Freshness wins today — the Speed & Bat-Speed card above holds your activation primer.
+          Heavy work is suppressed by the generator. Freshness wins today — the card above holds the short crossover activation at the front of the day.
         </CardContent>
       </Card>
     );

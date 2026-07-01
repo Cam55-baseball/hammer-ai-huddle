@@ -19,7 +19,7 @@ export interface GpSignal {
   readonly atBats: number;
   readonly pitchesSeen: number;
   readonly defensivePlays: number;
-  /** True iff a gp_games row exists for today — used to suppress lifts. */
+  /** True iff a non-canceled gp_games row exists for today — used to suppress lifts. */
   readonly gameToday: boolean;
   /** Whiff% on swings, last 7d. null if n<20 swings. */
   readonly whiffPct: number | null;
@@ -65,10 +65,11 @@ export function useGpSignal(windowDays = 7): GpSignal {
     staleTime: 60_000,
     queryFn: async () => {
       const { data } = await gp("gp_games")
-        .select("id,game_date")
+        .select("id,game_date,status")
         .eq("user_id", user!.id)
-        .gte("game_date", sinceDate);
-      return (data ?? []) as Array<{ id: string; game_date: string | null }>;
+        .gte("game_date", sinceDate)
+        .not("status", "in", "(canceled,cancelled,rescheduled)");
+      return (data ?? []) as Array<{ id: string; game_date: string | null; status: string | null }>;
     },
   });
 

@@ -20,6 +20,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
+const WK_GENERATOR_VERSION = "full_body_game_day_v3";
+
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
 
 export type WkSequenceRole =
@@ -62,6 +64,9 @@ export interface WkRx {
     cue?: string;
     rep_rule?: string;
     sequencing_hint?: string;
+    placement?: string;
+    generator_version?: string;
+    game_day?: boolean;
     reductions?: { reason: string; detail: string }[];
     training_age_years?: number;
     is_pro_prospect?: boolean;
@@ -101,7 +106,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [failed, setFailed] = useState(false);
-  const autoTried = useRef(false);
+  const autoTriedKey = useRef<string | null>(null);
   const sideCtx = useSideContext();
   const sideHit = sideCtx.selectedSide?.hit;
   const sideThrow = sideCtx.selectedSide?.throw;
@@ -120,6 +125,23 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       return (data ?? []) as unknown as WkRx[];
     },
     staleTime: 60_000,
+  });
+
+  const gameDayQuery = useQuery({
+    queryKey: ["wk-rx-game-day", user?.id, planDate],
+    enabled: !!user?.id,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("gp_games")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("game_date", planDate)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
+        .limit(1);
+      if (error) throw error;
+      return (data ?? []).length > 0;
+    },
   });
 
   const invokeOnce = useCallback(async () => {
@@ -182,21 +204,34 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
+    const first = query.data?.[0];
+    const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
+    const isGameDayForPlan = gameDayQuery.data ?? false;
+    const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== isGameDayForPlan;
+    const refreshKey = !query.data
+      ? null
+      : query.data.length === 0
+        ? "empty"
+        : staleVersion
+          ? `version:${first?.why_payload?.generator_version ?? "missing"}`
+          : staleGameDay
+            ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
+            : null;
     if (
       !query.isLoading &&
-      query.data &&
-      query.data.length === 0 &&
+      !gameDayQuery.isLoading &&
+      refreshKey &&
       !generating &&
       !failed &&
-      !autoTried.current
+      autoTriedKey.current !== refreshKey
     ) {
-      autoTried.current = true;
+      autoTriedKey.current = refreshKey;
       generate();
     }
-  }, [query.isLoading, query.data, generate, generating, failed]);
+  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, generate, generating, failed]);
 
   const retry = useCallback(() => {
-    autoTried.current = false;
+    autoTriedKey.current = null;
     setFailed(false);
     generate();
   }, [generate]);
@@ -219,6 +254,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       cross_sport: rxs.filter((r) => r.slot === "cross_sport"),
       // New card-scoped buckets
       speedBat: [
+        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
         ...rxs.filter((r) => r.slot === "bat_speed"),
         ...rxs.filter((r) => r.slot === "speed"),
       ],
@@ -228,7 +264,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       ],
       conditioningCard: [
         ...rxs.filter((r) => r.slot === "conditioning"),
-        ...rxs.filter((r) => r.slot === "cross_sport"),
+        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement !== "early_activation"),
       ],
     };
   }, [query.data]);
