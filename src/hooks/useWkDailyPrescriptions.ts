@@ -18,7 +18,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
-import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
 
 const WK_GENERATOR_VERSION = "full_body_game_day_v3";
@@ -109,7 +108,6 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const [failed, setFailed] = useState(false);
   const autoTriedKey = useRef<string | null>(null);
   const sideCtx = useSideContext();
-  const gp = useGpSignal();
   const sideHit = sideCtx.selectedSide?.hit;
   const sideThrow = sideCtx.selectedSide?.throw;
 
@@ -127,6 +125,23 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       return (data ?? []) as unknown as WkRx[];
     },
     staleTime: 60_000,
+  });
+
+  const gameDayQuery = useQuery({
+    queryKey: ["wk-rx-game-day", user?.id, planDate],
+    enabled: !!user?.id,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("gp_games")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("game_date", planDate)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
+        .limit(1);
+      if (error) throw error;
+      return (data ?? []).length > 0;
+    },
   });
 
   const invokeOnce = useCallback(async () => {
@@ -191,7 +206,8 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   useEffect(() => {
     const first = query.data?.[0];
     const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
-    const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== gp.gameToday;
+    const isGameDayForPlan = gameDayQuery.data ?? false;
+    const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== isGameDayForPlan;
     const refreshKey = !query.data
       ? null
       : query.data.length === 0
@@ -199,11 +215,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         : staleVersion
           ? `version:${first?.why_payload?.generator_version ?? "missing"}`
           : staleGameDay
-            ? `game:${String(first?.why_payload?.game_day)}->${String(gp.gameToday)}`
+            ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
             : null;
     if (
       !query.isLoading &&
-      !gp.loading &&
+      !gameDayQuery.isLoading &&
       refreshKey &&
       !generating &&
       !failed &&
@@ -212,7 +228,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       autoTriedKey.current = refreshKey;
       generate();
     }
-  }, [query.isLoading, query.data, gp.loading, gp.gameToday, generate, generating, failed]);
+  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, generate, generating, failed]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
