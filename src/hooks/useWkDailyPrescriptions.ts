@@ -20,6 +20,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 import type { TrainingContext } from "@/lib/wic/trainingContext";
+import type { AthleteContext } from "@/lib/wic/athleteContext";
+import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
+import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 
 const WK_GENERATOR_VERSION = "wic_v1";
 
