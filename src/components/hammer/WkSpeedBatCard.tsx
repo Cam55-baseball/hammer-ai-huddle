@@ -3,7 +3,8 @@
  *
  * Placed BEFORE the Lifts card so athletes hit rotational + sprint targets
  * while the CNS is fresh. Renders slot="bat_speed" and slot="speed" only.
- * Game-day: shows a CNS activation primer instead of blank.
+ * Game-day: renders the backend-prescribed short crossover activation so it
+ * actually sits at the beginning of the day, not as a back-end conditioning card.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,16 +15,11 @@ import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 
-const GAME_DAY_PRIMER = [
-  { name: "Med-ball scoop toss × 5/side", detail: "2 sets · pop, not grind" },
-  { name: "Pogos × 20", detail: "2 sets · stiff ankles" },
-  { name: "Short accel × 3 (10y at 80%)", detail: "primes CNS without draining" },
-];
-
 export function WkSpeedBatCard() {
   const gp = useGpSignal();
   const { grouped, phaseDisplay, generate, generating, isLoading, failed, retry } =
     useWkDailyPrescriptions();
+  const items = grouped.speedBat;
 
   if (gp.gameToday) {
     return (
@@ -35,22 +31,25 @@ export function WkSpeedBatCard() {
             <Badge variant="outline" className="text-[10px] ml-auto">Game day</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1.5 text-xs">
-          <p className="text-muted-foreground">Sharp, not drained. Keep it short.</p>
-          <ul className="space-y-1.5 pt-1">
-            {GAME_DAY_PRIMER.map((it, i) => (
-              <li key={i} className="rounded border border-amber-500/20 bg-background/60 p-2">
-                <div className="font-medium text-foreground">{it.name}</div>
-                <div className="text-[11px] text-muted-foreground">{it.detail}</div>
-              </li>
-            ))}
-          </ul>
+        <CardContent className="space-y-2 text-xs">
+          <p className="text-muted-foreground">Sharp, not drained. Backend rule: short sports crossover activation must be first after warm-up on game days.</p>
+          {failed ? (
+            <Button size="sm" onClick={retry} className="h-7 w-full">
+              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+            </Button>
+          ) : isLoading || generating ? (
+            <Skeleton className="h-14 w-full rounded" />
+          ) : items.length === 0 ? (
+            <Button size="sm" variant="outline" className="h-7 w-full" onClick={() => generate()}>
+              Generate game-day activation
+            </Button>
+          ) : (
+            items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
+          )}
         </CardContent>
       </Card>
     );
   }
-
-  const items = grouped.speedBat;
 
   return (
     <Card className="border-violet-500/30">
