@@ -1015,6 +1015,13 @@ const handler = async (req: Request): Promise<Response> => {
         training_age_version: trainingAgeContext.training_age_version,
         missing_context_fields: athleteContext.missing_fields,
         context_completeness_score: athleteContext.completeness_score,
+        // Phase 8 — Elite Lift Intelligence diagnostics
+        lift_template_id: liftCertification.templateId,
+        lift_category_coverage: liftCertification.categoryCoverage,
+        lift_full_body_ok: liftCertification.fullBodyOk,
+        lift_duplicate_check_ok: liftCertification.duplicateCheckOk,
+        lift_substitution_completeness: liftCertification.substitutionCompleteness,
+        exercise_governance_version: liftCertification.governanceVersion,
       },
     });
     if (rpcErr) throw rpcErr;
