@@ -30,6 +30,9 @@ import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift } from "../_shared/wic/lift/sessionBuilder.ts";
+// Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
+import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
+import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
 // Phase 4 — Canonical Training Context (constitutional authority).
 import {
@@ -748,6 +751,118 @@ const handler = async (req: Request): Promise<Response> => {
       validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
     }
 
+    // -------- Phase 9 — Explosive Performance Engine (Speed + Bat Speed) --------
+    // Independent certifiers. Each resolves its own template from the same
+    // constitutional context, stamps governance metadata onto the matching
+    // rows, and blocks publication on fatal issues.
+    const isPracticeDayCtx = (trainingContext as any)?.day_type === "practice";
+    const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
+    const availableEquipmentCtx = (athleteContext as any)?.environment?.equipment ?? undefined;
+
+    const speedCertification = certifySpeed({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: (trainingAgeContext as any)?.classification,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isPracticeDay: isPracticeDayCtx,
+        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isReturnToPlay: false,
+      },
+      availableEquipment: availableEquipmentCtx,
+      environment: environmentCtx,
+      trainingAgeClass: (trainingAgeContext as any)?.classification,
+    });
+    const batSpeedCertification = certifyBatSpeed({
+      prescriptions: finalRxs as any,
+      catalog: lib as any,
+      template: {
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: (trainingAgeContext as any)?.classification,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isReturnToPlay: false,
+      },
+      availableEquipment: availableEquipmentCtx,
+      environment: environmentCtx,
+      trainingAgeClass: (trainingAgeContext as any)?.classification,
+    });
+
+    // Stamp Speed / Bat-Speed governance onto matching rows.
+    for (const rx of finalRxs) {
+      if (rx.slot === "speed") {
+        const stamp = speedCertification.stamps.get(rx.movement_slug);
+        if (!stamp) continue;
+        const wp = ((rx as any).why_payload ?? {}) as Record<string, unknown>;
+        wp.speed_governance = {
+          template_id: stamp.template_id,
+          template_name: stamp.template_name,
+          speed_category: stamp.category,
+          pap_classification: stamp.pap_classification,
+          movement_velocity: stamp.movement_velocity,
+          substitution_family: stamp.substitution_family,
+          substitution_ladder: stamp.substitution_ladder,
+          substitution_ladder_score: stamp.ladder_score,
+          governance_version: speedCertification.governanceVersion,
+        };
+        (rx as any).why_payload = wp;
+        const wv = ((rx as any).why_v2 ?? {}) as Record<string, unknown>;
+        wv.why_category = stamp.why_category;
+        wv.why_template = stamp.why_template;
+        wv.why_athlete = stamp.why_athlete;
+        wv.why_season = stamp.why_season;
+        wv.why_pap = stamp.why_pap;
+        wv.why_substitution_ladder = stamp.why_substitution_ladder;
+        (rx as any).why_v2 = wv;
+      } else if (rx.slot === "bat_speed") {
+        const stamp = batSpeedCertification.stamps.get(rx.movement_slug);
+        if (!stamp) continue;
+        const wp = ((rx as any).why_payload ?? {}) as Record<string, unknown>;
+        wp.bat_speed_governance = {
+          template_id: stamp.template_id,
+          template_name: stamp.template_name,
+          bat_speed_category: stamp.category,
+          pap_classification: stamp.pap_classification,
+          movement_velocity: stamp.movement_velocity,
+          substitution_family: stamp.substitution_family,
+          substitution_ladder: stamp.substitution_ladder,
+          substitution_ladder_score: stamp.ladder_score,
+          governance_version: batSpeedCertification.governanceVersion,
+        };
+        (rx as any).why_payload = wp;
+        const wv = ((rx as any).why_v2 ?? {}) as Record<string, unknown>;
+        wv.why_category = stamp.why_category;
+        wv.why_template = stamp.why_template;
+        wv.why_athlete = stamp.why_athlete;
+        wv.why_season = stamp.why_season;
+        wv.why_pap = stamp.why_pap;
+        wv.why_substitution_ladder = stamp.why_substitution_ladder;
+        (rx as any).why_v2 = wv;
+      }
+    }
+
+    // Promote Phase 9 fatal issues into the validator report.
+    for (const f of speedCertification.fatal) {
+      validatorReport.issues.push({ code: f.code, severity: "fatal", message: f.message, slug: f.slug });
+      (validatorReport as any).ok = false;
+    }
+    for (const w of speedCertification.warn) {
+      validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
+    }
+    for (const f of batSpeedCertification.fatal) {
+      validatorReport.issues.push({ code: f.code, severity: "fatal", message: f.message, slug: f.slug });
+      (validatorReport as any).ok = false;
+    }
+    for (const w of batSpeedCertification.warn) {
+      validatorReport.issues.push({ code: w.code, severity: "warn", message: w.message, slug: w.slug });
+    }
+
+
     // Phase 2 Fix 7 — Canonical validation pass. Additional structural checks
     // that the shared validator does not know about (duplicates, metadata
     // completeness) are enforced here so publication is all-or-nothing.
@@ -944,6 +1059,18 @@ const handler = async (req: Request): Promise<Response> => {
             lift_duplicate_check_ok: liftCertification.duplicateCheckOk,
             lift_substitution_completeness: liftCertification.substitutionCompleteness,
             exercise_governance_version: liftCertification.governanceVersion,
+            // Phase 9 — Explosive Performance Engine diagnostics
+            speed_template_id: speedCertification.templateId,
+            speed_category_coverage: speedCertification.categoryCoverage,
+            speed_pap_score: speedCertification.papScore,
+            speed_substitution_completeness: speedCertification.substitutionCompleteness,
+            speed_validation_status: speedCertification.validationStatus,
+            bat_speed_template_id: batSpeedCertification.templateId,
+            bat_speed_category_coverage: batSpeedCertification.categoryCoverage,
+            bat_speed_pap_score: batSpeedCertification.papScore,
+            bat_speed_substitution_completeness: batSpeedCertification.substitutionCompleteness,
+            bat_speed_validation_status: batSpeedCertification.validationStatus,
+            explosive_governance_version: speedCertification.governanceVersion,
           },
         });
       } catch (diagErr) {
@@ -1022,6 +1149,18 @@ const handler = async (req: Request): Promise<Response> => {
         lift_duplicate_check_ok: liftCertification.duplicateCheckOk,
         lift_substitution_completeness: liftCertification.substitutionCompleteness,
         exercise_governance_version: liftCertification.governanceVersion,
+        // Phase 9 — Explosive Performance Engine diagnostics
+        speed_template_id: speedCertification.templateId,
+        speed_category_coverage: speedCertification.categoryCoverage,
+        speed_pap_score: speedCertification.papScore,
+        speed_substitution_completeness: speedCertification.substitutionCompleteness,
+        speed_validation_status: speedCertification.validationStatus,
+        bat_speed_template_id: batSpeedCertification.templateId,
+        bat_speed_category_coverage: batSpeedCertification.categoryCoverage,
+        bat_speed_pap_score: batSpeedCertification.papScore,
+        bat_speed_substitution_completeness: batSpeedCertification.substitutionCompleteness,
+        bat_speed_validation_status: batSpeedCertification.validationStatus,
+        explosive_governance_version: speedCertification.governanceVersion,
       },
     });
     if (rpcErr) throw rpcErr;

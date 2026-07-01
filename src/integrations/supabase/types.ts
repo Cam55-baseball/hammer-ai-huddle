@@ -13561,6 +13561,11 @@ export type Database = {
           adaptation: string | null
           adaptation_profile_id: string | null
           athlete_context_version: string | null
+          bat_speed_category_coverage: Json | null
+          bat_speed_pap_score: number | null
+          bat_speed_substitution_completeness: number | null
+          bat_speed_template_id: string | null
+          bat_speed_validation_status: string | null
           cards_produced: Json
           context_completeness_score: number | null
           context_validation_outcome: string | null
@@ -13570,6 +13575,7 @@ export type Database = {
           errors: Json
           exercise_count: number
           exercise_governance_version: string | null
+          explosive_governance_version: string | null
           generation_id: string
           generation_ms: number | null
           generator_version: string
@@ -13589,6 +13595,11 @@ export type Database = {
           resolved_day_type: string | null
           resolved_season_phase: string | null
           season_phase: string | null
+          speed_category_coverage: Json | null
+          speed_pap_score: number | null
+          speed_substitution_completeness: number | null
+          speed_template_id: string | null
+          speed_validation_status: string | null
           training_age_version: string | null
           user_id: string
           validation_status: string
@@ -13598,6 +13609,11 @@ export type Database = {
           adaptation?: string | null
           adaptation_profile_id?: string | null
           athlete_context_version?: string | null
+          bat_speed_category_coverage?: Json | null
+          bat_speed_pap_score?: number | null
+          bat_speed_substitution_completeness?: number | null
+          bat_speed_template_id?: string | null
+          bat_speed_validation_status?: string | null
           cards_produced?: Json
           context_completeness_score?: number | null
           context_validation_outcome?: string | null
@@ -13607,6 +13623,7 @@ export type Database = {
           errors?: Json
           exercise_count?: number
           exercise_governance_version?: string | null
+          explosive_governance_version?: string | null
           generation_id?: string
           generation_ms?: number | null
           generator_version: string
@@ -13626,6 +13643,11 @@ export type Database = {
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
+          speed_category_coverage?: Json | null
+          speed_pap_score?: number | null
+          speed_substitution_completeness?: number | null
+          speed_template_id?: string | null
+          speed_validation_status?: string | null
           training_age_version?: string | null
           user_id: string
           validation_status: string
@@ -13635,6 +13657,11 @@ export type Database = {
           adaptation?: string | null
           adaptation_profile_id?: string | null
           athlete_context_version?: string | null
+          bat_speed_category_coverage?: Json | null
+          bat_speed_pap_score?: number | null
+          bat_speed_substitution_completeness?: number | null
+          bat_speed_template_id?: string | null
+          bat_speed_validation_status?: string | null
           cards_produced?: Json
           context_completeness_score?: number | null
           context_validation_outcome?: string | null
@@ -13644,6 +13671,7 @@ export type Database = {
           errors?: Json
           exercise_count?: number
           exercise_governance_version?: string | null
+          explosive_governance_version?: string | null
           generation_id?: string
           generation_ms?: number | null
           generator_version?: string
@@ -13663,6 +13691,11 @@ export type Database = {
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
           season_phase?: string | null
+          speed_category_coverage?: Json | null
+          speed_pap_score?: number | null
+          speed_substitution_completeness?: number | null
+          speed_template_id?: string | null
+          speed_validation_status?: string | null
           training_age_version?: string | null
           user_id?: string
           validation_status?: string
@@ -13674,6 +13707,8 @@ export type Database = {
         Row: {
           aliases: string[] | null
           bat_compatible: boolean | null
+          bat_speed_adaptation: string | null
+          bat_speed_category: string | null
           bias: string | null
           category: string
           cns_cost: number
@@ -13695,6 +13730,7 @@ export type Database = {
           evidence_note: string | null
           family: string | null
           game_day_eligible: boolean | null
+          game_day_legal: boolean | null
           governance_version: string | null
           id: string
           intensity_class: string | null
@@ -13705,12 +13741,15 @@ export type Database = {
           min_training_age_years: number
           movement_category: string | null
           movement_pattern: string | null
+          movement_velocity: string | null
           name: string
+          pap_classification: string | null
           pap_compatible: boolean | null
           pattern: string | null
           phase_allow: string[]
           position_scope: string[] | null
           power_emphasis: boolean | null
+          practice_day_legal: boolean | null
           primary_adaptation: string | null
           progression_slug: string | null
           recovery_cost: number | null
@@ -13724,12 +13763,15 @@ export type Database = {
           secondary_adaptation: string | null
           slug: string
           source_philosophy: string | null
+          speed_adaptation: string | null
+          speed_category: string | null
           speed_emphasis: boolean | null
           sport_scope: string
           sprint_compatible: boolean | null
           substitution_family: string | null
           throw_compatible: boolean | null
           training_age_legality: Json | null
+          transfer_group: string | null
           unilateral: boolean | null
           updated_at: string
           variant: string | null
@@ -13740,6 +13782,8 @@ export type Database = {
         Insert: {
           aliases?: string[] | null
           bat_compatible?: boolean | null
+          bat_speed_adaptation?: string | null
+          bat_speed_category?: string | null
           bias?: string | null
           category: string
           cns_cost?: number
@@ -13761,6 +13805,7 @@ export type Database = {
           evidence_note?: string | null
           family?: string | null
           game_day_eligible?: boolean | null
+          game_day_legal?: boolean | null
           governance_version?: string | null
           id?: string
           intensity_class?: string | null
@@ -13771,12 +13816,15 @@ export type Database = {
           min_training_age_years?: number
           movement_category?: string | null
           movement_pattern?: string | null
+          movement_velocity?: string | null
           name: string
+          pap_classification?: string | null
           pap_compatible?: boolean | null
           pattern?: string | null
           phase_allow?: string[]
           position_scope?: string[] | null
           power_emphasis?: boolean | null
+          practice_day_legal?: boolean | null
           primary_adaptation?: string | null
           progression_slug?: string | null
           recovery_cost?: number | null
@@ -13790,12 +13838,15 @@ export type Database = {
           secondary_adaptation?: string | null
           slug: string
           source_philosophy?: string | null
+          speed_adaptation?: string | null
+          speed_category?: string | null
           speed_emphasis?: boolean | null
           sport_scope?: string
           sprint_compatible?: boolean | null
           substitution_family?: string | null
           throw_compatible?: boolean | null
           training_age_legality?: Json | null
+          transfer_group?: string | null
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
@@ -13806,6 +13857,8 @@ export type Database = {
         Update: {
           aliases?: string[] | null
           bat_compatible?: boolean | null
+          bat_speed_adaptation?: string | null
+          bat_speed_category?: string | null
           bias?: string | null
           category?: string
           cns_cost?: number
@@ -13827,6 +13880,7 @@ export type Database = {
           evidence_note?: string | null
           family?: string | null
           game_day_eligible?: boolean | null
+          game_day_legal?: boolean | null
           governance_version?: string | null
           id?: string
           intensity_class?: string | null
@@ -13837,12 +13891,15 @@ export type Database = {
           min_training_age_years?: number
           movement_category?: string | null
           movement_pattern?: string | null
+          movement_velocity?: string | null
           name?: string
+          pap_classification?: string | null
           pap_compatible?: boolean | null
           pattern?: string | null
           phase_allow?: string[]
           position_scope?: string[] | null
           power_emphasis?: boolean | null
+          practice_day_legal?: boolean | null
           primary_adaptation?: string | null
           progression_slug?: string | null
           recovery_cost?: number | null
@@ -13856,12 +13913,15 @@ export type Database = {
           secondary_adaptation?: string | null
           slug?: string
           source_philosophy?: string | null
+          speed_adaptation?: string | null
+          speed_category?: string | null
           speed_emphasis?: boolean | null
           sport_scope?: string
           sprint_compatible?: boolean | null
           substitution_family?: string | null
           throw_compatible?: boolean | null
           training_age_legality?: Json | null
+          transfer_group?: string | null
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
