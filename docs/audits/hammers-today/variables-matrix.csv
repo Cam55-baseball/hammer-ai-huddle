@@ -1,0 +1,25 @@
+variable,collected_in,stored_in,consumed_track_a_wk_generate_daily,consumed_track_b_dailyPlan,gap
+age,profiles.age,profiles,line 240 -> selectAdaptation (youth <8 only),via envelope,under-used
+training_age_years,profiles.years_lifting,profiles,line 181 -> min_training_age filter (310),proj.liftingAgeYears (145),ok
+is_pro_prospect,profiles.is_pro_prospect,profiles,line 182 -> bypasses age gate,not used,track-a-only
+position_primary,profiles.primary_position,profiles,line 180 -> conditioning selector (679-694),ctx.position_primary,ok
+pitcher_or_two_way,none,none,NOT consumed,pos via dailyPlan,gap
+handedness_bat_throw,SideContext,athlete_side_preferences,payload accepted (173-174) but never read,SideContext badges,gap
+season_phase,athlete_context,athlete_context,line 187 resolveWkPhase (server),proj.seasonPhase (client mirror),drift-risk
+game_today,gp_games,gp_games,line 170-176 isGameDay,gpSig.gameToday,ok
+practice_today,scheduled_practice_sessions,scheduled_practice_sessions,hardcoded false (236),scheduleContext,gap
+tournament_camp_travel,calendar_events,calendar_events,not consumed,useScheduleWindow -> projectScheduleSignal,track-b-only
+sleep_hours,athlete_daily_log,athlete_daily_log,line 207 -> CNS cap (210),not used,ok
+cns_readiness,athlete_daily_log,athlete_daily_log,line 208 -> cap + adaptation,readiness.score,ok
+soreness,athlete_daily_log,athlete_daily_log,line 209 -> safety + swap,not used,track-a-only
+injuries_active,user_injury_progress,user_injury_progress,line 168 183 -> contra filter + swap,proj.injury,ok
+recent_recovery_ack,wk_recovery_acks,wk_recovery_acks,line 221-230 conservative cap,not used,ok
+equipment,envelope equipment_effective,derived,NOT consumed,proj.equipment,gap
+available_time,envelope typical_session_length_min,derived,NOT consumed,proj.availDays,gap
+category_goals,athlete_context.category_goals,athlete_context,NOT consumed,categoryGoals.ts,gap
+historical_workload,athlete_load_tracking,athlete_load_tracking,NOT consumed,proj.workloadHigh,gap
+anthropometrics,envelope anthropometrics,derived,NOT consumed,buildAnthroProfile,gap
+compliance_history,wk_prescriptions.status + wk_session_logs,wk_*,only 72h compound repeat block,not used,gap
+lifting_history_72h,wk_prescriptions,wk_prescriptions,line 272-289 compound dedupe,not used,ok
+lifecycle_band,envelope,derived,not consumed,lifecycleBand (146),gap
+development_priorities,envelope,derived,not consumed,proj.devPriorities,gap
