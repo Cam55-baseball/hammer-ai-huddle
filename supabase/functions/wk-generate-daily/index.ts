@@ -1059,6 +1059,18 @@ const handler = async (req: Request): Promise<Response> => {
             lift_duplicate_check_ok: liftCertification.duplicateCheckOk,
             lift_substitution_completeness: liftCertification.substitutionCompleteness,
             exercise_governance_version: liftCertification.governanceVersion,
+            // Phase 9 — Explosive Performance Engine diagnostics
+            speed_template_id: speedCertification.templateId,
+            speed_category_coverage: speedCertification.categoryCoverage,
+            speed_pap_score: speedCertification.papScore,
+            speed_substitution_completeness: speedCertification.substitutionCompleteness,
+            speed_validation_status: speedCertification.validationStatus,
+            bat_speed_template_id: batSpeedCertification.templateId,
+            bat_speed_category_coverage: batSpeedCertification.categoryCoverage,
+            bat_speed_pap_score: batSpeedCertification.papScore,
+            bat_speed_substitution_completeness: batSpeedCertification.substitutionCompleteness,
+            bat_speed_validation_status: batSpeedCertification.validationStatus,
+            explosive_governance_version: speedCertification.governanceVersion,
           },
         });
       } catch (diagErr) {
