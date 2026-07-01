@@ -52,6 +52,13 @@ interface MovementRow {
   phase_allow: string[] | null;
   is_eccentric_dominant: boolean | null;
   source_philosophy: string | null;
+  // WIC metadata (backfilled 2026-07-01)
+  primary_adaptation: string | null;
+  season_eligibility: string[] | null;
+  min_age_years: number | null;
+  game_day_eligible: boolean | null;
+  recovery_window_hours: number | null;
+  wic_metadata_complete: boolean | null;
 }
 
 interface BlockRow {
