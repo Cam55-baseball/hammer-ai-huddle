@@ -563,9 +563,50 @@ const handler = async (req: Request): Promise<Response> => {
 
     const finalRxs = dedupePrescriptions(rxs);
 
+    // -------- WIC Validation Engine — no publication without a passing report --------
+    const validatorReport = wicValidate({
+      phase: phaseRes.phase,
+      isGameDay,
+      prescriptions: finalRxs.map((r) => ({
+        engine: (r as any).engine,
+        slot: r.slot,
+        sequence_role: r.sequence_role,
+        movement_slug: r.movement_slug,
+        movement_name: r.movement_name,
+        sets: r.sets,
+        reps: r.reps,
+        why_v2: (r as any).why_v2,
+      })),
+    });
+    const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
+    if (!allWhysComplete) {
+      validatorReport.issues.push({
+        code: "missing_why_v2",
+        severity: "fatal",
+        message: "One or more prescriptions are missing constitutional why answers.",
+      });
+      (validatorReport as any).ok = false;
+    }
+
+    if (!validatorReport.ok) {
+      console.error("[wk-generate-daily] WIC validation failed", { user_id: user.id, plan_date: planDate, issues: validatorReport.issues });
+      return json({
+        error: "wic_validation_failed",
+        adaptation: adaptationDecision.primary,
+        phase: phaseRes.phase,
+        validator_report: validatorReport,
+      }, 422);
+    }
+
     // -------- Persist --------
     await admin.from("wk_prescriptions").delete().eq("user_id", user.id).eq("plan_date", planDate);
-    const rows = finalRxs.map((r) => ({ user_id: user.id, plan_date: planDate, phase: phaseRes.phase, ...r }));
+    const rows = finalRxs.map((r) => ({
+      user_id: user.id,
+      plan_date: planDate,
+      phase: phaseRes.phase,
+      ...r,
+      validator_report: validatorReport,
+    }));
     if (rows.length) {
       const { error: insErr } = await admin.from("wk_prescriptions").insert(rows);
       if (insErr) throw insErr;
@@ -583,17 +624,22 @@ const handler = async (req: Request): Promise<Response> => {
       },
     }, { onConflict: "user_id,ledger_date" });
 
-    console.info("[wk-generate-daily] ok v2", {
-      user_id: user.id, plan_date: planDate, phase: phaseRes.phase,
+    console.info("[wk-generate-daily] ok WIC", {
+      user_id: user.id, plan_date: planDate, phase: phaseRes.phase, adaptation: adaptationDecision.primary,
       cns_used: cnsUsed, cns_cap: cnsCap, blocks_n: rows.length, game_day: isGameDay,
+      validator_ok: validatorReport.ok, validator_warns: validatorReport.issues.filter((i) => i.severity === "warn").length,
     });
     return json({
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
+      adaptation: adaptationDecision.primary,
+      adaptation_reason: adaptationDecision.reason,
+      generator_version: WIC_VERSION,
       game_day: isGameDay,
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,
+      validator_report: validatorReport,
       prescriptions: rows,
     });
   } catch (e) {
