@@ -90,7 +90,12 @@ export function WkLiftsCard() {
   const blockedItems = blocked.data ?? [];
 
   return (
-    <Card className="border-blue-500/30">
+    <Card
+      className="border-blue-500/30"
+      data-card-type={entry.cardType}
+      data-display-order={entry.displayOrder}
+      data-generation-id={snapshotIdentity.generation_id ?? ""}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -164,7 +169,10 @@ export function WkLiftsCard() {
             </div>
           </details>
         )}
+        )}
+        <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
       </CardContent>
+
 
       <Dialog open={!!overrideTarget} onOpenChange={(o) => { if (!o) { setOverrideTarget(null); setOverrideReason(""); } }}>
         <DialogContent className="max-w-md">
