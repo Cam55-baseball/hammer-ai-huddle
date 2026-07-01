@@ -400,6 +400,20 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     return "neither";
   }, [gameDayQuery.data, practiceDayQuery.data]);
 
+  // Phase 4 — Canonical TrainingContext. Sourced from the first prescription's
+  // why_payload.training_context (generator is the single authority). Every
+  // card reads from the SAME object; no card resolves context locally.
+  const trainingContext: TrainingContext | null = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    const tc = first?.why_payload?.training_context ?? null;
+    if (!tc) return null;
+    return {
+      ...tc,
+      generation_id: tc.generation_id ?? snapshotIdentity.generation_id ?? null,
+    } as TrainingContext;
+  }, [query.data, snapshotIdentity.generation_id]);
+
+
   return {
     ...query,
     grouped,
