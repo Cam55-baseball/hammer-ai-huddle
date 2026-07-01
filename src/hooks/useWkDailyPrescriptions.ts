@@ -54,6 +54,7 @@ export interface WkRx {
   cns_clamped: boolean;
   substituted_from_slug: string | null;
   substitution_reason: string | null;
+  rationale: string | null;
   why_payload: {
     phase?: string;
     phase_display?: string;
@@ -64,6 +65,8 @@ export interface WkRx {
     reductions?: { reason: string; detail: string }[];
     training_age_years?: number;
     is_pro_prospect?: boolean;
+    intensity_class?: string;
+    source_philosophy?: string;
   };
   status: "planned" | "completed" | "skipped";
 }
@@ -250,6 +253,20 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     [query.data],
   );
 
+  const overrideMovement = useCallback(async (movementSlug: string, reason: string) => {
+    if (!user?.id || !reason.trim()) return;
+    const { error } = await supabase.from("wk_movement_overrides" as any).insert({
+      user_id: user.id,
+      movement_slug: movementSlug,
+      ack_date: planDate,
+      reason: reason.trim(),
+      actor_role: "self",
+    });
+    if (error) return toast.error("Could not record override");
+    toast.success("Override logged — regenerating plan");
+    await generate();
+  }, [user?.id, planDate, generate]);
+
   return {
     ...query,
     grouped,
@@ -260,5 +277,6 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     failed,
     retry,
     effectiveCnsTotal,
+    overrideMovement,
   };
 }

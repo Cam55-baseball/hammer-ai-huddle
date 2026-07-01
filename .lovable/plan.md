@@ -1,82 +1,83 @@
-# Workout Rebuild — Elite Full-Body Lifts, Correct Sequencing, Split Cards
 
-## Problems being fixed
+# Elite Lifts Rebuild — no drift, no repeats, personalized for eternity
 
-1. Speed + Lifts + Conditioning are jammed into one `WkLiftsSpeedSection` card — looks novice, hides sequencing.
-2. Lifts default to a single-pattern day (squat OR hinge OR push OR pull) — users experience them as "weak / non-beneficial / oddly structured." Elite reference sessions are full-body, unilateral-heavy, with trunk work, carries, and dedicated arm care.
-3. In-season vs off-season doctrine exists in the periodization block but the actual movement selection doesn't reflect it — same 1 compound + 3 supplementals regardless of phase.
-4. CNS-fresh work (bat-speed, sprint speed) should run BEFORE lifts, not be bundled next to them. Conditioning belongs with practice; sport work goes at end of day (or as a short in-season warm-up).
+## 1. Fix the "same exercise 3 times" bug (root cause)
 
-## Deliverables
+`wk-generate-daily` currently draws movements per `sequence_role` from a small pool without dedupe or cross-day memory, so short catalogs collapse to the same lift repeatedly.
 
-### 1. Split the single card into three sibling cards in `HammerDailyPlan.tsx`
-Rendered in strict order so the sequencing itself teaches the athlete:
+- Add **session dedupe**: no movement ID may appear twice inside one day's prescription. Post-selection pass re-rolls duplicates against the remaining pool; if pool exhausted, fall back to the next-best variant in the same movement family.
+- Add **72h non-repeat memory** for `slot='lift'` compound movements. Read `wk_prescriptions` for the last 3 days; exclude any compound movement_id already used. Supplemental has a 48h cool-down.
+- Add **weekly family cap**: each compound family (squat/hinge/press/pull) rotates through at least 2 distinct variants per week.
+- Deterministic seed = `user_id + iso_date + engine_version` so replay stays lineage-safe.
 
-```text
-[Warm-up card — already exists]
-[Speed & Bat-Speed]   ← NEW card, CNS-fresh, pre-lift
-[Lifts]               ← NEW full-body card
-[Practice + Conditioning] ← conditioning moves here, next to practice
-[Sport work]          ← end-of-day (or "short warm-up" chip in-season)
-```
+## 2. Personalization inputs — always honored
 
-- Delete the merged `WkLiftsSpeedSection` UI (keep the hook).
-- New components: `WkSpeedBatCard.tsx`, `WkLiftsCard.tsx`, `WkConditioningCard.tsx`, `WkSportBlockCard.tsx`.
-- Each card gets its own phase chip, its own reductions callout, its own regenerate button.
-- The bat/speed-before-lifts toggle is removed — sequencing is now enforced by card order, not a user switch.
+Generator reads (fail-visible, missingness preserved — never silently defaults):
 
-### 2. Rebuild `wk-generate-daily` around a full-body lift template
-Replace the "pick 1 compound by day-of-week pattern" logic with a phase-driven full-body template. Every offseason lift day emits this canonical block, matching the elite reference sessions:
+- **Training age** (`profiles.training_age_years`) → default recovery window.
+- **CNS ledger** (`wk_cns_ledger`) → dynamic extension of window when fatigued (adds 24h per +2 CNS above baseline).
+- **Season phase** (`wk_periodization_blocks` + season dates) → OS Q1–Q4 / pre / in-season / taper / post / playoffs.
+- **Anthro archetype** (`strengthSelector.ts`) → squat/hinge/press/pull variant bias.
+- **Discipline goals** (pitcher/hitter/two-way, softball vs baseball, ranked category goals) → arm-care depth, rotational vs linear power, unilateral emphasis.
+- **Injury / RTP / illness / game-today** → hard suppress + variant swap.
+- **1RM map** → % load prescription per compound.
+- **User goals** (explosive-first, longevity-first, hypertrophy accessory) → biases block count and intensity within the phase envelope.
 
-```text
-1. Arm Care (Crossover Symmetry list OR JBand chart)  — always
-2. Trunk primer (Trap-Bar Trunk Twist × 10)           — always
-3. Compound A: lower push (squat pattern, phase variant)
-4. Compound B: unilateral lower (lateral DB step-up / KOT lunge / slide lunge / SL DL with fat grips)
-5. Upper push unilateral (SA DB chest press / landmine row-to-press)
-6. Upper pull (SA standing cable row / renegade row / weighted pull-up)
-7. Loaded carry OR anti-rotation (waiter carry / paloff / standing cable hip flexor)
-8. Trunk finisher (Heavy Russian Twists × 10)
-```
+Missing input → block with a visible "Complete onboarding to unlock personalization" chip, never a silent default.
 
-Phase modulation applied to that template:
-- **OS Q1–Q2** — double-eccentric compound variants, 2×3 heavy, full 8 blocks.
-- **OS Q3–Q4** — eccentric → concentric power variants, drops to 6 blocks (skip block 5 or 7 to protect elastic work).
-- **In-Season** — concentric-primer only, 4 blocks (arm care + trunk primer + 1 compound + 1 unilateral), keeps output without DOMS. Sport work becomes the day's warm-up chip.
-- **Post-Season** — decompress: arm care + mobility carry + light concentric.
+## 3. Recovery windows (tiered + dynamic CNS)
 
-Sequencing telemetry emitted per prescription so the UI can render the "why this order" chip: `sequence_role: warmup_care | trunk_primer | compound | unilateral | upper_push | upper_pull | carry | trunk_finisher`.
+| Training age | Default compound window | Weekly lift days (OS) | In-season |
+|---|---|---|---|
+| <1 yr (novice) | 96h | 1 every 4 days | 1 primer/wk |
+| 1–3 yr (int)   | 72h | 2/wk | 2 primers/wk |
+| 3+ yr (adv)    | 48h | 3/wk | 2 primers/wk |
 
-Speed/bat-speed/conditioning are still generated by the same edge function but returned under distinct slot buckets so the three new cards can each pull their own.
+Dynamic override: CNS score ≥ 7 in last 24h extends the window by +24h; recovery ack drops the extension for 48h. Speed sessions can be scheduled more frequently as short high-quality doses when the calendar allows and CNS permits.
 
-### 3. Expand `wk_movement_catalog` with the elite reference movements
-New migration inserting (idempotent on slug):
-`sa_db_chest_press`, `sa_standing_cable_row`, `renegade_row`, `lateral_db_step_up`, `slide_lunge`, `kot_lunge`, `sl_deadlift_fat_grips`, `landmine_row_to_press`, `standing_cable_hip_flexor`, `waiter_carry`, `trap_bar_trunk_twist`, `heavy_russian_twist`, `crossover_symmetry_full`, `jband_full_chart`. Each with pattern/variant tags, CNS cost, cue, why_prescribed, injury contraindications, sensible defaults (`2×3`, `10 reps`, `20s hold`, etc.) matching the reference sessions.
+## 4. Lift-day scheduling
 
-### 4. Sequencing enforcement in code (not a toggle)
-- `WkSpeedBatCard` renders `bat_speed + speed` slots only.
-- `WkLiftsCard` renders `lift + supplemental + arm_care + trunk + carry` slots ordered by `sequence_role`.
-- `WkConditioningCard` renders `conditioning + cross_sport` and mounts adjacent to the practice card in `HammerDailyPlan`.
-- Game day: Speed/Bat card still shows activation primer; Lifts card shows "paused" state; Conditioning card hides.
-- In-season: Sport block card shows "Short warm-up — do this before the game" copy; other phases show "End of day."
+- **Auto default** by phase + training age respecting recovery windows and game/practice calendar.
+- **User override** in Settings → "Preferred lift days" honored when it doesn't violate the recovery window; violations render as a visible warning, never silent.
+- Lift day always sequences: **Warm-up → Speed/Bat-Speed → Lifts → Practice/Game → Conditioning → Crossover sport work**. Non-lift days show only what's actually scheduled — no empty lift card.
 
-### 5. Files touched
+## 5. Elite exercise catalog (compound / supplemental / OS-only / arm care)
 
-| File | Change |
-|---|---|
-| `supabase/functions/wk-generate-daily/index.ts` | Rewrite selection to full-body template with `sequence_role` + phase modulation |
-| `supabase/migrations/<new>.sql` | Seed elite movements + add `sequence_role` column to `wk_prescriptions` |
-| `src/hooks/useWkDailyPrescriptions.ts` | Expose `speedBat`, `lifts`, `conditioning`, `sport` grouped selectors |
-| `src/components/hammer/WkSpeedBatCard.tsx` | New |
-| `src/components/hammer/WkLiftsCard.tsx` | New (renders full-body template in role order) |
-| `src/components/hammer/WkConditioningCard.tsx` | New |
-| `src/components/hammer/WkSportBlockCard.tsx` | New (end-of-day vs in-season warm-up copy) |
-| `src/components/hammer/HammerDailyPlan.tsx` | Replace single `WkLiftsSpeedSection` mount with the four cards in the new order |
-| `src/components/hammer/WkLiftsSpeedSection.tsx` | Delete after cutover |
+Rebuild `wk_movement_catalog` with an auditable, philosophy-tagged library drawing from Heenan, McGinty/Pow3rPlus, Westside, GOATA, Summers Method, Marinovich, Cressey — plus foundational barbell staples. Every entry carries: `family`, `pattern`, `intensity_class`, `cns_cost`, `phase_allow[]`, `contraindications[]`, `source_philosophy`, `evidence_note`.
 
-### 6. Verification
-- Typecheck.
-- Manual: generate today's plan on OS Q1, OS Q4, In-Season, Post-Season fixtures and confirm the four cards render in order with correct movement counts.
-- Snapshot a Playwright pass on `/index` confirming the three sibling cards render and no card contains movements from a foreign slot.
+- **Compound (year-round, phase-modulated load)**: Trap-Bar DL, Front Squat, Safety-Bar Box Squat, Bench, Weighted Pull-Up, SL RDL, Hip Thrust, Landmine Press, Cressey Bowler Squat, Westside Box Squat (OS).
+- **Supplemental (year-round safe, concentric/iso-dominant)**: SA DB Press, Chest-Supp Row, KOT Lunge, B-Stance RDL, Cable Hip Flexor, Waiter Carry, Renegade Row, Landmine Row-to-Press, Slide Lunge, Heavy Russian Twist, Trap-Bar Trunk Twist, GOATA linear step-ups, McGinty rotational med-ball.
+- **OS-only (eccentric / max-effort / high soreness)**: Nordic Curl, Copenhagen Adduction (eccentric), Depth Drop, loaded eccentric ATG Split Squat, Overcoming Iso Max, Heavy Negatives, Westside ME singles, Marinovich reactive eccentrics.
+- **Arm care (every session, non-negotiable)**: Crossover Symmetry full, JBand chart, Scap CARs, Cressey Manual Cuff series.
 
-Approve to build.
+## 6. In-season contraindication — hard block
+
+OS-only bucket is hard-blocked from **10 days before first regular-season game through the last game of the season**. Generator refuses to select them; if a coach/user has an override token, single session unlock is allowed (see §7). Otherwise, replaced with the nearest safe supplemental in the same pattern.
+
+## 7. Coach / athlete override (gated, logged)
+
+- New table `wk_movement_overrides` (user_id, movement_id, ack_date, reason text, actor_role, expires_at).
+- Override unlocks a blocked movement for **one session only**, requires reason string, auto-expires end-of-day, and writes an `asb_events` lineage row so replay preserves the decision.
+- UI: "Request override" button on any blocked movement card.
+
+## 8. Card structure (no more merged card)
+
+Already split into Speed & Bat-Speed / Lifts / Conditioning / Sport in the last pass. This plan fixes the *content* of the Lifts card and its scheduling logic. Sequence enforced in `HammerDailyPlan.tsx` render order.
+
+## 9. Drift guards (no eternity drift)
+
+- Unit tests: dedupe within session, 72h non-repeat, in-season Nordic block, training-age window mapping, sequencing order.
+- Replay test: same seed + same inputs → identical prescription.
+- Lint script `scripts/check-no-inseason-eccentric.ts` fails CI if OS-only movement is ever emitted with `phase='in_season'`.
+- Every generator run writes `wk_prescriptions.rationale` explaining WHY each movement was chosen (phase, window, anthro, goal, CNS).
+
+## Technical touch-points
+
+- **Migration**: add `wk_movement_overrides` table + grants; add columns to `wk_movement_catalog` (`family`, `intensity_class`, `cns_cost`, `phase_allow`, `contraindications`, `source_philosophy`); seed elite catalog.
+- **Edge fn `wk-generate-daily`**: rewrite selection pipeline (phase → training age → recovery window → anthro bias → goal bias → dedupe → 72h memory → weekly family cap → rationale write).
+- **Hook `useWkDailyPrescriptions.ts`**: expose `overrideMovement(id, reason)`.
+- **`WkLiftsCard.tsx`**: render "why this movement" chip, override button on blocked items, warning banner when user-chosen day violates recovery window.
+- **Settings**: "Preferred lift days" picker.
+- **Tests**: `wkGenerator.dedupe.test.ts`, `wkGenerator.inseasonBlock.test.ts`, `wkGenerator.recoveryWindow.test.ts`.
+
+Approve and I'll execute end-to-end.

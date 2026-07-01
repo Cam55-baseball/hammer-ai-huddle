@@ -36,6 +36,11 @@ interface MovementRow {
   default_reps: number | null;
   default_tempo: string | null;
   default_load_pct: number | null;
+  family: string | null;
+  intensity_class: string | null;
+  phase_allow: string[] | null;
+  is_eccentric_dominant: boolean | null;
+  source_philosophy: string | null;
 }
 
 interface BlockRow {
@@ -85,6 +90,7 @@ interface Prescription {
   substituted_from_slug: string | null;
   substitution_reason: string | null;
   why_payload: Record<string, unknown>;
+  rationale?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -167,11 +173,40 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // -------- Load 72h lift history + active overrides (drift guards) --------
+    const threeDaysAgo = new Date(planDate + "T00:00:00");
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const threeDaysAgoStr = threeDaysAgo.toISOString().slice(0, 10);
+    const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
+      admin.from("wk_prescriptions")
+        .select("movement_slug, plan_date, slot")
+        .eq("user_id", user.id)
+        .eq("slot", "lift")
+        .gte("plan_date", threeDaysAgoStr)
+        .lt("plan_date", planDate),
+      admin.from("wk_movement_overrides")
+        .select("movement_slug, expires_at")
+        .eq("user_id", user.id)
+        .eq("ack_date", planDate)
+        .gt("expires_at", new Date().toISOString()),
+    ]);
+    const recentCompoundSlugs = new Set((recentLifts ?? []).map((r: any) => r.movement_slug as string));
+    const overrideSlugs = new Set((activeOverrides ?? []).map((r: any) => r.movement_slug as string));
+    const usedThisSession = new Set<string>();
+
     // -------- Movement filters --------
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
       if (!m) return false;
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
+      // Phase legality — hard-block eccentric/OS-only movements outside legal phases, unless override
+      if (m.phase_allow && m.phase_allow.length > 0 && !m.phase_allow.includes(phaseRes.phase)) {
+        if (!overrideSlugs.has(m.slug)) return false;
+      }
+      // Session dedupe — no movement twice in a day
+      if (usedThisSession.has(m.slug)) return false;
+      // 72h non-repeat for compound lifts
+      if (m.intensity_class === "compound" && recentCompoundSlugs.has(m.slug)) return false;
       return true;
     };
     const swap = (m: MovementRow) => {
@@ -208,10 +243,21 @@ const handler = async (req: Request): Promise<Response> => {
       why: string = "",
     ) => {
       const s = swap(m);
+      // Session dedupe: skip if this slug was already emitted today
+      if (usedThisSession.has(s.movement.slug)) return;
+      usedThisSession.add(s.movement.slug);
       const setsBase = overrides.sets ?? s.movement.default_sets ?? null;
       const repsBase = overrides.reps ?? s.movement.default_reps ?? null;
       const clamped = (cnsUsed + s.movement.cns_cost) > cnsCap;
       cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
+      const rationaleParts: string[] = [
+        `Phase: ${phaseRes.displayName}`,
+        `Training age: ${trainingAgeYears}y${isProProspect ? " (pro prospect)" : ""}`,
+        s.movement.intensity_class ? `Class: ${s.movement.intensity_class}` : "",
+        s.movement.source_philosophy ? `Source: ${s.movement.source_philosophy}` : "",
+        why || s.movement.why_prescribed,
+        reductions.length ? `Reductions: ${reductions.map((r) => r.reason).join(", ")}` : "",
+      ].filter(Boolean);
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
@@ -226,12 +272,15 @@ const handler = async (req: Request): Promise<Response> => {
         why_payload: {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
+          intensity_class: s.movement.intensity_class,
+          source_philosophy: s.movement.source_philosophy,
           why: why || s.movement.why_prescribed,
           cue: s.movement.cue,
           rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
           reductions,
         },
-      });
+        rationale: rationaleParts.join(" • "),
+      } as any);
     };
 
     const isOffseason = phaseRes.phase.startsWith("os_");
