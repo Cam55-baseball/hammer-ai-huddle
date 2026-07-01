@@ -67,6 +67,7 @@ export interface WkRx {
     is_pro_prospect?: boolean;
     intensity_class?: string;
     source_philosophy?: string;
+    override?: { reason: string | null; actor_role: string; expires_at: string } | null;
   };
   status: "planned" | "completed" | "skipped";
 }
