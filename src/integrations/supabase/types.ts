@@ -13568,15 +13568,21 @@ export type Database = {
           default_sets: number | null
           default_tempo: string | null
           demo_video_url: string | null
+          evidence_note: string | null
+          family: string | null
           id: string
+          intensity_class: string | null
+          is_eccentric_dominant: boolean
           min_competition_level: string | null
           min_training_age_years: number
           name: string
           pattern: string | null
+          phase_allow: string[]
           position_scope: string[] | null
           progression_slug: string | null
           regression_slug: string | null
           slug: string
+          source_philosophy: string | null
           sport_scope: string
           updated_at: string
           variant: string | null
@@ -13593,15 +13599,21 @@ export type Database = {
           default_sets?: number | null
           default_tempo?: string | null
           demo_video_url?: string | null
+          evidence_note?: string | null
+          family?: string | null
           id?: string
+          intensity_class?: string | null
+          is_eccentric_dominant?: boolean
           min_competition_level?: string | null
           min_training_age_years?: number
           name: string
           pattern?: string | null
+          phase_allow?: string[]
           position_scope?: string[] | null
           progression_slug?: string | null
           regression_slug?: string | null
           slug: string
+          source_philosophy?: string | null
           sport_scope?: string
           updated_at?: string
           variant?: string | null
@@ -13618,19 +13630,58 @@ export type Database = {
           default_sets?: number | null
           default_tempo?: string | null
           demo_video_url?: string | null
+          evidence_note?: string | null
+          family?: string | null
           id?: string
+          intensity_class?: string | null
+          is_eccentric_dominant?: boolean
           min_competition_level?: string | null
           min_training_age_years?: number
           name?: string
           pattern?: string | null
+          phase_allow?: string[]
           position_scope?: string[] | null
           progression_slug?: string | null
           regression_slug?: string | null
           slug?: string
+          source_philosophy?: string | null
           sport_scope?: string
           updated_at?: string
           variant?: string | null
           why_prescribed?: string
+        }
+        Relationships: []
+      }
+      wk_movement_overrides: {
+        Row: {
+          ack_date: string
+          actor_role: string
+          created_at: string
+          expires_at: string
+          id: string
+          movement_slug: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          ack_date?: string
+          actor_role?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          movement_slug: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          ack_date?: string
+          actor_role?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          movement_slug?: string
+          reason?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -13699,6 +13750,7 @@ export type Database = {
           movement_slug: string
           phase: string
           plan_date: string
+          rationale: string | null
           reps: number | null
           sequence_order: number
           sequence_role: string | null
@@ -13722,6 +13774,7 @@ export type Database = {
           movement_slug: string
           phase: string
           plan_date: string
+          rationale?: string | null
           reps?: number | null
           sequence_order?: number
           sequence_role?: string | null
@@ -13745,6 +13798,7 @@ export type Database = {
           movement_slug?: string
           phase?: string
           plan_date?: string
+          rationale?: string | null
           reps?: number | null
           sequence_order?: number
           sequence_role?: string | null
