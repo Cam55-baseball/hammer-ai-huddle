@@ -369,10 +369,27 @@ const handler = async (req: Request): Promise<Response> => {
       const philoPiece = philo ? ` Doctrine: ${philo}.` : "";
       const rationale = `Chosen because you're in ${phaseRes.displayName} with a ${ageStr}${proStr}, and this is a ${cls}. ${reasonPiece}.${philoPiece}${overridePiece}${reductionsPiece}`.replace(/\s+/g, " ").trim();
 
+      // WIC — required constitutional payload
+      const wicEngine = engineForSlotRole(slot, role);
+      const finalSets = clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase;
+      const setsRepsStr = finalSets != null && repsBase != null ? `${finalSets}×${repsBase}` : "prescribed dose";
+      const orderStr = `Sequence #${seq + 1} — ${role.replace(/_/g, " ")} keeps the constitutional day order intact.`;
+      const recoveryStr = `${s.movement.cns_cost} CNS units; expect ~${Math.max(24, s.movement.cns_cost * 12)}h before repeating this pattern.`;
+      const why_v2: WhyV2 = buildWhy({
+        why_today: adaptationDecision.reason,
+        why_athlete: `${adaptationDecision.reason_athlete} (${trainingAgeYears || 0}-yr training age${isProProspect ? ", pro prospect" : ""}).`,
+        why_exercise: why || s.movement.why_prescribed || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
+        why_volume: `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
+        why_order: orderStr,
+        why_recovery: recoveryStr,
+        adaptation: adaptationDecision.primary,
+        engine: wicEngine,
+        generator_version: WIC_VERSION,
+      });
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
-        sets: clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase,
+        sets: finalSets,
         reps: repsBase,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
@@ -382,7 +399,7 @@ const handler = async (req: Request): Promise<Response> => {
         substitution_reason: s.reason,
         why_payload: {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
-          generator_version: "full_body_game_day_v3",
+          generator_version: WIC_VERSION,
           game_day: isGameDay,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
@@ -395,9 +412,14 @@ const handler = async (req: Request): Promise<Response> => {
           rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
           reductions,
           override: overrideMeta,
+          wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
           ...meta,
         },
         rationale,
+        adaptation: adaptationDecision.primary,
+        engine: wicEngine,
+        why_v2,
+        generator_version: WIC_VERSION,
       } as any);
       return true;
     };
