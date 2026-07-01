@@ -3,6 +3,15 @@
  *
  * Reads from `wk_prescriptions`. If the user has no rows for `planDate`, it
  * invokes the `wk-generate-daily` edge function to produce them, then refetches.
+ *
+ * Elite hardening:
+ *   - 30s timeout on invoke
+ *   - one automatic retry with backoff
+ *   - explicit `failed` state + manual `retry()` so the user is never stuck
+ *   - threads most recent recovery ack (sleep/soreness/readiness) into the
+ *     edge function so the plan actually adapts day-to-day
+ *   - computes `effectiveCnsTotal` from `status` (skipped → 0 CNS) so the
+ *     CNS-heavy clamp reflects what the athlete actually did
  */
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,10 +57,18 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+}
+
 export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
+  const [failed, setFailed] = useState(false);
   const autoTried = useRef(false);
   const sideCtx = useSideContext();
   const sideHit = sideCtx.selectedSide?.hit;
@@ -73,31 +90,84 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     staleTime: 60_000,
   });
 
+  const invokeOnce = useCallback(async () => {
+    // Pull the most recent recovery ack so the edge function can bias the
+    // next plan (real learning loop instead of one-way personalization).
+    const { data: lastAck } = await supabase
+      .from("wk_recovery_acks" as any)
+      .select("reduction_reason, reduction_payload, acknowledged_at")
+      .eq("user_id", user!.id)
+      .order("acknowledged_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return withTimeout(
+      supabase.functions.invoke("wk-generate-daily", {
+        body: {
+          plan_date: planDate,
+          side_hit: sideHit,
+          side_throw: sideThrow,
+          recent_ack: lastAck ?? null,
+        },
+      }),
+      30_000,
+      "wk-generate-daily",
+    );
+  }, [user, planDate, sideHit, sideThrow]);
+
   const generate = useCallback(async () => {
     if (!user?.id || generating) return;
     setGenerating(true);
+    setFailed(false);
+    const started = Date.now();
     try {
-      const { error } = await supabase.functions.invoke("wk-generate-daily", {
-        body: { plan_date: planDate, side_hit: sideHit, side_throw: sideThrow },
-      });
-      if (error) throw error;
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { error } = await invokeOnce();
+          if (error) throw error;
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          if (attempt === 0) {
+            // Backoff before the single retry
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+        }
+      }
+      if (lastErr) throw lastErr;
+      console.debug("[wk-generate-daily] ok", { ms: Date.now() - started });
       await qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
     } catch (e) {
-      console.error("wk-generate-daily failed", e);
-      toast.error("Could not generate today's elite plan. Try again.");
+      console.error("wk-generate-daily failed (after retry)", e);
+      setFailed(true);
+      toast.error("Elite plan couldn't build. Tap Regenerate.");
     } finally {
       setGenerating(false);
     }
-  }, [user?.id, planDate, qc, generating, sideHit, sideThrow]);
+  }, [user?.id, planDate, qc, generating, invokeOnce]);
 
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
-    if (!query.isLoading && query.data && query.data.length === 0 && !generating && !autoTried.current) {
+    if (
+      !query.isLoading &&
+      query.data &&
+      query.data.length === 0 &&
+      !generating &&
+      !failed &&
+      !autoTried.current
+    ) {
       autoTried.current = true;
       generate();
     }
-  }, [query.isLoading, query.data, generate, generating]);
+  }, [query.isLoading, query.data, generate, generating, failed]);
 
+  const retry = useCallback(() => {
+    autoTried.current = false;
+    setFailed(false);
+    generate();
+  }, [generate]);
 
   const grouped = useMemo(() => {
     const rxs = query.data ?? [];
@@ -121,6 +191,17 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     return first?.why_payload?.phase_display ?? null;
   }, [query.data]);
 
+  // Effective CNS = skipped rows contribute 0, everything else contributes
+  // full cns_cost. Keeps the "CNS heavy" clamp honest to actuals.
+  const effectiveCnsTotal = useMemo(
+    () =>
+      (query.data ?? []).reduce(
+        (s, r) => s + (r.status === "skipped" ? 0 : Number(r.cns_cost) || 0),
+        0,
+      ),
+    [query.data],
+  );
+
   return {
     ...query,
     grouped,
@@ -128,5 +209,8 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     phaseDisplay,
     generate,
     generating,
+    failed,
+    retry,
+    effectiveCnsTotal,
   };
 }

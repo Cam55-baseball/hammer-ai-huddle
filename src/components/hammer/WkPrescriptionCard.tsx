@@ -101,8 +101,8 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
                 </Badge>
               )}
             </div>
-            <div className="mt-1 font-semibold text-sm">{rx.movement_name}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">{dosage}</div>
+            <div className="mt-1 font-semibold text-sm line-clamp-2 break-words">{rx.movement_name}</div>
+            <div className="text-xs text-muted-foreground mt-0.5 break-words">{dosage}</div>
           </div>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="shrink-0 h-7 px-2">
