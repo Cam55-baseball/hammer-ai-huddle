@@ -74,6 +74,17 @@ export interface WkRx {
     source_philosophy?: string;
     override?: { reason: string | null; actor_role: string; expires_at: string } | null;
   };
+  // WIC constitutional fields
+  adaptation?: string | null;
+  engine?: string | null;
+  why_v2?: {
+    why_today?: string;
+    why_athlete?: string;
+    why_exercise?: string;
+    why_volume?: string;
+    why_order?: string;
+    why_recovery?: string;
+  } | null;
   status: "planned" | "completed" | "skipped";
 }
 
