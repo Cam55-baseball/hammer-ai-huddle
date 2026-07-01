@@ -27,6 +27,8 @@ import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
+import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { getCard } from "@/lib/wic/cardRegistry";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
