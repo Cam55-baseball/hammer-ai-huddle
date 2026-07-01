@@ -27,14 +27,17 @@ import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
+import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { getCard } from "@/lib/wic/cardRegistry";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement,
+    grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
+  const entry = getCard("lift")!;
   const blocked = useBlockedLiftMovements(phaseKey);
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);
@@ -87,7 +90,12 @@ export function WkLiftsCard() {
   const blockedItems = blocked.data ?? [];
 
   return (
-    <Card className="border-blue-500/30">
+    <Card
+      className="border-blue-500/30"
+      data-card-type={entry.cardType}
+      data-display-order={entry.displayOrder}
+      data-generation-id={snapshotIdentity.generation_id ?? ""}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -161,7 +169,9 @@ export function WkLiftsCard() {
             </div>
           </details>
         )}
+        <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
       </CardContent>
+
 
       <Dialog open={!!overrideTarget} onOpenChange={(o) => { if (!o) { setOverrideTarget(null); setOverrideReason(""); } }}>
         <DialogContent className="max-w-md">

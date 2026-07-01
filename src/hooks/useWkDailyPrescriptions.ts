@@ -155,6 +155,24 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     },
   });
 
+  // Phase 3 — practice-day awareness (mirrors the generator's query so the
+  // client-side dayKind cannot drift from what the server prescribed against).
+  const practiceDayQuery = useQuery({
+    queryKey: ["wk-rx-practice-day", user?.id, planDate],
+    enabled: !!user?.id,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("scheduled_practice_sessions")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("session_date", planDate)
+        .limit(1);
+      if (error) throw error;
+      return (data ?? []).length > 0;
+    },
+  });
+
   const invokeOnce = useCallback(async () => {
     // Pull the most recent recovery ack so the edge function can bias the
     // next plan (real learning loop instead of one-way personalization).
@@ -273,12 +291,15 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       bat_speed: rxs.filter((r) => r.slot === "bat_speed"),
       conditioning: rxs.filter((r) => r.slot === "conditioning"),
       cross_sport: rxs.filter((r) => r.slot === "cross_sport"),
-      // New card-scoped buckets
-      speedBat: [
+      // New card-scoped buckets — Phase 3 splits Speed and Bat Speed into
+      // independent cards. Cross-sport at early_activation placement remains
+      // available for the Speed card banner on game days; content itself is
+      // owned by the cross_sport card.
+      speedCard: [
         ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
-        ...rxs.filter((r) => r.slot === "bat_speed"),
         ...rxs.filter((r) => r.slot === "speed"),
       ],
+      batSpeedCard: rxs.filter((r) => r.slot === "bat_speed"),
       lifts: [
         ...rxs.filter((r) => r.slot === "lift").sort(byRoleOrder),
         ...rxs.filter((r) => r.slot === "supplemental"),
@@ -286,6 +307,13 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       conditioningCard: [
         ...rxs.filter((r) => r.slot === "conditioning"),
         ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement !== "early_activation"),
+      ],
+      // Legacy alias kept for any lingering imports; will be removed after
+      // callers are migrated. Prefer speedCard + batSpeedCard.
+      speedBat: [
+        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
+        ...rxs.filter((r) => r.slot === "bat_speed"),
+        ...rxs.filter((r) => r.slot === "speed"),
       ],
     };
   }, [query.data]);
@@ -330,6 +358,46 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     await generate();
   }, [user?.id, planDate, generate]);
 
+  // Phase 3 — unified snapshot identity. Every card stamps this so cross-card
+  // consistency is provable at render time; a card carrying a different
+  // identity is by definition stale and must refetch.
+  const snapshotIdentity = useMemo(() => {
+    const rxs = query.data ?? [];
+    const first = rxs[0];
+    const generatedAt =
+      rxs.reduce<string | null>((min, r: any) => {
+        const c = r?.created_at ?? null;
+        if (!c) return min;
+        return !min || c < min ? c : min;
+      }, null) ?? null;
+    const generatorVersion = (first as any)?.generator_version ?? first?.why_payload?.generator_version ?? null;
+    const seasonPhase = first?.why_payload?.phase ?? null;
+    const generationId =
+      user?.id && generatedAt
+        ? `${user.id}:${planDate}:${generatorVersion ?? "na"}:${generatedAt}`
+        : null;
+    return {
+      generation_id: generationId,
+      generated_at: generatedAt,
+      generator_version: generatorVersion,
+      season_phase: seasonPhase,
+      season_display: (first?.why_payload?.phase_display as string | undefined) ?? null,
+      plan_date: planDate,
+    };
+  }, [query.data, user?.id, planDate]);
+
+  // Phase 3 — day kind. Derived from the SAME sources the generator uses
+  // (gp_games + scheduled_practice_sessions) so the daily flow accurately
+  // reflects the athlete's schedule.
+  const dayKind: "game" | "practice" | "both" | "neither" = useMemo(() => {
+    const g = !!gameDayQuery.data;
+    const p = !!practiceDayQuery.data;
+    if (g && p) return "both";
+    if (g) return "game";
+    if (p) return "practice";
+    return "neither";
+  }, [gameDayQuery.data, practiceDayQuery.data]);
+
   return {
     ...query,
     grouped,
@@ -342,5 +410,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     retry,
     effectiveCnsTotal,
     overrideMovement,
+    snapshotIdentity,
+    dayKind,
   };
 }
