@@ -851,6 +851,7 @@ const handler = async (req: Request): Promise<Response> => {
       validator_report: validatorReport,
       diagnostics_id: diagId,
       generation_ms: generationMs,
+      training_context: trainingContext,
       prescriptions: rows,
     });
   } catch (e) {
