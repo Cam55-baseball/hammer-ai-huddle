@@ -13569,11 +13569,17 @@ export type Database = {
           duplicate_count: number
           errors: Json
           exercise_count: number
+          exercise_governance_version: string | null
           generation_id: string
           generation_ms: number | null
           generator_version: string
           id: string
           legality_profile_id: string | null
+          lift_category_coverage: Json | null
+          lift_duplicate_check_ok: boolean | null
+          lift_full_body_ok: boolean | null
+          lift_substitution_completeness: number | null
+          lift_template_id: string | null
           metadata_complete: boolean
           missing_context_fields: string[] | null
           ordering_ok: boolean
@@ -13600,11 +13606,17 @@ export type Database = {
           duplicate_count?: number
           errors?: Json
           exercise_count?: number
+          exercise_governance_version?: string | null
           generation_id?: string
           generation_ms?: number | null
           generator_version: string
           id?: string
           legality_profile_id?: string | null
+          lift_category_coverage?: Json | null
+          lift_duplicate_check_ok?: boolean | null
+          lift_full_body_ok?: boolean | null
+          lift_substitution_completeness?: number | null
+          lift_template_id?: string | null
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
@@ -13631,11 +13643,17 @@ export type Database = {
           duplicate_count?: number
           errors?: Json
           exercise_count?: number
+          exercise_governance_version?: string | null
           generation_id?: string
           generation_ms?: number | null
           generator_version?: string
           id?: string
           legality_profile_id?: string | null
+          lift_category_coverage?: Json | null
+          lift_duplicate_check_ok?: boolean | null
+          lift_full_body_ok?: boolean | null
+          lift_substitution_completeness?: number | null
+          lift_template_id?: string | null
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
@@ -13654,10 +13672,12 @@ export type Database = {
       }
       wk_movement_catalog: {
         Row: {
+          aliases: string[] | null
           bat_compatible: boolean | null
           bias: string | null
           category: string
           cns_cost: number
+          concentric_profile: string | null
           contraindications: string[] | null
           created_at: string
           cue: string
@@ -13667,11 +13687,15 @@ export type Database = {
           default_tempo: string | null
           demo_video_url: string | null
           duplicate_group: string | null
+          eccentric_profile: string | null
           elastic_emphasis: boolean | null
+          elastic_profile: string | null
           equipment: string[] | null
+          equipment_requirements: string[] | null
           evidence_note: string | null
           family: string | null
           game_day_eligible: boolean | null
+          governance_version: string | null
           id: string
           intensity_class: string | null
           is_eccentric_dominant: boolean
@@ -13679,8 +13703,10 @@ export type Database = {
           min_age_years: number | null
           min_competition_level: string | null
           min_training_age_years: number
+          movement_category: string | null
           movement_pattern: string | null
           name: string
+          pap_compatible: boolean | null
           pattern: string | null
           phase_allow: string[]
           position_scope: string[] | null
@@ -13688,17 +13714,23 @@ export type Database = {
           primary_adaptation: string | null
           progression_slug: string | null
           recovery_cost: number | null
+          recovery_demand: number | null
           recovery_window_hours: number | null
           regression_slug: string | null
           replacement_pool: string[] | null
+          rotational: boolean | null
           season_eligibility: string[] | null
+          season_legality: Json | null
           secondary_adaptation: string | null
           slug: string
           source_philosophy: string | null
           speed_emphasis: boolean | null
           sport_scope: string
           sprint_compatible: boolean | null
+          substitution_family: string | null
           throw_compatible: boolean | null
+          training_age_legality: Json | null
+          unilateral: boolean | null
           updated_at: string
           variant: string | null
           volume_cost: number | null
@@ -13706,10 +13738,12 @@ export type Database = {
           wic_metadata_complete: boolean | null
         }
         Insert: {
+          aliases?: string[] | null
           bat_compatible?: boolean | null
           bias?: string | null
           category: string
           cns_cost?: number
+          concentric_profile?: string | null
           contraindications?: string[] | null
           created_at?: string
           cue: string
@@ -13719,11 +13753,15 @@ export type Database = {
           default_tempo?: string | null
           demo_video_url?: string | null
           duplicate_group?: string | null
+          eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
+          elastic_profile?: string | null
           equipment?: string[] | null
+          equipment_requirements?: string[] | null
           evidence_note?: string | null
           family?: string | null
           game_day_eligible?: boolean | null
+          governance_version?: string | null
           id?: string
           intensity_class?: string | null
           is_eccentric_dominant?: boolean
@@ -13731,8 +13769,10 @@ export type Database = {
           min_age_years?: number | null
           min_competition_level?: string | null
           min_training_age_years?: number
+          movement_category?: string | null
           movement_pattern?: string | null
           name: string
+          pap_compatible?: boolean | null
           pattern?: string | null
           phase_allow?: string[]
           position_scope?: string[] | null
@@ -13740,17 +13780,23 @@ export type Database = {
           primary_adaptation?: string | null
           progression_slug?: string | null
           recovery_cost?: number | null
+          recovery_demand?: number | null
           recovery_window_hours?: number | null
           regression_slug?: string | null
           replacement_pool?: string[] | null
+          rotational?: boolean | null
           season_eligibility?: string[] | null
+          season_legality?: Json | null
           secondary_adaptation?: string | null
           slug: string
           source_philosophy?: string | null
           speed_emphasis?: boolean | null
           sport_scope?: string
           sprint_compatible?: boolean | null
+          substitution_family?: string | null
           throw_compatible?: boolean | null
+          training_age_legality?: Json | null
+          unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
           volume_cost?: number | null
@@ -13758,10 +13804,12 @@ export type Database = {
           wic_metadata_complete?: boolean | null
         }
         Update: {
+          aliases?: string[] | null
           bat_compatible?: boolean | null
           bias?: string | null
           category?: string
           cns_cost?: number
+          concentric_profile?: string | null
           contraindications?: string[] | null
           created_at?: string
           cue?: string
@@ -13771,11 +13819,15 @@ export type Database = {
           default_tempo?: string | null
           demo_video_url?: string | null
           duplicate_group?: string | null
+          eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
+          elastic_profile?: string | null
           equipment?: string[] | null
+          equipment_requirements?: string[] | null
           evidence_note?: string | null
           family?: string | null
           game_day_eligible?: boolean | null
+          governance_version?: string | null
           id?: string
           intensity_class?: string | null
           is_eccentric_dominant?: boolean
@@ -13783,8 +13835,10 @@ export type Database = {
           min_age_years?: number | null
           min_competition_level?: string | null
           min_training_age_years?: number
+          movement_category?: string | null
           movement_pattern?: string | null
           name?: string
+          pap_compatible?: boolean | null
           pattern?: string | null
           phase_allow?: string[]
           position_scope?: string[] | null
@@ -13792,17 +13846,23 @@ export type Database = {
           primary_adaptation?: string | null
           progression_slug?: string | null
           recovery_cost?: number | null
+          recovery_demand?: number | null
           recovery_window_hours?: number | null
           regression_slug?: string | null
           replacement_pool?: string[] | null
+          rotational?: boolean | null
           season_eligibility?: string[] | null
+          season_legality?: Json | null
           secondary_adaptation?: string | null
           slug?: string
           source_philosophy?: string | null
           speed_emphasis?: boolean | null
           sport_scope?: string
           sprint_compatible?: boolean | null
+          substitution_family?: string | null
           throw_compatible?: boolean | null
+          training_age_legality?: Json | null
+          unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
           volume_cost?: number | null
