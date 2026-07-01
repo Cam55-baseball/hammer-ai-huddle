@@ -242,10 +242,21 @@ const handler = async (req: Request): Promise<Response> => {
       why: string = "",
     ) => {
       const s = swap(m);
+      // Session dedupe: skip if this slug was already emitted today
+      if (usedThisSession.has(s.movement.slug)) return;
+      usedThisSession.add(s.movement.slug);
       const setsBase = overrides.sets ?? s.movement.default_sets ?? null;
       const repsBase = overrides.reps ?? s.movement.default_reps ?? null;
       const clamped = (cnsUsed + s.movement.cns_cost) > cnsCap;
       cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
+      const rationaleParts: string[] = [
+        `Phase: ${phaseRes.displayName}`,
+        `Training age: ${trainingAgeYears}y${isProProspect ? " (pro prospect)" : ""}`,
+        s.movement.intensity_class ? `Class: ${s.movement.intensity_class}` : "",
+        s.movement.source_philosophy ? `Source: ${s.movement.source_philosophy}` : "",
+        why || s.movement.why_prescribed,
+        reductions.length ? `Reductions: ${reductions.map((r) => r.reason).join(", ")}` : "",
+      ].filter(Boolean);
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
@@ -260,12 +271,15 @@ const handler = async (req: Request): Promise<Response> => {
         why_payload: {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
+          intensity_class: s.movement.intensity_class,
+          source_philosophy: s.movement.source_philosophy,
           why: why || s.movement.why_prescribed,
           cue: s.movement.cue,
           rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
           reductions,
         },
-      });
+        rationale: rationaleParts.join(" • "),
+      } as any);
     };
 
     const isOffseason = phaseRes.phase.startsWith("os_");
