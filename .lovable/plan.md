@@ -1,41 +1,42 @@
-## Status
+## Final E2E Verification & Gap-Closure Pass
 
-The core E2E plumbing is in place:
-- `wk-generate-daily` edge function deployed
-- `WkLiftsSpeedSection` reads `gameToday` from `useGpSignal` and suppresses lifts
-- `HammerDailyPlan` clamps skill blocks to "maintain" when Σ CNS ≥ 7 and shows a "CNS heavy" badge
-- `WkPrescriptionCard` writes completions to `wk_session_logs`
-- `ReviewAnswersStep` captures training age / pro-prospect / 1RMs
-- Owner-only Tuning link to `/admin/periodization`
+Goal: prove the Elite Lifts + Speed system (and its dependencies) is 100% E2E with zero gaps, then close anything found.
 
-What is still rough enough to break "seamless and elite":
+### 1. Static verification sweep
+- `tsgo` full typecheck.
+- Grep for known risk patterns: raw `signOut(`, unguarded dynamic imports, `useAuth` without `useOptionalAuth` in error-prone leaves, missing `ErrorBoundary` around lazy sections.
+- Confirm every table touched by the plan (`wk_prescriptions`, `wk_session_logs`, `wk_recovery_acks`, `wk_periodization_blocks`, `wk_cns_ledger`, `profiles` new cols) has SELECT/INSERT/UPDATE grants + RLS policies for `authenticated`.
 
-## Gaps to close
+### 2. Edge function contract audit (`wk-generate-daily`)
+- Verify request schema (Zod) matches every client call site (`useWkDailyPrescriptions`, admin regenerate).
+- Verify response shape is consumed correctly (CNS totals, prescriptions[], reason strings).
+- Check CORS on all responses (including error paths), 45s timeout guard, structured logs, and recovery-ack + game-day inputs are read defensively.
+- Run `supabase--curl_edge_functions` with a real preview session for: (a) normal day, (b) game-day suppression, (c) post-recovery-ack low-CNS mode. Capture logs.
 
-1. **Error containment** — `WkLiftsSpeedSection` and `WkPrescriptionCard` are not wrapped in an error boundary. A single edge-function or render error currently blanks the Hammer Today plan. Wrap both in a localized `ElitePlanBoundary` that falls back to a compact "Plan unavailable — retry" card so the rest of Hammer Today keeps working.
+### 3. Client E2E audit
+- `useWkDailyPrescriptions`: single-fire ref, 30s timeout, backoff retry, manual regenerate, `effectiveCnsTotal` from actuals, `SideContext` threading, error state exposed to UI.
+- `WkLiftsSpeedSection`: skeleton, error boundary, game-day primer, bat-vs-lift toggle persisted, recovery ack write path, mobile wrap at 402px.
+- `HammerDailyPlan`: CNS clamp (≥7) applied to hitting/throwing/defense with badge, owner-only Tuning menu, error boundary wrap.
+- `ReviewAnswersStep`: writes `training_age_years`, `is_pro_prospect`, `one_rm` to `profiles`; values round-trip.
 
-2. **Auto-generate resiliency** — `useWkDailyPrescriptions` currently retries once per mount. If the first attempt fails (timeout, cold start), the user sees an empty section until tomorrow. Add: a) 30s timeout on the invoke, b) one automatic retry with backoff, c) a visible "Regenerate plan" button when both attempts fail.
+### 4. Live Playwright smoke (headless, localhost:8080, injected session)
+- Route: `/` Hammers Today.
+  - Screenshot the Lifts + Speed card in loading → generated states.
+  - Toggle bat-before-lifts, reload, confirm persistence.
+  - Tap "Regenerate" and confirm new prescription arrives.
+  - Log a completion on one prescription; confirm `wk_session_logs` row via a follow-up query.
+- Simulate game-day: insert a `gp_games` row for today via edge or query, reload, confirm activation primer replaces prescriptions and CNS badge behavior.
+- Submit a recovery ack (high soreness) and confirm the next generation drops the CNS cap for 48h.
+- Owner path: open the header menu → "Tuning" → `/admin/periodization` loads and lists blocks.
 
-3. **Recovery acknowledgment loop** — `wk_recovery_acks` is written but never read back into the next-day prescription. Thread the most recent ack (soreness / sleep / readiness) into the `wk-generate-daily` request body so the next plan actually adapts. Without this, "personalization" is a one-way street.
+### 5. Gap closure
+For each defect found in steps 1–4, apply the smallest targeted fix (client, edge, or migration with proper GRANTs) and re-run the affected verification.
 
-4. **Session log → CNS ledger** — Completions land in `wk_session_logs` but the CNS clamp only reads today's *prescribed* `cns_cost`. After a user finishes a block, recompute Σ CNS from actuals so the clamp reflects what was really done (e.g., skipped sets reduce the clamp, bonus sets increase it).
+### 6. Final report
+- Table of checks (pass/fail + evidence: screenshot path, log line, or query result).
+- Explicit statement of any residual gaps or "won't fix" items with rationale.
 
-5. **Game-day suppression UX** — Today the suppression notice replaces the whole section. Replace with a collapsible "Game day — lifts paused, here's your activation primer" card containing a 10-minute CNS-priming routine so users still get value on game days.
-
-6. **Mobile polish** — At 402px the bat-vs-lift toggle, "Why" disclosure, and set/rep tracker overflow the card. Apply `flex-wrap`, stack the toggle vertically under `sm`, and clamp the prescription headline to 2 lines.
-
-7. **Owner Tuning link visibility** — The Tuning button currently renders inline in the header and pushes other controls off-screen on mobile. Move it into the existing overflow menu (kebab) so the header stays clean for athletes.
-
-8. **Telemetry sanity** — Add a single `console.debug` → `engine_function_logs` row on each plan generation with `{ generated_ms, cns_total, blocks_n, suppressed: gameToday }` so we can verify quality in production without guessing.
-
-## Out of scope
-
-No schema migrations beyond reading existing `wk_recovery_acks` rows. No changes to dailyPlan business logic beyond the CNS-from-actuals recompute. Onboarding, dossiers, and General untouched.
-
-## Verification
-
-- `tsgo` clean
-- Manual: force the edge function to 500 → confirm boundary + retry button render and the rest of Hammer Today stays interactive
-- Manual: mark a game today → confirm activation-primer card appears instead of blank suppression
-- Manual: complete one block → confirm "CNS heavy" badge updates to reflect actuals
-- Manual: 402px viewport → no horizontal overflow in Lifts + Speed section
+### Technical notes
+- No new features; verification + minimal fixes only.
+- No schema changes unless a missing grant/policy is discovered.
+- All edge function changes redeploy automatically; no manual deploy step surfaced to user.
