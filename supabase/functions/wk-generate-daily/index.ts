@@ -349,6 +349,7 @@ const handler = async (req: Request): Promise<Response> => {
         substitution_reason: s.reason,
         why_payload: {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
+          generator_version: "full_body_game_day_v3",
           game_day: isGameDay,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
