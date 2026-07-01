@@ -74,6 +74,7 @@ export interface WkRx {
     intensity_class?: string;
     source_philosophy?: string;
     override?: { reason: string | null; actor_role: string; expires_at: string } | null;
+    training_context?: TrainingContext | null;
   };
   // WIC constitutional fields
   adaptation?: string | null;
