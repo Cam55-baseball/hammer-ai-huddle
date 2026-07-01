@@ -13,6 +13,9 @@
     "e2e:onboarding": "node tests/e2e/onboarding/run.mjs",
     "verify:onboarding": "npm run test:onboarding && npm run e2e:onboarding",
     "lint:p3": "npx -y tsx scripts/lint-no-p3-cue.ts",
+    "audit:wk-inseason": "npx -y tsx scripts/check-no-inseason-eccentric.ts",
+    "audit:wk-dedupe": "npx -y tsx scripts/audits/wk-dedupe-check.ts",
+    "audit:wk": "npm run audit:wk-inseason && npm run audit:wk-dedupe",
     "verify": "npm run lint:p3 && npm run lint"
   },
   "dependencies": {
