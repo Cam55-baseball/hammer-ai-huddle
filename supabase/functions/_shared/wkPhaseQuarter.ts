@@ -44,6 +44,22 @@ export function resolveWkPhase(
   if (seasonRes.phase === "preseason") {
     return { phase: "os_q4", displayName: QUARTER_LABEL.os_q4, source: seasonRes.source };
   }
+  // seasonRes.phase === "off_season"
+  // Guard: if the resolver had to default (no signal AND no explicit off-season
+  // window) but the athlete stored a non-off_season status, honor the stored
+  // status instead of showing "Offseason Q1". Only true default users see os_q1.
+  if (seasonRes.source === "default") {
+    const stored = (settings?.season_status ?? "").toString();
+    if (stored === "in_season") {
+      return { phase: "in_season", displayName: QUARTER_LABEL.in_season, source: "stored" };
+    }
+    if (stored === "post_season") {
+      return { phase: "post_season", displayName: QUARTER_LABEL.post_season, source: "stored" };
+    }
+    if (stored === "preseason") {
+      return { phase: "os_q4", displayName: QUARTER_LABEL.os_q4, source: "stored" };
+    }
+  }
   const postEnd = parseDate(settings?.post_season_end_date);
   const preStart = parseDate(settings?.preseason_start_date);
   if (postEnd && preStart && preStart > postEnd) {
