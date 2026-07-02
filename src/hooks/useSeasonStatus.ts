@@ -95,6 +95,12 @@ export function useSeasonStatus() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      // Any surface derived from the stored season phase must refresh so the
+      // WK cards / plan header / profile all show the corrected phase in the
+      // same paint. Explicit invalidation of the daily prescription cache
+      // triggers a regenerate on next mount so cards no longer display a
+      // stale "Offseason Q1" alongside a corrected "In Season" header.
+      queryClient.invalidateQueries({ queryKey: ['wk-rx'] });
     },
   });
 
