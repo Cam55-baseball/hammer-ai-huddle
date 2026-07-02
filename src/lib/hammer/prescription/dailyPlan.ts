@@ -198,7 +198,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "2 sets x 10 steps each way", cue: "knees track toes" },
               { name: "Pogo hops", dosage: "2 sets x 12 contacts" },
             ];
-      const dur = inSeason ? 8 : offSeason ? 18 : 12;
+      const dur = inSeason ? 12 : offSeason ? 18 : 12;
       return {
         modality,
         title: inSeason ? "Warm-up — game-ready" : offSeason ? "Warm-up — extended" : "Warm-up — dynamic",
