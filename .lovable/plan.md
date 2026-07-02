@@ -1,70 +1,78 @@
-## Root cause
+## Issue 1 — Today Plan: Speed, Bat Speed, and Lifts fail to load
 
-Edge-function logs for `wk-generate-daily` show the WIC validator is rejecting every generation with fatal issues:
+**Root cause (from `wk-generate-daily` edge logs):** the WIC certifiers reject every generation with fatal issues:
 
-- `lift_not_full_body` / `lift_missing_compound_lower|upper_push|upper_pull|core`
-- `speed_governance_missing` on `accel_10_30y`, `lateral_first_step`, `repeat_90ft_bb`
-- `speed_unresolved_template` (needs `acceleration`)
-- `bs_unresolved_template` (needs `elastic_rotation`)
+- `lift_not_full_body` — template `full_body_strength` requires `compound_lower, compound_upper_push, compound_upper_pull, core, rotation`, but the composed session is missing `compound_lower` and `rotation`.
+- `lift_missing_compound_lower` / `lift_missing_rotational_demand` — same cause.
+- `speed_duplicate_category` — the sprint composer emits two `acceleration` slugs in one session.
+- `bs_unresolved_template` — `bs.max` requires a slug tagged `bat_speed_category = elastic_rotation`, none are picked.
 
-A DB inspection of `wk_movement_catalog` confirms a broken backfill: nearly every row has `movement_category = 'rotation'` regardless of slug, and `speed_category` / `bat_speed_category` / `conditioning_category` / `cross_sport_category` / `recovery_category` / `arm_care_category` are `NULL` for most rows.
+Two contributing sub-causes:
 
-Because Session Builders read categories from the catalog, no template can resolve — validation fatal → generation aborts → user sees "Elite plan couldn't build. Tap Regenerate." on every card (Lifts, Speed, Bat Speed, Conditioning).
+1. **Season resolution drift** — user is `in_season` but the lift certifier resolved `full_body_strength` (off-season default), so the required-category list is stricter than the in-season template. The `resolveWkPhase` fix from the prior turn is not propagating into the lift template resolver's `seasonPhase` input.
+2. **Composer/catalog mismatch** — `engines/strength.ts` picks slugs (`push_press_concentric`, `sa_standing_cable_row`, `sa_db_chest_press`, `sl_deadlift_fat_grips`, `paloff_press`, `slide_lunge`, `renegade_row`, `weighted_pullup_full`, `trap_bar_trunk_twist`, `waiter_carry`, `standing_cable_hip_flexor`, `rdl_concentric`, `trap_bar_dl_double_ecc`) that are either absent from `wk_movement_catalog` or lack a `movement_category`. The sprint composer emits two `acceleration` drills. The bat-speed composer emits no `elastic_rotation` slug.
+
+## Issue 2 — Game Hub numeric inputs default to `0` and can't be cleared
+
+Every `Input type="number"` in `src/components/games/*.tsx` (AtBatLogger, PitchLogger, DefenseLogger, BaserunLogger, SubLogger, GameSheet, dossier drawers) is bound to a state field that starts at `0`. React treats `value={0}` as a controlled `"0"` — the user can't blank the field to type their own number.
 
 ## Fix
 
-### 1. Data migration — correct governance categories on `wk_movement_catalog`
+### A. Backfill catalog governance (deterministic, additive)
 
-Add a single migration that UPDATEs each seeded slug to the category expected by its engine module. Categories are derived from `supabase/functions/_shared/wic/*/movementCategories.ts` and the slug-family conventions already used in the seeders.
+One migration on `wk_movement_catalog`:
 
-Examples of the mapping (full mapping applied in the migration):
+- Insert-or-update rows for every slug referenced by `engines/strength.ts`, `engines/sprint.ts`, `engines/batSpeed.ts` that is missing or mis-categorised. Categories:
+  - `push_press_concentric`, `sa_db_chest_press`, `landmine_row_to_press`, `bench_press_concentric`, `db_bench` → `compound_upper_push`
+  - `sa_standing_cable_row`, `weighted_pullup_full`, `weighted_pullup_concentric`, `renegade_row`, `lat_pulldown`, `db_row_bench` → `compound_upper_pull`
+  - `back_squat_*`, `front_squat_double_ecc`, `trap_bar_dl_double_ecc`, `goblet_squat` → `compound_lower`
+  - `hip_thrust_concentric`, `hip_thrust_double_ecc`, `rdl_concentric` → `posterior_chain`
+  - `sl_deadlift_fat_grips`, `slide_lunge`, `kot_lunge`, `lateral_db_step_up` → `single_leg`
+  - `paloff_press` → `anti_rotation`
+  - `waiter_carry`, `standing_cable_hip_flexor` → `carry`
+  - `trap_bar_trunk_twist`, `heavy_russian_twist` → `rotation`
+  - `crossover_symmetry_full`, `jband_full_chart` → `arm_care`
+- Bat speed `bat_speed_category = elastic_rotation` on `band_resisted_swings`, `cable_chops`, and add `med_ball_rot_shotput`, `overload_bat_swings`, `underload_bat_swings` if missing.
+- Speed `speed_category`: keep `accel_10_30y = acceleration`; retag `sprint_starts_wall`/`wall_drill_march` → `acceleration`; ensure `top_speed_flys`/`fly_10s` → `top_speed`, `bounds_ab` → `elastic_plyo`, so the sprint composer stops emitting duplicate `acceleration`.
 
-- **Lifts / `movement_category`**
-  - `back_squat_*`, `front_squat*`, `trap_bar_dl*`, `rdl*`, `hip_thrust*` → `compound_lower`
-  - `bench_press_*`, `db_bench`, `ohp*`, `landmine_press*` → `compound_upper_push`
-  - `chin_up*`, `pullup*`, `db_row_bench`, `pendlay_row*`, `chest_supported_row*` → `compound_upper_pull`
-  - `atg_split_squat`, `bulgarian*`, `bowler_squat`, `box_step_up`, `reverse_lunge*` → `single_leg`
-  - `nordic*`, `copenhagen*`, `posterior_*` → `posterior_chain`
-  - `pallof*`, `anti_rotation*` → `anti_rotation`
-  - `farmer_carry*`, `suitcase_carry*` → `carry`
-  - `dead_bug*`, `hollow*`, `plank*`, `deadbug*`, `hlr*` → `core`
-  - `cable_chops`, `band_resisted_swings`, `med_ball_rot*` → `rotation`
-  - Mobility / breathing → `mobility`
-  - `crossover_symmetry*`, `jaeger*`, `plyocare*` → `arm_care`
-- **Speed / `speed_category`** (leave `movement_category` NULL or `jump_landing` as appropriate)
-  - `accel_10_30y`, `sprint_starts*`, `wall_drill*` → `acceleration`
-  - `lateral_first_step`, `crossover_run` → `lateral_agility`
-  - `repeat_90ft_bb`, `tempo_runs` → `alactic_capacity`
-  - `broad_jump*`, `depth_jump*`, `bounds*` → `elastic_plyo`
-- **Bat Speed / `bat_speed_category`**
-  - `band_resisted_swings`, `cable_chops`, `med_ball_rot*`, `overload_bat*`, `underload_bat*` → `elastic_rotation`
-  - `heavy_bag_swing*` → `heavy_load_rotation`
-  - `contact_point_tee*` → `precision_rotation`
-- **Conditioning / `conditioning_category`**
-  - `bases_*`, `catcher_up_downs`, `tempo_runs` → `aerobic_base`
-  - `hiit_bike`, `assault_bike_intervals` → `alactic_intervals`
-- **Cross-sport / `cross_sport_category`**
-  - `cross_sport_*` → `coordination`
-- **Recovery / `recovery_category`**
-  - `contralateral_cross_crawl`, `deep_squat_breathing`, `foam_roll*`, `parasympathetic_reset*` → `regeneration`
-- **Arm-care / `arm_care_category`**
-  - `crossover_symmetry_full`, `jaeger_j_bands`, `plyocare_reverse_throws` → `throwing_day`
+Idempotent `UPDATE ... WHERE slug = ...`; new rows via `INSERT ... ON CONFLICT (slug) DO UPDATE`. No schema change.
 
-The migration is idempotent (`UPDATE ... WHERE slug = ...`) and only sets columns that currently hold the wrong value or NULL. No schema change, no drops, additive per system-freeze rules.
+### B. Composer correctness (`supabase/functions/_shared/wic/engines/`)
 
-### 2. Toast UX — one clean message per generation attempt
+- **`strength.ts`** — always emit one movement per required category from the resolved template (compound_lower + upper_push + upper_pull + core + rotation for full-body templates), pulling from the phase-legal slug list. Explicitly add a `rotation` slug (`heavy_russian_twist` or `trap_bar_trunk_twist`) so the in-season/off-season sessions never miss it.
+- **`sprint.ts`** — enforce "one primary acceleration + one non-acceleration accessory" so `speed_duplicate_category` cannot fire; pick from `top_speed`/`elastic_plyo`/`change_of_direction` for the second slot.
+- **`batSpeed.ts`** — always include one `elastic_rotation` slug for `bs.max`, gated on catalog tag.
 
-`src/hooks/useWkDailyPrescriptions.ts`:
+### C. Season resolution reaches the lift certifier
 
-- Keep the single retry loop, but on final failure show ONE toast (`toast.error(..., { id: "wk-generate-failed" })`) so it doesn't stack across cards.
-- Message: **"Today's plan is regenerating — tap Regenerate if it doesn't refresh."** (less alarming; still actionable).
-- Add a small `console.warn` with the returned edge-function error body for diagnostics.
+In `supabase/functions/wk-generate-daily/index.ts` where `certifyLift` / `resolveLiftTemplate` is called, pass the canonical `seasonPhase` from `resolveWkPhase` (the same source the client uses via `useSeasonStatus`) instead of the raw off-season fallback. Verify `template.seasonPhase === "in_season"` when stored status is in-season.
 
-No other UI, schema, or engine logic changes.
+### D. Softer failure UX (already partially present)
+
+Keep the single non-stacking toast from `useWkDailyPrescriptions`; add a `retry` button on each failing card (already there via `CardActions`). No new UI copy.
+
+### E. Numeric inputs in Game Hub — reusable `<NumberField>`
+
+Create `src/components/games/NumberField.tsx`:
+
+- Local string state seeded from the numeric prop (`""` when incoming value is `0` and `allowEmpty` is true, else `String(value)`).
+- `onChange`: accept `""`; call parent with `undefined` (or `0` if `zeroOnBlank`) only on blur.
+- Preserves `min`, `max`, `step`, `placeholder`, `className` passthrough.
+
+Replace every `<Input type="number" value={f.xxx} onChange=...>` in:
+
+- `AtBatLogger.tsx`, `PitchLogger.tsx`, `DefenseLogger.tsx`, `BaserunLogger.tsx`, `SubLogger.tsx`, `GameSheet.tsx`, `PitcherDossierDrawer.tsx`, `HitterDossierDrawer.tsx`
+
+with `<NumberField ...>`. Business logic (submission, validation) untouched.
 
 ### Validation
 
-1. Apply migration → re-run `wk-generate-daily` for the affected user/date → confirm no `WIC validation failed` fatal issues in edge logs.
-2. Confirm Lifts card resolves `full_body_strength` (compound_lower + upper_push + upper_pull + core present).
-3. Confirm Speed template `speed.acceleration` and Bat Speed template `bs.max` resolve.
-4. Confirm the error toast no longer appears on the Today plan.
+1. Re-run `wk-generate-daily` for the affected user/date → confirm zero fatal issues in edge-function logs.
+2. Reload Hammers Today → Speed, Bat Speed, and Lifts cards render with real prescriptions and CardActions.
+3. Open Game Hub → each numeric field can be cleared (delete the `0`) and typed into freely; submitting a blank field records `0` (or `null` where appropriate).
+
+### Technical notes
+
+- Migration is additive and idempotent — no data loss risk under system-freeze rules.
+- Composer changes are deterministic; no new randomness.
+- `NumberField` is presentation-only; no changes to `gp_*` tables or edge functions.

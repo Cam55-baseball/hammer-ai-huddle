@@ -21,6 +21,7 @@ import { RepCard, RepKeyboardHints } from "./RepCard";
 import { showUndoToast } from "@/lib/games/undoToast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { NumberField } from "@/components/games/NumberField";
 
 const CONTACTS = ["weak","medium","hard","barrel","mishit"];
 const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
@@ -186,10 +187,10 @@ function PitchForm({
           )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <F label="Inn"><Input type="number" value={f.inning}
-            onChange={(e) => set("inning", Number(e.target.value))} /></F>
-          <F label="Pitch #"><Input type="number" value={f.pitch_no}
-            onChange={(e) => set("pitch_no", Number(e.target.value))} /></F>
+          <F label="Inn"><NumberField value={f.inning}
+            onValueChange={(v) => set("inning", v ?? 0)} /></F>
+          <F label="Pitch #"><NumberField value={f.pitch_no}
+            onValueChange={(v) => set("pitch_no", v ?? 0)} /></F>
           <F label="Type">
             <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
@@ -198,7 +199,7 @@ function PitchForm({
               </SelectContent>
             </Select>
           </F>
-          <F label="Velo"><Input type="number" value={f.pitch_velo}
+          <F label="Velo"><NumberField value={f.pitch_velo}
             onChange={(e) => set("pitch_velo", e.target.value)} /></F>
           <F label="Result">
             <Select value={f.result} onValueChange={(v) => set("result", v)}>
@@ -208,10 +209,10 @@ function PitchForm({
               </SelectContent>
             </Select>
           </F>
-          <F label="Balls"><Input type="number" min={0} max={4} value={f.count_balls}
-            onChange={(e) => set("count_balls", Number(e.target.value))} /></F>
-          <F label="Strikes"><Input type="number" min={0} max={3} value={f.count_strikes}
-            onChange={(e) => set("count_strikes", Number(e.target.value))} /></F>
+          <F label="Balls"><NumberField min={0} max={4} value={f.count_balls}
+            onValueChange={(v) => set("count_balls", v ?? 0)} /></F>
+          <F label="Strikes"><NumberField min={0} max={3} value={f.count_strikes}
+            onValueChange={(v) => set("count_strikes", v ?? 0)} /></F>
           <F label="Pitcher throws">
             <Select value={f.pitcher_throws} onValueChange={(v) => set("pitcher_throws", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>

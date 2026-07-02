@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
+import { NumberField } from "@/components/games/NumberField";
 
 
 const TYPES = ["pinch_hit","pinch_run","def_replace","relief","position_swap","dh"];
@@ -156,8 +157,8 @@ function SubForm({ onSave, onCancel }: {
   return (
     <Card className="p-4 space-y-3 bg-muted/30 border-l-4 border-l-slate-500">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <F label="Inning"><Input type="number" value={f.inning}
-          onChange={(e) => set("inning", Number(e.target.value))} /></F>
+        <F label="Inning"><NumberField value={f.inning}
+          onValueChange={(v) => set("inning", v ?? 0)} /></F>
         <F label="Type">
           <Select value={f.sub_type} onValueChange={(v) => set("sub_type", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>

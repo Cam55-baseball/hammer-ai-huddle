@@ -35,6 +35,7 @@ import type { AtBatPitchTally } from "@/hooks/useAtBatPitches";
 import { RepCard, RepKeyboardHints } from "./RepCard";
 import { AbSwingPanel } from "./AbSwingPanel";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
+import { NumberField } from "@/components/games/NumberField";
 
 const RESULTS = [
   "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
@@ -408,10 +409,9 @@ function AtBatForm({
           </Select>
         </Field>
         <Field label="Inning">
-          <Input
-            type="number"
+          <NumberField
             value={f.inning}
-            onChange={(e) => set("inning", Number(e.target.value))}
+            onValueChange={(v) => set("inning", v ?? 0)}
           />
         </Field>
         <Field label="Side">
@@ -440,12 +440,12 @@ function AtBatForm({
           </Select>
         </Field>
         <Field label="Balls">
-          <Input type="number" min={0} max={4} value={f.count_balls}
-            onChange={(e) => set("count_balls", Number(e.target.value))} />
+          <NumberField min={0} max={4} value={f.count_balls}
+            onValueChange={(v) => set("count_balls", v ?? 0)} />
         </Field>
         <Field label="Strikes">
-          <Input type="number" min={0} max={3} value={f.count_strikes}
-            onChange={(e) => set("count_strikes", Number(e.target.value))} />
+          <NumberField min={0} max={3} value={f.count_strikes}
+            onValueChange={(v) => set("count_strikes", v ?? 0)} />
         </Field>
         <Field label="Contact">
           <Select value={f.contact_quality} onValueChange={(v) => set("contact_quality", v)}>
@@ -472,27 +472,27 @@ function AtBatForm({
           </Select>
         </Field>
         <Field label="Pitch velo">
-          <Input type="number" value={f.pitch_velo}
+          <NumberField value={f.pitch_velo}
             onChange={(e) => set("pitch_velo", e.target.value)} />
         </Field>
         <Field label="Outs">
-          <Input type="number" min={0} max={2} value={f.outs}
-            onChange={(e) => set("outs", Number(e.target.value))} />
+          <NumberField min={0} max={2} value={f.outs}
+            onValueChange={(v) => set("outs", v ?? 0)} />
         </Field>
         <Field label="Runners on">
           <Input placeholder="e.g. 1,3" value={f.runners_on}
             onChange={(e) => set("runners_on", e.target.value)} />
         </Field>
         <Field label="RBI">
-          <Input type="number" min={0} value={f.rbi}
-            onChange={(e) => set("rbi", Number(e.target.value))} />
+          <NumberField min={0} value={f.rbi}
+            onValueChange={(v) => set("rbi", v ?? 0)} />
         </Field>
         <Field label="LOB">
-          <Input type="number" min={0} value={f.lob}
-            onChange={(e) => set("lob", Number(e.target.value))} />
+          <NumberField min={0} value={f.lob}
+            onValueChange={(v) => set("lob", v ?? 0)} />
         </Field>
         <Field label="H1 time (sec)">
-          <Input type="number" step="0.01" value={f.h1_time_sec}
+          <NumberField step="0.01" value={f.h1_time_sec}
             onChange={(e) => set("h1_time_sec", e.target.value)} />
         </Field>
       </div>

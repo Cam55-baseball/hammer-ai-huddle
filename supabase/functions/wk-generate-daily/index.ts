@@ -141,6 +141,7 @@ type SequenceRole =
   | "upper_pull"
   | "carry_antirotation"
   | "trunk_finisher"
+  | "rotation"
   | "supplemental"
   | "speed"
   | "bat_speed"
@@ -1702,10 +1703,40 @@ function ensureFullBodyLift(
     if (m) push("lift", "trunk_primer", m, { sets: 1, reps: isInSeason ? 6 : 10 }, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
   }
 
+  // WIC certifier requires movement_category=rotation to be present in every
+  // full-body lift template. Add a dedicated rotation slot when the trunk
+  // primer did not resolve to a rotation-category movement.
+  const hasRotation = rxs.some(
+    (r) =>
+      r.slot === "lift" &&
+      (r.movement_slug === "trap_bar_trunk_twist" ||
+        r.movement_slug === "band_resisted_swings" ||
+        r.movement_slug === "cable_chops" ||
+        r.movement_slug === "heavy_russian_twist" ||
+        r.movement_slug === "med_ball_shot_put"),
+  );
+  if (!hasRotation) {
+    const m = pickFirst([
+      "trap_bar_trunk_twist",
+      "band_resisted_swings",
+      "cable_chops",
+      "heavy_russian_twist",
+    ]);
+    if (m)
+      push(
+        "lift",
+        "rotation",
+        m,
+        { sets: 1, reps: isInSeason ? 6 : 8 },
+        "Full-body guardrail: rotation category is mandatory in every WIC lift template.",
+      );
+  }
+
   if (!liftRoles.has("compound_lower")) {
+    // Only slugs whose movement_category === 'compound_lower' satisfy the certifier.
     const m = pickFirst(isInSeason
-      ? ["goblet_squat", "hip_thrust_concentric", "rdl_concentric", "back_squat_concentric"]
-      : ["back_squat_double_ecc", "front_squat_double_ecc", "trap_bar_dl_double_ecc", "hip_thrust_concentric", "back_squat_concentric"]);
+      ? ["goblet_squat", "back_squat_concentric", "front_squat_double_ecc", "safety_bar_box_squat"]
+      : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "back_squat_concentric", "goblet_squat"]);
     if (m) push("lift", "compound_lower", m, { sets: isInSeason ? 2 : 3, reps: 3 }, "Full-body guardrail: one legal lower-body compound anchors the session.");
   }
 
@@ -1715,16 +1746,17 @@ function ensureFullBodyLift(
   }
 
   if (!liftRoles.has("upper_push")) {
+    // Movement_category=compound_upper_push slugs only.
     const m = pickFirst(isInSeason
-      ? ["db_bench", "push_press_concentric", "bench_press_concentric", "sa_db_chest_press", "landmine_row_to_press"]
-      : ["sa_db_chest_press", "landmine_row_to_press", "db_bench", "bench_press_concentric", "push_press_concentric"]);
+      ? ["db_bench", "bench_press_concentric", "push_press_concentric", "incline_bench_double_ecc"]
+      : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric"]);
     if (m) push("lift", "upper_push", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
   }
 
   if (!liftRoles.has("upper_pull")) {
     const m = pickFirst(isInSeason
-      ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "renegade_row"]
-      : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "renegade_row"]);
+      ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric"]
+      : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc"]);
     if (m) push("lift", "upper_pull", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
   }
 }

@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
+import { NumberField } from "@/components/games/NumberField";
 
 
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF"];
@@ -206,8 +207,8 @@ function DefForm({ onSave, onCancel }: {
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {/* Always shown */}
-        <F label="Inning"><Input type="number" value={f.inning}
-          onChange={(e) => set("inning", Number(e.target.value))} /></F>
+        <F label="Inning"><NumberField value={f.inning}
+          onValueChange={(v) => set("inning", v ?? 0)} /></F>
         <F label="Position">
           <Select value={f.position} onValueChange={(v) => set("position", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -251,7 +252,7 @@ function DefForm({ onSave, onCancel }: {
         {isCatcher && (
           <>
             <F label="Pop time (sec)">
-              <Input type="number" step="0.01" value={f.pop_time_sec}
+              <NumberField step="0.01" value={f.pop_time_sec}
                 onChange={(e) => set("pop_time_sec", e.target.value)} />
             </F>
             <F label="Throw base">
@@ -261,7 +262,7 @@ function DefForm({ onSave, onCancel }: {
               </Select>
             </F>
             <F label="Arm velo">
-              <Input type="number" value={f.arm_velo}
+              <NumberField value={f.arm_velo}
                 onChange={(e) => set("arm_velo", e.target.value)} />
             </F>
           </>
@@ -277,11 +278,11 @@ function DefForm({ onSave, onCancel }: {
               </Select>
             </F>
             <F label="Time to 1B (sec)">
-              <Input type="number" step="0.01" value={f.time_to_first_sec}
+              <NumberField step="0.01" value={f.time_to_first_sec}
                 onChange={(e) => set("time_to_first_sec", e.target.value)} />
             </F>
             <F label="Arm velo">
-              <Input type="number" value={f.arm_velo}
+              <NumberField value={f.arm_velo}
                 onChange={(e) => set("arm_velo", e.target.value)} />
             </F>
           </>
@@ -303,7 +304,7 @@ function DefForm({ onSave, onCancel }: {
               </Select>
             </F>
             <F label="Arm velo">
-              <Input type="number" value={f.arm_velo}
+              <NumberField value={f.arm_velo}
                 onChange={(e) => set("arm_velo", e.target.value)} />
             </F>
           </>

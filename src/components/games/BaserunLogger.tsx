@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
+import { NumberField } from "@/components/games/NumberField";
 
 
 const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
@@ -171,8 +172,8 @@ function RunForm({ onSave, onCancel }: {
   return (
     <Card className="p-4 space-y-3 bg-muted/30">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <F label="Inning"><Input type="number" value={f.inning}
-          onChange={(e) => set("inning", Number(e.target.value))} /></F>
+        <F label="Inning"><NumberField value={f.inning}
+          onValueChange={(v) => set("inning", v ?? 0)} /></F>
         <F label="Event">
           <Select value={f.event_type} onValueChange={(v) => set("event_type", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -188,12 +189,12 @@ function RunForm({ onSave, onCancel }: {
             </SelectContent>
           </Select>
         </F>
-        <F label="From"><Input type="number" min={0} max={4} value={f.base_from}
-          onChange={(e) => set("base_from", Number(e.target.value))} /></F>
-        <F label="To"><Input type="number" min={0} max={4} value={f.base_to}
-          onChange={(e) => set("base_to", Number(e.target.value))} /></F>
+        <F label="From"><NumberField min={0} max={4} value={f.base_from}
+          onValueChange={(v) => set("base_from", v ?? 0)} /></F>
+        <F label="To"><NumberField min={0} max={4} value={f.base_to}
+          onValueChange={(v) => set("base_to", v ?? 0)} /></F>
         <F label="Lead (steps)">
-          <Input type="number" step="0.5" value={f.lead_steps}
+          <NumberField step="0.5" value={f.lead_steps}
             onChange={(e) => set("lead_steps", e.target.value)} />
         </F>
         <F label="Pitcher arm">
@@ -205,11 +206,11 @@ function RunForm({ onSave, onCancel }: {
           </Select>
         </F>
         <F label="P → H (sec)">
-          <Input type="number" step="0.01" value={f.pitcher_time_to_home_sec}
+          <NumberField step="0.01" value={f.pitcher_time_to_home_sec}
             onChange={(e) => set("pitcher_time_to_home_sec", e.target.value)} />
         </F>
         <F label="Pop time (sec)">
-          <Input type="number" step="0.01" value={f.catcher_pop_time_sec}
+          <NumberField step="0.01" value={f.catcher_pop_time_sec}
             onChange={(e) => set("catcher_pop_time_sec", e.target.value)} />
         </F>
         <F label="Pitch type">
@@ -219,7 +220,7 @@ function RunForm({ onSave, onCancel }: {
           </Select>
         </F>
         <F label="My run (sec)">
-          <Input type="number" step="0.01" value={f.run_time_sec}
+          <NumberField step="0.01" value={f.run_time_sec}
             onChange={(e) => set("run_time_sec", e.target.value)} />
         </F>
       </div>
