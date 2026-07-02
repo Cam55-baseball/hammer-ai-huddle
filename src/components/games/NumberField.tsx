@@ -31,7 +31,8 @@ type BaseProps = Omit<
 >;
 
 export interface NumberFieldProps extends BaseProps {
-  value: number | string | null | undefined;
+  value?: number | string | null | undefined;
+  defaultValue?: number | string | null | undefined;
   onValueChange?: (value: number | null) => void;
   /** Optional legacy passthrough — receives raw change event. */
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
