@@ -240,9 +240,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       console.debug("[wk-generate-daily] ok", { ms: Date.now() - started });
       await qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
     } catch (e) {
-      console.error("wk-generate-daily failed (after retry)", e);
+      console.warn("wk-generate-daily failed (after retry)", e);
       setFailed(true);
-      toast.error("Elite plan couldn't build. Tap Regenerate.");
+      toast.error("Today's plan is regenerating — tap Regenerate if it doesn't refresh.", {
+        id: "wk-generate-failed",
+      });
     } finally {
       inFlightRef.current = false;
       setGenerating(false);
