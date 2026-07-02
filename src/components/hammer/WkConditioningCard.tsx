@@ -59,6 +59,7 @@ export function WkConditioningCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="conditioning" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
   );
