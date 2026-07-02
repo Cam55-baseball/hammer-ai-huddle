@@ -141,6 +141,7 @@ type SequenceRole =
   | "upper_pull"
   | "carry_antirotation"
   | "trunk_finisher"
+  | "rotation"
   | "supplemental"
   | "speed"
   | "bat_speed"
