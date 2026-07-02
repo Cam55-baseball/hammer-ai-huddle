@@ -173,6 +173,11 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
             { name: "Hip airplanes", dosage: "5 per side", cue: "control the lower-down, no wobble" },
             { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "2 sets x 8 steps each way", cue: "knees track over toes, hips stay level", stopIf: "knee or hip pain" },
             { name: "Pogo hops", dosage: "2 sets x 10 quick contacts", cue: "stiff ankles, ground feels hot" },
+            // In-season cross-sport neural activation lives INSIDE the warm-up
+            // (never on the back end of an in-season day). Keeps carry-over
+            // patterns from decaying without adding a separate CNS block.
+            { name: "Cross-sport activation — shuffle + change-of-direction", dosage: "2 sets x 20 sec each direction", cue: "athletic stance, quick feet, react like a defender", stopIf: "knee/ankle pain" },
+            { name: "Cross-sport activation — med-ball rotational toss", setup: "6-8 lb ball vs wall or partner", dosage: "2 sets x 4 per side", cue: "hips lead, arms finish — mimic a swing / throw" },
           ]
         : offSeason
           ? [
