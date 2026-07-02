@@ -20,6 +20,10 @@ export function WkConditioningCard() {
   const gp = useGpSignal();
   const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity } = useHammersToday();
   const entry = getCard("conditioning")!;
+  const { display: label } = useCanonicalPhaseDisplay(
+    snapshotIdentity.season_display,
+    snapshotIdentity.season_phase,
+  );
 
   if (gp.gameToday) return null;
 
