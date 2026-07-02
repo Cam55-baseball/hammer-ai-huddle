@@ -173,6 +173,7 @@ export function WkLiftsCard() {
           </details>
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
       </CardContent>
 
 
