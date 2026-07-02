@@ -20,6 +20,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { StrikeZonePlanner } from "./StrikeZonePlanner";
 import { PregamePlanPanel } from "./PregamePlanPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { NumberField } from "@/components/games/NumberField";
 
 const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_quarter","side_arm","submarine","windmill"];
 const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
@@ -105,13 +106,11 @@ export function PitcherDossierDrawer({
                       {PITCH_TYPES.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
                     </SelectContent>
                   </Select>
-                  <Input
-                    type="number" min={0} max={100} placeholder="usage %"
+                  <NumberField min={0} max={100} placeholder="usage %"
                     value={p.usage ?? ""} onChange={(e) => setPitch(i, { usage: Number(e.target.value) })}
                     className="w-24"
                   />
-                  <Input
-                    type="number" placeholder="velo"
+                  <NumberField placeholder="velo"
                     value={p.velo ?? ""} onChange={(e) => setPitch(i, { velo: Number(e.target.value) })}
                     className="w-24"
                   />

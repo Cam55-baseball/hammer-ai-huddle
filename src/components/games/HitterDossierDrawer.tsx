@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PregamePlanPanel } from "./PregamePlanPanel";
+import { NumberField } from "@/components/games/NumberField";
 
 export function HitterDossierDrawer({
   open, onOpenChange, sport, dossier,
@@ -89,7 +90,7 @@ export function HitterDossierDrawer({
               </Select>
             </Field>
             <Field label="First-pitch swing %">
-              <Input type="number" min={0} max={100} value={t.first_pitch_swing_pct ?? ""}
+              <NumberField min={0} max={100} value={t.first_pitch_swing_pct ?? ""}
                 onChange={(e) => setT("first_pitch_swing_pct", Number(e.target.value))} />
             </Field>
           </div>

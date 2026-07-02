@@ -45,6 +45,7 @@ import { ActivePlanCard } from "./ActivePlanCard";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { PitcherDossierDrawer } from "./PitcherDossierDrawer";
+import { NumberField } from "@/components/games/NumberField";
 
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
@@ -344,8 +345,7 @@ function OverviewPanel({
         </div>
         <div className="space-y-1.5">
           <Label>Lineup slot</Label>
-          <Input
-            type="number"
+          <NumberField
             min={1}
             max={12}
             defaultValue={game.lineup_slot ?? ""}
@@ -356,8 +356,7 @@ function OverviewPanel({
         </div>
         <div className="space-y-1.5">
           <Label>My score</Label>
-          <Input
-            type="number"
+          <NumberField
             defaultValue={game.my_score ?? ""}
             onBlur={(e) =>
               onPatch({ my_score: e.target.value ? Number(e.target.value) : null })
@@ -366,8 +365,7 @@ function OverviewPanel({
         </div>
         <div className="space-y-1.5">
           <Label>Opp score</Label>
-          <Input
-            type="number"
+          <NumberField
             defaultValue={game.opp_score ?? ""}
             onBlur={(e) =>
               onPatch({ opp_score: e.target.value ? Number(e.target.value) : null })
