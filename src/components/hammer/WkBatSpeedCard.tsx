@@ -11,15 +11,19 @@ import { Loader2, RefreshCw, Bolt } from "lucide-react";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
-import { seasonDisplayLabel } from "@/lib/wic/seasonDisplay";
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function WkBatSpeedCard() {
   const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity, dayKind } = useHammersToday();
   const entry = getCard("bat_speed")!;
   const items = grouped.batSpeedCard;
   const isGameDay = dayKind === "game" || dayKind === "both";
-  const label = seasonDisplayLabel(snapshotIdentity.season_phase) || snapshotIdentity.season_display || null;
+  const { display: label } = useCanonicalPhaseDisplay(
+    snapshotIdentity.season_display,
+    snapshotIdentity.season_phase,
+  );
 
   return (
     <Card
@@ -56,6 +60,7 @@ export function WkBatSpeedCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="bat_speed" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
   );

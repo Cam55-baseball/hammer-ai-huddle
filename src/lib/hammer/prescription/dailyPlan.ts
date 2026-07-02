@@ -173,6 +173,11 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
             { name: "Hip airplanes", dosage: "5 per side", cue: "control the lower-down, no wobble" },
             { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "2 sets x 8 steps each way", cue: "knees track over toes, hips stay level", stopIf: "knee or hip pain" },
             { name: "Pogo hops", dosage: "2 sets x 10 quick contacts", cue: "stiff ankles, ground feels hot" },
+            // In-season cross-sport neural activation lives INSIDE the warm-up
+            // (never on the back end of an in-season day). Keeps carry-over
+            // patterns from decaying without adding a separate CNS block.
+            { name: "Cross-sport activation — shuffle + change-of-direction", dosage: "2 sets x 20 sec each direction", cue: "athletic stance, quick feet, react like a defender", stopIf: "knee/ankle pain" },
+            { name: "Cross-sport activation — med-ball rotational toss", setup: "6-8 lb ball vs wall or partner", dosage: "2 sets x 4 per side", cue: "hips lead, arms finish — mimic a swing / throw" },
           ]
         : offSeason
           ? [
@@ -193,15 +198,15 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "2 sets x 10 steps each way", cue: "knees track toes" },
               { name: "Pogo hops", dosage: "2 sets x 12 contacts" },
             ];
-      const dur = inSeason ? 8 : offSeason ? 18 : 12;
+      const dur = inSeason ? 12 : offSeason ? 18 : 12;
       return {
         modality,
-        title: inSeason ? "Warm-up — game-ready" : offSeason ? "Warm-up — extended" : "Warm-up — dynamic",
+        title: inSeason ? "Warm-up — game-ready + cross-sport" : offSeason ? "Warm-up — extended" : "Warm-up — dynamic",
         why: inSeason
-          ? "Prime your CNS without spending. Short and sharp before you compete."
+          ? "Prime your CNS without spending, then a short cross-sport activation to keep athleticism sharp — carry-over patterns live INSIDE the warm-up in-season, never on the back end."
           : "Open the joints, switch the nervous system on, get the body honest before output.",
         roadmapReason: inSeason
-          ? "In-season — minimum effective dose so you save legs for the game."
+          ? "In-season — short warm-up with embedded cross-sport neural spark so you save legs for the game."
           : offSeason
             ? "Off-season — extended prep so you can handle today's higher volume work."
             : "Default warm-up sequence calibrated to today's session length.",

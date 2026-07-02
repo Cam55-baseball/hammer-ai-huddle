@@ -81,6 +81,23 @@ export function resolveWkPhase(
     };
   }
 
+  // Guard: if resolveSeasonPhase defaulted (no signal at all) but the athlete
+  // stored a non-off_season status, honor the stored status instead of showing
+  // "Offseason Q1". Prevents drift between profile + WK cards.
+  if (seasonRes.source === 'default') {
+    const stored = (settings?.season_status ?? '').toString();
+    if (stored === 'in_season') {
+      return { phase: 'in_season', displayName: QUARTER_LABEL.in_season, source: 'stored', daysIntoQuarter: null, daysUntilNextQuarter: null };
+    }
+    if (stored === 'post_season') {
+      return { phase: 'post_season', displayName: QUARTER_LABEL.post_season, source: 'stored', daysIntoQuarter: null, daysUntilNextQuarter: null };
+    }
+    if (stored === 'preseason') {
+      return { phase: 'os_q4', displayName: QUARTER_LABEL.os_q4, source: 'stored', daysIntoQuarter: null, daysUntilNextQuarter: null };
+    }
+  }
+
+
   // Offseason — slice into 4 quarters between post_season_end and next preseason_start.
   const postEnd = parseDate(settings?.post_season_end_date);
   const preStart = parseDate(settings?.preseason_start_date);

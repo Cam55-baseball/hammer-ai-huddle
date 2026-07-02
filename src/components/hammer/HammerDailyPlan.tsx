@@ -303,22 +303,41 @@ function HammerDailyPlanBody() {
             ? "Warm-up → Short crossover activation → Game"
             : "Warm-up → Speed → Bat Speed → Lifts → Practice → Conditioning → Sport Block"}
         </div>
-        {/* Phase 3 — Speed and Bat Speed are constitutionally separate cards. */}
-        <ErrorBoundary label="wk-speed">
-          <WkSpeedCard />
-        </ErrorBoundary>
-        <ErrorBoundary label="wk-bat-speed">
-          <WkBatSpeedCard />
-        </ErrorBoundary>
-        <ErrorBoundary label="wk-lifts">
-          <WkLiftsCard />
-        </ErrorBoundary>
-        {plan.blocks.map((b) => (
-          <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
-        ))}
-        <ErrorBoundary label="wk-conditioning">
-          <WkConditioningCard />
-        </ErrorBoundary>
+        {/*
+          Canonical daily ordering:
+          1. Warm-up ALWAYS first (pulled to the top even though `plan.blocks`
+             may deliver it in a different position — the warm-up primes CNS
+             for the sprint / bat-speed exposure that follows).
+          2. Speed → Bat Speed → Lifts (fresh-CNS window).
+          3. Remaining plan blocks (practice, skill blocks, sport blocks…).
+          4. Conditioning at the tail so aerobic fatigue doesn't blunt speed.
+        */}
+        {(() => {
+          const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup");
+          const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup");
+          return (
+            <>
+              {warmupBlocks.map((b) => (
+                <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
+              ))}
+              <ErrorBoundary label="wk-speed">
+                <WkSpeedCard />
+              </ErrorBoundary>
+              <ErrorBoundary label="wk-bat-speed">
+                <WkBatSpeedCard />
+              </ErrorBoundary>
+              <ErrorBoundary label="wk-lifts">
+                <WkLiftsCard />
+              </ErrorBoundary>
+              {otherBlocks.map((b) => (
+                <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
+              ))}
+              <ErrorBoundary label="wk-conditioning">
+                <WkConditioningCard />
+              </ErrorBoundary>
+            </>
+          );
+        })()}
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
     </Card>

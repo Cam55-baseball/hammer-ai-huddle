@@ -1,98 +1,51 @@
-## Phase 12+ Hardening — System Completion & Long-Term Stability Seal
+## Fixes
 
-Additive-only hardening pass over sealed Phases 1–12. No new features. Locks the WIC runtime into a closed-loop deterministic system with a single canonical fingerprint (`SystemStateV1`), a non-bypassable global invariant checker, and a 10,000-run CI super-gate.
+### 1. Warm-up card at the top of Hammers Today
 
-### 1. New shared modules (backend-only, under `supabase/functions/_shared/wic/`)
-
-- `stateCompression/systemStateCompressor.ts`
-  - Exports `SystemStateV1` type with the 7 canonical hash fields (`seed`, `engine_execution_order`, `governance_hash`, `snapshot_hash`, `validator_aggregate_hash`, `why_v2_hash`, `determinism_trace_hash`).
-  - `compressSystemState(inputs) → SystemStateV1` — deterministic, sorted, stable JSON hash.
-  - `systemStateHash(state)` — single canonical fingerprint. This is the ONLY object allowed for cross-system comparisons downstream (telemetry, diagnostics, CI).
-- `invariants/globalInvariantChecker.ts`
-  - `assertGlobalInvariants({ systemState, rxs, diag, governanceSlice, whyV2Root, validatorAggregate, executionOrder, determinismTrace })`.
-  - Fatal `global_invariant_failure` on any mismatch across the 6 hard invariants (snapshot recompute, governance hash match, `why_v2_completeness_score == 100`, zero unresolved fatals, locked ordering equality, stableSeed reproducibility).
-  - Halts pipeline — no partial continuation.
-- `whyV2/unifiedWhy.ts` (edit — not new)
-  - Add `freezeWhyV2(why)` (deep `Object.freeze` on all nested nodes).
-  - Add `hashWhyV2(why)` (recursively sorted key stable hash).
-  - Post Step 8 in orchestration, any mutation attempt throws `why_v2_mutation_detected`.
-- `engineContract/engineContractVFinal.ts`
-  - Wrapper `withEngineContract(certifyFn)` that enforces every certifier returns `engine_signature_hash`, `deterministic_output_hash`, `substitution_trace_hash`, `category_resolution_hash`.
-  - Rejects unresolved categories and unverified substitutions before the engine result is accepted.
-- `telemetry/minimalTelemetryEmitter.ts`
-  - `emitSystemState(systemState)` — production emits ONLY `SystemStateV1`.
-  - Raw engine logs gated behind `DEBUG_WIC=1`.
-  - No intermediate artifact persistence.
-
-### 2. Orchestration patch — `supabase/functions/wk-generate-daily/index.ts`
-
-Insert after Step 10 (snapshot immutability) and before Step 11 (persistence):
+In `src/components/hammer/HammerDailyPlan.tsx`, split `plan.blocks` into `warmupBlocks` (`modality === "warmup"`) and `otherBlocks`, then render in this canonical order:
 
 ```text
-10a  compressSystemState(...) → SystemStateV1
-10b  freezeWhyV2(whyV2Root) + hash
-10c  assertGlobalInvariants(SystemStateV1, ...)
-10d  emitSystemState(SystemStateV1)
-11   wk_persist_prescriptions_atomic (unchanged call site)
+HammerScheduleStrip
+GpInGameAdvisoryStrip
+"Do in this order" hint
+Warm-up block(s)               ← moved to top
+WkSpeedCard
+WkBatSpeedCard
+WkLiftsCard
+otherBlocks (practice, sport, fueling, recovery, …)
+WkConditioningCard
 ```
 
-- Wrap all seven certifiers via `withEngineContract(...)` — imports only; no logic changes inside engines.
-- All existing catch/soft-continue branches after Step 8 remain forbidden; any invariant failure aborts and persists partial diagnostics with `global_validator_status='fatal'` + `SystemStateV1` fields populated.
+Update the "Do in this order" hint text to lead with **Warm-up → …** and, when `!gpSig.gameToday` and the resolved season is `in_season`, include a `Cross-sport activation` step inside the warm-up phrase.
 
-### 3. Persistence hardening — additive migration + RPC edit
+### 2. Cross-sport activation inside Warm-up when In-Season
 
-**Migration (additive, nullable):** add to `wk_generation_diagnostics`:
-- `system_state jsonb`
-- `system_state_hash text`
-- `engine_signature_hashes jsonb`
-- `why_v2_hash text`
-- `validator_aggregate_hash text`
-- `global_invariant_status text`
+In `src/components/hammer/HammerWarmupDialog.tsx` (opened by the warm-up block via `hammer:open-warmup-generator`), append an **In-Season Cross-Sport Activation** section (~3–5 min low-CNS ballistic/coordination moves — light med-ball throws, band rotations, jump-rope, agility ladder) when `useSeasonStatus().resolvedPhase === "in_season"` (and `gpSig.gameToday === false`). Server-side, extend `buildHammerDailyPlan`'s warm-up block (`src/lib/hammer/prescription/dailyPlan.ts` case `"warmup"`) so its `why`/`drills` explicitly mention the cross-sport activation add-on during in-season, keeping the block a single card (not a new card).
 
-**RPC:** update `wk_persist_prescriptions_atomic` to:
-- Recompute `systemStateHash` from provided diag inputs and raise `system_state_hash_mismatch` on divergence.
-- Verify governance hash alignment with `wk_movement_catalog` slice used in run.
-- Wrap the entire persist as a single transaction — atomic-or-fail-all is already the contract; add explicit `RAISE EXCEPTION` on any invariant mismatch before any INSERT executes.
+### 3. Season label drift ("Off-season Q1" vs. "In Season")
 
-### 4. CI super-gate — extend `scripts/audits/performance-support-audit.ts`
+Root cause: the four WK cards render `snapshotIdentity.season_phase` — which comes from the edge function's `resolveWkPhase` — while the plan header, profile, and other cards read `useSeasonStatus().resolvedPhase`. When a user has `season_status = "in_season"` but no `preseason_*` / `post_season_*` dates saved, the server resolver falls back to `os_q1` (default branch in `supabase/functions/_shared/wkPhaseQuarter.ts`) while the client shows `in_season`.
 
-Append Phase 12+ FINAL suite:
-- 10,000-run `SystemStateV1` hash stability against fixed fixtures → any divergence exits 1.
-- Global invariant checker pass rate must be 100%.
-- Deterministic replay across shuffled input ordering (inputs re-sorted canonically must yield identical `system_state_hash`).
-- Forced mutation attack: mutate `whyV2Root` post-freeze → must throw `why_v2_mutation_detected`. Mutate snapshot post-hash → must throw `snapshot_mutation_detected`. Mutate governance slice → must throw `global_invariant_failure`.
-- Cross-season replay equivalence: replay Phase 1–12 fixture matrix (12 phases × 9 day types) and confirm identical `system_state_hash` per matrix cell.
-- Any deviation → `Deno.exit(1)` → HARD BLOCK MERGE.
+Fixes (both required so it stays consistent E2E):
 
-### 5. Documentation — `docs/wic/system-freeze-v1.md` addendum
+- **Server (authoritative):** in `supabase/functions/_shared/wkPhaseQuarter.ts`, when `resolveSeasonPhase` returns `off_season` with `source === "default"` (i.e. no explicit off-season window) AND the stored `settings.season_status` is `in_season` or `post_season`, honor the stored status instead of defaulting to `os_q1`. Only fall back to `os_q1` when the athlete truly has no signal.
+- **Client (defensive):** in `WkSpeedCard`, `WkBatSpeedCard`, `WkLiftsCard`, `WkConditioningCard`, replace the `seasonDisplayLabel(snapshotIdentity.season_phase)` label with a helper `useCanonicalSeasonLabel()` that prefers `useSeasonStatus().resolvedPhase` and falls back to `snapshotIdentity.season_phase`. This guarantees the four cards match the profile + plan header even before the next generation.
+- Trigger a one-shot `generate()` re-run after `useSeasonStatus` auto-corrects the stored phase so any prescriptions stamped with the wrong phase are refreshed (invalidate the `wk-daily-prescriptions` query key inside the auto-correct effect in `src/hooks/useSeasonStatus.ts`).
 
-Append the Architectural Rule of Life:
-- System is CLOSED-LOOP DETERMINISTIC.
-- All outputs derive from `SystemStateV1`.
-- No feature may bypass the invariant checker.
-- No engine may exist outside the registered execution chain.
-- Zero runtime fallback logic anywhere in WIC.
-- Evolution is ONLY additive via: new engines (must register in ordering + validator registry), new validators (must register in `globalValidatorRegistry`), new diagnostics fields (must ship an additive migration).
+### 4. "Add to game plan" + "Ask Hammer" buttons on Speed / Bat Speed / Lifts / Conditioning cards
 
-Also update `docs/wic/constitution.md` "Sources of authority" table to list the four new modules.
+Create `src/components/hammer/cards/CardActions.tsx` — a shared footer button row with two actions:
 
-### Execution order
+- **Add to game plan** — creates a `custom_activity_template` via `useCustomActivities.createTemplate`, mirroring the existing `handleAddToGamePlan` in `HammerDailyPlan.tsx`. Accepts `{ title, modality, drills, why }` per card and toasts on success.
+- **Ask Hammer** — opens an inline mini-chat (same `useHammerChat` hook already used by `HammerDailyPlan`) pre-loaded with `categoryFocus` = card modality + current drills, so answers are contextual.
 
-1. Additive migration for the 6 new diagnostic columns + RPC update.
-2. New shared modules (`systemStateCompressor`, `globalInvariantChecker`, `engineContractVFinal`, `minimalTelemetryEmitter`) + edits to `unifiedWhy.ts`.
-3. Patch `wk-generate-daily/index.ts` orchestration (Steps 10a–10d + certifier wrappers).
-4. Extend audit script with the 10,000-run FINAL suite.
-5. Update `system-freeze-v1.md` and `constitution.md`.
+Mount `<CardActions … />` inside `<CardContent>` of `WkSpeedCard`, `WkBatSpeedCard`, `WkLiftsCard`, and `WkConditioningCard`, feeding it the card's `items` (grouped prescriptions) plus a stable title (e.g. `"Speed — <phase display>"`). Guard: hide the buttons when `items.length === 0` or `isLoading`.
 
-### Success criteria
+### 5. E2E verification
 
-- 10,000× replay produces identical `system_state_hash`.
-- Global invariant checker: 100% pass on the audit matrix.
-- All four mutation-attack scenarios fail safely with the correct fatal code.
-- Production telemetry surface emits only `SystemStateV1`.
-- CI audit exits 0.
-
-### Notes
-
-- Fully additive. No schema rewrites, no UI changes, no engine logic changes — only wrappers and hashes.
-- Preserves all Phase 11–12 constructs (`determinism_seed`, `snapshot_hash`, `engine_execution_order`, `why_v2_completeness_score`); the new `SystemStateV1` is the canonical fingerprint that binds them together.
+- Playwright script hits `/athlete/command`, logs in via injected Supabase session, and asserts:
+  - Warm-up card renders **before** Speed on the DOM (`data-card-type` ordering).
+  - When `season_status = in_season` (no date windows), all four WK cards + plan header + profile show the same "In Season" label (no `os_q1`).
+  - "Add to game plan" and "Ask Hammer" buttons are present and click-responsive on Speed, Bat Speed, Lifts, Conditioning cards.
+  - "Add to game plan" click creates a row in `custom_activity_templates` and shows the success toast.
+- Re-run `scripts/audits/phase-12-plus-super-gate.ts` to confirm no invariant regression from the resolver change.

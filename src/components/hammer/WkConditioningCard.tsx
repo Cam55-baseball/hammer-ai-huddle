@@ -11,13 +11,19 @@ import { Heart, Loader2, RefreshCw } from "lucide-react";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useGpSignal } from "@/hooks/useGpSignal";
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function WkConditioningCard() {
   const gp = useGpSignal();
   const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity } = useHammersToday();
   const entry = getCard("conditioning")!;
+  const { display: label } = useCanonicalPhaseDisplay(
+    snapshotIdentity.season_display,
+    snapshotIdentity.season_phase,
+  );
 
   if (gp.gameToday) return null;
 
@@ -42,6 +48,7 @@ export function WkConditioningCard() {
             {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
           </Button>
         </CardTitle>
+        {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
       </CardHeader>
       <CardContent className="space-y-2">
         {failed ? (
@@ -52,6 +59,7 @@ export function WkConditioningCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="conditioning" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
   );

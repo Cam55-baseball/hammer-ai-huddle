@@ -28,16 +28,19 @@ import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, phaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement, snapshotIdentity,
+    grouped, reductions, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
   const entry = getCard("lift")!;
+  const { display: phaseDisplay } = useCanonicalPhaseDisplay(serverPhaseDisplay, phaseKey);
   const blocked = useBlockedLiftMovements(phaseKey);
   const [ackOpen, setAckOpen] = useState(false);
   const [acked, setAcked] = useState(false);
@@ -170,6 +173,7 @@ export function WkLiftsCard() {
           </details>
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
       </CardContent>
 
 

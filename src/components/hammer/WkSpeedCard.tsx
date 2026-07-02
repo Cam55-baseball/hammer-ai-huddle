@@ -12,15 +12,19 @@ import { Loader2, RefreshCw, Zap } from "lucide-react";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
-import { seasonDisplayLabel } from "@/lib/wic/seasonDisplay";
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function WkSpeedCard() {
   const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity, dayKind } = useHammersToday();
   const entry = getCard("speed")!;
   const items = grouped.speedCard;
   const isGameDay = dayKind === "game" || dayKind === "both";
-  const label = seasonDisplayLabel(snapshotIdentity.season_phase) || snapshotIdentity.season_display || null;
+  const { display: label } = useCanonicalPhaseDisplay(
+    snapshotIdentity.season_display,
+    snapshotIdentity.season_phase,
+  );
 
   return (
     <Card
@@ -61,6 +65,7 @@ export function WkSpeedCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="speed" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
   );
