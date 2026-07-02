@@ -52,18 +52,28 @@ function normalizeIncoming(v: NumberFieldProps["value"]): string {
 
 export const NumberField = React.forwardRef<HTMLInputElement, NumberFieldProps>(
   function NumberField(
-    { value, onValueChange, onChange, allowDecimal, step, inputMode, ...rest },
+    {
+      value,
+      defaultValue,
+      onValueChange,
+      onChange,
+      allowDecimal,
+      step,
+      inputMode,
+      ...rest
+    },
     ref,
   ) {
+    const isControlled = value !== undefined;
     const [focused, setFocused] = React.useState(false);
     const [buffer, setBuffer] = React.useState<string>(() =>
-      normalizeIncoming(value),
+      normalizeIncoming(isControlled ? value : defaultValue),
     );
 
-    // Sync buffer from prop only when not focused (avoids fighting the user).
+    // Sync buffer from prop only when controlled and not focused.
     React.useEffect(() => {
-      if (!focused) setBuffer(normalizeIncoming(value));
-    }, [value, focused]);
+      if (isControlled && !focused) setBuffer(normalizeIncoming(value));
+    }, [value, focused, isControlled]);
 
     const stepIsDecimal =
       typeof step === "string"
