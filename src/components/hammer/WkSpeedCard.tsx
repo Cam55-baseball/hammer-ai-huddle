@@ -65,6 +65,7 @@ export function WkSpeedCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <CardActions modality="speed" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
   );
