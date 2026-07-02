@@ -48,6 +48,7 @@ export function WkConditioningCard() {
             {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
           </Button>
         </CardTitle>
+        {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
       </CardHeader>
       <CardContent className="space-y-2">
         {failed ? (
