@@ -201,12 +201,12 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       const dur = inSeason ? 12 : offSeason ? 18 : 12;
       return {
         modality,
-        title: inSeason ? "Warm-up — game-ready" : offSeason ? "Warm-up — extended" : "Warm-up — dynamic",
+        title: inSeason ? "Warm-up — game-ready + cross-sport" : offSeason ? "Warm-up — extended" : "Warm-up — dynamic",
         why: inSeason
-          ? "Prime your CNS without spending. Short and sharp before you compete."
+          ? "Prime your CNS without spending, then a short cross-sport activation to keep athleticism sharp — carry-over patterns live INSIDE the warm-up in-season, never on the back end."
           : "Open the joints, switch the nervous system on, get the body honest before output.",
         roadmapReason: inSeason
-          ? "In-season — minimum effective dose so you save legs for the game."
+          ? "In-season — short warm-up with embedded cross-sport neural spark so you save legs for the game."
           : offSeason
             ? "Off-season — extended prep so you can handle today's higher volume work."
             : "Default warm-up sequence calibrated to today's session length.",
