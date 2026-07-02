@@ -28,7 +28,9 @@ import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
