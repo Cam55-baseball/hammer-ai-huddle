@@ -11,8 +11,10 @@ import { Heart, Loader2, RefreshCw } from "lucide-react";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
+import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useGpSignal } from "@/hooks/useGpSignal";
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function WkConditioningCard() {
   const gp = useGpSignal();
