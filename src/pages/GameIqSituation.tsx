@@ -29,6 +29,9 @@ export default function GameIqSituation() {
   const [hover, setHover] = useState<IqActorRole | null>(null);
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
   const [context, setContext] = useState<ContextSelection>(NEUTRAL_SELECTION);
+  const alignmentsQ = useAlignmentPresets(fieldSport);
+
+
 
 
   if (q.isLoading) {
