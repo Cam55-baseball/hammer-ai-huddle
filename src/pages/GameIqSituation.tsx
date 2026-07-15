@@ -16,6 +16,8 @@ import {
   CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
   type ContextAxis, type ContextSelection,
 } from "@/lib/iq/contextShifts";
+import { useDefensiveAlignment } from "@/hooks/useDefensiveAlignment";
+
 
 
 export default function GameIqSituation() {
