@@ -44,7 +44,9 @@ export interface IqSituation {
   triple_check_count: number;
   sources: { label: string; ref?: string }[];
   updated_at: string;
+  alignment_preset?: string | null;
 }
+
 
 export interface IqScenario {
   id: string;
