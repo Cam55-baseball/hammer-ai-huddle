@@ -21,9 +21,11 @@ interface Props {
   situationTitle?: string;
   scenario: IqScenario;
   actors: IqActor[];
+  defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions }: Props) {
+
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
 
