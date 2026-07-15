@@ -44,7 +44,9 @@ export interface IqSituation {
   triple_check_count: number;
   sources: { label: string; ref?: string }[];
   updated_at: string;
+  alignment_preset?: string | null;
 }
+
 
 export interface IqScenario {
   id: string;
@@ -56,7 +58,9 @@ export interface IqScenario {
   correct_actor_assignments: Record<string, IqAssignment>;
   distractors: { label: string; assignments: Record<string, IqAssignment> }[];
   explanation: string;
+  alignment_preset?: string | null;
 }
+
 
 export interface IqUserProgress {
   user_id: string;

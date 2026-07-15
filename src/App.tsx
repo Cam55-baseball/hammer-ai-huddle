@@ -164,6 +164,8 @@ const FoundationDiagnosticsPanel = lazyWithRetry(() => import("./pages/owner/Fou
 const FoundationHealthDashboard = lazyWithRetry(() => import("./pages/owner/FoundationHealthDashboard"));
 const OwnerAlertCenter = lazyWithRetry(() => import("./pages/owner/OwnerAlertCenter"));
 const IqLibrary = lazyWithRetry(() => import("./pages/owner/IqLibrary"));
+const IqAlignmentsEditor = lazyWithRetry(() => import("./pages/owner/IqAlignmentsEditor"));
+
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
@@ -323,6 +325,8 @@ const App = () => {
               <Route path="/owner/foundations/health" element={<FoundationHealthDashboard />} />
               <Route path="/owner/alerts" element={<OwnerAlertCenter />} />
               <Route path="/owner/iq-library" element={<IqLibrary />} />
+              <Route path="/owner/iq/alignments" element={<IqAlignmentsEditor />} />
+
 
               <Route path="/success" element={<Success />} />
               <Route path="/admin" element={<AdminDashboard />} />

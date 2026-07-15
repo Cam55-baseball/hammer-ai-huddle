@@ -16,16 +16,22 @@ import {
   CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
   type ContextAxis, type ContextSelection,
 } from "@/lib/iq/contextShifts";
+import { useAlignmentPresets, fallbackAlignment } from "@/hooks/useDefensiveAlignment";
+
 
 
 export default function GameIqSituation() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { sport } = useSportTheme();
+  const fieldSport = sport === "softball" ? "softball" : "baseball";
   const q = useIqSituation(slug ?? "", sport);
   const [hover, setHover] = useState<IqActorRole | null>(null);
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
   const [context, setContext] = useState<ContextSelection>(NEUTRAL_SELECTION);
+  const alignmentsQ = useAlignmentPresets(fieldSport);
+
+
 
 
   if (q.isLoading) {
@@ -55,6 +61,16 @@ export default function GameIqSituation() {
   const { situation, actors, scenarios } = q.data;
   const hoveredActor = hover ? actors.find((a) => a.role === hover) : null;
   const firstScenario = scenarios[0];
+  const alignmentKey = firstScenario?.alignment_preset ?? situation.alignment_preset ?? null;
+  const presets = alignmentsQ.data ?? [];
+  const chosenPreset =
+    (alignmentKey ? presets.find((p) => p.preset_key === alignmentKey) : null) ??
+    presets.find((p) => p.is_default) ??
+    presets.find((p) => p.preset_key === "standard") ??
+    null;
+  const defensivePositions = chosenPreset?.positions ?? fallbackAlignment(fieldSport);
+
+
 
   return (
     <DashboardLayout>
@@ -98,7 +114,7 @@ export default function GameIqSituation() {
           const hasContext = Object.values(context).some(Boolean);
           return (
           <>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} />
+            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} />
 
             <Card className="p-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
@@ -255,6 +271,8 @@ export default function GameIqSituation() {
             situationTitle={situation.title}
             scenario={firstScenario}
             actors={actors}
+            defensivePositions={defensivePositions}
+
           />
         )}
       </div>
