@@ -325,6 +325,8 @@ const App = () => {
               <Route path="/owner/foundations/health" element={<FoundationHealthDashboard />} />
               <Route path="/owner/alerts" element={<OwnerAlertCenter />} />
               <Route path="/owner/iq-library" element={<IqLibrary />} />
+              <Route path="/owner/iq/alignments" element={<IqAlignmentsEditor />} />
+
 
               <Route path="/success" element={<Success />} />
               <Route path="/admin" element={<AdminDashboard />} />
