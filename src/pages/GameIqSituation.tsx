@@ -24,6 +24,7 @@ export default function GameIqSituation() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { sport } = useSportTheme();
+  const fieldSport = sport === "softball" ? "softball" : "baseball";
   const q = useIqSituation(slug ?? "", sport);
   const [hover, setHover] = useState<IqActorRole | null>(null);
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
@@ -57,6 +58,8 @@ export default function GameIqSituation() {
   const { situation, actors, scenarios } = q.data;
   const hoveredActor = hover ? actors.find((a) => a.role === hover) : null;
   const firstScenario = scenarios[0];
+  const alignmentKey = firstScenario?.alignment_preset ?? situation.alignment_preset ?? null;
+
 
   return (
     <DashboardLayout>
