@@ -5944,6 +5944,42 @@ export type Database = {
           },
         ]
       }
+      iq_defensive_alignments: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string
+          positions: Json
+          preset_key: string
+          sport: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label: string
+          positions: Json
+          preset_key: string
+          sport: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          positions?: Json
+          preset_key?: string
+          sport?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       iq_owner_review_log: {
         Row: {
           approved: boolean
@@ -5984,6 +6020,7 @@ export type Database = {
       }
       iq_scenarios: {
         Row: {
+          alignment_preset: string | null
           correct_actor_assignments: Json
           created_at: string
           distractors: Json
@@ -5997,6 +6034,7 @@ export type Database = {
           variant_id: string | null
         }
         Insert: {
+          alignment_preset?: string | null
           correct_actor_assignments?: Json
           created_at?: string
           distractors?: Json
@@ -6010,6 +6048,7 @@ export type Database = {
           variant_id?: string | null
         }
         Update: {
+          alignment_preset?: string | null
           correct_actor_assignments?: Json
           created_at?: string
           distractors?: Json
@@ -6150,6 +6189,7 @@ export type Database = {
       }
       iq_situations: {
         Row: {
+          alignment_preset: string | null
           canonical_order: number
           created_at: string
           deleted_at: string | null
@@ -6167,6 +6207,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alignment_preset?: string | null
           canonical_order?: number
           created_at?: string
           deleted_at?: string | null
@@ -6184,6 +6225,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alignment_preset?: string | null
           canonical_order?: number
           created_at?: string
           deleted_at?: string | null
