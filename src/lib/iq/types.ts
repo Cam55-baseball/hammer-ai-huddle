@@ -58,7 +58,9 @@ export interface IqScenario {
   correct_actor_assignments: Record<string, IqAssignment>;
   distractors: { label: string; assignments: Record<string, IqAssignment> }[];
   explanation: string;
+  alignment_preset?: string | null;
 }
+
 
 export interface IqUserProgress {
   user_id: string;
