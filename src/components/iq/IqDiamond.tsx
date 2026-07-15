@@ -14,32 +14,41 @@ interface IqDiamondProps {
   className?: string;
   /** Per-role positional shift in percent points on the 100×100 grid. */
   roleShifts?: Record<string, { dx: number; dy: number }>;
+  /** Owner-editable defender starting positions (from `iq_defensive_alignments`). */
+  defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
 }
 
 
-// Canonical starting coordinates on a 100x100 grid.
-// y=100 is home plate, y=0 is the CF wall.
-const HOME_POS: Record<IqActorRole, { x: number; y: number }> = {
-  P:  { x: 50, y: 70 },
-  C:  { x: 50, y: 96 },
-  "1B": { x: 76, y: 70 },
-  "2B": { x: 60, y: 56 },
-  SS:   { x: 40, y: 56 },
-  "3B": { x: 24, y: 70 },
-  LF:   { x: 18, y: 28 },
-  CF:   { x: 50, y: 14 },
-  RF:   { x: 82, y: 28 },
-  R1: { x: 76, y: 78 },
-  R2: { x: 50, y: 60 },
-  R3: { x: 24, y: 78 },
+// Offensive roles keep built-in coords — bases/batter box are fixed by rules.
+const OFFENSIVE_POS: Partial<Record<IqActorRole, { x: number; y: number }>> = {
+  R1: { x: 76, y: 70 },
+  R2: { x: 50, y: 40 },
+  R3: { x: 24, y: 70 },
   BR: { x: 50, y: 96 },
   BAT: { x: 50, y: 96 },
 };
 
-export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }: IqDiamondProps) {
+// Ultimate fallback for defenders if no alignment prop was passed.
+const DEFENSIVE_FALLBACK: Partial<Record<IqActorRole, { x: number; y: number }>> = {
+  P:  { x: 50, y: 68 },
+  C:  { x: 50, y: 94 },
+  "1B": { x: 72, y: 66 },
+  "2B": { x: 60, y: 52 },
+  SS:   { x: 40, y: 52 },
+  "3B": { x: 28, y: 66 },
+  LF:   { x: 22, y: 22 },
+  CF:   { x: 50, y: 10 },
+  RF:   { x: 78, y: 22 },
+};
+
+export function IqDiamond({ actors, mode, highlightRole, className, roleShifts, defensivePositions }: IqDiamondProps) {
   const byRole = useMemo(() => new Map(actors.map((a) => [a.role, a])), [actors]);
   const posFor = (role: IqActorRole) => {
-    const base = HOME_POS[role];
+    const base =
+      defensivePositions?.[role] ??
+      DEFENSIVE_FALLBACK[role] ??
+      OFFENSIVE_POS[role] ??
+      { x: 50, y: 50 };
     const s = roleShifts?.[role];
     if (!s) return base;
     return {
@@ -47,6 +56,7 @@ export function IqDiamond({ actors, mode, highlightRole, className, roleShifts }
       y: Math.max(2, Math.min(98, base.y + s.dy)),
     };
   };
+
 
   return (
     <div className={"relative w-full aspect-square overflow-hidden rounded-2xl border " + (className ?? "")}
