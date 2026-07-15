@@ -16,7 +16,7 @@ import {
   CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
   type ContextAxis, type ContextSelection,
 } from "@/lib/iq/contextShifts";
-import { useDefensiveAlignment } from "@/hooks/useDefensiveAlignment";
+import { useAlignmentPresets, fallbackAlignment } from "@/hooks/useDefensiveAlignment";
 
 
 
