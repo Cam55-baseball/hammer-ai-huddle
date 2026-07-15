@@ -114,7 +114,7 @@ export default function GameIqSituation() {
           const hasContext = Object.values(context).some(Boolean);
           return (
           <>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} />
+            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} />
 
             <Card className="p-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
