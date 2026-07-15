@@ -271,6 +271,8 @@ export default function GameIqSituation() {
             situationTitle={situation.title}
             scenario={firstScenario}
             actors={actors}
+            defensivePositions={defensivePositions}
+
           />
         )}
       </div>
