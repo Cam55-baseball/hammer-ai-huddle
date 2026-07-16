@@ -239,7 +239,7 @@ const App = () => {
               <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path=".lovable/oauth/consent" element={<OAuthConsent />} />
+              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/select-user-role" element={<SelectUserRole />} />
               <Route path="/select-sport-scout" element={<SelectSportScout />} />
