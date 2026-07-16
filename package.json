@@ -23,6 +23,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.10.0",
+    "@lovable.dev/mcp-js": "^0.22.2",
     "@lucide/lab": "^0.1.2",
     "@mediapipe/tasks-vision": "^0.10.35",
     "@radix-ui/react-accordion": "^1.2.11",
@@ -90,7 +91,7 @@
     "vite-plugin-pwa": "^1.1.0",
     "vitest": "^4.0.18",
     "workbox-window": "^7.4.0",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
