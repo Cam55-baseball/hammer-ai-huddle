@@ -165,6 +165,7 @@ const FoundationHealthDashboard = lazyWithRetry(() => import("./pages/owner/Foun
 const OwnerAlertCenter = lazyWithRetry(() => import("./pages/owner/OwnerAlertCenter"));
 const IqLibrary = lazyWithRetry(() => import("./pages/owner/IqLibrary"));
 const IqAlignmentsEditor = lazyWithRetry(() => import("./pages/owner/IqAlignmentsEditor"));
+const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
@@ -238,6 +239,7 @@ const App = () => {
               <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path=".lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/select-user-role" element={<SelectUserRole />} />
               <Route path="/select-sport-scout" element={<SelectSportScout />} />
