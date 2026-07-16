@@ -72,7 +72,15 @@ export default function GameIq() {
           <p className="text-muted-foreground">
             Every pitch. Every position. <span className="font-semibold">Ball · Bag · Backup.</span>
           </p>
+          {isOwner && (
+            <div className="flex justify-center">
+              <Button size="sm" variant="outline" onClick={() => navigate("/owner/iq/alignments")}>
+                <Settings className="h-4 w-4 mr-1" /> Edit defensive alignments
+              </Button>
+            </div>
+          )}
         </header>
+
 
         <div className="grid grid-cols-3 gap-3">
           <Card className="p-4 text-center">
