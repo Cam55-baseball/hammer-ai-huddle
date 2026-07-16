@@ -55,6 +55,8 @@ export default function GameIq() {
   }, [progressQ.data]);
 
   const situations = situationsQ.data ?? [];
+  const { isOwner } = useOwnerAccess();
+
 
   const [resume, setResume] = useState(() => quizResume.load());
   const dismissResume = () => { quizResume.clear(); setResume(null); };
