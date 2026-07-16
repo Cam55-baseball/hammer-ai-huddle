@@ -4,7 +4,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Brain, Shield, Swords, Target, Footprints, Sparkles, PlayCircle, X } from "lucide-react";
+import { Brain, Shield, Swords, Target, Footprints, Sparkles, PlayCircle, X, Settings } from "lucide-react";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { IqSituationCard } from "@/components/iq/IqSituationCard";
 import { useIqSituations } from "@/hooks/useIqSituations";
 import { useIqProgress } from "@/hooks/useIqProgress";
@@ -54,6 +55,8 @@ export default function GameIq() {
   }, [progressQ.data]);
 
   const situations = situationsQ.data ?? [];
+  const { isOwner } = useOwnerAccess();
+
 
   const [resume, setResume] = useState(() => quizResume.load());
   const dismissResume = () => { quizResume.clear(); setResume(null); };
@@ -69,7 +72,15 @@ export default function GameIq() {
           <p className="text-muted-foreground">
             Every pitch. Every position. <span className="font-semibold">Ball · Bag · Backup.</span>
           </p>
+          {isOwner && (
+            <div className="flex justify-center">
+              <Button size="sm" variant="outline" onClick={() => navigate("/owner/iq/alignments")}>
+                <Settings className="h-4 w-4 mr-1" /> Edit defensive alignments
+              </Button>
+            </div>
+          )}
         </header>
+
 
         <div className="grid grid-cols-3 gap-3">
           <Card className="p-4 text-center">
