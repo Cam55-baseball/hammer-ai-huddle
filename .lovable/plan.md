@@ -1,55 +1,55 @@
-# Game IQ — Accurate Default Positions + Admin Alignment Editor
 
-## Problem
-Defensive starting positions in Game IQ are hard-coded in `src/components/iq/IqDiamond.tsx` (`HOME_POS`). They don't match real baseball/softball alignments, aren't tunable per sport, and every scenario animates *from* those wrong starts — which is why plays look off. There is no way for you (the owner) to correct them without a code change, and there is no concept of situational alignments (double play depth, no-doubles, corners in, shift, etc.).
+# Game IQ Alignments — Editor v2 + Range-Aware, Drastic-Shift Coverage
 
-## Goal
-1. You (owner) can visually drag each of the 9 defenders to their correct default spot, per sport, and save it once.
-2. Scenarios can optionally reference an **alignment preset** (Standard, Double Play Depth, No Doubles, Corners In, Bunt Defense, Shift L / Shift R, Outfield Shallow / Deep) so starting positions match the situation before the play animates.
-3. IqDiamond stops using hard-coded coords — it always reads the saved defaults for the current sport, then applies preset overrides, then applies per-actor `roleShifts`.
+## Why this needs a redo
+The current editor at `/owner/iq/alignments` technically works but is unusable in practice: drag handles are invisible/tiny, touch drag fights the page, there's no snap or undo, moving 4 outfielders in unison is impossible, and there's no way to see whether the defenders you moved actually cover the field. It also doesn't expose the concepts you called out — per-defender range, independent IF/OF placement, lateral vs longitudinal shifts, and truly drastic situational alignments (wheel, 1st-and-3rd D, 5-man infield, 4-man OF, no-doubles-with-corners-in, etc.).
 
-## What gets built
+Answering your direct questions:
+- **Lateral + longitudinal:** the coordinate system already supports both (x = lateral, y = longitudinal), but the UI hides it. v2 exposes explicit "slide sideways" and "play deeper/shallower" controls per role and per group.
+- **Position depends on neighbors' range:** not modeled yet. v2 adds a per-role range radius and a coverage overlay so you can *see* the gaps between SS and CF, 1B and 2B, etc., and adjust.
+- **Independent OF vs IF placement:** v2 groups defenders so you can shift the whole outfield deeper/left without touching the infield, and vice-versa.
+- **Drastic shifts:** partially covered today (bunt D, shift L/R, corners in, OF shallow/deep). v2 adds the missing extreme presets and lets you clone/create your own.
 
-### 1. Storage (Lovable Cloud)
-New table `iq_defensive_alignments`:
-- `id`, `sport` ('baseball'|'softball'), `preset_key` (text, e.g. `standard`, `dp_depth`, `no_doubles`, `corners_in`, `bunt`, `shift_l`, `shift_r`, `of_shallow`, `of_deep`), `label`, `positions jsonb` ({ P:{x,y}, C:{x,y}, "1B":{x,y}, ... 9 positions on a 0–100 grid }), `is_default bool`, `updated_at`, `updated_by`.
-- Unique `(sport, preset_key)`.
-- RLS: read for `authenticated`; write only for `admin` role via `has_role`. Standard GRANTs.
-- Seed one row per sport with `preset_key = 'standard'`, `is_default = true`, using best-known real alignments (baseball 90ft, softball 60ft) as a starting point — you'll then fine-tune them in the editor.
+## What ships
 
-Optional column on `iq_situations` / `iq_scenarios`: `alignment_preset text null` so a scenario can pin its starting alignment (e.g. bunt-defense scenarios pin `bunt`).
+### 1. New editor UX (`/owner/iq/alignments`)
+- **Big, obvious drag pucks** with the position label, drop shadow, and a live x/y readout that follows the finger. Pointer + touch, `touch-action: none`, no page scroll while dragging.
+- **Snap-to-grid** toggle (1% default, 0.5% fine mode) and **keyboard nudge** (arrows = 1%, shift+arrows = 5%) when a puck is selected.
+- **Undo / Redo** stack per editing session, plus **Revert to saved** and **Reset to seed**.
+- **Multi-select + group drag:** tap-select multiple defenders (or use "Select all OF" / "Select all IF" chips) and drag them together. Also exposes group buttons: *Shift OF ← / → / deeper / shallower*, *Shift IF ← / → / in / back*, with a step slider (1–10%).
+- **Mirror L↔R** button for creating opposite-handed shifts from an existing one in one tap.
+- **Compare overlay:** ghost the currently-saved positions underneath the working copy so you can see what changed.
 
-### 2. Owner alignment editor — `/owner/iq/alignments`
-- Sport toggle (Baseball / Softball).
-- Preset dropdown (Standard, DP depth, No doubles, Corners in, Bunt D, Shift L/R, OF shallow/deep) with "New preset" and "Duplicate from Standard".
-- Full-size IqDiamond with **draggable** defender dots (pointer + touch). Live x/y readout; snap-to-grid toggle (0.5% increments); numeric nudge buttons; "Reset to seed" per role.
-- "Save preset" writes to `iq_defensive_alignments`. "Set as default for sport" flips `is_default`.
-- Preview toggle to overlay the current preset on top of an existing scenario so you can eyeball routes.
+### 2. Range + coverage model
+- Add per-role `range_radius` (0–100 grid units) with sane defaults (e.g. CF 18, corner OF 14, MI 10, corners 8, P 6, C 5). Editable per preset.
+- Render each defender's range as a translucent disk on the diamond; overlaps show blended color, gaps show as unshaded field. This is the "did I actually cover the field?" check you're missing.
+- Coverage score chip (% of fair territory covered) updates live so you know when a drastic shift leaves a hole you didn't intend.
 
-### 3. Runtime wiring
-- New hook `useDefensiveAlignment(sport, presetKey?)` → returns saved `positions` (falls back to `standard`, then to a tiny built-in constant if the network fails, so the diamond always renders).
-- `IqDiamond` no longer holds `HOME_POS` for the 9 defensive roles. It accepts `defensivePositions` (from the hook) and keeps its own coords only for `R1/R2/R3/BR/BAT`.
-- `IqScenarioRunner` and `GameIqSituation` resolve `alignment_preset` (scenario → situation → sport default) and pass the resulting positions into `IqDiamond`. `roleShifts` still layers on top (so a scenario like "SS cheats up the middle" stays a shift, not a new preset).
-- `primary_path` points stay authored relative to the same 0–100 grid, so authored routes keep working — only the starting dot moves.
+### 3. Situational preset library (drastic shifts included)
+Seed the missing presets per sport so *every* situation the app teaches has an accurate starting frame:
+- Standard, DP depth, No-doubles, Corners in, Bunt D (standard), **Wheel play (bunt)**, **1st-and-3rd defense**, **Infield in (bases loaded)**, **Guard the lines**, **Shift L / Shift R (full)**, **Half-shift L / R**, **4-man outfield**, **5-man infield**, **OF shallow / deep**, **OF no-doubles with corners in**, **Squeeze defense**.
+Also expose **Duplicate preset**, **Rename**, **Delete** (owner only) so you can spin up custom ones without another migration.
 
-### 4. Data hygiene
-- One-time seed migration inserts the 9 preset rows per sport with sensible starting coordinates.
-- After you save your corrections once, all 114 scenarios inherit them automatically — no per-scenario re-authoring needed.
+### 4. Data changes (single migration)
+- `iq_defensive_alignments`: add `range_radii jsonb` (per-role radius map, nullable) and allow user-created presets via existing `preset_key` uniqueness `(sport, preset_key)`.
+- Seed the new preset rows for baseball + softball with initial coordinates and role-appropriate ranges. GRANTs + RLS unchanged (read = authenticated, write = admin).
 
-## Non-goals (this pass)
-- Not changing scenario content, actor paths, or the quiz engine.
-- Not touching `fieldGeometry.ts` (game-scoring canvas is a separate surface).
-- Not exposing the editor to non-admin users.
+### 5. Runtime consumption (no visual regression)
+- `useDefensiveAlignment` already returns `positions`; extend it to also return `rangeRadii` (falls back to defaults when null) so future overlays in the athlete-facing IQ views can show coverage when relevant. Scenarios continue to resolve `alignment_preset` exactly as they do today — no change to authored `primary_path` data.
+
+## Non-goals
+- No changes to scenario content, quiz logic, or `fieldGeometry.ts` (game-scoring canvas).
+- Athlete-facing coverage overlays are wired but off by default; only the editor uses them at launch.
+- No new roles/actors — still the 9 defenders.
 
 ## Technical notes
-- Coordinate system stays the existing 0–100 grid where y=100 is home, y=0 is the CF wall — no math changes downstream.
-- Drag uses pointer events on the SVG overlay; coordinates clamped to [2, 98] to match current guardrails.
-- Presets are cached in React Query keyed by `(sport, presetKey)`; editor invalidates on save.
-- Admin gate reuses existing `has_role(auth.uid(),'admin')` pattern; if you aren't flagged admin yet I'll add you in the same migration.
+- Drag layer uses a single SVG `<g>` with `pointer-events` on each puck; group drag moves selected pucks by the same delta and clamps each individually to `[2, 98]`.
+- Undo stack is in-memory (last 50 states) — cheap and enough for a session.
+- Range disks are pure SVG `<circle>` with `mix-blend-mode: screen`; coverage % is a Monte-Carlo sample (500 points) over fair territory computed once per state change.
+- Owner-only routes stay gated by the existing `has_role(auth.uid(),'admin')` check.
 
 ## Deliverable order
-1. Migration + seed + GRANTs + RLS.
-2. `useDefensiveAlignment` hook + refactor `IqDiamond` to consume it (no visible change yet, just decoupled).
-3. Owner editor page + route.
-4. Wire `alignment_preset` resolution into `GameIqSituation` / `IqScenarioRunner`.
-5. You tune Standard for both sports; we then add the situational presets together.
+1. Migration: `range_radii` column + seed the new drastic-shift presets for both sports.
+2. Rewrite `IqAlignmentsEditor.tsx`: new drag layer, group controls, undo, snap, keyboard, compare overlay, coverage overlay, duplicate/rename/delete.
+3. Extend `useDefensiveAlignment` to expose `rangeRadii`; leave athlete views unchanged.
+4. You tune Standard for both sports, then we sweep the drastic presets together.
