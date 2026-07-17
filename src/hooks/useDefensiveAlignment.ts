@@ -4,6 +4,7 @@ import type { IqActorRole } from "@/lib/iq/types";
 
 export type FieldSport = "baseball" | "softball";
 export type AlignmentPositions = Partial<Record<IqActorRole, { x: number; y: number }>>;
+export type AlignmentRanges = Partial<Record<IqActorRole, number>>;
 
 export interface AlignmentPreset {
   id: string;
@@ -11,13 +12,18 @@ export interface AlignmentPreset {
   preset_key: string;
   label: string;
   positions: AlignmentPositions;
+  range_radii: AlignmentRanges | null;
   is_default: boolean;
   updated_at: string;
 }
 
-// Last-resort fallback so the diamond ALWAYS renders even if the network
-// is down before any preset has been loaded. Owner-editable presets in the
-// database override this for real users.
+// Sensible per-role coverage radii (0–100 grid units). Owner can override per preset.
+export const DEFAULT_RANGE_RADII: AlignmentRanges = {
+  P: 6, C: 5,
+  "1B": 8, "2B": 10, SS: 10, "3B": 8,
+  LF: 14, CF: 18, RF: 14,
+};
+
 const HARD_FALLBACK: Record<FieldSport, AlignmentPositions> = {
   baseball: {
     P: { x: 50, y: 68 }, C: { x: 50, y: 94 },
@@ -35,7 +41,6 @@ export function fallbackAlignment(sport: FieldSport): AlignmentPositions {
   return HARD_FALLBACK[sport];
 }
 
-/** All presets for a sport (used by the editor). */
 export function useAlignmentPresets(sport: FieldSport) {
   return useQuery({
     queryKey: ["iq-alignments", sport],
@@ -53,10 +58,6 @@ export function useAlignmentPresets(sport: FieldSport) {
   });
 }
 
-/**
- * Resolve the positions to render:
- *   requested preset → sport default → hard fallback.
- */
 export function useDefensiveAlignment(sport: FieldSport, presetKey?: string | null) {
   const q = useAlignmentPresets(sport);
   const presets = q.data ?? [];
@@ -68,6 +69,7 @@ export function useDefensiveAlignment(sport: FieldSport, presetKey?: string | nu
 
   return {
     positions: (chosen?.positions ?? fallbackAlignment(sport)) as AlignmentPositions,
+    rangeRadii: { ...DEFAULT_RANGE_RADII, ...(chosen?.range_radii ?? {}) } as AlignmentRanges,
     preset: chosen,
     isLoading: q.isLoading,
   };
