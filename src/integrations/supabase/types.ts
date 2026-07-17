@@ -5952,6 +5952,7 @@ export type Database = {
           label: string
           positions: Json
           preset_key: string
+          range_radii: Json | null
           sport: string
           updated_at: string
           updated_by: string | null
@@ -5963,6 +5964,7 @@ export type Database = {
           label: string
           positions: Json
           preset_key: string
+          range_radii?: Json | null
           sport: string
           updated_at?: string
           updated_by?: string | null
@@ -5974,6 +5976,7 @@ export type Database = {
           label?: string
           positions?: Json
           preset_key?: string
+          range_radii?: Json | null
           sport?: string
           updated_at?: string
           updated_by?: string | null
