@@ -14,7 +14,14 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
+import { BlockCompletionControls } from "@/components/hammer/BlockCompletionControls";
+import {
+  projectAdaptiveAdjustments,
+  recordPhaseSignature,
+  loadEngagement,
+} from "@/lib/hammer/prescription/dailyEngagement";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -189,6 +196,23 @@ function HammerDailyPlanBody() {
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
+  // Bump on every done/skip so intent header + adaptive notes re-derive.
+  const [engagementTick, setEngagementTick] = useState(0);
+  const bumpEngagement = () => setEngagementTick((t) => t + 1);
+  const { user } = useAuth();
+
+  // Record today's phase signature (interpretive; localStorage only) so the
+  // rotation engine can flag monotony tomorrow.
+  useEffect(() => {
+    recordPhaseSignature(user?.id, plan.blocks);
+  }, [user?.id, plan.blocks]);
+
+  const adaptive = useMemo(
+    () => projectAdaptiveAdjustments(plan.blocks, loadEngagement(user?.id)),
+    // engagementTick invalidates when the athlete marks blocks done/skipped
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [plan.blocks, user?.id, engagementTick],
+  );
 
   return (
     <Card id="hammer-plan" className="scroll-mt-24">
@@ -295,6 +319,7 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
         <HammerScheduleStrip />
         <GpInGameAdvisoryStrip />
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
@@ -317,9 +342,18 @@ function HammerDailyPlanBody() {
           const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup");
           return (
             <>
-              {warmupBlocks.map((b) => (
-                <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
-              ))}
+              {warmupBlocks.map((b) => {
+                const adj = adaptive.find((a) => a.modality === b.modality);
+                return (
+                  <BlockCard
+                    key={b.modality}
+                    block={b}
+                    onNavigate={(r) => navigate(r)}
+                    onEngagementChanged={bumpEngagement}
+                    adaptiveNote={adj?.note}
+                  />
+                );
+              })}
               <ErrorBoundary label="wk-speed">
                 <WkSpeedCard />
               </ErrorBoundary>
@@ -329,9 +363,18 @@ function HammerDailyPlanBody() {
               <ErrorBoundary label="wk-lifts">
                 <WkLiftsCard />
               </ErrorBoundary>
-              {otherBlocks.map((b) => (
-                <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
-              ))}
+              {otherBlocks.map((b) => {
+                const adj = adaptive.find((a) => a.modality === b.modality);
+                return (
+                  <BlockCard
+                    key={b.modality}
+                    block={b}
+                    onNavigate={(r) => navigate(r)}
+                    onEngagementChanged={bumpEngagement}
+                    adaptiveNote={adj?.note}
+                  />
+                );
+              })}
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
@@ -347,9 +390,13 @@ function HammerDailyPlanBody() {
 function BlockCard({
   block,
   onNavigate,
+  onEngagementChanged,
+  adaptiveNote,
 }: {
   block: PrescribedBlock;
   onNavigate: (route: string) => void;
+  onEngagementChanged?: () => void;
+  adaptiveNote?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -625,7 +672,12 @@ function BlockCard({
 
           <DailyPlanVideoChips modality={block.modality} />
 
-
+          {adaptiveNote && (
+            <div className="rounded-md border border-cyan-500/30 bg-cyan-500/5 px-2 py-1.5 text-[11px] text-muted-foreground leading-snug">
+              <span className="font-semibold text-cyan-700 dark:text-cyan-300">Hammer adjusts: </span>
+              {adaptiveNote}
+            </div>
+          )}
 
           <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/40">
             {block.gamePlanTemplate && (
@@ -657,6 +709,13 @@ function BlockCard({
               <MessageCircle className="h-3 w-3" />
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
+            <div className="ml-auto">
+              <BlockCompletionControls
+                modality={block.modality}
+                modalityLabel={block.title}
+                onChanged={() => onEngagementChanged?.()}
+              />
+            </div>
           </div>
 
           {chatOpen && <InlineBlockChat block={block} />}
