@@ -342,9 +342,18 @@ function HammerDailyPlanBody() {
           const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup");
           return (
             <>
-              {warmupBlocks.map((b) => (
-                <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
-              ))}
+              {warmupBlocks.map((b) => {
+                const adj = adaptive.find((a) => a.modality === b.modality);
+                return (
+                  <BlockCard
+                    key={b.modality}
+                    block={b}
+                    onNavigate={(r) => navigate(r)}
+                    onEngagementChanged={bumpEngagement}
+                    adaptiveNote={adj?.note}
+                  />
+                );
+              })}
               <ErrorBoundary label="wk-speed">
                 <WkSpeedCard />
               </ErrorBoundary>
@@ -354,9 +363,18 @@ function HammerDailyPlanBody() {
               <ErrorBoundary label="wk-lifts">
                 <WkLiftsCard />
               </ErrorBoundary>
-              {otherBlocks.map((b) => (
-                <BlockCard key={b.modality} block={b} onNavigate={(r) => navigate(r)} />
-              ))}
+              {otherBlocks.map((b) => {
+                const adj = adaptive.find((a) => a.modality === b.modality);
+                return (
+                  <BlockCard
+                    key={b.modality}
+                    block={b}
+                    onNavigate={(r) => navigate(r)}
+                    onEngagementChanged={bumpEngagement}
+                    adaptiveNote={adj?.note}
+                  />
+                );
+              })}
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
