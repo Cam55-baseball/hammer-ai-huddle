@@ -672,7 +672,12 @@ function BlockCard({
 
           <DailyPlanVideoChips modality={block.modality} />
 
-
+          {adaptiveNote && (
+            <div className="rounded-md border border-cyan-500/30 bg-cyan-500/5 px-2 py-1.5 text-[11px] text-muted-foreground leading-snug">
+              <span className="font-semibold text-cyan-700 dark:text-cyan-300">Hammer adjusts: </span>
+              {adaptiveNote}
+            </div>
+          )}
 
           <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/40">
             {block.gamePlanTemplate && (
@@ -704,6 +709,13 @@ function BlockCard({
               <MessageCircle className="h-3 w-3" />
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
+            <div className="ml-auto">
+              <BlockCompletionControls
+                modality={block.modality}
+                modalityLabel={block.title}
+                onChanged={() => onEngagementChanged?.()}
+              />
+            </div>
           </div>
 
           {chatOpen && <InlineBlockChat block={block} />}
