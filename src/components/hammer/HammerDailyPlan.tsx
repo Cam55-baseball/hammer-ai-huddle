@@ -390,9 +390,13 @@ function HammerDailyPlanBody() {
 function BlockCard({
   block,
   onNavigate,
+  onEngagementChanged,
+  adaptiveNote,
 }: {
   block: PrescribedBlock;
   onNavigate: (route: string) => void;
+  onEngagementChanged?: () => void;
+  adaptiveNote?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
