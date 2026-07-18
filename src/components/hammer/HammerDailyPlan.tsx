@@ -196,6 +196,23 @@ function HammerDailyPlanBody() {
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
+  // Bump on every done/skip so intent header + adaptive notes re-derive.
+  const [engagementTick, setEngagementTick] = useState(0);
+  const bumpEngagement = () => setEngagementTick((t) => t + 1);
+  const { user } = useAuth();
+
+  // Record today's phase signature (interpretive; localStorage only) so the
+  // rotation engine can flag monotony tomorrow.
+  useEffect(() => {
+    recordPhaseSignature(user?.id, plan.blocks);
+  }, [user?.id, plan.blocks]);
+
+  const adaptive = useMemo(
+    () => projectAdaptiveAdjustments(plan.blocks, loadEngagement(user?.id)),
+    // engagementTick invalidates when the athlete marks blocks done/skipped
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [plan.blocks, user?.id, engagementTick],
+  );
 
   return (
     <Card id="hammer-plan" className="scroll-mt-24">
