@@ -319,6 +319,7 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
         <HammerScheduleStrip />
         <GpInGameAdvisoryStrip />
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
