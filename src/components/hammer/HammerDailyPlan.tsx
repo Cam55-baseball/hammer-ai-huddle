@@ -14,7 +14,14 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
+import { BlockCompletionControls } from "@/components/hammer/BlockCompletionControls";
+import {
+  projectAdaptiveAdjustments,
+  recordPhaseSignature,
+  loadEngagement,
+} from "@/lib/hammer/prescription/dailyEngagement";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
