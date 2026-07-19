@@ -283,7 +283,7 @@ export default function AthleteOnboarding() {
       if (throwingHand) {
         const { error } = await supabase
           .from("profiles")
-          .update({ throwing_hand: throwingHand })
+          .update({ throwing_hand: throwingHand === "S" ? "B" : throwingHand })
           .eq("id", user.id);
         if (error) throw error;
         // Mirror ambidextrous flag into athlete_mpi_settings when "Both" chosen.
