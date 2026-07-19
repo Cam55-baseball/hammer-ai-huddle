@@ -339,7 +339,11 @@ function HammerDailyPlanBody() {
         */}
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup");
-          const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup");
+          // Modalities owned by dedicated Wk cards (Speed / Bat Speed / Lifts /
+          // Conditioning / Cross-sport) must not also render as generic blocks
+          // here — otherwise users see duplicate category cards.
+          const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
+          const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup" && !WK_OWNED.has(b.modality));
           return (
             <>
               {warmupBlocks.map((b) => {
