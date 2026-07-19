@@ -115,39 +115,72 @@ export default function AthleteOnboarding() {
 
   // Deep-link routing: ?step=review jumps to the review summary; ?edit=<key>
   // jumps directly to that step and marks it as an edit (save returns to review).
+  // Otherwise, auto-resume from any saved draft slot (Save & exit continuity).
   const urlRoutedRef = useRef(false);
   useEffect(() => {
-    if (urlRoutedRef.current) return;
+    if (urlRoutedRef.current || !user?.id) return;
     const editKey = searchParams.get("edit") as ReviewEditKey | null;
     const stepParam = searchParams.get("step");
-    const resume = searchParams.get("resume");
+    const startOver = searchParams.get("startOver") === "1";
     if (editKey && editKey in EDIT_TARGETS) {
       urlRoutedRef.current = true;
       setStep(EDIT_TARGETS[editKey]);
       setEditReturnTo(STEP_REVIEW);
-    } else if (stepParam === "review") {
+      return;
+    }
+    if (stepParam === "review") {
       urlRoutedRef.current = true;
       setStep(STEP_REVIEW);
-    } else if (resume === "1" && user?.id) {
-      urlRoutedRef.current = true;
-      (async () => {
-        try {
-          const draft = await readDraftSlot<{ stepIndex?: number; dayType?: DayType }>(
-            user.id,
-            "onboarding-step",
-          );
-          if (draft) {
-            if (typeof draft.stepIndex === "number") {
-              setStep(Math.min(Math.max(draft.stepIndex, 0), STEPS.length - 1));
-            }
-            if (draft.dayType) setDayType(draft.dayType);
-          }
-        } catch {
-          /* resume is best-effort */
-        }
-      })();
+      return;
     }
+    urlRoutedRef.current = true;
+    (async () => {
+      try {
+        // Hydrate saved profile answers regardless of step (so back-nav still shows them).
+        const profileDraft = await readDraftSlot<{ throwingHand?: ThrowingHandValue }>(
+          user.id,
+          "profile-answers",
+        );
+        if (profileDraft?.throwingHand) setThrowingHand(profileDraft.throwingHand);
+        // Also read persisted throwing_hand from profile if no draft.
+        if (!profileDraft?.throwingHand) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("throwing_hand")
+            .eq("id", user.id)
+            .maybeSingle();
+          const th = (data as { throwing_hand?: string | null } | null)?.throwing_hand;
+          if (th === "L" || th === "R" || th === "S") setThrowingHand(th);
+        }
+        if (startOver) {
+          clearDraftSlot(user.id, "onboarding-step");
+          return;
+        }
+        const draft = await readDraftSlot<{ stepIndex?: number; dayType?: DayType }>(
+          user.id,
+          "onboarding-step",
+        );
+        if (draft) {
+          if (draft.dayType) setDayType(draft.dayType);
+          if (typeof draft.stepIndex === "number" && draft.stepIndex > 0) {
+            const target = Math.min(Math.max(draft.stepIndex, 0), STEPS.length - 1);
+            setStep(target);
+            setResumedFromStep(target);
+          }
+        }
+      } catch {
+        /* resume is best-effort */
+      }
+    })();
   }, [searchParams, user?.id]);
+
+  // Continuously persist step + dayType so refresh/close never loses progress.
+  useEffect(() => {
+    if (!user?.id || !urlRoutedRef.current) return;
+    if (step === STEP_DONE) return;
+    writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
+  }, [user?.id, step, dayType]);
+
 
   // Skip the flow only when the athlete already finished it AND we're not
   // explicitly reviewing/editing. This lets completed users come back via
