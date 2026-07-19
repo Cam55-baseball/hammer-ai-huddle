@@ -539,7 +539,10 @@ export default function AthleteOnboarding() {
       {step === STEP_REVIEW && (
         <ReviewAnswersStep
           onEdit={handleEditFromReview}
-          onFinish={() => setStep(STEP_DONE)}
+          onFinish={() => {
+            if (user?.id) clearDraftSlot(user.id, "onboarding-step");
+            setStep(STEP_DONE);
+          }}
         />
       )}
 
