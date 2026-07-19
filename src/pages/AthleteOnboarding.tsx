@@ -78,9 +78,12 @@ export default function AthleteOnboarding() {
   /** When set, the next save returns to STEP_REVIEW instead of advancing linearly. */
   const [editReturnTo, setEditReturnTo] = useState<number | null>(null);
   const [dayType, setDayType] = useState<DayType>("training");
+  const [throwingHand, setThrowingHand] = useState<ThrowingHandValue | undefined>(undefined);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [emitting, setEmitting] = useState(false);
   const [emittedEventId, setEmittedEventId] = useState<string | null>(null);
   const [emitError, setEmitError] = useState<{ topic: string; code?: string; message?: string } | null>(null);
+  const [resumedFromStep, setResumedFromStep] = useState<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && isAuthStable && !user) navigate("/auth", { replace: true });
