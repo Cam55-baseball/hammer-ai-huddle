@@ -150,7 +150,8 @@ export default function AthleteOnboarding() {
             .eq("id", user.id)
             .maybeSingle();
           const th = (data as { throwing_hand?: string | null } | null)?.throwing_hand;
-          if (th === "L" || th === "R" || th === "S") setThrowingHand(th);
+          if (th === "L" || th === "R") setThrowingHand(th);
+          else if (th === "B" || th === "S") setThrowingHand("S");
         }
         if (startOver) {
           clearDraftSlot(user.id, "onboarding-step");
