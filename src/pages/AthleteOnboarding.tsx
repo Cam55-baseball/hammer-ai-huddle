@@ -19,7 +19,8 @@ import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
-import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
+import { writeDraftSlot, readDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
+import { ThrowingHandSelector, type ThrowingHandValue } from "@/components/splits/ThrowingHandSelector";
 
 
 const STEPS = [
