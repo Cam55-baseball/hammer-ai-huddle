@@ -276,10 +276,47 @@ export default function AthleteOnboarding() {
         ? "first-login"
         : "incomplete-onboarding";
 
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    setSavingProfile(true);
+    try {
+      if (throwingHand) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ throwing_hand: throwingHand })
+          .eq("id", user.id);
+        if (error) throw error;
+        // Mirror ambidextrous flag into athlete_mpi_settings when "Both" chosen.
+        if (throwingHand === "S") {
+          await supabase
+            .from("athlete_mpi_settings")
+            .upsert(
+              {
+                user_id: user.id,
+                is_ambidextrous_thrower: true,
+                primary_throwing_hand: "S",
+              } as never,
+              { onConflict: "user_id" },
+            );
+        }
+        writeDraftSlot(user.id, "profile-answers", { throwingHand });
+      }
+      goNext();
+    } catch (e) {
+      console.warn("[onboarding] profile save failed", e);
+      // Non-blocking — still allow forward navigation so users are never stuck.
+      goNext();
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   return (
     <AthleteOnboardingShell
       stepIndex={step}
       steps={STEPS}
+      onBack={step > 0 && step < STEP_DONE ? goBack : undefined}
+      onJumpToStep={(i) => setStep(i)}
       onSaveAndExit={() => {
         if (user?.id) writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
       }}
@@ -288,6 +325,27 @@ export default function AthleteOnboarding() {
         state={onboardingState}
         lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
       />
+
+      {resumedFromStep !== null && step !== STEP_DONE && (
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+          <span className="text-muted-foreground">
+            Resuming from <span className="font-medium text-foreground">{STEPS[resumedFromStep]}</span>.
+          </span>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 text-xs"
+            onClick={() => {
+              if (user?.id) clearDraftSlot(user.id, "onboarding-step");
+              setResumedFromStep(null);
+              setStep(0);
+            }}
+          >
+            Start over
+          </Button>
+        </div>
+      )}
+
       {step === STEP_WELCOME && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>
@@ -312,22 +370,40 @@ export default function AthleteOnboarding() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Confirm your profile</h2>
           <p className="text-sm text-muted-foreground">
-            You can refine details later in <span className="font-medium">Profile</span>.
-            Nothing here is required to start emitting canonical events.
+            A couple quick questions so Hammer can personalize your plan. You can
+            edit any of these later from <span className="font-medium">Profile</span>.
           </p>
           <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
             Signed in as <span className="font-mono text-xs">{user?.email ?? "—"}</span>
           </div>
+
+          <div className="rounded-md border border-border bg-card/40 p-3">
+            <ThrowingHandSelector
+              value={throwingHand}
+              onValueChange={(v) => {
+                setThrowingHand(v);
+                if (user?.id) writeDraftSlot(user.id, "profile-answers", { throwingHand: v });
+              }}
+              label="Which hand do you throw with?"
+            />
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Pick <span className="font-medium">Both</span> if you throw ambidextrously — we'll
+              track sides separately so drills stay relevant to each arm.
+            </p>
+          </div>
+
           <div className="flex justify-between">
             <Button variant="ghost" onClick={goBack}>
               Back
             </Button>
-            <Button onClick={goNext}>
-              Continue <ArrowRight className="ml-2 h-4 w-4" />
+            <Button onClick={handleSaveProfile} disabled={savingProfile}>
+              {savingProfile ? "Saving…" : "Continue"}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </section>
       )}
+
 
       {step === STEP_GOALS && (
         <CategoryGoalsStep onContinue={goNext} onBack={goBack} />
