@@ -19,7 +19,8 @@ import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
-import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
+import { writeDraftSlot, readDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
+import { ThrowingHandSelector, type ThrowingHandValue } from "@/components/splits/ThrowingHandSelector";
 
 
 const STEPS = [
@@ -77,9 +78,12 @@ export default function AthleteOnboarding() {
   /** When set, the next save returns to STEP_REVIEW instead of advancing linearly. */
   const [editReturnTo, setEditReturnTo] = useState<number | null>(null);
   const [dayType, setDayType] = useState<DayType>("training");
+  const [throwingHand, setThrowingHand] = useState<ThrowingHandValue | undefined>(undefined);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [emitting, setEmitting] = useState(false);
   const [emittedEventId, setEmittedEventId] = useState<string | null>(null);
   const [emitError, setEmitError] = useState<{ topic: string; code?: string; message?: string } | null>(null);
+  const [resumedFromStep, setResumedFromStep] = useState<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && isAuthStable && !user) navigate("/auth", { replace: true });
@@ -111,39 +115,73 @@ export default function AthleteOnboarding() {
 
   // Deep-link routing: ?step=review jumps to the review summary; ?edit=<key>
   // jumps directly to that step and marks it as an edit (save returns to review).
+  // Otherwise, auto-resume from any saved draft slot (Save & exit continuity).
   const urlRoutedRef = useRef(false);
   useEffect(() => {
-    if (urlRoutedRef.current) return;
+    if (urlRoutedRef.current || !user?.id) return;
     const editKey = searchParams.get("edit") as ReviewEditKey | null;
     const stepParam = searchParams.get("step");
-    const resume = searchParams.get("resume");
+    const startOver = searchParams.get("startOver") === "1";
     if (editKey && editKey in EDIT_TARGETS) {
       urlRoutedRef.current = true;
       setStep(EDIT_TARGETS[editKey]);
       setEditReturnTo(STEP_REVIEW);
-    } else if (stepParam === "review") {
+      return;
+    }
+    if (stepParam === "review") {
       urlRoutedRef.current = true;
       setStep(STEP_REVIEW);
-    } else if (resume === "1" && user?.id) {
-      urlRoutedRef.current = true;
-      (async () => {
-        try {
-          const draft = await readDraftSlot<{ stepIndex?: number; dayType?: DayType }>(
-            user.id,
-            "onboarding-step",
-          );
-          if (draft) {
-            if (typeof draft.stepIndex === "number") {
-              setStep(Math.min(Math.max(draft.stepIndex, 0), STEPS.length - 1));
-            }
-            if (draft.dayType) setDayType(draft.dayType);
-          }
-        } catch {
-          /* resume is best-effort */
-        }
-      })();
+      return;
     }
+    urlRoutedRef.current = true;
+    (async () => {
+      try {
+        // Hydrate saved profile answers regardless of step (so back-nav still shows them).
+        const profileDraft = await readDraftSlot<{ throwingHand?: ThrowingHandValue }>(
+          user.id,
+          "profile-answers",
+        );
+        if (profileDraft?.throwingHand) setThrowingHand(profileDraft.throwingHand);
+        // Also read persisted throwing_hand from profile if no draft.
+        if (!profileDraft?.throwingHand) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("throwing_hand")
+            .eq("id", user.id)
+            .maybeSingle();
+          const th = (data as { throwing_hand?: string | null } | null)?.throwing_hand;
+          if (th === "L" || th === "R") setThrowingHand(th);
+          else if (th === "B" || th === "S") setThrowingHand("S");
+        }
+        if (startOver) {
+          clearDraftSlot(user.id, "onboarding-step");
+          return;
+        }
+        const draft = await readDraftSlot<{ stepIndex?: number; dayType?: DayType }>(
+          user.id,
+          "onboarding-step",
+        );
+        if (draft) {
+          if (draft.dayType) setDayType(draft.dayType);
+          if (typeof draft.stepIndex === "number" && draft.stepIndex > 0) {
+            const target = Math.min(Math.max(draft.stepIndex, 0), STEPS.length - 1);
+            setStep(target);
+            setResumedFromStep(target);
+          }
+        }
+      } catch {
+        /* resume is best-effort */
+      }
+    })();
   }, [searchParams, user?.id]);
+
+  // Continuously persist step + dayType so refresh/close never loses progress.
+  useEffect(() => {
+    if (!user?.id || !urlRoutedRef.current) return;
+    if (step === STEP_DONE) return;
+    writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
+  }, [user?.id, step, dayType]);
+
 
   // Skip the flow only when the athlete already finished it AND we're not
   // explicitly reviewing/editing. This lets completed users come back via
@@ -239,10 +277,47 @@ export default function AthleteOnboarding() {
         ? "first-login"
         : "incomplete-onboarding";
 
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    setSavingProfile(true);
+    try {
+      if (throwingHand) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ throwing_hand: throwingHand === "S" ? "B" : throwingHand })
+          .eq("id", user.id);
+        if (error) throw error;
+        // Mirror ambidextrous flag into athlete_mpi_settings when "Both" chosen.
+        if (throwingHand === "S") {
+          await supabase
+            .from("athlete_mpi_settings")
+            .upsert(
+              {
+                user_id: user.id,
+                is_ambidextrous_thrower: true,
+                primary_throwing_hand: "S",
+              } as never,
+              { onConflict: "user_id" },
+            );
+        }
+        writeDraftSlot(user.id, "profile-answers", { throwingHand });
+      }
+      goNext();
+    } catch (e) {
+      console.warn("[onboarding] profile save failed", e);
+      // Non-blocking — still allow forward navigation so users are never stuck.
+      goNext();
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   return (
     <AthleteOnboardingShell
       stepIndex={step}
       steps={STEPS}
+      onBack={step > 0 && step < STEP_DONE ? goBack : undefined}
+      onJumpToStep={(i) => setStep(i)}
       onSaveAndExit={() => {
         if (user?.id) writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
       }}
@@ -251,6 +326,27 @@ export default function AthleteOnboarding() {
         state={onboardingState}
         lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
       />
+
+      {resumedFromStep !== null && step !== STEP_DONE && (
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+          <span className="text-muted-foreground">
+            Resuming from <span className="font-medium text-foreground">{STEPS[resumedFromStep]}</span>.
+          </span>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 text-xs"
+            onClick={() => {
+              if (user?.id) clearDraftSlot(user.id, "onboarding-step");
+              setResumedFromStep(null);
+              setStep(0);
+            }}
+          >
+            Start over
+          </Button>
+        </div>
+      )}
+
       {step === STEP_WELCOME && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>
@@ -275,22 +371,40 @@ export default function AthleteOnboarding() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Confirm your profile</h2>
           <p className="text-sm text-muted-foreground">
-            You can refine details later in <span className="font-medium">Profile</span>.
-            Nothing here is required to start emitting canonical events.
+            A couple quick questions so Hammer can personalize your plan. You can
+            edit any of these later from <span className="font-medium">Profile</span>.
           </p>
           <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
             Signed in as <span className="font-mono text-xs">{user?.email ?? "—"}</span>
           </div>
+
+          <div className="rounded-md border border-border bg-card/40 p-3">
+            <ThrowingHandSelector
+              value={throwingHand}
+              onValueChange={(v) => {
+                setThrowingHand(v);
+                if (user?.id) writeDraftSlot(user.id, "profile-answers", { throwingHand: v });
+              }}
+              label="Which hand do you throw with?"
+            />
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Pick <span className="font-medium">Both</span> if you throw ambidextrously — we'll
+              track sides separately so drills stay relevant to each arm.
+            </p>
+          </div>
+
           <div className="flex justify-between">
             <Button variant="ghost" onClick={goBack}>
               Back
             </Button>
-            <Button onClick={goNext}>
-              Continue <ArrowRight className="ml-2 h-4 w-4" />
+            <Button onClick={handleSaveProfile} disabled={savingProfile}>
+              {savingProfile ? "Saving…" : "Continue"}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </section>
       )}
+
 
       {step === STEP_GOALS && (
         <CategoryGoalsStep onContinue={goNext} onBack={goBack} />
@@ -425,7 +539,10 @@ export default function AthleteOnboarding() {
       {step === STEP_REVIEW && (
         <ReviewAnswersStep
           onEdit={handleEditFromReview}
-          onFinish={() => setStep(STEP_DONE)}
+          onFinish={() => {
+            if (user?.id) clearDraftSlot(user.id, "onboarding-step");
+            setStep(STEP_DONE);
+          }}
         />
       )}
 

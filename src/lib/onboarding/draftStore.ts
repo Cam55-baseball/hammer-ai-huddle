@@ -25,7 +25,8 @@ export type DraftSlot =
   | "category-goals-wizard"
   | "schedule-importer"
   | "injury-intake"
-  | "onboarding-step";
+  | "onboarding-step"
+  | "profile-answers";
 
 type DraftBag = Partial<Record<DraftSlot, unknown>>;
 
