@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users, Play } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
 import { toast } from "@/hooks/use-toast";
@@ -23,9 +23,10 @@ interface Props {
   actors: IqActor[];
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
   sport?: "baseball" | "softball";
+  batterSide?: "R" | "L";
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball" }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R" }: Props) {
 
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
@@ -44,6 +45,7 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     (initial?.answer as IqAssignment | null) ?? null,
   );
   const [submitted, setSubmitted] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
   const correct = position
@@ -135,7 +137,7 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     <Card className="p-5 space-y-4" data-protected-editing="true">
       <p className="text-base font-medium">{scenario.prompt}</p>
 
-      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} />
+      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} batterSide={batterSide} playing={playing} />
 
       {!submitted && (
         <>
@@ -286,7 +288,14 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
               </Collapsible>
             )}
 
-            <div className="flex gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button size="sm" variant="default" onClick={() => {
+                setPlaying(false);
+                setTimeout(() => setPlaying(true), 40);
+                setTimeout(() => setPlaying(false), 1600);
+              }}>
+                <Play className="h-3.5 w-3.5 mr-1" /> Watch the play
+              </Button>
               <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
               <Button size="sm" variant="ghost" onClick={() => navigate("/iq")}>Back to library</Button>
             </div>

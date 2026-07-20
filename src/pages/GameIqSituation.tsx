@@ -162,7 +162,7 @@ export default function GameIqSituation() {
                 Alignment: {resolved.presetKey}{resolved.reason === "rule" ? " (rule)" : resolved.reason === "default" ? " (default)" : ""}
               </Badge>
             </div>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} sport={fieldSport} />
+            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} sport={fieldSport} batterSide={hand} />
 
 
             <Card className="p-3 space-y-2">
@@ -322,6 +322,7 @@ export default function GameIqSituation() {
             actors={actors}
             defensivePositions={defensivePositions}
             sport={fieldSport}
+            batterSide={hand}
           />
         )}
       </div>

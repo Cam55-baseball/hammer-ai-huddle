@@ -16,9 +16,11 @@ interface Props {
   sport: FieldSport;
   className?: string;
   showGrid?: boolean;
+  /** Highlight the batter box for the active hitter's side. */
+  batterSide?: "R" | "L";
 }
 
-export function IqField({ sport, className, showGrid }: Props) {
+export function IqField({ sport, className, showGrid, batterSide }: Props) {
   const f = fieldPoints(sport);
   const { home, first, second, third, mound, gpf, s } = f;
 
@@ -113,10 +115,12 @@ export function IqField({ sport, className, showGrid }: Props) {
         fill="hsl(var(--iq-chalk))"
       />
 
-      {/* Batter's boxes */}
-      <rect x={home.x - 3.8} y={home.y - 2.4} width="1.8" height="4.8" fill="none"
+      {/* Batter's boxes — the active side is subtly filled so shifts read correctly. */}
+      <rect x={home.x - 3.8} y={home.y - 2.4} width="1.8" height="4.8"
+            fill={batterSide === "R" ? "hsl(var(--iq-chalk) / 0.18)" : "none"}
             stroke="hsl(var(--iq-chalk) / 0.85)" strokeWidth="0.25" />
-      <rect x={home.x + 2.0} y={home.y - 2.4} width="1.8" height="4.8" fill="none"
+      <rect x={home.x + 2.0} y={home.y - 2.4} width="1.8" height="4.8"
+            fill={batterSide === "L" ? "hsl(var(--iq-chalk) / 0.18)" : "none"}
             stroke="hsl(var(--iq-chalk) / 0.85)" strokeWidth="0.25" />
       {/* Catcher's box */}
       <path d={`M ${home.x - 2.0} ${home.y + 2.6} L ${home.x - 2.0} ${home.y + 5.0} L ${home.x + 2.0} ${home.y + 5.0} L ${home.x + 2.0} ${home.y + 2.6}`}
