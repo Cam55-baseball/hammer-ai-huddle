@@ -9,6 +9,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -117,8 +118,13 @@ export default function AnalyzeVideo() {
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
   const sideDiscipline: 'hit' | 'throw' = module === 'hitting' ? 'hit' : 'throw';
-  const { selectedSide, shouldShowPicker } = useSideContext();
+  const { selectedSide, shouldShowPicker, setSide } = useSideContext();
   const activeSide = selectedSide[sideDiscipline];
+  // For declared switch/ambi athletes we require an explicit per-file side
+  // confirmation so the analysis, roadmap, and profile are filed under the
+  // correct side. Non-switch athletes bypass this entirely.
+  const [sideConfirmedForFile, setSideConfirmedForFile] = useState(false);
+  const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
 
   // Track which drills are already saved
   useEffect(() => {
@@ -340,10 +346,26 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setLandingTime(null);
+    // Reset per-file side confirmation whenever a new clip is loaded.
+    setSideConfirmedForFile(false);
   };
 
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user) return;
+
+    // Pre-upload side gate for declared switch hitters / ambidextrous throwers.
+    // The clip must be tagged L or R before it leaves the device so the
+    // resulting analysis, drills, and report card are filed under the
+    // correct side profile.
+    if (requiresSideConfirmation && !sideConfirmedForFile) {
+      toast.error(
+        sideDiscipline === 'hit'
+          ? 'Confirm the batting side used in this clip before analysis.'
+          : 'Confirm the throwing hand used in this clip before analysis.',
+      );
+      return;
+    }
+
 
     // Phase 52 — pre-upload session assertion. RLS on `videos` requires
     // `auth.uid() = user_id`; if the Supabase client has no live session
@@ -1149,10 +1171,42 @@ export default function AnalyzeVideo() {
               </div>
             </Card>
 
+            {requiresSideConfirmation && !analysis && !analyzing && (
+              <Card className={cn(
+                "p-3 sm:p-4 border",
+                sideConfirmedForFile ? "border-primary/40 bg-primary/5" : "border-amber-500/60 bg-amber-500/5",
+              )}>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">
+                      {sideConfirmedForFile
+                        ? `Filing this clip under ${activeSide === 'L' ? 'Left' : 'Right'} ${sideDiscipline === 'hit' ? 'batting' : 'throwing'}.`
+                        : `Which ${sideDiscipline === 'hit' ? 'batting side' : 'throwing hand'} was used in this clip?`}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Analysis, drills, and roadmap will be filed under this side.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {(['L','R'] as const).map(s => (
+                      <Button
+                        key={s}
+                        size="sm"
+                        variant={activeSide === s && sideConfirmedForFile ? 'default' : 'outline'}
+                        onClick={() => { setSide(sideDiscipline, s); setSideConfirmedForFile(true); }}
+                      >
+                        {s === 'L' ? 'Left' : 'Right'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
-                disabled={uploading || extractingFrames}
+                disabled={uploading || extractingFrames || (requiresSideConfirmation && !sideConfirmedForFile)}
                 size="lg"
                 className="w-full"
               >

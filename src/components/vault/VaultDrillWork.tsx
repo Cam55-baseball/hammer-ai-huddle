@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dumbbell, Star, Sparkles, Trash2 } from 'lucide-react';
 import { useDrillRecommendations } from '@/hooks/useDrillRecommendations';
 import { DrillDetailDialog } from '@/components/practice/DrillDetailDialog';
+import { SideViewTabs, type SideViewMode } from '@/components/shared/SideViewTabs';
+import { SideBadge } from '@/components/shared/SideBadge';
+import { useSideContext } from '@/contexts/SideContext';
 import type { ScoredDrill } from '@/utils/drillRecommendationEngine';
 
 interface VaultDrillWorkProps {
@@ -17,6 +20,18 @@ interface VaultDrillWorkProps {
 export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrillWorkProps) {
   const [activeTab, setActiveTab] = useState('saved');
   const [selectedDrill, setSelectedDrill] = useState<ScoredDrill | null>(null);
+  const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
+  const showSideFilter = isSwitchHitter || isAmbidextrousThrower;
+  const [sideView, setSideView] = useState<SideViewMode>('combined');
+
+  const filteredDrills = useMemo(() => {
+    if (!showSideFilter || sideView === 'combined') return savedDrills;
+    return savedDrills.filter(d => {
+      const s = (d as any).side;
+      // Include null-tagged drills in both L and R views so legacy saves remain visible.
+      return s == null || s === 'both' || s === sideView;
+    });
+  }, [savedDrills, sideView, showSideFilter]);
 
   const { recommendations, isLoading } = useDrillRecommendations({
     sport,
@@ -45,19 +60,26 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
           </TabsList>
 
           <TabsContent value="saved" className="mt-3 space-y-2">
-            {savedDrills.length === 0 ? (
+            {showSideFilter && savedDrills.length > 0 && (
+              <div className="pb-1">
+                <SideViewTabs value={sideView} onChange={setSideView} />
+              </div>
+            )}
+            {filteredDrills.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No saved drills yet. Save drills from practice recommendations.
+                {savedDrills.length === 0
+                  ? 'No saved drills yet. Save drills from practice recommendations.'
+                  : 'No drills filed under this side yet.'}
               </p>
             ) : (
-              savedDrills.map((d) => (
+              filteredDrills.map((d) => (
                 <div
                   key={d.id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{d.drill_name}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       <Badge variant="secondary" className="text-[10px] capitalize">
                         {d.module}
                       </Badge>
@@ -66,6 +88,7 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
                           {d.drill_type.replace(/_/g, ' ')}
                         </Badge>
                       )}
+                      {(d as any).side && <SideBadge side={(d as any).side} />}
                     </div>
                   </div>
                   {onDeleteDrill && (
@@ -82,6 +105,7 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
               ))
             )}
           </TabsContent>
+
 
           <TabsContent value="recommended" className="mt-3 space-y-2">
             {isLoading ? (
