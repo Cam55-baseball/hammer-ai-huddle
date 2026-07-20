@@ -84,11 +84,11 @@ export default function IqCombos() {
   const saveMut = useMutation({
     mutationFn: async (c: Combo) => {
       if (!c.name.trim()) throw new Error("Name is required");
-      const payload = {
+      const payload: any = {
         name: c.name.trim(),
         sport: c.sport,
         base_alignment_id: c.base_alignment_id,
-        layers: c.layers,
+        layers: c.layers as any,
         notes: c.notes ?? null,
       };
       if (c.id === "__new__") {
