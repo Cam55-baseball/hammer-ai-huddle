@@ -33,6 +33,7 @@ import { certifyLift } from "../_shared/wic/lift/sessionBuilder.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
+import { resolveBatSpeedTemplate } from "../_shared/wic/batSpeed/templates.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
@@ -641,10 +642,40 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Bat-speed engine (its own card, always pre-lift) --------
     if (!isGameDay) {
+      const batSpeedTemplate = resolveBatSpeedTemplate({
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: (trainingAgeContext as any)?.classification,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isReturnToPlay: false,
+      });
       const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
-      const bat = batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
-      if (bat) {
-        push("bat_speed", "bat_speed", bat, {}, "Rotational power primer — direct bat-speed transfer. Do BEFORE lifts while CNS is fresh.");
+      const usedBatSpeedSlugs = new Set<string>();
+      const pickBatSpeedByCategory = (category: string) => {
+        const sameCategory = batSpeedPool.filter(
+          (m) => ((m as any).bat_speed_category ?? null) === category && !usedBatSpeedSlugs.has(m.slug),
+        );
+        return sameCategory.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? sameCategory[0] ?? null;
+      };
+      const batSpeedPicks = batSpeedTemplate.requiredCategories
+        .map((category) => ({ category, movement: pickBatSpeedByCategory(category) }))
+        .filter((pick): pick is { category: string; movement: MovementRow } => !!pick.movement);
+      if (batSpeedPicks.length === 0) {
+        const fallback = batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
+        if (fallback) batSpeedPicks.push({ category: String((fallback as any).bat_speed_category ?? "bat_speed"), movement: fallback });
+      }
+      for (const pick of batSpeedPicks) {
+        usedBatSpeedSlugs.add(pick.movement.slug);
+        push(
+          "bat_speed",
+          "bat_speed",
+          pick.movement,
+          {},
+          `${batSpeedTemplate.displayName} — ${pick.category.replace(/_/g, " ")} transfer. Do BEFORE lifts while CNS is fresh.`,
+          { bat_speed_template_id: batSpeedTemplate.id, bat_speed_required_category: pick.category },
+        );
       }
     }
 

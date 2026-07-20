@@ -7,6 +7,7 @@
 import { AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 
 export type WkCardFailure = {
   code?: string | null;
@@ -47,8 +48,12 @@ export function WkCardFailureNotice({
   retrying?: boolean;
 }) {
   const navigate = useNavigate();
+  const { hasCompletedOnboarding } = useAthleteOnboardingState();
   const engineReasons = failure?.engineFailures?.[engine] ?? [];
   const missing = failure?.missingFields ?? [];
+  const onboardingTarget = hasCompletedOnboarding
+    ? "/onboarding/athlete?step=review"
+    : "/onboarding/athlete";
 
   const primary =
     engineReasons[0] ??
@@ -81,9 +86,9 @@ export function WkCardFailureNotice({
                 size="sm"
                 variant="outline"
                 className="h-7"
-                onClick={() => navigate("/onboarding/athlete")}
+                onClick={() => navigate(onboardingTarget)}
               >
-                Finish onboarding
+                {hasCompletedOnboarding ? "Review missing setup" : "Finish onboarding"}
               </Button>
             )}
           </div>
