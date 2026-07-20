@@ -31,13 +31,14 @@ import { CardMeta } from "@/components/hammer/cards/CardMeta";
 import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
+import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, retry, overrideMovement, snapshotIdentity,
+    grouped, reductions, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
   const entry = getCard("lift")!;
   const { display: phaseDisplay } = useCanonicalPhaseDisplay(serverPhaseDisplay, phaseKey);
@@ -133,9 +134,7 @@ export function WkLiftsCard() {
           </div>
         )}
         {failed ? (
-          <Button size="sm" onClick={retry} className="h-7 w-full">
-            <RefreshCw className="h-3 w-3 mr-1" /> Retry
-          </Button>
+          <WkCardFailureNotice engine="lift" failure={failureReason} retry={retry} retrying={generating} />
         ) : isLoading ? (
           <>
             <Skeleton className="h-14 w-full rounded" />

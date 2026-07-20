@@ -15,10 +15,11 @@ import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
+import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 
 export function WkConditioningCard() {
   const gp = useGpSignal();
-  const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity } = useHammersToday();
+  const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity } = useHammersToday();
   const entry = getCard("conditioning")!;
   const { display: label } = useCanonicalPhaseDisplay(
     snapshotIdentity.season_display,
@@ -52,7 +53,7 @@ export function WkConditioningCard() {
       </CardHeader>
       <CardContent className="space-y-2">
         {failed ? (
-          <Button size="sm" onClick={retry} className="h-7 w-full"><RefreshCw className="h-3 w-3 mr-1" /> Retry</Button>
+          <WkCardFailureNotice engine="conditioning" failure={failureReason} retry={retry} retrying={generating} />
         ) : isLoading ? (
           <Skeleton className="h-14 w-full rounded" />
         ) : (
