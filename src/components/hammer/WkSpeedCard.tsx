@@ -18,7 +18,7 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 
 export function WkSpeedCard() {
-  const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity, dayKind } = useHammersToday();
+  const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
   const entry = getCard("speed")!;
   const items = grouped.speedCard;
   const isGameDay = dayKind === "game" || dayKind === "both";
