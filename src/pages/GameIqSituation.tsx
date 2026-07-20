@@ -18,6 +18,7 @@ import {
 } from "@/lib/iq/contextShifts";
 import { useAlignmentPresets, fallbackAlignment, resolvePositions } from "@/hooks/useDefensiveAlignment";
 import type { Handedness } from "@/lib/iq/fieldModel";
+import { resolveAlignment, type RunnerBase } from "@/lib/iq/alignmentResolver";
 
 
 
@@ -31,6 +32,8 @@ export default function GameIqSituation() {
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
   const [context, setContext] = useState<ContextSelection>(NEUTRAL_SELECTION);
   const [hand, setHand] = useState<Handedness>("R");
+  const [runners, setRunners] = useState<RunnerBase[]>([]);
+  const [outs, setOuts] = useState<number>(0);
   const alignmentsQ = useAlignmentPresets(fieldSport);
 
 
