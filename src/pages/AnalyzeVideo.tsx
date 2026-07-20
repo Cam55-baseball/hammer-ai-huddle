@@ -1120,6 +1120,12 @@ export default function AnalyzeVideo() {
                         ? t('videoAnalysis.analysisEnabledDescription')
                         : t('videoAnalysis.analysisDisabledDescription')}
                     </p>
+                  </div>
+                  <Switch
+                    id="enable-analysis"
+                    checked={analysisEnabled}
+                    onCheckedChange={setAnalysisEnabled}
+                  />
                 </div>
 
                 {/* Side filing selector — switch hitters / ambidextrous throwers only */}
@@ -1136,13 +1142,6 @@ export default function AnalyzeVideo() {
                     <SideContextPicker discipline={sideDiscipline} size="md" />
                   </div>
                 )}
-
-                  <Switch
-                    id="enable-analysis"
-                    checked={analysisEnabled}
-                    onCheckedChange={setAnalysisEnabled}
-                  />
-                </div>
 
                 {/* Landing Marker for Pitching/Throwing */}
                 {analysisEnabled && (module === 'pitching' || module === 'throwing') && (
