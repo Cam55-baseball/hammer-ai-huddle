@@ -60,19 +60,26 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
           </TabsList>
 
           <TabsContent value="saved" className="mt-3 space-y-2">
-            {savedDrills.length === 0 ? (
+            {showSideFilter && savedDrills.length > 0 && (
+              <div className="pb-1">
+                <SideViewTabs value={sideView} onChange={setSideView} />
+              </div>
+            )}
+            {filteredDrills.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No saved drills yet. Save drills from practice recommendations.
+                {savedDrills.length === 0
+                  ? 'No saved drills yet. Save drills from practice recommendations.'
+                  : 'No drills filed under this side yet.'}
               </p>
             ) : (
-              savedDrills.map((d) => (
+              filteredDrills.map((d) => (
                 <div
                   key={d.id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{d.drill_name}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       <Badge variant="secondary" className="text-[10px] capitalize">
                         {d.module}
                       </Badge>
@@ -81,6 +88,7 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
                           {d.drill_type.replace(/_/g, ' ')}
                         </Badge>
                       )}
+                      {(d as any).side && <SideBadge side={(d as any).side} />}
                     </div>
                   </div>
                   {onDeleteDrill && (
@@ -97,6 +105,7 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
               ))
             )}
           </TabsContent>
+
 
           <TabsContent value="recommended" className="mt-3 space-y-2">
             {isLoading ? (
