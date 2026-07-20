@@ -173,6 +173,7 @@ const ATHLETE_GAPS: ReadonlyArray<KnowledgeGap> = [
     options: [
       { value: "R", label: "Right" },
       { value: "L", label: "Left" },
+      { value: "S", label: "Both" },
     ],
     persistTo: "throws_hand",
     topic: "onboarding.knowledge_gap_resolved",

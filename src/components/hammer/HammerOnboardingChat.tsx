@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useHammerOnboardingDirector } from "@/hooks/useHammerOnboardingDirector";
 import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useSportTheme } from "@/contexts/SportThemeContext";
@@ -36,14 +36,12 @@ const INJURY_REGIONS = [
 export function HammerOnboardingChat() {
   const identity = getHammerIdentity();
   const dir = useHammerOnboardingDirector();
-  const [draft, setDraft] = useState<unknown>("");
   const [busy, setBusy] = useState(false);
 
   if (dir.isLoading) return null;
 
-  if (!dir.nextGap) {
-    // Completion card — explicit confirmation, not a silent pass-through.
-    if (dir.resolvedCount === 0) return null;
+  if (!dir.currentGap) {
+    if (dir.totalGaps === 0) return null;
     return (
       <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
         <CardHeader className="pb-2">
@@ -52,14 +50,26 @@ export function HammerOnboardingChat() {
         <CardContent className="space-y-2">
           <p className="text-sm">You're set. I have what I need to coach you. Open today's plan whenever you're ready.</p>
           <p className="text-[10px] text-muted-foreground">
-            {dir.resolvedCount} / {dir.totalGaps} answered ({dir.audience})
+            {dir.totalGaps} / {dir.totalGaps} reviewed ({dir.audience})
           </p>
+          <div className="flex justify-start">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={dir.goBack}
+              disabled={!dir.canGoBack}
+              aria-label="Back to previous question"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
-  const gap = dir.nextGap;
+  const gap = dir.currentGap;
+  const value = dir.answers[gap.id] ?? "";
 
   const isEmpty = (v: unknown): boolean => {
     if (v == null) return true;
@@ -72,40 +82,40 @@ export function HammerOnboardingChat() {
   // Injury gap accepts the explicit "100% healthy" choice as a valid empty.
   const canSubmit = (() => {
     if (gap.inputKind === "injury") {
-      const d = draft as { status?: string } | string;
-      return typeof d === "object" && d?.status === "healthy" ? true : !isEmpty(draft);
+      const d = value as { status?: string } | string;
+      return typeof d === "object" && d?.status === "healthy" ? true : !isEmpty(value);
     }
     if (gap.inputKind === "anthropometrics") {
       // Allow submitting with any provided field; "skip" handles fully empty.
-      return !isEmpty(draft);
+      return !isEmpty(value);
     }
     if (gap.inputKind === "lifting_history") {
-      const d = draft as { total_years?: unknown };
+      const d = value as { total_years?: unknown };
       return d != null && typeof d === "object" && d.total_years != null && d.total_years !== "";
     }
-    return !isEmpty(draft);
+    return !isEmpty(value);
   })();
+  const canAdvance = canSubmit || gap.skippable !== false;
 
-  const submit = async () => {
-    if (!canSubmit) return;
+  const advance = async () => {
+    if (!canAdvance || busy) return;
     setBusy(true);
     try {
-      let value: unknown = draft;
-      if (gap.inputKind === "number") value = Number(draft);
-      if (gap.inputKind === "text" && typeof draft === "string") value = draft.trim();
-      await dir.resolve(gap.id, value);
-      setDraft("");
+      if (canSubmit) {
+        let normalized: unknown = value;
+        if (gap.inputKind === "number") normalized = Number(value);
+        if (gap.inputKind === "text" && typeof value === "string") normalized = value.trim();
+        await dir.resolve(gap.id, normalized);
+      } else {
+        dir.skip(gap.id);
+      }
+      dir.goForward();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Couldn't save your answer";
-      toast.error(`${msg}. Try again or tap Skip.`);
+      toast.error(`${msg}. Try again.`);
     } finally {
       setBusy(false);
     }
-  };
-
-  const skipNow = () => {
-    dir.skip(gap.id);
-    setDraft("");
   };
 
   return (
@@ -114,7 +124,7 @@ export function HammerOnboardingChat() {
         <CardTitle className="text-sm flex items-center justify-between">
           <span>{identity.voiceLabel} · {dir.audience} onboarding</span>
           <span className="text-[10px] text-muted-foreground">
-            {dir.resolvedCount} / {dir.totalGaps}
+            {dir.currentIndex + 1} / {dir.totalGaps}
           </span>
         </CardTitle>
       </CardHeader>
@@ -122,27 +132,25 @@ export function HammerOnboardingChat() {
         <p className="text-sm">{gap.question}</p>
         {gap.helper && <p className="text-xs text-muted-foreground">{gap.helper}</p>}
 
-        <GapInput gap={gap} value={draft} onChange={setDraft} onSubmit={() => void submit()} />
+        <GapInput gap={gap} value={value} onChange={(next) => dir.setAnswer(gap.id, next)} onSubmit={() => void advance()} />
 
-        <div className="flex items-center gap-2 justify-end">
+        <div className="flex items-center justify-between gap-2">
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => {
-              dir.goBack();
-              setDraft("");
-            }}
+            size="icon"
+            onClick={dir.goBack}
             disabled={busy || !dir.canGoBack}
             aria-label="Back to previous question"
           >
-            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-            Back
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={skipNow} disabled={busy}>
-            Skip
-          </Button>
-          <Button size="sm" onClick={() => void submit()} disabled={busy || !canSubmit}>
-            {busy ? "Saving…" : "Save & next"}
+          <Button
+            size="icon"
+            onClick={() => void advance()}
+            disabled={busy || !canAdvance}
+            aria-label="Save and go to next question"
+          >
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
