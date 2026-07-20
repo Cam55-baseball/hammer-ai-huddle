@@ -125,6 +125,19 @@ export function HammerOnboardingChat() {
         <GapInput gap={gap} value={draft} onChange={setDraft} onSubmit={() => void submit()} />
 
         <div className="flex items-center gap-2 justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              dir.goBack();
+              setDraft("");
+            }}
+            disabled={busy || !dir.canGoBack}
+            aria-label="Back to previous question"
+          >
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+            Back
+          </Button>
           <Button variant="ghost" size="sm" onClick={skipNow} disabled={busy}>
             Skip
           </Button>
