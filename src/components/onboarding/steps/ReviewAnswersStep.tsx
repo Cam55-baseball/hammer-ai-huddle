@@ -77,6 +77,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
     useAthleteOnboardingState();
   const [email, setEmail] = useState<string>("—");
   const [dob, setDob] = useState<string | null>(null);
+  const [throwingHand, setThrowingHand] = useState<string | null>(null);
   const [goals, setGoals] = useState<CategoryGoalsPayloadV2 | null>(null);
   const [latestSchedule, setLatestSchedule] = useState<string | null>(null);
   const [trainingAge, setTrainingAge] = useState<string>("");
@@ -85,6 +86,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
   const [oneRmBench, setOneRmBench] = useState<string>("");
   const [oneRmDl, setOneRmDl] = useState<string>("");
   const [savingTraining, setSavingTraining] = useState(false);
+
 
   useEffect(() => {
     if (!user?.id) return;
