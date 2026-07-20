@@ -1,6 +1,10 @@
 // Top-down baseball/softball diamond. Renders actors as dots with
-// animated routes. Teach mode shows all paths; quiz mode hides them
-// until the answer is revealed. Uses the elite IqField renderer.
+// animated routes that ALWAYS originate from the resolved defender
+// position (shift, DP depth, no-doubles, wheel, etc. all carry over).
+//
+// Teach/reveal modes show all paths; quiz mode hides them until the
+// answer is revealed. `playing` triggers a play-the-routes animation
+// used by the "Watch the play" flow.
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
@@ -8,6 +12,12 @@ import type { IqActor, IqActorRole, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_COLOR, ROLE_LABELS } from "@/lib/iq/types";
 import { IqField } from "./IqField";
 import type { FieldSport } from "@/lib/iq/fieldModel";
+import {
+  DEFAULT_DEFENDER_POS,
+  buildResolvedDefenderMap,
+  pointsToPathD,
+  resolveRolePath,
+} from "@/lib/iq/pathResolver";
 
 interface IqDiamondProps {
   actors: IqActor[];
@@ -20,8 +30,11 @@ interface IqDiamondProps {
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
   /** Sport for field geometry (baseball / softball). Defaults to baseball. */
   sport?: FieldSport;
+  /** Batter handedness — highlights the correct batter box. */
+  batterSide?: "R" | "L";
+  /** When true, plays defender routes as an animation (used in "Watch play"). */
+  playing?: boolean;
 }
-
 
 // Offensive roles keep built-in coords — bases/batter box are fixed by rules.
 const OFFENSIVE_POS: Partial<Record<IqActorRole, { x: number; y: number }>> = {
@@ -32,27 +45,14 @@ const OFFENSIVE_POS: Partial<Record<IqActorRole, { x: number; y: number }>> = {
   BAT: { x: 50, y: 96 },
 };
 
-// Ultimate fallback for defenders if no alignment prop was passed.
-const DEFENSIVE_FALLBACK: Partial<Record<IqActorRole, { x: number; y: number }>> = {
-  P:  { x: 50, y: 68 },
-  C:  { x: 50, y: 94 },
-  "1B": { x: 72, y: 66 },
-  "2B": { x: 60, y: 52 },
-  SS:   { x: 40, y: 52 },
-  "3B": { x: 28, y: 66 },
-  LF:   { x: 22, y: 22 },
-  CF:   { x: 50, y: 10 },
-  RF:   { x: 78, y: 22 },
-};
-
 export function IqDiamond({
-  actors, mode, highlightRole, className, roleShifts, defensivePositions, sport = "baseball",
+  actors, mode, highlightRole, className, roleShifts, defensivePositions,
+  sport = "baseball", batterSide = "R", playing = false,
 }: IqDiamondProps) {
-  const byRole = useMemo(() => new Map(actors.map((a) => [a.role, a])), [actors]);
   const posFor = (role: IqActorRole) => {
     const base =
       defensivePositions?.[role] ??
-      DEFENSIVE_FALLBACK[role] ??
+      DEFAULT_DEFENDER_POS[role] ??
       OFFENSIVE_POS[role] ??
       { x: 50, y: 50 };
     const s = roleShifts?.[role];
@@ -63,44 +63,72 @@ export function IqDiamond({
     };
   };
 
+  // Resolved defender map lets target-role waypoints point at teammates.
+  const resolvedMap = useMemo(() => {
+    const m = defensivePositions ? buildResolvedDefenderMap(defensivePositions) : {};
+    // Ensure all defenders are represented so `targetRole` never falls back to the old default.
+    actors.forEach((a) => {
+      if (!m[a.role]) m[a.role] = posFor(a.role);
+    });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defensivePositions, actors]);
+
+  const showPaths = mode === "teach" || mode === "reveal" || playing;
+
   return (
     <div className={"relative w-full aspect-square overflow-hidden rounded-2xl border " + (className ?? "")}
          style={{ background: "hsl(var(--iq-field))" }}>
-      <IqField sport={sport} />
+      <IqField sport={sport} batterSide={batterSide} />
 
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
-        {/* Actor routes (only in teach/reveal modes) */}
-        {(mode === "teach" || mode === "reveal") && actors.flatMap((a) => {
+        {/* Actor routes — always anchored to the resolved set position. */}
+        {showPaths && actors.flatMap((a) => {
           const start = posFor(a.role);
           if (!a.primary_path?.length) return [];
-          const pts = [start, ...a.primary_path];
-          const d = pts.map((p,i)=> `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
+          const pts = resolveRolePath(a.role, start, a.primary_path, { positions: resolvedMap });
+          const d = pointsToPathD(pts);
+          const dimmed = highlightRole && highlightRole !== a.role;
           return [(
             <motion.path key={`path-${a.role}`} d={d}
               fill="none" stroke={ASSIGNMENT_COLOR[a.assignment]}
-              strokeWidth={highlightRole === a.role ? 0.9 : 0.5}
+              strokeWidth={highlightRole === a.role ? 0.95 : 0.55}
               strokeDasharray="1.2 1.2" strokeLinecap="round"
               initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: highlightRole && highlightRole !== a.role ? 0.25 : 0.9 }}
-              transition={{ duration: 1.1, ease: "easeOut" }} />
+              animate={{ pathLength: 1, opacity: dimmed ? 0.25 : 0.9 }}
+              transition={{ duration: playing ? 1.4 : 1.1, ease: "easeOut" }} />
           )];
         })}
       </svg>
 
-      {/* Actor dots */}
+      {/* Actor dots — defenders animate along their resolved routes when `playing`. */}
       {actors.map((a) => {
-        const pos = posFor(a.role);
+        const start = posFor(a.role);
+        const isDefender = !["R1","R2","R3","BR","BAT"].includes(a.role);
+        const shouldPlay = playing && isDefender && a.primary_path?.length > 0;
+        const resolvedPts = shouldPlay
+          ? resolveRolePath(a.role, start, a.primary_path, { positions: resolvedMap })
+          : [start];
         const showColor = mode !== "quiz";
         const isHi = highlightRole === a.role;
+        const animate = shouldPlay
+          ? {
+              left: resolvedPts.map((p) => `${p.x}%`),
+              top: resolvedPts.map((p) => `${p.y}%`),
+              scale: isHi ? 1.15 : 1,
+              opacity: 1,
+            }
+          : { left: `${start.x}%`, top: `${start.y}%`, scale: isHi ? 1.15 : 1, opacity: 1 };
         return (
           <motion.button
             key={a.role}
             type="button"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: isHi ? 1.15 : 1, opacity: 1 }}
-            transition={{ delay: 0.05, type: "spring", stiffness: 220, damping: 18 }}
+            initial={{ scale: 0.5, opacity: 0, left: `${start.x}%`, top: `${start.y}%` }}
+            animate={animate}
+            transition={shouldPlay
+              ? { duration: 1.4, ease: "easeInOut", times: resolvedPts.map((_, i) => i / Math.max(1, resolvedPts.length - 1)) }
+              : { delay: 0.05, type: "spring", stiffness: 220, damping: 18 }}
             className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
-            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
           >
             <div className="rounded-full border-2 shadow-lg flex items-center justify-center font-bold text-[10px] sm:text-xs"
                  style={{
