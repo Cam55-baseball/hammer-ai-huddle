@@ -15,9 +15,10 @@ import { CardMeta } from "@/components/hammer/cards/CardMeta";
 import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
+import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 
 export function WkSpeedCard() {
-  const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity, dayKind } = useHammersToday();
+  const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
   const entry = getCard("speed")!;
   const items = grouped.speedCard;
   const isGameDay = dayKind === "game" || dayKind === "both";
@@ -52,9 +53,7 @@ export function WkSpeedCard() {
       </CardHeader>
       <CardContent className="space-y-2">
         {failed ? (
-          <Button size="sm" onClick={retry} className="h-7 w-full">
-            <RefreshCw className="h-3 w-3 mr-1" /> Retry
-          </Button>
+          <WkCardFailureNotice engine="speed" failure={failureReason} retry={retry} retrying={generating} />
         ) : isLoading || generating ? (
           <Skeleton className="h-14 w-full rounded" />
         ) : items.length === 0 ? (

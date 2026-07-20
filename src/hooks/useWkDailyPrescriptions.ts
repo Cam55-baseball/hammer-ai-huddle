@@ -120,11 +120,20 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
+export type WkFailureReason = {
+  code: string | null;
+  title: string | null;
+  detail: string | null;
+  missingFields: string[];
+  engineFailures: Record<string, string[]>;
+} | null;
+
 export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [failureReason, setFailureReason] = useState<WkFailureReason>(null);
   const autoTriedKey = useRef<string | null>(null);
   const sideCtx = useSideContext();
   const sideHit = sideCtx.selectedSide?.hit;
@@ -220,6 +229,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     inFlightRef.current = true;
     setGenerating(true);
     setFailed(false);
+    setFailureReason(null);
     const started = Date.now();
     try {
       let lastErr: unknown = null;
@@ -239,12 +249,41 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       if (lastErr) throw lastErr;
       console.debug("[wk-generate-daily] ok", { ms: Date.now() - started });
       await qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
-    } catch (e) {
+    } catch (e: any) {
       console.warn("wk-generate-daily failed (after retry)", e);
+      // Parse the structured error body the edge function returns so cards
+      // can show the *actual* reason instead of a bare "Retry" button.
+      let parsed: WkFailureReason = null;
+      try {
+        const ctx = e?.context;
+        if (ctx && typeof ctx.json === "function") {
+          const body = await ctx.clone().json();
+          const engineFailures: Record<string, string[]> = {};
+          const rawEngines = body?.engine_failures ?? body?.validator_report?.engine_failures ?? {};
+          for (const [k, v] of Object.entries(rawEngines)) {
+            if (Array.isArray(v)) engineFailures[k] = v.map(String);
+          }
+          parsed = {
+            code: body?.error ?? null,
+            title: body?.title ?? null,
+            detail: body?.detail ?? body?.message ?? null,
+            missingFields: Array.isArray(body?.missing_context_fields)
+              ? body.missing_context_fields.map(String)
+              : Array.isArray(body?.validator_report?.missing_context_fields)
+                ? body.validator_report.missing_context_fields.map(String)
+                : [],
+            engineFailures,
+          };
+        }
+      } catch {
+        /* body not JSON — leave parsed null */
+      }
+      setFailureReason(parsed);
       setFailed(true);
-      toast.error("Today's plan is regenerating — tap Regenerate if it doesn't refresh.", {
-        id: "wk-generate-failed",
-      });
+      toast.error(
+        parsed?.detail ?? parsed?.title ?? "Today's plan couldn't publish — tap Retry.",
+        { id: "wk-generate-failed" },
+      );
     } finally {
       inFlightRef.current = false;
       setGenerating(false);
@@ -448,6 +487,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     generate,
     generating,
     failed,
+    failureReason,
     retry,
     effectiveCnsTotal,
     overrideMovement,

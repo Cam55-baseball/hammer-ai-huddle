@@ -1459,10 +1459,35 @@ const handler = async (req: Request): Promise<Response> => {
       } catch (diagErr) {
         console.error("[wk-generate-daily] diagnostics-write failed", diagErr);
       }
+      // Cards consume `engine_failures` + `missing_context_fields` to show
+      // the actual reason today's plan didn't publish (no more bare "Retry").
+      const engineFailures: Record<string, string[]> = {};
+      for (const er of engineReports) {
+        if (er.fatal && er.fatal.length) {
+          engineFailures[er.engine] = er.fatal.map((f: any) =>
+            typeof f === "string" ? f : (f?.message ?? f?.detail ?? f?.code ?? "fatal"),
+          );
+        }
+      }
+      const missingContextFields: string[] = Array.isArray((athleteContext as any)?.missing_fields)
+        ? (athleteContext as any).missing_fields
+        : [];
+      const primaryEngine =
+        Object.keys(engineFailures)[0] ??
+        (validatorReport.issues.find((i: any) => i.severity === "fatal")?.code ?? null);
+      const primaryDetail =
+        (primaryEngine && engineFailures[primaryEngine]?.[0]) ??
+        validatorReport.issues.find((i: any) => i.severity === "fatal")?.message ??
+        "Publication blocked by WIC validator.";
       return json({
         error: "wic_validation_failed",
+        title: primaryEngine ? `${primaryEngine} block couldn't publish` : "Plan couldn't publish",
+        detail: primaryDetail,
         adaptation: adaptationDecision.primary,
         phase: phaseRes.phase,
+        engine_failures: engineFailures,
+        missing_context_fields: missingContextFields,
+        context_completeness_score: (athleteContext as any)?.completeness_score ?? null,
         validator_report: validatorReport,
       }, 422);
     }
