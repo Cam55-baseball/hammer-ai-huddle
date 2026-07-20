@@ -32,7 +32,11 @@ import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingS
 
 export type ReviewEditKey =
   | "profile"
+  | "anthropometrics"
   | "goals"
+  | "fuel"
+  | "mental"
+  | "connections"
   | "schedule"
   | "injury"
   | "notifications";
