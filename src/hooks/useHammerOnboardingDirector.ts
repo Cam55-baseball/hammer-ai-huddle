@@ -32,6 +32,7 @@ import {
 export interface HammerOnboardingDirector {
   readonly audience: GapAudience;
   readonly openGaps: ReadonlyArray<KnowledgeGap>;
+  readonly orderedGaps: ReadonlyArray<KnowledgeGap>;
   readonly nextGap: KnowledgeGap | null;
   readonly currentGap: KnowledgeGap | null;
   readonly currentIndex: number;
@@ -46,6 +47,7 @@ export interface HammerOnboardingDirector {
   skip(gapId: string): void;
   goBack(): void;
   goForward(): void;
+  jumpTo(index: number): void;
 }
 
 function hasMeaningfulValue(value: unknown): boolean {
@@ -377,9 +379,19 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     setActiveIndex((i) => Math.min(i + 1, orderedGaps.length));
   }, [orderedGaps.length]);
 
+  const jumpTo = useCallback(
+    (index: number) => {
+      if (!Number.isFinite(index)) return;
+      const clamped = Math.max(0, Math.min(Math.floor(index), orderedGaps.length - 1));
+      setActiveIndex(clamped);
+    },
+    [orderedGaps.length],
+  );
+
   return {
     audience,
     openGaps,
+    orderedGaps,
     nextGap: currentGap,
     currentGap,
     currentIndex: activeIndex,
@@ -394,6 +406,8 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     skip,
     goBack,
     goForward,
+    jumpTo,
   };
 }
+
 
