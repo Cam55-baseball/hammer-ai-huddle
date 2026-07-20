@@ -156,7 +156,13 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     const seededAnswers: Record<string, unknown> = {};
     for (const gap of gapSet) {
       const variable = ctx.get(gap.contextKey);
-      if (!variable || variable.missing || !hasMeaningfulValue(variable.value)) continue;
+      if (!variable || variable.missing) continue;
+      if (gap.id === "injury_history" && Array.isArray(variable.value) && variable.value.length === 0) {
+        seeded.add(gap.id);
+        seededAnswers[gap.id] = { status: "healthy" };
+        continue;
+      }
+      if (!hasMeaningfulValue(variable.value)) continue;
       seeded.add(gap.id);
       seededAnswers[gap.id] = variable.value;
     }
@@ -247,7 +253,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
         next.delete(gap.id);
         return next;
       });
-      setAnswers((prev) => ({ ...prev, [gap.id]: v }));
+      setAnswers((prev) => ({ ...prev, [gap.id]: value }));
 
       // Best-effort cache refresh — never block forward progress on this.
       try {
