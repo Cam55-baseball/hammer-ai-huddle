@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { IqActorRole } from "@/lib/iq/types";
+import {
+  anchorsToPositions, type DefensiveAnchors, type FieldSport, type Handedness,
+} from "@/lib/iq/fieldModel";
 
-export type FieldSport = "baseball" | "softball";
+export type { FieldSport } from "@/lib/iq/fieldModel";
 export type AlignmentPositions = Partial<Record<IqActorRole, { x: number; y: number }>>;
 export type AlignmentRanges = Partial<Record<IqActorRole, number>>;
 
@@ -15,6 +18,10 @@ export interface AlignmentPreset {
   range_radii: AlignmentRanges | null;
   is_default: boolean;
   updated_at: string;
+  anchors_vs_rhh?: DefensiveAnchors | null;
+  anchors_vs_lhh?: DefensiveAnchors | null;
+  positions_vs_rhh?: AlignmentPositions | null;
+  positions_vs_lhh?: AlignmentPositions | null;
 }
 
 // Sensible per-role coverage radii (0–100 grid units). Owner can override per preset.
@@ -58,7 +65,30 @@ export function useAlignmentPresets(sport: FieldSport) {
   });
 }
 
-export function useDefensiveAlignment(sport: FieldSport, presetKey?: string | null) {
+/**
+ * Resolve positions for a given preset and batter handedness.
+ * Priority: anchors_vs_<hand> (elite) → positions_vs_<hand> → legacy `positions` → hard fallback.
+ */
+export function resolvePositions(
+  preset: AlignmentPreset | null | undefined,
+  sport: FieldSport,
+  hand: Handedness,
+): AlignmentPositions {
+  if (!preset) return fallbackAlignment(sport);
+  const anchors = hand === "R" ? preset.anchors_vs_rhh : preset.anchors_vs_lhh;
+  if (anchors && Object.keys(anchors).length > 0) {
+    return anchorsToPositions(sport, anchors, hand);
+  }
+  const posByHand = hand === "R" ? preset.positions_vs_rhh : preset.positions_vs_lhh;
+  if (posByHand && Object.keys(posByHand).length > 0) return posByHand;
+  return preset.positions ?? fallbackAlignment(sport);
+}
+
+export function useDefensiveAlignment(
+  sport: FieldSport,
+  presetKey?: string | null,
+  hand: Handedness = "R",
+) {
   const q = useAlignmentPresets(sport);
   const presets = q.data ?? [];
   const chosen =
@@ -68,7 +98,8 @@ export function useDefensiveAlignment(sport: FieldSport, presetKey?: string | nu
     null;
 
   return {
-    positions: (chosen?.positions ?? fallbackAlignment(sport)) as AlignmentPositions,
+    positions: resolvePositions(chosen, sport, hand),
+    anchors: (hand === "R" ? chosen?.anchors_vs_rhh : chosen?.anchors_vs_lhh) ?? null,
     rangeRadii: { ...DEFAULT_RANGE_RADII, ...(chosen?.range_radii ?? {}) } as AlignmentRanges,
     preset: chosen,
     isLoading: q.isLoading,

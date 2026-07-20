@@ -1,11 +1,13 @@
 // Top-down baseball/softball diamond. Renders actors as dots with
 // animated routes. Teach mode shows all paths; quiz mode hides them
-// until the answer is revealed. Pure SVG, no external deps beyond framer-motion.
+// until the answer is revealed. Uses the elite IqField renderer.
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import type { IqActor, IqActorRole, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_COLOR, ROLE_LABELS } from "@/lib/iq/types";
+import { IqField } from "./IqField";
+import type { FieldSport } from "@/lib/iq/fieldModel";
 
 interface IqDiamondProps {
   actors: IqActor[];
@@ -16,6 +18,8 @@ interface IqDiamondProps {
   roleShifts?: Record<string, { dx: number; dy: number }>;
   /** Owner-editable defender starting positions (from `iq_defensive_alignments`). */
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
+  /** Sport for field geometry (baseball / softball). Defaults to baseball. */
+  sport?: FieldSport;
 }
 
 
@@ -41,7 +45,9 @@ const DEFENSIVE_FALLBACK: Partial<Record<IqActorRole, { x: number; y: number }>>
   RF:   { x: 78, y: 22 },
 };
 
-export function IqDiamond({ actors, mode, highlightRole, className, roleShifts, defensivePositions }: IqDiamondProps) {
+export function IqDiamond({
+  actors, mode, highlightRole, className, roleShifts, defensivePositions, sport = "baseball",
+}: IqDiamondProps) {
   const byRole = useMemo(() => new Map(actors.map((a) => [a.role, a])), [actors]);
   const posFor = (role: IqActorRole) => {
     const base =
@@ -57,33 +63,16 @@ export function IqDiamond({ actors, mode, highlightRole, className, roleShifts, 
     };
   };
 
-
   return (
     <div className={"relative w-full aspect-square overflow-hidden rounded-2xl border " + (className ?? "")}
-         style={{ background: "radial-gradient(ellipse at 50% 100%, hsl(var(--iq-field)) 0%, hsl(var(--iq-field) / 0.7) 70%)" }}>
+         style={{ background: "hsl(var(--iq-field))" }}>
+      <IqField sport={sport} />
+
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
-
-        {/* Outfield arc */}
-        <path d="M 5 50 A 45 45 0 0 1 95 50 L 50 100 Z"
-              fill="hsl(var(--iq-field) / 0.5)"
-              stroke="hsl(var(--iq-chalk) / 0.15)" strokeWidth="0.3" />
-        {/* Infield diamond */}
-        <polygon points="50,40 76,70 50,96 24,70"
-                 fill="hsl(var(--iq-field) / 0.9)"
-                 stroke="hsl(var(--iq-chalk) / 0.55)" strokeWidth="0.4" />
-        {/* Bases */}
-        {[{x:50,y:40},{x:76,y:70},{x:50,y:96},{x:24,y:70}].map((b,i)=>(
-          <rect key={i} x={b.x-1.6} y={b.y-1.6} width="3.2" height="3.2"
-                fill="hsl(var(--iq-chalk))" transform={`rotate(45 ${b.x} ${b.y})`} />
-        ))}
-        {/* Pitcher's mound/circle */}
-        <circle cx="50" cy="70" r="3.5" fill="none" stroke="hsl(var(--iq-chalk) / 0.5)" strokeWidth="0.3" />
-
         {/* Actor routes (only in teach/reveal modes) */}
         {(mode === "teach" || mode === "reveal") && actors.flatMap((a) => {
           const start = posFor(a.role);
           if (!a.primary_path?.length) return [];
-
           const pts = [start, ...a.primary_path];
           const d = pts.map((p,i)=> `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
           return [(
