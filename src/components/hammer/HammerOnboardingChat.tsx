@@ -93,6 +93,14 @@ export function HammerOnboardingChat() {
       const d = value as { total_years?: unknown };
       return d != null && typeof d === "object" && d.total_years != null && d.total_years !== "";
     }
+    if (gap.inputKind === "competition_level") {
+      // Composite value — require at least a tier to be picked.
+      if (value && typeof value === "object") {
+        const d = value as { level?: string };
+        return typeof d.level === "string" && d.level.trim() !== "";
+      }
+      return typeof value === "string" && value.trim() !== "";
+    }
     return !isEmpty(value);
   })();
   const canAdvance = canSubmit || gap.skippable !== false;
@@ -169,10 +177,14 @@ function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
   const { sport } = useSportTheme();
 
   if (gap.inputKind === "competition_level") {
+    const composite =
+      value && typeof value === "object" && !Array.isArray(value)
+        ? (value as { level?: string })
+        : { level: typeof value === "string" ? value : "" };
     return (
       <CompetitionLevelPicker
         sport={sport}
-        value={typeof value === "string" ? value : ""}
+        value={composite as { level: string }}
         onChange={onChange}
         mode="full"
       />

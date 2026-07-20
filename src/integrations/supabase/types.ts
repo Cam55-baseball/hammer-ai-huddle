@@ -773,7 +773,11 @@ export type Database = {
           anthropometrics: Json | null
           bats_hand: string | null
           category_goals: Json | null
+          competition_age_group: string | null
+          competition_events: Json | null
+          competition_home_state: string | null
           competition_level: string | null
+          competition_play_state: string | null
           confidence: Json
           created_at: string
           development_priorities: string[] | null
@@ -807,7 +811,11 @@ export type Database = {
           anthropometrics?: Json | null
           bats_hand?: string | null
           category_goals?: Json | null
+          competition_age_group?: string | null
+          competition_events?: Json | null
+          competition_home_state?: string | null
           competition_level?: string | null
+          competition_play_state?: string | null
           confidence?: Json
           created_at?: string
           development_priorities?: string[] | null
@@ -841,7 +849,11 @@ export type Database = {
           anthropometrics?: Json | null
           bats_hand?: string | null
           category_goals?: Json | null
+          competition_age_group?: string | null
+          competition_events?: Json | null
+          competition_home_state?: string | null
           competition_level?: string | null
+          competition_play_state?: string | null
           confidence?: Json
           created_at?: string
           development_priorities?: string[] | null

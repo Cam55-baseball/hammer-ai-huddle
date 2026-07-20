@@ -135,8 +135,9 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
                 sport={sport}
                 value={level}
                 onChange={(v) => {
-                  setLevelState(v);
-                  setLevel(v);
+                  const next = typeof v === "string" ? v : v.level;
+                  setLevelState(next);
+                  setLevel(next);
                 }}
                 mode="quick"
               />
