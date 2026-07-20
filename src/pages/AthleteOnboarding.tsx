@@ -21,6 +21,8 @@ import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsSt
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
 import { writeDraftSlot, readDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { ThrowingHandSelector, type ThrowingHandValue } from "@/components/splits/ThrowingHandSelector";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 
 const STEPS = [
