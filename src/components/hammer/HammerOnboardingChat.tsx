@@ -92,6 +92,13 @@ export function HammerOnboardingChat() {
     if (gap.inputKind === "lifting_history") {
       const d = value as { total_years?: unknown };
       return d != null && typeof d === "object" && d.total_years != null && d.total_years !== "";
+    if (gap.inputKind === "competition_level") {
+      // Composite value — require at least a tier to be picked.
+      if (value && typeof value === "object") {
+        const d = value as { level?: string };
+        return typeof d.level === "string" && d.level.trim() !== "";
+      }
+      return typeof value === "string" && value.trim() !== "";
     }
     return !isEmpty(value);
   })();
