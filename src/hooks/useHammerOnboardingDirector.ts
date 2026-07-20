@@ -268,7 +268,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   }, []);
 
   const goForward = useCallback(() => {
-    setActiveIndex((i) => Math.min(i + 1, Math.max(orderedGaps.length - 1, 0)));
+    setActiveIndex((i) => Math.min(i + 1, orderedGaps.length));
   }, [orderedGaps.length]);
 
   return {
