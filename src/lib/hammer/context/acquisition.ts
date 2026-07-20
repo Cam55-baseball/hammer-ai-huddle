@@ -193,6 +193,23 @@ export async function persistContextAnswer(
     upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
   }).upsert(payload, { onConflict: "user_id" });
   if (error) throw new Error(`persistContextAnswer(${key}): ${error.message}`);
+
+  // Mirror handedness onto athlete_mpi_settings so SideContext gating +
+  // downstream switch/ambi consumers stay consistent. Fire-and-forget.
+  if (key === "bats_hand" || key === "throws_hand") {
+    const v = typeof value === "string" ? value : null;
+    const mirror: Record<string, unknown> = { user_id: userId };
+    if (key === "bats_hand") {
+      mirror.is_switch_hitter = v === "S";
+      mirror.primary_batting_side = v;
+    } else {
+      mirror.is_ambidextrous_thrower = v === "S";
+      mirror.primary_throwing_hand = v;
+    }
+    void (supabase.from("athlete_mpi_settings") as unknown as {
+      upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: unknown }>;
+    }).upsert(mirror, { onConflict: "user_id" });
+  }
 }
 
 /** Persist a coach-onboarding answer onto `coach_context`. */
