@@ -23,9 +23,10 @@ interface Props {
   actors: IqActor[];
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
   sport?: "baseball" | "softball";
+  batterSide?: "R" | "L";
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball" }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R" }: Props) {
 
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
@@ -44,6 +45,7 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     (initial?.answer as IqAssignment | null) ?? null,
   );
   const [submitted, setSubmitted] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
   const correct = position
