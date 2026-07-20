@@ -196,6 +196,13 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
 
       // Advance immediately — do not wait on refetch.
       setSessionResolved((prev) => new Set(prev).add(gap.id));
+      setSessionReopened((prev) => {
+        if (!prev.has(gap.id)) return prev;
+        const next = new Set(prev);
+        next.delete(gap.id);
+        return next;
+      });
+      setHistory((prev) => [...prev, gap.id]);
 
       // Best-effort cache refresh — never block forward progress on this.
       try {
@@ -213,9 +220,42 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
       // Skipping never imputes a value — missingness remains visible.
       // Mark session-skipped so the queue advances for athlete/coach/scout alike.
       setSessionSkipped((prev) => new Set(prev).add(gapId));
+      setSessionReopened((prev) => {
+        if (!prev.has(gapId)) return prev;
+        const next = new Set(prev);
+        next.delete(gapId);
+        return next;
+      });
+      setHistory((prev) => [...prev, gapId]);
     },
     [],
   );
+
+  const goBack = useCallback(() => {
+    setHistory((prev) => {
+      if (prev.length === 0) return prev;
+      const next = prev.slice(0, -1);
+      const last = prev[prev.length - 1];
+      setSessionResolved((s) => {
+        if (!s.has(last)) return s;
+        const n = new Set(s);
+        n.delete(last);
+        return n;
+      });
+      setSessionSkipped((s) => {
+        if (!s.has(last)) return s;
+        const n = new Set(s);
+        n.delete(last);
+        return n;
+      });
+      setSessionReopened((s) => {
+        const n = new Set(s);
+        n.add(last);
+        return n;
+      });
+      return next;
+    });
+  }, []);
 
   return {
     audience,
@@ -224,8 +264,10 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     totalGaps: gapSet.length,
     resolvedCount: gapSet.length - openGaps.length,
     isLoading: ctx.isLoading || audienceLoading,
+    canGoBack: history.length > 0,
     resolve,
     skip,
+    goBack,
   };
 }
 
