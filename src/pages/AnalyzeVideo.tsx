@@ -117,8 +117,13 @@ export default function AnalyzeVideo() {
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
   const sideDiscipline: 'hit' | 'throw' = module === 'hitting' ? 'hit' : 'throw';
-  const { selectedSide, shouldShowPicker } = useSideContext();
+  const { selectedSide, shouldShowPicker, setSide } = useSideContext();
   const activeSide = selectedSide[sideDiscipline];
+  // For declared switch/ambi athletes we require an explicit per-file side
+  // confirmation so the analysis, roadmap, and profile are filed under the
+  // correct side. Non-switch athletes bypass this entirely.
+  const [sideConfirmedForFile, setSideConfirmedForFile] = useState(false);
+  const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
 
   // Track which drills are already saved
   useEffect(() => {
@@ -340,10 +345,26 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setLandingTime(null);
+    // Reset per-file side confirmation whenever a new clip is loaded.
+    setSideConfirmedForFile(false);
   };
 
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user) return;
+
+    // Pre-upload side gate for declared switch hitters / ambidextrous throwers.
+    // The clip must be tagged L or R before it leaves the device so the
+    // resulting analysis, drills, and report card are filed under the
+    // correct side profile.
+    if (requiresSideConfirmation && !sideConfirmedForFile) {
+      toast.error(
+        sideDiscipline === 'hit'
+          ? 'Confirm the batting side used in this clip before analysis.'
+          : 'Confirm the throwing hand used in this clip before analysis.',
+      );
+      return;
+    }
+
 
     // Phase 52 — pre-upload session assertion. RLS on `videos` requires
     // `auth.uid() = user_id`; if the Supabase client has no live session
