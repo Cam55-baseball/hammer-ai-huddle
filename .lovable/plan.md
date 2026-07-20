@@ -1,26 +1,37 @@
 ## Problem
 
-Onboarding today hides the header **Back** button on step 0 and the final Done step, and the stepper chips are only clickable for steps behind the current one. On a revisit (Review answers, deep-link edits, or Redo) users can't freely move back to earlier questions or jump forward again to the step they came from.
+The Hammer athlete onboarding chat card (the pink "Hammer · athlete onboarding 12/16" card in the screenshot) only exposes **Skip** and **Save & next**. Once a user answers or skips a question, there's no way to return to a previous one — the director hook advances the queue and never looks back.
 
-## Fix — presentation only
+## Fix — add a Back control next to Skip / Save & next
 
-### 1. `src/components/onboarding/AthleteOnboardingShell.tsx`
-- Show the header **Back** button whenever `onBack` is provided and `stepIndex > 0` (drop the `stepIndex < steps.length - 1` clamp so Done/Review also show it).
-- Add an optional `allowForwardJump?: boolean` prop. When true, stepper chips are clickable for **every** step (not just completed ones), so revisiting users can bounce between Profile ↔ Goals ↔ Schedule ↔ Review at will.
-- Keep the visual "done / active / upcoming" chip states unchanged.
+### 1. `src/hooks/useHammerOnboardingDirector.ts`
+Add a lightweight session history so the previous question can be reopened without mutating persisted context:
 
-### 2. `src/pages/AthleteOnboarding.tsx`
-- Pass `onBack={goBack}` whenever `step > 0` (remove the `step < STEP_DONE` guard) so Back also works from the Done screen back into Review.
-- Pass `allowForwardJump` to the shell when the user is revisiting — i.e. `hasCompletedOnboarding` **or** an `?edit=…` / `?step=review` deep-link is active — so returning users can jump forward as well as back. First-time linear onboarding keeps today's "completed-only" chip behavior.
-- Ensure `goBack`'s `editReturnTo` shortcut still wins (already implemented) so a Back press from an edit target returns to Review in a single tap.
-- Every embedded step already exposes an in-card Back (`ProfileStep`, `CategoryGoalsStep`, `ScheduleStep`, `InjuryIntakeStep`, `NotificationsStep`) — no changes needed there; the shell Back is the always-visible fallback.
+- New session state:
+  - `history: string[]` — ordered list of gap IDs the user has acted on this session (push on every successful `resolve` and `skip`).
+  - `sessionReopened: Set<string>` — gap IDs to force back into the open queue even if the athlete context already has a saved value.
+- New API:
+  - `canGoBack: boolean` (true when `history.length > 0`).
+  - `goBack(): void` — pops the last id from `history`, removes it from `sessionResolved` and `sessionSkipped`, and adds it to `sessionReopened`. That makes the openGaps filter surface it again as `nextGap`, so the user sees their previous question with a blank draft ready to overwrite. The persisted value on the server is left intact until they hit Save & next again (missingness/organism-truth invariants preserved — this is UX-only re-entry, never a silent mutation).
+- `openGaps` filter: treat `sessionReopened.has(g.id)` as "open" for athlete audience regardless of `ctx.get(...).missing`.
+- Update the `HammerOnboardingDirector` interface accordingly.
 
-### 3. Verify (no code changes expected)
-- Manual walk-through on a completed account: Welcome-back → Review → Edit Profile → header Back returns to Review; Redo → header Back available from step 1 onward; stepper chip on "Goals" is clickable from "Schedule" both forward and backward.
+### 2. `src/components/hammer/HammerOnboardingChat.tsx`
+- Pull `canGoBack` and `goBack` from the director.
+- In the action row (currently `Skip` + `Save & next`), add a leading **Back** button:
+  - `variant="ghost"`, `size="sm"`, `<ArrowLeft />` icon, disabled when `!canGoBack || busy`.
+  - Clicking it calls `goBack()` and clears local `draft` state.
+- Keep the row right-aligned; Back sits just to the left of Skip so the order is **Back · Skip · Save & next**, matching the screenshot placement the user asked for.
+
+### 3. Verify
+- Answer question 12 → Save & next advances to 13 → tap **Back** → question 12 re-appears with its Skip / Save & next buttons and a blank draft.
+- Skip a question → tap **Back** → skipped question re-appears.
+- On the very first question of a session, **Back** is disabled (no history).
 
 ## Files touched
-- `src/components/onboarding/AthleteOnboardingShell.tsx`
-- `src/pages/AthleteOnboarding.tsx`
+- `src/hooks/useHammerOnboardingDirector.ts`
+- `src/components/hammer/HammerOnboardingChat.tsx`
 
 ## Out of scope
-- No draft-store, schema, or step-content changes. Persistence on every step change (added last turn) already covers back/forward navigation safely.
+- The separate multi-step `AthleteOnboarding` page shell (that already has a header Back button and clickable stepper from the previous turn) — this request is specifically about the in-card Hammer chat surface shown in the screenshot.
+- Any change to persisted answers, gap ordering, or the director's resolve/skip semantics beyond reopening a question in the session queue.
