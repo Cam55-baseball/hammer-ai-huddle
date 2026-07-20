@@ -241,6 +241,12 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
 
       // Advance immediately — do not wait on refetch.
       setSessionResolved((prev) => new Set(prev).add(gap.id));
+      setSessionSkipped((prev) => {
+        if (!prev.has(gap.id)) return prev;
+        const next = new Set(prev);
+        next.delete(gap.id);
+        return next;
+      });
       setAnswers((prev) => ({ ...prev, [gap.id]: v }));
 
       // Best-effort cache refresh — never block forward progress on this.
