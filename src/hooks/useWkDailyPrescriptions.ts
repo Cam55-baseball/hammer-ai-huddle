@@ -120,11 +120,20 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
+export type WkFailureReason = {
+  code: string | null;
+  title: string | null;
+  detail: string | null;
+  missingFields: string[];
+  engineFailures: Record<string, string[]>;
+} | null;
+
 export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [failureReason, setFailureReason] = useState<WkFailureReason>(null);
   const autoTriedKey = useRef<string | null>(null);
   const sideCtx = useSideContext();
   const sideHit = sideCtx.selectedSide?.hit;
