@@ -323,6 +323,8 @@ export default function GameIqSituation() {
             defensivePositions={defensivePositions}
             sport={fieldSport}
             batterSide={hand}
+            debrief={(situation as any).debrief ?? null}
+            conceptLabels={conceptLabels ?? []}
           />
         )}
       </div>
