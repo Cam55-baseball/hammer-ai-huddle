@@ -21,6 +21,8 @@ import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsSt
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
 import { writeDraftSlot, readDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { ThrowingHandSelector, type ThrowingHandValue } from "@/components/splits/ThrowingHandSelector";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 
 const STEPS = [
@@ -69,6 +71,7 @@ const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
  */
 export default function AthleteOnboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading, isAuthStable } = useAuth();
   const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
@@ -290,7 +293,7 @@ export default function AthleteOnboarding() {
         if (error) throw error;
         // Mirror ambidextrous flag into athlete_mpi_settings when "Both" chosen.
         if (throwingHand === "S") {
-          await supabase
+          const { error: mpiError } = await supabase
             .from("athlete_mpi_settings")
             .upsert(
               {
@@ -300,8 +303,18 @@ export default function AthleteOnboarding() {
               } as never,
               { onConflict: "user_id" },
             );
+          if (mpiError) {
+            console.warn("[onboarding] mpi ambidextrous upsert failed", mpiError);
+            toast.warning(
+              "Saved throwing hand, but ambidextrous flag didn't sync — you can re-toggle it in Review.",
+            );
+          }
         }
         writeDraftSlot(user.id, "profile-answers", { throwingHand });
+        // Refresh SideContext so the goals step immediately sees the new
+        // ambidextrous flag without a full reload.
+        queryClient.invalidateQueries({ queryKey: ["side-identity", user.id] });
+
       }
       goNext();
     } catch (e) {
