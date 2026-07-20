@@ -214,6 +214,21 @@ export default function AthleteOnboarding() {
     !searchParams.has("edit") &&
     searchParams.get("step") !== "review";
 
+  const invalidateHammerPlanInputs = useCallback(() => {
+    if (!user?.id) return;
+    // Clear every cache that can keep Hammers Today in a stale failed state
+    // after onboarding/profile context is completed or edited.
+    queryClient.invalidateQueries({ queryKey: ["wk-rx"] });
+    queryClient.invalidateQueries({ queryKey: ["wk-rx-game-day"] });
+    queryClient.invalidateQueries({ queryKey: ["wk-rx-practice-day"] });
+    queryClient.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["athlete-context-envelope", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["athlete-onboarding-state", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["side-identity", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["athlete-context"] });
+    queryClient.invalidateQueries({ queryKey: ["hammer-daily-plan"] });
+  }, [queryClient, user?.id]);
+
 
 
 
