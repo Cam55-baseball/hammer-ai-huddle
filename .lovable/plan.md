@@ -1,63 +1,39 @@
+## What's wrong
 
-# Fix "Retry" on Speed / Bat Speed / Lifts / Conditioning cards
+**1. The 404.** `WkCardFailureNotice.tsx` deep-links to `/hammer/onboarding`, but the actual route in `App.tsx` is `/onboarding/athlete`. Every other `/onboarding/*` alias redirects to `/onboarding/athlete`, but the `/hammer/onboarding` path was never registered — so it falls through to the SPA 404.
 
-## Current state (verified)
+**2. E2E link — mostly wired, one missing hop.** The four cards are already wired end-to-end: onboarding writes `profiles`, `athlete_context`, `athlete_body_goals`, `athlete_daily_log` → the `wk-generate-daily` edge function assembles an `AthleteContext` from those tables → the WIC validator counts `missing_fields` and either publishes the plan (Speed / Bat Speed / Lifts / Conditioning) or returns the structured error the cards now surface.
 
-- `useWkDailyPrescriptions` flips `failed = true` **whenever `wk-generate-daily` throws or times out (30s)**. Every card (`WkSpeedCard`, `WkBatSpeedCard`, `WkLiftsCard`, `WkConditioningCard`) then renders the same generic "Retry" button. The user sees `Retry` on all four because they share one snapshot — one edge failure blanks the whole plan, not four independent failures.
-- The edge function can fail for **three distinct reasons**, all currently indistinguishable in the UI:
-  1. **HTTP 422 `wic_validation_failed`** — WIC validator rejected the plan (duplicate movements, missing `why_v2` answer, forbidden game-day slot, missing full-body role, or a per-engine certification refused to publish). Returns a full `validator_report` we currently discard.
-  2. **HTTP 500** — an engine threw before validation (catalog empty for sport, missing `wk_periodization_blocks` for phase, RPC failure, athlete-context resolver crash).
-  3. **Timeout at 30s** — Gemini/LLM path slow or one of the certification engines looping over a sparse catalog.
-- The most common practical cause in the wild is **missing athlete context** (Q1–Q24 onboarding partially done): `athleteContext.missing_fields` drives which engines can certify. Speed/Bat-Speed/Lift/Conditioning engines each require a minimum profile (sport, primary position, training age, competitive level, season phase, equipment). If any engine returns `validation_status: "rejected"`, the WIC validator marks the whole publication fatal → 422 → "Retry" on every card.
-- **Root cause is currently unconfirmed for this specific user** — no `wk-generate-daily` calls appear in edge logs (user is on `/auth`). The plan below both diagnoses and repairs the class.
+The missing hop: when the user finishes onboarding, nothing tells the Hammers Today snapshot to regenerate. The cards will keep showing the pre-onboarding failure notice until the user manually taps Retry or the auto-generate effect fires on next mount.
 
-## Objectives
+## Fix
 
-1. Never again show a bare "Retry" — the athlete (and we) must see *why* generation was refused and what to do.
-2. Turn a single-engine refusal into a **partial success**: cards whose engines certified should render; only the failing card shows an actionable reason.
-3. Close the two most common structural failure modes (missing context, sparse catalog per sport/phase) so elite prescriptions publish for every onboarded athlete.
+### 1. Point "Finish onboarding" at the real route
+In `src/components/hammer/WkCardFailureNotice.tsx`, change the navigate target from `/hammer/onboarding` to `/onboarding/athlete`.
 
-## Work
+### 2. Kick the plan on completion
+In `src/pages/AthleteOnboarding.tsx`, extend the `onFinish` handler so that after clearing the draft it also invalidates the `["wk-rx", user.id, *]` queries. That triggers the auto-generate effect inside `useWkDailyPrescriptions`, which re-runs `wk-generate-daily` with the freshly-written context — the four cards then publish real prescriptions instead of the failure notice.
 
-### 1. Surface the real reason (client)
+Same invalidation added to the "Open Command Center" button so refreshed context reaches the snapshot before the user lands on Hammers Today.
 
-- `useWkDailyPrescriptions.generate`: capture `error.context` from `supabase.functions.invoke`, read the JSON body (`error`, `validator_report`, `missing_context_fields`, `phase`, `adaptation`), and expose on the snapshot as `failureReason: { code, title, detail, missingFields, engineFailures[] }`.
-- Update `useHammersToday()` consumers so each card reads a **per-engine** status (`engineFailures` keyed by `speed | bat_speed | lift | conditioning`). Cards render:
-  - Certified engine → normal card.
-  - Refused engine → red-outline card with the exact reason (e.g., "Speed engine needs your **primary position** and **training age** — finish onboarding Q6, Q11") and a deep-link to that onboarding step.
-  - Global failure (500/timeout) → single top-level banner with "Regenerate" + "Report".
+## E2E confirmation
 
-### 2. Diagnostics passthrough (edge)
+After the two changes above, the flow is:
 
-- In `wk-generate-daily`, both the 422 and 500 paths already write `wk_generation_diagnostics` — extend the response body with a small `failure_reasons[]` array derived from `validatorReport.issues` and each engine's `validationStatus`, so the client can render actionable copy without another fetch.
-- Add `missing_context_fields` and `context_completeness_score` to the response (they're already computed for diagnostics).
+```text
+Onboarding step writes → athlete_context / profiles / body_goals / daily_log
+   ↓ (onFinish invalidates wk-rx cache)
+useWkDailyPrescriptions auto-generate fires
+   ↓
+wk-generate-daily assembles AthleteContext (missing_fields shrinks)
+   ↓
+WIC engines certify → wk_prescriptions rows for lift / speed / bat_speed / conditioning
+   ↓
+Speed / Bat Speed / Lifts / Conditioning cards render items instead of WkCardFailureNotice
+```
 
-### 3. Repair the structural failure classes
+Cards will still show the failure notice for a specific engine if that engine's required inputs are genuinely absent (e.g. no equipment, no primary position). That's the intended constitutional behavior — the notice now lists which fields to fix and links to the correct onboarding route.
 
-- **Missing context short-circuit**: at the top of the edge function, if `athleteContext.completeness_score < threshold` OR any of the hard-required fields (`sport`, `primary_position`, `training_age`, `competitive_level`, `season_phase`) is null, return 200 with a *partial plan* (warm-up + mobility + arm care where possible) and a structured `blocked_engines[]` payload instead of 422. This alone eliminates the majority of "Retry" reports.
-- **Sparse-catalog guardrail**: in each engine (`liftCertification`, `speedCertification`, `batSpeedCertification`, `conditioningCertification`), when the filtered `wk_movement_catalog` slice for `(sport, phase, equipment, training_age)` returns < N eligible movements, widen the filter deterministically (drop equipment first, then age band) before refusing. Emit a `substitution_completeness` warning so we can audit.
-- **Per-engine soft-fail**: change the WIC publication validator so an engine that fails category coverage becomes a **warn** (engine omitted, others publish) instead of a fatal for the whole plan. Fatal remains only for duplicate movements or a forbidden-slot violation.
-
-### 4. Onboarding gap deep-links
-
-- Add an `onboardingFieldRegistry.ts` mapping each `missing_field` to its onboarding step id, so the per-card refusal message renders "Complete: Position (Q6)" as a real button that jumps into `HammerOnboardingChat` at that step (uses the existing dropdown navigator).
-
-### 5. Observability
-
-- Extend `wk_generation_diagnostics` writes with the new `blocked_engines` and `failure_reasons` fields (already partially present); add an owner-facing view at `/owner/wk/diagnostics` listing recent failures + top missing fields so we can watch the class shrink to zero.
-
-### 6. Verification
-
-- Add a Vitest that mocks `supabase.functions.invoke` returning each of: 200 full, 200 partial with blocked engines, 422 with validator report, 500, and asserts the correct per-card UI in each case.
-- Deno test for `wk-generate-daily` that runs three athletes: (a) fully onboarded → 4/4 engines certify, (b) missing position → speed+lift blocked, others publish, (c) empty catalog for softball offseason → widened filter still publishes.
-- Manual smoke: sign in as a test athlete with partial onboarding, confirm the actual missing-field messages surface and deep-links work.
-
-## Technical notes
-
-- No schema change required for step 1–2 (all fields already exist on `wk_generation_diagnostics`).
-- Step 3 changes engine contracts inside `_shared/wic/*` — must bump `WIC_VERSION` minor and update `docs/wic/*` per the WIC amendment process.
-- Step 5 owner view is a new read-only page; no RLS changes (owner role already gated).
-
-## Out of scope
-
-- Rebuilding the prescription philosophy itself (movement selection, sets/reps, sequencing) — the engines are correct; the issue is failure handling and context gating. If after this ships you still see weak prescriptions, we open a separate WIC amendment for the specific engine.
+## Files touched
+- `src/components/hammer/WkCardFailureNotice.tsx` — one-line path fix.
+- `src/pages/AthleteOnboarding.tsx` — invalidate `wk-rx` on finish + Command Center button.
