@@ -16,7 +16,8 @@ import {
   CONTEXT_AXIS_LABELS, getContextValues, computeRoleShifts, NEUTRAL_SELECTION,
   type ContextAxis, type ContextSelection,
 } from "@/lib/iq/contextShifts";
-import { useAlignmentPresets, fallbackAlignment } from "@/hooks/useDefensiveAlignment";
+import { useAlignmentPresets, fallbackAlignment, resolvePositions } from "@/hooks/useDefensiveAlignment";
+import type { Handedness } from "@/lib/iq/fieldModel";
 
 
 
@@ -29,6 +30,7 @@ export default function GameIqSituation() {
   const [hover, setHover] = useState<IqActorRole | null>(null);
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
   const [context, setContext] = useState<ContextSelection>(NEUTRAL_SELECTION);
+  const [hand, setHand] = useState<Handedness>("R");
   const alignmentsQ = useAlignmentPresets(fieldSport);
 
 
@@ -68,7 +70,9 @@ export default function GameIqSituation() {
     presets.find((p) => p.is_default) ??
     presets.find((p) => p.preset_key === "standard") ??
     null;
-  const defensivePositions = chosenPreset?.positions ?? fallbackAlignment(fieldSport);
+  const defensivePositions = chosenPreset
+    ? resolvePositions(chosenPreset as any, fieldSport, hand)
+    : fallbackAlignment(fieldSport);
 
 
 
@@ -114,7 +118,21 @@ export default function GameIqSituation() {
           const hasContext = Object.values(context).some(Boolean);
           return (
           <>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} />
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Batter</div>
+              <div className="inline-flex rounded-full border p-0.5 text-xs">
+                <button type="button" onClick={() => setHand("R")}
+                        className={"px-3 py-0.5 rounded-full " + (hand === "R" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+                  RHH
+                </button>
+                <button type="button" onClick={() => setHand("L")}
+                        className={"px-3 py-0.5 rounded-full " + (hand === "L" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+                  LHH
+                </button>
+              </div>
+            </div>
+            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} sport={fieldSport} />
+
 
             <Card className="p-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
@@ -272,7 +290,7 @@ export default function GameIqSituation() {
             scenario={firstScenario}
             actors={actors}
             defensivePositions={defensivePositions}
-
+            sport={fieldSport}
           />
         )}
       </div>

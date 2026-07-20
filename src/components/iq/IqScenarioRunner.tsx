@@ -22,9 +22,10 @@ interface Props {
   scenario: IqScenario;
   actors: IqActor[];
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
+  sport?: "baseball" | "softball";
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball" }: Props) {
 
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
@@ -134,7 +135,7 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     <Card className="p-5 space-y-4" data-protected-editing="true">
       <p className="text-base font-medium">{scenario.prompt}</p>
 
-      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} />
+      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} />
 
       {!submitted && (
         <>
