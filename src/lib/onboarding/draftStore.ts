@@ -26,7 +26,11 @@ export type DraftSlot =
   | "schedule-importer"
   | "injury-intake"
   | "onboarding-step"
-  | "profile-answers";
+  | "profile-answers"
+  | "anthropometrics"
+  | "fuel-recovery"
+  | "mental-career"
+  | "connections";
 
 type DraftBag = Partial<Record<DraftSlot, unknown>>;
 
