@@ -1170,10 +1170,42 @@ export default function AnalyzeVideo() {
               </div>
             </Card>
 
+            {requiresSideConfirmation && !analysis && !analyzing && (
+              <Card className={cn(
+                "p-3 sm:p-4 border",
+                sideConfirmedForFile ? "border-primary/40 bg-primary/5" : "border-amber-500/60 bg-amber-500/5",
+              )}>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">
+                      {sideConfirmedForFile
+                        ? `Filing this clip under ${activeSide === 'L' ? 'Left' : 'Right'} ${sideDiscipline === 'hit' ? 'batting' : 'throwing'}.`
+                        : `Which ${sideDiscipline === 'hit' ? 'batting side' : 'throwing hand'} was used in this clip?`}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Analysis, drills, and roadmap will be filed under this side.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {(['L','R'] as const).map(s => (
+                      <Button
+                        key={s}
+                        size="sm"
+                        variant={activeSide === s && sideConfirmedForFile ? 'default' : 'outline'}
+                        onClick={() => { setSide(sideDiscipline, s); setSideConfirmedForFile(true); }}
+                      >
+                        {s === 'L' ? 'Left' : 'Right'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
-                disabled={uploading || extractingFrames}
+                disabled={uploading || extractingFrames || (requiresSideConfirmation && !sideConfirmedForFile)}
                 size="lg"
                 className="w-full"
               >
