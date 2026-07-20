@@ -66,16 +66,15 @@ export default function GameIqSituation() {
   const { situation, actors, scenarios } = q.data;
   const hoveredActor = hover ? actors.find((a) => a.role === hover) : null;
   const firstScenario = scenarios[0];
-  const alignmentKey = firstScenario?.alignment_preset ?? situation.alignment_preset ?? null;
   const presets = alignmentsQ.data ?? [];
-  const chosenPreset =
-    (alignmentKey ? presets.find((p) => p.preset_key === alignmentKey) : null) ??
-    presets.find((p) => p.is_default) ??
-    presets.find((p) => p.preset_key === "standard") ??
-    null;
-  const defensivePositions = chosenPreset
-    ? resolvePositions(chosenPreset as any, fieldSport, hand)
-    : fallbackAlignment(fieldSport);
+  const resolved = resolveAlignment({
+    presets,
+    selector: (situation as any).alignment_selector ?? null,
+    situationPreset: firstScenario?.alignment_preset ?? situation.alignment_preset ?? null,
+    sport: fieldSport,
+    state: { batterSide: hand, runners, outs },
+  });
+  const defensivePositions = resolved.positions.P ? resolved.positions : fallbackAlignment(fieldSport);
 
 
 
