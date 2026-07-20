@@ -670,7 +670,7 @@ const handler = async (req: Request): Promise<Response> => {
         usedBatSpeedSlugs.add(pick.movement.slug);
         push(
           "bat_speed",
-          pick.category === "bat_speed" ? "bat_speed" : `bat_speed_${pick.category}`,
+          "bat_speed",
           pick.movement,
           {},
           `${batSpeedTemplate.displayName} — ${pick.category.replace(/_/g, " ")} transfer. Do BEFORE lifts while CNS is fresh.`,
