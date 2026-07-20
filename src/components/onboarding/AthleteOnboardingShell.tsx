@@ -39,7 +39,7 @@ export function AthleteOnboardingShell({
     }
   };
 
-  const showBack = !!onBack && stepIndex > 0 && stepIndex < steps.length - 1;
+  const showBack = !!onBack && stepIndex > 0;
 
   return (
     <div className="min-h-screen bg-background">
