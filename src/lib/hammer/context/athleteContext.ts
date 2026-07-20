@@ -178,10 +178,13 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       fromEnvelope(env, "safeguarding_minor", "Safeguarding (minor)", "identity"),
       fromEnvelope(env, "anthropometrics", "Anthropometrics", "physiology"),
       fromEnvelope(env, "position_primary", "Primary position", "identity"),
+      fromEnvelope(env, "position_secondary", "Secondary positions", "identity"),
       fromEnvelope(env, "throws_hand", "Throws hand", "identity"),
       fromEnvelope(env, "bats_hand", "Bats side", "identity"),
       fromEnvelope(env, "competition_level", "Competition level", "identity"),
       fromEnvelope(env, "education_stage", "Education stage", "identity"),
+      fromEnvelope(env, "other_sports", "Other sports", "identity"),
+      fromEnvelope(env, "lifting_history", "Lifting history", "development"),
 
       // Live signals (existing)
       mkLive("season_phase_runtime", "Season phase (runtime)", "season", dayType ?? null, "useDayState.dayType"),
