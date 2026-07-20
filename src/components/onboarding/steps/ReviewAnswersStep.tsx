@@ -77,6 +77,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
     useAthleteOnboardingState();
   const [email, setEmail] = useState<string>("—");
   const [dob, setDob] = useState<string | null>(null);
+  const [throwingHand, setThrowingHand] = useState<string | null>(null);
   const [goals, setGoals] = useState<CategoryGoalsPayloadV2 | null>(null);
   const [latestSchedule, setLatestSchedule] = useState<string | null>(null);
   const [trainingAge, setTrainingAge] = useState<string>("");
@@ -86,6 +87,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
   const [oneRmDl, setOneRmDl] = useState<string>("");
   const [savingTraining, setSavingTraining] = useState(false);
 
+
   useEffect(() => {
     if (!user?.id) return;
     setEmail(user.email ?? "—");
@@ -93,7 +95,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
       const [{ data: prof }, { data: ctx }, { data: sched }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("date_of_birth, training_age_years, is_pro_prospect, one_rm")
+          .select("date_of_birth, training_age_years, is_pro_prospect, one_rm, throwing_hand")
           .eq("id", user.id)
           .maybeSingle(),
         supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle(),
@@ -111,8 +113,11 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
         training_age_years: number | null;
         is_pro_prospect: boolean | null;
         one_rm: Record<string, number> | null;
+        throwing_hand: string | null;
       } | null;
       setDob(profRow?.date_of_birth ?? null);
+      setThrowingHand(profRow?.throwing_hand ?? null);
+
       setTrainingAge(
         profRow?.training_age_years != null ? String(profRow.training_age_years) : "",
       );
@@ -180,11 +185,25 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
       ok: !!dob,
     },
     {
+      label: "Throwing hand",
+      value:
+        throwingHand === "L"
+          ? "Left"
+          : throwingHand === "R"
+            ? "Right"
+            : throwingHand === "B" || throwingHand === "S"
+              ? "Both (ambidextrous)"
+              : "Not set",
+      editKey: "profile",
+      ok: !!throwingHand,
+    },
+    {
       label: "Today's schedule",
       value: latestSchedule ? latestSchedule : "Not emitted yet",
       editKey: "schedule",
       ok: hasScheduleEvent,
     },
+
     {
       label: "Ranked sub-goals",
       value: summarizeGoals(goals),

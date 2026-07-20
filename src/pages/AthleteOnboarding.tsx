@@ -115,13 +115,16 @@ export default function AthleteOnboarding() {
 
   // Deep-link routing: ?step=review jumps to the review summary; ?edit=<key>
   // jumps directly to that step and marks it as an edit (save returns to review).
-  // Otherwise, auto-resume from any saved draft slot (Save & exit continuity).
+  // ?redo=1 forces a full restart. Otherwise, auto-resume from any saved draft
+  // slot (Save & exit continuity). Completed users see a "welcome back" panel
+  // on step 0 instead of being silently redirected to /command.
   const urlRoutedRef = useRef(false);
+  const redoRequested = searchParams.get("redo") === "1";
   useEffect(() => {
     if (urlRoutedRef.current || !user?.id) return;
     const editKey = searchParams.get("edit") as ReviewEditKey | null;
     const stepParam = searchParams.get("step");
-    const startOver = searchParams.get("startOver") === "1";
+    const startOver = searchParams.get("startOver") === "1" || redoRequested;
     if (editKey && editKey in EDIT_TARGETS) {
       urlRoutedRef.current = true;
       setStep(EDIT_TARGETS[editKey]);
@@ -136,13 +139,18 @@ export default function AthleteOnboarding() {
     urlRoutedRef.current = true;
     (async () => {
       try {
-        // Hydrate saved profile answers regardless of step (so back-nav still shows them).
+        if (startOver) {
+          clearDraftSlot(user.id, "onboarding-step");
+          clearDraftSlot(user.id, "profile-answers");
+          setThrowingHand(undefined);
+          return;
+        }
+        // Hydrate saved profile answers regardless of step.
         const profileDraft = await readDraftSlot<{ throwingHand?: ThrowingHandValue }>(
           user.id,
           "profile-answers",
         );
         if (profileDraft?.throwingHand) setThrowingHand(profileDraft.throwingHand);
-        // Also read persisted throwing_hand from profile if no draft.
         if (!profileDraft?.throwingHand) {
           const { data } = await supabase
             .from("profiles")
@@ -152,10 +160,6 @@ export default function AthleteOnboarding() {
           const th = (data as { throwing_hand?: string | null } | null)?.throwing_hand;
           if (th === "L" || th === "R") setThrowingHand(th);
           else if (th === "B" || th === "S") setThrowingHand("S");
-        }
-        if (startOver) {
-          clearDraftSlot(user.id, "onboarding-step");
-          return;
         }
         const draft = await readDraftSlot<{ stepIndex?: number; dayType?: DayType }>(
           user.id,
@@ -173,7 +177,7 @@ export default function AthleteOnboarding() {
         /* resume is best-effort */
       }
     })();
-  }, [searchParams, user?.id]);
+  }, [searchParams, user?.id, redoRequested]);
 
   // Continuously persist step + dayType so refresh/close never loses progress.
   useEffect(() => {
@@ -182,19 +186,16 @@ export default function AthleteOnboarding() {
     writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
   }, [user?.id, step, dayType]);
 
+  /** Completed users landing on step 0 without a deep-link see the welcome-back panel. */
+  const showWelcomeBack =
+    !stateLoading &&
+    hasCompletedOnboarding &&
+    step === STEP_WELCOME &&
+    !redoRequested &&
+    !searchParams.has("edit") &&
+    searchParams.get("step") !== "review";
 
-  // Skip the flow only when the athlete already finished it AND we're not
-  // explicitly reviewing/editing. This lets completed users come back via
-  // /onboarding/athlete?step=review or ?edit=<key> to update answers.
-  useEffect(() => {
-    const isReviewing =
-      searchParams.has("edit") ||
-      searchParams.get("step") === "review" ||
-      step >= STEP_REVIEW;
-    if (!stateLoading && hasCompletedOnboarding && !isReviewing && step < STEP_NOTIFICATIONS) {
-      navigate("/command", { replace: true });
-    }
-  }, [stateLoading, hasCompletedOnboarding, navigate, step, searchParams]);
+
 
 
   /** Advance, OR if we're in edit-mode, jump back to Review and clear the flag. */
@@ -347,7 +348,44 @@ export default function AthleteOnboarding() {
         </div>
       )}
 
-      {step === STEP_WELCOME && (
+      {step === STEP_WELCOME && showWelcomeBack && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">Welcome back.</h2>
+          <p className="text-sm text-muted-foreground">
+            You've already completed onboarding. Pick up where you want:
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Button variant="outline" onClick={() => setStep(STEP_REVIEW)}>
+              Review answers
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (user?.id) {
+                  clearDraftSlot(user.id, "onboarding-step");
+                  clearDraftSlot(user.id, "profile-answers");
+                }
+                setThrowingHand(undefined);
+                setResumedFromStep(null);
+                setSearchParams({ redo: "1" }, { replace: true });
+                setStep(STEP_WELCOME);
+                // Force the welcome-back panel off by flipping redoRequested via URL.
+              }}
+            >
+              Redo onboarding
+            </Button>
+            <Button onClick={() => navigate("/command")}>
+              Go to Command Center <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            "Redo onboarding" clears your saved draft and starts at Welcome. Your
+            existing profile data stays intact until you save new answers.
+          </p>
+        </section>
+      )}
+
+      {step === STEP_WELCOME && !showWelcomeBack && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>
           <p className="text-sm text-muted-foreground">
@@ -366,6 +404,7 @@ export default function AthleteOnboarding() {
           </div>
         </section>
       )}
+
 
       {step === STEP_PROFILE && (
         <section className="space-y-4">

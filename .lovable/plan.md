@@ -1,39 +1,43 @@
-# Onboarding — Elite E2E Fixes
+## Root cause
 
-Three concrete gaps in `src/pages/AthleteOnboarding.tsx` and its child steps. All frontend/presentation work — no schema changes.
+The Both / Back / Save‑&‑resume work from the last turn **is in the code and correct** — but your account has `hasCompletedOnboarding = true`, so `src/pages/AthleteOnboarding.tsx` fires this effect on mount:
 
-## 1. Throwing hand: add "Both" option
+```
+if (hasCompletedOnboarding && !isReviewing && step < STEP_NOTIFICATIONS)
+  navigate("/command", { replace: true });
+```
 
-The Profile step currently doesn't collect throwing hand at all, and `ThrowingHandSelector` only exposes L/R. Ambidextrous throwers have no way to declare that.
+That kicks completed users straight to `/command` before Welcome/Profile ever render. That is why every fix looks missing — you literally never see those screens.
 
-- Extend `src/components/splits/ThrowingHandSelector.tsx` to support values `L | R | S` (S = switch/both).
-- In the Profile step of `AthleteOnboarding.tsx`, add a "Which hand do you throw with?" question with **Left / Right / Both** options.
-- On save, write to `profiles.throwing_hand` and, when Both is picked, also set `is_ambidextrous_thrower = true` + `primary_throwing_hand` via the existing `useSwitchHitterProfile` hook (both fields already exist in the schema).
-- Reuse the same pattern already used elsewhere in the app so downstream side-context, splits, and drill logic pick it up automatically.
+## Fix
 
-## 2. Real Back button — end to end
+Frontend / presentation only. No schema changes.
 
-`goBack` exists but several steps render it inconsistently and the shell has no persistent back affordance:
+### 1. Give completed users a real entry point
+`src/pages/AthleteOnboarding.tsx`
+- Replace the silent auto‑redirect for completed users with a **first‑screen "Welcome back" panel** (rendered when `hasCompletedOnboarding && step === 0` and no `?edit`/`?step=review`/`?redo=1`) offering three actions:
+  - **Review answers** → `setStep(STEP_REVIEW)`
+  - **Redo onboarding** → clears the `onboarding-step` draft and starts at Welcome (adds `?redo=1`)
+  - **Go to Command Center** → `navigate("/command")`
+- Remove the automatic `navigate("/command")` so the user is never bounced without consent. Deep‑links (`?edit=…`, `?step=review`, `?redo=1`) bypass the panel exactly as today.
 
-- Add a persistent **Back** control in `AthleteOnboardingShell.tsx` header (left of Save & exit) that calls the same handler, hidden only on step 0 and Done.
-- Audit every step (`Welcome`, `Profile`, `Rank goals`, `Schedule`, `Confirm`, `Injury`, `Notifications`, `Review`) to guarantee a working Back that preserves in-step input (goals, day type, injury draft) via the draft store before navigating.
-- Wire the stepper chips at the top so clicking a completed step navigates back to it.
+### 2. Make the throwing‑hand answer visible & editable from Review
+`src/components/onboarding/steps/ReviewAnswersStep.tsx`
+- Add a **Profile → Throwing hand** row that reads `profiles.throwing_hand` (mapping `B` → "Both") and links via existing `onEdit("profile")` deep‑link, which already routes to the Profile step and returns to Review on save.
 
-## 3. Save & Exit that actually resumes
+### 3. Guarantee Back + Save‑&‑Exit continue to work on the re‑entered flow
+Already implemented, but re-verify against a completed account after fix 1:
+- Header Back button in `AthleteOnboardingShell.tsx` shows on steps 1..N‑1.
+- Stepper chips are clickable for completed steps.
+- `writeDraftSlot("onboarding-step", {stepIndex, dayType})` fires on every step change; auto‑resume runs without `?resume=1`; `clearDraftSlot` runs on Done and on "Start over" / "Redo onboarding".
 
-Today `writeDraftSlot` fires on exit but resume only triggers when URL has `?resume=1`. Users who click Save & Exit and later reopen `/onboarding/athlete` land back on step 0.
+### 4. Minor polish
+- On `?redo=1`, also clear `profile-answers` so the throwing‑hand pick truly restarts.
+- Replace the small "Resuming from step N" banner text with the current step's label + a "Start over" button (already present) — no additional plumbing needed.
 
-- On mount, if a draft exists for `onboarding-step` and onboarding is not yet complete, auto-resume to the saved step + dayType (no URL flag required).
-- Add a subtle "Resuming from step N — start over" banner so users can opt out.
-- Persist per-step form state (Profile answers, selected dayType, injury intake progress, notification prefs toggled) to their own draft slots on every change, not just on exit — so refresh/tab-close never loses input.
-- Clear the `onboarding-step` slot on true completion (Done step) via `clearDraftSlot`.
+## Files touched
+- `src/pages/AthleteOnboarding.tsx` — welcome‑back panel, drop silent redirect, honor `?redo=1`.
+- `src/components/onboarding/steps/ReviewAnswersStep.tsx` — surface throwing‑hand row with edit link.
 
-## Technical notes
-
-- Files touched:
-  - `src/pages/AthleteOnboarding.tsx` — Profile step form, auto-resume, per-field draft writes, clear-on-complete.
-  - `src/components/onboarding/AthleteOnboardingShell.tsx` — header Back button, clickable completed stepper chips.
-  - `src/components/splits/ThrowingHandSelector.tsx` — add `S` (Both) option.
-  - `src/lib/onboarding/draftStore.ts` — add a `profile-answers` slot type.
-- No database migration required; `profiles.throwing_hand` and switch-hitter fields already exist.
-- No changes to canonical event emission, replay lineage, or Command Center gating.
+## Out of scope
+- No changes to `draftStore.ts`, `ThrowingHandSelector.tsx`, or `AthleteOnboardingShell.tsx` — those pieces are already correct; the fix above is what actually lets you see them.
