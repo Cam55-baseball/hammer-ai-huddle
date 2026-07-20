@@ -293,7 +293,7 @@ export default function AthleteOnboarding() {
         if (error) throw error;
         // Mirror ambidextrous flag into athlete_mpi_settings when "Both" chosen.
         if (throwingHand === "S") {
-          await supabase
+          const { error: mpiError } = await supabase
             .from("athlete_mpi_settings")
             .upsert(
               {
@@ -303,8 +303,18 @@ export default function AthleteOnboarding() {
               } as never,
               { onConflict: "user_id" },
             );
+          if (mpiError) {
+            console.warn("[onboarding] mpi ambidextrous upsert failed", mpiError);
+            toast.warning(
+              "Saved throwing hand, but ambidextrous flag didn't sync — you can re-toggle it in Review.",
+            );
+          }
         }
         writeDraftSlot(user.id, "profile-answers", { throwingHand });
+        // Refresh SideContext so the goals step immediately sees the new
+        // ambidextrous flag without a full reload.
+        queryClient.invalidateQueries({ queryKey: ["side-identity", user.id] });
+
       }
       goNext();
     } catch (e) {
