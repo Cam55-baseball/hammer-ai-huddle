@@ -75,7 +75,7 @@ export function AthleteOnboardingShell({
           {steps.map((label, i) => {
             const done = i < stepIndex;
             const active = i === stepIndex;
-            const clickable = done && !!onJumpToStep;
+            const clickable = !!onJumpToStep && !active && (done || allowForwardJump);
             const chipClass = `flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-medium ${
               done
                 ? "border-primary bg-primary text-primary-foreground"
