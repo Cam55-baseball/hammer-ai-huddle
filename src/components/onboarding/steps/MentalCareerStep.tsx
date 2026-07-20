@@ -86,7 +86,7 @@ export function MentalCareerStep({ onContinue, onBack }: Props) {
         <Label htmlFor="routine" className="text-xs">Pre-game / pre-at-bat routine</Label>
         <Textarea id="routine" rows={2} value={routine}
           onChange={(e) => { setRoutine(e.target.value); persist({ pregame_routine: e.target.value }); }}
-          placeholder="e.g. 4 breaths, visualize first pitch, tap helmet" />
+          placeholder="e.g. Headphones on the ride, 3 breaths between innings, one cue word before the play — 'see it deep' / 'quiet feet' / 'trust it'" />
       </div>
 
       <div className="flex justify-between">
