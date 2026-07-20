@@ -1,122 +1,63 @@
 
-# Elite Game IQ — Editor V3, Scenario Auto-Selection & Resolution Audit
+# Fix "Retry" on Speed / Bat Speed / Lifts / Conditioning cards
 
-Finishes the step-based positioning system by giving owners a coach-grade editor, teaching scenarios to auto-pick the right defensive preset per batter/runners/outs/count, and adding a permanent audit that guarantees every published situation resolves cleanly for RHH + LHH in both sports.
+## Current state (verified)
 
----
+- `useWkDailyPrescriptions` flips `failed = true` **whenever `wk-generate-daily` throws or times out (30s)**. Every card (`WkSpeedCard`, `WkBatSpeedCard`, `WkLiftsCard`, `WkConditioningCard`) then renders the same generic "Retry" button. The user sees `Retry` on all four because they share one snapshot — one edge failure blanks the whole plan, not four independent failures.
+- The edge function can fail for **three distinct reasons**, all currently indistinguishable in the UI:
+  1. **HTTP 422 `wic_validation_failed`** — WIC validator rejected the plan (duplicate movements, missing `why_v2` answer, forbidden game-day slot, missing full-body role, or a per-engine certification refused to publish). Returns a full `validator_report` we currently discard.
+  2. **HTTP 500** — an engine threw before validation (catalog empty for sport, missing `wk_periodization_blocks` for phase, RPC failure, athlete-context resolver crash).
+  3. **Timeout at 30s** — Gemini/LLM path slow or one of the certification engines looping over a sparse catalog.
+- The most common practical cause in the wild is **missing athlete context** (Q1–Q24 onboarding partially done): `athleteContext.missing_fields` drives which engines can certify. Speed/Bat-Speed/Lift/Conditioning engines each require a minimum profile (sport, primary position, training age, competitive level, season phase, equipment). If any engine returns `validation_status: "rejected"`, the WIC validator marks the whole publication fatal → 422 → "Retry" on every card.
+- **Root cause is currently unconfirmed for this specific user** — no `wk-generate-daily` calls appear in edge logs (user is on `/auth`). The plan below both diagnoses and repairs the class.
 
-## Part 1 — Editor V3 (`IqAlignmentsEditor.tsx`)
+## Objectives
 
-Replace the legacy percent-drag UI with a coach-language, step-based editor.
+1. Never again show a bare "Retry" — the athlete (and we) must see *why* generation was refused and what to do.
+2. Turn a single-engine refusal into a **partial success**: cards whose engines certified should render; only the failing card shows an actionable reason.
+3. Close the two most common structural failure modes (missing context, sparse catalog per sport/phase) so elite prescriptions publish for every onboarded athlete.
 
-**Layout**
-- Header: preset name, sport toggle (Baseball 90' / Softball 60'), status, save state.
-- Handedness tabs: **RHH | LHH** (edits `anchors_vs_rhh` vs `anchors_vs_lhh` independently).
-- Left: realistic `IqField` (reused from viewer) with 9 draggable defender pucks, live coach-readable label under each ("SS — 4 steps toward 2B, 2 steps back").
-- Right: **Numeric Step Panel** for the selected defender(s):
-  - `from` (home base of the position) — read-only.
-  - `toward` dropdown (2B, 3B, 1B, LF line, RF line, gap, home, mound, etc.).
-  - `steps` (lateral, integer, ±).
-  - `depthSteps` (in/out, integer, ±).
-  - Range disk radius (defensive range in steps).
-- Multi-select: shift-click or marquee; step nudges apply to all selected (already supported in V2 — carry forward).
-- **Mirror to opposite hand** button: copies current tab's anchors to the other, flipping lateral `toward` (2B↔2B, 3B↔1B, LF line↔RF line, LC gap↔RC gap).
-- **Reset defender** / **Reset preset to seed** actions.
-- Live **Coverage %** + range-disk overlay recomputed per hand.
+## Work
 
-**Persistence**
-- Writes `anchors_vs_rhh` / `anchors_vs_lhh` (jsonb) via `useIqAlignmentMutations`.
-- Also updates legacy `positions_vs_rhh/lhh` (percent) by running anchors through `fieldModel.anchorToPct` so viewers without anchor support stay correct.
-- Autosave debounced 800ms + explicit Save button; toast on error.
+### 1. Surface the real reason (client)
 
-**Validation**
-- Steps clamped to sport bounds (Baseball ±40, Softball ±28).
-- Warn (non-blocking) if a defender lands outside fair territory or overlaps another puck within 2 steps.
+- `useWkDailyPrescriptions.generate`: capture `error.context` from `supabase.functions.invoke`, read the JSON body (`error`, `validator_report`, `missing_context_fields`, `phase`, `adaptation`), and expose on the snapshot as `failureReason: { code, title, detail, missingFields, engineFailures[] }`.
+- Update `useHammersToday()` consumers so each card reads a **per-engine** status (`engineFailures` keyed by `speed | bat_speed | lift | conditioning`). Cards render:
+  - Certified engine → normal card.
+  - Refused engine → red-outline card with the exact reason (e.g., "Speed engine needs your **primary position** and **training age** — finish onboarding Q6, Q11") and a deep-link to that onboarding step.
+  - Global failure (500/timeout) → single top-level banner with "Regenerate" + "Report".
 
----
+### 2. Diagnostics passthrough (edge)
 
-## Part 2 — Scenario Auto-Selection (`alignment_selector`)
+- In `wk-generate-daily`, both the 422 and 500 paths already write `wk_generation_diagnostics` — extend the response body with a small `failure_reasons[]` array derived from `validatorReport.issues` and each engine's `validationStatus`, so the client can render actionable copy without another fetch.
+- Add `missing_context_fields` and `context_completeness_score` to the response (they're already computed for diagnostics).
 
-Make each situation deterministically resolve to the correct preset given game state.
+### 3. Repair the structural failure classes
 
-**Selector schema** (`iq_situations.alignment_selector jsonb`)
-```json
-{
-  "rules": [
-    { "when": { "runners": ["1B"], "outs": [0,1], "batter_side": "RHH" }, "preset": "double_play_depth" },
-    { "when": { "runners": ["3B"], "outs": [0,1] }, "preset": "infield_in" },
-    { "when": { "count": { "balls_gte": 3 } }, "preset": "no_doubles" }
-  ],
-  "default": "standard"
-}
-```
+- **Missing context short-circuit**: at the top of the edge function, if `athleteContext.completeness_score < threshold` OR any of the hard-required fields (`sport`, `primary_position`, `training_age`, `competitive_level`, `season_phase`) is null, return 200 with a *partial plan* (warm-up + mobility + arm care where possible) and a structured `blocked_engines[]` payload instead of 422. This alone eliminates the majority of "Retry" reports.
+- **Sparse-catalog guardrail**: in each engine (`liftCertification`, `speedCertification`, `batSpeedCertification`, `conditioningCertification`), when the filtered `wk_movement_catalog` slice for `(sport, phase, equipment, training_age)` returns < N eligible movements, widen the filter deterministically (drop equipment first, then age band) before refusing. Emit a `substitution_completeness` warning so we can audit.
+- **Per-engine soft-fail**: change the WIC publication validator so an engine that fails category coverage becomes a **warn** (engine omitted, others publish) instead of a fatal for the whole plan. Fatal remains only for duplicate movements or a forbidden-slot violation.
 
-**Resolver** (`src/lib/iq/alignmentResolver.ts` — new)
-- `resolveAlignment({ situation, batterSide, sport }) → { presetId, anchors, positions, coverage }`.
-- Evaluates rules top-down; first match wins; falls back to `default` then to sport `standard`.
-- Returns anchor-resolved coords per hand via `fieldModel`.
+### 4. Onboarding gap deep-links
 
-**Runtime wiring**
-- `useIqSituations` selects `alignment_selector` + preset joins.
-- `IqScenarioRunner.tsx` calls resolver whenever `batterSide / runners / outs / count` change and passes the result to `IqDiamond`.
-- Toggling batter handedness during a scenario re-resolves live.
+- Add an `onboardingFieldRegistry.ts` mapping each `missing_field` to its onboarding step id, so the per-card refusal message renders "Complete: Position (Q6)" as a real button that jumps into `HammerOnboardingChat` at that step (uses the existing dropdown navigator).
 
-**Owner UX**
-- New "Alignment logic" tab on the situation editor: rule builder (runners chips, outs multi-select, count operators, batter-side selector, preset dropdown). Preview panel shows which rule fires under a chosen game state.
+### 5. Observability
 
----
+- Extend `wk_generation_diagnostics` writes with the new `blocked_engines` and `failure_reasons` fields (already partially present); add an owner-facing view at `/owner/wk/diagnostics` listing recent failures + top missing fields so we can watch the class shrink to zero.
 
-## Part 3 — Resolution Audit
+### 6. Verification
 
-Guarantee no published situation ever renders a broken field.
+- Add a Vitest that mocks `supabase.functions.invoke` returning each of: 200 full, 200 partial with blocked engines, 422 with validator report, 500, and asserts the correct per-card UI in each case.
+- Deno test for `wk-generate-daily` that runs three athletes: (a) fully onboarded → 4/4 engines certify, (b) missing position → speed+lift blocked, others publish, (c) empty catalog for softball offseason → widened filter still publishes.
+- Manual smoke: sign in as a test athlete with partial onboarding, confirm the actual missing-field messages surface and deep-links work.
 
-**Edge function** `iq-alignment-audit` (new)
-- For every `iq_situations` row where `status = 'published'`:
-  - For each sport it supports × {RHH, LHH} × representative game states:
-    - Run resolver; assert preset exists, anchors resolve for that hand, no defender falls off-field, coverage ≥ minimum threshold.
-  - Collect failures with reason codes (`missing_preset`, `missing_hand_anchors`, `off_field`, `low_coverage`, `no_default`).
-- Writes to new table `iq_alignment_audit_runs` (run metadata) + `iq_alignment_audit_findings` (per-situation results). Both RLS-locked to owner role, GRANTed to `authenticated` + `service_role`.
+## Technical notes
 
-**Owner UI** `/owner/iq/audit`
-- "Run audit" button (invokes edge function).
-- Table of latest findings grouped by severity, deep-linked to the situation editor and alignment editor.
-- Badge on `/owner/iq` nav shows open failure count.
+- No schema change required for step 1–2 (all fields already exist on `wk_generation_diagnostics`).
+- Step 3 changes engine contracts inside `_shared/wic/*` — must bump `WIC_VERSION` minor and update `docs/wic/*` per the WIC amendment process.
+- Step 5 owner view is a new read-only page; no RLS changes (owner role already gated).
 
-**CI-style guard**
-- Publish action on a situation runs a mini-audit inline; blocks publish if any hand fails to resolve.
+## Out of scope
 
----
-
-## Technical details
-
-**Files created**
-- `src/lib/iq/alignmentResolver.ts`
-- `src/components/iq/editor/StepPanel.tsx`, `HandTabs.tsx`, `MirrorButton.tsx`
-- `src/components/iq/editor/AlignmentRuleBuilder.tsx`
-- `src/pages/owner/IqAlignmentAudit.tsx`
-- `supabase/functions/iq-alignment-audit/index.ts`
-
-**Files modified**
-- `src/pages/owner/IqAlignmentsEditor.tsx` — full V3 rewrite around anchors + hand tabs.
-- `src/hooks/useDefensiveAlignment.ts` — expose anchor writer helpers.
-- `src/hooks/useIqSituations.ts` — include `alignment_selector`.
-- `src/components/iq/IqScenarioRunner.tsx` — call resolver on state change.
-- `src/pages/owner/GameIqSituation.tsx` — add "Alignment logic" tab + inline publish audit.
-- `src/pages/owner/GameIqOwner.tsx` — audit failure badge.
-
-**Migrations**
-- `iq_alignment_audit_runs` (started_at, finished_at, triggered_by, status, totals).
-- `iq_alignment_audit_findings` (run_id, situation_id, sport, batter_side, severity, reason_code, detail jsonb).
-- Both: GRANT to `authenticated` + `service_role`; RLS restricting reads/writes to `has_role(auth.uid(),'owner')`; `service_role` bypass for the edge function.
-
-**Constants**
-- `SPORT_STEP_BOUNDS`, `RANGE_DEFAULTS`, `COVERAGE_MIN` centralized in `fieldModel.ts`.
-
----
-
-## Acceptance criteria
-1. Owner can drag OR type step values per defender, per hand, per sport, with live coach labels + coverage %.
-2. Mirror-to-opposite-hand flips lateral direction correctly for every `toward` landmark.
-3. Every scenario in `IqScenarioRunner` auto-picks a preset from `alignment_selector` and re-resolves when batter side / runners / outs / count change.
-4. Audit page lists 0 failures after a green run; publish is blocked for any situation with an unresolved hand.
-5. Legacy `positions_vs_rhh/lhh` stay in sync so any consumer not yet on anchors still renders correctly.
+- Rebuilding the prescription philosophy itself (movement selection, sets/reps, sequencing) — the engines are correct; the issue is failure handling and context gating. If after this ships you still see weak prescriptions, we open a separate WIC amendment for the specific engine.
