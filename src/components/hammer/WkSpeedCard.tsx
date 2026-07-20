@@ -53,9 +53,7 @@ export function WkSpeedCard() {
       </CardHeader>
       <CardContent className="space-y-2">
         {failed ? (
-          <Button size="sm" onClick={retry} className="h-7 w-full">
-            <RefreshCw className="h-3 w-3 mr-1" /> Retry
-          </Button>
+          <WkCardFailureNotice engine="speed" failure={failureReason} retry={retry} retrying={generating} />
         ) : isLoading || generating ? (
           <Skeleton className="h-14 w-full rounded" />
         ) : items.length === 0 ? (
