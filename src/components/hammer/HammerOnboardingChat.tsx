@@ -129,13 +129,41 @@ export function HammerOnboardingChat() {
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <span>{identity.voiceLabel} · {dir.audience} onboarding</span>
-          <span className="text-[10px] text-muted-foreground">
-            {dir.currentIndex + 1} / {dir.totalGaps}
-          </span>
+        <CardTitle className="text-sm flex items-center justify-between gap-2">
+          <span className="truncate">{identity.voiceLabel} · {dir.audience} onboarding</span>
+          <Select
+            value={String(dir.currentIndex)}
+            onValueChange={(v) => dir.jumpTo(Number(v))}
+          >
+            <SelectTrigger
+              className="h-6 w-auto min-w-[64px] gap-1 px-2 py-0 text-[10px] text-muted-foreground"
+              aria-label="Jump to question"
+            >
+              <SelectValue>
+                {dir.currentIndex + 1} / {dir.totalGaps}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              {dir.orderedGaps.map((g, i) => {
+                const answered = dir.answers[g.id] != null && dir.answers[g.id] !== "";
+                return (
+                  <SelectItem key={g.id} value={String(i)} className="text-xs">
+                    <span className="flex items-center gap-2">
+                      <span className="tabular-nums text-muted-foreground w-6 shrink-0">
+                        {i + 1}.
+                      </span>
+                      <span className={answered ? "text-muted-foreground" : ""}>
+                        {g.question.length > 60 ? `${g.question.slice(0, 60)}…` : g.question}
+                      </span>
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-3">
         <p className="text-sm">{gap.question}</p>
         {gap.helper && <p className="text-xs text-muted-foreground">{gap.helper}</p>}
