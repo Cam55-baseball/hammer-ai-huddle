@@ -652,24 +652,29 @@ const handler = async (req: Request): Promise<Response> => {
         isReturnToPlay: false,
       });
       const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
-      const requiredBatSpeed = batSpeedTemplate.requiredCategories
-        .map((category) =>
-          batSpeedPool.find(
-            (m) =>
-              ((m as any).bat_speed_category ?? null) === category &&
-              BAT_SPEED_PREFERRED.includes(m.slug),
-          ) ?? batSpeedPool.find((m) => ((m as any).bat_speed_category ?? null) === category),
-        )
-        .find(Boolean);
-      const bat = requiredBatSpeed ?? batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
-      if (bat) {
+      const usedBatSpeedSlugs = new Set<string>();
+      const pickBatSpeedByCategory = (category: string) => {
+        const sameCategory = batSpeedPool.filter(
+          (m) => ((m as any).bat_speed_category ?? null) === category && !usedBatSpeedSlugs.has(m.slug),
+        );
+        return sameCategory.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? sameCategory[0] ?? null;
+      };
+      const batSpeedPicks = batSpeedTemplate.requiredCategories
+        .map((category) => ({ category, movement: pickBatSpeedByCategory(category) }))
+        .filter((pick): pick is { category: string; movement: MovementRow } => !!pick.movement);
+      if (batSpeedPicks.length === 0) {
+        const fallback = batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
+        if (fallback) batSpeedPicks.push({ category: String((fallback as any).bat_speed_category ?? "bat_speed"), movement: fallback });
+      }
+      for (const pick of batSpeedPicks) {
+        usedBatSpeedSlugs.add(pick.movement.slug);
         push(
           "bat_speed",
-          "bat_speed",
-          bat,
+          pick.category === "bat_speed" ? "bat_speed" : `bat_speed_${pick.category}`,
+          pick.movement,
           {},
-          `${batSpeedTemplate.displayName} — direct bat-speed transfer. Do BEFORE lifts while CNS is fresh.`,
-          { bat_speed_template_id: batSpeedTemplate.id },
+          `${batSpeedTemplate.displayName} — ${pick.category.replace(/_/g, " ")} transfer. Do BEFORE lifts while CNS is fresh.`,
+          { bat_speed_template_id: batSpeedTemplate.id, bat_speed_required_category: pick.category },
         );
       }
     }
