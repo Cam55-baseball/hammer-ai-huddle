@@ -13,6 +13,7 @@ import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IqLens } from "@/lib/iq/types";
 import { quizResume } from "@/lib/iq/resumeStore";
+import { IqConceptLadder } from "@/components/iq/IqConceptLadder";
 
 const LENS_TABS: { value: IqLens | "all"; label: string; icon: typeof Brain }[] = [
   { value: "all", label: "All", icon: Brain },
