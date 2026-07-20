@@ -6554,18 +6554,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          side: string | null
           user_id: string
           video_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          side?: string | null
           user_id: string
           video_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          side?: string | null
           user_id?: string
           video_id?: string
         }
@@ -12033,6 +12036,7 @@ export type Database = {
           id: string
           module_origin: string
           saved_at: string | null
+          side: string | null
           tip_category: string | null
           tip_text: string
           user_id: string
@@ -12041,6 +12045,7 @@ export type Database = {
           id?: string
           module_origin: string
           saved_at?: string | null
+          side?: string | null
           tip_category?: string | null
           tip_text: string
           user_id: string
@@ -12049,6 +12054,7 @@ export type Database = {
           id?: string
           module_origin?: string
           saved_at?: string | null
+          side?: string | null
           tip_category?: string | null
           tip_text?: string
           user_id?: string
@@ -12327,6 +12333,7 @@ export type Database = {
           id: string
           module: string
           notes: string | null
+          side: string | null
           sport: string
           sub_module: string
           total_weight_lifted: number | null
@@ -12341,6 +12348,7 @@ export type Database = {
           id?: string
           module: string
           notes?: string | null
+          side?: string | null
           sport: string
           sub_module: string
           total_weight_lifted?: number | null
@@ -12355,6 +12363,7 @@ export type Database = {
           id?: string
           module?: string
           notes?: string | null
+          side?: string | null
           sport?: string
           sub_module?: string
           total_weight_lifted?: number | null
