@@ -36,8 +36,10 @@ export interface HammerOnboardingDirector {
   readonly totalGaps: number;
   readonly resolvedCount: number;
   readonly isLoading: boolean;
+  readonly canGoBack: boolean;
   resolve(gapId: string, value: unknown): Promise<void>;
   skip(gapId: string): void;
+  goBack(): void;
 }
 
 function useUserAudience(): { audience: GapAudience; loading: boolean } {
