@@ -26,6 +26,8 @@ export interface LibraryVideo {
   // Foundation class (long-form A–Z philosophy videos)
   video_class?: 'application' | 'foundation' | null;
   foundation_meta?: import('@/lib/foundationVideos').FoundationMeta | null;
+  /** Per-user side filing for this like (declared switch/ambi athletes). */
+  liked_sides?: Array<'L' | 'R' | 'both'>;
 }
 
 export interface LibraryTag {
@@ -115,19 +117,25 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch user's likes
+      // Fetch user's likes (with side tagging for switch / ambi athletes).
       const { data: likes } = await supabase
         .from('library_video_likes')
-        .select('video_id')
+        .select('video_id, side')
         .eq('user_id', user.id);
 
-      const likedIds = new Set(likes?.map(l => l.video_id) || []);
-      
+      const likedMap = new Map<string, Array<'L' | 'R' | 'both'>>();
+      (likes || []).forEach((l: any) => {
+        const arr = likedMap.get(l.video_id) || [];
+        if (l.side === 'L' || l.side === 'R' || l.side === 'both') arr.push(l.side);
+        likedMap.set(l.video_id, arr);
+      });
+
       let enriched = (data || []).map(v => ({
         ...v,
         tags: v.tags || [],
         sport: v.sport || [],
-        is_liked: likedIds.has(v.id),
+        is_liked: likedMap.has(v.id),
+        liked_sides: likedMap.get(v.id) || [],
       })) as LibraryVideo[];
 
       if (savedOnly) {
