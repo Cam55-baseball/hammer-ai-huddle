@@ -137,6 +137,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   const openGaps = useMemo(() => {
     return gapSet
       .filter((g) => {
+        if (sessionReopened.has(g.id)) return true;
         if (sessionResolved.has(g.id)) return false;
         if (sessionSkipped.has(g.id)) return false;
         if (audience === "athlete") {
@@ -146,7 +147,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
         return true;
       })
       .sort((a, b) => a.priority - b.priority);
-  }, [audience, gapSet, ctx, sessionResolved, sessionSkipped]);
+  }, [audience, gapSet, ctx, sessionResolved, sessionSkipped, sessionReopened]);
 
   const resolve = useCallback(
     async (gapId: string, value: unknown) => {
