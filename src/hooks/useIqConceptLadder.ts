@@ -33,7 +33,7 @@ const RUNG_UNLOCK_THRESHOLD = 70; // pct
 const CONCEPT_UNLOCK_THRESHOLD = 60;
 
 export function useIqConceptLadder(sport: IqSport) {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const uid = user?.id ?? null;
   return useQuery({
     queryKey: ["iq-concept-ladder", sport, uid ?? "anon"],
