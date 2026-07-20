@@ -201,6 +201,7 @@ export async function persistCoachContextAnswer(
   key: string,
   value: AnyValue,
 ): Promise<void> {
+  await ensureFreshSession(userId);
   const payload: Record<string, unknown> = { user_id: userId, [key]: value };
   const { error } = await (supabase.from("coach_context") as unknown as {
     upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
