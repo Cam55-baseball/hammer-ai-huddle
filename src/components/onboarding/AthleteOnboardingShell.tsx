@@ -25,6 +25,7 @@ export function AthleteOnboardingShell({
   onSaveAndExit,
   onBack,
   onJumpToStep,
+  allowForwardJump = false,
 }: Props) {
   const navigate = useNavigate();
   const handleExit = async () => {
