@@ -28,6 +28,16 @@ export function IqSituationCard({ situation, mastery, onClick }: Props) {
               </Badge>
             ))}
             <Badge variant="secondary" className="text-[10px] capitalize">{situation.difficulty}</Badge>
+            {(() => {
+              const rung = Math.max(1, Math.min(5, (situation as any).difficulty_rung ?? 1));
+              return (
+                <span className="inline-flex items-center gap-0.5" aria-label={`Difficulty rung ${rung} of 5`}>
+                  {[1, 2, 3, 4, 5].map((r) => (
+                    <span key={r} className={`h-1 w-2 rounded-full ${r <= rung ? "bg-primary" : "bg-muted"}`} />
+                  ))}
+                </span>
+              );
+            })()}
             {situation.triple_check_count >= 3 && (
               <span className="inline-flex items-center gap-1 text-[10px] text-green-500">
                 <CheckCircle2 className="h-3 w-3" /> Triple-checked
