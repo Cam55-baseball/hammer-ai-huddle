@@ -137,7 +137,7 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     <Card className="p-5 space-y-4" data-protected-editing="true">
       <p className="text-base font-medium">{scenario.prompt}</p>
 
-      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} />
+      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} batterSide={batterSide} playing={playing} />
 
       {!submitted && (
         <>
