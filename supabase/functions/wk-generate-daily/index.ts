@@ -33,6 +33,7 @@ import { certifyLift } from "../_shared/wic/lift/sessionBuilder.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
+import { resolveBatSpeedTemplate } from "../_shared/wic/batSpeed/templates.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
@@ -641,10 +642,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Bat-speed engine (its own card, always pre-lift) --------
     if (!isGameDay) {
+      const batSpeedTemplate = resolveBatSpeedTemplate({
+        seasonPhase: trainingContext.season_phase,
+        dayType: trainingContext.day_type,
+        trainingAge: (trainingAgeContext as any)?.classification,
+        primaryAdaptation: adaptationDecision.primary,
+        isGameDay,
+        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isReturnToPlay: false,
+      });
       const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
-      const bat = batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
+      const requiredBatSpeed = batSpeedTemplate.requiredCategories
+        .map((category) =>
+          batSpeedPool.find(
+            (m) =>
+              ((m as any).bat_speed_category ?? null) === category &&
+              BAT_SPEED_PREFERRED.includes(m.slug),
+          ) ?? batSpeedPool.find((m) => ((m as any).bat_speed_category ?? null) === category),
+        )
+        .find(Boolean);
+      const bat = requiredBatSpeed ?? batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
       if (bat) {
-        push("bat_speed", "bat_speed", bat, {}, "Rotational power primer — direct bat-speed transfer. Do BEFORE lifts while CNS is fresh.");
+        push(
+          "bat_speed",
+          "bat_speed",
+          bat,
+          {},
+          `${batSpeedTemplate.displayName} — direct bat-speed transfer. Do BEFORE lifts while CNS is fresh.`,
+          { bat_speed_template_id: batSpeedTemplate.id },
+        );
       }
     }
 
