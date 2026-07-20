@@ -6,11 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users, Volume2, VolumeX, BookOpen } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
 import { IqPlaybackControls } from "./IqPlaybackControls";
 import { IqOverlayFilterBar, type OverlayMode } from "./IqCoachOverlay";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
+import { useIqVoiceover, isVoiceoverSupported } from "@/hooks/useIqVoiceover";
 import { toast } from "@/hooks/use-toast";
 import type { IqActor, IqActorRole, IqScenario, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_LABELS, ROLE_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
@@ -18,12 +19,16 @@ import { quizResume, pendingAttempts } from "@/lib/iq/resumeStore";
 import { buildScenarioFeedback } from "@/lib/iq/feedback";
 
 const OVERLAY_KEY = "iq:overlay";
+const VOICE_KEY = "iq:voice";
 function loadOverlay(): OverlayMode {
   try {
     const v = localStorage.getItem(OVERLAY_KEY);
     if (v === "all" || v === "footwork" || v === "comm" || v === "eyes" || v === "off") return v;
   } catch { /* noop */ }
   return "all";
+}
+function loadVoice(): boolean {
+  try { return localStorage.getItem(VOICE_KEY) === "1"; } catch { return false; }
 }
 
 interface Props {
@@ -35,9 +40,11 @@ interface Props {
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
   sport?: "baseball" | "softball";
   batterSide?: "R" | "L";
+  debrief?: string | null;
+  conceptLabels?: string[];
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R" }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R", debrief, conceptLabels }: Props) {
 
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
@@ -60,10 +67,14 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [overlay, setOverlay] = useState<OverlayMode>(loadOverlay);
+  const [voice, setVoice] = useState<boolean>(loadVoice);
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
   useEffect(() => { try { localStorage.setItem(OVERLAY_KEY, overlay); } catch { /* noop */ } }, [overlay]);
+  useEffect(() => { try { localStorage.setItem(VOICE_KEY, voice ? "1" : "0"); } catch { /* noop */ } }, [voice]);
+
+  useIqVoiceover({ enabled: submitted && voice, playing, progress, actors, mode: overlay });
 
   // Advance the play clock while `playing`.
   useEffect(() => {
@@ -188,6 +199,20 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <IqOverlayFilterBar value={overlay} onChange={setOverlay} />
+            {isVoiceoverSupported() && (
+              <Button
+                type="button"
+                size="sm"
+                variant={voice ? "default" : "outline"}
+                onClick={() => setVoice((v) => !v)}
+                className="h-7 text-xs"
+                aria-pressed={voice}
+                aria-label="Toggle coach voiceover"
+              >
+                {voice ? <Volume2 className="h-3.5 w-3.5 mr-1" /> : <VolumeX className="h-3.5 w-3.5 mr-1" />}
+                Voice
+              </Button>
+            )}
           </div>
           <IqPlaybackControls
             playing={playing}
@@ -352,6 +377,28 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
                   ))}
                 </CollapsibleContent>
               </Collapsible>
+            )}
+
+            {(debrief || (conceptLabels && conceptLabels.length > 0)) && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <BookOpen className="h-4 w-4 text-primary" /> Debrief
+                </div>
+                {debrief && <p className="text-sm leading-relaxed">{debrief}</p>}
+                {conceptLabels && conceptLabels.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Concepts</span>
+                    {conceptLabels.map((c) => (
+                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  Master this concept to unlock the next rung.
+                </p>
+              </div>
             )}
 
             <div className="flex flex-wrap gap-2 pt-1">

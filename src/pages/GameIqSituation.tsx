@@ -63,7 +63,7 @@ export default function GameIqSituation() {
     );
   }
 
-  const { situation, actors, scenarios } = q.data;
+  const { situation, actors, scenarios, conceptLabels } = q.data as any;
   const hoveredActor = hover ? actors.find((a) => a.role === hover) : null;
   const firstScenario = scenarios[0];
   const presets = alignmentsQ.data ?? [];
@@ -323,6 +323,8 @@ export default function GameIqSituation() {
             defensivePositions={defensivePositions}
             sport={fieldSport}
             batterSide={hand}
+            debrief={(situation as any).debrief ?? null}
+            conceptLabels={conceptLabels ?? []}
           />
         )}
       </div>

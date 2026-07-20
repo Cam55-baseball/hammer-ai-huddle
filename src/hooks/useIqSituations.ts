@@ -39,17 +39,25 @@ export function useIqSituation(slug: string, sport: IqSport) {
       if (error) throw error;
       if (!sit) return null;
 
-      const [actorsRes, scenariosRes] = await Promise.all([
+      const [actorsRes, scenariosRes, conceptLinksRes] = await Promise.all([
         supabase.from("iq_situation_actors").select("*").eq("situation_id", sit.id),
         supabase.from("iq_scenarios").select("*").eq("situation_id", sit.id),
+        supabase.from("iq_situation_concepts")
+          .select("concept_id, iq_concept_tags(label)")
+          .eq("situation_id", sit.id),
       ]);
       if (actorsRes.error) throw actorsRes.error;
       if (scenariosRes.error) throw scenariosRes.error;
+
+      const conceptLabels = (conceptLinksRes.data ?? [])
+        .map((r: any) => r?.iq_concept_tags?.label as string | undefined)
+        .filter((s): s is string => !!s);
 
       return {
         situation: sit as unknown as IqSituation,
         actors: (actorsRes.data ?? []) as unknown as IqActor[],
         scenarios: (scenariosRes.data ?? []) as unknown as IqScenario[],
+        conceptLabels,
       };
     },
     enabled: !!slug,

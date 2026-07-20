@@ -6082,6 +6082,50 @@ export type Database = {
         }
         Relationships: []
       }
+      iq_alignment_combos: {
+        Row: {
+          base_alignment_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          layers: Json
+          name: string
+          notes: string | null
+          sport: string
+          updated_at: string
+        }
+        Insert: {
+          base_alignment_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          layers?: Json
+          name: string
+          notes?: string | null
+          sport: string
+          updated_at?: string
+        }
+        Update: {
+          base_alignment_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          layers?: Json
+          name?: string
+          notes?: string | null
+          sport?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_alignment_combos_base_alignment_id_fkey"
+            columns: ["base_alignment_id"]
+            isOneToOne: false
+            referencedRelation: "iq_defensive_alignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       iq_concept_tags: {
         Row: {
           created_at: string
@@ -6089,6 +6133,7 @@ export type Database = {
           id: string
           key: string
           label: string
+          requires_concept_ids: string[]
           sport: string
         }
         Insert: {
@@ -6097,6 +6142,7 @@ export type Database = {
           id?: string
           key: string
           label: string
+          requires_concept_ids?: string[]
           sport?: string
         }
         Update: {
@@ -6105,6 +6151,7 @@ export type Database = {
           id?: string
           key?: string
           label?: string
+          requires_concept_ids?: string[]
           sport?: string
         }
         Relationships: []
@@ -6421,8 +6468,10 @@ export type Database = {
           alignment_selector: Json | null
           canonical_order: number
           created_at: string
+          debrief: string | null
           deleted_at: string | null
           difficulty: string
+          difficulty_rung: number
           id: string
           lens_tags: string[]
           owner_id: string | null
@@ -6440,8 +6489,10 @@ export type Database = {
           alignment_selector?: Json | null
           canonical_order?: number
           created_at?: string
+          debrief?: string | null
           deleted_at?: string | null
           difficulty?: string
+          difficulty_rung?: number
           id?: string
           lens_tags?: string[]
           owner_id?: string | null
@@ -6459,8 +6510,10 @@ export type Database = {
           alignment_selector?: Json | null
           canonical_order?: number
           created_at?: string
+          debrief?: string | null
           deleted_at?: string | null
           difficulty?: string
+          difficulty_rung?: number
           id?: string
           lens_tags?: string[]
           owner_id?: string | null

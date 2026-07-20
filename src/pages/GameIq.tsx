@@ -13,6 +13,7 @@ import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IqLens } from "@/lib/iq/types";
 import { quizResume } from "@/lib/iq/resumeStore";
+import { IqConceptLadder } from "@/components/iq/IqConceptLadder";
 
 const LENS_TABS: { value: IqLens | "all"; label: string; icon: typeof Brain }[] = [
   { value: "all", label: "All", icon: Brain },
@@ -73,13 +74,18 @@ export default function GameIq() {
             Every pitch. Every position. <span className="font-semibold">Ball · Bag · Backup.</span>
           </p>
           {isOwner && (
-            <div className="flex justify-center">
+            <div className="flex flex-wrap justify-center gap-2">
               <Button size="sm" variant="outline" onClick={() => navigate("/owner/iq/alignments")}>
-                <Settings className="h-4 w-4 mr-1" /> Edit defensive alignments
+                <Settings className="h-4 w-4 mr-1" /> Edit alignments
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate("/owner/iq/combos")}>
+                <Settings className="h-4 w-4 mr-1" /> Combo presets
               </Button>
             </div>
           )}
         </header>
+
+        <IqConceptLadder />
 
 
         <div className="grid grid-cols-3 gap-3">
