@@ -14,7 +14,7 @@ import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
 import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
-import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
+import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 
 export function WkSpeedCard() {
   const { grouped, generate, generating, isLoading, failed, retry, snapshotIdentity, dayKind } = useHammersToday();
