@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dumbbell, Star, Sparkles, Trash2 } from 'lucide-react';
 import { useDrillRecommendations } from '@/hooks/useDrillRecommendations';
 import { DrillDetailDialog } from '@/components/practice/DrillDetailDialog';
+import { SideViewTabs, type SideViewMode } from '@/components/shared/SideViewTabs';
+import { SideBadge } from '@/components/shared/SideBadge';
+import { useSideContext } from '@/contexts/SideContext';
 import type { ScoredDrill } from '@/utils/drillRecommendationEngine';
 
 interface VaultDrillWorkProps {
@@ -17,6 +20,18 @@ interface VaultDrillWorkProps {
 export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrillWorkProps) {
   const [activeTab, setActiveTab] = useState('saved');
   const [selectedDrill, setSelectedDrill] = useState<ScoredDrill | null>(null);
+  const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
+  const showSideFilter = isSwitchHitter || isAmbidextrousThrower;
+  const [sideView, setSideView] = useState<SideViewMode>('combined');
+
+  const filteredDrills = useMemo(() => {
+    if (!showSideFilter || sideView === 'combined') return savedDrills;
+    return savedDrills.filter(d => {
+      const s = (d as any).side;
+      // Include null-tagged drills in both L and R views so legacy saves remain visible.
+      return s == null || s === 'both' || s === sideView;
+    });
+  }, [savedDrills, sideView, showSideFilter]);
 
   const { recommendations, isLoading } = useDrillRecommendations({
     sport,
