@@ -57,7 +57,30 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
   );
   const [submitted, setSubmitted] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const [overlay, setOverlay] = useState<OverlayMode>(loadOverlay);
+  const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
+
+  useEffect(() => { try { localStorage.setItem(OVERLAY_KEY, overlay); } catch { /* noop */ } }, [overlay]);
+
+  // Advance the play clock while `playing`.
+  useEffect(() => {
+    if (!playing) return;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = (now - last) / 1000; last = now;
+      setProgress((p) => {
+        const next = p + (dt / 3.2) * speed;
+        if (next >= 1) { setPlaying(false); return 1; }
+        return next;
+      });
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, speed]);
 
   const correct = position
     ? scenario.correct_actor_assignments[position] === answer
