@@ -355,13 +355,6 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
             )}
 
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button size="sm" variant="default" onClick={() => {
-                setPlaying(false);
-                setTimeout(() => setPlaying(true), 40);
-                setTimeout(() => setPlaying(false), 1600);
-              }}>
-                <Play className="h-3.5 w-3.5 mr-1" /> Watch the play
-              </Button>
               <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
               <Button size="sm" variant="ghost" onClick={() => navigate("/iq")}>Back to library</Button>
             </div>
