@@ -56,6 +56,23 @@ function hasMeaningfulValue(value: unknown): boolean {
   return true;
 }
 
+function toEditableAnswer(gap: KnowledgeGap, value: unknown): unknown {
+  if (gap.inputKind === "text" && Array.isArray(value)) {
+    return value.join(", ");
+  }
+  if (gap.inputKind === "injury" && Array.isArray(value)) {
+    if (value.length === 0) return { status: "healthy" };
+    const rows = value.filter((v): v is Record<string, unknown> => v != null && typeof v === "object");
+    return {
+      status: "managing",
+      regions: rows.map((r) => r.region).filter((r): r is string => typeof r === "string"),
+      severity: rows.find((r) => typeof r.severity === "string")?.severity,
+      note: rows.map((r) => r.note).filter((n): n is string => typeof n === "string").join(", "),
+    };
+  }
+  return value;
+}
+
 function useUserAudience(): { audience: GapAudience; loading: boolean } {
   const { user } = useAuth();
   const [audience, setAudience] = useState<GapAudience>("athlete");
@@ -138,7 +155,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
       const v = (coachScoutRow as Record<string, unknown>)[gap.persistTo];
       if (!hasMeaningfulValue(v)) continue;
       seeded.add(gap.id);
-      seededAnswers[gap.id] = v;
+      seededAnswers[gap.id] = toEditableAnswer(gap, v);
     }
     if (seeded.size > 0) {
       setSessionResolved((prev) => {
@@ -164,7 +181,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
       }
       if (!hasMeaningfulValue(variable.value)) continue;
       seeded.add(gap.id);
-      seededAnswers[gap.id] = variable.value;
+      seededAnswers[gap.id] = toEditableAnswer(gap, variable.value);
     }
     if (seeded.size === 0 && Object.keys(seededAnswers).length === 0) return;
     setSessionResolved((prev) => {
