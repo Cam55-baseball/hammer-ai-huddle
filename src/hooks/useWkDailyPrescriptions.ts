@@ -487,6 +487,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     generate,
     generating,
     failed,
+    failureReason,
     retry,
     effectiveCnsTotal,
     overrideMovement,
