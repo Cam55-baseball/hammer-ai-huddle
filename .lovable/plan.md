@@ -1,86 +1,68 @@
+# Game IQ — Phase 3 & Phase 4
 
-# Elite Game IQ Overhaul — Phase 2
+Building on Phase 1 (route anchoring, watch-the-play) and Phase 2 (playback engine, coach overlays, concept mastery + decay), the next phases turn Game IQ into a true mastery ladder with authoring tools that let you scale content without a developer.
 
-Phase 1 (route anchoring + "Watch the play") is live. Phase 2 upgrades the diamond into a full play-simulator, adds a coaching overlay layer, expands the alignment preset library to competitor parity, and introduces a mastery ladder tied to concept tags.
+## Phase 3 — Mastery Ladder, Combo Presets, Preset Library Expansion
 
-## What we're building
+**Goal:** Make the concept mastery data visible to athletes as a progression ladder, and give owners the authoring tools to build composite defensive presets and seed a large preset library.
 
-### 1. Play Playback Engine (timeline with ball + runners)
-Today "Watch the play" animates defender routes in parallel over ~1.4s. Elite competitors show a **synchronized clock** — pitch → contact → ball flight → defender routes → runner advances → tag/out.
+### 3.1 Concept Mastery Ladder (athlete-facing)
+Edit `src/pages/GameIq.tsx` to render a "Ladder" view above the scenario grid:
+- Groups scenarios by `iq_concept_tags` (e.g., "Cutoffs & Relays", "Bunt Defense", "1st-and-3rd", "Pickoffs", "Rundowns", "Tag-up reads").
+- Each concept row shows: mastery bar (0–100 from `iq_user_concept_mastery`), rung count (attempts / mastered), and lock badge for concepts gated behind prerequisite concepts.
+- Tapping a concept expands to its situations, sorted by difficulty rung.
+- Uses `fetchConcepts` + `fetchMyConceptMastery` already shipped in `src/lib/iq/concepts.ts`.
 
-- New `src/lib/iq/playTimeline.ts` — resolves a scenario into a normalized 0..1 timeline with typed segments (`pitch`, `contact`, `ball_flight`, `defender_route`, `runner_advance`, `throw`, `tag`).
-- Extend `iq_situation_actors` reads to include an optional `timing` field per waypoint (`{ t: 0..1 }`) plus per-actor `start_at` / `end_at`. Absent timing → auto-spaced evenly (back-compat).
-- Add `ball_track` to `IqScenario` (jsonb column) — sequence of `{ x,y,t, kind: "batted"|"thrown" }` points. Renders as a distinct yellow trail with a moving ball dot.
-- Rebuild `IqDiamond`'s `playing` mode to drive off the timeline: single `elapsed` state (framer-motion `useMotionValue`) that all actors + ball read from. Replaces the current per-actor keyframe hack.
-- Playback controls in `IqScenarioRunner` reveal panel: Play / Pause / Scrub / 0.5×–1×–2× speed.
+### 3.2 Difficulty Rungs
+Add a `difficulty_rung` (1–5) column to `iq_situations` and surface it as rung pips on each situation card. Unlock rung N+1 for a concept once rung N reaches 70% mastery. Locked situations still previewable in "demo" mode but don't count toward attempts.
 
-### 2. Coach Overlay Layer (footwork · comm · eyes)
-Currently each actor has `coaching_note` / `communication_call` / `secondary_read` / `elite_cue` shown only in the hover card. Elite apps overlay these ON the field during playback.
+### 3.3 Combo Builder (owner-facing)
+Add a "Combos" tab to `src/pages/owner/IqAlignmentsEditor.tsx`:
+- Composite preset = ordered stack of base alignment + situational overrides (e.g., "Base 4-3 defense" → "Runner on 2B, no outs shift" → "LHH pull shade").
+- Drag to reorder overrides; each override sees the previous stack as its baseline.
+- Preview panel renders the composed result on `IqField`, with a diff view showing which defenders moved at each layer.
+- Saves to a new `iq_alignment_combos` table (id, name, sport, base_alignment_id, layers jsonb, created_by).
 
-- New `src/components/iq/IqCoachOverlay.tsx` — toggleable chips anchored to each defender that surface at the timeline moment they matter:
-  - **Footwork** (drop step, crossover, rounded route) — icon + 1-line cue.
-  - **Comm** — speech bubble with the exact `communication_call`.
-  - **Eyes** — dashed sight-line from defender to the read target (ball, runner, cutoff).
-- Overlay filter bar above the field: `All · Footwork · Comm · Eyes · Off`. Persisted in `localStorage("iq:overlay")`.
-- Extend `IqActor` with optional `footwork_cue: string`, `eyes_target: IqActorRole | "ball" | "1B"…`, migrated via `jsonbMigrations` for legacy rows.
+### 3.4 Preset Library Expansion
+Seed additional canonical alignments authored via the new editor:
+- Infield: no-doubles depth, corners-in bunt, halfway, DP depth, guard-the-line, wheel play, first-and-third defense (3 variants).
+- Outfield: no-doubles, standard, shallow (infield-assist), pull shade LHH/RHH, opposite-field shade.
+- Sport-specific: softball slap-hitter shift, baseball extreme shift vs pull power.
+Total target: ~25 alignments per sport.
 
-### 3. Preset Library Expansion (parity with Motion Playbook / BR Instincts)
-Ship a curated set of alignment presets and route templates coach-legible in `coach-language`, seeded into `iq_defensive_alignments`:
+## Phase 4 — Situation Authoring UI + Live Coaching Layer
 
-- **Infield**: standard, DP depth, corners-in (bunt), corners-in (contact play), guard the lines, wheel (LH bunter), rotation (RH bunter), 1st-and-3rd defense (concede / cut).
-- **Outfield**: standard, no-doubles, shallow (bases-loaded / infield-in combo), shift RH pull, shift LH pull, tag-up depth (R3, <2 outs).
-- **Situational combos** (compose infield × outfield): "bases-loaded, tie run at 3rd, 1 out" auto-composes corners-in + shallow OF.
+**Goal:** Owner can author new situations end-to-end in-app (no SQL), and athletes get a live "coach in your ear" audio layer during playback.
 
-Owner tool at `/owner/iq/alignments` gains a **Combo Builder** tab: pick infield preset + OF preset + situational tag, preview on `IqField`, save as a composite.
+### 4.1 Situation Authoring UI
+New page `/owner/iq/situations`:
+- Pick sport, base alignment, and runners/outs/count.
+- For each defender: drag on the field to set the set position, then place waypoints along the play with per-waypoint `t` values.
+- Author footwork/comm/eyes cues inline (attach to defender + timing window).
+- Ball track authored by clicking sequential points; `t` values auto-computed from spacing but editable.
+- Attach one or more `iq_concept_tags` and a `difficulty_rung`.
+- Preview uses the exact same `IqDiamond` playback the athlete sees.
+- Saves to `iq_situations` + `iq_situation_actors` + `iq_situation_concepts`.
 
-### 4. Difficulty Ladder / Progression
-Today difficulty is a flat `intro | core | advanced | elite` string. Add a **progression graph** — each situation lists prerequisite concept tags, unlocked once mastery ≥ threshold.
+### 4.2 Live Coaching Voiceover
+- Use the browser's speech synthesis (free, offline) to speak coach cues in sync with playback: footwork chip appears → speak the footwork cue; comm bubble → speak the call in first-person ("I got two!").
+- Toggle in `IqOverlayFilterBar` (existing component).
+- Falls back silently if speech synthesis unavailable.
 
-- New table `iq_concept_tags` (id, sport, key, label, description) + `iq_situation_concepts` (situation_id, concept_id).
-- `iq_user_progress` gains derived rollup view `iq_user_concept_mastery` (avg mastery across situations touching a concept).
-- Library page groups situations into ladders per lens; locked rungs show "unlock by mastering: X, Y".
-- Wire `useIqSituations` to also fetch concept mastery so the UI can render lock state.
+### 4.3 Post-Play Debrief
+After "Watch the play" completes:
+- Show a debrief card: what the concept was, why each defender moved where they did, and one "next rung" prompt.
+- Debrief text pulled from a new `debrief` field on `iq_situations` (nullable, authored in 4.1).
 
-### 5. Concept-Tag Mastery Decay
-Extend spaced-repetition to concept level: if a user hasn't touched a concept in N days, decay concept mastery by 5%/week (visible on the ladder as a fading ring). Nightly cron `iq-decay` edge function.
+## Technical Details
 
-## Technical details
+- **Schema additions**: `iq_situations.difficulty_rung int default 1`, `iq_situations.debrief text`, new table `iq_alignment_combos` with RLS (owner-write, all-authenticated-read + GRANTs).
+- **Concept gating**: prerequisites stored as `iq_concept_tags.requires_concept_ids uuid[]`; ladder view resolves lock state client-side.
+- **Combo composition**: pure client-side reduce over layers; each layer is a partial `Record<Role, PositionOverride>`.
+- **Voiceover**: `window.speechSynthesis` + `SpeechSynthesisUtterance`; queued from timeline events so it stays in sync with scrub.
+- **Authoring UI**: reuses `IqField` for the draw surface; waypoints stored in the same `iq_situation_actors.path` jsonb shape playback already reads.
 
-**Files created**
-- `src/lib/iq/playTimeline.ts` — timeline resolver + interpolation helpers.
-- `src/components/iq/IqCoachOverlay.tsx` — overlay chips + sight lines.
-- `src/components/iq/IqPlaybackControls.tsx` — play/pause/scrub/speed.
-- `src/lib/iq/concepts.ts` — concept lookup + mastery aggregation.
-- `supabase/functions/iq-decay/index.ts` — nightly concept decay job.
-
-**Files modified**
-- `src/components/iq/IqDiamond.tsx` — timeline-driven `playing`, ball track, overlay slots.
-- `src/components/iq/IqScenarioRunner.tsx` — playback controls, overlay filter, timeline scrubber.
-- `src/pages/GameIqSituation.tsx` — pass ball_track + timeline into diamond; overlay toggle.
-- `src/pages/GameIQ.tsx` (library) — ladder rendering, lock badges.
-- `src/pages/owner/IqAlignmentsEditor.tsx` — Combo Builder tab.
-- `src/lib/iq/types.ts` — `IqPathPoint.t?`, `IqActor.footwork_cue?/eyes_target?`, `IqScenario.ball_track?`, `IqConcept`, `IqSituationConcept`.
-- `src/lib/jsonbMigrations.ts` — register migrations for actor/scenario payload shape v2.
-
-**Migrations** (schema-only, additive, with GRANTs)
-1. `alter table iq_situation_actors add column footwork_cue text, add column eyes_target text;`
-2. `alter table iq_scenarios add column ball_track jsonb;`
-3. `create table iq_concept_tags(id uuid pk, sport text, key text, label text, description text)` + GRANT.
-4. `create table iq_situation_concepts(situation_id uuid fk, concept_id uuid fk, weight int default 1, primary key(situation_id, concept_id))` + GRANT.
-5. `create view iq_user_concept_mastery` (security-invoker view over `iq_user_progress` × `iq_situation_concepts`).
-
-**Cron**: schedule `iq-decay` daily at 04:00 UTC via `supabase/config.toml`.
-
-**Backwards compatibility**: All new fields optional; existing 114 situations render unchanged. Timeline auto-spaces routes when `t` absent; ball_track omitted → no ball rendered.
-
-## Sequencing
-1. Timeline resolver + ball track (foundation everything else builds on).
-2. Playback controls in the runner reveal panel.
-3. Coach overlay layer with filter bar.
-4. Preset library expansion + Combo Builder.
-5. Concept tags + ladder + decay cron.
-
-## Out of scope (queued for Phase 3)
-- Multi-scenario branching ("what if the runner rounds hard?").
-- Video-linked scenarios (upload → auto-place ball_track).
-- Head-to-head IQ battles between users.
+## Out of Scope (queued for Phase 5)
+- Multiplayer/coach-led synchronized playback.
+- Video overlay (author-uploaded MP4 aligned to the timeline).
+- AI-generated situation suggestions from opponent scouting dossiers.
