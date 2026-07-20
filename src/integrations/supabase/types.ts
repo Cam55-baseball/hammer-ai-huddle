@@ -5982,11 +5982,15 @@ export type Database = {
       }
       iq_defensive_alignments: {
         Row: {
+          anchors_vs_lhh: Json | null
+          anchors_vs_rhh: Json | null
           created_at: string
           id: string
           is_default: boolean
           label: string
           positions: Json
+          positions_vs_lhh: Json | null
+          positions_vs_rhh: Json | null
           preset_key: string
           range_radii: Json | null
           sport: string
@@ -5994,11 +5998,15 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          anchors_vs_lhh?: Json | null
+          anchors_vs_rhh?: Json | null
           created_at?: string
           id?: string
           is_default?: boolean
           label: string
           positions: Json
+          positions_vs_lhh?: Json | null
+          positions_vs_rhh?: Json | null
           preset_key: string
           range_radii?: Json | null
           sport: string
@@ -6006,11 +6014,15 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          anchors_vs_lhh?: Json | null
+          anchors_vs_rhh?: Json | null
           created_at?: string
           id?: string
           is_default?: boolean
           label?: string
           positions?: Json
+          positions_vs_lhh?: Json | null
+          positions_vs_rhh?: Json | null
           preset_key?: string
           range_radii?: Json | null
           sport?: string
@@ -6229,6 +6241,7 @@ export type Database = {
       iq_situations: {
         Row: {
           alignment_preset: string | null
+          alignment_selector: Json | null
           canonical_order: number
           created_at: string
           deleted_at: string | null
@@ -6247,6 +6260,7 @@ export type Database = {
         }
         Insert: {
           alignment_preset?: string | null
+          alignment_selector?: Json | null
           canonical_order?: number
           created_at?: string
           deleted_at?: string | null
@@ -6265,6 +6279,7 @@ export type Database = {
         }
         Update: {
           alignment_preset?: string | null
+          alignment_selector?: Json | null
           canonical_order?: number
           created_at?: string
           deleted_at?: string | null
