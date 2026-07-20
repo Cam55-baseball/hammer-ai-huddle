@@ -163,6 +163,7 @@ export async function persistContextAnswer(
 ): Promise<void> {
   const column = COLUMN_BY_KEY[key];
   if (!column) throw new Error(`Unknown context key: ${key}`);
+  await ensureFreshSession(userId);
 
   const { data: existing } = await (supabase.from("athlete_context") as unknown as {
     select: (c: string) => {
