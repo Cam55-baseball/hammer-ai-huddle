@@ -215,6 +215,30 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
       ok: hasCategoryGoals,
     },
     {
+      label: "Body measurements",
+      value: "Edit to review height, weight, wingspan",
+      editKey: "anthropometrics",
+      ok: true,
+    },
+    {
+      label: "Fuel & recovery",
+      value: "Edit to review sleep, hydration, diet",
+      editKey: "fuel",
+      ok: true,
+    },
+    {
+      label: "Mental & career",
+      value: "Edit to review level target and routine",
+      editKey: "mental",
+      ok: true,
+    },
+    {
+      label: "Connections",
+      value: "Edit to invite a parent or link a coach",
+      editKey: "connections",
+      ok: true,
+    },
+    {
       label: "Health check",
       value: "Edit to revisit",
       editKey: "injury",
