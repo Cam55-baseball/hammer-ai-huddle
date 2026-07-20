@@ -93,6 +93,11 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   // Session-skipped set — user explicitly chose Skip; never imputes a value,
   // just removes from the queue for this session.
   const [sessionSkipped, setSessionSkipped] = useState<Set<string>>(new Set());
+  // Session-reopened set — gaps the user navigated back to; forced back into
+  // openGaps for athlete audience even if the stored context has a value.
+  const [sessionReopened, setSessionReopened] = useState<Set<string>>(new Set());
+  // Ordered history of gap IDs acted on this session (resolve or skip).
+  const [history, setHistory] = useState<string[]>([]);
 
   const gapSet = useMemo(() => getKnowledgeGapsForAudience(audience), [audience]);
 
