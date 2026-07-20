@@ -1,25 +1,35 @@
-**Plan**
 
-1. **Make “Finish onboarding” go directly into editable onboarding**
-   - Update the four-card failure CTA so it opens `/onboarding/athlete?step=review` instead of the normal completed-user landing.
-   - Rename the CTA to “Review missing setup” when backend diagnostics say the user is already onboarded but workout context is still insufficient.
-   - Keep the normal completed-user screen available from Profile, but don’t let this error path strand users behind “already completed onboarding.”
+# How the four Hammers Today cards are personalized
 
-2. **Refresh the right Hammers Today queries after onboarding edits**
-   - On onboarding completion and “Open Command Center,” invalidate all workout-related query families, not only the exact `wk-rx` key.
-   - Include game/practice day companion queries and athlete onboarding/context queries so the four cards regenerate against the newest answers.
-   - Clear the previous failure state by forcing a fresh generation attempt when the user returns from onboarding.
+No code changes proposed. This is a read-only explanation of what the `wk-generate-daily` engine actually consumes when it builds the **Speed**, **Bat Speed**, **Lifts**, and **Conditioning** cards.
 
-3. **Fix the confirmed workout generator failure**
-   - The recent backend logs show publication is being blocked by `Template bs.max requires categories: elastic_rotation`.
-   - Database inspection confirmed `elastic_rotation` bat-speed movements exist, so this is a generator/selection issue, not simply unfinished onboarding.
-   - Patch the bat-speed selection so `bs.max`, `bs.elastic`, and game-day primer templates always select an eligible `elastic_rotation` movement when the resolved template requires it, with safe fallback only when that template does not require elastic rotation.
+## What the generator DOES use (linked E2E)
 
-4. **Improve the card error message**
-   - If failure is a validator/template problem, show that the plan engine is being repaired/retried instead of telling the user onboarding is the only answer.
-   - Keep missing-field messages when actual `missing_context_fields` are returned.
+Pulled per-user on every generation:
 
-5. **Validate end-to-end**
-   - Test the `wk-generate-daily` function for the current signed-in user/date.
-   - Verify the response no longer fails with the bat-speed `elastic_rotation` template error.
-   - Verify the four Hammers Today cards have a clean path to regenerate after onboarding review/finish.
+- **Athlete context** (`athlete_context`) — discipline (baseball/softball, pitcher, two-way), training age, season phase, goals ranking across speed/power/throwing/hitting/fielding, sub-goals
+- **Handedness & side** (`athlete_side_preferences`, `athlete_mpi_settings`) — throws L/R/both, hits L/R/switch; drives movement laterality and bat-speed sequencing
+- **Profile** (`profiles`) — identity, level, age bracket
+- **Active injuries** (`user_injury_progress` where status = acute/active) — filters contraindicated movements and auto-regresses to safer substitutions
+- **Body goals** (`athlete_body_goals`) — weight/mass targets bias hypertrophy vs. power selection
+- **Daily load & sleep** (`athlete_daily_log`) — sleep < 6h triggers CNS-reduction path; recent load caps volume
+- **Schedule** (`gp_games`, calendar events) — game-day → short crossover session; off-day/practice-day → full 8-block template
+- **Adaptation decision** (WIC engine) — primary adaptation (max strength, RFD, hypertrophy, etc.) resolved from season phase + day type + training age
+- **Movement catalog** (`wk_movement_catalog`) — legality gates: season phase, CNS cost, category requirements, bat-speed sub-category, injury contraindications
+
+## What the generator does NOT currently use
+
+Collected in onboarding / elsewhere but not read by `wk-generate-daily`:
+
+- Nutrition context (`vault_nutrition_goals`, `hydration_settings`, fueling window prefs from `FuelRecoveryStep`)
+- Mental / career context (`MentalCareerStep` answers, mental funnel routine)
+- Anthropometrics beyond weight goals (height, wingspan from `AnthropometricsStep`)
+- Foundation / HIE snapshots (`hie_snapshots`, `foundation_*`)
+- MPI scores (`mpi_scores`) — used elsewhere but not fed into the four cards
+- Video analysis outcomes (`video_user_outcomes`, weakness scores)
+
+## Bottom line
+
+The four cards are **substantially personalized** — not random. Movement selection is deterministic against athlete goals, side, injuries, sleep, load, season, and game schedule. The gaps are around nutrition/mental/foundation signals, which are collected but not yet routed into the workout generator.
+
+No files will be changed.
