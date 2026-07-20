@@ -165,6 +165,7 @@ const FoundationHealthDashboard = lazyWithRetry(() => import("./pages/owner/Foun
 const OwnerAlertCenter = lazyWithRetry(() => import("./pages/owner/OwnerAlertCenter"));
 const IqLibrary = lazyWithRetry(() => import("./pages/owner/IqLibrary"));
 const IqAlignmentsEditor = lazyWithRetry(() => import("./pages/owner/IqAlignmentsEditor"));
+const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAudit"));
 const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
@@ -328,6 +329,8 @@ const App = () => {
               <Route path="/owner/alerts" element={<OwnerAlertCenter />} />
               <Route path="/owner/iq-library" element={<IqLibrary />} />
               <Route path="/owner/iq/alignments" element={<IqAlignmentsEditor />} />
+              <Route path="/owner/iq/alignments/audit" element={<IqAlignmentAudit />} />
+
 
 
               <Route path="/success" element={<Success />} />

@@ -45,6 +45,7 @@ export interface IqSituation {
   sources: { label: string; ref?: string }[];
   updated_at: string;
   alignment_preset?: string | null;
+  alignment_selector?: import("./alignmentResolver").AlignmentSelector | null;
 }
 
 

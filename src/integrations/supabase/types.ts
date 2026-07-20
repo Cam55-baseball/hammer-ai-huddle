@@ -5980,6 +5980,108 @@ export type Database = {
           },
         ]
       }
+      iq_alignment_audit_findings: {
+        Row: {
+          batter_side: string
+          created_at: string
+          detail: Json
+          id: string
+          preset_key: string | null
+          reason_code: string
+          run_id: string
+          severity: string
+          situation_id: string
+          situation_slug: string | null
+          situation_title: string | null
+          sport: string
+        }
+        Insert: {
+          batter_side: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          preset_key?: string | null
+          reason_code: string
+          run_id: string
+          severity: string
+          situation_id: string
+          situation_slug?: string | null
+          situation_title?: string | null
+          sport: string
+        }
+        Update: {
+          batter_side?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          preset_key?: string | null
+          reason_code?: string
+          run_id?: string
+          severity?: string
+          situation_id?: string
+          situation_slug?: string | null
+          situation_title?: string | null
+          sport?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_alignment_audit_findings_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "iq_alignment_audit_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iq_alignment_audit_findings_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_alignment_audit_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          findings_error: number
+          findings_total: number
+          findings_warn: number
+          finished_at: string | null
+          id: string
+          situations_checked: number
+          started_at: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          findings_error?: number
+          findings_total?: number
+          findings_warn?: number
+          finished_at?: string | null
+          id?: string
+          situations_checked?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          findings_error?: number
+          findings_total?: number
+          findings_warn?: number
+          finished_at?: string | null
+          id?: string
+          situations_checked?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       iq_defensive_alignments: {
         Row: {
           anchors_vs_lhh: Json | null

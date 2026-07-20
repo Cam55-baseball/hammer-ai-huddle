@@ -18,6 +18,7 @@ import {
 } from "@/lib/iq/contextShifts";
 import { useAlignmentPresets, fallbackAlignment, resolvePositions } from "@/hooks/useDefensiveAlignment";
 import type { Handedness } from "@/lib/iq/fieldModel";
+import { resolveAlignment, type RunnerBase } from "@/lib/iq/alignmentResolver";
 
 
 
@@ -31,6 +32,8 @@ export default function GameIqSituation() {
   const [mode, setMode] = useState<"teach" | "quiz">("teach");
   const [context, setContext] = useState<ContextSelection>(NEUTRAL_SELECTION);
   const [hand, setHand] = useState<Handedness>("R");
+  const [runners, setRunners] = useState<RunnerBase[]>([]);
+  const [outs, setOuts] = useState<number>(0);
   const alignmentsQ = useAlignmentPresets(fieldSport);
 
 
@@ -63,16 +66,15 @@ export default function GameIqSituation() {
   const { situation, actors, scenarios } = q.data;
   const hoveredActor = hover ? actors.find((a) => a.role === hover) : null;
   const firstScenario = scenarios[0];
-  const alignmentKey = firstScenario?.alignment_preset ?? situation.alignment_preset ?? null;
   const presets = alignmentsQ.data ?? [];
-  const chosenPreset =
-    (alignmentKey ? presets.find((p) => p.preset_key === alignmentKey) : null) ??
-    presets.find((p) => p.is_default) ??
-    presets.find((p) => p.preset_key === "standard") ??
-    null;
-  const defensivePositions = chosenPreset
-    ? resolvePositions(chosenPreset as any, fieldSport, hand)
-    : fallbackAlignment(fieldSport);
+  const resolved = resolveAlignment({
+    presets,
+    selector: (situation as any).alignment_selector ?? null,
+    situationPreset: firstScenario?.alignment_preset ?? situation.alignment_preset ?? null,
+    sport: fieldSport,
+    state: { batterSide: hand, runners, outs },
+  });
+  const defensivePositions = resolved.positions.P ? resolved.positions : fallbackAlignment(fieldSport);
 
 
 
@@ -118,18 +120,47 @@ export default function GameIqSituation() {
           const hasContext = Object.values(context).some(Boolean);
           return (
           <>
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Batter</div>
-              <div className="inline-flex rounded-full border p-0.5 text-xs">
-                <button type="button" onClick={() => setHand("R")}
-                        className={"px-3 py-0.5 rounded-full " + (hand === "R" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
-                  RHH
-                </button>
-                <button type="button" onClick={() => setHand("L")}
-                        className={"px-3 py-0.5 rounded-full " + (hand === "L" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
-                  LHH
-                </button>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Batter</span>
+                  <div className="inline-flex rounded-full border p-0.5 text-xs">
+                    <button type="button" onClick={() => setHand("R")}
+                            className={"px-3 py-0.5 rounded-full " + (hand === "R" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+                      RHH
+                    </button>
+                    <button type="button" onClick={() => setHand("L")}
+                            className={"px-3 py-0.5 rounded-full " + (hand === "L" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+                      LHH
+                    </button>
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-1 text-xs">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Runners</span>
+                  {(["1B","2B","3B"] as RunnerBase[]).map((b) => {
+                    const on = runners.includes(b);
+                    return (
+                      <button key={b} type="button"
+                        onClick={() => setRunners((r) => on ? r.filter((x) => x !== b) : [...r, b])}
+                        className={"px-2 py-0.5 rounded-full border text-[11px] " + (on ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30")}>
+                        {b}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="inline-flex items-center gap-1 text-xs">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Outs</span>
+                  {[0,1,2].map((o) => (
+                    <button key={o} type="button" onClick={() => setOuts(o)}
+                      className={"px-2 py-0.5 rounded-full border text-[11px] " + (outs === o ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30")}>
+                      {o}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <Badge variant="outline" className="text-[10px]">
+                Alignment: {resolved.presetKey}{resolved.reason === "rule" ? " (rule)" : resolved.reason === "default" ? " (default)" : ""}
+              </Badge>
             </div>
             <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} sport={fieldSport} />
 
