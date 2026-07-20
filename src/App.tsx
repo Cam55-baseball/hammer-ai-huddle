@@ -330,7 +330,6 @@ const App = () => {
               <Route path="/owner/alerts" element={<OwnerAlertCenter />} />
               <Route path="/owner/iq-library" element={<IqLibrary />} />
               <Route path="/owner/iq/alignments" element={<IqAlignmentsEditor />} />
-              <Route path="/owner/iq/alignments" element={<IqAlignmentsEditor />} />
               <Route path="/owner/iq/combos" element={<IqCombos />} />
               <Route path="/owner/iq/alignments/audit" element={<IqAlignmentAudit />} />
 
