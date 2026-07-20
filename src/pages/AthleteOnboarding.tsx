@@ -330,8 +330,14 @@ export default function AthleteOnboarding() {
     <AthleteOnboardingShell
       stepIndex={step}
       steps={STEPS}
-      onBack={step > 0 && step < STEP_DONE ? goBack : undefined}
+      onBack={step > 0 ? goBack : undefined}
       onJumpToStep={(i) => setStep(i)}
+      allowForwardJump={
+        hasCompletedOnboarding ||
+        searchParams.get("edit") !== null ||
+        searchParams.get("step") === "review" ||
+        editReturnTo !== null
+      }
       onSaveAndExit={() => {
         if (user?.id) writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
       }}
