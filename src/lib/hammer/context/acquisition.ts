@@ -58,7 +58,40 @@ const COLUMN_BY_KEY: Record<string, string> = {
   competition_home_state: "competition_home_state",
   competition_play_state: "competition_play_state",
   competition_events: "competition_events",
+  // Extended onboarding (Fuel & recovery / Mental & career / Connections)
+  sleep_target_hrs: "sleep_target_hrs",
+  water_goal_oz: "water_goal_oz",
+  diet_style: "diet_style",
+  allergies: "allergies",
+  level_target: "level_target",
+  focus_area: "focus_area",
+  pregame_routine: "pregame_routine",
+  coach_code: "coach_code",
 };
+
+/**
+ * Session guard — ensures the Supabase JWT is fresh and matches `userId`
+ * before any write. Prevents "new row violates row-level security policy"
+ * errors that occur when React still holds a stale `user` object but the
+ * PostgREST request goes out under an expired / evicted token.
+ */
+async function ensureFreshSession(userId: string): Promise<void> {
+  const { data: sessData } = await supabase.auth.getSession();
+  let session = sessData.session;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const expiresAt = session?.expires_at ?? 0;
+  const needsRefresh = !session || !session.access_token || expiresAt - nowSec < 60;
+  if (needsRefresh) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed.session) {
+      throw new Error("Session expired — please sign in again");
+    }
+    session = refreshed.session;
+  }
+  if (session.user.id !== userId) {
+    throw new Error("Session expired — please sign in again");
+  }
+}
 
 type AnyValue = string | number | string[] | unknown;
 
@@ -130,6 +163,7 @@ export async function persistContextAnswer(
 ): Promise<void> {
   const column = COLUMN_BY_KEY[key];
   if (!column) throw new Error(`Unknown context key: ${key}`);
+  await ensureFreshSession(userId);
 
   const { data: existing } = await (supabase.from("athlete_context") as unknown as {
     select: (c: string) => {
@@ -167,6 +201,7 @@ export async function persistCoachContextAnswer(
   key: string,
   value: AnyValue,
 ): Promise<void> {
+  await ensureFreshSession(userId);
   const payload: Record<string, unknown> = { user_id: userId, [key]: value };
   const { error } = await (supabase.from("coach_context") as unknown as {
     upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
@@ -180,6 +215,7 @@ export async function persistScoutContextAnswer(
   key: string,
   value: AnyValue,
 ): Promise<void> {
+  await ensureFreshSession(userId);
   const payload: Record<string, unknown> = { user_id: userId, [key]: value };
   const { error } = await (supabase.from("scout_context") as unknown as {
     upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;

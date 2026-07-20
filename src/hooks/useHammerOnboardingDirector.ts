@@ -167,6 +167,59 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     }
   }, [audience, coachScoutRow, gapSet]);
 
+  // Supplemental athlete hydration for the newer athlete_context columns that
+  // the envelope RPC doesn't (yet) expose. Reads directly so returning users
+  // see their previous fuel / mental / connections answers as resolved.
+  const SUPPLEMENTAL_COLS = [
+    "sleep_target_hrs",
+    "water_goal_oz",
+    "diet_style",
+    "allergies",
+    "level_target",
+    "focus_area",
+    "pregame_routine",
+    "coach_code",
+  ] as const;
+  const { data: supplementalRow } = useQuery({
+    queryKey: ["onboarding-supplemental-athlete", user?.id],
+    enabled: !!user && audience === "athlete",
+    staleTime: 30_000,
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await (supabase.from("athlete_context") as unknown as {
+        select: (c: string) => {
+          eq: (col: string, val: string) => {
+            maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
+          };
+        };
+      })
+        .select(SUPPLEMENTAL_COLS.join(","))
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
+  useEffect(() => {
+    if (audience !== "athlete" || !supplementalRow) return;
+    const seeded = new Set<string>();
+    const seededAnswers: Record<string, unknown> = {};
+    for (const gap of gapSet) {
+      if (!(SUPPLEMENTAL_COLS as readonly string[]).includes(gap.persistTo)) continue;
+      const v = (supplementalRow as Record<string, unknown>)[gap.persistTo];
+      if (!hasMeaningfulValue(v)) continue;
+      seeded.add(gap.id);
+      seededAnswers[gap.id] = v;
+    }
+    if (seeded.size === 0) return;
+    setSessionResolved((prev) => {
+      const next = new Set(prev);
+      for (const id of seeded) next.add(id);
+      return next;
+    });
+    setAnswers((prev) => ({ ...seededAnswers, ...prev }));
+  }, [audience, supplementalRow, gapSet]);
+
   useEffect(() => {
     if (audience !== "athlete") return;
     const seeded = new Set<string>();

@@ -770,9 +770,11 @@ export type Database = {
       }
       athlete_context: {
         Row: {
+          allergies: string | null
           anthropometrics: Json | null
           bats_hand: string | null
           category_goals: Json | null
+          coach_code: string | null
           competition_age_group: string | null
           competition_events: Json | null
           competition_home_state: string | null
@@ -781,21 +783,26 @@ export type Database = {
           confidence: Json
           created_at: string
           development_priorities: string[] | null
+          diet_style: string | null
           education_stage: string | null
+          focus_area: string | null
           goal_horizon: string | null
           goal_priority_rank: number | null
           goal_summary: string | null
           injury_history: Json | null
           last_authored_at: string | null
           last_authored_by: string | null
+          level_target: string | null
           lifting_age_years: number | null
           lifting_history: Json | null
           onboarding_draft: Json | null
           other_sports: string[] | null
           position_primary: string | null
           position_secondary: string[] | null
+          pregame_routine: string | null
           school_grade: string | null
           season_phase: string | null
+          sleep_target_hrs: number | null
           sport_primary: string | null
           sport_secondary: string[] | null
           throws_hand: string | null
@@ -803,14 +810,17 @@ export type Database = {
           typical_session_length_min: number | null
           updated_at: string
           user_id: string
+          water_goal_oz: number | null
           weekly_availability_days: number | null
           weekly_availability_hours: number | null
           years_in_sport: number | null
         }
         Insert: {
+          allergies?: string | null
           anthropometrics?: Json | null
           bats_hand?: string | null
           category_goals?: Json | null
+          coach_code?: string | null
           competition_age_group?: string | null
           competition_events?: Json | null
           competition_home_state?: string | null
@@ -819,21 +829,26 @@ export type Database = {
           confidence?: Json
           created_at?: string
           development_priorities?: string[] | null
+          diet_style?: string | null
           education_stage?: string | null
+          focus_area?: string | null
           goal_horizon?: string | null
           goal_priority_rank?: number | null
           goal_summary?: string | null
           injury_history?: Json | null
           last_authored_at?: string | null
           last_authored_by?: string | null
+          level_target?: string | null
           lifting_age_years?: number | null
           lifting_history?: Json | null
           onboarding_draft?: Json | null
           other_sports?: string[] | null
           position_primary?: string | null
           position_secondary?: string[] | null
+          pregame_routine?: string | null
           school_grade?: string | null
           season_phase?: string | null
+          sleep_target_hrs?: number | null
           sport_primary?: string | null
           sport_secondary?: string[] | null
           throws_hand?: string | null
@@ -841,14 +856,17 @@ export type Database = {
           typical_session_length_min?: number | null
           updated_at?: string
           user_id: string
+          water_goal_oz?: number | null
           weekly_availability_days?: number | null
           weekly_availability_hours?: number | null
           years_in_sport?: number | null
         }
         Update: {
+          allergies?: string | null
           anthropometrics?: Json | null
           bats_hand?: string | null
           category_goals?: Json | null
+          coach_code?: string | null
           competition_age_group?: string | null
           competition_events?: Json | null
           competition_home_state?: string | null
@@ -857,21 +875,26 @@ export type Database = {
           confidence?: Json
           created_at?: string
           development_priorities?: string[] | null
+          diet_style?: string | null
           education_stage?: string | null
+          focus_area?: string | null
           goal_horizon?: string | null
           goal_priority_rank?: number | null
           goal_summary?: string | null
           injury_history?: Json | null
           last_authored_at?: string | null
           last_authored_by?: string | null
+          level_target?: string | null
           lifting_age_years?: number | null
           lifting_history?: Json | null
           onboarding_draft?: Json | null
           other_sports?: string[] | null
           position_primary?: string | null
           position_secondary?: string[] | null
+          pregame_routine?: string | null
           school_grade?: string | null
           season_phase?: string | null
+          sleep_target_hrs?: number | null
           sport_primary?: string | null
           sport_secondary?: string[] | null
           throws_hand?: string | null
@@ -879,6 +902,7 @@ export type Database = {
           typical_session_length_min?: number | null
           updated_at?: string
           user_id?: string
+          water_goal_oz?: number | null
           weekly_availability_days?: number | null
           weekly_availability_hours?: number | null
           years_in_sport?: number | null

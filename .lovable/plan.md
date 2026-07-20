@@ -1,95 +1,54 @@
+## Fixes
 
-## Problem
+### 1. RLS error on `persistContextAnswer(weekly_availability_hours)`
 
-The current level picker (baseball + softball) mixes three unrelated concepts into one flat chip grid: **playing tier** (Rec, JV, D1), **age group** (6U…14U), and **events** (WBC, Olympic, Collegiate Olympic, Showcase / Perfect Game). It also duplicates redundant rungs (HS Freshman + HS JV) and has no way to capture where the athlete actually competes — which is critical because travel players routinely play out-of-state in more competitive circuits.
+**Root cause (verified):** The `athlete_context` policy is `USING/WITH CHECK (auth.uid() = user_id)`. The write itself is correct (`user_id: user.id`), so the only way this fails is if the Supabase auth session on the request is stale/missing at the moment of the upsert — `useAuth` still holds the React `user` object, but the JWT sent to PostgREST has expired or been evicted (the same class of eviction we hardened against earlier). Because `weekly_availability_hours` is roughly mid-flow, the token is often past its 1‑hour rotation when this question is answered.
 
-## Redesign — one question, three clean inputs
+**Fix in `src/lib/hammer/context/acquisition.ts`:**
+- Before every upsert, call `supabase.auth.getSession()` and, if the access token is missing or expiring within 60s, call `supabase.auth.refreshSession()`.
+- Assert `session.user.id === userId`; if not, throw a clear "Session expired — please sign in again" error instead of the raw RLS message.
+- Apply the same guard to `persistCoachContextAnswer` / `persistScoutContextAnswer` and to `draftStore.ts`'s debounced remote flush (same table, same failure mode).
 
-The onboarding step keeps the same slot but renders three coordinated fields:
+**Fix in the caller (`useHammerOnboardingDirector.resolve`)**:
+- Catch the "session expired" error class and surface a toast + keep the answer in local state so the user's typing is not lost. Retry once after refresh.
 
-### 1. Playing tier (single select, cleaned up)
+### 2. New onboarding steps not appearing when going back through questions
 
-Only real levels of play, no ages, no events, no duplicates.
+**Root cause (verified):** The 4 new steps (`AnthropometricsStep`, `FuelRecoveryStep`, `MentalCareerStep`, `ConnectionsStep`) live only inside the standalone `src/pages/AthleteOnboarding.tsx` page (13-step shell). The surface the user actually re-enters from Hammers Today ("Answer Hammer") is the chat director in `src/components/hammer/HammerOnboardingChat.tsx` driven by `knowledgeGaps.ts` — and that gap list was never extended, so the new questions are invisible there.
 
-- **Youth / Amateur:** Recreational · Little League · Middle School · **Travel Ball** · High School JV · High School Varsity
-- **Collegiate:** JUCO · NAIA · D3 · D2 · D1
-- **College Summer Ball:** College Summer Ball · Cape Cod League *(baseball only)*
-- **Professional (baseball):** Academy · Foreign League · Winter Ball · Independent Pro · Rookie · Low-A · High-A · AA · AAA · MLB
-- **Professional (softball):** Independent Pro · International Pro · WPF · NPF · AUSL
+**Fix — extend the chat director to include the new hybrid steps:**
 
-Removed from the tier list: `hs_freshman` (redundant with JV), `showcase_perfect_game` / `showcase_pgf`, `collegiate_olympic`, `wbc`, `olympic`, `world_championship`, and the standalone `6u`…`18u_gold` chips. These move to fields #2 or #3.
+Add knowledge gaps to `src/lib/hammer/onboarding/knowledgeGaps.ts` for the athlete audience:
 
-### 2. Age group sub-picker (conditional)
+| Gap id | Persist target | Input kind |
+|---|---|---|
+| `anthropometrics` | `athlete_context.anthropometrics` (jsonb, already exists) | custom form |
+| `sleep_target_hrs` | new athlete_context column | numeric |
+| `water_goal_oz` | new athlete_context column | numeric |
+| `diet_style` | new athlete_context column | choice |
+| `allergies` | new athlete_context column | text |
+| `level_target` | new athlete_context column | choice |
+| `focus_area` | new athlete_context column | text |
+| `pregame_routine` | new athlete_context column | text |
+| `parent_email` | writes to `parent_invite_dispatches` via existing helper | email |
+| `coach_code` | new athlete_context column | text |
 
-Renders only when tier = **Travel Ball**, **Little League**, **Middle School**, or **Recreational**:
+**Migration** — additive columns on `public.athlete_context` (nullable, no default):
+`sleep_target_hrs numeric`, `water_goal_oz numeric`, `diet_style text`, `allergies text`, `level_target text`, `focus_area text`, `pregame_routine text`, `coach_code text`. Existing GRANTs on `athlete_context` already cover them.
 
-`6U · 7U · 8U · 9U · 10U · 11U · 12U · 13U · 14U · 15U · 16U · 17U · 18U`
+**Router changes:**
+- Extend `COLUMN_BY_KEY` in `acquisition.ts` with the 8 new columns.
+- Extend the envelope hydrator (`athleteContext.ts`) so the chat director recognizes the values as "resolved" on back-navigation.
+- Render the 4 existing step components inline in `HammerOnboardingChat.tsx` when the current gap id belongs to that group (a `renderKind: "form"` branch), reusing the same components used by `AthleteOnboarding.tsx` so the two surfaces stay in sync.
+- Parent-email gap: reuse the `ConnectionsStep` inline; on submit, insert into `parent_invite_dispatches` (already implemented in that component) and mark the gap resolved without writing to `athlete_context`.
 
-Softball adds: `16U · 18U Gold` variants as separate tags. Persisted as `competition_age_group`.
+### Out of scope
+- No changes to the standalone `AthleteOnboarding` page's ordering.
+- No visual redesign.
+- No changes to any other table's RLS.
 
-### 3. Where do you play? (state + travel indicator)
+### Technical details
 
-Two lightweight inputs shown for every tier below college:
-
-- **Home state** — US state dropdown (+ "Outside US" option, with free-text country).
-- **Play state** — same dropdown, defaults to home state. If different, we tag the athlete as an out-of-state / travel-circuit competitor, which raises the competition-weight interpretation (playing PG events in Georgia while living in Ohio is a real signal).
-
-Collegiate + Pro athletes only see a single "Team location" state field (informational, no weighting change).
-
-### 4. Notable events (separate multi-select, optional)
-
-A small follow-up chip group shown after tier is picked, clearly labeled **"Events you've competed in"** — not a level:
-
-`Showcase / Perfect Game · PGF · Collegiate Olympic · WBC · Olympic · World Championship`
-
-Persisted as `competition_events[]`. Kept out of the level weighting math; used later by scouting/recruiting surfaces.
-
-## Data + weighting
-
-`baseballCompetitionLevels` / `softballCompetitionLevels` are trimmed to the tier list in #1. The removed keys are moved into two new catalogs:
-
-- `src/data/baseball/ageGroups.ts` + `src/data/softball/ageGroups.ts` — age-group keys with their existing multipliers.
-- `src/data/competitionEvents.ts` — event keys (WBC, Olympic, showcases) with `event_prestige_index` but no `competition_weight_multiplier`.
-
-`getCompetitionWeight()` in `src/data/competitionWeighting.ts` is extended to accept `{ level, ageGroup, playState, homeState }` and compose the final multiplier: `tier × age_group_factor × out_of_state_bonus`. Existing callers keep working (age group + state default to undefined → factor 1.0, identical to today's number).
-
-## UI
-
-`src/components/shared/CompetitionLevelPicker.tsx` becomes a small composite:
-
-```
-[ Tier grid — grouped by category ]
-[ Age group chips ]           ← only when tier ∈ youth pre-HS
-[ Home state ▾ ] [ Play state ▾ ]  ← below college
-[ + Notable events (optional) ]
-```
-
-Same component is reused by `HammerOnboardingChat.tsx`, `TellHammerDialog.tsx`, `SessionConfigPanel.tsx`, and Game Setup — one source, every surface stays in sync.
-
-## Persistence
-
-`src/lib/hammer/onboarding/knowledgeGaps.ts` — the `competition_level` gap becomes a composite gap that writes:
-
-- `competition_level` (existing)
-- `competition_age_group` (new)
-- `competition_home_state` (new)
-- `competition_play_state` (new)
-- `competition_events` (new, array)
-
-All five fields land in `athlete_context` via the existing `acquisition.ts` writer path; the four new columns are added in one migration with matching GRANTs.
-
-## Files touched
-
-- `src/data/baseball/competitionLevels.ts`, `src/data/softball/competitionLevels.ts` — trimmed
-- `src/data/baseball/ageGroups.ts`, `src/data/softball/ageGroups.ts` — new
-- `src/data/competitionEvents.ts` — new
-- `src/data/competitionWeighting.ts` — extended weighting fn
-- `src/components/shared/CompetitionLevelPicker.tsx` — composite UI
-- `src/lib/hammer/onboarding/knowledgeGaps.ts` — composite gap definition
-- `src/lib/hammer/context/athleteContext.ts` — hydrate new fields
-- `src/lib/hammer/context/acquisition.ts` — persist new fields
-- Migration: add `competition_age_group`, `competition_home_state`, `competition_play_state`, `competition_events` to `athlete_context`
-
-## Result
-
-The question stops looking like a dumping ground. A 12-year-old on a Nationals travel team traveling from Ohio to Georgia for PG events answers **Travel Ball → 12U → Home: OH, Play: GA → Events: Perfect Game** — four clean signals instead of one confused chip. WBC/Olympic no longer masquerade as career levels. HS Freshman stops competing with JV. Credibility restored.
+- Migration is additive-only, adds 8 nullable columns. No RLS change (existing "athletes manage own context" policy covers them).
+- Session refresh path uses `supabase.auth.refreshSession()`; on failure it throws a typed error the director catches and shows via `toast.error`.
+- `HammerOnboardingChat.tsx` gets a small `<GapFormShell>` that renders the imported step component and calls the director's `resolve(gapId, value)` on submit; back/forward buttons remain the director's.
