@@ -33,13 +33,27 @@ export interface HammerOnboardingDirector {
   readonly audience: GapAudience;
   readonly openGaps: ReadonlyArray<KnowledgeGap>;
   readonly nextGap: KnowledgeGap | null;
+  readonly currentGap: KnowledgeGap | null;
+  readonly currentIndex: number;
   readonly totalGaps: number;
   readonly resolvedCount: number;
   readonly isLoading: boolean;
   readonly canGoBack: boolean;
+  readonly canGoForward: boolean;
+  readonly answers: Readonly<Record<string, unknown>>;
+  setAnswer(gapId: string, value: unknown): void;
   resolve(gapId: string, value: unknown): Promise<void>;
   skip(gapId: string): void;
   goBack(): void;
+  goForward(): void;
+}
+
+function hasMeaningfulValue(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value as object).length > 0;
+  return true;
 }
 
 function useUserAudience(): { audience: GapAudience; loading: boolean } {
@@ -85,21 +99,22 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   const ctx = useHammerAthleteContext();
   const qc = useQueryClient();
   const { audience, loading: audienceLoading } = useUserAudience();
-  // Session-resolved set — used by ALL audiences so the next question advances
-  // immediately after a successful save, without waiting on envelope refetch.
-  // Athlete fix: prevents users from appearing "stuck" on the same question
-  // when refetch is slow or cached.
+  // Stable linear navigation: users can move question 1 → final and back without
+  // saved answers disappearing. Missingness still drives progress, but never the
+  // currently displayed question.
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [sessionResolved, setSessionResolved] = useState<Set<string>>(new Set());
-  // Session-skipped set — user explicitly chose Skip; never imputes a value,
-  // just removes from the queue for this session.
   const [sessionSkipped, setSessionSkipped] = useState<Set<string>>(new Set());
-  // Session-reopened set — gaps the user navigated back to; forced back into
-  // openGaps for athlete audience even if the stored context has a value.
-  const [sessionReopened, setSessionReopened] = useState<Set<string>>(new Set());
-  // Ordered history of gap IDs acted on this session (resolve or skip).
-  const [history, setHistory] = useState<string[]>([]);
 
   const gapSet = useMemo(() => getKnowledgeGapsForAudience(audience), [audience]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+    setSessionResolved(new Set());
+    setSessionSkipped(new Set());
+    setAnswers({});
+  }, [audience]);
 
   // Hydrate coach/scout previously-answered gaps so progress survives reload.
   const { data: coachScoutRow } = useQuery({
@@ -118,12 +133,12 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
   useEffect(() => {
     if (audience === "athlete" || !coachScoutRow) return;
     const seeded = new Set<string>();
+    const seededAnswers: Record<string, unknown> = {};
     for (const gap of gapSet) {
       const v = (coachScoutRow as Record<string, unknown>)[gap.persistTo];
-      if (v == null) continue;
-      if (typeof v === "string" && v.trim() === "") continue;
-      if (Array.isArray(v) && v.length === 0) continue;
+      if (!hasMeaningfulValue(v)) continue;
       seeded.add(gap.id);
+      seededAnswers[gap.id] = v;
     }
     if (seeded.size > 0) {
       setSessionResolved((prev) => {
@@ -131,13 +146,32 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
         for (const id of seeded) next.add(id);
         return next;
       });
+      setAnswers((prev) => ({ ...seededAnswers, ...prev }));
     }
   }, [audience, coachScoutRow, gapSet]);
+
+  useEffect(() => {
+    if (audience !== "athlete") return;
+    const seeded = new Set<string>();
+    const seededAnswers: Record<string, unknown> = {};
+    for (const gap of gapSet) {
+      const variable = ctx.get(gap.contextKey);
+      if (!variable || variable.missing || !hasMeaningfulValue(variable.value)) continue;
+      seeded.add(gap.id);
+      seededAnswers[gap.id] = variable.value;
+    }
+    if (seeded.size === 0 && Object.keys(seededAnswers).length === 0) return;
+    setSessionResolved((prev) => {
+      const next = new Set(prev);
+      for (const id of seeded) next.add(id);
+      return next;
+    });
+    setAnswers((prev) => ({ ...seededAnswers, ...prev }));
+  }, [audience, gapSet, ctx]);
 
   const openGaps = useMemo(() => {
     return gapSet
       .filter((g) => {
-        if (sessionReopened.has(g.id)) return true;
         if (sessionResolved.has(g.id)) return false;
         if (sessionSkipped.has(g.id)) return false;
         if (audience === "athlete") {
@@ -147,7 +181,18 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
         return true;
       })
       .sort((a, b) => a.priority - b.priority);
-  }, [audience, gapSet, ctx, sessionResolved, sessionSkipped, sessionReopened]);
+  }, [audience, gapSet, ctx, sessionResolved, sessionSkipped]);
+
+  const orderedGaps = useMemo(
+    () => [...gapSet].sort((a, b) => a.priority - b.priority),
+    [gapSet],
+  );
+
+  const currentGap = orderedGaps[activeIndex] ?? null;
+
+  const setAnswer = useCallback((gapId: string, value: unknown) => {
+    setAnswers((prev) => ({ ...prev, [gapId]: value }));
+  }, []);
 
   const resolve = useCallback(
     async (gapId: string, value: unknown) => {
@@ -196,13 +241,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
 
       // Advance immediately — do not wait on refetch.
       setSessionResolved((prev) => new Set(prev).add(gap.id));
-      setSessionReopened((prev) => {
-        if (!prev.has(gap.id)) return prev;
-        const next = new Set(prev);
-        next.delete(gap.id);
-        return next;
-      });
-      setHistory((prev) => [...prev, gap.id]);
+      setAnswers((prev) => ({ ...prev, [gap.id]: v }));
 
       // Best-effort cache refresh — never block forward progress on this.
       try {
@@ -217,57 +256,38 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
 
   const skip = useCallback(
     (gapId: string) => {
-      // Skipping never imputes a value — missingness remains visible.
-      // Mark session-skipped so the queue advances for athlete/coach/scout alike.
+      // Skipping never imputes a value — missingness remains visible. It is only
+      // a session-level progress marker and does not affect back/forward history.
       setSessionSkipped((prev) => new Set(prev).add(gapId));
-      setSessionReopened((prev) => {
-        if (!prev.has(gapId)) return prev;
-        const next = new Set(prev);
-        next.delete(gapId);
-        return next;
-      });
-      setHistory((prev) => [...prev, gapId]);
     },
     [],
   );
 
   const goBack = useCallback(() => {
-    setHistory((prev) => {
-      if (prev.length === 0) return prev;
-      const next = prev.slice(0, -1);
-      const last = prev[prev.length - 1];
-      setSessionResolved((s) => {
-        if (!s.has(last)) return s;
-        const n = new Set(s);
-        n.delete(last);
-        return n;
-      });
-      setSessionSkipped((s) => {
-        if (!s.has(last)) return s;
-        const n = new Set(s);
-        n.delete(last);
-        return n;
-      });
-      setSessionReopened((s) => {
-        const n = new Set(s);
-        n.add(last);
-        return n;
-      });
-      return next;
-    });
+    setActiveIndex((i) => Math.max(i - 1, 0));
   }, []);
+
+  const goForward = useCallback(() => {
+    setActiveIndex((i) => Math.min(i + 1, Math.max(orderedGaps.length - 1, 0)));
+  }, [orderedGaps.length]);
 
   return {
     audience,
     openGaps,
-    nextGap: openGaps[0] ?? null,
-    totalGaps: gapSet.length,
+    nextGap: currentGap,
+    currentGap,
+    currentIndex: activeIndex,
+    totalGaps: orderedGaps.length,
     resolvedCount: gapSet.length - openGaps.length,
     isLoading: ctx.isLoading || audienceLoading,
-    canGoBack: history.length > 0,
+    canGoBack: activeIndex > 0,
+    canGoForward: activeIndex < orderedGaps.length - 1,
+    answers,
+    setAnswer,
     resolve,
     skip,
     goBack,
+    goForward,
   };
 }
 
