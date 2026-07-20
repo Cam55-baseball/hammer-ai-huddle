@@ -253,9 +253,19 @@ function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
       total_years?: number | string;
       consistent_last_12mo?: "yes" | "no";
       interruption_months?: number | string;
+      interruption_ended_months_ago?: number | string;
+      interruption_injury_related?: "yes" | "no";
       interruption_reason?: string;
+      return_to_lifting_status?: "not_yet" | "light_rehab" | "partial" | "fully_back";
     };
     const set = (patch: Partial<typeof v>) => onChange({ ...v, ...patch });
+    const showLayoff = v.consistent_last_12mo === "no";
+    const RTL_OPTS: Array<{ v: NonNullable<typeof v.return_to_lifting_status>; label: string }> = [
+      { v: "not_yet", label: "Not yet returned" },
+      { v: "light_rehab", label: "Light / rehab only" },
+      { v: "partial", label: "Partial lifts" },
+      { v: "fully_back", label: "Fully back" },
+    ];
     return (
       <div className="space-y-2">
         <div>
@@ -283,26 +293,77 @@ function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
             ))}
           </div>
         </div>
-        <div>
-          <Label className="text-xs">Months off (if any)</Label>
-          <Input
-            type="number"
-            inputMode="numeric"
-            value={v.interruption_months ?? ""}
-            onChange={(e) => set({ interruption_months: e.target.value === "" ? "" : Number(e.target.value) })}
-          />
-        </div>
-        <div>
-          <Label className="text-xs">Reason for layoff (optional)</Label>
-          <Input
-            value={v.interruption_reason ?? ""}
-            onChange={(e) => set({ interruption_reason: e.target.value })}
-            placeholder="e.g. broken leg, school season"
-          />
-        </div>
+
+        {showLayoff && (
+          <div className="space-y-2 rounded-md border border-border/60 bg-muted/20 p-2.5">
+            <p className="text-[11px] text-muted-foreground">
+              Tell me about your <span className="font-medium text-foreground">most recent long layoff</span> so I can program around it.
+            </p>
+            <div>
+              <Label className="text-xs">Length of that layoff (months)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={v.interruption_months ?? ""}
+                onChange={(e) => set({ interruption_months: e.target.value === "" ? "" : Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">How long ago did it end? (months — 0 if still off)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={v.interruption_ended_months_ago ?? ""}
+                onChange={(e) => set({ interruption_ended_months_ago: e.target.value === "" ? "" : Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Was it injury-related?</Label>
+              <div className="flex gap-2 mt-1">
+                {(["yes", "no"] as const).map((opt) => (
+                  <Button
+                    key={opt}
+                    type="button"
+                    size="sm"
+                    variant={v.interruption_injury_related === opt ? "default" : "outline"}
+                    onClick={() => set({ interruption_injury_related: opt })}
+                  >
+                    {opt === "yes" ? "Yes" : "No"}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">What happened & what have you done since?</Label>
+              <Textarea
+                rows={3}
+                value={v.interruption_reason ?? ""}
+                onChange={(e) => set({ interruption_reason: e.target.value })}
+                placeholder="Injury details, surgery, PT/rehab, any lifting you've resumed, current limitations…"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Where are you now with lifting?</Label>
+              <div className="mt-1 grid grid-cols-2 gap-1.5">
+                {RTL_OPTS.map((o) => (
+                  <Button
+                    key={o.v}
+                    type="button"
+                    size="sm"
+                    variant={v.return_to_lifting_status === o.v ? "default" : "outline"}
+                    onClick={() => set({ return_to_lifting_status: o.v })}
+                  >
+                    {o.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
+
 
   if (gap.inputKind === "anthropometrics") {
     const v = (typeof value === "object" && value !== null ? value : {}) as {
