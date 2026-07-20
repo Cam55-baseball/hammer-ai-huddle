@@ -35,7 +35,7 @@ export function GameSessionFields({ opponentName, opponentLevel, onNameChange, o
         <CompetitionLevelPicker
           sport={sport}
           value={opponentLevel}
-          onChange={onLevelChange}
+          onChange={(v) => onLevelChange(typeof v === 'string' ? v : v.level)}
           mode="quick"
         />
       </div>
