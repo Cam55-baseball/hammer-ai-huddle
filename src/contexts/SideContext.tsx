@@ -49,12 +49,27 @@ export function SideContextProvider({ children }: { children: ReactNode }) {
     queryKey: ["side-identity", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase
-        .from("athlete_mpi_settings")
-        .select("is_switch_hitter,is_ambidextrous_thrower,primary_batting_side,primary_throwing_hand")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      return data;
+      const [{ data: mpi }, { data: ctx }] = await Promise.all([
+        supabase
+          .from("athlete_mpi_settings")
+          .select("is_switch_hitter,is_ambidextrous_thrower,primary_batting_side,primary_throwing_hand")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        (supabase.from("athlete_context") as any)
+          .select("bats_hand,throws_hand")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
+      const bats = (ctx as any)?.bats_hand as string | null | undefined;
+      const throws = (ctx as any)?.throws_hand as string | null | undefined;
+      return {
+        is_switch_hitter: !!mpi?.is_switch_hitter || bats === "S",
+        is_ambidextrous_thrower: !!mpi?.is_ambidextrous_thrower || throws === "S",
+        primary_batting_side:
+          mpi?.primary_batting_side ?? (bats === "L" || bats === "R" ? bats : null),
+        primary_throwing_hand:
+          mpi?.primary_throwing_hand ?? (throws === "L" || throws === "R" ? throws : null),
+      };
     },
     enabled: !!user,
     staleTime: 5 * 60_000,
