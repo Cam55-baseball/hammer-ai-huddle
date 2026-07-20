@@ -7,7 +7,7 @@ export function useIqSituations(sport: IqSport, lens?: IqLens) {
     queryKey: ["iq-situations", sport, lens ?? "all"],
     queryFn: async () => {
       const sportFilter = sport === "both" ? ["baseball","softball","both"] : [sport, "both"];
-      let q = supabase
+      const { data, error } = await supabase
         .from("iq_situations")
         .select("*")
         .in("sport", sportFilter)
@@ -15,7 +15,6 @@ export function useIqSituations(sport: IqSport, lens?: IqLens) {
         .is("deleted_at", null)
         .order("canonical_order", { ascending: true });
 
-      const { data, error } = await q;
       if (error) throw error;
       const rows = (data ?? []) as unknown as IqSituation[];
       return lens ? rows.filter((r) => r.lens_tags?.includes(lens)) : rows;
