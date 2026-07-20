@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users, Play } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
 import { toast } from "@/hooks/use-toast";
