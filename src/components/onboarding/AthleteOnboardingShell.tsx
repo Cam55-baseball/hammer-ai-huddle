@@ -12,8 +12,10 @@ interface Props {
   onSaveAndExit?: () => void | Promise<void>;
   /** Optional back handler; when omitted or on step 0, the back button is hidden. */
   onBack?: () => void;
-  /** Optional jump-to-step (only invoked for indices < stepIndex). */
+  /** Optional jump-to-step (only invoked for indices < stepIndex unless allowForwardJump). */
   onJumpToStep?: (index: number) => void;
+  /** When true, stepper chips are clickable for every step (forward and back). */
+  allowForwardJump?: boolean;
 }
 
 export function AthleteOnboardingShell({
@@ -23,6 +25,7 @@ export function AthleteOnboardingShell({
   onSaveAndExit,
   onBack,
   onJumpToStep,
+  allowForwardJump = false,
 }: Props) {
   const navigate = useNavigate();
   const handleExit = async () => {
@@ -36,7 +39,7 @@ export function AthleteOnboardingShell({
     }
   };
 
-  const showBack = !!onBack && stepIndex > 0 && stepIndex < steps.length - 1;
+  const showBack = !!onBack && stepIndex > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +75,7 @@ export function AthleteOnboardingShell({
           {steps.map((label, i) => {
             const done = i < stepIndex;
             const active = i === stepIndex;
-            const clickable = done && !!onJumpToStep;
+            const clickable = !!onJumpToStep && !active && (done || allowForwardJump);
             const chipClass = `flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-medium ${
               done
                 ? "border-primary bg-primary text-primary-foreground"

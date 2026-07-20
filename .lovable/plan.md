@@ -1,36 +1,26 @@
-## Status of previous plan
+## Problem
 
-Verified in code — most of it landed:
+Onboarding today hides the header **Back** button on step 0 and the final Done step, and the stepper chips are only clickable for steps behind the current one. On a revisit (Review answers, deep-link edits, or Redo) users can't freely move back to earlier questions or jump forward again to the step they came from.
 
-- `ThrowingHandSelector` shows **Both** (`S`).
-- `AthleteOnboarding.handleSaveProfile` writes `profiles.throwing_hand = 'B'` and upserts `athlete_mpi_settings.is_ambidextrous_thrower = true` + `primary_throwing_hand = 'S'` when Both is picked.
-- `SideContext` derives `isAmbidextrousThrower` from `athlete_mpi_settings.is_ambidextrous_thrower`.
-- `CategoryGoalsStep` exposes the per-goal **R / L / Both** side chip for `throwing` and `pitching` when `isAmbidextrousThrower` is true (line 97 + lines 421–453).
-- Copy tweak on the arm-scoping prompt is present ("Pick **Both** if you throw ambidextrously…").
+## Fix — presentation only
 
-Two real gaps remain that break the E2E promise for a Both-hand thrower in a single session.
+### 1. `src/components/onboarding/AthleteOnboardingShell.tsx`
+- Show the header **Back** button whenever `onBack` is provided and `stepIndex > 0` (drop the `stepIndex < steps.length - 1` clamp so Done/Review also show it).
+- Add an optional `allowForwardJump?: boolean` prop. When true, stepper chips are clickable for **every** step (not just completed ones), so revisiting users can bounce between Profile ↔ Goals ↔ Schedule ↔ Review at will.
+- Keep the visual "done / active / upcoming" chip states unchanged.
 
-## Gap 1 — mpi upsert error is silently swallowed
+### 2. `src/pages/AthleteOnboarding.tsx`
+- Pass `onBack={goBack}` whenever `step > 0` (remove the `step < STEP_DONE` guard) so Back also works from the Done screen back into Review.
+- Pass `allowForwardJump` to the shell when the user is revisiting — i.e. `hasCompletedOnboarding` **or** an `?edit=…` / `?step=review` deep-link is active — so returning users can jump forward as well as back. First-time linear onboarding keeps today's "completed-only" chip behavior.
+- Ensure `goBack`'s `editReturnTo` shortcut still wins (already implemented) so a Back press from an edit target returns to Review in a single tap.
+- Every embedded step already exposes an in-card Back (`ProfileStep`, `CategoryGoalsStep`, `ScheduleStep`, `InjuryIntakeStep`, `NotificationsStep`) — no changes needed there; the shell Back is the always-visible fallback.
 
-`src/pages/AthleteOnboarding.tsx` (lines 292–303): the `athlete_mpi_settings` upsert is not destructured, so `{ error }` is ignored. If RLS or a constraint rejects the upsert, `is_ambidextrous_thrower` never lands, `SideContext` returns `false`, and the L/R/Both side chip in `CategoryGoalsStep` never appears — from the user's perspective, "Both" was accepted but goals still act one-armed.
-
-Fix: capture `{ error: mpiError }`, `console.warn` it, and surface a non-blocking `toast.warning("Saved throwing hand, but ambidextrous flag didn't sync — you can re-toggle it in Review.")` so the failure is visible instead of invisible. Still call `goNext()` — never block forward motion.
-
-## Gap 2 — SideContext doesn't refresh in the same session
-
-`src/contexts/SideContext.tsx` loads `["side-identity", user?.id]` once via `useQuery` and never invalidates. When the athlete picks Both on the Profile step and advances to the Goals step in the same session, `isAmbidextrousThrower` stays `false` until a full reload, so the per-goal side chip is missing on first visit.
-
-Fix: after a successful `handleSaveProfile` in `AthleteOnboarding.tsx`, call `queryClient.invalidateQueries({ queryKey: ["side-identity", user.id] })` so `CategoryGoalsStep` reads the fresh flag on mount. No changes to `SideContext` itself.
-
-## Gap 3 (small) — Review row for throwing hand
-
-`ReviewAnswersStep.tsx` already shows the throwing-hand row with `B → Both`. Confirmed in the previous turn. No change needed unless the label needs to also reflect the mpi flag; skipping.
+### 3. Verify (no code changes expected)
+- Manual walk-through on a completed account: Welcome-back → Review → Edit Profile → header Back returns to Review; Redo → header Back available from step 1 onward; stepper chip on "Goals" is clickable from "Schedule" both forward and backward.
 
 ## Files touched
-
-- `src/pages/AthleteOnboarding.tsx` — capture mpi upsert error + toast; invalidate `side-identity` after profile save.
+- `src/components/onboarding/AthleteOnboardingShell.tsx`
+- `src/pages/AthleteOnboarding.tsx`
 
 ## Out of scope
-
-- No schema changes.
-- No changes to `SideContext.tsx`, `ThrowingHandSelector.tsx`, `CategoryGoalsStep.tsx`, or `ReviewAnswersStep.tsx` — they are already correct; the two fixes above are what actually make the ambidextrous path work E2E within one session.
+- No draft-store, schema, or step-content changes. Persistence on every step change (added last turn) already covers back/forward navigation safely.
