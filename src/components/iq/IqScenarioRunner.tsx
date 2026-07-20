@@ -67,10 +67,14 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [overlay, setOverlay] = useState<OverlayMode>(loadOverlay);
+  const [voice, setVoice] = useState<boolean>(loadVoice);
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
   useEffect(() => { try { localStorage.setItem(OVERLAY_KEY, overlay); } catch { /* noop */ } }, [overlay]);
+  useEffect(() => { try { localStorage.setItem(VOICE_KEY, voice ? "1" : "0"); } catch { /* noop */ } }, [voice]);
+
+  useIqVoiceover({ enabled: submitted && voice, playing, progress, actors, mode: overlay });
 
   // Advance the play clock while `playing`.
   useEffect(() => {
