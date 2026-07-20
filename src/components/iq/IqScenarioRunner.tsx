@@ -6,14 +6,25 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users, Play } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
+import { IqPlaybackControls } from "./IqPlaybackControls";
+import { IqOverlayFilterBar, type OverlayMode } from "./IqCoachOverlay";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
 import { toast } from "@/hooks/use-toast";
 import type { IqActor, IqActorRole, IqScenario, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_LABELS, ROLE_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
 import { quizResume, pendingAttempts } from "@/lib/iq/resumeStore";
 import { buildScenarioFeedback } from "@/lib/iq/feedback";
+
+const OVERLAY_KEY = "iq:overlay";
+function loadOverlay(): OverlayMode {
+  try {
+    const v = localStorage.getItem(OVERLAY_KEY);
+    if (v === "all" || v === "footwork" || v === "comm" || v === "eyes" || v === "off") return v;
+  } catch { /* noop */ }
+  return "all";
+}
 
 interface Props {
   situationId: string;
