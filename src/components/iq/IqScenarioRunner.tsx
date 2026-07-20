@@ -171,7 +171,39 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     <Card className="p-5 space-y-4" data-protected-editing="true">
       <p className="text-base font-medium">{scenario.prompt}</p>
 
-      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} batterSide={batterSide} playing={playing} />
+      <IqDiamond
+        actors={actors}
+        mode={submitted ? "reveal" : "quiz"}
+        highlightRole={position}
+        defensivePositions={defensivePositions}
+        sport={sport}
+        batterSide={batterSide}
+        progress={submitted ? progress : undefined}
+        playing={submitted ? playing : false}
+        scenario={scenario}
+        overlay={submitted ? overlay : "off"}
+      />
+
+      {submitted && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <IqOverlayFilterBar value={overlay} onChange={setOverlay} />
+          </div>
+          <IqPlaybackControls
+            playing={playing}
+            progress={progress}
+            speed={speed}
+            onTogglePlay={() => {
+              if (progress >= 1) setProgress(0);
+              setPlaying((p) => !p);
+            }}
+            onScrub={(t) => { setPlaying(false); setProgress(t); }}
+            onSetSpeed={setSpeed}
+            onRestart={() => { setProgress(0); setPlaying(true); }}
+          />
+        </div>
+      )}
+
 
       {!submitted && (
         <>
