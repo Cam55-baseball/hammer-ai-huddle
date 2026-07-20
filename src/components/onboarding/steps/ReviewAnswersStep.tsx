@@ -185,11 +185,25 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
       ok: !!dob,
     },
     {
+      label: "Throwing hand",
+      value:
+        throwingHand === "L"
+          ? "Left"
+          : throwingHand === "R"
+            ? "Right"
+            : throwingHand === "B" || throwingHand === "S"
+              ? "Both (ambidextrous)"
+              : "Not set",
+      editKey: "profile",
+      ok: !!throwingHand,
+    },
+    {
       label: "Today's schedule",
       value: latestSchedule ? latestSchedule : "Not emitted yet",
       editKey: "schedule",
       ok: hasScheduleEvent,
     },
+
     {
       label: "Ranked sub-goals",
       value: summarizeGoals(goals),
