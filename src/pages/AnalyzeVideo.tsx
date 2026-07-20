@@ -1017,11 +1017,6 @@ export default function AnalyzeVideo() {
             <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} {t('videoAnalysis.mechanicsEvaluation', 'mechanics evaluation')}</p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <SideContextPicker
-              discipline={sideDiscipline}
-              label={sideDiscipline === 'hit' ? 'Hitting side' : 'Throwing hand'}
-              className="mr-1"
-            />
             {videoPreview && (
               <Button variant="outline" size="sm" onClick={handleRemoveVideo} className="flex-1 sm:flex-initial">
                 <Trash2 className="h-4 w-4 sm:mr-2" />
@@ -1132,6 +1127,21 @@ export default function AnalyzeVideo() {
                     onCheckedChange={setAnalysisEnabled}
                   />
                 </div>
+
+                {/* Side filing selector — switch hitters / ambidextrous throwers only */}
+                {shouldShowPicker(sideDiscipline) && (
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                    <div className="space-y-0.5 pr-3">
+                      <Label className="text-sm font-medium">
+                        {sideDiscipline === 'hit' ? 'Filing side (Hitting)' : 'Filing side (Throwing)'}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        This analysis, notes, and drill recommendations will be filed under the selected side of your profile.
+                      </p>
+                    </div>
+                    <SideContextPicker discipline={sideDiscipline} size="md" />
+                  </div>
+                )}
 
                 {/* Landing Marker for Pitching/Throwing */}
                 {analysisEnabled && (module === 'pitching' || module === 'throwing') && (
