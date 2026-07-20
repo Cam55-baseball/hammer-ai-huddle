@@ -54,6 +54,10 @@ const COLUMN_BY_KEY: Record<string, string> = {
   throws_hand: "throws_hand",
   bats_hand: "bats_hand",
   anthropometrics: "anthropometrics",
+  competition_age_group: "competition_age_group",
+  competition_home_state: "competition_home_state",
+  competition_play_state: "competition_play_state",
+  competition_events: "competition_events",
 };
 
 type AnyValue = string | number | string[] | unknown;

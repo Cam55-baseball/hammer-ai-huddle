@@ -85,7 +85,7 @@ const ATHLETE_GAPS: ReadonlyArray<KnowledgeGap> = [
     audience: "athlete",
     priority: 25,
     question: "What level do you compete at right now?",
-    helper: "Pick the rung that matches you today — from T-Ball all the way to MLB / AUSL. We use this everywhere so be precise.",
+    helper: "Pick your playing tier — from Rec/Little League all the way to MLB / AUSL. If you're on a travel team, we'll ask your age bracket next. Showcases and Olympic events go in the optional list at the bottom.",
     inputKind: "competition_level",
     persistTo: "competition_level",
     topic: "onboarding.knowledge_gap_resolved",
