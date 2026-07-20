@@ -8,7 +8,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 import type { IqSituation, IqSport } from "@/lib/iq/types";
 import { decayMastery, type IqConcept } from "@/lib/iq/concepts";
 
