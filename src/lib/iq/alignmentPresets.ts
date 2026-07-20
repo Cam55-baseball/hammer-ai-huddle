@@ -150,8 +150,8 @@ export function seedPresets(sport: FieldSport): PresetSeed[] {
   });
 
   return [
-    { sport, preset_key: "standard", label: "Standard",
-      anchors_vs_rhh: std_R, anchors_vs_lhh: std_L, is_default: true },
+    { sport, preset_key: "standard" as const, label: "Standard",
+      anchors_vs_rhh: std_R, anchors_vs_lhh: std_L, is_default: true } satisfies PresetSeed,
     make("dp_depth",         "Double-play depth",   (a) => applyMiddleDP(applyCornersFive(a))),
     make("no_doubles",       "No-doubles (late/lead)", applyNoDoubles),
     make("corners_in",       "Corners in (bunt/squeeze)", applyCornersIn),
