@@ -647,11 +647,7 @@ export default function AthleteOnboarding() {
           onEdit={handleEditFromReview}
           onFinish={() => {
             if (user?.id) clearDraftSlot(user.id, "onboarding-step");
-            // Invalidate the Hammers Today snapshot so the four canonical
-            // cards (Speed / Bat Speed / Lifts / Conditioning) refetch the
-            // freshly-written athlete context and auto-regenerate a plan.
-            queryClient.invalidateQueries({ queryKey: ["wk-rx"] });
-            queryClient.invalidateQueries({ queryKey: ["athlete-context"] });
+            invalidateHammerPlanInputs();
             setStep(STEP_DONE);
           }}
         />
@@ -671,7 +667,7 @@ export default function AthleteOnboarding() {
             </Button>
             <Button
               onClick={() => {
-                queryClient.invalidateQueries({ queryKey: ["wk-rx"] });
+                invalidateHammerPlanInputs();
                 navigate("/command");
               }}
             >
