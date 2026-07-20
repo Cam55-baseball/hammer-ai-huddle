@@ -280,8 +280,17 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
       toast.success("Goals saved. Hammer will plan around them.");
       onContinue();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[CategoryGoalsStep] save failed", e);
+      const err = e as { message?: string; details?: string; hint?: string; code?: string };
+      const msg =
+        (e instanceof Error && e.message) ||
+        err?.message ||
+        err?.details ||
+        err?.hint ||
+        (err?.code ? `code ${err.code}` : "") ||
+        (typeof e === "string" ? e : JSON.stringify(e));
       toast.error(`Couldn't save goals — ${msg}`);
+
     } finally {
       setSaving(false);
     }
