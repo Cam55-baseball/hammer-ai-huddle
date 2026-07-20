@@ -95,7 +95,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
       const [{ data: prof }, { data: ctx }, { data: sched }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("date_of_birth, training_age_years, is_pro_prospect, one_rm")
+          .select("date_of_birth, training_age_years, is_pro_prospect, one_rm, throwing_hand")
           .eq("id", user.id)
           .maybeSingle(),
         supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle(),
@@ -113,8 +113,11 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
         training_age_years: number | null;
         is_pro_prospect: boolean | null;
         one_rm: Record<string, number> | null;
+        throwing_hand: string | null;
       } | null;
       setDob(profRow?.date_of_birth ?? null);
+      setThrowingHand(profRow?.throwing_hand ?? null);
+
       setTrainingAge(
         profRow?.training_age_years != null ? String(profRow.training_age_years) : "",
       );
