@@ -165,6 +165,7 @@ const FoundationHealthDashboard = lazyWithRetry(() => import("./pages/owner/Foun
 const OwnerAlertCenter = lazyWithRetry(() => import("./pages/owner/OwnerAlertCenter"));
 const IqLibrary = lazyWithRetry(() => import("./pages/owner/IqLibrary"));
 const IqAlignmentsEditor = lazyWithRetry(() => import("./pages/owner/IqAlignmentsEditor"));
+const IqCombos = lazyWithRetry(() => import("./pages/owner/IqCombos"));
 const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAudit"));
 const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
