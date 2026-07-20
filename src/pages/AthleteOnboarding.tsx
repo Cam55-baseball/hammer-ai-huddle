@@ -480,9 +480,26 @@ export default function AthleteOnboarding() {
       )}
 
 
+      {step === STEP_ANTHRO && (
+        <AnthropometricsStep onContinue={goNext} onBack={goBack} />
+      )}
+
       {step === STEP_GOALS && (
         <CategoryGoalsStep onContinue={goNext} onBack={goBack} />
       )}
+
+      {step === STEP_FUEL && (
+        <FuelRecoveryStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_MENTAL && (
+        <MentalCareerStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_CONNECTIONS && (
+        <ConnectionsStep onContinue={goNext} onBack={goBack} />
+      )}
+
 
       {step === STEP_SCHEDULE && (
         <section className="space-y-4">
