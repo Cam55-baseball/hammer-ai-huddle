@@ -1,30 +1,101 @@
-## Why the picker doesn't show
 
-The side selector *is* placed under "Enable Hammer Analysis" on `AnalyzeVideo.tsx` (lines 1132–1142), but it renders through `SideContextPicker`, which auto-hides unless the athlete is flagged switch-hitter / ambidextrous-thrower.
+## Goal
 
-The flag lives on `athlete_mpi_settings.is_switch_hitter` / `is_ambidextrous_thrower`. Onboarding, however, writes handedness into `athlete_context.bats_hand` / `throws_hand` (values `R` / `L` / `S`) — it never mirrors "S" onto `athlete_mpi_settings`. So even after answering "Both / Switch" in onboarding, `shouldShowPicker` returns false and nothing appears on the Video Analysis screen.
+Turn the "sandlot" IQ diamond into an elite, MLB/AUSL-grade teaching field where every fielder has an exact, coach-legible spot ("7 steps toward 2B, 7 steps back from bag"), understands *why* they're there, and shifts correctly for handedness and situation.
 
-Nothing about placement is wrong — the gating is what's broken.
+## What changes end-to-end
 
-## Fix
+### 1. Real field geometry (removes the sandlot look)
+`src/components/iq/IqDiamond.tsx` gets replaced with a sport-aware SVG that renders:
+- Back-of-infield dirt arc + grass cutout (per sport radius)
+- Base paths, 60'/90' baselines, foul lines to fence, warning track
+- Mound (60'6") or pitcher's circle (43') per sport
+- Batter's boxes, catcher's box, on-deck circles, 1B/3B coach's boxes
+- A **step-grid overlay** (toggleable) that shows a distance ruler when a defender is selected: "15 ft toward 2B · 10 ft back"
 
-1. **`src/contexts/SideContext.tsx`** — additionally read `athlete_context.bats_hand` and `athlete_context.throws_hand` in the identity query. Compute:
-   - `isSwitchHitter = mpi.is_switch_hitter || ctx.bats_hand === "S"`
-   - `isAmbidextrousThrower = mpi.is_ambidextrous_thrower || ctx.throws_hand === "S"`
-   
-   This makes the onboarding answer the single source of truth without requiring a schema migration.
+All coordinates come from a new `src/lib/iq/fieldModel.ts` that converts *steps from a landmark* into normalized (x,y) using each sport's real distances (already in `leagueDistances.ts`, 1 step = 2.5 ft).
 
-2. **`src/lib/hammer/context/acquisition.ts`** — inside `persistContextAnswer`, when `key === "bats_hand"` or `key === "throws_hand"`, also fire-and-forget an upsert onto `athlete_mpi_settings` mirroring the flag + primary side:
-   - `bats_hand = "S"` → `{ is_switch_hitter: true, primary_batting_side: "S" }`
-   - `bats_hand = "L" | "R"` → `{ is_switch_hitter: false, primary_batting_side: value }`
-   - same shape for `throws_hand` → `is_ambidextrous_thrower` / `primary_throwing_hand`
-   
-   This keeps the mpi settings row consistent for every other consumer already reading it (`useSwitchHitterProfile`, panels, etc.).
+### 2. Step-based, dual-input positioning model
+New canonical position format for every defender:
 
-3. **Verify** by rebuilding, opening Video Analysis on a switch/ambi test account, and confirming the "Filing side" panel appears directly beneath the Enable Hammer Analysis toggle, and stays hidden for single-side athletes.
+```ts
+type StepAnchor =
+  | { from: '1B'|'2B'|'3B'|'HOME'; toward: '1B'|'2B'|'3B'|'HOME'|'CF'|'OUT'; steps: number; depthSteps: number }
+  | { from: 'BASELINE_1B_2B'|'BASELINE_2B_3B'; lateralSteps: number; depthSteps: number }
+  | { from: '2B'; lateralSteps: number; depthSteps: number }; // outfield "line up with 2B"
+```
 
-## Out of scope
+`fieldModel.ts` converts anchor → (x,y). Editor edits either the anchor (numeric inputs) OR the position (drag); they stay in sync. Each puck shows its coach-readable label:
+- **3B**: "7 steps toward 2B · 7 steps back"
+- **CF (vs RHH)**: "3 steps right of 2B · 60 steps back"
+- **SS**: "midway 2B–3B (45 ft) · 3 steps back"
 
-- No placement changes on `AnalyzeVideo.tsx` — the panel is already positioned correctly and only needs to be reachable.
-- No schema migration; existing columns cover the mirror.
-- No changes to non-side-aware surfaces.
+### 3. Handedness split on every preset
+`iq_defensive_alignments` gets `positions_vs_rhh jsonb` and `positions_vs_lhh jsonb` (plus `anchors_vs_rhh` / `anchors_vs_lhh`). The editor has an "RHH / LHH" tab; scenario runner auto-picks the right side from the batter actor. Legacy `positions` becomes the fallback during migration.
+
+### 4. Nine seeded situational presets (per sport, per handedness)
+Owner-editable, factory-seeded with your specifications:
+
+| Preset | Key rule (baseball defaults, softball scaled) |
+|---|---|
+| **Standard** | 3B 7↔7, 1B 5↔5, SS/2B 45 ft, CF 3 steps opposite of pitcher, LF/RF lined up with corner-adjacent bag |
+| **DP Depth** | Middle IF 4 in / 3 back off bag; corners at 5↔5 |
+| **No-Doubles** | OFs +8 steps deep, +4 steps toward foul line |
+| **Corners In (bunt/squeeze)** | 1B/3B 3 steps in front of bag on grass |
+| **Infield In** | All IF cut distance in half to home |
+| **Guard Lines (late)** | 1B/3B hug the line (2 steps off) |
+| **Shift — Pull (LHH)** | SS behind 2B, 2B in short RF |
+| **Shift — Pull (RHH)** | 2B behind 2B, SS deep 5.5 hole |
+| **1st-and-3rd** | Middle IF cheat toward 2B; corners at bag |
+| **Wheel** | 3B charges, SS covers 3rd, 2B covers 2nd |
+
+### 5. Scenario-driven auto-alignment
+`iq_situations` already has `alignment_preset`. We add `alignment_selector` (function of runners, outs, count, batter side) so each of the 100+ scenarios auto-loads the correct preset. Owner can override per scenario.
+
+### 6. Owner editor upgrades (`src/pages/owner/IqAlignmentsEditor.tsx`)
+- RHH / LHH tabs
+- Per-defender numeric step panel (anchor + toward + steps + depthSteps) alongside drag
+- "Mirror to opposite hand" applies your published mirror rules
+- Live coach-readable label under each puck
+- Range disks + coverage % kept; recomputed per handedness
+
+## Technical section
+
+**New/changed files**
+- `src/lib/iq/fieldModel.ts` — anchor→coord math, step→ft, per-sport scaling, label formatter
+- `src/lib/iq/alignmentPresets.ts` — factory presets (9 × 2 sports × 2 handedness = 36 seed objects)
+- `src/components/iq/IqField.tsx` — new realistic field SVG (replaces geometry in `IqDiamond`)
+- `src/components/iq/IqDiamond.tsx` — consumes `IqField`, reads new position shape
+- `src/hooks/useDefensiveAlignment.ts` — returns `{ positions, anchors, byHand(side) }`
+- `src/pages/owner/IqAlignmentsEditor.tsx` — dual-input UI, RHH/LHH tabs, step panel, mirror
+- `src/hooks/useIqSituations.ts` — resolves auto-selected preset per scenario context
+
+**DB migration** (surfaced separately for approval)
+```sql
+ALTER TABLE public.iq_defensive_alignments
+  ADD COLUMN positions_vs_rhh jsonb,
+  ADD COLUMN positions_vs_lhh jsonb,
+  ADD COLUMN anchors_vs_rhh   jsonb,
+  ADD COLUMN anchors_vs_lhh   jsonb;
+
+ALTER TABLE public.iq_situations
+  ADD COLUMN alignment_selector jsonb; -- { default, byBatterSide, byRunners, byOuts }
+
+-- Seed all 9 presets × 2 sports × 2 hands (upsert on (sport, preset_key))
+```
+Grants + RLS already exist on both tables; no new tables.
+
+**Softball scaling**: `leagueDistances.ts` already has 60' bases / 43' circle. `fieldModel.ts` multiplies every step-anchor by `sport.baseDist / 90` so the same anchor rules render correctly for both sports.
+
+**Back-compat**: If a preset row still has only legacy `positions`, we treat it as `positions_vs_rhh` and auto-mirror for LHH until the owner reviews it.
+
+## Deliverable order
+1. DB migration (approval gate)
+2. `fieldModel.ts` + `alignmentPresets.ts` (pure logic, unit-testable)
+3. `IqField.tsx` + updated `IqDiamond.tsx` (visuals)
+4. Editor V3 with RHH/LHH tabs and step panel
+5. Scenario auto-selection + audit that all existing situations resolve to a preset
+
+## Out of scope (unless you say otherwise)
+- Adding *new* IQ scenarios beyond the current 100+ (this plan fixes positioning; a follow-up can expand the library)
+- Video overlays / AR
