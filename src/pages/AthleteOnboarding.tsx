@@ -71,6 +71,7 @@ const DAY_TYPE_OPTIONS: { value: DayType; label: string; help: string }[] = [
  */
 export default function AthleteOnboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading, isAuthStable } = useAuth();
   const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
