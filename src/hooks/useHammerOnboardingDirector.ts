@@ -377,9 +377,19 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     setActiveIndex((i) => Math.min(i + 1, orderedGaps.length));
   }, [orderedGaps.length]);
 
+  const jumpTo = useCallback(
+    (index: number) => {
+      if (!Number.isFinite(index)) return;
+      const clamped = Math.max(0, Math.min(Math.floor(index), orderedGaps.length - 1));
+      setActiveIndex(clamped);
+    },
+    [orderedGaps.length],
+  );
+
   return {
     audience,
     openGaps,
+    orderedGaps,
     nextGap: currentGap,
     currentGap,
     currentIndex: activeIndex,
@@ -394,6 +404,8 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
     skip,
     goBack,
     goForward,
+    jumpTo,
   };
 }
+
 
