@@ -254,6 +254,30 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
           await persistCoachContextAnswer(user.id, gap.persistTo, v);
         } else if (audience === "scout") {
           await persistScoutContextAnswer(user.id, gap.persistTo, v);
+        } else if (gap.persistTo === "competition_level" && v && typeof v === "object") {
+          // Composite competition selection — fan out to individual columns.
+          const c = v as {
+            level?: string;
+            ageGroup?: string;
+            homeState?: string;
+            playState?: string;
+            events?: string[];
+          };
+          if (typeof c.level === "string" && c.level) {
+            await persistContextAnswer(user.id, "competition_level", c.level, "hammer_onboarding");
+          }
+          if (typeof c.ageGroup === "string" && c.ageGroup) {
+            await persistContextAnswer(user.id, "competition_age_group", c.ageGroup, "hammer_onboarding");
+          }
+          if (typeof c.homeState === "string" && c.homeState) {
+            await persistContextAnswer(user.id, "competition_home_state", c.homeState, "hammer_onboarding");
+          }
+          if (typeof c.playState === "string" && c.playState) {
+            await persistContextAnswer(user.id, "competition_play_state", c.playState, "hammer_onboarding");
+          }
+          if (Array.isArray(c.events)) {
+            await persistContextAnswer(user.id, "competition_events", c.events, "hammer_onboarding");
+          }
         } else {
           await persistContextAnswer(user.id, gap.persistTo, v, "hammer_onboarding");
         }
