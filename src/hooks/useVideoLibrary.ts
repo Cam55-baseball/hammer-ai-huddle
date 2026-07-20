@@ -170,12 +170,13 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
     fetchVideos(next, true);
   };
 
-  const toggleLike = async (videoId: string) => {
+  const toggleLike = async (videoId: string, side?: 'L' | 'R' | 'both' | null) => {
     if (!user) return;
     const video = videos.find(v => v.id === videoId);
     if (!video) return;
 
     if (video.is_liked) {
+      // Remove all likes for this video by this user (any side).
       await supabase
         .from('library_video_likes')
         .delete()
@@ -184,7 +185,7 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
     } else {
       await supabase
         .from('library_video_likes')
-        .insert({ user_id: user.id, video_id: videoId });
+        .insert({ user_id: user.id, video_id: videoId, side: side ?? null } as any);
     }
 
     setVideos(prev => prev.map(v =>

@@ -973,25 +973,27 @@ export function useVault() {
     return { success: true };
   }, [user, savedDrills, fetchSavedItems]);
 
-  // Save tip to vault (from nutrition)
+  // Save tip to vault (from nutrition / daily tips)
   const saveTip = useCallback(async (tip: {
     tip_text: string;
     tip_category: string | null;
     module_origin: string;
+    side?: 'L' | 'R' | 'both' | null;
   }) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    // Check if already saved (prevent duplicates)
-    const existing = savedTips.find(t => 
-      t.tip_text === tip.tip_text && 
-      t.module_origin === tip.module_origin
+    // Side-aware dedup — L and R can both be saved for switch/ambi athletes.
+    const existing = savedTips.find(t =>
+      t.tip_text === tip.tip_text &&
+      t.module_origin === tip.module_origin &&
+      ((t as any).side ?? null) === (tip.side ?? null)
     );
     if (existing) return { success: false, error: 'already_saved' };
 
     const { error } = await supabase.from('vault_saved_tips').insert({
       user_id: user.id,
       ...tip,
-    });
+    } as any);
 
     if (error) {
       console.error('Error saving tip:', error);
