@@ -348,7 +348,44 @@ export default function AthleteOnboarding() {
         </div>
       )}
 
-      {step === STEP_WELCOME && (
+      {step === STEP_WELCOME && showWelcomeBack && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">Welcome back.</h2>
+          <p className="text-sm text-muted-foreground">
+            You've already completed onboarding. Pick up where you want:
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Button variant="outline" onClick={() => setStep(STEP_REVIEW)}>
+              Review answers
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (user?.id) {
+                  clearDraftSlot(user.id, "onboarding-step");
+                  clearDraftSlot(user.id, "profile-answers");
+                }
+                setThrowingHand(undefined);
+                setResumedFromStep(null);
+                setSearchParams({ redo: "1" }, { replace: true });
+                setStep(STEP_WELCOME);
+                // Force the welcome-back panel off by flipping redoRequested via URL.
+              }}
+            >
+              Redo onboarding
+            </Button>
+            <Button onClick={() => navigate("/command")}>
+              Go to Command Center <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            "Redo onboarding" clears your saved draft and starts at Welcome. Your
+            existing profile data stays intact until you save new answers.
+          </p>
+        </section>
+      )}
+
+      {step === STEP_WELCOME && !showWelcomeBack && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>
           <p className="text-sm text-muted-foreground">
@@ -367,6 +404,7 @@ export default function AthleteOnboarding() {
           </div>
         </section>
       )}
+
 
       {step === STEP_PROFILE && (
         <section className="space-y-4">
