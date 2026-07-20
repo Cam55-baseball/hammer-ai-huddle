@@ -32,6 +32,7 @@ import {
 export interface HammerOnboardingDirector {
   readonly audience: GapAudience;
   readonly openGaps: ReadonlyArray<KnowledgeGap>;
+  readonly orderedGaps: ReadonlyArray<KnowledgeGap>;
   readonly nextGap: KnowledgeGap | null;
   readonly currentGap: KnowledgeGap | null;
   readonly currentIndex: number;
@@ -46,6 +47,7 @@ export interface HammerOnboardingDirector {
   skip(gapId: string): void;
   goBack(): void;
   goForward(): void;
+  jumpTo(index: number): void;
 }
 
 function hasMeaningfulValue(value: unknown): boolean {
