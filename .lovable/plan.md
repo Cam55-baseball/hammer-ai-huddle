@@ -1,101 +1,122 @@
 
-## Goal
+# Elite Game IQ — Editor V3, Scenario Auto-Selection & Resolution Audit
 
-Turn the "sandlot" IQ diamond into an elite, MLB/AUSL-grade teaching field where every fielder has an exact, coach-legible spot ("7 steps toward 2B, 7 steps back from bag"), understands *why* they're there, and shifts correctly for handedness and situation.
+Finishes the step-based positioning system by giving owners a coach-grade editor, teaching scenarios to auto-pick the right defensive preset per batter/runners/outs/count, and adding a permanent audit that guarantees every published situation resolves cleanly for RHH + LHH in both sports.
 
-## What changes end-to-end
+---
 
-### 1. Real field geometry (removes the sandlot look)
-`src/components/iq/IqDiamond.tsx` gets replaced with a sport-aware SVG that renders:
-- Back-of-infield dirt arc + grass cutout (per sport radius)
-- Base paths, 60'/90' baselines, foul lines to fence, warning track
-- Mound (60'6") or pitcher's circle (43') per sport
-- Batter's boxes, catcher's box, on-deck circles, 1B/3B coach's boxes
-- A **step-grid overlay** (toggleable) that shows a distance ruler when a defender is selected: "15 ft toward 2B · 10 ft back"
+## Part 1 — Editor V3 (`IqAlignmentsEditor.tsx`)
 
-All coordinates come from a new `src/lib/iq/fieldModel.ts` that converts *steps from a landmark* into normalized (x,y) using each sport's real distances (already in `leagueDistances.ts`, 1 step = 2.5 ft).
+Replace the legacy percent-drag UI with a coach-language, step-based editor.
 
-### 2. Step-based, dual-input positioning model
-New canonical position format for every defender:
+**Layout**
+- Header: preset name, sport toggle (Baseball 90' / Softball 60'), status, save state.
+- Handedness tabs: **RHH | LHH** (edits `anchors_vs_rhh` vs `anchors_vs_lhh` independently).
+- Left: realistic `IqField` (reused from viewer) with 9 draggable defender pucks, live coach-readable label under each ("SS — 4 steps toward 2B, 2 steps back").
+- Right: **Numeric Step Panel** for the selected defender(s):
+  - `from` (home base of the position) — read-only.
+  - `toward` dropdown (2B, 3B, 1B, LF line, RF line, gap, home, mound, etc.).
+  - `steps` (lateral, integer, ±).
+  - `depthSteps` (in/out, integer, ±).
+  - Range disk radius (defensive range in steps).
+- Multi-select: shift-click or marquee; step nudges apply to all selected (already supported in V2 — carry forward).
+- **Mirror to opposite hand** button: copies current tab's anchors to the other, flipping lateral `toward` (2B↔2B, 3B↔1B, LF line↔RF line, LC gap↔RC gap).
+- **Reset defender** / **Reset preset to seed** actions.
+- Live **Coverage %** + range-disk overlay recomputed per hand.
 
-```ts
-type StepAnchor =
-  | { from: '1B'|'2B'|'3B'|'HOME'; toward: '1B'|'2B'|'3B'|'HOME'|'CF'|'OUT'; steps: number; depthSteps: number }
-  | { from: 'BASELINE_1B_2B'|'BASELINE_2B_3B'; lateralSteps: number; depthSteps: number }
-  | { from: '2B'; lateralSteps: number; depthSteps: number }; // outfield "line up with 2B"
+**Persistence**
+- Writes `anchors_vs_rhh` / `anchors_vs_lhh` (jsonb) via `useIqAlignmentMutations`.
+- Also updates legacy `positions_vs_rhh/lhh` (percent) by running anchors through `fieldModel.anchorToPct` so viewers without anchor support stay correct.
+- Autosave debounced 800ms + explicit Save button; toast on error.
+
+**Validation**
+- Steps clamped to sport bounds (Baseball ±40, Softball ±28).
+- Warn (non-blocking) if a defender lands outside fair territory or overlaps another puck within 2 steps.
+
+---
+
+## Part 2 — Scenario Auto-Selection (`alignment_selector`)
+
+Make each situation deterministically resolve to the correct preset given game state.
+
+**Selector schema** (`iq_situations.alignment_selector jsonb`)
+```json
+{
+  "rules": [
+    { "when": { "runners": ["1B"], "outs": [0,1], "batter_side": "RHH" }, "preset": "double_play_depth" },
+    { "when": { "runners": ["3B"], "outs": [0,1] }, "preset": "infield_in" },
+    { "when": { "count": { "balls_gte": 3 } }, "preset": "no_doubles" }
+  ],
+  "default": "standard"
+}
 ```
 
-`fieldModel.ts` converts anchor → (x,y). Editor edits either the anchor (numeric inputs) OR the position (drag); they stay in sync. Each puck shows its coach-readable label:
-- **3B**: "7 steps toward 2B · 7 steps back"
-- **CF (vs RHH)**: "3 steps right of 2B · 60 steps back"
-- **SS**: "midway 2B–3B (45 ft) · 3 steps back"
+**Resolver** (`src/lib/iq/alignmentResolver.ts` — new)
+- `resolveAlignment({ situation, batterSide, sport }) → { presetId, anchors, positions, coverage }`.
+- Evaluates rules top-down; first match wins; falls back to `default` then to sport `standard`.
+- Returns anchor-resolved coords per hand via `fieldModel`.
 
-### 3. Handedness split on every preset
-`iq_defensive_alignments` gets `positions_vs_rhh jsonb` and `positions_vs_lhh jsonb` (plus `anchors_vs_rhh` / `anchors_vs_lhh`). The editor has an "RHH / LHH" tab; scenario runner auto-picks the right side from the batter actor. Legacy `positions` becomes the fallback during migration.
+**Runtime wiring**
+- `useIqSituations` selects `alignment_selector` + preset joins.
+- `IqScenarioRunner.tsx` calls resolver whenever `batterSide / runners / outs / count` change and passes the result to `IqDiamond`.
+- Toggling batter handedness during a scenario re-resolves live.
 
-### 4. Nine seeded situational presets (per sport, per handedness)
-Owner-editable, factory-seeded with your specifications:
+**Owner UX**
+- New "Alignment logic" tab on the situation editor: rule builder (runners chips, outs multi-select, count operators, batter-side selector, preset dropdown). Preview panel shows which rule fires under a chosen game state.
 
-| Preset | Key rule (baseball defaults, softball scaled) |
-|---|---|
-| **Standard** | 3B 7↔7, 1B 5↔5, SS/2B 45 ft, CF 3 steps opposite of pitcher, LF/RF lined up with corner-adjacent bag |
-| **DP Depth** | Middle IF 4 in / 3 back off bag; corners at 5↔5 |
-| **No-Doubles** | OFs +8 steps deep, +4 steps toward foul line |
-| **Corners In (bunt/squeeze)** | 1B/3B 3 steps in front of bag on grass |
-| **Infield In** | All IF cut distance in half to home |
-| **Guard Lines (late)** | 1B/3B hug the line (2 steps off) |
-| **Shift — Pull (LHH)** | SS behind 2B, 2B in short RF |
-| **Shift — Pull (RHH)** | 2B behind 2B, SS deep 5.5 hole |
-| **1st-and-3rd** | Middle IF cheat toward 2B; corners at bag |
-| **Wheel** | 3B charges, SS covers 3rd, 2B covers 2nd |
+---
 
-### 5. Scenario-driven auto-alignment
-`iq_situations` already has `alignment_preset`. We add `alignment_selector` (function of runners, outs, count, batter side) so each of the 100+ scenarios auto-loads the correct preset. Owner can override per scenario.
+## Part 3 — Resolution Audit
 
-### 6. Owner editor upgrades (`src/pages/owner/IqAlignmentsEditor.tsx`)
-- RHH / LHH tabs
-- Per-defender numeric step panel (anchor + toward + steps + depthSteps) alongside drag
-- "Mirror to opposite hand" applies your published mirror rules
-- Live coach-readable label under each puck
-- Range disks + coverage % kept; recomputed per handedness
+Guarantee no published situation ever renders a broken field.
 
-## Technical section
+**Edge function** `iq-alignment-audit` (new)
+- For every `iq_situations` row where `status = 'published'`:
+  - For each sport it supports × {RHH, LHH} × representative game states:
+    - Run resolver; assert preset exists, anchors resolve for that hand, no defender falls off-field, coverage ≥ minimum threshold.
+  - Collect failures with reason codes (`missing_preset`, `missing_hand_anchors`, `off_field`, `low_coverage`, `no_default`).
+- Writes to new table `iq_alignment_audit_runs` (run metadata) + `iq_alignment_audit_findings` (per-situation results). Both RLS-locked to owner role, GRANTed to `authenticated` + `service_role`.
 
-**New/changed files**
-- `src/lib/iq/fieldModel.ts` — anchor→coord math, step→ft, per-sport scaling, label formatter
-- `src/lib/iq/alignmentPresets.ts` — factory presets (9 × 2 sports × 2 handedness = 36 seed objects)
-- `src/components/iq/IqField.tsx` — new realistic field SVG (replaces geometry in `IqDiamond`)
-- `src/components/iq/IqDiamond.tsx` — consumes `IqField`, reads new position shape
-- `src/hooks/useDefensiveAlignment.ts` — returns `{ positions, anchors, byHand(side) }`
-- `src/pages/owner/IqAlignmentsEditor.tsx` — dual-input UI, RHH/LHH tabs, step panel, mirror
-- `src/hooks/useIqSituations.ts` — resolves auto-selected preset per scenario context
+**Owner UI** `/owner/iq/audit`
+- "Run audit" button (invokes edge function).
+- Table of latest findings grouped by severity, deep-linked to the situation editor and alignment editor.
+- Badge on `/owner/iq` nav shows open failure count.
 
-**DB migration** (surfaced separately for approval)
-```sql
-ALTER TABLE public.iq_defensive_alignments
-  ADD COLUMN positions_vs_rhh jsonb,
-  ADD COLUMN positions_vs_lhh jsonb,
-  ADD COLUMN anchors_vs_rhh   jsonb,
-  ADD COLUMN anchors_vs_lhh   jsonb;
+**CI-style guard**
+- Publish action on a situation runs a mini-audit inline; blocks publish if any hand fails to resolve.
 
-ALTER TABLE public.iq_situations
-  ADD COLUMN alignment_selector jsonb; -- { default, byBatterSide, byRunners, byOuts }
+---
 
--- Seed all 9 presets × 2 sports × 2 hands (upsert on (sport, preset_key))
-```
-Grants + RLS already exist on both tables; no new tables.
+## Technical details
 
-**Softball scaling**: `leagueDistances.ts` already has 60' bases / 43' circle. `fieldModel.ts` multiplies every step-anchor by `sport.baseDist / 90` so the same anchor rules render correctly for both sports.
+**Files created**
+- `src/lib/iq/alignmentResolver.ts`
+- `src/components/iq/editor/StepPanel.tsx`, `HandTabs.tsx`, `MirrorButton.tsx`
+- `src/components/iq/editor/AlignmentRuleBuilder.tsx`
+- `src/pages/owner/IqAlignmentAudit.tsx`
+- `supabase/functions/iq-alignment-audit/index.ts`
 
-**Back-compat**: If a preset row still has only legacy `positions`, we treat it as `positions_vs_rhh` and auto-mirror for LHH until the owner reviews it.
+**Files modified**
+- `src/pages/owner/IqAlignmentsEditor.tsx` — full V3 rewrite around anchors + hand tabs.
+- `src/hooks/useDefensiveAlignment.ts` — expose anchor writer helpers.
+- `src/hooks/useIqSituations.ts` — include `alignment_selector`.
+- `src/components/iq/IqScenarioRunner.tsx` — call resolver on state change.
+- `src/pages/owner/GameIqSituation.tsx` — add "Alignment logic" tab + inline publish audit.
+- `src/pages/owner/GameIqOwner.tsx` — audit failure badge.
 
-## Deliverable order
-1. DB migration (approval gate)
-2. `fieldModel.ts` + `alignmentPresets.ts` (pure logic, unit-testable)
-3. `IqField.tsx` + updated `IqDiamond.tsx` (visuals)
-4. Editor V3 with RHH/LHH tabs and step panel
-5. Scenario auto-selection + audit that all existing situations resolve to a preset
+**Migrations**
+- `iq_alignment_audit_runs` (started_at, finished_at, triggered_by, status, totals).
+- `iq_alignment_audit_findings` (run_id, situation_id, sport, batter_side, severity, reason_code, detail jsonb).
+- Both: GRANT to `authenticated` + `service_role`; RLS restricting reads/writes to `has_role(auth.uid(),'owner')`; `service_role` bypass for the edge function.
 
-## Out of scope (unless you say otherwise)
-- Adding *new* IQ scenarios beyond the current 100+ (this plan fixes positioning; a follow-up can expand the library)
-- Video overlays / AR
+**Constants**
+- `SPORT_STEP_BOUNDS`, `RANGE_DEFAULTS`, `COVERAGE_MIN` centralized in `fieldModel.ts`.
+
+---
+
+## Acceptance criteria
+1. Owner can drag OR type step values per defender, per hand, per sport, with live coach labels + coverage %.
+2. Mirror-to-opposite-hand flips lateral direction correctly for every `toward` landmark.
+3. Every scenario in `IqScenarioRunner` auto-picks a preset from `alignment_selector` and re-resolves when batter side / runners / outs / count change.
+4. Audit page lists 0 failures after a green run; publish is blocked for any situation with an unresolved hand.
+5. Legacy `positions_vs_rhh/lhh` stay in sync so any consumer not yet on anchors still renders correctly.
