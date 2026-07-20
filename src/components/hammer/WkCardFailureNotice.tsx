@@ -81,7 +81,7 @@ export function WkCardFailureNotice({
                 size="sm"
                 variant="outline"
                 className="h-7"
-                onClick={() => navigate("/hammer/onboarding")}
+                onClick={() => navigate("/onboarding/athlete")}
               >
                 Finish onboarding
               </Button>
