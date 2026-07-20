@@ -1,94 +1,86 @@
 
-# Game IQ — Pinnacle Upgrade
+# Elite Game IQ Overhaul — Phase 2
 
-Goal: make Baseball/Softball Game IQ the clear best-in-market experience — beyond Motion Playbook, Baseball Instincts, and Softball IQ apps — with accurate positioning, lines that always originate from the *actual* set position, and coaching depth those apps don't have.
+Phase 1 (route anchoring + "Watch the play") is live. Phase 2 upgrades the diamond into a full play-simulator, adds a coaching overlay layer, expands the alignment preset library to competitor parity, and introduces a mastery ladder tied to concept tags.
 
-## Problems today
+## What we're building
 
-1. **Routes don't follow the defender's real set position.** `IqDiamond` computes `posFor(role)` correctly (owner alignment → hand-aware → fallback), but `primary_path` arrays are authored as absolute grid points, and the drawn line uses `start = posFor(role)` + raw `primary_path` points. When alignment shifts (shift, DP depth, no-doubles, wheel, corners in, etc.), the *start* moves but the path targets stay pinned to the old preset — so a SS drawn at `x:40,y:52` gets rerouted from `x:32,y:48` (shift) yet the line still ends at the old spot, producing bent, wrong-looking routes.
-2. **Scenarios feel static.** No ball flight, no runner motion, no play timeline, no "watch it, then quiz me" cycle. Competitors (Motion Playbook especially) win on animated play playback.
-3. **Situational depth is thin.** Alignment selector resolves a preset but scenarios don't visibly explain *why* the alignment changed for this situation, don't show pre-pitch adjustments (corners in with runner on 3B, IF-in-DP depth, no-doubles, wheel/rotation on bunt, 4th-outfielder, shaded shifts by count).
-4. **No coaching layer per role beyond text.** No footwork cue, no eye discipline, no ball priority, no communication call visualized on the field.
-5. **No sport-authentic polish.** Softball uses baseball diamond visuals scaled down; no rise-ball/dropball-specific cues, no slap-hitter alignment, no short-game (bunt defense wheel) presets.
-6. **No progression / mastery arc surfacing.** Situations exist as a flat list; no "level" ladder like the competitors' "Rookie → Pro → Elite" progression paths.
+### 1. Play Playback Engine (timeline with ball + runners)
+Today "Watch the play" animates defender routes in parallel over ~1.4s. Elite competitors show a **synchronized clock** — pitch → contact → ball flight → defender routes → runner advances → tag/out.
 
-## What to build
+- New `src/lib/iq/playTimeline.ts` — resolves a scenario into a normalized 0..1 timeline with typed segments (`pitch`, `contact`, `ball_flight`, `defender_route`, `runner_advance`, `throw`, `tag`).
+- Extend `iq_situation_actors` reads to include an optional `timing` field per waypoint (`{ t: 0..1 }`) plus per-actor `start_at` / `end_at`. Absent timing → auto-spaced evenly (back-compat).
+- Add `ball_track` to `IqScenario` (jsonb column) — sequence of `{ x,y,t, kind: "batted"|"thrown" }` points. Renders as a distinct yellow trail with a moving ball dot.
+- Rebuild `IqDiamond`'s `playing` mode to drive off the timeline: single `elapsed` state (framer-motion `useMotionValue`) that all actors + ball read from. Replaces the current per-actor keyframe hack.
+- Playback controls in `IqScenarioRunner` reveal panel: Play / Pause / Scrub / 0.5×–1×–2× speed.
 
-### 1. Route anchoring (fix the lines-must-follow-the-defender bug)
-Change scenario authoring model from *absolute path points* to *anchor-relative path deltas*, resolved at render time against each defender's actual set position:
-- Add `primary_path_mode: "absolute" | "relative_to_start" | "to_target"` on `iq_actors` scenario rows (default backfill `"absolute"` so existing content still works).
-- New authoring format supports `{ target: "1B" | "2B" | "3B" | "H" | "cutoff" | { role: "SS" } | { dx, dy } }` segments.
-- `IqDiamond` resolves each waypoint at render, so when the alignment resolver picks *no-doubles* or *DP depth* or *shift* the paths always start at the real defender dot and terminate at the correct bag/cutoff/backup spot.
-- Backfill existing scenarios: for each actor whose path clearly targets a base, rewrite to `{ target: "<base>" }`; leave others as absolute with a deterministic offset applied so they at least start from the resolved position.
+### 2. Coach Overlay Layer (footwork · comm · eyes)
+Currently each actor has `coaching_note` / `communication_call` / `secondary_read` / `elite_cue` shown only in the hover card. Elite apps overlay these ON the field during playback.
 
-### 2. Play Playback Engine (beats Motion Playbook)
-Add a "Watch the play" mode above the quiz:
-- Ball timeline (`ball_path: [{ t, x, y, phase: "pitch"|"contact"|"in-flight"|"fielded"|"throw" }]`).
-- Runner timelines per base (`runner_paths`).
-- Defender routes animated in sync with ball frames using `framer-motion` `useAnimationFrame` on a shared clock (0..1).
-- Controls: Play / Pause / Scrub / 0.5×/1×/2×, and "Loop until I get it".
-- Quiz mode still hides paths; Reveal mode plays the animation with your chosen role highlighted so you *see* what you should have done.
+- New `src/components/iq/IqCoachOverlay.tsx` — toggleable chips anchored to each defender that surface at the timeline moment they matter:
+  - **Footwork** (drop step, crossover, rounded route) — icon + 1-line cue.
+  - **Comm** — speech bubble with the exact `communication_call`.
+  - **Eyes** — dashed sight-line from defender to the read target (ball, runner, cutoff).
+- Overlay filter bar above the field: `All · Footwork · Comm · Eyes · Off`. Persisted in `localStorage("iq:overlay")`.
+- Extend `IqActor` with optional `footwork_cue: string`, `eyes_target: IqActorRole | "ball" | "1B"…`, migrated via `jsonbMigrations` for legacy rows.
 
-### 3. Coach Layer overlays (per role, per situation)
-Extend `iq_actors` (or a sibling `iq_actor_coaching` table) with:
-- `footwork` (e.g., "drop-step, crossover to the bag"),
-- `eyes` (e.g., "runner at 2B, then ball"),
-- `priority` (`ball | bag | backup | communicate`),
-- `call` (verbal — "I got 2!", "Cut 4!", "Bag!"),
-- `common_mistake`.
-Render as toggleable overlays on the diamond (Footwork / Eyes / Comm bubbles) — nothing in the market ships this on a field diagram.
+### 3. Preset Library Expansion (parity with Motion Playbook / BR Instincts)
+Ship a curated set of alignment presets and route templates coach-legible in `coach-language`, seeded into `iq_defensive_alignments`:
 
-### 4. Situational depth expansion
-Preset library expansion (owner editor already exists at `/owner/iq/alignments`):
-- **Bunt defense**: wheel-left, wheel-right, crash, rotation, safe.
-- **Runner on 3B < 2 outs**: corners in / halfway / all-in.
-- **Runners on / DP situation**: IF DP depth.
-- **No-doubles / late innings**: OF deep + corners on lines.
-- **Shifts**: full shift RHH/LHH, shaded, 4th-OF (softball slap look).
-- **Softball-specific**: slap-hitter alignment (3B crash + SS creep), rise-ball 2-strike, drop-ball GB alignment.
-Alignment selector rules on situations reference these presets so playback reflects the *right* pre-pitch look automatically.
+- **Infield**: standard, DP depth, corners-in (bunt), corners-in (contact play), guard the lines, wheel (LH bunter), rotation (RH bunter), 1st-and-3rd defense (concede / cut).
+- **Outfield**: standard, no-doubles, shallow (bases-loaded / infield-in combo), shift RH pull, shift LH pull, tag-up depth (R3, <2 outs).
+- **Situational combos** (compose infield × outfield): "bases-loaded, tie run at 3rd, 1 out" auto-composes corners-in + shallow OF.
 
-### 5. Sport-authentic field polish
-- `IqField` gets sport-specific dirt shapes (softball skinned infield vs baseball dirt cutout), correct mound-to-plate ratio, correct foul line lengths, bases sized to sport.
-- Batter box shown with L/R based on `state.batterSide`, so alignment "shift vs LHH" visibly reads correct.
-- Warning track, outfield fence arc, coach's boxes — all drawn once from `fieldGeometry.ts` (already the SoT).
+Owner tool at `/owner/iq/alignments` gains a **Combo Builder** tab: pick infield preset + OF preset + situational tag, preview on `IqField`, save as a composite.
 
-### 6. Progression Ladder + Weekly Program (mastery moat)
-- Tag every situation with `difficulty: "rookie" | "varsity" | "college" | "pro"` and `concept_tags` (e.g., `cut-relay`, `1st-and-3rd`, `bunt-D`, `pickoff`, `pop-up-priority`, `rundown`).
-- New page `/iq/ladder` renders a visual ladder per lens (Defense / Offense / Baserunning / Pitching) with unlock gating from mastery.
-- "IQ Path of the Week" pulls 5 due situations + 2 next-difficulty stretch situations into a single-tap program from the Hammer daily plan.
+### 4. Difficulty Ladder / Progression
+Today difficulty is a flat `intro | core | advanced | elite` string. Add a **progression graph** — each situation lists prerequisite concept tags, unlocked once mastery ≥ threshold.
 
-### 7. Attempt telemetry → real mastery
-Extend `iq_attempts` payload with `time_to_first_click_ms`, `changed_answer_before_lock`, `role_chosen`, `mode ("quiz"|"watch-then-quiz")`. Mastery decay curve becomes concept-tag aware so a wrong answer on `cut-relay` resurfaces *other* cut-relay situations, not just the exact scenario.
+- New table `iq_concept_tags` (id, sport, key, label, description) + `iq_situation_concepts` (situation_id, concept_id).
+- `iq_user_progress` gains derived rollup view `iq_user_concept_mastery` (avg mastery across situations touching a concept).
+- Library page groups situations into ladders per lens; locked rungs show "unlock by mastering: X, Y".
+- Wire `useIqSituations` to also fetch concept mastery so the UI can render lock state.
+
+### 5. Concept-Tag Mastery Decay
+Extend spaced-repetition to concept level: if a user hasn't touched a concept in N days, decay concept mastery by 5%/week (visible on the ladder as a fading ring). Nightly cron `iq-decay` edge function.
 
 ## Technical details
 
-**Files to add**
-- `src/lib/iq/pathResolver.ts` — resolves relative/target waypoints against `AlignmentPositions`.
-- `src/lib/iq/playbackClock.ts` — shared animation clock hook.
-- `src/components/iq/IqPlayback.tsx` — play/pause/scrub controls + ball/runner rendering.
-- `src/components/iq/IqCoachOverlays.tsx` — footwork/eyes/comm toggles.
-- `src/pages/IqLadder.tsx` — difficulty ladder view.
-- `supabase/migrations/*` — add columns: `iq_actors.primary_path_mode`, `iq_actors.footwork/eyes/priority/call/common_mistake`, `iq_scenarios.ball_path jsonb`, `iq_scenarios.runner_paths jsonb`, `iq_situations.difficulty text`, `iq_situations.concept_tags text[]`. Include `GRANT`s per public-schema rule.
+**Files created**
+- `src/lib/iq/playTimeline.ts` — timeline resolver + interpolation helpers.
+- `src/components/iq/IqCoachOverlay.tsx` — overlay chips + sight lines.
+- `src/components/iq/IqPlaybackControls.tsx` — play/pause/scrub/speed.
+- `src/lib/iq/concepts.ts` — concept lookup + mastery aggregation.
+- `supabase/functions/iq-decay/index.ts` — nightly concept decay job.
 
-**Files to change**
-- `src/components/iq/IqDiamond.tsx` — resolve paths via `pathResolver`; accept `phase` prop from playback clock; stop drawing lines from the fallback map.
-- `src/components/iq/IqScenarioRunner.tsx` — add "Watch → Quiz → Reveal" flow, wire coach overlays, log richer attempt telemetry.
-- `src/components/iq/IqField.tsx` — sport-authentic polish, batter box handedness, softball skinned infield.
-- `src/hooks/useIqSituations.ts` — surface `difficulty` and `concept_tags`.
-- `src/pages/owner/IqAlignmentsEditor.tsx` — add preset templates for wheel/no-doubles/DP/corners-in/slap.
+**Files modified**
+- `src/components/iq/IqDiamond.tsx` — timeline-driven `playing`, ball track, overlay slots.
+- `src/components/iq/IqScenarioRunner.tsx` — playback controls, overlay filter, timeline scrubber.
+- `src/pages/GameIqSituation.tsx` — pass ball_track + timeline into diamond; overlay toggle.
+- `src/pages/GameIQ.tsx` (library) — ladder rendering, lock badges.
+- `src/pages/owner/IqAlignmentsEditor.tsx` — Combo Builder tab.
+- `src/lib/iq/types.ts` — `IqPathPoint.t?`, `IqActor.footwork_cue?/eyes_target?`, `IqScenario.ball_track?`, `IqConcept`, `IqSituationConcept`.
+- `src/lib/jsonbMigrations.ts` — register migrations for actor/scenario payload shape v2.
 
-**Backwards compatibility**
-- Existing scenarios default to `primary_path_mode: "absolute"` and continue to render, but a data migration script rewrites obvious base-target paths to `{ target }` form so the "lines follow defender" fix immediately applies to the library without hand-editing every row.
+**Migrations** (schema-only, additive, with GRANTs)
+1. `alter table iq_situation_actors add column footwork_cue text, add column eyes_target text;`
+2. `alter table iq_scenarios add column ball_track jsonb;`
+3. `create table iq_concept_tags(id uuid pk, sport text, key text, label text, description text)` + GRANT.
+4. `create table iq_situation_concepts(situation_id uuid fk, concept_id uuid fk, weight int default 1, primary key(situation_id, concept_id))` + GRANT.
+5. `create view iq_user_concept_mastery` (security-invoker view over `iq_user_progress` × `iq_situation_concepts`).
 
-## Rollout order
+**Cron**: schedule `iq-decay` daily at 04:00 UTC via `supabase/config.toml`.
 
-1. Route anchoring + backfill (fixes the user's reported "lines must follow the new defender set position").
-2. Field polish + sport authenticity.
-3. Play Playback Engine.
-4. Coach Layer overlays.
-5. Preset expansion + selector rules on top situations.
-6. Progression Ladder + weekly program hook.
-7. Richer attempt telemetry + concept-tag mastery decay.
+**Backwards compatibility**: All new fields optional; existing 114 situations render unchanged. Timeline auto-spaces routes when `t` absent; ball_track omitted → no ball rendered.
 
-Each phase ships independently; the app stays green between phases.
+## Sequencing
+1. Timeline resolver + ball track (foundation everything else builds on).
+2. Playback controls in the runner reveal panel.
+3. Coach overlay layer with filter bar.
+4. Preset library expansion + Combo Builder.
+5. Concept tags + ladder + decay cron.
+
+## Out of scope (queued for Phase 3)
+- Multi-scenario branching ("what if the runner rounds hard?").
+- Video-linked scenarios (upload → auto-place ball_track).
+- Head-to-head IQ battles between users.

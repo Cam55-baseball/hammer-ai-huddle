@@ -6,14 +6,25 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users, Play } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
+import { IqPlaybackControls } from "./IqPlaybackControls";
+import { IqOverlayFilterBar, type OverlayMode } from "./IqCoachOverlay";
 import { useRecordIqAttempt } from "@/hooks/useIqProgress";
 import { toast } from "@/hooks/use-toast";
 import type { IqActor, IqActorRole, IqScenario, IqAssignment } from "@/lib/iq/types";
 import { ASSIGNMENT_LABELS, ROLE_LABELS, DEFENSIVE_ROLES } from "@/lib/iq/types";
 import { quizResume, pendingAttempts } from "@/lib/iq/resumeStore";
 import { buildScenarioFeedback } from "@/lib/iq/feedback";
+
+const OVERLAY_KEY = "iq:overlay";
+function loadOverlay(): OverlayMode {
+  try {
+    const v = localStorage.getItem(OVERLAY_KEY);
+    if (v === "all" || v === "footwork" || v === "comm" || v === "eyes" || v === "off") return v;
+  } catch { /* noop */ }
+  return "all";
+}
 
 interface Props {
   situationId: string;
@@ -46,7 +57,30 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
   );
   const [submitted, setSubmitted] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const [overlay, setOverlay] = useState<OverlayMode>(loadOverlay);
+  const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
+
+  useEffect(() => { try { localStorage.setItem(OVERLAY_KEY, overlay); } catch { /* noop */ } }, [overlay]);
+
+  // Advance the play clock while `playing`.
+  useEffect(() => {
+    if (!playing) return;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = (now - last) / 1000; last = now;
+      setProgress((p) => {
+        const next = p + (dt / 3.2) * speed;
+        if (next >= 1) { setPlaying(false); return 1; }
+        return next;
+      });
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, speed]);
 
   const correct = position
     ? scenario.correct_actor_assignments[position] === answer
@@ -137,7 +171,39 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     <Card className="p-5 space-y-4" data-protected-editing="true">
       <p className="text-base font-medium">{scenario.prompt}</p>
 
-      <IqDiamond actors={actors} mode={submitted ? "reveal" : "quiz"} highlightRole={position} defensivePositions={defensivePositions} sport={sport} batterSide={batterSide} playing={playing} />
+      <IqDiamond
+        actors={actors}
+        mode={submitted ? "reveal" : "quiz"}
+        highlightRole={position}
+        defensivePositions={defensivePositions}
+        sport={sport}
+        batterSide={batterSide}
+        progress={submitted ? progress : undefined}
+        playing={submitted ? playing : false}
+        scenario={scenario}
+        overlay={submitted ? overlay : "off"}
+      />
+
+      {submitted && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <IqOverlayFilterBar value={overlay} onChange={setOverlay} />
+          </div>
+          <IqPlaybackControls
+            playing={playing}
+            progress={progress}
+            speed={speed}
+            onTogglePlay={() => {
+              if (progress >= 1) setProgress(0);
+              setPlaying((p) => !p);
+            }}
+            onScrub={(t) => { setPlaying(false); setProgress(t); }}
+            onSetSpeed={setSpeed}
+            onRestart={() => { setProgress(0); setPlaying(true); }}
+          />
+        </div>
+      )}
+
 
       {!submitted && (
         <>
@@ -289,13 +355,6 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
             )}
 
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button size="sm" variant="default" onClick={() => {
-                setPlaying(false);
-                setTimeout(() => setPlaying(true), 40);
-                setTimeout(() => setPlaying(false), 1600);
-              }}>
-                <Play className="h-3.5 w-3.5 mr-1" /> Watch the play
-              </Button>
               <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
               <Button size="sm" variant="ghost" onClick={() => navigate("/iq")}>Back to library</Button>
             </div>

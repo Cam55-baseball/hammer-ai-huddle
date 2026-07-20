@@ -6082,6 +6082,33 @@ export type Database = {
         }
         Relationships: []
       }
+      iq_concept_tags: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          label: string
+          sport: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          label: string
+          sport?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
+          sport?: string
+        }
+        Relationships: []
+      }
       iq_defensive_alignments: {
         Row: {
           anchors_vs_lhh: Json | null
@@ -6174,6 +6201,7 @@ export type Database = {
       iq_scenarios: {
         Row: {
           alignment_preset: string | null
+          ball_track: Json | null
           correct_actor_assignments: Json
           created_at: string
           distractors: Json
@@ -6188,6 +6216,7 @@ export type Database = {
         }
         Insert: {
           alignment_preset?: string | null
+          ball_track?: Json | null
           correct_actor_assignments?: Json
           created_at?: string
           distractors?: Json
@@ -6202,6 +6231,7 @@ export type Database = {
         }
         Update: {
           alignment_preset?: string | null
+          ball_track?: Json | null
           correct_actor_assignments?: Json
           created_at?: string
           distractors?: Json
@@ -6239,11 +6269,15 @@ export type Database = {
           communication_call: string
           created_at: string
           elite_cue: string
+          end_at: number | null
+          eyes_target: string | null
+          footwork_cue: string | null
           id: string
           primary_path: Json
           role: string
           secondary_read: string
           situation_id: string
+          start_at: number | null
           updated_at: string
         }
         Insert: {
@@ -6253,11 +6287,15 @@ export type Database = {
           communication_call?: string
           created_at?: string
           elite_cue?: string
+          end_at?: number | null
+          eyes_target?: string | null
+          footwork_cue?: string | null
           id?: string
           primary_path?: Json
           role: string
           secondary_read?: string
           situation_id: string
+          start_at?: number | null
           updated_at?: string
         }
         Update: {
@@ -6267,16 +6305,53 @@ export type Database = {
           communication_call?: string
           created_at?: string
           elite_cue?: string
+          end_at?: number | null
+          eyes_target?: string | null
+          footwork_cue?: string | null
           id?: string
           primary_path?: Json
           role?: string
           secondary_read?: string
           situation_id?: string
+          start_at?: number | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "iq_situation_actors_situation_id_fkey"
+            columns: ["situation_id"]
+            isOneToOne: false
+            referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_situation_concepts: {
+        Row: {
+          concept_id: string
+          situation_id: string
+          weight: number
+        }
+        Insert: {
+          concept_id: string
+          situation_id: string
+          weight?: number
+        }
+        Update: {
+          concept_id?: string
+          situation_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_situation_concepts_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "iq_concept_tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iq_situation_concepts_situation_id_fkey"
             columns: ["situation_id"]
             isOneToOne: false
             referencedRelation: "iq_situations"
@@ -6447,6 +6522,38 @@ export type Database = {
             columns: ["situation_id"]
             isOneToOne: false
             referencedRelation: "iq_situations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iq_user_concept_mastery: {
+        Row: {
+          concept_id: string
+          last_touched_at: string | null
+          mastery_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concept_id: string
+          last_touched_at?: string | null
+          mastery_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concept_id?: string
+          last_touched_at?: string | null
+          mastery_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iq_user_concept_mastery_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "iq_concept_tags"
             referencedColumns: ["id"]
           },
         ]
