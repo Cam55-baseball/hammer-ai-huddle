@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 import { useHammerOnboardingDirector } from "@/hooks/useHammerOnboardingDirector";
 import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useSportTheme } from "@/contexts/SportThemeContext";
