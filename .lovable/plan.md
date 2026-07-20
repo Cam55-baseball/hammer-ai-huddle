@@ -1,37 +1,25 @@
-## Problem
+## Root cause (confirmed)
 
-The Hammer athlete onboarding chat card (the pink "Hammer · athlete onboarding 12/16" card in the screenshot) only exposes **Skip** and **Save & next**. Once a user answers or skips a question, there's no way to return to a previous one — the director hook advances the queue and never looks back.
+The `public.athlete_context` table has **no GRANTs** to any role (verified via `information_schema.role_table_grants` — empty). RLS policies exist and are correct, but without table-level GRANTs PostgREST returns `permission denied for table athlete_context` before RLS even runs. The upsert in `CategoryGoalsStep.handleSave` fails, and the resulting PostgrestError serializes to `[object Object]` in the toast.
 
-## Fix — add a Back control next to Skip / Save & next
+The recent client-side error-stringify tweak can't fix this — the failure is server-side authorization.
 
-### 1. `src/hooks/useHammerOnboardingDirector.ts`
-Add a lightweight session history so the previous question can be reopened without mutating persisted context:
+## Fix
 
-- New session state:
-  - `history: string[]` — ordered list of gap IDs the user has acted on this session (push on every successful `resolve` and `skip`).
-  - `sessionReopened: Set<string>` — gap IDs to force back into the open queue even if the athlete context already has a saved value.
-- New API:
-  - `canGoBack: boolean` (true when `history.length > 0`).
-  - `goBack(): void` — pops the last id from `history`, removes it from `sessionResolved` and `sessionSkipped`, and adds it to `sessionReopened`. That makes the openGaps filter surface it again as `nextGap`, so the user sees their previous question with a blank draft ready to overwrite. The persisted value on the server is left intact until they hit Save & next again (missingness/organism-truth invariants preserved — this is UX-only re-entry, never a silent mutation).
-- `openGaps` filter: treat `sessionReopened.has(g.id)` as "open" for athlete audience regardless of `ctx.get(...).missing`.
-- Update the `HammerOnboardingDirector` interface accordingly.
+One migration adding the missing grants:
 
-### 2. `src/components/hammer/HammerOnboardingChat.tsx`
-- Pull `canGoBack` and `goBack` from the director.
-- In the action row (currently `Skip` + `Save & next`), add a leading **Back** button:
-  - `variant="ghost"`, `size="sm"`, `<ArrowLeft />` icon, disabled when `!canGoBack || busy`.
-  - Clicking it calls `goBack()` and clears local `draft` state.
-- Keep the row right-aligned; Back sits just to the left of Skip so the order is **Back · Skip · Save & next**, matching the screenshot placement the user asked for.
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.athlete_context TO authenticated;
+GRANT ALL ON public.athlete_context TO service_role;
+```
 
-### 3. Verify
-- Answer question 12 → Save & next advances to 13 → tap **Back** → question 12 re-appears with its Skip / Save & next buttons and a blank draft.
-- Skip a question → tap **Back** → skipped question re-appears.
-- On the very first question of a session, **Back** is disabled (no history).
+RLS already restricts rows to `auth.uid() = user_id`, so authenticated grants are safe.
 
-## Files touched
-- `src/hooks/useHammerOnboardingDirector.ts`
-- `src/components/hammer/HammerOnboardingChat.tsx`
+## Sweep
 
-## Out of scope
-- The separate multi-step `AthleteOnboarding` page shell (that already has a header Back button and clickable stepper from the previous turn) — this request is specifically about the in-card Hammer chat surface shown in the screenshot.
-- Any change to persisted answers, gap ordering, or the director's resolve/skip semantics beyond reopening a question in the session queue.
+Since this class of bug ("table created without GRANTs") tends to affect siblings from the same migration wave, I'll query `information_schema.role_table_grants` for every `public` table touched by onboarding/goals writes (`athlete_context`, `athlete_mpi_settings`, `athlete_side_preferences`, `profiles`) and add missing grants in the same migration so we don't chase this again next week.
+
+## Verification
+
+- Re-query `role_table_grants` after migration → confirm `authenticated` has INSERT/UPDATE/SELECT/DELETE.
+- Ask you to retry Save on the goals step; toast should read "Goals saved."
