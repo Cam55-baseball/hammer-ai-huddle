@@ -18,6 +18,10 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
+import { AnthropometricsStep } from "@/components/onboarding/steps/AnthropometricsStep";
+import { FuelRecoveryStep } from "@/components/onboarding/steps/FuelRecoveryStep";
+import { MentalCareerStep } from "@/components/onboarding/steps/MentalCareerStep";
+import { ConnectionsStep } from "@/components/onboarding/steps/ConnectionsStep";
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
 import { writeDraftSlot, readDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { ThrowingHandSelector, type ThrowingHandValue } from "@/components/splits/ThrowingHandSelector";
@@ -28,7 +32,11 @@ import { toast } from "sonner";
 const STEPS = [
   "Welcome",
   "Profile",
+  "Body",
   "Rank goals",
+  "Fuel & recovery",
+  "Mental & career",
+  "Connections",
   "Schedule today",
   "Confirm",
   "Health check",
@@ -38,18 +46,26 @@ const STEPS = [
 ];
 const STEP_WELCOME = 0;
 const STEP_PROFILE = 1;
-const STEP_GOALS = 2;
-const STEP_SCHEDULE = 3;
-const STEP_CONFIRM = 4;
-const STEP_INJURY = 5;
-const STEP_NOTIFICATIONS = 6;
-const STEP_REVIEW = 7;
-const STEP_DONE = 8;
+const STEP_ANTHRO = 2;
+const STEP_GOALS = 3;
+const STEP_FUEL = 4;
+const STEP_MENTAL = 5;
+const STEP_CONNECTIONS = 6;
+const STEP_SCHEDULE = 7;
+const STEP_CONFIRM = 8;
+const STEP_INJURY = 9;
+const STEP_NOTIFICATIONS = 10;
+const STEP_REVIEW = 11;
+const STEP_DONE = 12;
 
 /** Deep-link edit keys → owning step index. */
 const EDIT_TARGETS: Record<ReviewEditKey, number> = {
   profile: STEP_PROFILE,
+  anthropometrics: STEP_ANTHRO,
   goals: STEP_GOALS,
+  fuel: STEP_FUEL,
+  mental: STEP_MENTAL,
+  connections: STEP_CONNECTIONS,
   schedule: STEP_SCHEDULE,
   injury: STEP_INJURY,
   notifications: STEP_NOTIFICATIONS,
