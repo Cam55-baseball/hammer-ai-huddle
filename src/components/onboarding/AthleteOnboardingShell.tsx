@@ -12,8 +12,10 @@ interface Props {
   onSaveAndExit?: () => void | Promise<void>;
   /** Optional back handler; when omitted or on step 0, the back button is hidden. */
   onBack?: () => void;
-  /** Optional jump-to-step (only invoked for indices < stepIndex). */
+  /** Optional jump-to-step (only invoked for indices < stepIndex unless allowForwardJump). */
   onJumpToStep?: (index: number) => void;
+  /** When true, stepper chips are clickable for every step (forward and back). */
+  allowForwardJump?: boolean;
 }
 
 export function AthleteOnboardingShell({
