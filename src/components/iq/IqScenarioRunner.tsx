@@ -19,12 +19,16 @@ import { quizResume, pendingAttempts } from "@/lib/iq/resumeStore";
 import { buildScenarioFeedback } from "@/lib/iq/feedback";
 
 const OVERLAY_KEY = "iq:overlay";
+const VOICE_KEY = "iq:voice";
 function loadOverlay(): OverlayMode {
   try {
     const v = localStorage.getItem(OVERLAY_KEY);
     if (v === "all" || v === "footwork" || v === "comm" || v === "eyes" || v === "off") return v;
   } catch { /* noop */ }
   return "all";
+}
+function loadVoice(): boolean {
+  try { return localStorage.getItem(VOICE_KEY) === "1"; } catch { return false; }
 }
 
 interface Props {
@@ -36,9 +40,11 @@ interface Props {
   defensivePositions?: Partial<Record<IqActorRole, { x: number; y: number }>>;
   sport?: "baseball" | "softball";
   batterSide?: "R" | "L";
+  debrief?: string | null;
+  conceptLabels?: string[];
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R" }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R", debrief, conceptLabels }: Props) {
 
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
