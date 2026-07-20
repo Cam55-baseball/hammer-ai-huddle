@@ -1,54 +1,79 @@
-## Plan: Repair athlete Hammer onboarding navigation
+## Goal
+Turn athlete onboarding into a full, hybrid guided tour (~10–15 min) that captures every variable our modules already consume, so Today Plan, Nutrition Hub, Recovery, Calendar, Game Hub, Recruiting, and Coach/Parent linking all light up on day one. Structured domains use the stepper; qualitative domains stay in Hammer chat. Minors see every question but writes to weight-goal and recruiting surfaces are gated until a parent authorizes.
 
-### What will change
-- Replace the current “missing questions only” onboarding behavior with a stable ordered question flow.
-- Users will be able to start at question 1, move forward question-by-question, and go back to any previous question without deleting answers.
-- Replace the current **Back / Skip / Save & next** controls with clear **back arrow** and **forward arrow** navigation.
-- Forward navigation will save the current answer before advancing.
-- Back navigation will only move to the previous question; it will not clear, skip, or erase anything.
-- Previously answered fields will prefill when users revisit a question.
+## New onboarding shape
 
-### Current issue confirmed from the code
-- The Hammer onboarding card currently renders `nextGap` from `openGaps[0]`, where `openGaps` filters out answers already present in the athlete context.
-- That means returning users can be dropped directly into a later unanswered item, such as question 12, instead of seeing question 1 with prior answers available.
-- The current Back action removes a prior item from resolved/skipped state and reopens it, which can make navigation feel destructive instead of like normal previous/next navigation.
-- The UI resets `draft` to empty after save/back/skip, so revisiting a question does not reliably show the saved answer.
+Progress bar shows "Step N of ~12". Every step has Back / Save & Exit / Continue. Anything can be revisited from a Review step at the end and from Settings → Onboarding.
 
-### Implementation steps
-1. **Rebuild the onboarding director state**
-   - Keep the canonical ordered athlete question list as the source of the flow.
-   - Add an `activeIndex` so the UI knows exactly which question the user is on.
-   - Expose `currentGap`, `currentIndex`, `totalGaps`, `canGoBack`, and `canGoForward`.
-   - Stop using “first missing question” as the navigation driver.
+```text
+1.  Welcome + role/sport confirm      (existing)
+2.  Identity & handedness             (existing, incl. "Both" throwing)
+3.  Anthropometrics                   NEW — height, weight, wingspan, hand size, dominant leg
+4.  Body & health                     NEW — DOB/grade, biological stage band, weight-goal (cut/maintain/gain), target weight (minor→gated)
+5.  Injury & medical history          EXPAND — past injuries, current pain zones, surgeries, RTP status, cleared limitations
+6.  Sport context & positions         (existing) — primary/secondary positions, bats/throws, two-way
+7.  Training environment & equipment  EXPAND — home/gym/field, equipment inventory, indoor/outdoor, weekly hours, session length
+8.  Season & schedule                 EXPAND — current season phase, team commitments, practice days, game days, travel windows, import schedule CTA
+9.  Category goals (5 ranked)         (existing) — sport-specific sub-goal trees
+10. Fuel & recovery                   NEW — dietary style, allergies, meal count, hydration baseline, supplements, typical bed/wake, sleep hours target, HRV/wearable device, stress baseline
+11. Mental & career                   NEW — pre-game routine, focus/confidence baseline, level target (HS/JUCO/D1/pro), showcase plans, verified stats sites, exposure prefs (minor→gated)
+12. Connections & notifications       NEW — parent link (required for minors), coach link, notification channels, quiet hours
+13. Review & finish                   NEW — chip list of every answer, edit any, then complete
+```
 
-2. **Hydrate answers into a local draft map**
-   - Read existing athlete context values for every onboarding gap.
-   - Store answers by `gap.id` so users can revisit any previous question and see what they already entered.
-   - Preserve unsaved in-session edits while navigating.
+Hammer chat director stays available after finish for drip questions (mental notes, injury narrative, life context) that don't fit the stepper.
 
-3. **Make forward navigation save safely**
-   - When the user taps the forward arrow, save the current answer if it has a value.
-   - If the answer is empty, allow forward navigation only when the question is optional/skippable, preserving missingness without fabricating data.
-   - Do not clear the field after moving forward.
+## Minor branching (RR-8 / RR-10)
 
-4. **Make back navigation non-destructive**
-   - Back arrow only decrements `activeIndex`.
-   - It will not remove saved answers, reopen gaps, mark anything skipped, or clear fields.
+- DOB in step 4 sets `is_minor`. All prompts still render.
+- Weight-goal + target weight, recruiting level, showcase, exposure, verified-stats: inputs enabled, but Continue writes a pending intent (not the live goal) and shows a "Awaiting parent authorization" chip until the parent link in step 12 completes RR-10 consent flow.
+- Parent link uses existing `parent_invite_dispatches` + `athlete_recruiting_consent` primitives.
 
-5. **Update the Hammer onboarding UI**
-   - Replace **Back / Skip / Save & next** with icon-based previous and next controls.
-   - Show progress as the actual position, for example `1 / 16`, not just answered count.
-   - Keep the current question input components, but bind them to the per-question draft map instead of one resettable `draft` value.
-   - Show a clean final completion state after the last question.
+## Data plumbing (E2E)
 
-6. **Protect the full onboarding page resume behavior**
-   - Keep the broader onboarding step draft system intact.
-   - Ensure returning to the athlete onboarding page does not force users into question 12 just because earlier answers already exist.
-   - Users should be able to resume the onboarding area and still navigate through the Hammer questions normally.
+Every new field maps to an existing canonical owner — no parallel truth surfaces:
 
-7. **Validate E2E behavior**
-   - Start a fresh athlete onboarding flow and confirm question 1 appears first.
-   - Answer question 1, move forward, then back, and confirm the answer is still visible.
-   - Move forward through multiple questions and confirm every forward tap saves the current answer.
-   - Revisit onboarding with existing answers and confirm users can still navigate from question 1 through the final question.
-   - Confirm no navigation action kicks the user out of the app.
+| Step | Fields | Canonical table / event |
+|------|--------|--------------------------|
+| 3 Anthro | height, weight, wingspan, hand, dominant leg | `athlete_context.anthropometrics` (envelope) |
+| 4 Body | DOB, weight-goal, target weight | `profiles.dob`, `athlete_body_goals` (new intent col for minors), `vault_wellness_goals` |
+| 5 Injury | history, current pain, RTP | `physio_health_profiles`, `athlete_events` (`injury.reported`) |
+| 7 Equipment | inventory, indoor/outdoor, hours | `athlete_equipment_context`, `athlete_context.equipment_effective` |
+| 8 Schedule | season, practice/game days, travel | `athlete_context.season_phase`, `calendar_events` via existing importer |
+| 10 Fuel | diet style, allergies, hydration, supplements | `hydration_settings`, `vault_nutrition_goals`, `nutrition_streaks` seed, `athlete_context.dietary_prefs` (new envelope key) |
+| 10 Recovery | bed/wake, sleep target, wearable, stress | `wellness_preferences`, `stress_assessments` seed, `wearable_metrics` device pref |
+| 11 Mental/Career | routine, level target, showcase, exposure | `mental_health_prompts` seed, `athlete_professional_status`, `athlete_recruiting_consent` (pending for minors) |
+| 12 Connections | parent, coach, notif prefs | `parent_athlete_links` / `parent_invite_dispatches`, `folder_coach_permissions`, `notification_preferences`, `follower_notification_prefs` |
+
+All writes flow through existing acquisition helpers / `emitAsbEvent` — no new topic namespace. Existing `useAthleteOnboardingState` gains `hasAnthro`, `hasFuel`, `hasRecovery`, `hasConnections`, `hasCareerIntent` derivations; `hasCompletedOnboarding` requires the required subset only.
+
+## Required vs recommended vs optional
+
+- **Required to enter app**: role, sport, handedness, positions, category goals, schedule day-type, notification pref. (Matches today's gate — we don't raise the barrier.)
+- **Recommended (prompted, skippable per step)**: anthro, injury, equipment, season, fuel, recovery, connections.
+- **Optional**: career/showcase, mental prompts, verified-stats links.
+
+Skipping still records a `missing` envelope entry (no fabrication) and Hammer will re-ask contextually when the athlete opens the relevant module.
+
+## Implementation steps
+
+1. Extend `AthleteOnboardingShell` step registry with the seven new/expanded steps and a Review step; wire draft persistence per step (existing `onboarding-step` draft slot).
+2. Build step components under `src/components/onboarding/steps/`: `AnthropometricsStep`, `BodyHealthStep`, `InjuryHistoryStep` (extend existing intake), `EquipmentStep`, `SeasonScheduleStep` (embed `SeasonScheduleImporterDialog`), `FuelRecoveryStep`, `MentalCareerStep`, `ConnectionsStep`, `ReviewAnswersStep` (extend existing).
+3. Add acquisition writers in `src/lib/hammer/context/acquisition.ts` for new envelope keys (`dietary_prefs`, `hydration_baseline`, `sleep_target`, `wearable_device`, `stress_baseline`, `pregame_routine`, `career_target`, `showcase_intent`, `exposure_prefs`).
+4. Extend `AthleteContextEnvelope` SPINE_VARIABLE_KEYS and the `get_athlete_context_envelope` RPC (migration) to expose them with `{ value, source, confidence, missing, last_updated, owner }`.
+5. Add minor-write gating helper `gateMinorWrite(userId, surface)` that routes to pending-intent tables when `is_minor && !parent_authorized`.
+6. Update `useAthleteOnboardingState` derivations and the Profile/Sidebar "resume onboarding" panel to reflect the expanded checklist (required subset unchanged, recommended shown as progress ring).
+7. Keep `useHammerOnboardingDirector` linear nav; add the new gap ids so post-onboarding Hammer chat can re-ask any skipped item without duplicating step logic.
+8. E2E smoke via existing `.github/workflows/onboarding-regression.yml` — add fixtures for each new step, a minor branch, and a completion-with-skips branch.
+
+## Constitutional guardrails
+
+- No fabrication: skips write `missing: true` envelope entries, never defaults.
+- RR-6: injury inputs are athlete-reported, never diagnostic; RTP requires human authorization downstream (unchanged).
+- RR-8: life context (sleep, stress, family) is user-controlled; every field skippable, no coercion copy.
+- RR-10: minor writes to weight-goal / recruiting / exposure are pending-intent until parent authorizes.
+- Additive-only: no existing step removed, no envelope key renamed, no topic namespace introduced.
+
+## Open items before build (I'll confirm as I go, flag if you want to decide now)
+- Whether weight-goal for adults writes directly to `vault_wellness_goals` or stays as a Nutrition-Hub-owned surface with onboarding only capturing intent — I'll default to writing intent + linking, not overriding an existing goal.
+- Whether coach-link invite in step 12 sends immediately or queues to Review — I'll default to queued, sent on finish.
