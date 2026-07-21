@@ -77,6 +77,7 @@ export function DelayCam() {
   const replayUrlRef = useRef<string | null>(null);
   const queueRef = useRef<ArrayBuffer[]>([]);
   const timedChunksRef = useRef<TimedBlob[]>([]);
+  const initChunkRef = useRef<Blob | null>(null);
   const startTsRef = useRef<number>(0);
   const driftIntervalRef = useRef<number | null>(null);
   const fallbackIntervalRef = useRef<number | null>(null);
@@ -133,6 +134,7 @@ export function DelayCam() {
     sourceBufferRef.current = null;
     queueRef.current = [];
     timedChunksRef.current = [];
+    initChunkRef.current = null;
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
@@ -147,6 +149,15 @@ export function DelayCam() {
 
   useEffect(() => cleanup, [cleanup]);
 
+  // Build a decodable Blob by ensuring the recorder's first init segment is always first.
+  const buildDecodableBlob = useCallback((body: Blob[], fallbackMime?: string): Blob | null => {
+    const init = initChunkRef.current;
+    const mime = recorderRef.current?.mimeType || fallbackMime || mimeRef.current || "video/webm";
+    if (!init) return body.length ? new Blob(body, { type: mime }) : null;
+    const parts = body[0] === init ? body : [init, ...body];
+    return new Blob(parts, { type: mime });
+  }, []);
+
   // Replay: export the last N seconds of the ring buffer into a standalone video.
   const replayLastN = useCallback((n: number) => {
     const items = timedChunksRef.current;
@@ -155,8 +166,8 @@ export function DelayCam() {
     const cutoff = now - n * 1000;
     const selected = items.filter((x) => x.t >= cutoff).map((x) => x.blob);
     if (selected.length === 0) return;
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = new Blob(selected, { type: mime });
+    const blob = buildDecodableBlob(selected);
+    if (!blob) return;
     const url = URL.createObjectURL(blob);
     setReplayUrl(url);
     if (replayUrlRef.current) URL.revokeObjectURL(replayUrlRef.current);
@@ -169,13 +180,14 @@ export function DelayCam() {
         rv.play().catch(() => {});
       }
     }, 0);
-  }, []);
+  }, [buildDecodableBlob]);
 
   const saveClip = useCallback(() => {
     const items = timedChunksRef.current;
     if (items.length === 0) return;
     const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = new Blob(items.map((x) => x.blob), { type: mime });
+    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    if (!blob) return;
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -184,7 +196,7 @@ export function DelayCam() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-  }, []);
+  }, [buildDecodableBlob]);
 
   const start = useCallback(async (nextFacing?: Facing) => {
     setError(null);
@@ -253,12 +265,19 @@ export function DelayCam() {
         if (!ev.data || ev.data.size === 0) return;
         const now = performance.now();
         if (startTsRef.current === 0) startTsRef.current = now;
+
+        // The first chunk contains the container's init segment (WebM/MP4 headers).
+        // Without it, later chunks are not decodable when recombined.
+        if (!initChunkRef.current) {
+          initChunkRef.current = ev.data;
+        }
         timedChunksRef.current.push({ blob: ev.data, t: now });
 
-        // Trim ring buffer to the configured max window.
+        // Trim ring buffer to the configured max window. Always keep the first
+        // chunk because it holds the init segment required for decoding.
         const cutoff = now - MAX_BUFFER_SEC * 1000;
-        while (timedChunksRef.current.length > 2 && timedChunksRef.current[0].t < cutoff) {
-          timedChunksRef.current.shift();
+        while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
+          timedChunksRef.current.splice(1, 1);
         }
 
         if (modeRef.current === "mse") {
@@ -308,7 +327,8 @@ export function DelayCam() {
           const eligible = items.filter((x) => now - x.t >= delayMs).map((x) => x.blob);
           if (eligible.length === 0) return;
           try {
-            const blob = new Blob(eligible, { type: mimeRef.current });
+            const blob = buildDecodableBlob(eligible, mimeRef.current);
+            if (!blob) return;
             const url = URL.createObjectURL(blob);
             const prev = fallbackUrlRef.current;
             fallbackUrlRef.current = url;
@@ -329,7 +349,7 @@ export function DelayCam() {
       cleanup();
       setRunning(false);
     }
-  }, [cleanup, facing, flushQueue]);
+  }, [buildDecodableBlob, cleanup, facing, flushQueue]);
 
   const stop = useCallback(() => {
     cleanup();
@@ -453,7 +473,7 @@ export function DelayCam() {
               key={n}
               size="sm"
               variant={replayDuration === n ? "default" : "outline"}
-              disabled={!running}
+              disabled={!running || bufferedSec < n + delay}
               onClick={() => {
                 setReplayDuration(n);
                 replayLastN(n);
@@ -474,6 +494,14 @@ export function DelayCam() {
               playsInline
               controls
               autoPlay
+              onError={() => {
+                setError("Replay clip couldn't decode. Try pressing Start again and wait until the buffer is ready.");
+                if (replayUrlRef.current) {
+                  URL.revokeObjectURL(replayUrlRef.current);
+                  replayUrlRef.current = null;
+                }
+                setReplayUrl(null);
+              }}
               className="w-full aspect-video rounded-md bg-muted object-cover"
             />
           </div>
