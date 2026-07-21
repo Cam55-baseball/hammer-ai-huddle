@@ -300,6 +300,8 @@ const App = () => {
                 }
               />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
+              <Route path="/hammer/recall" element={<HammerRecall />} />
+              <Route path="/hammer/recall/:threadId" element={<HammerRecall />} />
               {/* Wave 3 — longitudinal continuity surfaces (capability-gated) */}
               <Route path="/runtime/cycle" element={<RequireCapability capability="wave3_view"><Wave3Cycle /></RequireCapability>} />
               <Route path="/runtime/rtp" element={<RequireCapability capability="wave3_view"><Wave3RTP /></RequireCapability>} />
