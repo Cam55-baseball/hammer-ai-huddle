@@ -349,7 +349,7 @@ export function DelayCam() {
   }, [facing, running, start]);
 
   return (
-    <Card className="p-4 space-y-4">
+    <Card className="p-4 space-y-4 border-2 border-dashed border-red-500">
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
