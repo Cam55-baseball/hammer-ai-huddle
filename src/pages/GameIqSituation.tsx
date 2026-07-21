@@ -3,13 +3,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BookOpen, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Lightbulb, AlertTriangle, Sparkles, Play } from "lucide-react";
 import { IqDiamond, legendForAssignments } from "@/components/iq/IqDiamond";
 import { IqScenarioRunner } from "@/components/iq/IqScenarioRunner";
+import { IqPlaybackControls } from "@/components/iq/IqPlaybackControls";
 import { useIqSituation } from "@/hooks/useIqSituations";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ROLE_LABELS, ASSIGNMENT_LABELS, ASSIGNMENT_COLOR, LENS_ACCENT, LENS_LABELS, DEFENSIVE_ROLES, OFFENSIVE_ROLES } from "@/lib/iq/types";
 import type { IqActorRole } from "@/lib/iq/types";
 import {
@@ -35,6 +36,26 @@ export default function GameIqSituation() {
   const [runners, setRunners] = useState<RunnerBase[]>([]);
   const [outs, setOuts] = useState<number>(0);
   const alignmentsQ = useAlignmentPresets(fieldSport);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!playing) return;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = (now - last) / 1000; last = now;
+      setProgress((p) => {
+        const next = p + (dt / 3.2) * speed;
+        if (next >= 1) { setPlaying(false); return 1; }
+        return next;
+      });
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, speed]);
 
 
 
@@ -162,7 +183,45 @@ export default function GameIqSituation() {
                 Alignment: {resolved.presetKey}{resolved.reason === "rule" ? " (rule)" : resolved.reason === "default" ? " (default)" : ""}
               </Badge>
             </div>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} sport={fieldSport} batterSide={hand} />
+            <IqDiamond
+              actors={actors}
+              mode={(playing || progress > 0) && firstScenario ? "reveal" : "teach"}
+              highlightRole={hover}
+              roleShifts={shifts}
+              defensivePositions={defensivePositions}
+              sport={fieldSport}
+              batterSide={hand}
+              scenario={firstScenario}
+              playing={playing}
+              progress={(playing || progress > 0) ? progress : undefined}
+            />
+
+            {firstScenario && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="default"
+                  onClick={() => { setProgress(0); setPlaying(true); }}
+                  className="gap-1.5"
+                >
+                  <Play className="h-3.5 w-3.5" />
+                  Watch the play
+                </Button>
+                <IqPlaybackControls
+                  playing={playing}
+                  progress={progress}
+                  speed={speed}
+                  onTogglePlay={() => {
+                    if (progress >= 1) setProgress(0);
+                    setPlaying((p) => !p);
+                  }}
+                  onScrub={(t) => { setPlaying(false); setProgress(t); }}
+                  onSetSpeed={setSpeed}
+                  onRestart={() => { setProgress(0); setPlaying(true); }}
+                />
+              </div>
+            )}
 
 
             <Card className="p-3 space-y-2">
