@@ -192,6 +192,7 @@ export default function GameIqSituation() {
               sport={fieldSport}
               batterSide={hand}
               scenario={firstScenario}
+              situation={situation}
               playing={playing}
               progress={(playing || progress > 0) ? progress : undefined}
             />
