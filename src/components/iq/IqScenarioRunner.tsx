@@ -77,7 +77,19 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
   useEffect(() => { try { localStorage.setItem(OVERLAY_KEY, overlay); } catch { /* noop */ } }, [overlay]);
   useEffect(() => { try { localStorage.setItem(VOICE_KEY, voice ? "1" : "0"); } catch { /* noop */ } }, [voice]);
 
-  useIqVoiceover({ enabled: submitted && voice, playing, progress, actors, mode: overlay });
+  // Derive per-actor startAts matching what buildTimeline uses in IqDiamond,
+  // so voiceover triggers exactly when each actor's chip becomes visible.
+  const startAts = (() => {
+    const defenders = actors.filter((a) => !["R1","R2","R3","BR","BAT"].includes(a.role));
+    const N = Math.max(1, defenders.length);
+    const map: Partial<Record<IqActorRole, number>> = {};
+    actors.forEach((a, idx) => {
+      const anyA = a as unknown as { start_at?: number };
+      map[a.role] = anyA.start_at ?? 0.15 + (idx / N) * 0.05;
+    });
+    return map;
+  })();
+  useIqVoiceover({ enabled: submitted && voice, playing, progress, actors, mode: overlay, startAts });
 
   // Advance the play clock while `playing`.
   useEffect(() => {
