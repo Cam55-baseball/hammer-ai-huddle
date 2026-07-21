@@ -82,6 +82,7 @@ const ParentRecruitingAuthorization = lazyWithRetry(
   () => import("./pages/ParentRecruitingAuthorization"),
 );
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
+const HammerRecall = lazyWithRetry(() => import("./pages/HammerRecall"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
 const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetail"));
@@ -299,6 +300,8 @@ const App = () => {
                 }
               />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
+              <Route path="/hammer/recall" element={<HammerRecall />} />
+              <Route path="/hammer/recall/:threadId" element={<HammerRecall />} />
               {/* Wave 3 — longitudinal continuity surfaces (capability-gated) */}
               <Route path="/runtime/cycle" element={<RequireCapability capability="wave3_view"><Wave3Cycle /></RequireCapability>} />
               <Route path="/runtime/rtp" element={<RequireCapability capability="wave3_view"><Wave3RTP /></RequireCapability>} />
