@@ -342,6 +342,8 @@ export function DelayCam() {
     if (running) await start(next);
   }, [facing, running, start]);
 
+  const cameraLabel = facing === "user" ? "Front" : "Rear";
+
   return (
     <Card className="p-4 space-y-4 border-2 border-dashed border-red-500">
       <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -363,11 +365,6 @@ export function DelayCam() {
               <Camera className="h-4 w-4" /> Start
             </Button>
           )}
-          {hasMulti && (
-            <Button size="sm" variant="outline" onClick={swap} disabled={!running} className="gap-1.5">
-              <SwitchCamera className="h-4 w-4" /> Flip
-            </Button>
-          )}
           <Button size="sm" variant="outline" onClick={saveClip} disabled={!running || timedChunksRef.current.length === 0} className="gap-1.5">
             <Download className="h-4 w-4" /> Save clip
           </Button>
@@ -384,13 +381,32 @@ export function DelayCam() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
           <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Live</div>
-          <video
-            ref={liveRef}
-            muted
-            playsInline
-            autoPlay
-            className="w-full aspect-video rounded-md bg-muted object-cover"
-          />
+          <div className="relative">
+            <video
+              ref={liveRef}
+              muted
+              playsInline
+              autoPlay
+              className="w-full aspect-video rounded-md bg-muted object-cover"
+            />
+            {hasMulti && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={swap}
+                  className="absolute top-2 right-2 gap-1.5 shadow-md bg-background/90 text-foreground hover:bg-background"
+                >
+                  <SwitchCamera className="h-4 w-4" /> Flip camera
+                </Button>
+                <Badge
+                  variant="secondary"
+                  className="absolute bottom-2 left-2 pointer-events-none bg-background/80 text-foreground"
+                >
+                  {cameraLabel} camera
+                </Badge>
+              </>
+            )}
+          </div>
         </div>
         <div className="space-y-1">
           <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
