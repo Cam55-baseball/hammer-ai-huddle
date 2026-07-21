@@ -42,6 +42,7 @@ import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
+import { DelayCam } from "@/components/analyze/DelayCam";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
