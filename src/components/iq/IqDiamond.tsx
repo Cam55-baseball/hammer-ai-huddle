@@ -140,8 +140,21 @@ export function IqDiamond({
         {/* Route lines — always anchored to resolved set positions. */}
         {showPaths && actors.flatMap((a) => {
           const start = posFor(a.role);
-          if (!a.primary_path?.length) return [];
-          const pts = resolveRolePath(a.role, start, a.primary_path, { positions: resolvedMap });
+          let pts: { x: number; y: number }[] | null = null;
+          if (a.primary_path?.length) {
+            pts = resolveRolePath(a.role, start, a.primary_path, { positions: resolvedMap });
+          } else {
+            // Fall back to the synthesized timeline samples for this role.
+            const track = timeline.actors.find((t) => t.role === a.role);
+            if (track && track.samples.length > 1) {
+              const first = track.samples[0];
+              const last = track.samples[track.samples.length - 1];
+              if (Math.hypot(last.x - first.x, last.y - first.y) > 1.5) {
+                pts = track.samples.map((s) => ({ x: s.x, y: s.y }));
+              }
+            }
+          }
+          if (!pts || pts.length < 2) return [];
           const d = pointsToPathD(pts);
           const dimmed = highlightRole && highlightRole !== a.role;
           return [(
