@@ -1557,7 +1557,12 @@ export default function AnalyzeVideo() {
             )}
           </div>
         )}
+
+        <div className="mt-4">
+          <DelayCam />
+        </div>
       </div>
+
 
       {/* Save to Library Dialog */}
       {currentVideoId && (
