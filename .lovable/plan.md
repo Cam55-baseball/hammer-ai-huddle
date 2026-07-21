@@ -1,87 +1,58 @@
 
-## Root cause (verified)
+## Goal
 
-Confirmed by querying `iq_situations` / `iq_situation_actors` / `iq_scenarios`:
-
-- 110 published situations, only **29 have any actor `primary_path`**, and **0 have any `ball_track`**.
-- `drag-bunt-rhh-r0`: all 9 defenders have `primary_path = []`, scenario `ball_track = null`.
-- The playback engine (`playTimeline.ts` → `IqDiamond`) works, but with no paths and no ball track it renders a static field — exactly what the user is seeing.
-
-So the code is fine; the *content* has no plays authored. Fix must guarantee **every situation has drawn + animated routes + a moving ball**, and stay that way going forward.
-
-## Goals
-
-1. Every published Game IQ situation shows animated defender routes and a moving ball when "Watch the play" is pressed.
-2. No situation can be published without at least an auto-generated animation.
-3. Owners can visually edit / override the generated play.
+Add a DelayCam (instant-replay) module directly beneath the analysis section on the Analyze Video page. Live camera feed records into a rolling buffer and plays back on a delay of 1–55 seconds. Game IQ playback stays untouched.
 
 ## Deliverables
 
-### 1. Play archetype generator (`src/lib/iq/playGenerator.ts`)
+### 1. New component `src/components/analyze/DelayCam.tsx`
 
-Given a situation (slug, title, `lens_tags`, actors, `alignment_preset`, runners, batter side) and its resolved defender positions, output:
+Self-contained, no backend, no uploads.
 
-- `primary_path` per defender actor (target/landmark waypoints, not absolute pixels)
-- `start_at` / `end_at` per actor (staggered by role responsibility)
-- `ball_track` with `kind: pitch → batted/bunted → thrown` points
-- Runner tracks (R1/R2/R3/BR) advancing to the right base
+- Uses `navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: false })`.
+- Live preview `<video>` (muted, playsInline, autoplay) shows the current camera feed.
+- Delayed `<video>` shows the same feed N seconds later.
+- Rolling buffer via `MediaRecorder` writing timesliced chunks (e.g. 250 ms) into a ring buffer sized to `delaySeconds + 5s` headroom. Delayed player consumes buffer chunks after `delaySeconds` elapsed, using `MediaSource` + `SourceBuffer` for continuous playback (fallback: rebuild a Blob URL from the last-N-seconds window every tick if MSE unsupported).
+- On mount: enumerate devices, default to rear camera on mobile.
 
-Archetypes derived from title/tags — the taxonomy already visible in the data:
+### 2. Controls
 
-- Bunt family (drag/sac/push/squeeze/slash/pop-up/foul/wheel/corner-charge)
-- Steal / pickoff / first-and-third
-- Comebacker / grounder to IF / slow roller
-- Fly ball / gap / line drive / relay
-- Wild pitch / passed ball
-- Mound visit / pre-pitch (static “setup” animation only)
+- Big Start / Stop toggle.
+- Camera switch button (front/back) when >1 video input.
+- Delay slider 1–55 s (step 1) with live numeric readout.
+- Quick preset chips: 3s, 5s, 10s, 20s, 30s, 45s.
+- "Save last clip" button — dumps current buffer to a downloadable `.webm`.
+- Status line: "Recording • Delay 8s • Buffer 12s".
 
-Each archetype is a small function that composes waypoints from `LANDMARKS` + `targetRole` refs in `pathResolver.ts`, so routes stay correct under any alignment shift (already supported).
+### 3. Placement
 
-Specifically for `drag-bunt-rhh-r0`: P charges toward 1B line, 1B charges then retreats to bag, 2B covers 1B, SS covers 2B, 3B holds, C trails up 1B line, OF backup arcs; ball = pitch → bunted toward 1B line → thrown to 1B.
+Edit `src/pages/AnalyzeVideo.tsx` — insert `<DelayCam />` in a bordered `Card` immediately below the existing analysis section, with a header "DelayCam — Instant Replay" and a one-line explainer ("Live camera with adjustable 1–55s playback delay for self-review").
 
-### 2. Backfill migration
+### 4. Permissions / errors
 
-`supabase/migrations/<ts>_iq_play_backfill.sql` plus a one-shot script `scripts/backfillIqPlays.ts` (invoked via edge function `iq-backfill-plays`) that:
+- Ask for camera permission on Start (not on mount).
+- Handle `NotAllowedError`, `NotFoundError`, `NotReadableError` with inline messaging + retry button.
+- Cleanup: stop tracks, revoke object URLs, close MediaSource on unmount and on Stop.
 
-- Reads every published situation.
-- Runs `playGenerator` to produce actor `primary_path` + `start_at`/`end_at` and scenario `ball_track`.
-- Writes back only where `primary_path` is empty or `ball_track` is null (non-destructive to the 29 already authored).
+### 5. Not touched
 
-### 3. Runtime safety net
-
-In `buildTimeline` (`src/lib/iq/playTimeline.ts`):
-
-- If an actor still has no `primary_path` after resolution, synthesize one from the archetype at render time so playback is never empty.
-- If `ball_track` is empty, synthesize a minimal pitch→contact→throw track from actor assignments (find `ball` actor as source, first `bag` actor as destination).
-
-This guarantees animation even for future situations that ship before backfill runs.
-
-### 4. Admin authoring polish (`/owner/iq/situations`)
-
-- Add a "Generate play" button that calls `playGenerator` and previews the result on `IqDiamond`.
-- Add a per-actor timeline editor (drag waypoints on the field, drag `start_at`/`end_at` sliders) and a ball-track editor.
-- Publish gate: block publish if the situation would render zero motion (both actor paths empty AND ball track empty AND generator returns nothing).
-
-### 5. Situation page ("Watch the play") UX
-
-- Disable/relabel the button to "Preview (auto-generated)" when the play is synthesized at runtime, so users know it's a best-effort visualization until an owner authors it.
-- Keep the existing playback controls; no behavior change on already-authored plays.
-
-## Out of scope
-
-- Rewriting `IqField` / `IqDiamond` rendering.
-- Changing the concept ladder, quiz, or mastery flow.
-- Editing owner-controlled alignments.
+- Game IQ playback engine, `IqDiamond`, `playTimeline`, `playGenerator`.
+- Existing video analysis upload/analysis pipeline.
+- Auth, routing, database.
 
 ## Technical notes
 
-- All new waypoints use the `target` / `targetRole` / `dx,dy` forms in `pathResolver.ts` so alignment shifts, batter side, and outs continue to warp routes correctly.
-- `ball_track` uses the existing `BallTrackPoint` shape (`x,y,t,kind`).
-- Backfill writes go through service-role edge function; RLS on `iq_situation_actors` / `iq_scenarios` stays unchanged.
-- Deterministic seeds keyed on `situation.id` so regenerating is idempotent.
+- Pure client-side; no new tables, no edge functions, no dependencies.
+- Rolling-buffer approach: keep an array of `{ chunk: Blob, t: number }`; drop entries older than `delaySeconds + headroom`; feed the oldest-eligible chunks into the delayed player's `SourceBuffer`.
+- When the user drags the slider longer, buffer grows; when shorter, extra chunks are flushed and the delayed player fast-forwards to the new target offset.
+- Works in modern Chromium/Safari/Firefox; iOS Safari requires `playsInline` and a user gesture to start — Start button satisfies that.
+- Respect existing design tokens; no hardcoded colors.
 
 ## Acceptance
 
-- Visiting `/iq/drag-bunt-rhh-r0` and pressing "Watch the play" shows P, 1B, 2B, SS, C moving and a ball travelling pitch → bunt → throw to 1B.
-- Spot-check 10 random situations across bunts, steals, grounders, fly balls — all animate.
-- SQL check after backfill: `count(*) FILTER (WHERE primary_path is empty) = 0` on published actors; `count(*) FILTER (WHERE ball_track IS NULL) = 0` on their scenarios.
+- Analyze Video page shows the DelayCam card below the analysis section.
+- Pressing Start prompts for camera, then shows live + delayed feeds side-by-side (or stacked on mobile).
+- Adjusting the slider between 1 and 55 seconds visibly changes the replay lag within ~1 second.
+- Presets snap the slider and update the delay immediately.
+- Stop releases the camera; no console errors on unmount.
+- Game IQ "Watch the play" still works exactly as before.
