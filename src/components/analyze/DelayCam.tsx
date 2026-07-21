@@ -186,7 +186,8 @@ export function DelayCam() {
     const items = timedChunksRef.current;
     if (items.length === 0) return;
     const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = new Blob(items.map((x) => x.blob), { type: mime });
+    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    if (!blob) return;
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -195,7 +196,7 @@ export function DelayCam() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-  }, []);
+  }, [buildDecodableBlob]);
 
   const start = useCallback(async (nextFacing?: Facing) => {
     setError(null);
