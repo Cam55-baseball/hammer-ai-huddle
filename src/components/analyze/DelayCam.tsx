@@ -349,7 +349,7 @@ export function DelayCam() {
       cleanup();
       setRunning(false);
     }
-  }, [cleanup, facing, flushQueue]);
+  }, [buildDecodableBlob, cleanup, facing, flushQueue]);
 
   const stop = useCallback(() => {
     cleanup();
