@@ -130,7 +130,7 @@ export function IqDebriefCard({
 
       {next ? (
         <Link
-          to={`/game-iq/${sportPath}/${next.slug}`}
+          to={`/iq/${next.slug}`}
           className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold rounded-md border border-primary/40 bg-background px-2.5 py-1.5 hover:bg-primary/10 transition-colors"
         >
           Next rung · {next.title}
