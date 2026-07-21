@@ -3,13 +3,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BookOpen, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Lightbulb, AlertTriangle, Sparkles, Play } from "lucide-react";
 import { IqDiamond, legendForAssignments } from "@/components/iq/IqDiamond";
 import { IqScenarioRunner } from "@/components/iq/IqScenarioRunner";
+import { IqPlaybackControls } from "@/components/iq/IqPlaybackControls";
 import { useIqSituation } from "@/hooks/useIqSituations";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ROLE_LABELS, ASSIGNMENT_LABELS, ASSIGNMENT_COLOR, LENS_ACCENT, LENS_LABELS, DEFENSIVE_ROLES, OFFENSIVE_ROLES } from "@/lib/iq/types";
 import type { IqActorRole } from "@/lib/iq/types";
 import {
