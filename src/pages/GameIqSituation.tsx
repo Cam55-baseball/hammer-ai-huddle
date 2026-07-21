@@ -325,6 +325,7 @@ export default function GameIqSituation() {
             batterSide={hand}
             debrief={(situation as any).debrief ?? null}
             conceptLabels={conceptLabels ?? []}
+            difficultyRung={(situation as any).difficulty_rung ?? 1}
           />
         )}
       </div>

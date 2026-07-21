@@ -1,54 +1,40 @@
-# Game IQ — Phase 4: Situation Authoring UI + Live Voiceover + Post-Play Debrief
+# Phase 4 — Honest Completeness Audit
 
-Phase 3 landed the mastery ladder, difficulty rungs, combo builder, and preset expansion. This phase closes the plan by turning Game IQ into a fully self-serve authoring platform and adding the live "coach in your ear" layer during playback.
+Phase 4 is ~85% shipped. The core is live: `/owner/iq/situations` authoring page (532 lines) with defender drag, waypoints, ball track, live preview, and draft save; coach voiceover hook wired into the runner with a localStorage-persisted "Voice" toggle; debrief text + concept chips render inline on correct answer; route + `GameIq` nav button registered.
 
-## 4.1 Situation Authoring UI (`/owner/iq/situations`)
+Five items from the original plan are not yet done. To call this "E2E with extreme mastery" we need to close them.
 
-New owner page with an end-to-end drag-based authoring flow — no SQL required.
+## Gaps to close
 
-- **Setup panel**: sport, base alignment (from `iq_defensive_alignments`), runners/outs/count, batter side, difficulty rung (1–5), concept tag multi-select (from `iq_concept_tags`), title/slug/summary/debrief text.
-- **Defender canvas**: reuses `IqField` as the draw surface. For each of the 9 defenders:
-  - Drag to set the resolved set position (writes into `iq_situation_actors.set_x/set_y`).
-  - Click sequential points along the play to add waypoints (`primary_path` jsonb, each with `{x, y, t?}`; `t` auto-computed by arc-length, editable in a side sheet).
-  - Inline inputs for `assignment`, `footwork_cue`, `communication_call`, `eyes_target`, `coaching_note`, `common_mistake`, `elite_cue`.
-- **Ball track**: click-to-add points; `t` values auto-spaced, editable. Writes to `iq_scenarios.ball_track`.
-- **Live preview**: right-side pane runs the exact same `IqDiamond` + `IqPlaybackControls` the athlete sees — scrubbable, with coach overlays.
-- **Save**: creates `iq_situations` (status `draft`), `iq_situation_actors`, `iq_situation_concepts` link rows, and a default `iq_scenarios` row. Publish is a separate action (existing publish checklist).
+1. **`IqDebriefCard.tsx` extraction + "Next rung" prompt**
+   - Debrief is currently inline in `IqScenarioRunner.tsx` (lines 382–395). Plan called for a standalone `src/components/iq/IqDebriefCard.tsx`.
+   - Missing entirely: the "Next rung" link that jumps to the next-difficulty situation in the same primary concept (uses the existing ladder hook + `iq_situations.difficulty_rung` + `iq_situation_concepts`).
+   - Also add the fallback summary (concept description + top elite cues) when `debrief` is null, per plan §4.3.
 
-## 4.2 Live Coaching Voiceover
+2. **Voice triggering on true timeline events inside `IqDiamond`**
+   - `useIqVoiceover` currently fires from the runner using a progress-index heuristic (`0.1 + (idx % 6) * 0.12`), not the actor's real `start_at`/waypoint `t`. Plan §4.2 specified subscribing to timeline events in `IqDiamond` so utterances fire the instant a footwork chip / comm bubble becomes visible.
+   - Rework: expose a `cueEvents: { role, kind, text, t }[]` derived from `buildTimeline` + actor cues, and drive the hook off `progress >= event.t` instead of the index heuristic. Keep the pause/scrub cancel + speak-once dedupe.
 
-Wire the already-shipped `useIqVoiceover` hook (Phase 3) into the actual playback loop.
+3. **Voice toggle location**
+   - Plan §4.2 puts the "🔊 Voice" toggle inside `IqOverlayFilterBar`. It's currently a separate button on the runner toolbar. Move it into the filter bar so it lives with the other overlay controls (still persisted to `localStorage`).
 
-- **Trigger**: subscribe to timeline events in `IqDiamond`; when a defender's footwork cue chip or comm bubble becomes visible at time `t`, enqueue an utterance:
-  - Footwork → third-person ("Shortstop: crossover, gain ground toward second").
-  - Comm → first-person quote of `communication_call` ("I got two!").
-  - Eyes → skipped (visual only).
-- **Toggle**: extend `IqOverlayFilterBar` with a persistent "🔊 Voice" toggle stored in `localStorage` (`iq.voice.enabled`).
-- **Sync with scrub**: cancel pending utterances on pause/scrub so voice never runs ahead of the timeline.
-- **Fallback**: silent no-op when `window.speechSynthesis` is unavailable.
+4. **Nav link from `IqAlignmentsEditor` → authoring page**
+   - Plan §Files-edited requires `src/pages/owner/IqAlignmentsEditor.tsx` to link to `/owner/iq/situations`. Currently only `GameIq.tsx` links to it. Add a header button so alignment authors can jump directly into situation authoring.
 
-## 4.3 Post-Play Debrief
+5. **Authoring subcomponents extraction (hygiene)**
+   - `IqSituationsAuthoring.tsx` is 532 lines with the defender editor, ball-track editor, and cue form inlined. Plan specified splitting into:
+     - `src/components/iq/authoring/IqDefenderPositionEditor.tsx`
+     - `src/components/iq/authoring/IqBallTrackEditor.tsx`
+     - `src/components/iq/authoring/IqActorCueForm.tsx`
+   - Pure refactor, no behavior change, but required to match the stated file layout and keep the page maintainable.
 
-- After a correct answer in `IqScenarioRunner`, and after "Watch the play" completes, render a debrief card:
-  - Concept name(s) + short "why" (from `iq_situations.debrief`).
-  - Per-defender one-liner (assignment + elite cue) rendered from actors.
-  - "Next rung" prompt: link to the next-difficulty situation in the same primary concept, computed via the ladder hook.
-- If `debrief` is null, fall back to a generated summary from the concept description + top elite cues.
+## Verification after build mode
 
-## Technical Details
+- Load `/game-iq`, run a scenario, answer correctly → `IqDebriefCard` renders with concept chips + "Next rung: <slug>" button that navigates to the next-rung situation in the same concept.
+- Toggle Voice inside the overlay filter bar → utterances fire on the actual footwork/comm event times; pause/scrub cancels queued speech.
+- Open `/owner/iq/alignments` → header button navigates to `/owner/iq/situations`.
+- `tsgo` passes; `IqSituationsAuthoring.tsx` shrinks and imports the three extracted authoring components.
 
-- **Files (new)**:
-  - `src/pages/owner/IqSituationsAuthoring.tsx` — the authoring page.
-  - `src/components/iq/authoring/IqDefenderPositionEditor.tsx` — drag + waypoints on `IqField`.
-  - `src/components/iq/authoring/IqBallTrackEditor.tsx` — ball path click-to-add.
-  - `src/components/iq/authoring/IqActorCueForm.tsx` — per-defender cue inputs.
-  - `src/components/iq/IqDebriefCard.tsx` — post-play debrief.
-- **Files (edited)**:
-  - `src/App.tsx` — register `/owner/iq/situations` route.
-  - `src/components/iq/IqDiamond.tsx` — call `useIqVoiceover` at cue-visible timeline events.
-  - `src/components/iq/IqCoachOverlay.tsx` — add "Voice" toggle to `IqOverlayFilterBar`.
-  - `src/components/iq/IqScenarioRunner.tsx` — render `IqDebriefCard` on reveal + on Watch-the-Play completion.
-  - `src/pages/owner/IqAlignmentsEditor.tsx` — add nav link to the new authoring page.
-- **Schema**: no new tables. Uses `iq_situations.debrief` (already added in Phase 3), `iq_situation_actors` (set_x/set_y/footwork_cue/eyes_target/primary_path already exist), `iq_scenarios.ball_track` (already exists), and `iq_situation_concepts` (already exists).
-- **Constitutional**: authoring writes as `status='draft'` so the existing publish flow gates production content — matches the `bulkImport.ts` precedent and Phase 3 combo governance.
-- **Out of scope** (Phase 5 backlog): multiplayer coach-led playback, MP4 overlays, AI-generated situations from scouting dossiers.
+## Out of scope (unchanged from original plan)
+
+Multiplayer coach-led playback, MP4 overlays, AI-generated situations from scouting dossiers — Phase 5 backlog.
