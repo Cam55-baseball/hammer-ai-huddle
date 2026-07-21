@@ -35,12 +35,12 @@ const HARD_FALLBACK: Record<FieldSport, AlignmentPositions> = {
   baseball: {
     P: { x: 50, y: 68 }, C: { x: 50, y: 94 },
     "1B": { x: 72, y: 66 }, "2B": { x: 60, y: 52 }, SS: { x: 40, y: 52 }, "3B": { x: 28, y: 66 },
-    LF: { x: 22, y: 22 }, CF: { x: 50, y: 10 }, RF: { x: 78, y: 22 },
+    LF: { x: 15, y: 20 }, CF: { x: 50, y: 10 }, RF: { x: 85, y: 20 },
   },
   softball: {
     P: { x: 50, y: 60 }, C: { x: 50, y: 94 },
     "1B": { x: 70, y: 62 }, "2B": { x: 60, y: 48 }, SS: { x: 40, y: 48 }, "3B": { x: 30, y: 62 },
-    LF: { x: 24, y: 26 }, CF: { x: 50, y: 14 }, RF: { x: 76, y: 26 },
+    LF: { x: 17, y: 24 }, CF: { x: 50, y: 14 }, RF: { x: 83, y: 24 },
   },
 };
 
