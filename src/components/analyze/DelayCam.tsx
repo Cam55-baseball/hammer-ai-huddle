@@ -327,7 +327,8 @@ export function DelayCam() {
           const eligible = items.filter((x) => now - x.t >= delayMs).map((x) => x.blob);
           if (eligible.length === 0) return;
           try {
-            const blob = new Blob(eligible, { type: mimeRef.current });
+            const blob = buildDecodableBlob(eligible, mimeRef.current);
+            if (!blob) return;
             const url = URL.createObjectURL(blob);
             const prev = fallbackUrlRef.current;
             fallbackUrlRef.current = url;
