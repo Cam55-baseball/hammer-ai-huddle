@@ -183,7 +183,45 @@ export default function GameIqSituation() {
                 Alignment: {resolved.presetKey}{resolved.reason === "rule" ? " (rule)" : resolved.reason === "default" ? " (default)" : ""}
               </Badge>
             </div>
-            <IqDiamond actors={actors} mode="teach" highlightRole={hover} roleShifts={shifts} defensivePositions={defensivePositions} sport={fieldSport} batterSide={hand} />
+            <IqDiamond
+              actors={actors}
+              mode={(playing || progress > 0) && firstScenario ? "reveal" : "teach"}
+              highlightRole={hover}
+              roleShifts={shifts}
+              defensivePositions={defensivePositions}
+              sport={fieldSport}
+              batterSide={hand}
+              scenario={firstScenario}
+              playing={playing}
+              progress={(playing || progress > 0) ? progress : undefined}
+            />
+
+            {firstScenario && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="default"
+                  onClick={() => { setProgress(0); setPlaying(true); }}
+                  className="gap-1.5"
+                >
+                  <Play className="h-3.5 w-3.5" />
+                  Watch the play
+                </Button>
+                <IqPlaybackControls
+                  playing={playing}
+                  progress={progress}
+                  speed={speed}
+                  onTogglePlay={() => {
+                    if (progress >= 1) setProgress(0);
+                    setPlaying((p) => !p);
+                  }}
+                  onScrub={(t) => { setPlaying(false); setProgress(t); }}
+                  onSetSpeed={setSpeed}
+                  onRestart={() => { setProgress(0); setPlaying(true); }}
+                />
+              </div>
+            )}
 
 
             <Card className="p-3 space-y-2">
