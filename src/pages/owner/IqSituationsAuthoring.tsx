@@ -314,19 +314,8 @@ export default function IqSituationsAuthoring() {
               />
             </Card>
 
-            <Card className="p-3 space-y-2">
-              <Label>Editing target</Label>
-              <div className="grid grid-cols-5 gap-1">
-                <Button size="sm"
-                        variant={editing === "ball" ? "default" : "outline"}
-                        onClick={() => setEditing("ball")}>Ball</Button>
-                {DEFENSIVE_ROLES.map((r) => (
-                  <Button key={r} size="sm"
-                          variant={editing === r ? "default" : "outline"}
-                          onClick={() => setEditing(r)}>{r}</Button>
-                ))}
-              </div>
-            </Card>
+            <IqDefenderPositionEditor editing={editing} onChange={setEditing} />
+
           </div>
 
           {/* RIGHT: Metadata + per-role cues */}
