@@ -38,7 +38,7 @@ const QUICK_STARTS = [
 ];
 
 export default function HammerRecall() {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const nav = useNavigate();
   const { threadId } = useParams();
 
@@ -314,7 +314,7 @@ function MessageBubble({ msg }: { msg: UIMessage }) {
   return (
     <div className="space-y-2">
       <div className="prose prose-sm dark:prose-invert max-w-none">
-        <ReactMarkdown>{msg.text || "…"}</ReactMarkdown>
+        <div className="whitespace-pre-wrap text-sm">{msg.text || "…"}</div>
       </div>
       {msg.sources && msg.sources.length > 0 && (
         <details className="rounded-md border bg-muted/30 px-2 py-1 text-xs">
