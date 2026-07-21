@@ -213,21 +213,13 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
       {submitted && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <IqOverlayFilterBar value={overlay} onChange={setOverlay} />
-            {isVoiceoverSupported() && (
-              <Button
-                type="button"
-                size="sm"
-                variant={voice ? "default" : "outline"}
-                onClick={() => setVoice((v) => !v)}
-                className="h-7 text-xs"
-                aria-pressed={voice}
-                aria-label="Toggle coach voiceover"
-              >
-                {voice ? <Volume2 className="h-3.5 w-3.5 mr-1" /> : <VolumeX className="h-3.5 w-3.5 mr-1" />}
-                Voice
-              </Button>
-            )}
+            <IqOverlayFilterBar
+              value={overlay}
+              onChange={setOverlay}
+              voiceEnabled={voice}
+              onToggleVoice={() => setVoice((v) => !v)}
+              voiceSupported={isVoiceoverSupported()}
+            />
           </div>
           <IqPlaybackControls
             playing={playing}
