@@ -211,6 +211,7 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
         progress={animating ? progress : undefined}
         playing={animating ? playing : false}
         scenario={scenario}
+        situation={{ slug: situationSlug ?? "", title: situationTitle ?? "" }}
         overlay={animating ? overlay : "off"}
       />
 
