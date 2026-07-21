@@ -167,6 +167,7 @@ const IqLibrary = lazyWithRetry(() => import("./pages/owner/IqLibrary"));
 const IqAlignmentsEditor = lazyWithRetry(() => import("./pages/owner/IqAlignmentsEditor"));
 const IqCombos = lazyWithRetry(() => import("./pages/owner/IqCombos"));
 const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAudit"));
+const IqSituationsAuthoring = lazyWithRetry(() => import("./pages/owner/IqSituationsAuthoring"));
 const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
