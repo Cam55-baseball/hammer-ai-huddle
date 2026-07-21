@@ -97,7 +97,8 @@ export function anchorToPos(sport: FieldSport, anchor: StepAnchor, hand: Handedn
       const depthPt = add(f.home, scale(axis, anchor.depthStepsFromHome * stepG));
       // Lateral axis (perpendicular). Positive lateral = to batter's RIGHT (1B side).
       // On a top-down field where 1B is +x, that means +x for RHH view.
-      const lateral: Pt = { x: axis.y, y: -axis.x }; // 90° CW rotation of forward axis
+      // axis = home→2B = (0,-1); 90° CCW rotation gives (1,0) = +x = 1B side. ✓
+      const lateral: Pt = { x: -axis.y, y: axis.x };
       // For LHH the sign flips (mirror lateral reference).
       const sign = hand === "R" ? 1 : -1;
       const p = add(depthPt, scale(lateral, anchor.lateralStepsRightOfSecond * stepG * sign));
