@@ -81,6 +81,9 @@ export default function GameIq() {
               <Button size="sm" variant="outline" onClick={() => navigate("/owner/iq/combos")}>
                 <Settings className="h-4 w-4 mr-1" /> Combo presets
               </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate("/owner/iq/situations")}>
+                <Settings className="h-4 w-4 mr-1" /> Author situation
+              </Button>
             </div>
           )}
         </header>
