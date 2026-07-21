@@ -149,6 +149,15 @@ export function DelayCam() {
 
   useEffect(() => cleanup, [cleanup]);
 
+  // Build a decodable Blob by ensuring the recorder's first init segment is always first.
+  const buildDecodableBlob = useCallback((body: Blob[], fallbackMime?: string): Blob | null => {
+    const init = initChunkRef.current;
+    const mime = recorderRef.current?.mimeType || fallbackMime || mimeRef.current || "video/webm";
+    if (!init) return body.length ? new Blob(body, { type: mime }) : null;
+    const parts = body[0] === init ? body : [init, ...body];
+    return new Blob(parts, { type: mime });
+  }, []);
+
   // Replay: export the last N seconds of the ring buffer into a standalone video.
   const replayLastN = useCallback((n: number) => {
     const items = timedChunksRef.current;
@@ -157,8 +166,8 @@ export function DelayCam() {
     const cutoff = now - n * 1000;
     const selected = items.filter((x) => x.t >= cutoff).map((x) => x.blob);
     if (selected.length === 0) return;
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = new Blob(selected, { type: mime });
+    const blob = buildDecodableBlob(selected);
+    if (!blob) return;
     const url = URL.createObjectURL(blob);
     setReplayUrl(url);
     if (replayUrlRef.current) URL.revokeObjectURL(replayUrlRef.current);
@@ -171,7 +180,7 @@ export function DelayCam() {
         rv.play().catch(() => {});
       }
     }, 0);
-  }, []);
+  }, [buildDecodableBlob]);
 
   const saveClip = useCallback(() => {
     const items = timedChunksRef.current;
