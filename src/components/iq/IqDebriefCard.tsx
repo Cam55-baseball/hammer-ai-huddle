@@ -87,7 +87,7 @@ export function IqDebriefCard({
 
   if (!debrief && !fallback && !next && !(conceptLabels && conceptLabels.length)) return null;
 
-  const sportPath = sport === "softball" ? "softball" : "baseball";
+  void sport;
 
   return (
     <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
