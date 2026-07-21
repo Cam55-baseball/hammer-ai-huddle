@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, LogOut, RefreshCw, Eye, Megaphone, Sparkles, AlertTriangle, ChevronDown, Users, Play } from "lucide-react";
 import { IqDiamond } from "./IqDiamond";
 import { IqPlaybackControls } from "./IqPlaybackControls";
 import { IqOverlayFilterBar, type OverlayMode } from "./IqCoachOverlay";
@@ -66,11 +66,15 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     (initial?.answer as IqAssignment | null) ?? null,
   );
   const [submitted, setSubmitted] = useState(false);
+  // Preview mode: lets athletes "Watch the play" before answering. It animates
+  // routes/pucks in reveal styling without recording an attempt.
+  const [preview, setPreview] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [overlay, setOverlay] = useState<OverlayMode>(loadOverlay);
   const [voice, setVoice] = useState<boolean>(loadVoice);
+  const animating = submitted || preview;
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
@@ -199,20 +203,30 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
 
       <IqDiamond
         actors={actors}
-        mode={submitted ? "reveal" : "quiz"}
+        mode={animating ? "reveal" : "quiz"}
         highlightRole={position}
         defensivePositions={defensivePositions}
         sport={sport}
         batterSide={batterSide}
-        progress={submitted ? progress : undefined}
-        playing={submitted ? playing : false}
+        progress={animating ? progress : undefined}
+        playing={animating ? playing : false}
         scenario={scenario}
-        overlay={submitted ? overlay : "off"}
+        overlay={animating ? overlay : "off"}
       />
 
-      {submitted && (
+      {animating && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
+            <Button
+              type="button"
+              size="sm"
+              variant="default"
+              onClick={() => { setProgress(0); setPlaying(true); }}
+              className="gap-1.5"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Watch the play
+            </Button>
             <IqOverlayFilterBar
               value={overlay}
               onChange={setOverlay}
@@ -233,6 +247,14 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
             onSetSpeed={setSpeed}
             onRestart={() => { setProgress(0); setPlaying(true); }}
           />
+          {preview && !submitted && (
+            <div className="flex items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">
+              <span>Preview mode — your answer isn't locked in yet.</span>
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setPreview(false); setPlaying(false); setProgress(0); }}>
+                Back to quiz
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -267,10 +289,17 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
             </div>
           )}
 
-          <Button disabled={!position || !answer || record.isPending}
-                  onClick={handleSubmit} className="w-full">
-            Lock it in <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+          <div className="flex gap-2">
+            <Button disabled={!position || !answer || record.isPending}
+                    onClick={handleSubmit} className="flex-1">
+              Lock it in <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+            <Button type="button" variant="outline"
+                    onClick={() => { setPreview(true); setProgress(0); setPlaying(true); }}
+                    className="gap-1.5">
+              <Play className="h-4 w-4" /> Watch the play
+            </Button>
+          </div>
 
           <div className="flex items-center justify-between gap-2 pt-2 border-t">
             <Button type="button" variant="ghost" size="sm" onClick={reset}>

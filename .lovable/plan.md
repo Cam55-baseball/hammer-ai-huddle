@@ -1,37 +1,34 @@
-## Root cause (verified)
+## What I found
 
-In `src/lib/iq/fieldModel.ts` (line 100), the lateral axis for outfielders is computed as:
+All three features exist in code, but they're discoverable in ways that don't match the promise:
 
-```ts
-const lateral: Pt = { x: axis.y, y: -axis.x }; // 90° CW rotation
-```
+1. **Route anchoring + playback in `IqDiamond`** — wired (`playing`, `progress`, `roleShifts`, `defensivePositions` props all flow through). ✓
+2. **Batter's box highlight in `IqField`** — wired via `batterSide={hand}` from `GameIqSituation.tsx:325` → `IqScenarioRunner:206` → `IqDiamond:134` → `IqField:120–123`. But the highlight is `hsl(var(--iq-chalk) / 0.18)` — nearly invisible.
+3. **"Watch the play" button in `IqScenarioRunner`** — the `IqPlaybackControls` bar renders only after the athlete answers (gated by `submitted`), and its play control is an unlabeled Play icon, not a "Watch the play" button. That's why it looks missing.
 
-With `axis = home→2B = (0, -1)` on our grid (home at `(50, 95)`, 2B at `(50, ~15)`), this rotation yields `lateral = (-1, 0)` — pointing to screen-**left** (3B/LF side).
-
-The comment two lines above says the exact opposite:
-> "Positive lateral = to batter's RIGHT (1B side)... +x for RHH view."
-
-So the presets in `alignmentPresets.ts` were authored to that intent (LF uses **negative** `lateralStepsRightOfSecond`, RF uses **positive**), but the vector transform points the wrong way. Result: **LF renders on the RF side and RF renders on the LF side** — exactly what you're seeing on `/iq/comebacker-r1-double-play`.
+Plus: routes/pucks don't animate before submit, so the "anchoring + walking pucks" story isn't visible during the quiz phase either.
 
 ## Fix
 
-Change the lateral rotation to 90° CCW so `+lateralStepsRightOfSecond` truly maps to +x (1B side), matching the comment and every preset already in the codebase:
+### 1. Make batter's box highlight unmistakable — `src/components/iq/IqField.tsx`
+Replace the `0.18` fills with a solid accent fill + a 1px accent stroke on the active box, and dim the inactive box to `0.06`. Highlight color: `hsl(var(--iq-execute))` (already in the palette) so it reads as "the batter stands here."
 
-```ts
-const lateral: Pt = { x: -axis.y, y: axis.x }; // 90° CCW — +x = 1B side (batter's right for RHH)
-```
+### 2. Add a real "Watch the play" button — `src/components/iq/IqScenarioRunner.tsx`
+- In the **quiz phase** (before submit), render a secondary "Watch the play" button next to the "Submit" button that lets the athlete preview the animation without answering. It sets `submitted=true` in a "preview mode" flag so routes and pucks animate but the answer state stays unresolved (they can still answer after).
+- In the **reveal phase**, above `IqPlaybackControls`, render a prominent labeled "▶ Watch the play" button (uses the same handler as Restart+Play) so the action is obvious. Keep the compact controls beneath it for scrubbing/speed.
 
-That single-line change puts LF back on the 3B side and RF on the 1B side across every situation, every alignment preset, and every scenario — because every outfielder position in the app flows through `anchorToPos`.
+### 3. Ensure pucks visibly walk their routes — `src/components/iq/IqDiamond.tsx`
+Already works when `playing` is true. Confirm by:
+- Verifying `useIqPlayTimeline` sample function returns positions that interpolate along `primary_path` (spot-check with two situations).
+- If any actor has no `primary_path`, ensure the puck still animates from its resolved position to the same position (no-op) rather than snapping — already handled by `animate={{ left, top }}`.
 
 ## Verification
 
-1. Reload `/iq/comebacker-r1-double-play` — LF must sit on screen-left, RF on screen-right, CF centered.
-2. Toggle the situation between RHH and LHH — the outfield shift must **mirror** (RHH: LF pulled toward line, RF shaded toward gap; LHH: reversed).
-3. Spot-check 3–4 other situations (any bunt, any base-hit-to-RF, any deep-fly situation) to confirm no regression on infielders (they're unaffected — only the `outfield` branch changes).
-4. Open `/owner/iq/alignments` editor and confirm the drag positions of LF/RF match the coach labels ("3 steps right of 2B" now visually lands on the 1B side).
+1. Reload `/iq/comebacker-r1-double-play` as RHH → left-hand batter's box is dim, right-hand box has a solid accent fill and outline. Toggle to LHH → highlight swaps.
+2. Before submitting → "Watch the play" button is visible; clicking it animates every defender's puck along their route with dashed route lines drawing in.
+3. After submitting → prominent "▶ Watch the play" button appears above the scrub/speed bar; clicking replays the animation from t=0.
+4. Spot-check one bunt situation and one deep-fly situation for the same behavior.
 
 ## Out of scope
 
-- No changes to presets, scenarios, actor data, playback, or overlays.
-- No schema changes.
-- Infielder anchors (`corner_bag`, `middle_bag`) are geometrically correct and untouched.
+- No new tables, no changes to `playTimeline.ts` sampling logic, no scenario data changes, no changes to overlay/voice logic.

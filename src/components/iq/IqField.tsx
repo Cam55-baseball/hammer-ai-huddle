@@ -115,13 +115,16 @@ export function IqField({ sport, className, showGrid, batterSide }: Props) {
         fill="hsl(var(--iq-chalk))"
       />
 
-      {/* Batter's boxes — the active side is subtly filled so shifts read correctly. */}
+      {/* Batter's boxes — the active side is filled with the execute accent so
+          shifts read visually correct against RHH vs LHH. */}
       <rect x={home.x - 3.8} y={home.y - 2.4} width="1.8" height="4.8"
-            fill={batterSide === "R" ? "hsl(var(--iq-chalk) / 0.18)" : "none"}
-            stroke="hsl(var(--iq-chalk) / 0.85)" strokeWidth="0.25" />
+            fill={batterSide === "R" ? "hsl(var(--iq-execute) / 0.55)" : "hsl(var(--iq-chalk) / 0.06)"}
+            stroke={batterSide === "R" ? "hsl(var(--iq-execute))" : "hsl(var(--iq-chalk) / 0.85)"}
+            strokeWidth={batterSide === "R" ? 0.45 : 0.25} />
       <rect x={home.x + 2.0} y={home.y - 2.4} width="1.8" height="4.8"
-            fill={batterSide === "L" ? "hsl(var(--iq-chalk) / 0.18)" : "none"}
-            stroke="hsl(var(--iq-chalk) / 0.85)" strokeWidth="0.25" />
+            fill={batterSide === "L" ? "hsl(var(--iq-execute) / 0.55)" : "hsl(var(--iq-chalk) / 0.06)"}
+            stroke={batterSide === "L" ? "hsl(var(--iq-execute))" : "hsl(var(--iq-chalk) / 0.85)"}
+            strokeWidth={batterSide === "L" ? 0.45 : 0.25} />
       {/* Catcher's box */}
       <path d={`M ${home.x - 2.0} ${home.y + 2.6} L ${home.x - 2.0} ${home.y + 5.0} L ${home.x + 2.0} ${home.y + 5.0} L ${home.x + 2.0} ${home.y + 2.6}`}
             fill="none" stroke="hsl(var(--iq-chalk) / 0.8)" strokeWidth="0.25" />
