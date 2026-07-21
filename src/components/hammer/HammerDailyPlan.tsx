@@ -320,6 +320,22 @@ function HammerDailyPlanBody() {
       </CardHeader>
       <CardContent className="space-y-2">
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
+        <button
+          type="button"
+          onClick={() => navigate("/hammer/recall")}
+          className="flex w-full items-center justify-between rounded-md border border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 px-3 py-2 text-left hover:from-primary/15 hover:to-primary/10"
+        >
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <div>
+              <div className="text-sm font-medium">Ask Hammer — Recall & Clarity</div>
+              <div className="text-[11px] text-muted-foreground">
+                Dialogue about anything you've logged. Reset your head. Reshape today.
+              </div>
+            </div>
+          </div>
+          <span className="text-xs text-primary">Open →</span>
+        </button>
         <HammerScheduleStrip />
         <GpInGameAdvisoryStrip />
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
