@@ -66,11 +66,15 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
     (initial?.answer as IqAssignment | null) ?? null,
   );
   const [submitted, setSubmitted] = useState(false);
+  // Preview mode: lets athletes "Watch the play" before answering. It animates
+  // routes/pucks in reveal styling without recording an attempt.
+  const [preview, setPreview] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [overlay, setOverlay] = useState<OverlayMode>(loadOverlay);
   const [voice, setVoice] = useState<boolean>(loadVoice);
+  const animating = submitted || preview;
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(initial?.startedAt ?? Date.now());
 
