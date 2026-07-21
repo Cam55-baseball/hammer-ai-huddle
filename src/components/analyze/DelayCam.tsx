@@ -262,6 +262,7 @@ export function DelayCam() {
       recorderRef.current = rec;
       startTsRef.current = 0;
       rec.ondataavailable = async (ev) => {
+        console.log("[DelayCam] dataavailable", ev.data?.size, rec.state, rec.mimeType);
         if (!ev.data || ev.data.size === 0) return;
         const now = performance.now();
         if (startTsRef.current === 0) startTsRef.current = now;
