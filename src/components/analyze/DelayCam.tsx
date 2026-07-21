@@ -3,9 +3,13 @@
  * Self-contained, client-only. No uploads, no backend.
  *
  * Two playback paths:
- *  - MSE path: MediaSource / ManagedMediaSource + SourceBuffer for continuous playback.
- *  - Fallback: iOS Safari (no MediaSource) — rebuild a Blob URL from the trailing
- *    window every ~500ms and swap it into the delayed <video>.
+ *  - MSE path: MediaSource / ManagedMediaSource + SourceBuffer for continuous
+ *    delayed playback. We keep a ring buffer of the last 55s of recorded
+ *    chunks and feed them into the MediaSource, then drive the delayed video
+ *    to `liveEdge - delay`.
+ *  - Fallback: iOS Safari (no MediaSource) — rebuild a Blob URL from a trailing
+ *    window every ~500ms and swap it into the delayed <video>. Also supports a
+ *    "Replay last Ns" playback of the buffered segment.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -13,14 +17,19 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
-  Camera, CameraOff, SwitchCamera, Download, AlertCircle, Timer,
+  Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
 } from "lucide-react";
 
 const PRESETS = [3, 5, 10, 20, 30, 45];
 const MIN_DELAY = 1;
 const MAX_DELAY = 55;
+const MAX_BUFFER_SEC = 55;
+
+const REPLAY_DURATIONS = [3, 5, 10, 15];
 
 type Facing = "user" | "environment";
+
+type TimedBlob = { blob: Blob; t: number };
 
 function getMSE(): typeof MediaSource | null {
   if (typeof window === "undefined") return null;
@@ -32,11 +41,11 @@ function getMSE(): typeof MediaSource | null {
 
 function pickMime(mse: typeof MediaSource | null): string {
   const candidates = [
-    "video/mp4;codecs=avc1.42E01E",
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm;codecs=vp8",
     "video/webm",
+    "video/mp4;codecs=avc1.42E01E",
     "video/mp4",
   ];
   for (const c of candidates) {
@@ -57,6 +66,7 @@ function pickMime(mse: typeof MediaSource | null): string {
 export function DelayCam() {
   const liveRef = useRef<HTMLVideoElement>(null);
   const delayedRef = useRef<HTMLVideoElement>(null);
+  const replayRef = useRef<HTMLVideoElement>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -64,9 +74,9 @@ export function DelayCam() {
   const sourceBufferRef = useRef<SourceBuffer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const fallbackUrlRef = useRef<string | null>(null);
+  const replayUrlRef = useRef<string | null>(null);
   const queueRef = useRef<ArrayBuffer[]>([]);
-  const chunksRef = useRef<Blob[]>([]);
-  const timedChunksRef = useRef<{ blob: Blob; t: number }[]>([]);
+  const timedChunksRef = useRef<TimedBlob[]>([]);
   const startTsRef = useRef<number>(0);
   const driftIntervalRef = useRef<number | null>(null);
   const fallbackIntervalRef = useRef<number | null>(null);
@@ -80,6 +90,8 @@ export function DelayCam() {
   const [bufferedSec, setBufferedSec] = useState(0);
   const [hasMulti, setHasMulti] = useState(false);
   const [mode, setMode] = useState<"mse" | "blob">("mse");
+  const [replayDuration, setReplayDuration] = useState(5);
+  const [replayUrl, setReplayUrl] = useState<string | null>(null);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
@@ -120,7 +132,6 @@ export function DelayCam() {
     mediaSourceRef.current = null;
     sourceBufferRef.current = null;
     queueRef.current = [];
-    chunksRef.current = [];
     timedChunksRef.current = [];
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
@@ -136,8 +147,48 @@ export function DelayCam() {
 
   useEffect(() => cleanup, [cleanup]);
 
+  // Replay: export the last N seconds of the ring buffer into a standalone video.
+  const replayLastN = useCallback((n: number) => {
+    const items = timedChunksRef.current;
+    if (items.length === 0) return;
+    const now = items[items.length - 1].t;
+    const cutoff = now - n * 1000;
+    const selected = items.filter((x) => x.t >= cutoff).map((x) => x.blob);
+    if (selected.length === 0) return;
+    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+    const blob = new Blob(selected, { type: mime });
+    const url = URL.createObjectURL(blob);
+    setReplayUrl(url);
+    if (replayUrlRef.current) URL.revokeObjectURL(replayUrlRef.current);
+    replayUrlRef.current = url;
+    // Autoplay the replay in the dedicated replay player.
+    setTimeout(() => {
+      const rv = replayRef.current;
+      if (rv) {
+        rv.currentTime = 0;
+        rv.play().catch(() => {});
+      }
+    }, 0);
+  }, []);
+
+  const saveClip = useCallback(() => {
+    const items = timedChunksRef.current;
+    if (items.length === 0) return;
+    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+    const blob = new Blob(items.map((x) => x.blob), { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${mime.includes("mp4") ? "mp4" : "webm"}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }, []);
+
   const start = useCallback(async (nextFacing?: Facing) => {
     setError(null);
+    setReplayUrl(null);
     cleanup();
     const useFacing = nextFacing ?? facing;
     try {
@@ -165,7 +216,6 @@ export function DelayCam() {
         const ms = new MSE();
         mediaSourceRef.current = ms;
         const dv = delayedRef.current;
-        // ManagedMediaSource (iOS 17.1+) attaches via srcObject; classic MSE via createObjectURL.
         const isManaged = (window as any).ManagedMediaSource && ms instanceof (window as any).ManagedMediaSource;
         if (dv) {
           if (isManaged && "srcObject" in HTMLMediaElement.prototype) {
@@ -188,10 +238,8 @@ export function DelayCam() {
             sb.mode = "sequence";
             sb.addEventListener("updateend", flushQueue);
             sourceBufferRef.current = sb;
-            // Drain anything buffered before sourceopen fired.
             flushQueue();
           } catch {
-            // MSE couldn't accept this mime — degrade to blob fallback.
             modeRef.current = "blob";
             setMode("blob");
           }
@@ -203,12 +251,12 @@ export function DelayCam() {
       startTsRef.current = 0;
       rec.ondataavailable = async (ev) => {
         if (!ev.data || ev.data.size === 0) return;
-        if (startTsRef.current === 0) startTsRef.current = performance.now();
-        chunksRef.current.push(ev.data);
-        timedChunksRef.current.push({ blob: ev.data, t: performance.now() });
+        const now = performance.now();
+        if (startTsRef.current === 0) startTsRef.current = now;
+        timedChunksRef.current.push({ blob: ev.data, t: now });
 
-        // Trim ring buffer to delay + headroom.
-        const cutoff = performance.now() - (delayRef.current + 8) * 1000;
+        // Trim ring buffer to the configured max window.
+        const cutoff = now - MAX_BUFFER_SEC * 1000;
         while (timedChunksRef.current.length > 2 && timedChunksRef.current[0].t < cutoff) {
           timedChunksRef.current.shift();
         }
@@ -222,7 +270,7 @@ export function DelayCam() {
       rec.start(250);
 
       if (modeRef.current === "mse") {
-        // Drift tracker: keep delayed video exactly `delay` behind live.
+        // Drift tracker: keep delayed video exactly `delay` behind live edge.
         driftIntervalRef.current = window.setInterval(() => {
           const dv = delayedRef.current;
           const sb = sourceBufferRef.current;
@@ -254,10 +302,9 @@ export function DelayCam() {
           const items = timedChunksRef.current;
           if (items.length < 2) return;
           const ageOldest = now - items[0].t;
-          setBufferedSec(ageOldest / 1000);
+          setBufferedSec(Math.min(MAX_BUFFER_SEC, ageOldest / 1000));
           if (ageOldest < delayMs) return; // not enough buffered yet
 
-          // Take chunks whose age >= delay (trailing window from oldest).
           const eligible = items.filter((x) => now - x.t >= delayMs).map((x) => x.blob);
           if (eligible.length === 0) return;
           try {
@@ -284,27 +331,22 @@ export function DelayCam() {
     }
   }, [cleanup, facing, flushQueue]);
 
-  const stop = useCallback(() => { cleanup(); setRunning(false); setBufferedSec(0); }, [cleanup]);
+  const stop = useCallback(() => {
+    cleanup();
+    setRunning(false);
+    setBufferedSec(0);
+    if (replayUrlRef.current) {
+      URL.revokeObjectURL(replayUrlRef.current);
+      replayUrlRef.current = null;
+    }
+    setReplayUrl(null);
+  }, [cleanup]);
 
   const swap = useCallback(async () => {
     const next: Facing = facing === "user" ? "environment" : "user";
     setFacing(next);
     if (running) await start(next);
   }, [facing, running, start]);
-
-  const saveClip = useCallback(() => {
-    if (chunksRef.current.length === 0) return;
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = new Blob(chunksRef.current, { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${mime.includes("mp4") ? "mp4" : "webm"}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-  }, []);
 
   return (
     <Card className="p-4 space-y-4">
@@ -317,7 +359,7 @@ export function DelayCam() {
             Live camera with adjustable 1–55s playback delay for self-review.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {running ? (
             <Button size="sm" variant="destructive" onClick={stop} className="gap-1.5">
               <CameraOff className="h-4 w-4" /> Stop
@@ -332,7 +374,7 @@ export function DelayCam() {
               <SwitchCamera className="h-4 w-4" /> Flip
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={saveClip} disabled={chunksRef.current.length === 0} className="gap-1.5">
+          <Button size="sm" variant="outline" onClick={saveClip} disabled={!running || timedChunksRef.current.length === 0} className="gap-1.5">
             <Download className="h-4 w-4" /> Save clip
           </Button>
         </div>
@@ -398,6 +440,44 @@ export function DelayCam() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-medium">Instant replay</span>
+          <span className="tabular-nums text-muted-foreground">Last {replayDuration}s</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {REPLAY_DURATIONS.map((n) => (
+            <Button
+              key={n}
+              size="sm"
+              variant={replayDuration === n ? "default" : "outline"}
+              disabled={!running}
+              onClick={() => {
+                setReplayDuration(n);
+                replayLastN(n);
+              }}
+              className="gap-1.5"
+            >
+              <Play className="h-3.5 w-3.5" /> Replay {n}s
+            </Button>
+          ))}
+        </div>
+        {replayUrl && (
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Replay clip</div>
+            <video
+              ref={replayRef}
+              src={replayUrl}
+              muted
+              playsInline
+              controls
+              autoPlay
+              className="w-full aspect-video rounded-md bg-muted object-cover"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
