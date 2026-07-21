@@ -386,27 +386,15 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
               </Collapsible>
             )}
 
-            {(debrief || (conceptLabels && conceptLabels.length > 0)) && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <BookOpen className="h-4 w-4 text-primary" /> Debrief
-                </div>
-                {debrief && <p className="text-sm leading-relaxed">{debrief}</p>}
-                {conceptLabels && conceptLabels.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Concepts</span>
-                    {conceptLabels.map((c) => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-[11px] text-muted-foreground pt-1">
-                  Master this concept to unlock the next rung.
-                </p>
-              </div>
-            )}
+            <IqDebriefCard
+              situationId={situationId}
+              sport={sport as IqSport}
+              currentRung={difficultyRung}
+              debrief={debrief}
+              conceptLabels={conceptLabels}
+              actors={actors}
+            />
+
 
             <div className="flex flex-wrap gap-2 pt-1">
               <Button size="sm" variant="outline" onClick={reset}>Try another position</Button>
