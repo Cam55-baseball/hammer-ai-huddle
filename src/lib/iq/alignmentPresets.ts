@@ -54,9 +54,9 @@ function standardRHH(sport: FieldSport): DefensiveAnchors {
     // CF: RHH => 3 steps RIGHT of 2B (away from pitcher's line of sight)
     CF: { kind: "outfield", lateralStepsRightOfSecond:  sc(sport, 3),  depthStepsFromHome: sc(sport, 100) },
     // LF: RHH => 3 steps right of the 3B/2B baseline projection
-    LF: { kind: "outfield", lateralStepsRightOfSecond: -sc(sport, 22), depthStepsFromHome: sc(sport, 95) },
+    LF: { kind: "outfield", lateralStepsRightOfSecond: -sc(sport, 34), depthStepsFromHome: sc(sport, 95) },
     // RF: RHH => lined up with 2B/3B extension
-    RF: { kind: "outfield", lateralStepsRightOfSecond:  sc(sport, 25), depthStepsFromHome: sc(sport, 95) },
+    RF: { kind: "outfield", lateralStepsRightOfSecond:  sc(sport, 34), depthStepsFromHome: sc(sport, 95) },
   };
 }
 function standardLHH(sport: FieldSport): DefensiveAnchors {
