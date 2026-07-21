@@ -1,18 +1,21 @@
-Add a red dashed border around the DelayCam card to make it easy to spot under the video analysis section.
+**Problem:** The replay clip in DelayCam shows a video player but never loads. The root cause is that `MediaRecorder` emits the WebM/MP4 initialization segment (header) only in the very first recorded chunk. The current code (`replayLastN`, the blob fallback, and `saveClip` after trimming) builds a Blob from a tail of the ring buffer without guaranteeing that first header chunk is included, so the browser silently cannot decode the clip.
 
-## What will change
+**Goal:** Make the replay clip (and the delayed blob fallback / save clip) always produce a decodable Blob.
 
-File: `src/components/analyze/DelayCam.tsx`
-- Update the root `<Card>` className at line 352 from:
-  ```
-  className="p-4 space-y-4"
-  ```
-  to:
-  ```
-  className="p-4 space-y-4 border-2 border-dashed border-red-500"
-  ```
-- This wraps the entire DelayCam card in a prominent red dashed outline while preserving existing padding and spacing.
+**File to change:** `src/components/analyze/DelayCam.tsx`
 
-## Verification
-- Run `bunx tsc --noEmit` to confirm no type errors.
-- Open `/analyze/throwing` (or any analysis page) and confirm the DelayCam card is outlined with a red dashed border.
+### Changes
+1. **Preserve the init segment.** Add a `initChunkRef` (ref) to store the first non-empty `MediaRecorder` chunk forever. Never let it be trimmed from the ring buffer.
+2. **Fix ring-buffer trimming.** Change the trim loop so it keeps the first (header) chunk and only trims from index 1 onward.
+3. **Prepend init segment on every reconstructed Blob:**
+   - `replayLastN(n)`: build the replay Blob as `[initChunk, ...selectedTrailingChunks]`.
+   - blob-fallback delayed playback: do the same when building the delayed video object URL.
+   - `saveClip`: keep the same init-first pattern so the full saved clip is always decodable.
+4. **Reset init chunk on cleanup.** When the user stops/restarts, clear the stored init chunk so the next recording starts fresh.
+5. **Surface decode errors.** Add an `onError` handler on the replay `<video>` so the user sees a message instead of a silent blank player.
+
+### Out of scope
+No changes to recording pipeline, MSE path drift logic, UI layout, or the red dashed border. Pure frontend fix.
+
+### Verification
+Run a Playwright script that starts DelayCam on `/analyze/throwing`, waits long enough for the ring buffer to rotate past the first chunk, clicks `Replay 5s`, and confirms the replay `<video>` reaches `readyState >= 2` with a non-zero duration. Screenshot the result.

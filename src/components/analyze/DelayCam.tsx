@@ -77,6 +77,7 @@ export function DelayCam() {
   const replayUrlRef = useRef<string | null>(null);
   const queueRef = useRef<ArrayBuffer[]>([]);
   const timedChunksRef = useRef<TimedBlob[]>([]);
+  const initChunkRef = useRef<Blob | null>(null);
   const startTsRef = useRef<number>(0);
   const driftIntervalRef = useRef<number | null>(null);
   const fallbackIntervalRef = useRef<number | null>(null);
