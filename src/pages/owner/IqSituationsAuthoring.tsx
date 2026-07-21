@@ -21,48 +21,24 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Trash2, Plus, Undo2 } from "lucide-react";
+import { ArrowLeft, Save, Undo2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAlignmentPresets, type FieldSport } from "@/hooks/useDefensiveAlignment";
 import { IqDiamond } from "@/components/iq/IqDiamond";
 import { IqPlaybackControls } from "@/components/iq/IqPlaybackControls";
+import { IqDefenderPositionEditor } from "@/components/iq/authoring/IqDefenderPositionEditor";
+import { IqBallTrackEditor } from "@/components/iq/authoring/IqBallTrackEditor";
+import { IqActorCueForm } from "@/components/iq/authoring/IqActorCueForm";
+import { emptyActor, type DraftActor } from "@/components/iq/authoring/types";
 import {
-  DEFENSIVE_ROLES, ROLE_LABELS, type IqActor, type IqActorRole,
-  type IqAssignment, type IqLens, type IqScenario, type IqSport,
+  DEFENSIVE_ROLES, type IqActor, type IqActorRole,
+  type IqLens, type IqScenario, type IqSport,
 } from "@/lib/iq/types";
 
-const ASSIGNMENTS: IqAssignment[] = ["ball", "bag", "backup", "read", "execute", "idle"];
 const LENSES: IqLens[] = ["defense", "offense", "pitching", "baserunning"];
 
-interface DraftActor {
-  role: IqActorRole;
-  assignment: IqAssignment;
-  primary_path: { x: number; y: number }[];
-  secondary_read: string;
-  communication_call: string;
-  coaching_note: string;
-  common_mistake: string;
-  elite_cue: string;
-  footwork_cue: string;
-  eyes_target: string;
-}
-
-function emptyActor(role: IqActorRole): DraftActor {
-  return {
-    role,
-    assignment: "idle",
-    primary_path: [],
-    secondary_read: "",
-    communication_call: "",
-    coaching_note: "",
-    common_mistake: "",
-    elite_cue: "",
-    footwork_cue: "",
-    eyes_target: "",
-  };
-}
 
 export default function IqSituationsAuthoring() {
   const navigate = useNavigate();
