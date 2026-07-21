@@ -1,28 +1,32 @@
-## Problem
+### Problem
+- `/analyze/throwing` still shows the old Real-Time Playback card, which is redundant now that DelayCam exists.
+- DelayCam currently only previews the camera feed; it does not actually record, delay, or replay footage for users.
 
-DelayCam crashes on iOS Safari with `Can't find variable: MediaSource`. iPhone Safari historically ships without `window.MediaSource` (only `ManagedMediaSource` on iOS 17.1+), so the current MSE-first path throws immediately on Start. The plan already called for a Blob-URL fallback, but it isn't wired.
+### Plan
 
-## Fix
+#### 1. Retire Real-Time Playback surface
+- `src/pages/AnalyzeVideo.tsx`
+  - Remove the `RealTimePlaybackCard` import and its render.
+  - Keep `DelayCam` in place directly beneath the analysis section.
+- Delete `src/components/RealTimePlaybackCard.tsx` and `src/components/RealTimePlayback.tsx` (no other references remain).
 
-Update `src/components/analyze/DelayCam.tsx` only.
+#### 2. Make DelayCam actually replay E2E
+- `src/components/analyze/DelayCam.tsx`
+  - Add a real `MediaRecorder`-based capture pipeline: store recorded `Blob` chunks in a rolling buffer with timestamp metadata.
+  - Implement a trailing-window buffer that keeps the last 55s of footage (configurable).
+  - When the user sets a delay of N seconds, play back the chunk that is N seconds behind the live edge.
+  - Add a **Replay last Ns** button that plays the most recent N seconds of buffered footage on demand.
+  - Add **Save clip** to export the buffered segment as a downloadable `.webm` file.
+  - Ensure the delayed pane updates continuously when delay is active; do not leave it blank.
+  - Handle iOS Safari where `MediaSource` is unavailable by using a Blob-URL fallback player.
+  - Keep existing camera selection, flip, permission, error surfacing, and cleanup.
 
-1. **Feature-detect at Start**, before touching MSE:
-   - `const MSE = window.MediaSource ?? (window as any).ManagedMediaSource ?? null;`
-   - `const mseOk = !!MSE && MSE.isTypeSupported?.(mimeType);`
-2. **If MSE is available** — keep current SourceBuffer path (prefer `ManagedMediaSource` when that's what exists; attach via `srcObject` for ManagedMediaSource, else `URL.createObjectURL`).
-3. **If MSE is unavailable (iOS Safari fallback)** — run in Blob-URL mode:
-   - Keep the existing `{chunk, t}` ring buffer.
-   - Every ~500 ms, take chunks whose age ≥ `delaySeconds`, concatenate into a single `Blob`, set `delayedVideo.src = URL.createObjectURL(blob)`, `play()`, and revoke the previous URL on the next swap.
-   - Show a small status note: "Delayed playback (fallback mode)".
-4. **MIME selection** — pick the first supported of `video/mp4;codecs=avc1.42E01E` (Safari), `video/webm;codecs=vp9,opus`, `video/webm;codecs=vp8,opus`, `video/webm`. Use `MediaRecorder.isTypeSupported`.
-5. **Error surfacing** — wrap Start in try/catch; on failure show the existing inline error card with the actual message + Retry, instead of throwing to the console.
-6. **Cleanup** — revoke any active blob URL on Stop/unmount in both modes.
+#### 3. Clean up
+- Verify no other imports reference `RealTimePlaybackCard` or `RealTimePlayback`.
 
-No other files change. Game IQ playback and the analysis pipeline stay untouched.
-
-## Acceptance
-
-- On iPhone Safari, pressing Start no longer throws; live preview shows and delayed video plays ~N seconds behind (fallback mode).
-- On Chromium/desktop Safari 17+, MSE path still runs smoothly with continuous playback.
-- Slider 1–55 s and presets still adjust delay in both modes.
-- Stop fully releases camera and revokes URLs; no console errors.
+### Acceptance
+- `/analyze/throwing` no longer shows the Real-Time Playback card; only DelayCam appears under analysis.
+- Pressing Start begins recording; the buffer indicator climbs.
+- Pressing **Replay last Ns** plays back the trailing footage on both desktop Chrome/Safari and iPhone Safari.
+- Save clip downloads a playable file.
+- Stop fully releases the camera and revokes URLs.
