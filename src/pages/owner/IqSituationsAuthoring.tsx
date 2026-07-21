@@ -440,55 +440,22 @@ export default function IqSituationsAuthoring() {
               </div>
             </Card>
 
-            {/* Per-role cues */}
             {cur && (
-              <Card className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold">{ROLE_LABELS[cur.role]} ({cur.role})</h3>
-                  <Badge variant="outline">{cur.primary_path.length} waypoints</Badge>
-                </div>
-                <div>
-                  <Label>Assignment</Label>
-                  <Select value={cur.assignment} onValueChange={(v) => setActors((p) => ({
-                    ...p, [cur.role]: { ...p[cur.role], assignment: v as IqAssignment },
-                  }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ASSIGNMENTS.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {(["footwork_cue", "communication_call", "coaching_note", "common_mistake", "elite_cue", "secondary_read", "eyes_target"] as const).map((k) => (
-                  <div key={k}>
-                    <Label className="capitalize">{k.replace(/_/g, " ")}</Label>
-                    <Input value={cur[k]} onChange={(e) => setActors((p) => ({
-                      ...p, [cur.role]: { ...p[cur.role], [k]: e.target.value },
-                    }))} />
-                  </div>
-                ))}
-                <Button size="sm" variant="outline" onClick={() => setActors((p) => ({
+              <IqActorCueForm
+                actor={cur}
+                onChange={(patch) => setActors((p) => ({
+                  ...p, [cur.role]: { ...p[cur.role], ...patch } as DraftActor,
+                }))}
+                onClearWaypoints={() => setActors((p) => ({
                   ...p, [cur.role]: { ...p[cur.role], primary_path: [] },
-                }))}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear waypoints
-                </Button>
-              </Card>
+                }))}
+              />
             )}
 
             {editing === "ball" && (
-              <Card className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold">Ball track</h3>
-                  <Badge variant="outline">{ballTrack.length} points</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Click the field to add each ball position in order. The playback
-                  clock spaces them evenly.
-                </p>
-                <Button size="sm" variant="outline" onClick={() => setBallTrack([])}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear track
-                </Button>
-              </Card>
+              <IqBallTrackEditor track={ballTrack} onClear={() => setBallTrack([])} />
             )}
+
           </div>
         </div>
       </div>
