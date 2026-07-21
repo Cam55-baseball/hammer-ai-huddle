@@ -20,7 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
-import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
+
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
 import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
@@ -1067,8 +1067,6 @@ export default function AnalyzeVideo() {
               </div>
             </Card>
 
-            {/* Real-Time Playback Card */}
-            <RealTimePlaybackCard module={module || ''} sport={sport} />
             </div>
           </div>
         )}
