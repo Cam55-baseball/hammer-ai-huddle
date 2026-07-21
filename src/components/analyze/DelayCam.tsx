@@ -265,12 +265,19 @@ export function DelayCam() {
         if (!ev.data || ev.data.size === 0) return;
         const now = performance.now();
         if (startTsRef.current === 0) startTsRef.current = now;
+
+        // The first chunk contains the container's init segment (WebM/MP4 headers).
+        // Without it, later chunks are not decodable when recombined.
+        if (!initChunkRef.current) {
+          initChunkRef.current = ev.data;
+        }
         timedChunksRef.current.push({ blob: ev.data, t: now });
 
-        // Trim ring buffer to the configured max window.
+        // Trim ring buffer to the configured max window. Always keep the first
+        // chunk because it holds the init segment required for decoding.
         const cutoff = now - MAX_BUFFER_SEC * 1000;
-        while (timedChunksRef.current.length > 2 && timedChunksRef.current[0].t < cutoff) {
-          timedChunksRef.current.shift();
+        while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
+          timedChunksRef.current.splice(1, 1);
         }
 
         if (modeRef.current === "mse") {
