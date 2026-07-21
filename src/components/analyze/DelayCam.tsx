@@ -473,7 +473,7 @@ export function DelayCam() {
               key={n}
               size="sm"
               variant={replayDuration === n ? "default" : "outline"}
-              disabled={!running}
+              disabled={!running || bufferedSec < n + delay}
               onClick={() => {
                 setReplayDuration(n);
                 replayLastN(n);
