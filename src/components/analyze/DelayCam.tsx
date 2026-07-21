@@ -134,6 +134,7 @@ export function DelayCam() {
     sourceBufferRef.current = null;
     queueRef.current = [];
     timedChunksRef.current = [];
+    initChunkRef.current = null;
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
