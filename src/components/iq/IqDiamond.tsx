@@ -8,7 +8,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { IqActor, IqActorRole, IqAssignment, IqScenario } from "@/lib/iq/types";
+import type { IqActor, IqActorRole, IqAssignment, IqScenario, IqSituation } from "@/lib/iq/types";
 import { ASSIGNMENT_COLOR, ROLE_LABELS } from "@/lib/iq/types";
 import { IqField } from "./IqField";
 import type { FieldSport } from "@/lib/iq/fieldModel";
@@ -41,6 +41,8 @@ interface IqDiamondProps {
   playing?: boolean;
   /** Optional scenario (used to fetch `ball_track` for the ball animation). */
   scenario?: IqScenario | null;
+  /** Optional situation (used to synthesize a play if paths are missing). */
+  situation?: Pick<IqSituation, "slug" | "title"> | null;
   /** Coach overlay filter. */
   overlay?: OverlayMode;
 }
@@ -55,7 +57,7 @@ const OFFENSIVE_POS: Partial<Record<IqActorRole, { x: number; y: number }>> = {
 
 export function IqDiamond({
   actors, mode, highlightRole, className, roleShifts, defensivePositions,
-  sport = "baseball", batterSide = "R", playing = false, progress, scenario,
+  sport = "baseball", batterSide = "R", playing = false, progress, scenario, situation,
   overlay = "off",
 }: IqDiamondProps) {
   const posFor = (role: IqActorRole) => {
@@ -83,11 +85,12 @@ export function IqDiamond({
     () => buildTimeline({
       actors,
       scenario: scenario ?? null,
+      situation: situation ?? null,
       positions: (defensivePositions ?? {}) as never,
       posFor,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [actors, scenario, defensivePositions, roleShifts],
+    [actors, scenario, situation, defensivePositions, roleShifts],
   );
 
   // Internal 1.4s auto-play when `playing` toggles true without external progress.
