@@ -2,14 +2,12 @@
  * DelayCam — live camera with adjustable 1–55s instant-replay delay.
  * Self-contained, client-only. No uploads, no backend.
  *
- * Two playback paths:
- *  - MSE path: MediaSource / ManagedMediaSource + SourceBuffer for continuous
- *    delayed playback. We keep a ring buffer of the last 55s of recorded
- *    chunks and feed them into the MediaSource, then drive the delayed video
- *    to `liveEdge - delay`.
- *  - Fallback: iOS Safari (no MediaSource) — rebuild a Blob URL from a trailing
- *    window every ~500ms and swap it into the delayed <video>. Also supports a
- *    "Replay last Ns" playback of the buffered segment.
+ * Delayed mirror is rendered via a canvas frame ring buffer captured from the
+ * live <video> using requestVideoFrameCallback (with rAF fallback). This works
+ * uniformly on iOS Safari, Android Chrome, and desktop — no MediaSource, no
+ * <video src> swaps, no flicker.
+ *
+ * MediaRecorder runs in parallel purely to power Replay Last Ns and Save clip.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -24,64 +22,47 @@ const PRESETS = [3, 5, 10, 20, 30, 45];
 const MIN_DELAY = 1;
 const MAX_DELAY = 55;
 const MAX_BUFFER_SEC = 55;
+const MAX_FRAMES = MAX_BUFFER_SEC * 30 + 30; // safety cap
+const MAX_FRAME_W = 1280;
+const MAX_FRAME_H = 720;
 
 const REPLAY_DURATIONS = [3, 5, 10, 15];
 
 type Facing = "user" | "environment";
 
 type TimedBlob = { blob: Blob; t: number };
+type Frame = { bitmap: ImageBitmap; t: number };
 
-function getMSE(): typeof MediaSource | null {
-  if (typeof window === "undefined") return null;
-  const w = window as any;
-  return (w.MediaSource as typeof MediaSource | undefined)
-    ?? (w.ManagedMediaSource as typeof MediaSource | undefined)
-    ?? null;
-}
-
-function pickMime(mse: typeof MediaSource | null): string {
+function pickRecorderMime(): string {
   const candidates = [
+    "video/mp4;codecs=avc1.42E01E",
+    "video/mp4",
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm;codecs=vp8",
     "video/webm",
-    "video/mp4;codecs=avc1.42E01E",
-    "video/mp4",
   ];
   for (const c of candidates) {
-    const recOk = typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(c);
-    if (!recOk) continue;
-    if (!mse) return c; // fallback mode doesn't need MSE support
-    try {
-      if (mse.isTypeSupported?.(c)) return c;
-    } catch { /* ignore */ }
-  }
-  // If nothing matched both, at least return something the recorder accepts.
-  for (const c of candidates) {
-    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(c)) return c;
+    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(c)) return c;
   }
   return "video/webm";
 }
 
 export function DelayCam() {
   const liveRef = useRef<HTMLVideoElement>(null);
-  const delayedRef = useRef<HTMLVideoElement>(null);
+  const delayedCanvasRef = useRef<HTMLCanvasElement>(null);
+  const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const replayRef = useRef<HTMLVideoElement>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const mediaSourceRef = useRef<MediaSource | null>(null);
-  const sourceBufferRef = useRef<SourceBuffer | null>(null);
-  const objectUrlRef = useRef<string | null>(null);
-  const fallbackUrlRef = useRef<string | null>(null);
-  const replayUrlRef = useRef<string | null>(null);
-  const queueRef = useRef<ArrayBuffer[]>([]);
   const timedChunksRef = useRef<TimedBlob[]>([]);
   const initChunkRef = useRef<Blob | null>(null);
-  const startTsRef = useRef<number>(0);
-  const driftIntervalRef = useRef<number | null>(null);
-  const fallbackIntervalRef = useRef<number | null>(null);
-  const modeRef = useRef<"mse" | "blob">("mse");
+  const framesRef = useRef<Frame[]>([]);
+  const rvfcIdRef = useRef<number | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const drawRafRef = useRef<number | null>(null);
+  const replayUrlRef = useRef<string | null>(null);
   const mimeRef = useRef<string>("video/webm");
 
   const [running, setRunning] = useState(false);
@@ -90,7 +71,6 @@ export function DelayCam() {
   const [error, setError] = useState<string | null>(null);
   const [bufferedSec, setBufferedSec] = useState(0);
   const [hasMulti, setHasMulti] = useState(false);
-  const [mode, setMode] = useState<"mse" | "blob">("mse");
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
 
@@ -103,49 +83,42 @@ export function DelayCam() {
     }).catch(() => {});
   }, []);
 
-  const flushQueue = useCallback(() => {
-    const sb = sourceBufferRef.current;
-    if (!sb || sb.updating) return;
-    const next = queueRef.current.shift();
-    if (next) {
-      try { sb.appendBuffer(next); } catch { /* ignore quota / state */ }
+  // ----- Frame ring buffer helpers -----
+
+  const clearFrames = useCallback(() => {
+    for (const f of framesRef.current) {
+      try { f.bitmap.close(); } catch { /* ignore */ }
     }
+    framesRef.current = [];
   }, []);
 
   const cleanup = useCallback(() => {
-    if (driftIntervalRef.current != null) {
-      window.clearInterval(driftIntervalRef.current);
-      driftIntervalRef.current = null;
+    if (rvfcIdRef.current != null && liveRef.current && "cancelVideoFrameCallback" in liveRef.current) {
+      try { (liveRef.current as any).cancelVideoFrameCallback(rvfcIdRef.current); } catch {}
     }
-    if (fallbackIntervalRef.current != null) {
-      window.clearInterval(fallbackIntervalRef.current);
-      fallbackIntervalRef.current = null;
-    }
+    rvfcIdRef.current = null;
+    if (rafIdRef.current != null) cancelAnimationFrame(rafIdRef.current);
+    rafIdRef.current = null;
+    if (drawRafRef.current != null) cancelAnimationFrame(drawRafRef.current);
+    drawRafRef.current = null;
+
     try { recorderRef.current?.state !== "inactive" && recorderRef.current?.stop(); } catch {}
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-    try {
-      if (mediaSourceRef.current && mediaSourceRef.current.readyState === "open") {
-        mediaSourceRef.current.endOfStream();
-      }
-    } catch {}
-    mediaSourceRef.current = null;
-    sourceBufferRef.current = null;
-    queueRef.current = [];
+
     timedChunksRef.current = [];
     initChunkRef.current = null;
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
-    if (fallbackUrlRef.current) {
-      URL.revokeObjectURL(fallbackUrlRef.current);
-      fallbackUrlRef.current = null;
-    }
+    clearFrames();
+    offscreenCanvasRef.current = null;
+
     if (liveRef.current) liveRef.current.srcObject = null;
-    if (delayedRef.current) { delayedRef.current.removeAttribute("src"); delayedRef.current.load(); }
-  }, []);
+    const c = delayedCanvasRef.current;
+    if (c) {
+      const ctx = c.getContext("2d");
+      ctx?.clearRect(0, 0, c.width, c.height);
+    }
+  }, [clearFrames]);
 
   useEffect(() => cleanup, [cleanup]);
 
@@ -158,7 +131,6 @@ export function DelayCam() {
     return new Blob(parts, { type: mime });
   }, []);
 
-  // Replay: export the last N seconds of the ring buffer into a standalone video.
   const replayLastN = useCallback((n: number) => {
     const items = timedChunksRef.current;
     if (items.length === 0) return;
@@ -172,7 +144,6 @@ export function DelayCam() {
     setReplayUrl(url);
     if (replayUrlRef.current) URL.revokeObjectURL(replayUrlRef.current);
     replayUrlRef.current = url;
-    // Autoplay the replay in the dedicated replay player.
     setTimeout(() => {
       const rv = replayRef.current;
       if (rv) {
@@ -205,138 +176,141 @@ export function DelayCam() {
     const useFacing = nextFacing ?? facing;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: useFacing } },
+        video: { facingMode: { ideal: useFacing }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });
       streamRef.current = stream;
-      if (liveRef.current) {
-        liveRef.current.srcObject = stream;
-        await liveRef.current.play().catch(() => {});
-      }
+      const lv = liveRef.current;
+      if (!lv) throw new Error("Live video element not mounted");
+      lv.srcObject = stream;
+      lv.muted = true;
+      lv.playsInline = true;
+      await lv.play().catch(() => {});
 
-      const MSE = getMSE();
-      const mime = pickMime(MSE);
-      mimeRef.current = mime;
-      const mseOk = !!MSE && (() => {
-        try { return MSE.isTypeSupported?.(mime) ?? false; } catch { return false; }
-      })();
+      // Wait for real dimensions before sizing canvases.
+      await new Promise<void>((resolve) => {
+        if (lv.videoWidth > 0 && lv.videoHeight > 0) return resolve();
+        const on = () => { lv.removeEventListener("loadedmetadata", on); resolve(); };
+        lv.addEventListener("loadedmetadata", on, { once: true });
+      });
 
-      modeRef.current = mseOk ? "mse" : "blob";
-      setMode(modeRef.current);
+      // Compute capture size (letter-cap to 720p while preserving aspect).
+      const vw = lv.videoWidth || 1280;
+      const vh = lv.videoHeight || 720;
+      const scale = Math.min(1, MAX_FRAME_W / vw, MAX_FRAME_H / vh);
+      const cw = Math.max(2, Math.round(vw * scale));
+      const ch = Math.max(2, Math.round(vh * scale));
 
-      if (mseOk && MSE) {
-        const ms = new MSE();
-        mediaSourceRef.current = ms;
-        const dv = delayedRef.current;
-        const isManaged = (window as any).ManagedMediaSource && ms instanceof (window as any).ManagedMediaSource;
-        if (dv) {
-          if (isManaged && "srcObject" in HTMLMediaElement.prototype) {
-            try { (dv as any).srcObject = ms; }
-            catch {
-              const url = URL.createObjectURL(ms as any);
-              objectUrlRef.current = url;
-              dv.src = url;
-            }
-          } else {
-            const url = URL.createObjectURL(ms as any);
-            objectUrlRef.current = url;
-            dv.src = url;
-          }
-        }
+      const off = document.createElement("canvas");
+      off.width = cw;
+      off.height = ch;
+      offscreenCanvasRef.current = off;
+      const dc = delayedCanvasRef.current;
+      if (dc) { dc.width = cw; dc.height = ch; }
 
-        ms.addEventListener("sourceopen", () => {
-          try {
-            const sb = ms.addSourceBuffer(mime);
-            sb.mode = "sequence";
-            sb.addEventListener("updateend", flushQueue);
-            sourceBufferRef.current = sb;
-            flushQueue();
-          } catch {
-            modeRef.current = "blob";
-            setMode("blob");
-          }
-        });
-      }
-
-      const rec = new MediaRecorder(stream, { mimeType: mime });
-      recorderRef.current = rec;
-      startTsRef.current = 0;
-      rec.ondataavailable = async (ev) => {
-        if (!ev.data || ev.data.size === 0) return;
-        const now = performance.now();
-        if (startTsRef.current === 0) startTsRef.current = now;
-
-        // The first chunk contains the container's init segment (WebM/MP4 headers).
-        // Without it, later chunks are not decodable when recombined.
-        if (!initChunkRef.current) {
-          initChunkRef.current = ev.data;
-        }
-        timedChunksRef.current.push({ blob: ev.data, t: now });
-
-        // Trim ring buffer to the configured max window. Always keep the first
-        // chunk because it holds the init segment required for decoding.
-        const cutoff = now - MAX_BUFFER_SEC * 1000;
-        while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
-          timedChunksRef.current.splice(1, 1);
-        }
-
-        if (modeRef.current === "mse") {
-          const buf = await ev.data.arrayBuffer();
-          queueRef.current.push(buf);
-          flushQueue();
-        }
-      };
-      rec.start(250);
-
-      if (modeRef.current === "mse") {
-        // Drift tracker: keep delayed video exactly `delay` behind live edge.
-        driftIntervalRef.current = window.setInterval(() => {
-          const dv = delayedRef.current;
-          const sb = sourceBufferRef.current;
-          if (!dv || !sb || startTsRef.current === 0) return;
-          const elapsed = (performance.now() - startTsRef.current) / 1000;
-          const target = Math.max(0, elapsed - delayRef.current);
-          try {
-            if (sb.buffered.length > 0) {
-              const end = sb.buffered.end(sb.buffered.length - 1);
-              const startB = sb.buffered.start(0);
-              setBufferedSec(Math.max(0, end - startB));
-              const clamped = Math.min(Math.max(target, startB), end - 0.05);
-              if (dv.paused && elapsed >= delayRef.current && clamped > 0) {
-                try { dv.currentTime = clamped; } catch {}
-                dv.play().catch(() => {});
-              } else if (!dv.paused && Math.abs(dv.currentTime - clamped) > 0.6) {
-                try { dv.currentTime = clamped; } catch {}
-              }
-            }
-          } catch {}
-        }, 250) as unknown as number;
-      } else {
-        // Blob-URL fallback: rebuild trailing window and swap src every ~500ms.
-        fallbackIntervalRef.current = window.setInterval(() => {
-          const dv = delayedRef.current;
-          if (!dv) return;
+      // ----- Frame capture loop -----
+      const captureFrame = async () => {
+        const src = liveRef.current;
+        const canvas = offscreenCanvasRef.current;
+        if (!src || !canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        try {
+          ctx.drawImage(src, 0, 0, canvas.width, canvas.height);
+          const bitmap = await createImageBitmap(canvas);
           const now = performance.now();
-          const delayMs = delayRef.current * 1000;
-          const items = timedChunksRef.current;
-          if (items.length < 2) return;
-          const ageOldest = now - items[0].t;
-          setBufferedSec(Math.min(MAX_BUFFER_SEC, ageOldest / 1000));
-          if (ageOldest < delayMs) return; // not enough buffered yet
+          framesRef.current.push({ bitmap, t: now });
 
-          const eligible = items.filter((x) => now - x.t >= delayMs).map((x) => x.blob);
-          if (eligible.length === 0) return;
+          // Evict by time.
+          const cutoff = now - MAX_BUFFER_SEC * 1000;
+          while (framesRef.current.length > 0 && framesRef.current[0].t < cutoff) {
+            const dropped = framesRef.current.shift();
+            try { dropped?.bitmap.close(); } catch {}
+          }
+          // Evict by count (safety).
+          while (framesRef.current.length > MAX_FRAMES) {
+            const dropped = framesRef.current.shift();
+            try { dropped?.bitmap.close(); } catch {}
+          }
+          const first = framesRef.current[0];
+          const last = framesRef.current[framesRef.current.length - 1];
+          if (first && last) setBufferedSec((last.t - first.t) / 1000);
+        } catch { /* ignore transient draw errors */ }
+      };
+
+      const hasRVFC = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
+      if (hasRVFC) {
+        const step = () => {
+          void captureFrame();
+          rvfcIdRef.current = (lv as any).requestVideoFrameCallback(step);
+        };
+        rvfcIdRef.current = (lv as any).requestVideoFrameCallback(step);
+      } else {
+        const step = () => {
+          void captureFrame();
+          rafIdRef.current = requestAnimationFrame(step);
+        };
+        rafIdRef.current = requestAnimationFrame(step);
+      }
+
+      // ----- Delayed render loop -----
+      const renderDelayed = () => {
+        const c = delayedCanvasRef.current;
+        if (!c) { drawRafRef.current = requestAnimationFrame(renderDelayed); return; }
+        const ctx = c.getContext("2d");
+        const frames = framesRef.current;
+        if (ctx && frames.length > 0) {
+          const targetT = performance.now() - delayRef.current * 1000;
+          // Pick the newest frame whose t <= targetT; if none, use the oldest.
+          let pick: Frame | null = null;
+          for (let i = frames.length - 1; i >= 0; i--) {
+            if (frames[i].t <= targetT) { pick = frames[i]; break; }
+          }
+          if (!pick) pick = frames[0];
           try {
-            const blob = buildDecodableBlob(eligible, mimeRef.current);
-            if (!blob) return;
-            const url = URL.createObjectURL(blob);
-            const prev = fallbackUrlRef.current;
-            fallbackUrlRef.current = url;
-            dv.src = url;
-            dv.play().catch(() => {});
-            if (prev) setTimeout(() => URL.revokeObjectURL(prev), 1000);
+            ctx.drawImage(pick.bitmap, 0, 0, c.width, c.height);
           } catch { /* ignore */ }
-        }, 500) as unknown as number;
+
+          // Overlay "filling buffer" hint until we have enough range.
+          const first = frames[0];
+          const last = frames[frames.length - 1];
+          const have = (last.t - first.t) / 1000;
+          if (have < delayRef.current) {
+            ctx.fillStyle = "rgba(0,0,0,0.55)";
+            ctx.fillRect(0, c.height - 40, c.width, 40);
+            ctx.fillStyle = "#fff";
+            ctx.font = "600 14px system-ui, sans-serif";
+            ctx.textBaseline = "middle";
+            ctx.fillText(
+              `Filling buffer… ${have.toFixed(1)}s / ${delayRef.current}s`,
+              12,
+              c.height - 20,
+            );
+          }
+        }
+        drawRafRef.current = requestAnimationFrame(renderDelayed);
+      };
+      drawRafRef.current = requestAnimationFrame(renderDelayed);
+
+      // ----- MediaRecorder (for Replay Last Ns / Save clip only) -----
+      const mime = pickRecorderMime();
+      mimeRef.current = mime;
+      try {
+        const rec = new MediaRecorder(stream, { mimeType: mime });
+        recorderRef.current = rec;
+        rec.ondataavailable = (ev) => {
+          if (!ev.data || ev.data.size === 0) return;
+          const now = performance.now();
+          if (!initChunkRef.current) initChunkRef.current = ev.data;
+          timedChunksRef.current.push({ blob: ev.data, t: now });
+          const cutoff = now - MAX_BUFFER_SEC * 1000;
+          while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
+            timedChunksRef.current.splice(1, 1);
+          }
+        };
+        rec.start(250);
+      } catch {
+        // Recording is optional; the delayed mirror still works.
       }
 
       setRunning(true);
@@ -349,7 +323,7 @@ export function DelayCam() {
       cleanup();
       setRunning(false);
     }
-  }, [buildDecodableBlob, cleanup, facing, flushQueue]);
+  }, [cleanup, facing]);
 
   const stop = useCallback(() => {
     cleanup();
@@ -422,10 +396,8 @@ export function DelayCam() {
           <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
             Delayed ({delay}s behind)
           </div>
-          <video
-            ref={delayedRef}
-            muted
-            playsInline
+          <canvas
+            ref={delayedCanvasRef}
             className="w-full aspect-video rounded-md bg-muted object-cover"
           />
         </div>
@@ -517,12 +489,6 @@ export function DelayCam() {
         <span>Buffer {bufferedSec.toFixed(1)}s</span>
         <span>·</span>
         <span>Camera: {facing === "user" ? "Front" : "Rear"}</span>
-        {running && mode === "blob" && (
-          <>
-            <span>·</span>
-            <span>Fallback mode</span>
-          </>
-        )}
       </div>
     </Card>
   );
