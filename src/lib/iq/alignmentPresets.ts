@@ -67,8 +67,8 @@ function standardLHH(sport: FieldSport): DefensiveAnchors {
   return {
     ...base,
     CF: { kind: "outfield", lateralStepsRightOfSecond: -sc(sport, 3),  depthStepsFromHome: sc(sport, 100) },
-    LF: { kind: "outfield", lateralStepsRightOfSecond: -sc(sport, 25), depthStepsFromHome: sc(sport, 95) },
-    RF: { kind: "outfield", lateralStepsRightOfSecond:  sc(sport, 22), depthStepsFromHome: sc(sport, 95) },
+    LF: { kind: "outfield", lateralStepsRightOfSecond: -sc(sport, 34), depthStepsFromHome: sc(sport, 95) },
+    RF: { kind: "outfield", lateralStepsRightOfSecond:  sc(sport, 34), depthStepsFromHome: sc(sport, 95) },
   };
 }
 
