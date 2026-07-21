@@ -9,9 +9,10 @@
  * actor or per-waypoint `t` still animate — we auto-space defenders across
  * 0.15..0.95 and interpolate their waypoints evenly along that window.
  */
-import type { IqActor, IqActorRole, IqScenario } from "./types";
+import type { IqActor, IqActorRole, IqScenario, IqSituation } from "./types";
 import { resolveRolePath, type TargetWaypoint } from "./pathResolver";
 import type { AlignmentPositions } from "@/hooks/useDefensiveAlignment";
+import { synthesizePlay } from "./playGenerator";
 
 export interface BallTrackPoint {
   x: number;
@@ -80,6 +81,7 @@ function interpolatePath(
 interface BuildArgs {
   actors: IqActor[];
   scenario?: IqScenario | null;
+  situation?: Pick<IqSituation, "slug" | "title"> | null;
   positions: AlignmentPositions;
   posFor: (role: IqActorRole) => { x: number; y: number };
   /** Total playback duration at 1× (seconds). */
@@ -87,7 +89,7 @@ interface BuildArgs {
 }
 
 export function buildTimeline({
-  actors, scenario, positions, posFor, duration = 3.2,
+  actors, scenario, situation, positions, posFor, duration = 3.2,
 }: BuildArgs): ResolvedTimeline {
   const resolvedMap: Partial<Record<IqActorRole, { x: number; y: number }>> = {};
   actors.forEach((a) => { resolvedMap[a.role] = posFor(a.role); });
@@ -95,15 +97,32 @@ export function buildTimeline({
   const defenderActors = actors.filter((a) => !["R1","R2","R3","BR","BAT"].includes(a.role));
   const N = Math.max(1, defenderActors.length);
 
+  // Runtime fallback: if any actor lacks a path OR the scenario has no ball
+  // track, synthesize a play from the situation archetype. This guarantees
+  // every situation animates, even before an owner authors the paths.
+  const needsSynthesis =
+    actors.some((a) => !a.primary_path?.length) ||
+    !((scenario as unknown as { ball_track?: BallTrackPoint[] } | null)?.ball_track?.length);
+  const generated = needsSynthesis
+    ? synthesizePlay(
+        { slug: situation?.slug, title: situation?.title, runners: actors.filter((a) => ["R1","R2","R3"].includes(a.role)).map((a) => a.role.replace("R","") + "B") },
+        actors,
+      )
+    : null;
+
   const tracks: TimelineActorTrack[] = actors.map((a, idx) => {
     const start = posFor(a.role);
-    const path = a.primary_path?.length
-      ? resolveRolePath(a.role, start, a.primary_path as TargetWaypoint[], { positions: resolvedMap })
+    const authored = a.primary_path?.length
+      ? (a.primary_path as TargetWaypoint[])
+      : (generated?.actorPaths[a.role] ?? null);
+    const path = authored
+      ? resolveRolePath(a.role, start, authored, { positions: resolvedMap })
       : [start];
     // Default staggered window per role, unless explicit start_at / end_at set on actor.
     const anyA = a as unknown as { start_at?: number; end_at?: number };
-    const defStart = 0.15 + (idx / N) * 0.05;
-    const defEnd = 0.95;
+    const genWin = generated?.actorWindows[a.role];
+    const defStart = genWin?.startAt ?? (0.15 + (idx / N) * 0.05);
+    const defEnd = genWin?.endAt ?? 0.95;
     const startAt = clamp01(anyA.start_at ?? defStart);
     const endAt = clamp01(anyA.end_at ?? defEnd);
     const samples = interpolatePath(path, SAMPLES_PER_ROLE).map((s) => ({
@@ -115,8 +134,8 @@ export function buildTimeline({
 
   const ball: BallTrackPoint[] = (() => {
     const raw = (scenario as unknown as { ball_track?: BallTrackPoint[] } | null)?.ball_track;
-    if (!raw || !Array.isArray(raw) || raw.length === 0) return [];
-    return [...raw]
+    const src = raw && Array.isArray(raw) && raw.length > 0 ? raw : generated?.ball ?? [];
+    return [...src]
       .filter((p) => typeof p?.x === "number" && typeof p?.y === "number" && typeof p?.t === "number")
       .sort((a, b) => a.t - b.t);
   })();
