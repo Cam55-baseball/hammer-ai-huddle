@@ -103,8 +103,14 @@ export function IqCoachOverlay({ actors, mode, positionOf, landmarkOf, highlight
 interface FilterBarProps {
   value: OverlayMode;
   onChange: (v: OverlayMode) => void;
+  /** Optional voice toggle rendered inline with the overlay pills (Phase 4 §4.2). */
+  voiceEnabled?: boolean;
+  onToggleVoice?: () => void;
+  voiceSupported?: boolean;
 }
-export function IqOverlayFilterBar({ value, onChange }: FilterBarProps) {
+export function IqOverlayFilterBar({
+  value, onChange, voiceEnabled, onToggleVoice, voiceSupported,
+}: FilterBarProps) {
   const OPTS: { v: OverlayMode; label: string; icon?: typeof Footprints }[] = [
     { v: "all", label: "All" },
     { v: "footwork", label: "Footwork", icon: Footprints },
@@ -131,6 +137,21 @@ export function IqOverlayFilterBar({ value, onChange }: FilterBarProps) {
           </button>
         );
       })}
+      {onToggleVoice && voiceSupported && (
+        <button
+          type="button"
+          onClick={onToggleVoice}
+          aria-pressed={!!voiceEnabled}
+          aria-label="Toggle coach voiceover"
+          className={
+            "ml-0.5 px-2 py-0.5 rounded-full inline-flex items-center gap-1 " +
+            (voiceEnabled ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")
+          }
+        >
+          <span aria-hidden>🔊</span>
+          Voice
+        </button>
+      )}
     </div>
   );
 }

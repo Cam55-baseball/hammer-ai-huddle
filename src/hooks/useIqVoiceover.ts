@@ -1,12 +1,13 @@
 /**
  * useIqVoiceover — synchronize spoken coach cues with the playback clock.
  *
- * Fires speechSynthesis utterances the first time an actor's chip becomes
- * visible in the current mode. Debounces per-key so scrubbing doesn't spam
- * the queue. Silently no-ops when speechSynthesis is unavailable.
+ * Fires speechSynthesis utterances at each actor's real timeline `startAt`
+ * (per Phase 4 §4.2) rather than a fixed index heuristic. Debounces per-key
+ * so scrubbing doesn't spam the queue, cancels on pause/scrub/disable, and
+ * silently no-ops when speechSynthesis is unavailable.
  */
 import { useEffect, useRef } from "react";
-import type { IqActor } from "@/lib/iq/types";
+import type { IqActor, IqActorRole } from "@/lib/iq/types";
 import type { OverlayMode } from "@/components/iq/IqCoachOverlay";
 
 interface Params {
@@ -15,24 +16,28 @@ interface Params {
   progress: number;
   actors: IqActor[];
   mode: OverlayMode;
+  /** Per-actor start time on the 0..1 clock. Defaults to a lightly staggered fallback. */
+  startAts?: Partial<Record<IqActorRole, number>>;
 }
 
-export function useIqVoiceover({ enabled, playing, progress, actors, mode }: Params) {
+const DEFAULT_STAGGER = (idx: number, n: number) => 0.15 + (idx / Math.max(1, n)) * 0.05;
+
+export function useIqVoiceover({
+  enabled, playing, progress, actors, mode, startAts,
+}: Params) {
   const spokenRef = useRef<Set<string>>(new Set());
-  const wasEnabled = useRef(enabled);
 
   // Reset spoken cache when playback restarts (progress dropped near 0)
   useEffect(() => {
     if (progress <= 0.02) spokenRef.current.clear();
   }, [progress]);
 
-  // Cancel speech when disabled or paused
+  // Cancel speech when disabled or paused (or scrub — parent pauses on scrub)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const synth = window.speechSynthesis;
     if (!synth) return;
     if (!enabled || !playing) synth.cancel();
-    wasEnabled.current = enabled;
   }, [enabled, playing]);
 
   useEffect(() => {
@@ -43,12 +48,14 @@ export function useIqVoiceover({ enabled, playing, progress, actors, mode }: Par
 
     const wantFoot = mode === "all" || mode === "footwork";
     const wantComm = mode === "all" || mode === "comm";
+    if (!wantFoot && !wantComm) return;
 
-    for (const a of actors) {
-      // Distribute cues across the clock by role index so they don't all fire at 0
-      const idx = Math.max(0, actors.indexOf(a));
-      const trigger = 0.1 + (idx % 6) * 0.12;
-      if (progress < trigger) continue;
+    const n = actors.length;
+    actors.forEach((a, idx) => {
+      const startAt = startAts?.[a.role] ?? DEFAULT_STAGGER(idx, n);
+      // Small offset so the utterance lands just as the chip becomes visible.
+      const trigger = Math.min(0.98, startAt + 0.02);
+      if (progress < trigger) return;
 
       if (wantFoot) {
         const foot = (a as unknown as { footwork_cue?: string | null }).footwork_cue;
@@ -78,8 +85,8 @@ export function useIqVoiceover({ enabled, playing, progress, actors, mode }: Par
           }
         }
       }
-    }
-  }, [enabled, playing, progress, actors, mode]);
+    });
+  }, [enabled, playing, progress, actors, mode, startAts]);
 
   // Cancel on unmount
   useEffect(() => () => {
