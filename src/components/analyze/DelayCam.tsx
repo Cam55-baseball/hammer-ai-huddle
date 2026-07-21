@@ -365,11 +365,6 @@ export function DelayCam() {
               <Camera className="h-4 w-4" /> Start
             </Button>
           )}
-          {hasMulti && (
-            <Button size="sm" variant="outline" onClick={swap} disabled={!running} className="gap-1.5">
-              <SwitchCamera className="h-4 w-4" /> Flip
-            </Button>
-          )}
           <Button size="sm" variant="outline" onClick={saveClip} disabled={!running || timedChunksRef.current.length === 0} className="gap-1.5">
             <Download className="h-4 w-4" /> Save clip
           </Button>
