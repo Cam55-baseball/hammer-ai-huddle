@@ -21,48 +21,24 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Trash2, Plus, Undo2 } from "lucide-react";
+import { ArrowLeft, Save, Undo2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAlignmentPresets, type FieldSport } from "@/hooks/useDefensiveAlignment";
 import { IqDiamond } from "@/components/iq/IqDiamond";
 import { IqPlaybackControls } from "@/components/iq/IqPlaybackControls";
+import { IqDefenderPositionEditor } from "@/components/iq/authoring/IqDefenderPositionEditor";
+import { IqBallTrackEditor } from "@/components/iq/authoring/IqBallTrackEditor";
+import { IqActorCueForm } from "@/components/iq/authoring/IqActorCueForm";
+import { emptyActor, type DraftActor } from "@/components/iq/authoring/types";
 import {
-  DEFENSIVE_ROLES, ROLE_LABELS, type IqActor, type IqActorRole,
-  type IqAssignment, type IqLens, type IqScenario, type IqSport,
+  DEFENSIVE_ROLES, type IqActor, type IqActorRole,
+  type IqLens, type IqScenario, type IqSport,
 } from "@/lib/iq/types";
 
-const ASSIGNMENTS: IqAssignment[] = ["ball", "bag", "backup", "read", "execute", "idle"];
 const LENSES: IqLens[] = ["defense", "offense", "pitching", "baserunning"];
 
-interface DraftActor {
-  role: IqActorRole;
-  assignment: IqAssignment;
-  primary_path: { x: number; y: number }[];
-  secondary_read: string;
-  communication_call: string;
-  coaching_note: string;
-  common_mistake: string;
-  elite_cue: string;
-  footwork_cue: string;
-  eyes_target: string;
-}
-
-function emptyActor(role: IqActorRole): DraftActor {
-  return {
-    role,
-    assignment: "idle",
-    primary_path: [],
-    secondary_read: "",
-    communication_call: "",
-    coaching_note: "",
-    common_mistake: "",
-    elite_cue: "",
-    footwork_cue: "",
-    eyes_target: "",
-  };
-}
 
 export default function IqSituationsAuthoring() {
   const navigate = useNavigate();
@@ -338,19 +314,8 @@ export default function IqSituationsAuthoring() {
               />
             </Card>
 
-            <Card className="p-3 space-y-2">
-              <Label>Editing target</Label>
-              <div className="grid grid-cols-5 gap-1">
-                <Button size="sm"
-                        variant={editing === "ball" ? "default" : "outline"}
-                        onClick={() => setEditing("ball")}>Ball</Button>
-                {DEFENSIVE_ROLES.map((r) => (
-                  <Button key={r} size="sm"
-                          variant={editing === r ? "default" : "outline"}
-                          onClick={() => setEditing(r)}>{r}</Button>
-                ))}
-              </div>
-            </Card>
+            <IqDefenderPositionEditor editing={editing} onChange={setEditing} />
+
           </div>
 
           {/* RIGHT: Metadata + per-role cues */}
@@ -475,55 +440,22 @@ export default function IqSituationsAuthoring() {
               </div>
             </Card>
 
-            {/* Per-role cues */}
             {cur && (
-              <Card className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold">{ROLE_LABELS[cur.role]} ({cur.role})</h3>
-                  <Badge variant="outline">{cur.primary_path.length} waypoints</Badge>
-                </div>
-                <div>
-                  <Label>Assignment</Label>
-                  <Select value={cur.assignment} onValueChange={(v) => setActors((p) => ({
-                    ...p, [cur.role]: { ...p[cur.role], assignment: v as IqAssignment },
-                  }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ASSIGNMENTS.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {(["footwork_cue", "communication_call", "coaching_note", "common_mistake", "elite_cue", "secondary_read", "eyes_target"] as const).map((k) => (
-                  <div key={k}>
-                    <Label className="capitalize">{k.replace(/_/g, " ")}</Label>
-                    <Input value={cur[k]} onChange={(e) => setActors((p) => ({
-                      ...p, [cur.role]: { ...p[cur.role], [k]: e.target.value },
-                    }))} />
-                  </div>
-                ))}
-                <Button size="sm" variant="outline" onClick={() => setActors((p) => ({
+              <IqActorCueForm
+                actor={cur}
+                onChange={(patch) => setActors((p) => ({
+                  ...p, [cur.role]: { ...p[cur.role], ...patch } as DraftActor,
+                }))}
+                onClearWaypoints={() => setActors((p) => ({
                   ...p, [cur.role]: { ...p[cur.role], primary_path: [] },
-                }))}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear waypoints
-                </Button>
-              </Card>
+                }))}
+              />
             )}
 
             {editing === "ball" && (
-              <Card className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold">Ball track</h3>
-                  <Badge variant="outline">{ballTrack.length} points</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Click the field to add each ball position in order. The playback
-                  clock spaces them evenly.
-                </p>
-                <Button size="sm" variant="outline" onClick={() => setBallTrack([])}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear track
-                </Button>
-              </Card>
+              <IqBallTrackEditor track={ballTrack} onClear={() => setBallTrack([])} />
             )}
+
           </div>
         </div>
       </div>
