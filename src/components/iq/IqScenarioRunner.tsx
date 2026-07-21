@@ -289,10 +289,17 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
             </div>
           )}
 
-          <Button disabled={!position || !answer || record.isPending}
-                  onClick={handleSubmit} className="w-full">
-            Lock it in <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+          <div className="flex gap-2">
+            <Button disabled={!position || !answer || record.isPending}
+                    onClick={handleSubmit} className="flex-1">
+              Lock it in <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+            <Button type="button" variant="outline"
+                    onClick={() => { setPreview(true); setProgress(0); setPlaying(true); }}
+                    className="gap-1.5">
+              <Play className="h-4 w-4" /> Watch the play
+            </Button>
+          </div>
 
           <div className="flex items-center justify-between gap-2 pt-2 border-t">
             <Button type="button" variant="ghost" size="sm" onClick={reset}>
