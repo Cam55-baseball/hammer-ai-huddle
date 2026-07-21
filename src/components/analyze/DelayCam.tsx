@@ -494,6 +494,14 @@ export function DelayCam() {
               playsInline
               controls
               autoPlay
+              onError={() => {
+                setError("Replay clip couldn't decode. Try pressing Start again and wait until the buffer is ready.");
+                if (replayUrlRef.current) {
+                  URL.revokeObjectURL(replayUrlRef.current);
+                  replayUrlRef.current = null;
+                }
+                setReplayUrl(null);
+              }}
               className="w-full aspect-video rounded-md bg-muted object-cover"
             />
           </div>
