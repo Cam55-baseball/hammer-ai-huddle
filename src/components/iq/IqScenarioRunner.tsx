@@ -203,20 +203,30 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
 
       <IqDiamond
         actors={actors}
-        mode={submitted ? "reveal" : "quiz"}
+        mode={animating ? "reveal" : "quiz"}
         highlightRole={position}
         defensivePositions={defensivePositions}
         sport={sport}
         batterSide={batterSide}
-        progress={submitted ? progress : undefined}
-        playing={submitted ? playing : false}
+        progress={animating ? progress : undefined}
+        playing={animating ? playing : false}
         scenario={scenario}
-        overlay={submitted ? overlay : "off"}
+        overlay={animating ? overlay : "off"}
       />
 
-      {submitted && (
+      {animating && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
+            <Button
+              type="button"
+              size="sm"
+              variant="default"
+              onClick={() => { setProgress(0); setPlaying(true); }}
+              className="gap-1.5"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Watch the play
+            </Button>
             <IqOverlayFilterBar
               value={overlay}
               onChange={setOverlay}
@@ -237,6 +247,14 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
             onSetSpeed={setSpeed}
             onRestart={() => { setProgress(0); setPlaying(true); }}
           />
+          {preview && !submitted && (
+            <div className="flex items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">
+              <span>Preview mode — your answer isn't locked in yet.</span>
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setPreview(false); setPlaying(false); setProgress(0); }}>
+                Back to quiz
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
