@@ -342,6 +342,8 @@ export function DelayCam() {
     if (running) await start(next);
   }, [facing, running, start]);
 
+  const cameraLabel = facing === "user" ? "Front" : "Rear";
+
   return (
     <Card className="p-4 space-y-4 border-2 border-dashed border-red-500">
       <div className="flex items-start justify-between gap-2 flex-wrap">
