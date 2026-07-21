@@ -1,31 +1,37 @@
-# Fix "Couldn't reach Hammer" on Ask Hammer
+## Root cause (verified)
 
-## Root cause
-Client throws `FunctionsFetchError: Failed to fetch` when invoking `hammer-recall`. Edge-function logs show **no boot, no request, no error** for `hammer-recall` at all — meaning the function is not deployed / not reachable. All other functions (check-subscription, wk-generate-daily, etc.) show normal boot logs, so the runtime is fine; only this function is missing.
+In `src/lib/iq/fieldModel.ts` (line 100), the lateral axis for outfielders is computed as:
 
-The most probable cause is a deploy-time failure from the imports used in `supabase/functions/hammer-recall/index.ts`:
+```ts
+const lateral: Pt = { x: axis.y, y: -axis.x }; // 90° CW rotation
+```
 
-- `https://deno.land/std@0.168.0/http/server.ts` (old std URL)
-- `https://esm.sh/@supabase/supabase-js@2.76.0` (esm.sh floating specifier — known to cause silent deploy failures per Lovable's edge-function-deploy-errors guidance)
+With `axis = home→2B = (0, -1)` on our grid (home at `(50, 95)`, 2B at `(50, ~15)`), this rotation yields `lateral = (-1, 0)` — pointing to screen-**left** (3B/LF side).
 
-Every other working function in this project uses `npm:` specifiers instead.
+The comment two lines above says the exact opposite:
+> "Positive lateral = to batter's RIGHT (1B side)... +x for RHH view."
+
+So the presets in `alignmentPresets.ts` were authored to that intent (LF uses **negative** `lateralStepsRightOfSecond`, RF uses **positive**), but the vector transform points the wrong way. Result: **LF renders on the RF side and RF renders on the LF side** — exactly what you're seeing on `/iq/comebacker-r1-double-play`.
 
 ## Fix
 
-1. Rewrite the top of `supabase/functions/hammer-recall/index.ts` to use the project's standard import pattern:
-   - Replace `deno.land/std` `serve` with `Deno.serve` (native).
-   - Replace `esm.sh/@supabase/supabase-js@2.76.0` with `npm:@supabase/supabase-js@2`.
-   - Import CORS from `npm:@supabase/supabase-js@2/cors` and drop the local `corsHeaders` const to match the house rule.
-   - Keep the rest of the retrieval + Gemini logic unchanged.
+Change the lateral rotation to 90° CCW so `+lateralStepsRightOfSecond` truly maps to +x (1B side), matching the comment and every preset already in the codebase:
 
-2. Add an explicit `[functions.hammer-recall]` block to `supabase/config.toml` with `verify_jwt = true` so auth headers are validated the same way as `ai-chat` (the function already reads the user from the Authorization header).
+```ts
+const lateral: Pt = { x: -axis.y, y: axis.x }; // 90° CCW — +x = 1B side (batter's right for RHH)
+```
 
-3. If `supabase/functions/deno.lock` exists and still fails after the import swap, delete it so edge-runtime re-resolves cleanly.
+That single-line change puts LF back on the 3B side and RF on the 1B side across every situation, every alignment preset, and every scenario — because every outfielder position in the app flows through `anchorToPos`.
 
-4. Verify:
-   - `supabase--edge_function_logs` for `hammer-recall` now shows a `booted` line.
-   - `supabase--curl_edge_functions` POST to `/hammer-recall` with a small `{ messages: [...] }` body returns a JSON reply (or a clean 4xx) instead of a network failure.
-   - In the preview, sending a message from `/hammer/recall` no longer surfaces `Couldn't reach Hammer`.
+## Verification
+
+1. Reload `/iq/comebacker-r1-double-play` — LF must sit on screen-left, RF on screen-right, CF centered.
+2. Toggle the situation between RHH and LHH — the outfield shift must **mirror** (RHH: LF pulled toward line, RF shaded toward gap; LHH: reversed).
+3. Spot-check 3–4 other situations (any bunt, any base-hit-to-RF, any deep-fly situation) to confirm no regression on infielders (they're unaffected — only the `outfield` branch changes).
+4. Open `/owner/iq/alignments` editor and confirm the drag positions of LF/RF match the coach labels ("3 steps right of 2B" now visually lands on the 1B side).
 
 ## Out of scope
-- No changes to `HammerRecall.tsx` UI, retrieval SQL, or the recall_threads/recall_messages schema — those are fine; the only failure is the function not being reachable.
+
+- No changes to presets, scenarios, actor data, playback, or overlays.
+- No schema changes.
+- Infielder anchors (`corner_bag`, `middle_bag`) are geometrically correct and untouched.
