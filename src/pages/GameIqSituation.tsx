@@ -36,6 +36,26 @@ export default function GameIqSituation() {
   const [runners, setRunners] = useState<RunnerBase[]>([]);
   const [outs, setOuts] = useState<number>(0);
   const alignmentsQ = useAlignmentPresets(fieldSport);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!playing) return;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = (now - last) / 1000; last = now;
+      setProgress((p) => {
+        const next = p + (dt / 3.2) * speed;
+        if (next >= 1) { setPlaying(false); return 1; }
+        return next;
+      });
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, speed]);
 
 
 
