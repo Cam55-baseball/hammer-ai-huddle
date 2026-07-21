@@ -43,9 +43,11 @@ interface Props {
   batterSide?: "R" | "L";
   debrief?: string | null;
   conceptLabels?: string[];
+  /** Current situation's difficulty rung (1–5) — powers the "Next rung" prompt. */
+  difficultyRung?: number;
 }
 
-export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R", debrief, conceptLabels }: Props) {
+export function IqScenarioRunner({ situationId, situationSlug, situationTitle, scenario, actors, defensivePositions, sport = "baseball", batterSide = "R", debrief, conceptLabels, difficultyRung = 1 }: Props) {
 
   const navigate = useNavigate();
   const record = useRecordIqAttempt();
