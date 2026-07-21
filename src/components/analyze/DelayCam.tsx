@@ -270,7 +270,6 @@ export function DelayCam() {
         // Without it, later chunks are not decodable when recombined.
         if (!initChunkRef.current) {
           initChunkRef.current = ev.data;
-          console.log("[DelayCam] init chunk captured", ev.data.size);
         }
         timedChunksRef.current.push({ blob: ev.data, t: now });
 
