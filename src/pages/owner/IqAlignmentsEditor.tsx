@@ -332,9 +332,14 @@ export default function IqAlignmentsEditor() {
           <Button variant="ghost" onClick={() => navigate(-1)} className="-ml-2">
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate("/owner/iq/alignments/audit")}>
-            <ShieldCheck className="h-4 w-4 mr-1" /> Audit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/owner/iq/situations")}>
+              Author situation
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/owner/iq/alignments/audit")}>
+              <ShieldCheck className="h-4 w-4 mr-1" /> Audit
+            </Button>
+          </div>
         </div>
 
         <div>
