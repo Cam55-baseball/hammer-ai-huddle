@@ -440,7 +440,7 @@
   },
   "landingPage": {
     "heroTitle": "Elite Training for Champions.",
-    "heroSubtitle": "Hammer AI-Powered Results",
+    "heroSubtitle": "Hammer Hammer-Powered Results",
     "heroDescription": "Transform your game with advanced motion capture, real-time analytics, and professional development tools used by elite athletes worldwide.",
     "getStarted": "Get Started",
     "signIn": "Sign In",
@@ -451,7 +451,7 @@
     "activeDevelopment": "Active Development",
     "poweredByInnovation": "Powered by Innovation",
     "industryLeading": "Industry-leading technology for baseball and softball athletes",
-    "aiMotionCapture": "AI Motion Capture",
+    "aiMotionCapture": "Hammer Motion Capture",
     "aiMotionCaptureDesc": "Advanced computer vision analyzes every throw, pitch, and swing with professional-grade accuracy",
     "realTimeAnalytics": "Real-Time Analytics",
     "realTimeAnalyticsOwner": "Instant feedback on velocity, spin rate, release point, and 20+ biomechanical metrics",
@@ -1805,7 +1805,7 @@
     "player": {
       "welcome": {
         "title": "Welcome to Hammers Modality",
-        "description": "Your complete baseball training and scouting platform. Analyze your performance with AI-powered feedback, connect with scouts, and track your progress to the next level."
+        "description": "Your complete baseball training and scouting platform. Analyze your performance with Hammer-powered feedback, connect with scouts, and track your progress to the next level."
       },
       "creator": {
         "title": "Meet the Creator",
@@ -1813,11 +1813,11 @@
       },
       "modules": {
         "title": "Your Training Modules",
-        "description": "Access your Hitting, Pitching, and Throwing analysis tools. Each module is designed with cutting-edge AI to help you improve specific aspects of your game."
+        "description": "Access your Hitting, Pitching, and Throwing analysis tools. Each module is designed with cutting-edge Hammer to help you improve specific aspects of your game."
       },
       "upload": {
         "title": "Upload & Analyze Videos",
-        "description": "Use the module cards to upload videos of your workouts or games. Our AI analyzes your mechanics in real-time, providing instant feedback on your technique."
+        "description": "Use the module cards to upload videos of your workouts or games. Our Hammer analyzes your mechanics in real-time, providing instant feedback on your technique."
       },
       "coaching": {
         "title": "Get Personalized Coaching",
@@ -1863,7 +1863,7 @@
       },
       "videos": {
         "title": "View Player Videos",
-        "description": "Once you're following a player, access their entire video library in the Players Club. Watch their training sessions, game footage, and AI analysis breakdowns."
+        "description": "Once you're following a player, access their entire video library in the Players Club. Watch their training sessions, game footage, and Hammer analysis breakdowns."
       },
       "rankings": {
         "title": "Rankings System",
@@ -1871,7 +1871,7 @@
       },
       "analyze": {
         "title": "Analyze Performance",
-        "description": "Review AI-generated reports for each player, including efficiency scores, mechanics analysis, and detailed feedback to help you make informed recruiting decisions."
+        "description": "Review Hammer-generated reports for each player, including efficiency scores, mechanics analysis, and detailed feedback to help you make informed recruiting decisions."
       }
     }
   },
@@ -3476,7 +3476,7 @@
     },
     "disclaimer": {
       "title": "Educational Content Notice",
-      "text": "Mind Fuel provides mental performance education for athletes. This is not therapy or medical advice. Some information may be AI-generated. Consult a licensed professional for mental health concerns."
+      "text": "Mind Fuel provides mental performance education for athletes. This is not therapy or medical advice. Some information may be Hammer-generated. Consult a licensed professional for mental health concerns."
     },
     "loading": "Loading your mind fuel...",
     "error": "Failed to load lesson. Please try again.",
@@ -6717,7 +6717,7 @@
       "guidance": {
         "title": "How custom fields work",
         "checkbox": "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')",
-        "number": "Track measurable data the AI analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185'). Set a goal here — you'll log your actual value each day on your Game Plan.",
+        "number": "Track measurable data the Hammer analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185'). Set a goal here — you'll log your actual value each day on your Game Plan.",
         "text": "Log notes or observations (e.g., 'How I felt today'). Enter daily notes when viewing the card on your Game Plan.",
         "time": "Track time-based data (e.g., 'Recovery Duration'). Enter your actual time daily on the Game Plan."
       },
@@ -6917,7 +6917,7 @@
       "personalizedFor": "Personalized",
       "addExercisesFirst": "Add exercises to your workout first",
       "rateLimited": "Too many requests. Please wait a moment.",
-      "paymentRequired": "AI credits needed. Please contact support.",
+      "paymentRequired": "Hammer credits needed. Please contact support.",
       "warmingUpFor": "Warming up for...",
       "warmupContext": {
         "label": "What are you warming up for?",
@@ -7322,7 +7322,7 @@
       "personalized": "Personalized",
       "addToBlock": "Add to Block",
       "rateLimited": "Too many requests. Please wait a moment.",
-      "paymentRequired": "AI credits needed. Please contact support.",
+      "paymentRequired": "Hammer credits needed. Please contact support.",
       "questions": {
         "activation": "What area needs activation?",
         "elastic_prep": "What type of elasticity?",

@@ -304,7 +304,7 @@
   },
   "landingPage": {
     "heroTitle": "Entrenamiento de Élite para Campeones.",
-    "heroSubtitle": "Resultados Impulsados por IA de Hammer",
+    "heroSubtitle": "Resultados Impulsados por Hammer",
     "heroDescription": "Transforma tu juego con captura de movimiento avanzada, análisis en tiempo real y herramientas de desarrollo profesional utilizadas por atletas de élite en todo el mundo.",
     "getStarted": "Comenzar",
     "signIn": "Iniciar Sesión",
@@ -315,7 +315,7 @@
     "activeDevelopment": "Desarrollo Activo",
     "poweredByInnovation": "Impulsado por la Innovación",
     "industryLeading": "Tecnología líder en la industria para atletas de béisbol y sóftbol",
-    "aiMotionCapture": "Captura de Movimiento IA",
+    "aiMotionCapture": "Captura de Movimiento Hammer",
     "aiMotionCaptureDesc": "Visión por computadora avanzada que analiza cada lanzamiento, pitcheo y swing con precisión de grado profesional",
     "realTimeAnalytics": "Análisis en Tiempo Real",
     "realTimeAnalyticsOwner": "Retroalimentación instantánea sobre velocidad, tasa de giro, punto de liberación y más de 20 métricas biomecánicas",
@@ -1430,7 +1430,7 @@
     "player": {
       "welcome": {
         "title": "Bienvenido a Hammers Modality",
-        "description": "Tu plataforma completa de entrenamiento y scouting de béisbol. Analiza tu rendimiento con retroalimentación impulsada por IA, conéctate con scouts y rastrea tu progreso hacia el siguiente nivel."
+        "description": "Tu plataforma completa de entrenamiento y scouting de béisbol. Analiza tu rendimiento con retroalimentación impulsada por Hammer, conéctate con scouts y rastrea tu progreso hacia el siguiente nivel."
       },
       "creator": {
         "title": "Conoce al Creador",
@@ -1438,11 +1438,11 @@
       },
       "modules": {
         "title": "Tus Módulos de Entrenamiento",
-        "description": "Accede a tus herramientas de análisis de Bateo, Pitcheo y Lanzamiento. Cada módulo está diseñado con IA de vanguardia para ayudarte a mejorar aspectos específicos de tu juego."
+        "description": "Accede a tus herramientas de análisis de Bateo, Pitcheo y Lanzamiento. Cada módulo está diseñado con Hammer de vanguardia para ayudarte a mejorar aspectos específicos de tu juego."
       },
       "upload": {
         "title": "Sube y Analiza Videos",
-        "description": "Usa las tarjetas de módulos para subir videos de tus entrenamientos o juegos. Nuestra IA analiza tu mecánica en tiempo real, proporcionando retroalimentación instantánea sobre tu técnica."
+        "description": "Usa las tarjetas de módulos para subir videos de tus entrenamientos o juegos. Nuestra Hammer analiza tu mecánica en tiempo real, proporcionando retroalimentación instantánea sobre tu técnica."
       },
       "coaching": {
         "title": "Obtén Coaching Personalizado",
@@ -1488,7 +1488,7 @@
       },
       "videos": {
         "title": "Ver Videos de Jugadores",
-        "description": "Una vez que sigues a un jugador, accede a toda su biblioteca de videos en el Club de Jugadores. Mira sus sesiones de entrenamiento, metraje de juegos y análisis de IA."
+        "description": "Una vez que sigues a un jugador, accede a toda su biblioteca de videos en el Club de Jugadores. Mira sus sesiones de entrenamiento, metraje de juegos y análisis de Hammer."
       },
       "rankings": {
         "title": "Sistema de Clasificaciones",
@@ -1496,7 +1496,7 @@
       },
       "analyze": {
         "title": "Analiza el Rendimiento",
-        "description": "Revisa informes generados por IA para cada jugador, incluyendo puntajes de eficiencia, análisis de mecánica y retroalimentación detallada para ayudarte a tomar decisiones de reclutamiento informadas."
+        "description": "Revisa informes generados por Hammer para cada jugador, incluyendo puntajes de eficiencia, análisis de mecánica y retroalimentación detallada para ayudarte a tomar decisiones de reclutamiento informadas."
       }
     }
   },
@@ -2971,7 +2971,7 @@
     },
     "disclaimer": {
       "title": "Aviso de Contenido Educativo",
-      "text": "Combustible Mental proporciona educación de rendimiento mental para atletas. Esto no es terapia ni consejo médico. Alguna información puede ser generada por IA. Consulte a un profesional licenciado para preocupaciones de salud mental."
+      "text": "Combustible Mental proporciona educación de rendimiento mental para atletas. Esto no es terapia ni consejo médico. Alguna información puede ser generada por Hammer. Consulte a un profesional licenciado para preocupaciones de salud mental."
     },
     "loading": "Cargando tu combustible mental...",
     "error": "Error al cargar la lección. Por favor intenta de nuevo.",
@@ -5771,10 +5771,10 @@
     "analysisHint": "Esto puede tardar unos segundos",
     "uploadFailed": "Error al subir el video",
     "saveFailed": "Error al guardar el registro de video",
-    "analysisFailed": "El análisis de IA falló",
+    "analysisFailed": "El análisis de Hammer falló",
     "frameExtractionFailed": "Error al extraer fotogramas del video",
     "unexpectedError": "Ocurrió un error inesperado",
-    "frameCount": "Fotogramas para Análisis IA",
+    "frameCount": "Fotogramas para Análisis Hammer",
     "selectedForAnalysis": "seleccionados",
     "annotateFrame": "Anotar",
     "annotateCurrentFrame": "Anotar Fotograma Actual",
@@ -5922,7 +5922,7 @@
       "guidance": {
         "title": "Cómo funcionan los campos personalizados",
         "checkbox": "Seguir hábitos diarios (ej., 'Baño de Hielo,' 'Foam Roll,' 'Estirar Antes de Dormir')",
-        "number": "Seguir datos medibles que la IA analiza para tendencias (ej., 'Tiempo Sprint: 4.2,' 'Peso Usado: 185')",
+        "number": "Seguir datos medibles que Hammer analiza para tendencias (ej., 'Tiempo Sprint: 4.2,' 'Peso Usado: 185')",
         "text": "Registrar notas u observaciones (ej., 'Cómo me sentí hoy')",
         "time": "Seguir datos basados en tiempo (ej., 'Duración de Recuperación')"
       },
@@ -6141,7 +6141,7 @@
       "personalizedFor": "Personalizado",
       "addExercisesFirst": "Añade ejercicios primero",
       "rateLimited": "Demasiadas solicitudes. Espera un momento.",
-      "paymentRequired": "Se necesitan créditos de IA. Contacta a soporte.",
+      "paymentRequired": "Se necesitan créditos de Hammer. Contacta a soporte.",
       "warmingUpFor": "Calentando para...",
       "warmupContext": {
         "label": "¿Para qué estás calentando?",
@@ -6533,7 +6533,7 @@
       "personalized": "Personalizado",
       "addToBlock": "Agregar al Bloque",
       "rateLimited": "Demasiadas solicitudes. Por favor espera un momento.",
-      "paymentRequired": "Se necesitan créditos de IA. Por favor contacta al soporte.",
+      "paymentRequired": "Se necesitan créditos de Hammer. Por favor contacta al soporte.",
       "questions": {
         "activation": "¿Qué área necesita activación?",
         "elastic_prep": "¿Qué tipo de elasticidad?",

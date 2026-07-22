@@ -304,7 +304,7 @@
   },
   "landingPage": {
     "heroTitle": "Elite Training voor Kampioenen.",
-    "heroSubtitle": "Hammer AI-Aangedreven Resultaten",
+    "heroSubtitle": "Hammer Hammer-Aangedreven Resultaten",
     "heroDescription": "Transformeer uw spel met geavanceerde bewegingsanalyse, realtime analyses en professionele ontwikkelingstools die worden gebruikt door elite-atleten wereldwijd.",
     "getStarted": "Aan de Slag",
     "signIn": "Inloggen",
@@ -315,7 +315,7 @@
     "activeDevelopment": "Actieve Ontwikkeling",
     "poweredByInnovation": "Aangedreven door Innovatie",
     "industryLeading": "Toonaangevende technologie voor honkbal- en softbal-atleten",
-    "aiMotionCapture": "AI-Bewegingsanalyse",
+    "aiMotionCapture": "Hammer-Bewegingsanalyse",
     "aiMotionCaptureDesc": "Geavanceerde computervisie analyseert elke worp, pitch en swing met professionele nauwkeurigheid",
     "realTimeAnalytics": "Realtime Analyses",
     "realTimeAnalyticsOwner": "Directe feedback over snelheid, spinrate, lospunt en 20+ biomechanische metrieken",
@@ -1371,8 +1371,8 @@
       "welcome": { "title": "Welkom bij Hammers Modality!", "description": "Laten we de tools verkennen die je helpen je spel naar het volgende niveau te tillen." },
       "creator": { "title": "Je Creator Profiel", "description": "Stel je profiel in om je trainingservaring te personaliseren en verbind met scouts." },
       "modules": { "title": "Trainingsmodules", "description": "Krijg toegang tot gespecialiseerde modules voor slaan, gooien en pitchen om specifieke vaardigheden te verbeteren." },
-      "upload": { "title": "Video Uploaden", "description": "Upload je trainingsvideo's om AI-gestuurde analyse van je techniek te krijgen." },
-      "coaching": { "title": "AI Coaching", "description": "Ontvang gedetailleerde feedback en oefenaanbevelingen op basis van je videoanalyse." },
+      "upload": { "title": "Video Uploaden", "description": "Upload je trainingsvideo's om Hammer-gestuurde analyse van je techniek te krijgen." },
+      "coaching": { "title": "Hammer Coaching", "description": "Ontvang gedetailleerde feedback en oefenaanbevelingen op basis van je videoanalyse." },
       "library": { "title": "Spelers Club", "description": "Sla je trainingssessies op en organiseer ze in je persoonlijke bibliotheek." },
       "following": { "title": "Scout Verbinding", "description": "Verbind met scouts en coaches die je trainingsvoortgang kunnen zien." },
       "ranking": { "title": "Ranglijsten", "description": "Volg je voortgang en vergelijk jezelf met andere atleten in de ranglijsten." },
@@ -1386,7 +1386,7 @@
       "follow": { "title": "Volg Spelers", "description": "Stuur volgverzoeken om toegang te krijgen tot de trainingsbibliotheken van spelers." },
       "videos": { "title": "Bekijk Video's", "description": "Bekijk trainingssessies en analyseer de technieken van spelers." },
       "rankings": { "title": "Speler Ranglijsten", "description": "Bekijk prestatieranglijsten voor alle spelers op het platform." },
-      "analyze": { "title": "Analyseer Prestaties", "description": "Bekijk AI-analyses en voeg je eigen annotaties toe aan spelervideo's." }
+      "analyze": { "title": "Analyseer Prestaties", "description": "Bekijk Hammer-analyses en voeg je eigen annotaties toe aan spelervideo's." }
     }
   },
   "nutrition": {
@@ -2355,7 +2355,7 @@
     },
     "disclaimer": {
       "title": "Educatieve Inhoud Kennisgeving",
-      "text": "Geestelijke Brandstof biedt mentale prestatie-educatie voor atleten. Dit is geen therapie of medisch advies. Sommige informatie kan AI-gegenereerd zijn. Raadpleeg een gediplomeerde professional voor zorgen over geestelijke gezondheid."
+      "text": "Geestelijke Brandstof biedt mentale prestatie-educatie voor atleten. Dit is geen therapie of medisch advies. Sommige informatie kan Hammer-gegenereerd zijn. Raadpleeg een gediplomeerde professional voor zorgen over geestelijke gezondheid."
     },
     "loading": "Je geestelijke brandstof laden...",
     "error": "Laden van les mislukt. Probeer het opnieuw.",
@@ -4790,10 +4790,10 @@
     "analysisHint": "Dit kan enkele seconden duren",
     "uploadFailed": "Video uploaden mislukt",
     "saveFailed": "Video record opslaan mislukt",
-    "analysisFailed": "AI-analyse mislukt",
+    "analysisFailed": "Hammer-analyse mislukt",
     "frameExtractionFailed": "Video frames extraheren mislukt",
     "unexpectedError": "Er is een onverwachte fout opgetreden",
-    "frameCount": "Frames voor AI-analyse",
+    "frameCount": "Frames voor Hammer-analyse",
     "selectedForAnalysis": "geselecteerd",
     "annotateFrame": "Annoteer",
     "annotateCurrentFrame": "Huidig frame annoteren",
@@ -4941,7 +4941,7 @@
       "guidance": {
         "title": "Hoe aangepaste velden werken",
         "checkbox": "Dagelijkse gewoontes bijhouden (bijv. 'IJsbad,' 'Foam Roll,' 'Stretchen voor het Slapen')",
-        "number": "Meetbare data bijhouden die de AI analyseert voor trends (bijv. 'Sprinttijd: 4.2,' 'Gebruikt Gewicht: 185')",
+        "number": "Meetbare data bijhouden die de Hammer analyseert voor trends (bijv. 'Sprinttijd: 4.2,' 'Gebruikt Gewicht: 185')",
         "text": "Notities of observaties vastleggen (bijv. 'Hoe ik me vandaag voelde')",
         "time": "Tijdgebaseerde data bijhouden (bijv. 'Herstelduur')"
       },
@@ -5160,7 +5160,7 @@
       "personalizedFor": "Gepersonaliseerd",
       "addExercisesFirst": "Voeg eerst oefeningen toe",
       "rateLimited": "Te veel verzoeken. Wacht even.",
-      "paymentRequired": "AI-tegoed nodig. Neem contact op met support.",
+      "paymentRequired": "Hammer-tegoed nodig. Neem contact op met support.",
       "warmingUpFor": "Opwarmen voor...",
       "warmupContext": {
         "label": "Waarvoor warm je op?",
@@ -5423,7 +5423,7 @@
       "personalized": "Gepersonaliseerd",
       "addToBlock": "Toevoegen aan Blok",
       "rateLimited": "Te veel verzoeken. Even wachten alstublieft.",
-      "paymentRequired": "AI-credits nodig. Neem contact op met support.",
+      "paymentRequired": "Hammer-credits nodig. Neem contact op met support.",
       "questions": {
         "activation": "Welk gebied heeft activatie nodig?",
         "elastic_prep": "Welk type elasticiteit?",

@@ -304,7 +304,7 @@
   },
   "landingPage": {
     "heroTitle": "冠军的精英训练。",
-    "heroSubtitle": "锤炼AI驱动的成果",
+    "heroSubtitle": "锤炼Hammer驱动的成果",
     "heroDescription": "通过先进的动作捕捉、实时分析和世界各地精英运动员使用的专业发展工具来改变您的比赛。",
     "getStarted": "开始使用",
     "signIn": "登录",
@@ -315,7 +315,7 @@
     "activeDevelopment": "积极开发中",
     "poweredByInnovation": "创新驱动",
     "industryLeading": "为棒球和垒球运动员提供行业领先的技术",
-    "aiMotionCapture": "AI动作捕捉",
+    "aiMotionCapture": "Hammer动作捕捉",
     "aiMotionCaptureDesc": "先进的计算机视觉以专业级精度分析每一次投球、投掷和挥棒",
     "realTimeAnalytics": "实时分析",
     "realTimeAnalyticsOwner": "球速、旋转率、出手点和20多项生物力学指标的即时反馈",
@@ -1342,8 +1342,8 @@
       "welcome": { "title": "欢迎来到Hammers Modality！", "description": "让我们探索帮助您将比赛提升到新水平的工具。" },
       "creator": { "title": "您的创作者资料", "description": "设置您的个人资料以个性化训练体验并与球探建立联系。" },
       "modules": { "title": "训练模块", "description": "访问专门的击球、投掷和投球模块来提高特定技能。" },
-      "upload": { "title": "视频上传", "description": "上传您的训练视频以获得AI驱动的技术分析。" },
-      "coaching": { "title": "AI教练", "description": "根据您的视频分析获得详细的反馈和训练建议。" },
+      "upload": { "title": "视频上传", "description": "上传您的训练视频以获得Hammer驱动的技术分析。" },
+      "coaching": { "title": "Hammer教练", "description": "根据您的视频分析获得详细的反馈和训练建议。" },
       "library": { "title": "球员俱乐部", "description": "在您的个人库中保存和整理您的训练课程。" },
       "following": { "title": "球探连接", "description": "与可以查看您训练进度的球探和教练建立联系。" },
       "ranking": { "title": "排名", "description": "跟踪您的进步并在排名中与其他运动员进行比较。" },
@@ -1357,7 +1357,7 @@
       "follow": { "title": "关注球员", "description": "发送关注请求以访问球员的训练库。" },
       "videos": { "title": "观看视频", "description": "观看训练课程并分析球员的技术。" },
       "rankings": { "title": "球员排名", "description": "查看平台上所有球员的表现排名。" },
-      "analyze": { "title": "分析表现", "description": "查看AI分析并为球员视频添加您自己的注释。" }
+      "analyze": { "title": "分析表现", "description": "查看Hammer分析并为球员视频添加您自己的注释。" }
     }
   },
   "nutrition": {
@@ -2326,7 +2326,7 @@
     },
     "disclaimer": {
       "title": "教育内容声明",
-      "text": "心灵燃料为运动员提供心智表现教育。这不是治疗或医疗建议。部分信息可能由AI生成。如有心理健康问题，请咨询持证专业人士。"
+      "text": "心灵燃料为运动员提供心智表现教育。这不是治疗或医疗建议。部分信息可能由Hammer生成。如有心理健康问题，请咨询持证专业人士。"
     },
     "loading": "正在加载您的心灵燃料...",
     "error": "加载课程失败。请重试。",
@@ -4734,10 +4734,10 @@
     "analysisHint": "这可能需要几秒钟",
     "uploadFailed": "视频上传失败",
     "saveFailed": "保存视频记录失败",
-    "analysisFailed": "AI分析失败",
+    "analysisFailed": "Hammer分析失败",
     "frameExtractionFailed": "提取视频帧失败",
     "unexpectedError": "发生意外错误",
-    "frameCount": "AI分析帧数",
+    "frameCount": "Hammer分析帧数",
     "selectedForAnalysis": "已选择",
     "annotateFrame": "标注",
     "annotateCurrentFrame": "标注当前帧",
@@ -4885,7 +4885,7 @@
       "guidance": {
         "title": "自定义字段如何工作",
         "checkbox": "追踪每日习惯（例如'冰浴'、'泡沫轴'、'睡前拉伸'）",
-        "number": "追踪AI分析趋势的可测量数据（例如'冲刺时间: 4.2'、'使用重量: 185'）",
+        "number": "追踪Hammer分析趋势的可测量数据（例如'冲刺时间: 4.2'、'使用重量: 185'）",
         "text": "记录笔记或观察（例如'今天的感受'）",
         "time": "追踪基于时间的数据（例如'恢复时间'）"
       },
@@ -5104,7 +5104,7 @@
       "personalizedFor": "已个性化",
       "addExercisesFirst": "请先添加练习",
       "rateLimited": "请求过多，请稍候再试。",
-      "paymentRequired": "需要AI积分，请联系支持。",
+      "paymentRequired": "需要Hammer积分，请联系支持。",
       "warmingUpFor": "热身目的...",
       "warmupContext": {
         "label": "您在为什么热身？",
@@ -5367,7 +5367,7 @@
       "personalized": "已个性化",
       "addToBlock": "添加到区块",
       "rateLimited": "请求过多。请稍等。",
-      "paymentRequired": "需要AI积分。请联系支持。",
+      "paymentRequired": "需要Hammer积分。请联系支持。",
       "questions": {
         "activation": "哪个区域需要激活？",
         "elastic_prep": "什么类型的弹性？",
