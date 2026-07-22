@@ -55,7 +55,7 @@ import { projectScheduleSignal } from "@/lib/hammer/prescription/scheduleContext
 import { getHammerIdentity } from "@/lib/hammer/identity";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useCustomActivities } from "@/hooks/useCustomActivities";
-import { SideContextPicker } from "@/components/shared/SideContextPicker";
+
 import { useSideContext } from "@/contexts/SideContext";
 import { readSideBias } from "@/lib/side/sideBias";
 import { useAuth } from "@/hooks/useAuth";
@@ -276,9 +276,9 @@ function HammerDailyPlanBody() {
                   : `Throw ${plan.sideBias!.throw!.weakerSide}`}
               </Badge>
             )}
-            {/* Side context — only renders for switch hitters / ambidextrous throwers */}
-            <SideContextPicker discipline="hit" label="Bat" />
-            <SideContextPicker discipline="throw" label="Throw" />
+            {/* Side pickers intentionally removed from Today Plan — athletes set side
+                inside AnalyzeVideo / DelayCam / drill logging. Weaker-side bias still
+                runs silently via readSideBias() above. */}
             <Button
               size="sm"
               variant="ghost"
