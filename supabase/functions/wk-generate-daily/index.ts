@@ -606,7 +606,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, { sets: 1, reps: isInSeason ? 6 : 10 }, "Loaded rotation primer — wakes obliques + preps swing plane.");
 
       // 3) Compound A — lower strength primer, phase legal
-      const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase);
+      const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
       const compound = pickFirst(compoundSlugsByPhase) ?? lib.find((m) => m.category === "compound" && eligible(m) && ["squat", "hinge"].includes(m.pattern ?? ""));
       if (compound) {
         const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
