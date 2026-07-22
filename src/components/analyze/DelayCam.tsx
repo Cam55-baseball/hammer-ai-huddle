@@ -489,6 +489,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
 
       setRunning(true);
+      setMode(nextMode);
+      setTransitioning(false);
     } catch (e: any) {
       const name = e?.name || "";
       if (name === "NotAllowedError") setError("Camera permission denied. Enable it in your browser settings.");
@@ -497,13 +499,19 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       else setError(e?.message || "Could not start the camera.");
       cleanup();
       setRunning(false);
+      setMode("idle");
+      setTransitioning(false);
     }
   }, [cleanup, facing]);
 
-  const stop = useCallback(() => {
+  /** Full teardown that also clears any buffered clip. Used when the user
+   * starts a fresh session or unmounts. */
+  const fullReset = useCallback(() => {
     cleanup();
     setRunning(false);
+    setMode("idle");
     setBufferedSec(0);
+    setHasStoppedClip(false);
     if (replayUrlRef.current) {
       URL.revokeObjectURL(replayUrlRef.current);
       replayUrlRef.current = null;
@@ -511,11 +519,41 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setReplayUrl(null);
   }, [cleanup]);
 
+  /** Stop the active session. If the user was recording, preserve the
+   * buffered clip so save-to-device / save-to-club / replay still work.
+   * Streaming has no clip to preserve, so it fully resets. */
+  const stop = useCallback(() => {
+    const wasRecording = mode === "recording";
+    const preservedChunks = wasRecording ? timedChunksRef.current : [];
+    const preservedInit = wasRecording ? initChunkRef.current : null;
+    cleanup();
+    setRunning(false);
+    if (wasRecording && preservedChunks.length > 0) {
+      // Restore the buffer that cleanup() cleared so save/replay still work.
+      timedChunksRef.current = preservedChunks;
+      initChunkRef.current = preservedInit;
+      setHasStoppedClip(true);
+      setMode("idle");
+    } else {
+      setBufferedSec(0);
+      setHasStoppedClip(false);
+      if (replayUrlRef.current) {
+        URL.revokeObjectURL(replayUrlRef.current);
+        replayUrlRef.current = null;
+      }
+      setReplayUrl(null);
+      setMode("idle");
+    }
+  }, [cleanup, mode]);
+
   const swap = useCallback(async () => {
     const next: Facing = facing === "user" ? "environment" : "user";
     setFacing(next);
-    if (running) await start(next);
-  }, [facing, running, start]);
+    if (running && (mode === "streaming" || mode === "recording")) {
+      await start(mode, next);
+    }
+  }, [facing, running, mode, start]);
+
 
   const cameraLabel = facing === "user" ? "Front" : "Rear";
 
