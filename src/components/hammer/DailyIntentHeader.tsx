@@ -52,12 +52,13 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
   const rotation = useMemo(() => detectMonotony(state, plan.blocks), [state, plan.blocks]);
   const earned = milestones.filter((m) => m.earned);
 
-  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+  const dayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
   // weekArc is oldest→newest (last 7 including today at end). Rotate labels so
   // today is the last cell no matter what weekday it is.
   const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0…Sun=6
   const rotatedLabels: string[] = [];
   for (let i = 6; i >= 0; i--) rotatedLabels.push(dayLabels[(todayIdx - i + 7) % 7]);
+  const activeCount = streak.weekArc.filter(Boolean).length;
 
   return (
     <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent p-3 space-y-2.5">
