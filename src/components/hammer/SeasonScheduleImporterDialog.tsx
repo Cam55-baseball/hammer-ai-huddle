@@ -144,7 +144,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
     let timer: ReturnType<typeof setTimeout> | null = null;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(
-        () => reject(new Error("Hammer AI didn't respond in time — please try again.")),
+        () => reject(new Error("Hammer didn't respond in time — please try again.")),
         timeoutMs,
       );
     });
@@ -182,7 +182,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
       const { data, error } = (await Promise.race([invokePromise, timeoutPromise])) as Awaited<typeof invokePromise>;
       if (error) {
         console.error("[SeasonScheduleImporter] invoke error", { mode, error });
-        throw new Error(error.message || "Hammer AI request failed");
+        throw new Error(error.message || "Hammer request failed");
       }
       if (data?.error) {
         console.error("[SeasonScheduleImporter] gateway error", data);
@@ -439,7 +439,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
           {events.length === 0 ? (
             <Button onClick={handleAnalyze} disabled={parsing} className="gap-2">
               {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-              Analyze with Hammer AI
+              Analyze with Hammer
             </Button>
           ) : (
             <>

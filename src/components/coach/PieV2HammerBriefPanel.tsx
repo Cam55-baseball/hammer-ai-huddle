@@ -90,7 +90,7 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center justify-between">
-          <span>AI Hammer brief</span>
+          <span>Hammer brief</span>
           <Badge variant="outline">{points.length} priorities</Badge>
         </CardTitle>
       </CardHeader>

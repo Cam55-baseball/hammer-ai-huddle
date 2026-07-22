@@ -71,7 +71,7 @@ export function AbSwingPanel({
         />
       </div>
       <Textarea
-        rows={2} placeholder="Your thoughts on this AB (optional — helps the AI tune the read)"
+        rows={2} placeholder="Your thoughts on this AB (optional — helps Hammer tune the read)"
         value={thoughts} onChange={(e) => setThoughts(e.target.value)}
         className="text-xs"
       />

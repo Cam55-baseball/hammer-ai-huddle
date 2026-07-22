@@ -304,7 +304,7 @@
   },
   "landingPage": {
     "heroTitle": "Elite-Training für Champions.",
-    "heroSubtitle": "KI-gestützte Hammer-Ergebnisse",
+    "heroSubtitle": "Hammer-gestützte Hammer-Ergebnisse",
     "heroDescription": "Transformieren Sie Ihr Spiel mit fortschrittlicher Bewegungserfassung, Echtzeit-Analysen und professionellen Entwicklungstools, die von Elite-Athleten weltweit verwendet werden.",
     "getStarted": "Loslegen",
     "signIn": "Anmelden",
@@ -315,7 +315,7 @@
     "activeDevelopment": "Aktive Entwicklung",
     "poweredByInnovation": "Angetrieben von Innovation",
     "industryLeading": "Branchenführende Technologie für Baseball- und Softball-Athleten",
-    "aiMotionCapture": "KI-Bewegungserfassung",
+    "aiMotionCapture": "Hammer-Bewegungserfassung",
     "aiMotionCaptureDesc": "Fortschrittliche Computer Vision analysiert jeden Wurf, Pitch und Schwung mit professioneller Genauigkeit",
     "realTimeAnalytics": "Echtzeit-Analysen",
     "realTimeAnalyticsOwner": "Sofortiges Feedback zu Geschwindigkeit, Drehrate, Abgabepunkt und 20+ biomechanischen Metriken",
@@ -1441,8 +1441,8 @@
       "welcome": { "title": "Willkommen bei Hammers Modality!", "description": "Entdecken Sie die Werkzeuge, die Ihnen helfen, Ihr Spiel auf das nächste Level zu bringen." },
       "creator": { "title": "Ihr Ersteller-Profil", "description": "Richten Sie Ihr Profil ein, um Ihre Trainingserfahrung zu personalisieren und sich mit Scouts zu verbinden." },
       "modules": { "title": "Trainingsmodule", "description": "Greifen Sie auf spezialisierte Module für Schlagen, Werfen und Pitchen zu, um spezifische Fähigkeiten zu verbessern." },
-      "upload": { "title": "Video-Upload", "description": "Laden Sie Ihre Trainingsvideos hoch, um KI-gestützte Analysen Ihrer Technik zu erhalten." },
-      "coaching": { "title": "KI-Coaching", "description": "Erhalten Sie detailliertes Feedback und Übungsempfehlungen basierend auf Ihrer Videoanalyse." },
+      "upload": { "title": "Video-Upload", "description": "Laden Sie Ihre Trainingsvideos hoch, um Hammer-gestützte Analysen Ihrer Technik zu erhalten." },
+      "coaching": { "title": "Hammer-Coaching", "description": "Erhalten Sie detailliertes Feedback und Übungsempfehlungen basierend auf Ihrer Videoanalyse." },
       "library": { "title": "Spieler-Club", "description": "Speichern und organisieren Sie Ihre Trainingseinheiten in Ihrer persönlichen Bibliothek." },
       "following": { "title": "Scout-Verbindung", "description": "Verbinden Sie sich mit Scouts und Trainern, die Ihren Trainingsfortschritt sehen können." },
       "ranking": { "title": "Ranglisten", "description": "Verfolgen Sie Ihren Fortschritt und vergleichen Sie sich mit anderen Athleten in den Ranglisten." },
@@ -1456,7 +1456,7 @@
       "follow": { "title": "Spielern Folgen", "description": "Senden Sie Folgeanfragen, um Zugang zu den Trainingsbibliotheken der Spieler zu erhalten." },
       "videos": { "title": "Videos Ansehen", "description": "Schauen Sie sich Trainingseinheiten an und analysieren Sie die Techniken der Spieler." },
       "rankings": { "title": "Spieler-Ranglisten", "description": "Sehen Sie Leistungsranglisten für alle Spieler auf der Plattform." },
-      "analyze": { "title": "Leistung Analysieren", "description": "Überprüfen Sie KI-Analysen und fügen Sie Ihre eigenen Anmerkungen zu Spielervideos hinzu." }
+      "analyze": { "title": "Leistung Analysieren", "description": "Überprüfen Sie Hammer-Analysen und fügen Sie Ihre eigenen Anmerkungen zu Spielervideos hinzu." }
     }
   },
   "nutrition": {
@@ -2920,7 +2920,7 @@
     },
     "disclaimer": {
       "title": "Bildungsinhalts-Hinweis",
-      "text": "Geistiger Treibstoff bietet mentale Leistungsbildung für Athleten. Dies ist keine Therapie oder medizinische Beratung. Einige Informationen können KI-generiert sein. Konsultieren Sie einen lizenzierten Fachmann für Fragen zur psychischen Gesundheit."
+      "text": "Geistiger Treibstoff bietet mentale Leistungsbildung für Athleten. Dies ist keine Therapie oder medizinische Beratung. Einige Informationen können Hammer-generiert sein. Konsultieren Sie einen lizenzierten Fachmann für Fragen zur psychischen Gesundheit."
     },
     "loading": "Laden deines geistigen Treibstoffs...",
     "error": "Lektion konnte nicht geladen werden. Bitte versuche es erneut.",
@@ -5491,10 +5491,10 @@
     "analysisHint": "Dies kann einige Sekunden dauern",
     "uploadFailed": "Video-Upload fehlgeschlagen",
     "saveFailed": "Speichern des Videodatensatzes fehlgeschlagen",
-    "analysisFailed": "KI-Analyse fehlgeschlagen",
+    "analysisFailed": "Hammer-Analyse fehlgeschlagen",
     "frameExtractionFailed": "Extraktion der Videoframes fehlgeschlagen",
     "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten",
-    "frameCount": "Bilder für KI-Analyse",
+    "frameCount": "Bilder für Hammer-Analyse",
     "selectedForAnalysis": "ausgewählt",
     "annotateFrame": "Annotieren",
     "annotateCurrentFrame": "Aktuelles Bild annotieren",
@@ -5642,7 +5642,7 @@
       "guidance": {
         "title": "Wie eigene Felder funktionieren",
         "checkbox": "Tägliche Gewohnheiten verfolgen (z.B., 'Eisbad,' 'Foam Roll,' 'Dehnen vor dem Schlafengehen')",
-        "number": "Messbare Daten verfolgen, die die KI für Trends analysiert (z.B., 'Sprintzeit: 4.2,' 'Verwendetes Gewicht: 185')",
+        "number": "Messbare Daten verfolgen, die die Hammer für Trends analysiert (z.B., 'Sprintzeit: 4.2,' 'Verwendetes Gewicht: 185')",
         "text": "Notizen oder Beobachtungen protokollieren (z.B., 'Wie ich mich heute gefühlt habe')",
         "time": "Zeitbasierte Daten verfolgen (z.B., 'Erholungsdauer')"
       },
@@ -5861,7 +5861,7 @@
       "personalizedFor": "Personalisiert",
       "addExercisesFirst": "Füge zuerst Übungen hinzu",
       "rateLimited": "Zu viele Anfragen. Bitte warte einen Moment.",
-      "paymentRequired": "KI-Guthaben erforderlich. Kontaktiere den Support.",
+      "paymentRequired": "Hammer-Guthaben erforderlich. Kontaktiere den Support.",
       "warmingUpFor": "Aufwärmen für...",
       "warmupContext": {
         "label": "Wofür wärmst du dich auf?",
@@ -6124,7 +6124,7 @@
       "personalized": "Personalisiert",
       "addToBlock": "Zum Block Hinzufügen",
       "rateLimited": "Zu viele Anfragen. Bitte warten Sie einen Moment.",
-      "paymentRequired": "KI-Credits erforderlich. Bitte kontaktieren Sie den Support.",
+      "paymentRequired": "Hammer-Credits erforderlich. Bitte kontaktieren Sie den Support.",
       "questions": {
         "activation": "Welcher Bereich braucht Aktivierung?",
         "elastic_prep": "Welche Art von Elastizität?",

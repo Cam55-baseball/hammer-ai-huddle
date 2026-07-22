@@ -304,7 +304,7 @@
   },
   "landingPage": {
     "heroTitle": "チャンピオンのためのエリートトレーニング。",
-    "heroSubtitle": "AI搭載の結果をハンマー",
+    "heroSubtitle": "Hammer搭載の結果をハンマー",
     "heroDescription": "世界中のエリートアスリートが使用する高度なモーションキャプチャー、リアルタイム分析、プロフェッショナル開発ツールでゲームを変革しましょう。",
     "getStarted": "始める",
     "signIn": "ログイン",
@@ -315,7 +315,7 @@
     "activeDevelopment": "開発中",
     "poweredByInnovation": "イノベーションで駆動",
     "industryLeading": "野球とソフトボールアスリートのための業界最先端技術",
-    "aiMotionCapture": "AIモーションキャプチャー",
+    "aiMotionCapture": "Hammerモーションキャプチャー",
     "aiMotionCaptureDesc": "高度なコンピュータービジョンがすべての投球、ピッチング、スイングをプロレベルの精度で分析",
     "realTimeAnalytics": "リアルタイム分析",
     "realTimeAnalyticsOwner": "球速、スピン率、リリースポイント、20以上のバイオメカニクス指標の即時フィードバック",
@@ -1412,8 +1412,8 @@
       "welcome": { "title": "Hammers Modalityへようこそ！", "description": "あなたのゲームを次のレベルに引き上げるツールを探索しましょう。" },
       "creator": { "title": "あなたのクリエイタープロフィール", "description": "トレーニング体験をカスタマイズし、スカウトと繋がるためにプロフィールを設定しましょう。" },
       "modules": { "title": "トレーニングモジュール", "description": "バッティング、スローイング、ピッチングの専門モジュールにアクセスして、特定のスキルを向上させましょう。" },
-      "upload": { "title": "ビデオアップロード", "description": "トレーニングビデオをアップロードして、AIによるテクニック分析を受けましょう。" },
-      "coaching": { "title": "AIコーチング", "description": "ビデオ分析に基づいた詳細なフィードバックとドリルの推奨を受け取りましょう。" },
+      "upload": { "title": "ビデオアップロード", "description": "トレーニングビデオをアップロードして、Hammerによるテクニック分析を受けましょう。" },
+      "coaching": { "title": "Hammerコーチング", "description": "ビデオ分析に基づいた詳細なフィードバックとドリルの推奨を受け取りましょう。" },
       "library": { "title": "プレイヤーズクラブ", "description": "トレーニングセッションを個人ライブラリに保存・整理しましょう。" },
       "following": { "title": "スカウト接続", "description": "あなたのトレーニングの進捗を見ることができるスカウトやコーチと繋がりましょう。" },
       "ranking": { "title": "ランキング", "description": "進捗を追跡し、ランキングで他のアスリートと比較しましょう。" },
@@ -1427,7 +1427,7 @@
       "follow": { "title": "選手をフォロー", "description": "選手のトレーニングライブラリにアクセスするためにフォローリクエストを送信しましょう。" },
       "videos": { "title": "ビデオを見る", "description": "トレーニングセッションを視聴し、選手のテクニックを分析しましょう。" },
       "rankings": { "title": "選手ランキング", "description": "プラットフォーム上のすべての選手のパフォーマンスランキングを見ましょう。" },
-      "analyze": { "title": "パフォーマンス分析", "description": "AI分析を確認し、選手のビデオに独自の注釈を追加しましょう。" }
+      "analyze": { "title": "パフォーマンス分析", "description": "Hammer分析を確認し、選手のビデオに独自の注釈を追加しましょう。" }
     }
   },
   "nutrition": {
@@ -2455,7 +2455,7 @@
     },
     "disclaimer": {
       "title": "教育コンテンツに関するお知らせ",
-      "text": "マインドフューエルはアスリートのためのメンタルパフォーマンス教育を提供します。これは療法や医療アドバイスではありません。一部の情報はAI生成の可能性があります。メンタルヘルスの懸念については資格のある専門家にご相談ください。"
+      "text": "マインドフューエルはアスリートのためのメンタルパフォーマンス教育を提供します。これは療法や医療アドバイスではありません。一部の情報はHammer生成の可能性があります。メンタルヘルスの懸念については資格のある専門家にご相談ください。"
     },
     "loading": "マインドフューエルを読み込み中...",
     "error": "レッスンの読み込みに失敗しました。もう一度お試しください。",
@@ -4890,10 +4890,10 @@
     "analysisHint": "数秒かかる場合があります",
     "uploadFailed": "動画のアップロードに失敗しました",
     "saveFailed": "動画レコードの保存に失敗しました",
-    "analysisFailed": "AI分析に失敗しました",
+    "analysisFailed": "Hammer分析に失敗しました",
     "frameExtractionFailed": "動画フレームの抽出に失敗しました",
     "unexpectedError": "予期しないエラーが発生しました",
-    "frameCount": "AI分析用フレーム数",
+    "frameCount": "Hammer分析用フレーム数",
     "selectedForAnalysis": "選択済み",
     "annotateFrame": "注釈を追加",
     "annotateCurrentFrame": "現在のフレームに注釈",
@@ -5041,7 +5041,7 @@
       "guidance": {
         "title": "カスタムフィールドの使い方",
         "checkbox": "毎日の習慣を追跡（例：'アイスバス,' 'フォームロール,' '就寝前ストレッチ'）",
-        "number": "AIがトレンド分析する測定可能なデータを追跡（例：'スプリントタイム: 4.2,' '使用重量: 185'）",
+        "number": "Hammerがトレンド分析する測定可能なデータを追跡（例：'スプリントタイム: 4.2,' '使用重量: 185'）",
         "text": "メモや観察を記録（例：'今日の体調'）",
         "time": "時間ベースのデータを追跡（例：'リカバリー時間'）"
       },
@@ -5260,7 +5260,7 @@
       "personalizedFor": "パーソナライズ済み",
       "addExercisesFirst": "まずエクササイズを追加してください",
       "rateLimited": "リクエストが多すぎます。少々お待ちください。",
-      "paymentRequired": "AIクレジットが必要です。サポートにお問い合わせください。",
+      "paymentRequired": "Hammerクレジットが必要です。サポートにお問い合わせください。",
       "warmingUpFor": "ウォームアップの目的...",
       "warmupContext": {
         "label": "何のためにウォームアップしますか？",
@@ -5523,7 +5523,7 @@
       "personalized": "パーソナライズ済み",
       "addToBlock": "ブロックに追加",
       "rateLimited": "リクエストが多すぎます。少々お待ちください。",
-      "paymentRequired": "AIクレジットが必要です。サポートにお問い合わせください。",
+      "paymentRequired": "Hammerクレジットが必要です。サポートにお問い合わせください。",
       "questions": {
         "activation": "どのエリアを活性化する必要がありますか？",
         "elastic_prep": "どのタイプの弾性？",
