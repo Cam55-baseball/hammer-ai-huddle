@@ -13,6 +13,7 @@ import { DrillDetailDialog } from '@/components/practice/DrillDetailDialog';
 import { getProgressionLabel } from '@/utils/progressionMapping';
 import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
+import { positionLabel, positionShort, canonicalizePositions, normalizePositionCode } from '@/lib/drills/positionLabels';
 
 function DrillCard({ drill, onClick }: { drill: LibraryDrill; onClick: () => void }) {
   const hasVideo = drill.video_url && drill.video_url.trim() !== '';
@@ -51,16 +52,20 @@ function DrillCard({ drill, onClick }: { drill: LibraryDrill; onClick: () => voi
           </p>
         )}
 
-        {/* Position tags */}
-        {drill.positions.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {drill.positions.slice(0, 4).map(pos => (
-              <Badge key={pos} variant="secondary" className="text-[10px] capitalize px-1.5 py-0">
-                {pos.replace(/_/g, ' ')}
-              </Badge>
-            ))}
-          </div>
-        )}
+        {/* Position tags — deduped + canonicalized */}
+        {drill.positions.length > 0 && (() => {
+          const canon = canonicalizePositions(drill.positions);
+          if (!canon.length) return null;
+          return (
+            <div className="flex flex-wrap gap-1">
+              {canon.slice(0, 4).map(pos => (
+                <Badge key={pos} variant="secondary" className="text-[10px] px-1.5 py-0">
+                  {pos}
+                </Badge>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </button>
   );
@@ -113,7 +118,7 @@ export default function DrillLibraryPlayer() {
             </Select>
           </div>
 
-          {/* Position chips */}
+          {/* Position chips — canonical codes only, scorecard order, no duplicates */}
           {availablePositions.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <Button
@@ -124,17 +129,21 @@ export default function DrillLibraryPlayer() {
               >
                 All Positions
               </Button>
-              {availablePositions.map(pos => (
-                <Button
-                  key={pos}
-                  size="sm"
-                  variant={positionFilter === pos ? 'default' : 'outline'}
-                  onClick={() => setPositionFilter(positionFilter === pos ? null : pos)}
-                  className="h-7 text-xs capitalize"
-                >
-                  {pos.replace(/_/g, ' ')}
-                </Button>
-              ))}
+              {availablePositions.map(pos => {
+                const active = normalizePositionCode(positionFilter) === pos;
+                return (
+                  <Button
+                    key={pos}
+                    size="sm"
+                    variant={active ? 'default' : 'outline'}
+                    onClick={() => setPositionFilter(active ? null : pos)}
+                    className="h-7 text-xs"
+                    title={positionLabel(pos)}
+                  >
+                    {positionShort(pos)}
+                  </Button>
+                );
+              })}
             </div>
           )}
 

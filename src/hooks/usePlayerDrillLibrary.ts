@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getProgressionRange, expandRange } from '@/utils/progressionMapping';
+import { normalizePositionCode, canonicalizePositions } from '@/lib/drills/positionLabels';
 
 export type SortOption = 'recommended' | 'level' | 'recent';
 
@@ -151,12 +152,13 @@ export function usePlayerDrillLibrary() {
         };
       });
 
-      // Filter by position (strict: exclude drills with no positions)
-      if (position && !positionFilter) {
+      // Filter by primary position — compare via canonical codes so legacy
+      // strings (`shortstop`, `second_base`, …) still match modern codes.
+      const primaryCanon = normalizePositionCode(position);
+      if (primaryCanon && !positionFilter) {
         const posFiltered = libraryDrills.filter(
-          d => d.positions.includes(position)
+          d => canonicalizePositions(d.positions).includes(primaryCanon)
         );
-        // Fallback: if no drills match position, show all
         setDrills(posFiltered.length > 0 ? posFiltered : libraryDrills);
       } else {
         setDrills(libraryDrills);
@@ -175,8 +177,11 @@ export function usePlayerDrillLibrary() {
     let result = [...drills];
 
     if (positionFilter) {
-      // Strict: only drills that explicitly list this position
-      const posFiltered = result.filter(d => d.positions.includes(positionFilter));
+      const target = normalizePositionCode(positionFilter);
+      const posFiltered = result.filter(d => {
+        if (!target) return d.positions.includes(positionFilter);
+        return canonicalizePositions(d.positions).includes(target);
+      });
       result = posFiltered.length > 0 ? posFiltered : result;
     }
 
@@ -204,11 +209,11 @@ export function usePlayerDrillLibrary() {
     return result;
   }, [drills, search, sort, positionFilter]);
 
-  // Unique positions across all drills for filter chips
+  // Unique canonical positions across all drills, deduped + scorecard-ordered.
   const availablePositions = useMemo(() => {
-    const all = new Set<string>();
-    drills.forEach(d => d.positions.forEach(p => all.add(p)));
-    return Array.from(all).sort();
+    const raws: string[] = [];
+    drills.forEach(d => d.positions.forEach(p => raws.push(p)));
+    return canonicalizePositions(raws);
   }, [drills]);
 
   return {
