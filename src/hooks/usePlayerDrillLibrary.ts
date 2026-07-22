@@ -168,6 +168,10 @@ export function usePlayerDrillLibrary() {
       result = posFiltered.length > 0 ? posFiltered : result;
     }
 
+    if (selectedLevels.length > 0) {
+      result = result.filter(d => drillMatchesLevels(d.difficulty_levels, selectedLevels));
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(d =>
@@ -190,7 +194,7 @@ export function usePlayerDrillLibrary() {
     }
 
     return result;
-  }, [drills, search, sort, positionFilter]);
+  }, [drills, search, sort, positionFilter, selectedLevels]);
 
   // Unique canonical positions across all drills, deduped + scorecard-ordered.
   const availablePositions = useMemo(() => {
@@ -199,6 +203,24 @@ export function usePlayerDrillLibrary() {
     return canonicalizePositions(raws);
   }, [drills]);
 
+  // Unique canonical level keys present across the loaded library.
+  const availableLevels = useMemo<LevelKey[]>(() => {
+    const seen = new Set<LevelKey>();
+    for (const d of drills) {
+      for (const l of d.difficulty_levels || []) {
+        const k = normalizeLevelKey(l);
+        if (k) seen.add(k);
+      }
+    }
+    return LEVEL_ORDER.filter(k => seen.has(k));
+  }, [drills]);
+
+  const clearFilters = useCallback(() => {
+    setSearch('');
+    setPositionFilter(null);
+    setSelectedLevels([]);
+  }, []);
+
   return {
     drills: filteredDrills,
     loading,
@@ -206,6 +228,9 @@ export function usePlayerDrillLibrary() {
     search, setSearch,
     sort, setSort,
     positionFilter, setPositionFilter,
+    selectedLevels, setSelectedLevels,
     availablePositions,
+    availableLevels,
+    clearFilters,
   };
 }
