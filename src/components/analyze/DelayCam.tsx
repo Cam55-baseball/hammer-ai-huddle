@@ -97,12 +97,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState<null | "club" | "analyze">(null);
-  /** Stream-only = delayed mirror only, no MediaRecorder, decimated frame
-   * capture. Designed for long practice sessions (hours). */
-  const [streamOnly, setStreamOnly] = useState(false);
+  /** "idle" before start; "recording" runs MediaRecorder buffer for
+   * replay/save; "streaming" is delayed mirror only for long practice
+   * sessions. */
+  type Mode = "idle" | "streaming" | "recording";
+  const [mode, setMode] = useState<Mode>("idle");
+  /** True once a recording has stopped with a clip still buffered for
+   * save/replay. Cleared when a new session starts. */
+  const [hasStoppedClip, setHasStoppedClip] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const streamOnlyRef = useRef(streamOnly);
-  useEffect(() => { streamOnlyRef.current = streamOnly; }, [streamOnly]);
+  const streamOnlyRef = useRef(false);
   const frameCounterRef = useRef(0);
 
   const delayRef = useRef(delay);
