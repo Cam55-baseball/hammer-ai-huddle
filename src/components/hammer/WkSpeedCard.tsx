@@ -61,7 +61,7 @@ export function WkSpeedCard() {
             {isGameDay ? "No activation programmed (rest)." : "No sprint work today (cadence rest)."}
           </p>
         ) : (
-          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
+          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
         {items.length > 0 && <CardActions modality="speed" items={items} phaseDisplay={label} />}
