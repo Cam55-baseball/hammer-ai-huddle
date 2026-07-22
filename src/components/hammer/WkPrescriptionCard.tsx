@@ -87,14 +87,6 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
               <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
                 {SLOT_LABEL[rx.slot]}
               </Badge>
-              {why.phase_display && (
-                <span className="text-[10px] text-muted-foreground">{why.phase_display}</span>
-              )}
-              {rx.cns_clamped && (
-                <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/50 text-amber-700 dark:text-amber-300">
-                  <AlertTriangle className="h-3 w-3" /> CNS-clamped
-                </Badge>
-              )}
               {rx.substituted_from_slug && (
                 <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/50 text-rose-700 dark:text-rose-300">
                   <ShieldCheck className="h-3 w-3" /> Injury-swap
