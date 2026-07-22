@@ -144,7 +144,7 @@ export function WkLiftsCard() {
         ) : items.length === 0 ? (
           <p className="text-xs text-muted-foreground py-2">Tap refresh to generate today's full-body template.</p>
         ) : (
-          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
+          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} />)
         )}
 
         {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}

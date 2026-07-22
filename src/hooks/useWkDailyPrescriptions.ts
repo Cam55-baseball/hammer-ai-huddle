@@ -17,12 +17,14 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 import type { TrainingContext } from "@/lib/wic/trainingContext";
 import type { AthleteContext } from "@/lib/wic/athleteContext";
 import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
 import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
+import { resolveWkPhase } from "@/lib/hammer/workout/phaseQuarter";
 
 const WK_GENERATOR_VERSION = "wic_v1";
 
@@ -130,6 +132,7 @@ export type WkFailureReason = {
 
 export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const { user } = useAuth();
+  const season = useSeasonStatus();
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -138,6 +141,24 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const sideCtx = useSideContext();
   const sideHit = sideCtx.selectedSide?.hit;
   const sideThrow = sideCtx.selectedSide?.throw;
+
+  const canonicalPhase = useMemo(() => resolveWkPhase({
+    season_status: season.seasonStatus,
+    preseason_start_date: season.preseasonStartDate,
+    preseason_end_date: season.preseasonEndDate,
+    in_season_start_date: season.inSeasonStartDate,
+    in_season_end_date: season.inSeasonEndDate,
+    post_season_start_date: season.postSeasonStartDate,
+    post_season_end_date: season.postSeasonEndDate,
+  }), [
+    season.seasonStatus,
+    season.preseasonStartDate,
+    season.preseasonEndDate,
+    season.inSeasonStartDate,
+    season.inSeasonEndDate,
+    season.postSeasonStartDate,
+    season.postSeasonEndDate,
+  ]);
 
   const query = useQuery({
     queryKey: ["wk-rx", user?.id, planDate],
@@ -296,6 +317,14 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
     const isGameDayForPlan = gameDayQuery.data ?? false;
     const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== isGameDayForPlan;
+    const expectedPhase = canonicalPhase.phase;
+    const stalePhase =
+      !!first &&
+      !season.isLoading &&
+      (query.data ?? []).some((rx) => {
+        const storedPhase = rx.why_payload?.phase ?? rx.phase ?? null;
+        return !!storedPhase && storedPhase !== expectedPhase;
+      });
     const refreshKey = !query.data
       ? null
       : query.data.length === 0
@@ -304,10 +333,13 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           ? `version:${first?.why_payload?.generator_version ?? "missing"}`
           : staleGameDay
             ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
-            : null;
+            : stalePhase
+              ? `phase:${first?.why_payload?.phase ?? first?.phase ?? "missing"}->${expectedPhase}`
+              : null;
     if (
       !query.isLoading &&
       !gameDayQuery.isLoading &&
+      !season.isLoading &&
       refreshKey &&
       !generating &&
       !failed &&
@@ -316,7 +348,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       autoTriedKey.current = refreshKey;
       generate();
     }
-  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, generate, generating, failed]);
+  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, season.isLoading, generate, generating, failed]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
@@ -374,13 +406,17 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   const phaseDisplay = useMemo(() => {
     const first = (query.data ?? [])[0];
-    return first?.why_payload?.phase_display ?? null;
-  }, [query.data]);
+    const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
+    if (storedPhase && storedPhase !== canonicalPhase.phase) return canonicalPhase.displayName;
+    return first?.why_payload?.phase_display ?? canonicalPhase.displayName ?? null;
+  }, [query.data, canonicalPhase.phase, canonicalPhase.displayName]);
 
   const phaseKey = useMemo(() => {
     const first = (query.data ?? [])[0];
-    return first?.why_payload?.phase ?? null;
-  }, [query.data]);
+    const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
+    if (storedPhase && storedPhase !== canonicalPhase.phase) return canonicalPhase.phase;
+    return first?.why_payload?.phase ?? canonicalPhase.phase ?? null;
+  }, [query.data, canonicalPhase.phase]);
 
   // Effective CNS = skipped rows contribute 0, everything else contributes
   // full cns_cost. Keeps the "CNS heavy" clamp honest to actuals.
@@ -420,7 +456,10 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         return !min || c < min ? c : min;
       }, null) ?? null;
     const generatorVersion = (first as any)?.generator_version ?? first?.why_payload?.generator_version ?? null;
-    const seasonPhase = first?.why_payload?.phase ?? null;
+    const storedSeasonPhase = first?.why_payload?.phase ?? null;
+    const seasonPhase = storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+      ? canonicalPhase.phase
+      : storedSeasonPhase;
     const generationId =
       user?.id && generatedAt
         ? `${user.id}:${planDate}:${generatorVersion ?? "na"}:${generatedAt}`
@@ -430,10 +469,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       generated_at: generatedAt,
       generator_version: generatorVersion,
       season_phase: seasonPhase,
-      season_display: (first?.why_payload?.phase_display as string | undefined) ?? null,
+      season_display: storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+        ? canonicalPhase.displayName
+        : ((first?.why_payload?.phase_display as string | undefined) ?? canonicalPhase.displayName ?? null),
       plan_date: planDate,
     };
-  }, [query.data, user?.id, planDate]);
+  }, [query.data, user?.id, planDate, canonicalPhase.phase, canonicalPhase.displayName]);
 
   // Phase 3 — day kind. Derived from the SAME sources the generator uses
   // (gp_games + scheduled_practice_sessions) so the daily flow accurately
