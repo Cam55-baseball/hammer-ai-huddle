@@ -1,48 +1,66 @@
-## Elite Bat Speed Expansion — Hammers Today Plan
+## Goal
+Expand the Lifts / Strength library the same way we just did for Bat Speed, so the Hammers Today "Lifts" card can serve every subscription — from a 12U beginner through pro — with programming pulled from the historically best strength-development systems (throwing harder, hitting harder, running faster).
 
-Same playbook that worked for Speed: expand the library, sharpen the selection engine, and give athletes clearer, contrast-driven progressions from first-timer to pro.
+The current catalog has strong rotational coverage (77 movements) but only ~40 movements across all lift roles (squat 13, hinge 11, pull 7, press 6+1, unilateral/carry/accessory ~15). That is why athletes feel the lifts are thin and repeat too often. This plan roughly triples the lift pool with historically proven, elite-grade movements and wires them into the existing strength engine so each subscription tier gets appropriate programming automatically.
 
-### Current state (verified)
-- `wk_movement_catalog` has **13 rotation + 18 rotational_power = 31** bat-speed candidates. Too shallow to serve both beginners and elite pros without repetition, and light on contrast/overload-underload science.
-- Bat Speed card is driven by `wk-generate-daily` using `family in ('rotation','rotational_power')` filtered by `season_legality` + `training_age_legality` + WIC ordering.
+## What ships
 
-### Goals
-1. Athletes measurably move bat speed / exit velo / power output at every level (Youth → Pro).
-2. Session variety and phase-appropriate stimulus so plateaued elites keep progressing.
-3. Beginners get safe on-ramps before contrast/overload work.
+### 1. Seed ~90 new elite lift movements into `wk_movement_catalog`
 
-### Deliverables
+Structured across 6 doctrine buckets, each tagged with `family`, `movement_category`, `season_legality` (per WIC quarter), and `training_age_legality` (beginner → pro) so the engine can filter safely. Each row includes `cue`, `why_prescribed`, `source_philosophy`, `evidence_note`, `equipment_requirements`, `cns_cost`, `default_sets/reps`, `intensity_class`, `game_day_legal`, `pap_compatible`, `bat_compatible`, `throw_compatible`, `sprint_compatible`.
 
-**1. Seed ~60 new elite bat-speed movements** across five buckets, each with structured instructions (Setup, Elite Cues, Common Mistakes, Success Markers, Dose):
+**A. Max Strength Foundation (~15) — Westside / Prilepin / Sheiko**
+Box squat variations, safety-bar squats, floor press, chain/band deadlift, block pulls, tempo back squat, paused front squat, safety-bar good morning, Anderson squat, RDL cluster sets, deficit deadlift, snatch-grip RDL. Progressed by ME (max effort) / DE (dynamic effort) waves. In-season legality tightly gated.
 
-- **Overload / Underload Contrast (bat & implement)** — heavy-bat/donut, fungo, weighted-knob, underload wood, PVC whip, sledgehammer swings, Axe Trainer, contrast ladders. Sources: Driveline Hitting, Bat Speed Trainer research (Fleisig/DeRenne).
-- **Med-Ball Rotational Power** — shot-put throws, scoop tosses, granny throws, side rebounder, split-stance rotational throw, walking rotational toss, half-kneel throw, standing chest-pass rotation. Sources: Cressey, USATF throws coaches.
-- **PAP / Contrast Complexes** — trap-bar jump → swing, cable chop → swing, hip-thrust → med-ball throw, hex-bar deadlift → rotational throw. Sources: Verkhoshansky, Westside conjugate.
-- **Hip/Pelvis Sequencing (P1/P2/P4 rooted)** — cable hip snap, banded pelvic disassociation, hip-assisted swings, resisted-then-free (French Contrast for swing), half-turn iso holds, Coop DeRenne stride-drive drill. Aligned with Arakawa P3 involuntary rule.
-- **Rotational Strength & Anti-Rotation Base** — landmine rotational press, standing cable rotation with pause, Pallof press iso holds, half-kneel chop/lift (FMS), rear-foot elevated Pallof, tall-kneeling anti-rotation press. Sources: Cressey, Boyle, FMS.
+**B. Triple-Extension Power (~15) — Olympic Lifting / Cal Dietz Triphasic**
+Hang power clean, hang power snatch, clean pull, snatch pull, jump shrug, high-pull, push jerk, split jerk, dumbbell snatch, KB clean & press, contrast trap-bar jump, French contrast lower complex, box jump to depth drop, med-ball scoop throw for height, triphasic tempo squat. Elite tiers only; beginners get the KB/DB regressions.
 
-Each movement tagged with `season_legality` (in_season kept low-CNS; overload/PAP restricted to preseason + os_q2/q3) and `training_age_legality` (contrast/overload gated to hs_varsity+; med-ball basics open to youth).
+**C. Posterior-Chain & Hip Power (~15) — Cressey / Boyle / Louie Simmons**
+Barbell hip thrust, single-leg hip thrust, back-extension iso hold, reverse hyper, glute-ham raise, Nordic curl (eccentric only for entry), banded pull-through, single-leg RDL, staggered-stance RDL, kettlebell swing (Russian + American), heavy sled march, single-leg 45° hyper, banded good morning, hip airplane, copenhagen adductor plank. Direct transfer to sprint speed, throwing velocity, and rotational power.
 
-**2. Bat Speed engine upgrades (`supabase/functions/wk-generate-daily/index.ts`)**
-- Weekly rotation across the 5 buckets so a week hits Sequencing → Med-Ball Power → Overload/Underload → PAP → Anti-Rotation base.
-- Beginner rail: force sequencing + med-ball basics for `youth`/`middle_school`/no-baseline athletes; block overload/PAP.
-- Elite rail: prioritize contrast complexes + PAP for `hs_varsity`/`college`/`pro` in preseason/os_q2/q3.
-- In-season safety: cap CNS cost, prefer sequencing + underload; suppress heavy overload on game days (already schedule-modulated).
-- Anti-repetition: don't repeat the same movement within 5 sessions.
+**D. Knees Over Toes / Structural Bulletproofing (~15) — Ben Patrick / Kelly Starrett**
+ATG split squat, sled backward drag, Poliquin step-up, Peterson step-up, VMO leg extension, tibialis raise, KOT calf raise, Nordic hamstring, reverse Nordic, ATG lunge, hip-flexor iso, elephant walk, patrick step, jefferson curl (loaded spinal), couch stretch loaded. Universally legal — the durability layer under everything else.
 
-**3. Library viewer + export**
-- Add Bat Speed tab to `/owner/workouts/library` (`WorkoutLibraryViewer.tsx`) grouped by bucket × quarter × training age.
-- Export `hammers-batspeed-library.md` for owner review.
+**E. Upper Body Elite Push/Pull (~15) — Cressey Sports Performance / Driveline**
+Landmine press, half-kneeling landmine press, single-arm DB bench, Swiss bar bench, floor press, weighted push-up (chains), 1-arm cable row, chest-supported T-bar row, meadows row, batwing row, weighted pull-up full ROM, ring row, face pull, band pull-apart, external-rotation cable at 90°, prone Y/T/W, bottoms-up KB press. Shoulder-preservation prioritized: horizontal pulling volume ≥ pressing volume.
 
-**4. Athlete-facing polish**
-- Extend `WkBatSpeedCard` copy so the "Why this movement" line explains the bucket ("Contrast complex — heavy stimulates fast recruitment, then underload frees peak swing velocity") without internal jargon.
+**F. Carries / Anti-Rotation / Trunk (~15) — StrongFirst / DNS / FMS**
+Farmer's carry, suitcase carry, waiter's overhead carry, mixed carry, front-rack carry, Zercher carry, weighted Turkish get-up, half-kneel pallof iso, RFESS pallof, standing anti-rotation press, cable chop cluster, cable lift cluster, dragon flag progression, hollow body pull-through, side plank leg lift, dead-bug band press, McGill big-3 loaded, ab-wheel rollout. Foundation layer for every athlete.
 
-### Technical notes
-- All new rows inserted via `supabase--insert` (data, not schema). No new tables.
-- Legality JSON follows the existing `os_q1/os_q2/os_q3/os_q4/preseason/in_season/post_season/rtp` and `youth/middle_school/hs_jv/hs_varsity/college/pro` shapes already in the catalog.
-- Selector changes are additive in `wk-generate-daily`; existing card contract unchanged.
-- No changes to onboarding, RLS, or auth.
+Beginner-friendly regressions (bodyweight / DB / band versions) are seeded alongside barbell/chain variants so the training-age gate always has something to give a 12U or a novice adult.
 
-### Out of scope
-- Video demos (would require asset generation — flag separately if wanted).
-- Changes to Speed/Lifts/Conditioning libraries.
+### 2. Upgrade the Strength Engine (`supabase/functions/_shared/wic/engines/strength.ts`)
+
+- Expand each role slug list (`compoundSlugsFor`, `unilateralSlugs`, `upperPushSlugs`, `upperPullSlugs`, `carrySlugs`, `ARM_CARE_SLUGS`, `TRUNK_PRIMER_SLUGS`, `TRUNK_FINISHER_SLUGS`) to include the new slugs with correct season/training-age ordering.
+- Add a **weekly rotation bucket** (M/W/F pattern) so a hitter never sees the same squat twice in a week even if season/phase filters allow it.
+- Add **training-tier preference** — beginners preferred toward KB/DB/bodyweight; hs_varsity+ preferred toward barbell/chain/PAP; pro tier eligible for French contrast lower complex, tempo squat, snatch pulls.
+- Add an **ME/DE Westside-style wave** for `os_q1`/`os_q2` phases: alternate max-effort day (heavy compound) vs dynamic-effort day (speed squat/DE bench). Encoded as a helper `westsideWaveFor(dayOfWeek, phase)`.
+- Preserve `game_day_legal` and `in_season` filtering — nothing heavy on game day; in-season stays with tempo/single-leg/carry emphasis.
+
+### 3. Certifier / template metadata
+
+Verify each new slug satisfies the certifier's required tags for its role (family, `movement_category`, at least one of `power_emphasis|speed_emphasis|elastic_emphasis` where relevant, `wic_metadata_complete=true`). The bat-speed seed followed this pattern successfully.
+
+### 4. Library viewer update
+
+Add a **Lifts** tab (or expand the existing category filter) in `src/pages/owner/WorkoutLibraryViewer.tsx` that groups the ~130 total lift movements by the 6 doctrine buckets above with source philosophy visible per row, so you can inspect and QA what's in the library.
+
+### 5. Athlete-facing copy
+
+No new fields needed on `WkLiftsCard` — the seeded `cue` and `why_prescribed` are already athlete-safe (no CNS/phase jargon), consistent with the sanitization pass we did on `WkPrescriptionCard.tsx`. Just confirm on a Preview render that the new slugs display cleanly.
+
+## What stays the same
+- No schema migration (all columns already exist on `wk_movement_catalog`).
+- No changes to `wk-generate-daily/index.ts` beyond the engine slug lists it already consumes.
+- No changes to the athlete-facing card component contracts.
+- Season / training-age gates remain the single source of truth for who sees what.
+
+## Verification
+- Run `SELECT family, COUNT(*)` on `wk_movement_catalog` and confirm each family expands as expected (target: squat ≥ 22, hinge ≥ 22, push ≥ 15, pull ≥ 15, carry ≥ 10, accessory ≥ 20).
+- Force-generate a daily plan for a `youth beginner in_season` athlete and a `pro os_q1` athlete — confirm both get complete, non-repeating lifts blocks with appropriate movements.
+- Confirm `wic_metadata_complete=true` on every new row.
+
+## Technical details
+- Data insert goes through `supabase--insert` (data op, existing schema).
+- Engine changes are TypeScript edits to `supabase/functions/_shared/wic/engines/strength.ts`; deploys with the next edge function build.
+- Preferred-slug ordering pattern mirrors the recently updated `batSpeed.ts`.
