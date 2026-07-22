@@ -1,50 +1,68 @@
-Goal: Replace every user-visible mention of "AI" with Hammer-branded language so users never see the word AI anywhere in the app (web, meta tags, copy, translations, errors).
+## Current state
 
-Current state confirmed:
-- The screenshot button in `src/components/hammer/SeasonScheduleImporterDialog.tsx` reads **"Analyze with Hammer AI"`.
-- `index.html` meta description and og:description both contain "AI-powered".
-- Multiple hardcoded UI strings in components still say "AI" (document import, AB swing placeholder, Hammer brief label, HelpDesk FAQ, error messages).
-- English i18n still has "AI Motion Capture", "Hammer AI-Powered Results", onboarding/marketing descriptions, Mind Fuel disclaimer, and "AI credits" payment messages.
-- Non-English locales (es, fr, ja, ko, nl, zh, de) still contain "AI"/"IA" user-facing strings.
+DelayCam (`src/components/analyze/DelayCam.tsx`) is client-only:
+- Records live camera via `MediaRecorder` into a rolling buffer.
+- Renders a 1–55s delayed mirror on a canvas.
+- Offers "Save clip" which downloads the buffer as a local `.webm`/`.mp4` file.
+- Does **not** upload to backend, insert into `public.videos`, or trigger analysis.
 
-Plan:
+Players Club (`src/pages/PlayersClub.tsx`) and the video analysis flow (`src/pages/AnalyzeVideo.tsx`) already use the `videos` storage bucket and the `public.videos` table with `status`, `ai_analysis`, `mocap_data`, etc.
 
-1. Hardcoded UI strings
-   - `src/components/hammer/SeasonScheduleImporterDialog.tsx`
-     - Button: "Analyze with Hammer AI" → "Analyze with Hammer"
-     - Error: "Hammer AI didn't respond in time" → "Hammer didn't respond in time"
-     - Error: "Hammer AI request failed" → "Hammer request failed"
-   - `src/components/games/GameDocumentIngest.tsx`
-     - Heading: "AI document import" → "Hammer document import"
-   - `src/components/games/AbSwingPanel.tsx`
-     - Placeholder: "helps the AI tune the read" → "helps Hammer tune the read"
-   - `src/components/coach/PieV2HammerBriefPanel.tsx`
-     - Label: "AI Hammer brief" → "Hammer brief"
-   - `src/pages/HelpDesk.tsx`
-     - FAQ fallback: "The AI will analyze your mechanics" → "Hammer will analyze your mechanics"
-   - Any other non-comment string literal surfaced by the audit that is visible to users.
+## Goal
 
-2. Index / SEO meta tags
-   - `index.html`
-     - `<meta name="description">` and `og:description`: replace "AI-powered motion capture" with "Hammer motion capture" or equivalent Hammer-branded phrasing.
+Make DelayCam clips first-class library assets:
+- Save to Players Club (storage + `videos` row).
+- Analyze the saved clip with Hammer via a separate "Save & Analyze" action.
+- Keep the existing local download-to-phone option.
+- Infer the correct module (hitting / pitching / throwing) from the context in which the user opened DelayCam.
 
-3. i18n translations
-   - `src/i18n/locales/en.json`
-     - `heroSubtitle`: "Hammer AI-Powered Results" → "Hammer-Powered Results"
-     - `aiMotionCapture`: "AI Motion Capture" → "Hammer Motion Capture"
-     - Onboarding/marketing descriptions that say "AI-powered" / "AI analyzes" → "Hammer-powered" / "Hammer analyzes"
-     - `mindFuel.text`: "AI-generated" → "Hammer-generated" or "system-generated"
-     - Custom activity tracker `number`: "the AI analyzes" → "Hammer analyzes"
-     - `paymentRequired`: "AI credits needed" → "Hammer credits needed" or "Credits needed"
-   - `src/i18n/locales/es.json`, `fr.json`, `ja.json`, `ko.json`, `nl.json`, `zh.json`, `de.json`
-     - Apply the same conceptual replacements in each language (e.g., Spanish "IA" → "Hammer", Japanese "AI" → "Hammer", etc.).
+## Plan
 
-4. Code-only / non-user-facing cleanup
-   - Leave internal variable names, edge function names, file names, and developer comments unchanged unless they are surfaced to the user (e.g., in toast/error text). The plan will only change strings that render in the UI.
+### 1. Make DelayCam context-aware
+- Add a `module` prop to `DelayCam` that accepts `'hitting' | 'pitching' | 'throwing'`.
+- In `AnalyzeVideo.tsx`, pass the module that corresponds to the current analysis context (e.g., hitting analysis → `'hitting'`).
+- In `HammerDailyPlan.tsx`, if DelayCam is rendered there, pass a module derived from the current card/discipline context.
+- Default fallback remains `'hitting'` only when no context is available.
 
-5. Verification
-   - After edits, run an automated scan for any remaining `\bAI\b` inside user-facing strings (JSX text nodes, translation values, meta tags, error/toast messages).
-   - Build the app to confirm no TypeScript or i18n interpolation errors.
-   - Visually inspect the schedule importer button, HelpDesk FAQ, and landing-page hero subtitle to confirm the word AI is gone.
+### 2. Add Save and Save & Analyze actions to DelayCam
+- Add two new buttons next to the existing "Save clip" button:
+  - **"Save to Players Club"** — uploads the clip and inserts the row, then sets `status = 'completed'`.
+  - **"Save & Analyze"** — uploads the clip, inserts the row, then triggers the same analysis job used by `AnalyzeVideo.tsx` and sets `status = 'processing'`.
+- Both buttons build the same decodable blob from the rolling buffer (`buildDecodableBlob`).
+- Upload the blob to the `videos` storage bucket under `{userId}/delaycam/{uuid}.{ext}`.
+- Generate a thumbnail via the existing `generateVideoThumbnail` helper.
+- Insert a `public.videos` row with:
+  - `sport`: current user's selected sport (from `SportThemeContext` / profile default).
+  - `module`: the `module` prop passed to DelayCam.
+  - `status`: `'completed'` for Save, `'processing'` for Save & Analyze.
+  - `video_url`, `thumbnail_url`, `library_title`: auto-generated like "DelayCam replay — {timestamp}".
+- Show progress toast and success/error feedback.
 
-Expected outcome: every user-visible instance of "AI" is replaced with Hammer-branded language, starting with the circled "Analyze with Hammer" button.
+### 3. Implement the analysis trigger path
+- Reuse the same analysis invocation used by the normal video upload flow in `AnalyzeVideo.tsx` (edge function or DB RPC).
+- After Save & Analyze, poll or subscribe to the `videos` row for `status` transitions (`processing` → `completed`/`failed`).
+- Surface results in Players Club like any other analyzed video.
+- If analysis fails, leave the clip in the club with a clear "Analysis failed" badge and retry action.
+
+### 4. Preserve local download
+- Keep the existing **"Save clip"** button unchanged so users can still save the raw delayed video directly to their phone / desktop.
+
+### 5. UX hardening
+- Disable the save-to-club and save-and-analyze buttons until the buffer has enough content.
+- Add a confirmation/dialog before saving to let the user edit the auto-generated title and confirm the inferred module/sport.
+- Ensure camera permission errors and upload failures are surfaced with toast messages, not silent failures.
+- Reuse existing side-context / handedness data if relevant, matching the recent side-aware profile split.
+
+### 6. Verification
+- Manual end-to-end check: open DelayCam in a hitting context → start → wait for buffer → "Save to Players Club" → confirm row appears in `/players-club`.
+- Test "Save & Analyze" → confirm status moves to `processing` and then `completed` with `ai_analysis` populated.
+- Verify local download still works.
+- Confirm no regressions in the existing AnalyzeVideo upload flow.
+
+## Outcome
+
+Users will be able to:
+- Record a delayed replay in DelayCam.
+- Save it directly to their Players Club library with the correct module tag.
+- Save and analyze it with Hammer, then view the results in Players Club.
+- Download the raw clip to their phone as before.

@@ -16,7 +16,24 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
+  BookMarked, Sparkles, Loader2,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useOptionalAuth } from "@/hooks/useAuth";
+import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
+import { toast } from "sonner";
+
+type ClipModule = "hitting" | "pitching" | "throwing";
+type ClipSport = "baseball" | "softball";
+
+interface DelayCamProps {
+  /** Discipline this DelayCam session is being run under. Determines the
+   * `module` tag on any clip saved to Players Club. */
+  module?: ClipModule;
+  /** Sport this DelayCam session is being run under. Falls back to
+   * localStorage 'selectedSport' then 'baseball'. */
+  sport?: ClipSport;
+}
 
 const PRESETS = [3, 5, 10, 20, 30, 45];
 const MIN_DELAY = 1;
@@ -48,7 +65,13 @@ function pickRecorderMime(): string {
   return "video/webm";
 }
 
-export function DelayCam() {
+export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
+  const { user } = useOptionalAuth();
+  const resolvedModule: ClipModule = moduleProp ?? "hitting";
+  const resolvedSport: ClipSport =
+    sportProp ??
+    ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
+      "baseball");
   const liveRef = useRef<HTMLVideoElement>(null);
   const delayedCanvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -73,6 +96,7 @@ export function DelayCam() {
   const [hasMulti, setHasMulti] = useState(false);
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState<null | "club" | "analyze">(null);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
@@ -168,6 +192,105 @@ export function DelayCam() {
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }, [buildDecodableBlob]);
+
+  const saveToPlayersClub = useCallback(async (opts: { analyze: boolean }) => {
+    if (!user) {
+      toast.error("Sign in to save clips to Players Club.");
+      return;
+    }
+    const items = timedChunksRef.current;
+    if (items.length === 0) {
+      toast.error("Nothing to save yet — wait for the buffer to fill.");
+      return;
+    }
+    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    if (!blob) {
+      toast.error("Couldn't build the clip. Try recording again.");
+      return;
+    }
+
+    setSaving(opts.analyze ? "analyze" : "club");
+    const toastId = toast.loading(
+      opts.analyze ? "Saving & sending to Hammer for analysis…" : "Saving to Players Club…",
+    );
+
+    try {
+      const ext = mime.includes("mp4") ? "mp4" : "webm";
+      const ts = Date.now();
+      const filePath = `${user.id}/delaycam/${ts}.${ext}`;
+
+      // Wrap Blob as File so downstream tools (thumbnail generator) can read .name.
+      const file = new File([blob], `delaycam-${ts}.${ext}`, { type: mime });
+
+      const { error: uploadError } = await supabase.storage
+        .from("videos")
+        .upload(filePath, file, { contentType: mime, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("videos")
+        .getPublicUrl(filePath);
+
+      // Thumbnail generation is best-effort — never block the save.
+      let thumbnailUrl: string | null = null;
+      try {
+        const thumbBlob = await generateVideoThumbnail(file, 0.1);
+        thumbnailUrl = await uploadVideoThumbnail(thumbBlob, user.id, filePath);
+      } catch (thumbErr) {
+        console.warn("[DelayCam] thumbnail generation failed", thumbErr);
+      }
+
+      const { data: videoRow, error: insertError } = await supabase
+        .from("videos")
+        .insert([{
+          user_id: user.id,
+          sport: resolvedSport,
+          module: resolvedModule,
+          video_url: publicUrl,
+          thumbnail_url: thumbnailUrl,
+          status: opts.analyze ? "processing" : "completed",
+          library_title: `DelayCam replay — ${new Date().toLocaleString()}`,
+        }] as never)
+        .select("id")
+        .single();
+      if (insertError) throw insertError;
+
+      if (opts.analyze) {
+        // Fire-and-forget analysis. The videos row is already saved to
+        // Players Club regardless of analysis outcome.
+        supabase.functions
+          .invoke("analyze-video", {
+            body: {
+              videoId: (videoRow as { id: string }).id,
+              module: resolvedModule,
+              sport: resolvedSport,
+              userId: user.id,
+            },
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error("[DelayCam] analyze-video failed", error);
+              toast.error("Saved, but analysis failed. Open it in Players Club to retry.");
+            } else {
+              toast.success("Analysis complete — open Players Club to view results.");
+            }
+          })
+          .catch((e) => {
+            console.error("[DelayCam] analyze-video threw", e);
+          });
+        toast.success("Saved to Players Club. Analysis running in the background.", { id: toastId });
+      } else {
+        toast.success("Saved to Players Club.", { id: toastId });
+      }
+    } catch (e: any) {
+      console.error("[DelayCam] save to club failed", e);
+      toast.error(e?.message || "Couldn't save this clip. Please try again.", { id: toastId });
+    } finally {
+      setSaving(null);
+    }
+  }, [buildDecodableBlob, resolvedModule, resolvedSport, user]);
+
 
   const start = useCallback(async (nextFacing?: Facing) => {
     setError(null);
@@ -365,8 +488,36 @@ export function DelayCam() {
               <Camera className="h-4 w-4" /> Start
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={saveClip} disabled={!running || timedChunksRef.current.length === 0} className="gap-1.5">
-            <Download className="h-4 w-4" /> Save clip
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={saveClip}
+            disabled={!running || saving !== null || timedChunksRef.current.length === 0}
+            className="gap-1.5"
+            title="Download this clip to your phone or computer"
+          >
+            <Download className="h-4 w-4" /> Save to device
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void saveToPlayersClub({ analyze: false })}
+            disabled={!running || saving !== null || !user || timedChunksRef.current.length === 0}
+            className="gap-1.5"
+            title="Save this clip to your Players Club library"
+          >
+            {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
+            Save to Players Club
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => void saveToPlayersClub({ analyze: true })}
+            disabled={!running || saving !== null || !user || timedChunksRef.current.length === 0}
+            className="gap-1.5"
+            title="Save and run Hammer analysis on this clip"
+          >
+            {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Save & Analyze
           </Button>
         </div>
       </div>
