@@ -62,82 +62,85 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
 
   return (
     <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent p-3 space-y-2.5">
-      <div className="flex items-start justify-between gap-3">
-        <Collapsible defaultOpen={false} className="min-w-0 flex-1">
-          <CollapsibleTrigger className="flex w-full items-start gap-2 text-left hover:opacity-90 transition-opacity">
+      <Collapsible defaultOpen={false}>
+        <div className="flex items-start justify-between gap-3">
+          <CollapsibleTrigger className="flex items-start gap-2 text-left min-w-0 flex-1 hover:opacity-90 transition-opacity">
             <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
             <div className="min-w-0 flex-1 flex items-start justify-between gap-2">
               <div className="text-sm font-semibold leading-tight">{intent.headline}</div>
               <ChevronDown className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
             </div>
           </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="pl-6 pt-1.5">
-              <div className="text-[11px] text-muted-foreground leading-relaxed">
-                <span className="text-foreground/80">Yesterday:</span> {intent.yesterday}
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                <span className="text-foreground/80">Today:</span> {intent.today}
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                <span className="text-foreground/80">Tomorrow:</span> {intent.tomorrow}
-              </div>
+
+          {streak.currentDays > 0 && (
+            <div className="flex items-center gap-1 shrink-0 rounded-full bg-amber-500/10 px-2 py-1 border border-amber-500/30">
+              <Flame className="h-3.5 w-3.5 text-amber-500" />
+              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                {streak.currentDays}d
+              </span>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          )}
+        </div>
 
-        {streak.currentDays > 0 && (
-          <div className="flex items-center gap-1 shrink-0 rounded-full bg-amber-500/10 px-2 py-1 border border-amber-500/30">
-            <Flame className="h-3.5 w-3.5 text-amber-500" />
-            <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-              {streak.currentDays}d
-            </span>
+        <CollapsibleContent className="space-y-2.5 pt-2">
+          <div className="pl-6">
+            <div className="text-[11px] text-muted-foreground leading-relaxed">
+              <span className="text-foreground/80">Yesterday:</span> {intent.yesterday}
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+              <span className="text-foreground/80">Today:</span> {intent.today}
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+              <span className="text-foreground/80">Tomorrow:</span> {intent.tomorrow}
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Weekly rhythm arc — always visible */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Week rhythm
-          </span>
-          <span className="text-[10px] tabular-nums text-muted-foreground">
-            {activeCount} / 7 active
-          </span>
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {streak.weekArc.map((active, i) => {
-            const isToday = i === 6;
-            return (
-              <div
-                key={i}
-                className={`h-8 rounded flex flex-col items-center justify-center text-[9px] font-semibold border ${
-                  active
-                    ? "bg-primary/20 border-primary/40 text-primary"
-                    : "bg-muted/30 border-border/40 text-muted-foreground/60"
-                } ${isToday ? "ring-1 ring-primary/60" : ""}`}
-                title={
-                  isToday
-                    ? active
-                      ? "Today — active"
-                      : "Today — no blocks logged yet"
-                    : active
-                      ? "Active day"
-                      : "Rest / no logged blocks"
-                }
-              >
-                <span>{rotatedLabels[i]}</span>
-                {isToday && (
-                  <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
-                    Today
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+          {/* Weekly rhythm arc */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Week rhythm
+              </span>
+              <span className="text-[10px] tabular-nums text-muted-foreground">
+                {activeCount} / 7 active
+              </span>
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {streak.weekArc.map((active, i) => {
+                const isToday = i === 6;
+                return (
+                  <div
+                    key={i}
+                    className={`h-8 rounded flex flex-col items-center justify-center text-[9px] font-semibold border ${
+                      active
+                        ? "bg-primary/20 border-primary/40 text-primary"
+                        : "bg-muted/30 border-border/40 text-muted-foreground/60"
+                    } ${isToday ? "ring-1 ring-primary/60" : ""}`}
+                    title={
+                      isToday
+                        ? active
+                          ? "Today — active"
+                          : "Today — no blocks logged yet"
+                        : active
+                          ? "Active day"
+                          : "Rest / no logged blocks"
+                    }
+                  >
+                    <span>{rotatedLabels[i]}</span>
+                    {isToday && (
+                      <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
+                        Today
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+
 
 
       {/* Earned unlocks */}

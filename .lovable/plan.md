@@ -1,16 +1,7 @@
-## Fix: Collapse the narrative block, not the week rhythm
+Move the Week rhythm block inside the same `Collapsible` as the Yesterday/Today/Tomorrow narrative in `src/components/hammer/DailyIntentHeader.tsx`.
 
-Previous change made the wrong section collapsible. Correct it in `src/components/hammer/DailyIntentHeader.tsx`:
+- Trigger row: Sparkles icon + `intent.headline` + chevron (closed by default). Streak flame badge stays outside on the right.
+- `CollapsibleContent` contains, in order: Yesterday / Today / Tomorrow lines, then the Week rhythm header ("WEEK RHYTHM" + "{activeCount} / 7 active") and 7-day grid with Today marker.
+- Earned unlocks and Fresh angle sections remain outside the collapsible, unchanged.
 
-1. **Make the narrative section collapsible (closed by default)**
-   - Wrap the headline + Yesterday/Today/Tomorrow lines in a `Collapsible` with `defaultOpen={false}`.
-   - Trigger row shows the `Sparkles` icon + `intent.headline` + chevron so users can tap to expand.
-   - Streak flame badge stays outside the collapsible, on the right.
-   - Yesterday / Today / Tomorrow lines live inside `CollapsibleContent`.
-
-2. **Restore week rhythm to always visible**
-   - Remove the `Collapsible` wrapper around the week arc.
-   - Keep the two-letter day labels (`Mo`, `Tu`, …) and the "Today" marker under the current day cell.
-   - Keep the "{activeCount} / 7 active" count as a small label above/next to the grid.
-
-No other files change. No logic changes.
+No logic changes.
