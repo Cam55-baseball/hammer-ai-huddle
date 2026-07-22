@@ -39,7 +39,7 @@ export function WkBatSpeedCard() {
             <Bolt className="h-4 w-4 text-fuchsia-500 shrink-0" />
             <span className="truncate">Bat Speed</span>
             <Badge variant="outline" className="text-[10px]">
-              {isGameDay ? "Game day · light" : "Pre-lift · fresh CNS"}
+              {isGameDay ? "Game day · light" : "Warm and ready"}
             </Badge>
           </div>
           <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
