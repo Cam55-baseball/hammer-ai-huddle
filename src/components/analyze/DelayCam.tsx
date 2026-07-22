@@ -697,7 +697,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               key={n}
               size="sm"
               variant={replayDuration === n ? "default" : "outline"}
-              disabled={!running || bufferedSec < n + delay}
+              disabled={!running || streamOnly || bufferedSec < n + delay}
               onClick={() => {
                 setReplayDuration(n);
                 replayLastN(n);
