@@ -169,6 +169,7 @@ const IqAlignmentsEditor = lazyWithRetry(() => import("./pages/owner/IqAlignment
 const IqCombos = lazyWithRetry(() => import("./pages/owner/IqCombos"));
 const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAudit"));
 const IqSituationsAuthoring = lazyWithRetry(() => import("./pages/owner/IqSituationsAuthoring"));
+const WorkoutLibraryViewer = lazyWithRetry(() => import("./pages/owner/WorkoutLibraryViewer"));
 const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
@@ -337,6 +338,7 @@ const App = () => {
               <Route path="/owner/iq/combos" element={<IqCombos />} />
               <Route path="/owner/iq/alignments/audit" element={<IqAlignmentAudit />} />
               <Route path="/owner/iq/situations" element={<IqSituationsAuthoring />} />
+              <Route path="/owner/workouts/library" element={<WorkoutLibraryViewer />} />
 
 
 
