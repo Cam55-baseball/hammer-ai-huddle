@@ -121,24 +121,11 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
               <div className="text-muted-foreground">{why.why}</div>
             </div>
           )}
-          {why.source_philosophy && (
-            <div className="text-[11px] text-muted-foreground italic">Source: {why.source_philosophy}</div>
-          )}
           {why.cue && (
             <div className="rounded border border-primary/20 p-2">
               <div className="font-medium mb-0.5">Cue</div>
               <div className="text-foreground/80">{why.cue}</div>
             </div>
-          )}
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Zap className="h-3 w-3" />
-            CNS cost: <strong className="text-foreground">{rx.cns_cost}/3</strong>
-            {typeof why.training_age_years === "number" && (
-              <span>· Training age: {why.training_age_years}y{why.is_pro_prospect ? " · Pro/Prospect" : ""}</span>
-            )}
-          </div>
-          {why.rep_rule && (
-            <div className="text-[11px] text-muted-foreground">Phase rule: {why.rep_rule}</div>
           )}
           {why.sequencing_hint && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
