@@ -1,59 +1,69 @@
-#  Elite Movement Library Expansion — Ido Portal, Heenan, KOT, Marinovich, Westside, Summers, Cressey, Driveline
 
 ## Goal
 
-Kill the "same boring workout" complaint by roughly doubling the exercise catalog (currently ~106 movements) with ~80 elite, professionally-sourced additions, each tagged to the right philosophy, engine, and season Quarter. Then give you an in-app viewer that shows the entire library sliced by Quarter so you can audit what athletes will actually see.
+Bring the speed library to the same elite depth we just achieved for lifts. Today only **28 movements** are tagged for speed work — too thin to keep athletes progressing across 4 offseason quarters, in-season maintenance, and game-day primers. Users report weak start times, slow base-stealing, and stalled top-speed gains. We will expand to **~90 movements** drawn from the top track-and-field / speed-development canon and wire them into the existing `wk-generate-daily` engine automatically.
 
-## Scope
+## Scope (only speed — no other cards touched)
 
-### 1. Seed ~80 new movements into `wk_movement_catalog`
+### 1. Seed ~60 new movements into `wk_movement_catalog`
 
-Each row gets: `slug`, `name`, `category`, `source_philosophy`, `cue`, `why_prescribed`, `primary_adaptation`, `equipment`, `phase_allow`, `season_eligibility`, `season_legality` (jsonb per-quarter map), `training_age_legality`, `cns_cost`, `recovery_window_hours`, `pap_classification`, `movement_velocity`, `game_day_legal`, `practice_day_legal`, `substitution_family`, `duplicate_group`, `wic_metadata_complete=true`, `governance_version='wic_v1'`. Rough distribution:
+All tagged with `primary_adaptation`, `speed_category`, `speed_adaptation`, `movement_velocity`, `pap_classification`, `season_legality`, `training_age_legality`, `game_day_legal`, `practice_day_legal`, `transfer_group`, and `substitution_family` so the existing Speed Engine picks them up with zero code changes.
 
+Philosophy sources (matches the Olympic + pro speed canon the user asked for):
 
-| Philosophy                               | Count | Engines / Categories                                                                                                  | Primary Quarter windows              |
-| ---------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| **Knees Over Toes (Patrick)**            | 12    | KOT, unilateral_lower, arm_care (elbow/shoulder tilts), mobility                                                      | Q1–Q2 build, all-quarter maintenance |
-| **Cressey Sports Performance**           | 12    | arm_care, unilateral_lower, unilateral_push/pull, compound, mobility                                                  | Q1–Q4 + in-season maintenance        |
-| **Driveline (hitting + throwing)**       | 10    | bat_speed (plyo ball / bat-weight ladders), arm_care (weighted-ball J-bands, plyo shoulder), throwing prep            | Q2–Q4 + game-day primers             |
-| **Westside Barbell (Simmons)**           | 10    | compound (max-effort, dynamic-effort, box squat, board press), speed_lab (band-resisted sled), conditioning (prowler) | Q1–Q2 max strength, Q3 dynamic       |
-| **Ido Portal**                           | 8     | movement_prep / mobility / cross_sport (locomotion, hanging series, scapular pulls, squat sit, floreio flow)          | All quarters (movement literacy)     |
-| **Josh Heenan (APT / rotational power)** | 8     | functional_patterning, bat_speed, trunk (anti-extension, hip-shoulder separation)                                     | Q2–Q4                                |
-| **Marinovich (multi-plane athleticism)** | 8     | speed_lab, cross_sport (agility ladders, plyo scaffolding, sand work)                                                 | Q1 GPP, Q4 sharpening                |
-| **Summers Method (Cressey / Summers)**   | 6     | supplemental (posterior chain, structural balance), compound assistance                                               | Q1–Q2                                |
-| **Blended / PAP contrast bridges**       | ~6    | bat_speed, speed_lab, power (pair overload↔underload from new inventory)                                              | Q3–Q4, game-day primers              |
+- **Charlie Francis / Short-to-Long** — accel ladders 10→30→40y, tempo runs, EMS-style recovery runs
+- **Loren Seagrave / ALTIS** — wicket runs, A-skips/B-skips/dribble series, Mach drills, prime-times
+- **Dan Pfaff (multi-Olympic medalist coach)** — hill sprints (short/steep + long/moderate), sled contrasts 10–30% BW
+- **Tony Holler "Feed the Cats"** — fly 10s, fly 20s, timed shutdowns, weekly PR tracking
+- **Cal Dietz Triphasic** — eccentric-isometric-concentric single-leg jumps, altitude landings
+- **Ken Clark / Peter Weyand** — mass-specific force pogos, single-leg hops for ground-force
+- **Frans Bosch** — attractor-based coordination drills, isometric hip lock, split-stance switches
+- **Adarian Barr / Feed the Cats stealing** — false-step vs. drop-step start comparisons, first-3-step timing
+- **Driveline Baseball baserunning** — lead-off jumps, primary/secondary lead reactive starts, dive-back
+- **Marinovich / reactive** — light/color/audio cue starts, mirror sprints
+- **Knees Over Toes** — tibialis raises, backwards sled drags, ATG split squats for sprint durability
+- **Softball-specific slap starts, crow-hop lead-offs, 43ft reactive breaks** (Sue Enquist / Michele Smith canon)
+- **Elite baseball-specific** — pickoff jumps at 90ft, first-to-third reads, tag-up burst, home-to-1B timed splits (LHH + RHH)
 
+Coverage targets (adds shown, existing in parens):
 
-Every movement will:
+- **Acceleration / starts:** +14 (currently 4) → wicket ladders, 10y/20y/30y flys with countdown, resisted hill 10s, band-resisted starts, 3-point vs. 2-point vs. sport-specific stance starts, false-step audit, first-3-step contact drill, med-ball scoop-and-sprint, sled march 20–30% BW, Pfaff short hill, prowler push 10y
+- **Top speed / max velocity:** +10 (currently 3) → wicket max-velo, fly 20s, fly 30s, fly 40s w/ shutdown, ins-and-outs, tempo build 60y, downhill 2–3° overspeed, upright-mechanics dribble→fly, Holler "record-day" fly 10, tempo 100s @ 75%
+- **Base-stealing / sport-transfer:** +10 (currently 5) → primary-lead jump start, secondary-lead crossover, delayed steal read, dive-back explosive return, home-to-1B timed (LHH slap variant), 1B-to-3B on ball-in-dirt read, tag-up burst from 3B, softball 43ft primary lead break, catcher pop-time reactive break, first-move audit
+- **Plyometric / elastic ground contacts:** +10 (currently 2) → altitude drops, single-leg bounds (alt+same), skater bounds for distance, hurdle hop series, tuck-jump-to-sprint, pogo series (double/single), continuous broad jumps, mini-band pogo, box-jump-to-sprint, depth-drop-to-fly-10
+- **Resisted / overspeed contrast:** +6 (currently 2) → heavy sled 30% BW (accel only), light sled 10%, band-resisted start w/ release, tow-assisted fly, downhill assisted, wall-drive iso→sprint contrast pair
+- **Mobility / durability for sprinting:** +6 (currently 3) → tibialis raises, ATG split squat, backwards sled drag, hamstring Nordic w/ sprint transfer, adductor copenhagen for groin resilience, single-leg RDL iso
+- **Reactive / decision-based:** +4 (currently 3) → 2-color audio-cue start, mirror sprint 5-5-10, ball-drop reaction, coach-signal crossover start
 
-- Include a plain-English `cue` and a `why_prescribed` that names the philosophy and the adaptation it drives.
-- Populate `season_legality` per Quarter (`os_q1`, `os_q2`, `os_q3`, `os_q4`, `in_season`, `post_season`) so `wk-generate-daily` can select correctly.
-- Set `training_age_legality` so entry-level athletes get regressions and advanced athletes unlock the heavy Westside/Driveline overload work.
-- Attach `substitution_family` + `duplicate_group` so the validator can rotate variety and avoid repeats.
+### 2. Movement selection guardrails (already exist, we just populate them correctly)
 
-### 2. In-app Library Viewer (new admin page)
+- `season_legality` maps every movement to Q1/Q2/Q3/Q4/In-Season/Post-Season windows using Charlie Francis short-to-long progression (heavy resisted early, pure fly work late)
+- `training_age_legality` — beginners get wickets/A-skips/tempo; advanced/pro get overspeed, altitude drops, heavy sled contrasts, timed fly 30s
+- `game_day_legal = true` only for CNS-safe primers (fly 10, 2-3 reactive starts, wicket walk-through)
+- `pap_classification` populated so the engine correctly pairs a `heavy` sled or hill with a `light` fly for contrast (mirrors what we did for bat speed)
+- `substitution_family` populated so equipment / environment gaps auto-swap (e.g., no sled → hill; no hill → resisted band; no space → in-place pogo)
 
-New route `/owner/workouts/library` (owner + build-access gated, matches existing owner tools):
+### 3. Verify the existing engine surfaces the new library
 
-- Tabs across the top: **Q1 · Q2 · Q3 · Q4 · In-Season · Post-Season · Game-Day**.
-- Inside each tab, group by engine (Movement Prep, Warm-up, Sprint, Bat Speed, Power, Strength, Conditioning, Recovery, Mobility, Arm Care, Cross-Sport).
-- Each row shows: name, philosophy badge, cue, sets/reps defaults, training-age gate, equipment icons, and a "why" popover.
-- Count pills at the top (`Q1: 148 movements`, etc.) so you can see coverage at a glance.
-- Read-only — pulls straight from `wk_movement_catalog`.
+`supabase/functions/_shared/wic/engines/speed.ts` already selects by `speed_category`, `speed_adaptation`, `pap_classification`, `training_age_legality`, `season_legality`, and `game_day_legal`. No engine code change required — the new tags flow through automatically. Confirm this with a post-seed test by re-running `wk-generate-daily` for a sample beginner user and a sample pro user and diffing the returned speed card.
 
-### 3. Verification
+### 4. Wire the new library into the existing viewer
 
-- Run the WIC audit script (`scripts/audits/wic-audit.ts`) to confirm every new row has complete metadata.
-- Regenerate one athlete's Today plan and confirm the new movements start rotating in (variety uplift).
+`/owner/workouts/library` (built last turn) already reads the catalog; the new movements will show up automatically under the Speed engine tab, philosophy badges intact.
+
+### 5. Export a categorized library report
+
+Write `/mnt/documents/hammers-speed-library.md` listing every speed movement grouped by category (Accel / Top Speed / Base Stealing / Plyo / Resisted / Overspeed / Reactive / Durability), showing which quarter and training age each is legal for. Same format as the lift export.
 
 ## Out of scope
 
-- No engine logic changes — this is catalog + a read-only viewer only. Selection rules in `wk-generate-daily` already honor `season_legality` / `training_age_legality` / `substitution_family`, so new movements plug in automatically.
-- No changes to Today-plan card UI.
-- No pricing/tier changes.
+- No lift, bat-speed, conditioning, warm-up, or recovery library changes
+- No engine logic changes — only catalog seeding and metadata
+- No UI changes to `WkSpeedCard`, `HammerDailyPlan`, or the viewer
+- No changes to the constitution / doctrine / validator
 
-## Technical details
+## Technical detail
 
-- Delivered as **one migration** that inserts ~80 rows into `wk_movement_catalog` (ON CONFLICT DO NOTHING on `slug`).
-- New page: `src/pages/owner/WorkoutLibraryViewer.tsx`, hook `src/hooks/useWorkoutCatalog.ts`, wired into the existing owner router alongside `/owner/iq/alignments`.
-- Uses existing `@/integrations/supabase/client` — no new dependencies, no schema changes.
+- Insertion happens via one migration adding rows to `wk_movement_catalog`. All new rows include full metadata (pattern, adaptation, joint stress, recovery cost, volume cost, bias, duplicate_group, recovery_window_hours, and the speed-specific columns listed above).
+- Each movement includes `notes` / `coach_cues` / `common_mistakes` / `success_markers` in the same structured markdown shape the lift expansion used, so `WkPrescriptionCard`'s "Why this movement" dropdown renders cleanly.
+- Post-migration verification: `SELECT speed_category, count(*) FROM wk_movement_catalog GROUP BY 1` should show every category ≥10 (except overspeed which is intentionally selective).
