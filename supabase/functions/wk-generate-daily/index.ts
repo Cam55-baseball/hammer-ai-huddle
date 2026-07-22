@@ -205,6 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
     const [
       { data: profile },
       { data: ctx },
+      { data: mpiSettings },
       { data: injuries },
       { data: dailyLog },
       { data: gamesToday },
@@ -217,6 +218,7 @@ const handler = async (req: Request): Promise<Response> => {
     ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_mpi_settings").select("season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
       admin.from("gp_games")
@@ -247,7 +249,21 @@ const handler = async (req: Request): Promise<Response> => {
     const isPracticeDay = (practicesToday ?? []).length > 0;
 
     // -------- Resolve phase quarter --------
-    const phaseRes = resolveWkPhase(ctx ?? null);
+    // Season data lives on athlete_mpi_settings (season_status + phase date
+    // windows). athlete_context.season_phase is a secondary/legacy field.
+    // Merge both so an in-season athlete never gets Offseason Q1 by default.
+    const mpi: any = mpiSettings ?? {};
+    const ctxAny: any = ctx ?? {};
+    const seasonSettings = {
+      season_status: mpi.season_status ?? ctxAny.season_phase ?? null,
+      preseason_start_date: mpi.preseason_start_date ?? null,
+      preseason_end_date: mpi.preseason_end_date ?? null,
+      in_season_start_date: mpi.in_season_start_date ?? null,
+      in_season_end_date: mpi.in_season_end_date ?? null,
+      post_season_start_date: mpi.post_season_start_date ?? null,
+      post_season_end_date: mpi.post_season_end_date ?? null,
+    };
+    const phaseRes = resolveWkPhase(seasonSettings);
     const isOffseason = phaseRes.phase.startsWith("os_");
     const isDeep = phaseRes.phase === "os_q1" || phaseRes.phase === "os_q2";
     const isInSeason = phaseRes.phase === "in_season";
