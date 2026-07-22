@@ -488,8 +488,36 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               <Camera className="h-4 w-4" /> Start
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={saveClip} disabled={!running || timedChunksRef.current.length === 0} className="gap-1.5">
-            <Download className="h-4 w-4" /> Save clip
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={saveClip}
+            disabled={!running || saving !== null || timedChunksRef.current.length === 0}
+            className="gap-1.5"
+            title="Download this clip to your phone or computer"
+          >
+            <Download className="h-4 w-4" /> Save to device
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void saveToPlayersClub({ analyze: false })}
+            disabled={!running || saving !== null || !user || timedChunksRef.current.length === 0}
+            className="gap-1.5"
+            title="Save this clip to your Players Club library"
+          >
+            {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
+            Save to Players Club
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => void saveToPlayersClub({ analyze: true })}
+            disabled={!running || saving !== null || !user || timedChunksRef.current.length === 0}
+            className="gap-1.5"
+            title="Save and run Hammer analysis on this clip"
+          >
+            {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Save & Analyze
           </Button>
         </div>
       </div>
