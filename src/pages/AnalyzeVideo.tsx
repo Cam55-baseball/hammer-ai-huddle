@@ -1557,7 +1557,10 @@ export default function AnalyzeVideo() {
         )}
 
         <div className="mt-4">
-          <DelayCam />
+          <DelayCam
+            module={(module as "hitting" | "pitching" | "throwing") || "hitting"}
+            sport={sport as "baseball" | "softball"}
+          />
         </div>
       </div>
 
