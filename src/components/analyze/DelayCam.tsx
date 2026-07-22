@@ -97,6 +97,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState<null | "club" | "analyze">(null);
+  /** Stream-only = delayed mirror only, no MediaRecorder, decimated frame
+   * capture. Designed for long practice sessions (hours). */
+  const [streamOnly, setStreamOnly] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const streamOnlyRef = useRef(streamOnly);
+  useEffect(() => { streamOnlyRef.current = streamOnly; }, [streamOnly]);
+  const frameCounterRef = useRef(0);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
