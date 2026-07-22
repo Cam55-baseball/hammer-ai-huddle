@@ -1,20 +1,16 @@
-## Change
+## Fix: Collapse the narrative block, not the week rhythm
 
-In `src/components/hammer/DailyIntentHeader.tsx`, refactor the "Week" rhythm strip into a collapsible section that starts closed, and improve the day-of-week labels.
+Previous change made the wrong section collapsible. Correct it in `src/components/hammer/DailyIntentHeader.tsx`:
 
-### Details
+1. **Make the narrative section collapsible (closed by default)**
+   - Wrap the headline + Yesterday/Today/Tomorrow lines in a `Collapsible` with `defaultOpen={false}`.
+   - Trigger row shows the `Sparkles` icon + `intent.headline` + chevron so users can tap to expand.
+   - Streak flame badge stays outside the collapsible, on the right.
+   - Yesterday / Today / Tomorrow lines live inside `CollapsibleContent`.
 
-1. **Better day labels**: Replace the ambiguous single-letter labels (`M T W T F S S` — two T's, two S's) with two-letter abbreviations: `Mo Tu We Th Fr Sa Su`. Still rotate so today sits in the last cell. Add a subtle "Today" marker/label on the active cell for clarity.
+2. **Restore week rhythm to always visible**
+   - Remove the `Collapsible` wrapper around the week arc.
+   - Keep the two-letter day labels (`Mo`, `Tu`, …) and the "Today" marker under the current day cell.
+   - Keep the "{activeCount} / 7 active" count as a small label above/next to the grid.
 
-2. **Collapsible dropdown**: Wrap the week arc in a `<Collapsible>` (shadcn) with:
-   - Trigger row: "Week rhythm" label + small summary (e.g. `3 / 7 active`) + chevron icon
-   - `defaultOpen={false}` so it begins closed
-   - Content: the existing 7-cell grid with rotated labels and today ring
-
-3. **Scope**: Only this component changes. No logic, streak, or engagement changes — purely presentation of the week strip.
-
-### Technical notes
-
-- Use `@/components/ui/collapsible` (already available via shadcn).
-- Keep `rotatedLabels` logic; just swap the source array to two-letter names.
-- Compute `activeCount = streak.weekArc.filter(Boolean).length` for the trigger summary.
+No other files change. No logic changes.

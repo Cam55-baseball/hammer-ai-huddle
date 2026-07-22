@@ -63,21 +63,28 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
   return (
     <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent p-3 space-y-2.5">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2 min-w-0">
-          <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-          <div className="min-w-0">
-            <div className="text-sm font-semibold leading-tight">{intent.headline}</div>
-            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-              <span className="text-foreground/80">Yesterday:</span> {intent.yesterday}
+        <Collapsible defaultOpen={false} className="min-w-0 flex-1">
+          <CollapsibleTrigger className="flex w-full items-start gap-2 text-left hover:opacity-90 transition-opacity">
+            <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1 flex items-start justify-between gap-2">
+              <div className="text-sm font-semibold leading-tight">{intent.headline}</div>
+              <ChevronDown className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-              <span className="text-foreground/80">Today:</span> {intent.today}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="pl-6 pt-1.5">
+              <div className="text-[11px] text-muted-foreground leading-relaxed">
+                <span className="text-foreground/80">Yesterday:</span> {intent.yesterday}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                <span className="text-foreground/80">Today:</span> {intent.today}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                <span className="text-foreground/80">Tomorrow:</span> {intent.tomorrow}
+              </div>
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-              <span className="text-foreground/80">Tomorrow:</span> {intent.tomorrow}
-            </div>
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {streak.currentDays > 0 && (
           <div className="flex items-center gap-1 shrink-0 rounded-full bg-amber-500/10 px-2 py-1 border border-amber-500/30">
@@ -89,53 +96,49 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
         )}
       </div>
 
-      {/* Weekly rhythm arc — collapsible, closed by default */}
-      <Collapsible defaultOpen={false}>
-        <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-border/40 bg-muted/20 px-2 py-1.5 hover:bg-muted/40 transition-colors">
+      {/* Weekly rhythm arc — always visible */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
             Week rhythm
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-[10px] tabular-nums text-muted-foreground">
-              {activeCount} / 7 active
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+          <span className="text-[10px] tabular-nums text-muted-foreground">
+            {activeCount} / 7 active
           </span>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-2">
-          <div className="grid grid-cols-7 gap-1">
-            {streak.weekArc.map((active, i) => {
-              const isToday = i === 6;
-              return (
-                <div
-                  key={i}
-                  className={`h-8 rounded flex flex-col items-center justify-center text-[9px] font-semibold border ${
-                    active
-                      ? "bg-primary/20 border-primary/40 text-primary"
-                      : "bg-muted/30 border-border/40 text-muted-foreground/60"
-                  } ${isToday ? "ring-1 ring-primary/60" : ""}`}
-                  title={
-                    isToday
-                      ? active
-                        ? "Today — active"
-                        : "Today — no blocks logged yet"
-                      : active
-                        ? "Active day"
-                        : "Rest / no logged blocks"
-                  }
-                >
-                  <span>{rotatedLabels[i]}</span>
-                  {isToday && (
-                    <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
-                      Today
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {streak.weekArc.map((active, i) => {
+            const isToday = i === 6;
+            return (
+              <div
+                key={i}
+                className={`h-8 rounded flex flex-col items-center justify-center text-[9px] font-semibold border ${
+                  active
+                    ? "bg-primary/20 border-primary/40 text-primary"
+                    : "bg-muted/30 border-border/40 text-muted-foreground/60"
+                } ${isToday ? "ring-1 ring-primary/60" : ""}`}
+                title={
+                  isToday
+                    ? active
+                      ? "Today — active"
+                      : "Today — no blocks logged yet"
+                    : active
+                      ? "Active day"
+                      : "Rest / no logged blocks"
+                }
+              >
+                <span>{rotatedLabels[i]}</span>
+                {isToday && (
+                  <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
+                    Today
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
 
       {/* Earned unlocks */}
       {earned.length > 0 && (
