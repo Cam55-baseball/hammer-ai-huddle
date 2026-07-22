@@ -1,68 +1,42 @@
-## Current state
+Goal: Allow athletes to leave DelayCam open for extended practice sessions (hours) with only the delayed mirror active, without draining battery or filling memory from an always-on recorder.
 
-DelayCam (`src/components/analyze/DelayCam.tsx`) is client-only:
-- Records live camera via `MediaRecorder` into a rolling buffer.
-- Renders a 1–55s delayed mirror on a canvas.
-- Offers "Save clip" which downloads the buffer as a local `.webm`/`.mp4` file.
-- Does **not** upload to backend, insert into `public.videos`, or trigger analysis.
+Current state
+- `src/components/analyze/DelayCam.tsx` starts `MediaRecorder` on every `start()` call and keeps it running (250 ms slices) so "Replay Last N" and "Save clip" work instantly.
+- `timedChunksRef` has a memory leak: the init segment at index 0 is never evicted, so the blob array grows forever while the camera is on.
+- Frame capture runs at camera frame rate (~30 fps) and stores up to `MAX_FRAMES` ImageBitmaps (up to 720p). This is fine for minutes but heavy for hours.
+- No `document.visibilitychange` handling: when the tab is backgrounded, `requestAnimationFrame` throttles and the delayed mirror can freeze or desync.
 
-Players Club (`src/pages/PlayersClub.tsx`) and the video analysis flow (`src/pages/AnalyzeVideo.tsx`) already use the `videos` storage bucket and the `public.videos` table with `status`, `ai_analysis`, `mocap_data`, etc.
+What we will build
+1. **Stream-only toggle**
+   - Add a switch/segmented control in the DelayCam header: "Stream only" vs "Replay + Save".
+   - In Stream-only mode, `MediaRecorder` is **never started**. The delayed mirror still works; replay and save buttons are disabled until the user switches to Replay+Save mode.
+   - This eliminates the continuous blob accumulation and the init-chunk leak.
 
-## Goal
+2. **Power-aware frame capture**
+   - In Stream-only mode, drop the capture frame rate to 15 fps by skipping frames via `requestVideoFrameCallback` (counter-based, not timer-based) or a `setInterval` fallback.
+   - In Replay+Save mode, capture at the native rate so instant replay is smooth.
 
-Make DelayCam clips first-class library assets:
-- Save to Players Club (storage + `videos` row).
-- Analyze the saved clip with Hammer via a separate "Save & Analyze" action.
-- Keep the existing local download-to-phone option.
-- Infer the correct module (hitting / pitching / throwing) from the context in which the user opened DelayCam.
+3. **Background tab handling**
+   - Listen to `document.visibilitychange`.
+   - When the tab becomes hidden, **pause the delayed render loop** and reduce the frame capture loop to a minimal keep-alive state (or stop it entirely). When the tab becomes visible again, resume from the current camera feed without requiring a manual restart.
+   - Add a small status badge: "Paused (tab hidden)" so the user knows why the mirror stopped.
 
-## Plan
+4. **Fix recorder blob leak**
+   - Correct the eviction logic so the init segment is not retained indefinitely. When all chunks older than `MAX_BUFFER_SEC` are gone, also reset `initChunkRef`.
+   - Cap the total in-memory blob size to the same 55-second window.
 
-### 1. Make DelayCam context-aware
-- Add a `module` prop to `DelayCam` that accepts `'hitting' | 'pitching' | 'throwing'`.
-- In `AnalyzeVideo.tsx`, pass the module that corresponds to the current analysis context (e.g., hitting analysis → `'hitting'`).
-- In `HammerDailyPlan.tsx`, if DelayCam is rendered there, pass a module derived from the current card/discipline context.
-- Default fallback remains `'hitting'` only when no context is available.
+5. **UI/UX updates**
+   - Replace the single "Recording" badge with a more descriptive state: "Streaming", "Recording buffer", or "Paused (background)".
+   - Disable "Replay", "Save to device", "Save to Players Club", and "Save & Analyze" while in Stream-only mode, with a tooltip explaining they require Replay+Save mode.
 
-### 2. Add Save and Save & Analyze actions to DelayCam
-- Add two new buttons next to the existing "Save clip" button:
-  - **"Save to Players Club"** — uploads the clip and inserts the row, then sets `status = 'completed'`.
-  - **"Save & Analyze"** — uploads the clip, inserts the row, then triggers the same analysis job used by `AnalyzeVideo.tsx` and sets `status = 'processing'`.
-- Both buttons build the same decodable blob from the rolling buffer (`buildDecodableBlob`).
-- Upload the blob to the `videos` storage bucket under `{userId}/delaycam/{uuid}.{ext}`.
-- Generate a thumbnail via the existing `generateVideoThumbnail` helper.
-- Insert a `public.videos` row with:
-  - `sport`: current user's selected sport (from `SportThemeContext` / profile default).
-  - `module`: the `module` prop passed to DelayCam.
-  - `status`: `'completed'` for Save, `'processing'` for Save & Analyze.
-  - `video_url`, `thumbnail_url`, `library_title`: auto-generated like "DelayCam replay — {timestamp}".
-- Show progress toast and success/error feedback.
+Files to edit
+- `src/components/analyze/DelayCam.tsx` — add the mode toggle, conditional recorder start, frame-rate decimation, visibility handling, and status badge updates.
 
-### 3. Implement the analysis trigger path
-- Reuse the same analysis invocation used by the normal video upload flow in `AnalyzeVideo.tsx` (edge function or DB RPC).
-- After Save & Analyze, poll or subscribe to the `videos` row for `status` transitions (`processing` → `completed`/`failed`).
-- Surface results in Players Club like any other analyzed video.
-- If analysis fails, leave the clip in the club with a clear "Analysis failed" badge and retry action.
+Out of scope
+- No backend changes; storage/analyze logic remains unchanged.
+- No changes to `AnalyzeVideo.tsx` unless we decide to expose the default mode as a prop later.
 
-### 4. Preserve local download
-- Keep the existing **"Save clip"** button unchanged so users can still save the raw delayed video directly to their phone / desktop.
-
-### 5. UX hardening
-- Disable the save-to-club and save-and-analyze buttons until the buffer has enough content.
-- Add a confirmation/dialog before saving to let the user edit the auto-generated title and confirm the inferred module/sport.
-- Ensure camera permission errors and upload failures are surfaced with toast messages, not silent failures.
-- Reuse existing side-context / handedness data if relevant, matching the recent side-aware profile split.
-
-### 6. Verification
-- Manual end-to-end check: open DelayCam in a hitting context → start → wait for buffer → "Save to Players Club" → confirm row appears in `/players-club`.
-- Test "Save & Analyze" → confirm status moves to `processing` and then `completed` with `ai_analysis` populated.
-- Verify local download still works.
-- Confirm no regressions in the existing AnalyzeVideo upload flow.
-
-## Outcome
-
-Users will be able to:
-- Record a delayed replay in DelayCam.
-- Save it directly to their Players Club library with the correct module tag.
-- Save and analyze it with Hammer, then view the results in Players Club.
-- Download the raw clip to their phone as before.
+Success criteria
+- A user can start DelayCam in Stream-only mode, leave it open for an hour, and return to a responsive delayed mirror with no memory growth from blobs.
+- Switching to Replay+Save mode restores the current instant-replay and save behavior.
+- Backgrounding the tab does not crash the camera or desync the delay; foregrounding cleanly resumes.
