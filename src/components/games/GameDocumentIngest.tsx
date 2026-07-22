@@ -85,7 +85,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       <Card className="p-4 space-y-3 border-dashed">
         <div className="flex items-center gap-2">
           <FileUp className="h-4 w-4 text-primary" />
-          <p className="font-medium">AI document import</p>
+          <p className="font-medium">Hammer document import</p>
         </div>
         <p className="text-xs text-muted-foreground">
           Scorebook photo · TrackMan PDF/CSV · GameChanger export · Rapsodo CSV. Gemini

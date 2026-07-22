@@ -71,7 +71,7 @@ export default function HelpDesk() {
       items: [
         {
           question: t('helpDesk.faq.analyzeVideo', 'How do I analyze a video?'),
-          answer: t('helpDesk.faq.analyzeVideoAnswer', '1. Go to any analysis module (Hitting, Pitching, or Throwing)\n2. Upload your video\n3. The AI will analyze your mechanics\n4. You\'ll receive an efficiency score, detailed feedback, recommended drills, and a scorecard comparing to previous analyses.'),
+          answer: t('helpDesk.faq.analyzeVideoAnswer', '1. Go to any analysis module (Hitting, Pitching, or Throwing)\n2. Upload your video\n3. Hammer will analyze your mechanics\n4. You\'ll receive an efficiency score, detailed feedback, recommended drills, and a scorecard comparing to previous analyses.'),
         },
         {
           question: t('helpDesk.faq.texVision', 'How does Tex Vision work?'),
