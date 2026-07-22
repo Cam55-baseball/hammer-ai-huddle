@@ -79,13 +79,39 @@ export default function DrillLibraryPlayer() {
     search, setSearch,
     sort, setSort,
     positionFilter, setPositionFilter,
+    selectedLevels, setSelectedLevels,
     availablePositions,
+    availableLevels,
+    clearFilters,
   } = usePlayerDrillLibrary();
 
   const { modules } = useSubscription();
   const userHasPremium = modules.length > 0;
 
   const [selectedDrill, setSelectedDrill] = useState<LibraryDrill | null>(null);
+
+  const hasActiveFilters = !!search.trim() || !!positionFilter || selectedLevels.length > 0;
+
+  const toggleLevel = (key: LevelKey) => {
+    setSelectedLevels(
+      selectedLevels.includes(key)
+        ? selectedLevels.filter(k => k !== key)
+        : [...selectedLevels, key]
+    );
+  };
+
+  const levelTriggerLabel =
+    selectedLevels.length === 0
+      ? 'All Levels'
+      : selectedLevels.length === 1
+        ? LEVEL_LABELS[selectedLevels[0] as LevelKey] ?? 'Level'
+        : `${selectedLevels.length} levels`;
+
+  // Show all four levels in the picker so users can pre-select even if not
+  // all are represented in the currently loaded drills.
+  const levelOptions = LEVEL_ORDER.filter(
+    k => availableLevels.length === 0 || availableLevels.includes(k)
+  );
 
   return (
     <DashboardLayout>
@@ -108,8 +134,58 @@ export default function DrillLibraryPlayer() {
                 className="pl-9"
               />
             </div>
+
+            {/* Level multi-select */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-[180px] justify-between">
+                  <span className="flex items-center gap-2 truncate">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    {levelTriggerLabel}
+                  </span>
+                  {selectedLevels.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                      {selectedLevels.length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="end">
+                <div className="space-y-1">
+                  {levelOptions.map(k => {
+                    const checked = selectedLevels.includes(k);
+                    return (
+                      <label
+                        key={k}
+                        className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={() => toggleLevel(k)}
+                        />
+                        <span className="flex-1">{LEVEL_LABELS[k]}</span>
+                      </label>
+                    );
+                  })}
+                  {selectedLevels.length > 0 && (
+                    <>
+                      <div className="my-1 h-px bg-border" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start h-8"
+                        onClick={() => setSelectedLevels([])}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1.5" /> Clear levels
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <Select value={sort} onValueChange={v => setSort(v as SortOption)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -122,7 +198,7 @@ export default function DrillLibraryPlayer() {
 
           {/* Position chips — canonical codes only, scorecard order, no duplicates */}
           {availablePositions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               <Button
                 size="sm"
                 variant={!positionFilter ? 'default' : 'outline'}
@@ -146,6 +222,16 @@ export default function DrillLibraryPlayer() {
                   </Button>
                 );
               })}
+              {hasActiveFilters && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="h-7 text-xs ml-auto text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5 mr-1" /> Clear all
+                </Button>
+              )}
             </div>
           )}
 
