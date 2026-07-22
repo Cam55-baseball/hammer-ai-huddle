@@ -482,8 +482,6 @@ const handler = async (req: Request): Promise<Response> => {
         default: return c ?? "supplemental";
       }
     };
-    const humanizePhilosophy = (p: string | null) => p ? p.replace(/_/g, " ") : null;
-
     const push = (
       slot: Slot,
       role: SequenceRole,
@@ -511,10 +509,7 @@ const handler = async (req: Request): Promise<Response> => {
         : null;
 
       // Plain-English rationale
-      const philo = humanizePhilosophy(s.movement.source_philosophy);
       const cls = humanizeClass(s.movement.intensity_class);
-      const ageStr = trainingAgeYears > 0 ? `${trainingAgeYears}-year training age` : "beginner training age";
-      const proStr = isProProspect ? " (pro prospect)" : "";
       const reasonPiece = why || s.movement.why_prescribed || `${cls} pick for today`;
       const reductionsPiece = reductions.length
         ? ` Volume trimmed today because ${reductions.map((r) => r.detail.toLowerCase()).join(" and ")}.`
@@ -522,8 +517,7 @@ const handler = async (req: Request): Promise<Response> => {
       const overridePiece = overrideMeta
         ? ` Unlocked for this session by your override — reason: "${overrideMeta.reason ?? "not stated"}".`
         : "";
-      const philoPiece = philo ? ` Doctrine: ${philo}.` : "";
-      const rationale = `Chosen because you're in ${phaseRes.displayName} with a ${ageStr}${proStr}, and this is a ${cls}. ${reasonPiece}.${philoPiece}${overridePiece}${reductionsPiece}`.replace(/\s+/g, " ").trim();
+      const rationale = `${reasonPiece}.${overridePiece}${reductionsPiece}`.replace(/\s+/g, " ").trim();
 
       // WIC — required constitutional payload
       const wicEngine = engineForSlotRole(slot, role);

@@ -456,7 +456,10 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         return !min || c < min ? c : min;
       }, null) ?? null;
     const generatorVersion = (first as any)?.generator_version ?? first?.why_payload?.generator_version ?? null;
-    const seasonPhase = first?.why_payload?.phase ?? null;
+    const storedSeasonPhase = first?.why_payload?.phase ?? null;
+    const seasonPhase = storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+      ? canonicalPhase.phase
+      : storedSeasonPhase;
     const generationId =
       user?.id && generatedAt
         ? `${user.id}:${planDate}:${generatorVersion ?? "na"}:${generatedAt}`
@@ -466,7 +469,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       generated_at: generatedAt,
       generator_version: generatorVersion,
       season_phase: seasonPhase,
-      season_display: seasonPhase && seasonPhase !== canonicalPhase.phase
+      season_display: storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
         ? canonicalPhase.displayName
         : ((first?.why_payload?.phase_display as string | undefined) ?? canonicalPhase.displayName ?? null),
       plan_date: planDate,
