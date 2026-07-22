@@ -33,7 +33,15 @@ const SLOT_LABEL: Record<WkRx["slot"], string> = {
   cross_sport: "Cross-Sport",
 };
 
-export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
+export function WkPrescriptionCard({
+  rx,
+  phaseDisplay,
+  phaseKey,
+}: {
+  rx: WkRx;
+  phaseDisplay?: string | null;
+  phaseKey?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -69,6 +77,14 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
   };
 
   const why = rx.why_payload;
+  const storedPhase = why?.phase ?? rx.phase ?? null;
+  const phaseMismatch = !!phaseKey && !!storedPhase && storedPhase !== phaseKey;
+  const athleteWhy = phaseMismatch
+    ? `This movement was generated under an older season setting. Hammer is rebuilding today's plan so it matches ${phaseDisplay ?? "your current phase"}.`
+    : (rx.why_v2?.why_exercise ?? why?.why ?? null);
+  const todayLine = phaseMismatch
+    ? `Rebuilding to match ${phaseDisplay ?? "your current phase"}.`
+    : (rx.why_v2?.why_today ?? null);
   const reductions = why?.reductions ?? [];
   const dosage =
     [
@@ -110,8 +126,7 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
           {(() => {
-            const todayLine = rx.why_v2?.why_today ?? why.why ?? null;
-            const hasWhy = rx.rationale || todayLine;
+            const hasWhy = athleteWhy || todayLine;
             if (!hasWhy) return null;
             return (
               <Collapsible>
@@ -127,7 +142,7 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-1 rounded border border-primary/20 bg-primary/5 p-2 space-y-1 text-muted-foreground">
-                  {rx.rationale && <div>{rx.rationale}</div>}
+                  {athleteWhy && <div>{athleteWhy}</div>}
                   {todayLine && (
                     <div>
                       <span className="text-foreground">Today —</span> {todayLine}
