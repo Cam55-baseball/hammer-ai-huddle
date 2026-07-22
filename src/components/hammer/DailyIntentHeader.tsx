@@ -9,7 +9,12 @@
  * Constitutional subordination: Eternal Laws · Megaphase 151–160 · RR-5.
  */
 import { useMemo } from "react";
-import { Sparkles, Flame, Trophy } from "lucide-react";
+import { Sparkles, Flame, Trophy, ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -47,12 +52,13 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
   const rotation = useMemo(() => detectMonotony(state, plan.blocks), [state, plan.blocks]);
   const earned = milestones.filter((m) => m.earned);
 
-  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+  const dayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
   // weekArc is oldest→newest (last 7 including today at end). Rotate labels so
   // today is the last cell no matter what weekday it is.
   const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0…Sun=6
   const rotatedLabels: string[] = [];
   for (let i = 6; i >= 0; i--) rotatedLabels.push(dayLabels[(todayIdx - i + 7) % 7]);
+  const activeCount = streak.weekArc.filter(Boolean).length;
 
   return (
     <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent p-3 space-y-2.5">
@@ -83,38 +89,53 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
         )}
       </div>
 
-      {/* Weekly rhythm arc */}
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Week
-        </span>
-        <div className="flex-1 grid grid-cols-7 gap-1">
-          {streak.weekArc.map((active, i) => {
-            const isToday = i === 6;
-            return (
-              <div
-                key={i}
-                className={`h-6 rounded flex items-center justify-center text-[9px] font-semibold border ${
-                  active
-                    ? "bg-primary/20 border-primary/40 text-primary"
-                    : "bg-muted/30 border-border/40 text-muted-foreground/60"
-                } ${isToday ? "ring-1 ring-primary/60" : ""}`}
-                title={
-                  isToday
-                    ? active
-                      ? "Today — active"
-                      : "Today — no blocks logged yet"
-                    : active
-                      ? "Active day"
-                      : "Rest / no logged blocks"
-                }
-              >
-                {rotatedLabels[i]}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* Weekly rhythm arc — collapsible, closed by default */}
+      <Collapsible defaultOpen={false}>
+        <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-border/40 bg-muted/20 px-2 py-1.5 hover:bg-muted/40 transition-colors">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Week rhythm
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-[10px] tabular-nums text-muted-foreground">
+              {activeCount} / 7 active
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+          </span>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <div className="grid grid-cols-7 gap-1">
+            {streak.weekArc.map((active, i) => {
+              const isToday = i === 6;
+              return (
+                <div
+                  key={i}
+                  className={`h-8 rounded flex flex-col items-center justify-center text-[9px] font-semibold border ${
+                    active
+                      ? "bg-primary/20 border-primary/40 text-primary"
+                      : "bg-muted/30 border-border/40 text-muted-foreground/60"
+                  } ${isToday ? "ring-1 ring-primary/60" : ""}`}
+                  title={
+                    isToday
+                      ? active
+                        ? "Today — active"
+                        : "Today — no blocks logged yet"
+                      : active
+                        ? "Active day"
+                        : "Rest / no logged blocks"
+                  }
+                >
+                  <span>{rotatedLabels[i]}</span>
+                  {isToday && (
+                    <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
+                      Today
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Earned unlocks */}
       {earned.length > 0 && (
