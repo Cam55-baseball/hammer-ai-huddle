@@ -16,7 +16,24 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
+  BookMarked, Sparkles, Loader2,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useOptionalAuth } from "@/hooks/useAuth";
+import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
+import { toast } from "sonner";
+
+type ClipModule = "hitting" | "pitching" | "throwing";
+type ClipSport = "baseball" | "softball";
+
+interface DelayCamProps {
+  /** Discipline this DelayCam session is being run under. Determines the
+   * `module` tag on any clip saved to Players Club. */
+  module?: ClipModule;
+  /** Sport this DelayCam session is being run under. Falls back to
+   * localStorage 'selectedSport' then 'baseball'. */
+  sport?: ClipSport;
+}
 
 const PRESETS = [3, 5, 10, 20, 30, 45];
 const MIN_DELAY = 1;
