@@ -343,6 +343,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         const src = liveRef.current;
         const canvas = offscreenCanvasRef.current;
         if (!src || !canvas) return;
+        // In stream-only mode, decimate to ~15 fps by processing every other
+        // frame. This roughly halves CPU / memory bitmap churn during
+        // hours-long practice sessions.
+        frameCounterRef.current += 1;
+        if (streamOnlyRef.current && frameCounterRef.current % 2 === 0) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
         try {
@@ -351,8 +356,12 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           const now = performance.now();
           framesRef.current.push({ bitmap, t: now });
 
-          // Evict by time.
-          const cutoff = now - MAX_BUFFER_SEC * 1000;
+          // Evict by time. In stream-only mode we only need the current delay
+          // window plus a small margin, not the full 55s.
+          const windowSec = streamOnlyRef.current
+            ? Math.min(MAX_BUFFER_SEC, delayRef.current + 5)
+            : MAX_BUFFER_SEC;
+          const cutoff = now - windowSec * 1000;
           while (framesRef.current.length > 0 && framesRef.current[0].t < cutoff) {
             const dropped = framesRef.current.shift();
             try { dropped?.bitmap.close(); } catch {}
@@ -367,6 +376,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           if (first && last) setBufferedSec((last.t - first.t) / 1000);
         } catch { /* ignore transient draw errors */ }
       };
+
 
       const hasRVFC = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
       if (hasRVFC) {
