@@ -566,6 +566,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Live camera with adjustable 1–55s playback delay for self-review.
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {running ? (
