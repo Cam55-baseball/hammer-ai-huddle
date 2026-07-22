@@ -108,6 +108,16 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
 
+  // Background tab handling — surface a "Paused (background)" hint so the
+  // user knows why the mirror slows down. The browser already throttles
+  // rAF/rVFC when hidden; we just make it visible in the UI.
+  useEffect(() => {
+    const onVis = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    setHidden(document.hidden);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   useEffect(() => {
     navigator.mediaDevices?.enumerateDevices?.().then((d) => {
       setHasMulti(d.filter((x) => x.kind === "videoinput").length > 1);
