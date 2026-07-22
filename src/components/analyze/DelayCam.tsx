@@ -520,6 +520,48 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           <p className="text-xs text-muted-foreground mt-0.5">
             Live camera with adjustable 1–55s playback delay for self-review.
           </p>
+          <div className="mt-2 inline-flex rounded-md border border-border overflow-hidden text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                if (running) {
+                  // Switching modes while live requires restarting the pipeline
+                  // so the recorder is (de)activated cleanly.
+                  setStreamOnly(false);
+                  streamOnlyRef.current = false;
+                  void start();
+                } else {
+                  setStreamOnly(false);
+                }
+              }}
+              className={
+                "px-2.5 py-1 gap-1 inline-flex items-center " +
+                (!streamOnly ? "bg-primary text-primary-foreground" : "hover:bg-muted")
+              }
+              title="Standard mode with instant replay and save."
+            >
+              <Video className="h-3 w-3" /> Replay + Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (running) {
+                  setStreamOnly(true);
+                  streamOnlyRef.current = true;
+                  void start();
+                } else {
+                  setStreamOnly(true);
+                }
+              }}
+              className={
+                "px-2.5 py-1 gap-1 inline-flex items-center border-l border-border " +
+                (streamOnly ? "bg-primary text-primary-foreground" : "hover:bg-muted")
+              }
+              title="Delayed mirror only. Best for long practice sessions (hours). Replay and save are disabled."
+            >
+              <Eye className="h-3 w-3" /> Stream only
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {running ? (
