@@ -1,25 +1,31 @@
 ## Goal
-Take the "Bat R | L" and "Throw R | L" pickers off the Hammers Today Plan. Switch-hitters and ambidextrous throwers will continue to set side inside AnalyzeVideo, DelayCam, and drill/note logging surfaces. Weaker-side bias in the daily plan keeps running silently.
+Hide internal/coaching-jargon metadata from Hammers Today plan cards so athletes see clean, actionable prescriptions. No engine logic changes — everything still runs the same, just no longer surfaced in the UI.
 
-## Changes
+## What gets hidden
 
-1. `src/components/hammer/HammerDailyPlan.tsx`
-   - Remove the two `<SideContextPicker discipline="hit" />` / `discipline="throw"` renders (around lines 279–281) from the plan header.
-   - Keep the existing "Weaker side focus" badge (lines 267–277) — it's read-only and useful.
-   - Keep `readSideBias(...)` and pass-through into `buildHammerDailyPlan` unchanged, so the plan still leans toward the weaker side automatically.
-   - Keep the tiny `BlockSideBadge` (which just displays the active side per block) — it's a label, not a prompt.
-   - Remove the now-unused `SideContextPicker` import if nothing else in the file uses it.
+### `src/components/hammer/WkPrescriptionCard.tsx`
+- Remove the `Source: {source_philosophy}` line (e.g. "Blended elite programming").
+- Remove the visible **CNS cost: X/3** row (and the `Zap` icon row it lives on).
+- Remove the **Training age: Xy · Pro/Prospect** span.
+- Remove the **Phase rule: …** line (`why.rep_rule`).
+- Remove the **phase_display** chip in the header (e.g. "Off-Season Q1").
+- Remove the **CNS-clamped** badge in the header.
+- Remove the small `engine: … · adaptation: …` footer under the Why-v2 block.
 
-2. No changes to:
-   - `SideContext` provider / storage — pickers elsewhere still need it.
-   - `SideContextPicker` component — still used in AnalyzeVideo, DelayCam, drill logging, notes.
-   - `athlete_side_preferences` writes — still occur when the athlete picks a side in those other surfaces.
+### `src/components/hammer/WkSpeedCard.tsx` & `WkBatSpeedCard.tsx`
+- Replace the subtitle `"Pre-lift · fresh CNS"` with `"Warm and ready"` (keeps a friendly cue without CNS jargon). Game-day copy stays.
 
-## Verification
-- Load `/index` (Hammers Today) as a switch-hitter account → confirm the R|L pill row is gone from the header.
-- Confirm "Weaker side focus: Bat L" (or similar) still shows when applicable.
-- Open AnalyzeVideo and a drill log page → confirm the R|L picker still appears there for switch/ambi athletes.
-- Non-switch/non-ambi accounts: no visual change (pickers were already hidden for them).
+### `src/components/hammer/HammerDailyPlan.tsx`
+- Hide the top-level **"CNS heavy · skill clamped"** pill (clamp logic still runs silently).
+- Remove the doctrine explainer block ("2. Speed → Bat Speed → Lifts (fresh-CNS window)" etc.) that documents our sequencing rules to the user.
+
+### `WkLiftsCard.tsx`
+- Suppress the `phaseDisplay` subtitle (e.g. "Off-Season Q1 — Max Strength") and the "N movements blocked this phase" collapsible — both leak phase/doctrine language.
+
+## What stays
+- Movement name, dosage (sets × reps, tempo, load%), Cue, "Why this movement" (plain-English rationale), Complete/Skip.
+- Injury-swap badge and substitution reason (safety-relevant, athlete-facing).
+- All underlying engine behavior: CNS clamping, phase gating, training-age scaling, blocked-movement filtering — unchanged, just not displayed.
 
 ## Out of scope
-Any changes to onboarding handedness questions, side-aware storage, or the AnalyzeVideo side gate.
+No changes to `wk-generate-daily`, prescription schema, or the Progress/General surfaces where coaches/owners may still want the meta.
