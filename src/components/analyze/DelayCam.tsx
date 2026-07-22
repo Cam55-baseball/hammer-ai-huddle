@@ -433,25 +433,41 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       drawRafRef.current = requestAnimationFrame(renderDelayed);
 
       // ----- MediaRecorder (for Replay Last Ns / Save clip only) -----
+      // Skip entirely in stream-only mode so long sessions don't accumulate
+      // any encoded video in memory.
       const mime = pickRecorderMime();
       mimeRef.current = mime;
-      try {
-        const rec = new MediaRecorder(stream, { mimeType: mime });
-        recorderRef.current = rec;
-        rec.ondataavailable = (ev) => {
-          if (!ev.data || ev.data.size === 0) return;
-          const now = performance.now();
-          if (!initChunkRef.current) initChunkRef.current = ev.data;
-          timedChunksRef.current.push({ blob: ev.data, t: now });
-          const cutoff = now - MAX_BUFFER_SEC * 1000;
-          while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
-            timedChunksRef.current.splice(1, 1);
-          }
-        };
-        rec.start(250);
-      } catch {
-        // Recording is optional; the delayed mirror still works.
+      if (!streamOnlyRef.current) {
+        try {
+          const rec = new MediaRecorder(stream, { mimeType: mime });
+          recorderRef.current = rec;
+          rec.ondataavailable = (ev) => {
+            if (!ev.data || ev.data.size === 0) return;
+            const now = performance.now();
+            if (!initChunkRef.current) initChunkRef.current = ev.data;
+            timedChunksRef.current.push({ blob: ev.data, t: now });
+            // Evict old body chunks. Keep index 0 reserved for the init
+            // segment reference; if everything ages out, reset the buffer
+            // entirely so the next chunk becomes the new init segment.
+            const cutoff = now - MAX_BUFFER_SEC * 1000;
+            while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
+              timedChunksRef.current.splice(1, 1);
+            }
+            if (
+              timedChunksRef.current.length > 0 &&
+              timedChunksRef.current[timedChunksRef.current.length - 1].t <
+                now - (MAX_BUFFER_SEC + 5) * 1000
+            ) {
+              timedChunksRef.current = [];
+              initChunkRef.current = null;
+            }
+          };
+          rec.start(250);
+        } catch {
+          // Recording is optional; the delayed mirror still works.
+        }
       }
+
 
       setRunning(true);
     } catch (e: any) {
