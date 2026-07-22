@@ -33,6 +33,26 @@ const SLOT_LABEL: Record<WkRx["slot"], string> = {
   cross_sport: "Cross-Sport",
 };
 
+function cleanAthleteCopy(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const cleaned = value
+    .replace(/Chosen because[^.]*\./gi, "")
+    .replace(/Doctrine:[^.]*\./gi, "")
+    .replace(/\b(?:beginner|\d+(?:\.\d+)?-year) training age\b/gi, "")
+    .replace(/\s*\(pro prospect\)/gi, "")
+    .replace(/\bOffseason Q[1-4]\s+—\s+[^.]+/gi, "")
+    .replace(/\bIn-Season\s+—\s+[^.]+/gi, "")
+    .replace(/\bPost-Season\s+—\s+[^.]+/gi, "")
+    .replace(/\bCNS cost\b/gi, "training load")
+    .replace(/\bCNS is fresh\b/gi, "you are freshest")
+    .replace(/\bwhile CNS fresh\b/gi, "while you are freshest")
+    .replace(/\bCNS\b/g, "readiness")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,])/g, "$1")
+    .trim();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
 export function WkPrescriptionCard({
   rx,
   phaseDisplay,
@@ -81,10 +101,10 @@ export function WkPrescriptionCard({
   const phaseMismatch = !!phaseKey && !!storedPhase && storedPhase !== phaseKey;
   const athleteWhy = phaseMismatch
     ? `This movement was generated under an older season setting. Hammer is rebuilding today's plan so it matches ${phaseDisplay ?? "your current phase"}.`
-    : (rx.why_v2?.why_exercise ?? why?.why ?? null);
+    : cleanAthleteCopy(rx.why_v2?.why_exercise ?? why?.why ?? null);
   const todayLine = phaseMismatch
     ? `Rebuilding to match ${phaseDisplay ?? "your current phase"}.`
-    : (rx.why_v2?.why_today ?? null);
+    : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
   const reductions = why?.reductions ?? [];
   const dosage =
     [
