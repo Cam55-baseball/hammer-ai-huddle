@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { getProgressionRange, expandRange } from '@/utils/progressionMapping';
 import { normalizePositionCode, canonicalizePositions } from '@/lib/drills/positionLabels';
+import { drillMatchesLevels, normalizeLevelKey, LEVEL_ORDER, type LevelKey } from '@/utils/drillLevelLabels';
 
 export type SortOption = 'recommended' | 'level' | 'recent';
 
