@@ -255,15 +255,7 @@ function HammerDailyPlanBody() {
                 {plan.missingnessCount} needs input
               </Badge>
             )}
-            {cnsHigh && (
-              <Badge
-                variant="outline"
-                className="text-[10px] border-rose-400/60 text-rose-700 dark:text-rose-300"
-                title={`Today's elite Lifts/Speed plan totals ${totalCns} CNS — skill blocks held at maintenance to protect tomorrow.`}
-              >
-                CNS heavy · skill clamped
-              </Badge>
-            )}
+            {/* CNS-heavy clamp badge intentionally hidden from athlete UI — clamp logic still runs silently. */}
             {(plan.sideBias?.hit || plan.sideBias?.throw) && (
               <Badge
                 variant="default"
@@ -344,15 +336,6 @@ function HammerDailyPlanBody() {
             ? "Warm-up → Short crossover activation → Game"
             : "Warm-up → Speed → Bat Speed → Lifts → Practice → Conditioning → Sport Block"}
         </div>
-        {/*
-          Canonical daily ordering:
-          1. Warm-up ALWAYS first (pulled to the top even though `plan.blocks`
-             may deliver it in a different position — the warm-up primes CNS
-             for the sprint / bat-speed exposure that follows).
-          2. Speed → Bat Speed → Lifts (fresh-CNS window).
-          3. Remaining plan blocks (practice, skill blocks, sport blocks…).
-          4. Conditioning at the tail so aerobic fatigue doesn't blunt speed.
-        */}
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup");
           // Modalities owned by dedicated Wk cards (Speed / Bat Speed / Lifts /

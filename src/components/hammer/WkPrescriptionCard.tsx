@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, AlertTriangle, ShieldCheck, Zap, CheckCircle2, Info } from "lucide-react";
+import { ChevronDown, ShieldCheck, CheckCircle2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -87,14 +87,6 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
               <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
                 {SLOT_LABEL[rx.slot]}
               </Badge>
-              {why.phase_display && (
-                <span className="text-[10px] text-muted-foreground">{why.phase_display}</span>
-              )}
-              {rx.cns_clamped && (
-                <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/50 text-amber-700 dark:text-amber-300">
-                  <AlertTriangle className="h-3 w-3" /> CNS-clamped
-                </Badge>
-              )}
               {rx.substituted_from_slug && (
                 <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/50 text-rose-700 dark:text-rose-300">
                   <ShieldCheck className="h-3 w-3" /> Injury-swap
@@ -129,24 +121,11 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
               <div className="text-muted-foreground">{why.why}</div>
             </div>
           )}
-          {why.source_philosophy && (
-            <div className="text-[11px] text-muted-foreground italic">Source: {why.source_philosophy}</div>
-          )}
           {why.cue && (
             <div className="rounded border border-primary/20 p-2">
               <div className="font-medium mb-0.5">Cue</div>
               <div className="text-foreground/80">{why.cue}</div>
             </div>
-          )}
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Zap className="h-3 w-3" />
-            CNS cost: <strong className="text-foreground">{rx.cns_cost}/3</strong>
-            {typeof why.training_age_years === "number" && (
-              <span>· Training age: {why.training_age_years}y{why.is_pro_prospect ? " · Pro/Prospect" : ""}</span>
-            )}
-          </div>
-          {why.rep_rule && (
-            <div className="text-[11px] text-muted-foreground">Phase rule: {why.rep_rule}</div>
           )}
           {why.sequencing_hint && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
@@ -165,12 +144,6 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
                 {rx.why_v2.why_order && <li><span className="text-foreground">Order —</span> {rx.why_v2.why_order}</li>}
                 {rx.why_v2.why_recovery && <li><span className="text-foreground">Recovery —</span> {rx.why_v2.why_recovery}</li>}
               </ul>
-              {(rx.adaptation || rx.engine) && (
-                <div className="mt-1 text-[10px] text-muted-foreground">
-                  {rx.engine && <>engine: <span className="text-foreground">{rx.engine}</span></>}
-                  {rx.adaptation && <> · adaptation: <span className="text-foreground">{rx.adaptation}</span></>}
-                </div>
-              )}
             </div>
           )}
           {reductions.length > 0 && (

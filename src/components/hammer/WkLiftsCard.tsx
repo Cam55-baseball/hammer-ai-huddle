@@ -110,7 +110,7 @@ export function WkLiftsCard() {
             {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
           </Button>
         </CardTitle>
-        {phaseDisplay && <div className="text-[11px] text-muted-foreground line-clamp-2">{phaseDisplay}</div>}
+        {/* Phase display hidden from athlete UI — engine still uses phaseKey/phaseDisplay internally. */}
       </CardHeader>
       <CardContent className="space-y-2">
         {reductions.length > 0 && !acked && (
@@ -147,30 +147,7 @@ export function WkLiftsCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} />)
         )}
 
-        {phaseKey && blockedItems.length > 0 && (
-          <details className="rounded-md border border-violet-500/30 bg-violet-500/5 p-2 text-xs">
-            <summary className="cursor-pointer font-medium flex items-center gap-1.5 text-violet-800 dark:text-violet-200">
-              <Lock className="h-3 w-3" />
-              {blockedItems.length} movement{blockedItems.length === 1 ? "" : "s"} blocked this phase
-            </summary>
-            <div className="mt-2 space-y-1.5">
-              {blockedItems.slice(0, 12).map((m) => (
-                <div key={m.slug} className="flex items-start justify-between gap-2 rounded border border-border/50 bg-background p-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{m.name}</div>
-                    <div className="text-[11px] text-muted-foreground">{explainWhyBlocked(m, phaseKey)}</div>
-                  </div>
-                  <Button size="sm" variant="outline" className="h-7 text-[11px] shrink-0" onClick={() => setOverrideTarget(m)}>
-                    Request override
-                  </Button>
-                </div>
-              ))}
-              {blockedItems.length > 12 && (
-                <div className="text-[11px] text-muted-foreground">+{blockedItems.length - 12} more…</div>
-              )}
-            </div>
-          </details>
-        )}
+        {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
         {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
       </CardContent>
