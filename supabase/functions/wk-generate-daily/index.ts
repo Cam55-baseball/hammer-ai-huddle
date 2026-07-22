@@ -637,7 +637,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
-        const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason));
+        const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason, dayOfWeek));
         if (carry) push("lift", "carry_antirotation", carry, { sets: isInSeason ? 1 : undefined, reps: isInSeason ? 6 : undefined }, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
       }
 
