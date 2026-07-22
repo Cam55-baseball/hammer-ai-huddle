@@ -16,7 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
-  BookMarked, Sparkles, Loader2,
+  BookMarked, Sparkles, Loader2, Eye, Video,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -97,9 +97,26 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState<null | "club" | "analyze">(null);
+  /** Stream-only = delayed mirror only, no MediaRecorder, decimated frame
+   * capture. Designed for long practice sessions (hours). */
+  const [streamOnly, setStreamOnly] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const streamOnlyRef = useRef(streamOnly);
+  useEffect(() => { streamOnlyRef.current = streamOnly; }, [streamOnly]);
+  const frameCounterRef = useRef(0);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
+
+  // Background tab handling — surface a "Paused (background)" hint so the
+  // user knows why the mirror slows down. The browser already throttles
+  // rAF/rVFC when hidden; we just make it visible in the UI.
+  useEffect(() => {
+    const onVis = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    setHidden(document.hidden);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   useEffect(() => {
     navigator.mediaDevices?.enumerateDevices?.().then((d) => {
@@ -336,6 +353,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         const src = liveRef.current;
         const canvas = offscreenCanvasRef.current;
         if (!src || !canvas) return;
+        // In stream-only mode, decimate to ~15 fps by processing every other
+        // frame. This roughly halves CPU / memory bitmap churn during
+        // hours-long practice sessions.
+        frameCounterRef.current += 1;
+        if (streamOnlyRef.current && frameCounterRef.current % 2 === 0) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
         try {
@@ -344,8 +366,12 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           const now = performance.now();
           framesRef.current.push({ bitmap, t: now });
 
-          // Evict by time.
-          const cutoff = now - MAX_BUFFER_SEC * 1000;
+          // Evict by time. In stream-only mode we only need the current delay
+          // window plus a small margin, not the full 55s.
+          const windowSec = streamOnlyRef.current
+            ? Math.min(MAX_BUFFER_SEC, delayRef.current + 5)
+            : MAX_BUFFER_SEC;
+          const cutoff = now - windowSec * 1000;
           while (framesRef.current.length > 0 && framesRef.current[0].t < cutoff) {
             const dropped = framesRef.current.shift();
             try { dropped?.bitmap.close(); } catch {}
@@ -360,6 +386,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           if (first && last) setBufferedSec((last.t - first.t) / 1000);
         } catch { /* ignore transient draw errors */ }
       };
+
 
       const hasRVFC = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
       if (hasRVFC) {
@@ -416,25 +443,41 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       drawRafRef.current = requestAnimationFrame(renderDelayed);
 
       // ----- MediaRecorder (for Replay Last Ns / Save clip only) -----
+      // Skip entirely in stream-only mode so long sessions don't accumulate
+      // any encoded video in memory.
       const mime = pickRecorderMime();
       mimeRef.current = mime;
-      try {
-        const rec = new MediaRecorder(stream, { mimeType: mime });
-        recorderRef.current = rec;
-        rec.ondataavailable = (ev) => {
-          if (!ev.data || ev.data.size === 0) return;
-          const now = performance.now();
-          if (!initChunkRef.current) initChunkRef.current = ev.data;
-          timedChunksRef.current.push({ blob: ev.data, t: now });
-          const cutoff = now - MAX_BUFFER_SEC * 1000;
-          while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
-            timedChunksRef.current.splice(1, 1);
-          }
-        };
-        rec.start(250);
-      } catch {
-        // Recording is optional; the delayed mirror still works.
+      if (!streamOnlyRef.current) {
+        try {
+          const rec = new MediaRecorder(stream, { mimeType: mime });
+          recorderRef.current = rec;
+          rec.ondataavailable = (ev) => {
+            if (!ev.data || ev.data.size === 0) return;
+            const now = performance.now();
+            if (!initChunkRef.current) initChunkRef.current = ev.data;
+            timedChunksRef.current.push({ blob: ev.data, t: now });
+            // Evict old body chunks. Keep index 0 reserved for the init
+            // segment reference; if everything ages out, reset the buffer
+            // entirely so the next chunk becomes the new init segment.
+            const cutoff = now - MAX_BUFFER_SEC * 1000;
+            while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
+              timedChunksRef.current.splice(1, 1);
+            }
+            if (
+              timedChunksRef.current.length > 0 &&
+              timedChunksRef.current[timedChunksRef.current.length - 1].t <
+                now - (MAX_BUFFER_SEC + 5) * 1000
+            ) {
+              timedChunksRef.current = [];
+              initChunkRef.current = null;
+            }
+          };
+          rec.start(250);
+        } catch {
+          // Recording is optional; the delayed mirror still works.
+        }
       }
+
 
       setRunning(true);
     } catch (e: any) {
@@ -477,6 +520,48 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           <p className="text-xs text-muted-foreground mt-0.5">
             Live camera with adjustable 1–55s playback delay for self-review.
           </p>
+          <div className="mt-2 inline-flex rounded-md border border-border overflow-hidden text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                if (running) {
+                  // Switching modes while live requires restarting the pipeline
+                  // so the recorder is (de)activated cleanly.
+                  setStreamOnly(false);
+                  streamOnlyRef.current = false;
+                  void start();
+                } else {
+                  setStreamOnly(false);
+                }
+              }}
+              className={
+                "px-2.5 py-1 gap-1 inline-flex items-center " +
+                (!streamOnly ? "bg-primary text-primary-foreground" : "hover:bg-muted")
+              }
+              title="Standard mode with instant replay and save."
+            >
+              <Video className="h-3 w-3" /> Replay + Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (running) {
+                  setStreamOnly(true);
+                  streamOnlyRef.current = true;
+                  void start();
+                } else {
+                  setStreamOnly(true);
+                }
+              }}
+              className={
+                "px-2.5 py-1 gap-1 inline-flex items-center border-l border-border " +
+                (streamOnly ? "bg-primary text-primary-foreground" : "hover:bg-muted")
+              }
+              title="Delayed mirror only. Best for long practice sessions (hours). Replay and save are disabled."
+            >
+              <Eye className="h-3 w-3" /> Stream only
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {running ? (
@@ -492,9 +577,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             size="sm"
             variant="outline"
             onClick={saveClip}
-            disabled={!running || saving !== null || timedChunksRef.current.length === 0}
+            disabled={!running || streamOnly || saving !== null || timedChunksRef.current.length === 0}
             className="gap-1.5"
-            title="Download this clip to your phone or computer"
+            title={streamOnly ? "Switch to Replay + Save mode to save clips." : "Download this clip to your phone or computer"}
           >
             <Download className="h-4 w-4" /> Save to device
           </Button>
@@ -502,9 +587,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             size="sm"
             variant="outline"
             onClick={() => void saveToPlayersClub({ analyze: false })}
-            disabled={!running || saving !== null || !user || timedChunksRef.current.length === 0}
+            disabled={!running || streamOnly || saving !== null || !user || timedChunksRef.current.length === 0}
             className="gap-1.5"
-            title="Save this clip to your Players Club library"
+            title={streamOnly ? "Switch to Replay + Save mode to save clips." : "Save this clip to your Players Club library"}
           >
             {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
             Save to Players Club
@@ -512,9 +597,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           <Button
             size="sm"
             onClick={() => void saveToPlayersClub({ analyze: true })}
-            disabled={!running || saving !== null || !user || timedChunksRef.current.length === 0}
+            disabled={!running || streamOnly || saving !== null || !user || timedChunksRef.current.length === 0}
             className="gap-1.5"
-            title="Save and run Hammer analysis on this clip"
+            title={streamOnly ? "Switch to Replay + Save mode to save clips." : "Save and run Hammer analysis on this clip"}
           >
             {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             Save & Analyze
@@ -612,7 +697,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               key={n}
               size="sm"
               variant={replayDuration === n ? "default" : "outline"}
-              disabled={!running || bufferedSec < n + delay}
+              disabled={!running || streamOnly || bufferedSec < n + delay}
               onClick={() => {
                 setReplayDuration(n);
                 replayLastN(n);
@@ -649,13 +734,25 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
         <Badge variant={running ? "default" : "outline"} className="text-[10px]">
-          {running ? "Recording" : "Idle"}
+          {!running
+            ? "Idle"
+            : hidden
+              ? "Paused (background)"
+              : streamOnly
+                ? "Streaming"
+                : "Recording buffer"}
         </Badge>
         <span>Delay {delay}s</span>
         <span>·</span>
         <span>Buffer {bufferedSec.toFixed(1)}s</span>
         <span>·</span>
         <span>Camera: {facing === "user" ? "Front" : "Rear"}</span>
+        {streamOnly && running && (
+          <>
+            <span>·</span>
+            <span>Long-session mode</span>
+          </>
+        )}
       </div>
     </Card>
   );
