@@ -314,7 +314,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   }, [buildDecodableBlob, resolvedModule, resolvedSport, user]);
 
 
-  const start = useCallback(async (nextFacing?: Facing) => {
+  const start = useCallback(async (nextMode: "streaming" | "recording", nextFacing?: Facing) => {
+    setTransitioning(true);
+    streamOnlyRef.current = nextMode === "streaming";
+    setHasStoppedClip(false);
+
     setError(null);
     setReplayUrl(null);
     cleanup();
