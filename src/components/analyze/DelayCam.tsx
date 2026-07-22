@@ -193,6 +193,105 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }, [buildDecodableBlob]);
 
+  const saveToPlayersClub = useCallback(async (opts: { analyze: boolean }) => {
+    if (!user) {
+      toast.error("Sign in to save clips to Players Club.");
+      return;
+    }
+    const items = timedChunksRef.current;
+    if (items.length === 0) {
+      toast.error("Nothing to save yet — wait for the buffer to fill.");
+      return;
+    }
+    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    if (!blob) {
+      toast.error("Couldn't build the clip. Try recording again.");
+      return;
+    }
+
+    setSaving(opts.analyze ? "analyze" : "club");
+    const toastId = toast.loading(
+      opts.analyze ? "Saving & sending to Hammer for analysis…" : "Saving to Players Club…",
+    );
+
+    try {
+      const ext = mime.includes("mp4") ? "mp4" : "webm";
+      const ts = Date.now();
+      const filePath = `${user.id}/delaycam/${ts}.${ext}`;
+
+      // Wrap Blob as File so downstream tools (thumbnail generator) can read .name.
+      const file = new File([blob], `delaycam-${ts}.${ext}`, { type: mime });
+
+      const { error: uploadError } = await supabase.storage
+        .from("videos")
+        .upload(filePath, file, { contentType: mime, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("videos")
+        .getPublicUrl(filePath);
+
+      // Thumbnail generation is best-effort — never block the save.
+      let thumbnailUrl: string | null = null;
+      try {
+        const thumbBlob = await generateVideoThumbnail(file, 0.1);
+        thumbnailUrl = await uploadVideoThumbnail(thumbBlob, user.id, filePath);
+      } catch (thumbErr) {
+        console.warn("[DelayCam] thumbnail generation failed", thumbErr);
+      }
+
+      const { data: videoRow, error: insertError } = await supabase
+        .from("videos")
+        .insert([{
+          user_id: user.id,
+          sport: resolvedSport,
+          module: resolvedModule,
+          video_url: publicUrl,
+          thumbnail_url: thumbnailUrl,
+          status: opts.analyze ? "processing" : "completed",
+          library_title: `DelayCam replay — ${new Date().toLocaleString()}`,
+        }] as never)
+        .select("id")
+        .single();
+      if (insertError) throw insertError;
+
+      if (opts.analyze) {
+        // Fire-and-forget analysis. The videos row is already saved to
+        // Players Club regardless of analysis outcome.
+        supabase.functions
+          .invoke("analyze-video", {
+            body: {
+              videoId: (videoRow as { id: string }).id,
+              module: resolvedModule,
+              sport: resolvedSport,
+              userId: user.id,
+            },
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error("[DelayCam] analyze-video failed", error);
+              toast.error("Saved, but analysis failed. Open it in Players Club to retry.");
+            } else {
+              toast.success("Analysis complete — open Players Club to view results.");
+            }
+          })
+          .catch((e) => {
+            console.error("[DelayCam] analyze-video threw", e);
+          });
+        toast.success("Saved to Players Club. Analysis running in the background.", { id: toastId });
+      } else {
+        toast.success("Saved to Players Club.", { id: toastId });
+      }
+    } catch (e: any) {
+      console.error("[DelayCam] save to club failed", e);
+      toast.error(e?.message || "Couldn't save this clip. Please try again.", { id: toastId });
+    } finally {
+      setSaving(null);
+    }
+  }, [buildDecodableBlob, resolvedModule, resolvedSport, user]);
+
+
   const start = useCallback(async (nextFacing?: Facing) => {
     setError(null);
     setReplayUrl(null);
