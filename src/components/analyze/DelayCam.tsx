@@ -96,6 +96,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [hasMulti, setHasMulti] = useState(false);
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState<null | "club" | "analyze">(null);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
