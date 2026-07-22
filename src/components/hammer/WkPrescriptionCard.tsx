@@ -109,18 +109,34 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
-          {rx.rationale && (
-            <div className="rounded border border-primary/30 bg-primary/5 p-2">
-              <div className="font-medium mb-0.5 flex items-center gap-1"><Info className="h-3 w-3" /> Why this movement</div>
-              <div className="text-muted-foreground">{rx.rationale}</div>
-            </div>
-          )}
-          {why.why && !rx.rationale && (
-            <div className="rounded bg-muted/30 p-2">
-              <div className="font-medium mb-0.5 flex items-center gap-1"><Info className="h-3 w-3" /> Why today</div>
-              <div className="text-muted-foreground">{why.why}</div>
-            </div>
-          )}
+          {(() => {
+            const todayLine = rx.why_v2?.why_today ?? why.why ?? null;
+            const hasWhy = rx.rationale || todayLine;
+            if (!hasWhy) return null;
+            return (
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full rounded border border-primary/30 bg-primary/5 p-2 flex items-center justify-between gap-2 text-left hover:bg-primary/10 transition-colors group"
+                  >
+                    <span className="font-medium flex items-center gap-1">
+                      <Info className="h-3 w-3" /> Why this movement
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-1 rounded border border-primary/20 bg-primary/5 p-2 space-y-1 text-muted-foreground">
+                  {rx.rationale && <div>{rx.rationale}</div>}
+                  {todayLine && (
+                    <div>
+                      <span className="text-foreground">Today —</span> {todayLine}
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })()}
           {why.cue && (
             <div className="rounded border border-primary/20 p-2">
               <div className="font-medium mb-0.5">Cue</div>
@@ -133,19 +149,7 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
           {rx.substitution_reason && (
             <div className="text-[11px] text-rose-700 dark:text-rose-300">{rx.substitution_reason}</div>
           )}
-          {rx.why_v2 && (
-            <div className="rounded border border-primary/20 bg-background p-2">
-              <div className="font-medium mb-1 flex items-center gap-1"><Info className="h-3 w-3" /> Why this? (six answers)</div>
-              <ul className="space-y-1 text-[11px] text-muted-foreground">
-                {rx.why_v2.why_today && <li><span className="text-foreground">Today —</span> {rx.why_v2.why_today}</li>}
-                {rx.why_v2.why_athlete && <li><span className="text-foreground">You —</span> {rx.why_v2.why_athlete}</li>}
-                {rx.why_v2.why_exercise && <li><span className="text-foreground">Exercise —</span> {rx.why_v2.why_exercise}</li>}
-                {rx.why_v2.why_volume && <li><span className="text-foreground">Volume —</span> {rx.why_v2.why_volume}</li>}
-                {rx.why_v2.why_order && <li><span className="text-foreground">Order —</span> {rx.why_v2.why_order}</li>}
-                {rx.why_v2.why_recovery && <li><span className="text-foreground">Recovery —</span> {rx.why_v2.why_recovery}</li>}
-              </ul>
-            </div>
-          )}
+
           {reductions.length > 0 && (
             <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
               <div className="font-medium mb-0.5">Why reduced today</div>
