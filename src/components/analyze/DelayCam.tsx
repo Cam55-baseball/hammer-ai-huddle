@@ -566,93 +566,105 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Live camera with adjustable 1–55s playback delay for self-review.
-          </p>
-          <div className="mt-2 inline-flex rounded-md border border-border overflow-hidden text-[11px]">
-            <button
-              type="button"
-              onClick={() => {
-                if (running) {
-                  // Switching modes while live requires restarting the pipeline
-                  // so the recorder is (de)activated cleanly.
-                  setStreamOnly(false);
-                  streamOnlyRef.current = false;
-                  void start();
-                } else {
-                  setStreamOnly(false);
-                }
-              }}
-              className={
-                "px-2.5 py-1 gap-1 inline-flex items-center " +
-                (!streamOnly ? "bg-primary text-primary-foreground" : "hover:bg-muted")
-              }
-              title="Standard mode with instant replay and save."
-            >
-              <Video className="h-3 w-3" /> Replay + Save
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (running) {
-                  setStreamOnly(true);
-                  streamOnlyRef.current = true;
-                  void start();
-                } else {
-                  setStreamOnly(true);
-                }
-              }}
-              className={
-                "px-2.5 py-1 gap-1 inline-flex items-center border-l border-border " +
-                (streamOnly ? "bg-primary text-primary-foreground" : "hover:bg-muted")
-              }
-              title="Delayed mirror only. Best for long practice sessions (hours). Replay and save are disabled."
-            >
-              <Eye className="h-3 w-3" /> Stream only
-            </button>
-          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {running ? (
-            <Button size="sm" variant="destructive" onClick={stop} className="gap-1.5">
+            <Button size="sm" variant="destructive" onClick={stop} disabled={transitioning} className="gap-1.5">
               <CameraOff className="h-4 w-4" /> Stop
             </Button>
           ) : (
-            <Button size="sm" onClick={() => start()} className="gap-1.5">
-              <Camera className="h-4 w-4" /> Start
+            <>
+              <Button
+                size="sm"
+                onClick={() => { fullReset(); void start("recording"); }}
+                disabled={transitioning}
+                className="gap-1.5"
+                title="Record this session. Save to device, Save to Players Club, and Analyze become available."
+              >
+                <Video className="h-4 w-4" /> Record
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { fullReset(); void start("streaming"); }}
+                disabled={transitioning}
+                className="gap-1.5"
+                title="Delayed mirror only. Best for long practice sessions (hours). No recording, no save."
+              >
+                <Eye className="h-4 w-4" /> Stream
+              </Button>
+            </>
+          )}
+          {running && mode === "streaming" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { void start("recording"); }}
+              disabled={transitioning}
+              className="gap-1.5"
+              title="Switch to a recording session so you can save and analyze clips."
+            >
+              <Video className="h-4 w-4" /> Switch to Record
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={saveClip}
-            disabled={!running || streamOnly || saving !== null || timedChunksRef.current.length === 0}
-            className="gap-1.5"
-            title={streamOnly ? "Switch to Replay + Save mode to save clips." : "Download this clip to your phone or computer"}
-          >
-            <Download className="h-4 w-4" /> Save to device
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => void saveToPlayersClub({ analyze: false })}
-            disabled={!running || streamOnly || saving !== null || !user || timedChunksRef.current.length === 0}
-            className="gap-1.5"
-            title={streamOnly ? "Switch to Replay + Save mode to save clips." : "Save this clip to your Players Club library"}
-          >
-            {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
-            Save to Players Club
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => void saveToPlayersClub({ analyze: true })}
-            disabled={!running || streamOnly || saving !== null || !user || timedChunksRef.current.length === 0}
-            className="gap-1.5"
-            title={streamOnly ? "Switch to Replay + Save mode to save clips." : "Save and run Hammer analysis on this clip"}
-          >
-            {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Save & Analyze
-          </Button>
+          {running && mode === "recording" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { void start("streaming"); }}
+              disabled={transitioning}
+              className="gap-1.5"
+              title="Switch to stream-only for long sessions. Current recorded buffer will be cleared."
+            >
+              <Eye className="h-4 w-4" /> Switch to Stream
+            </Button>
+          )}
+          {(() => {
+            const canSave = (mode === "recording" || hasStoppedClip) && saving === null && timedChunksRef.current.length > 0;
+            const saveTip = mode === "streaming"
+              ? "Switch to Record mode to save clips."
+              : !canSave && !hasStoppedClip && mode !== "recording"
+                ? "Press Record to capture a session before saving."
+                : "";
+            return (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={saveClip}
+                  disabled={!canSave}
+                  className="gap-1.5"
+                  title={saveTip || "Download this clip to your phone or computer"}
+                >
+                  <Download className="h-4 w-4" /> Save to device
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void saveToPlayersClub({ analyze: false })}
+                  disabled={!canSave || !user}
+                  className="gap-1.5"
+                  title={saveTip || "Save this clip to your Players Club library"}
+                >
+                  {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
+                  Save to Players Club
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void saveToPlayersClub({ analyze: true })}
+                  disabled={!canSave || !user}
+                  className="gap-1.5"
+                  title={saveTip || "Save and run Hammer analysis on this clip"}
+                >
+                  {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  Save & Analyze
+                </Button>
+              </>
+            );
+          })()}
         </div>
       </div>
+
 
       {error && (
         <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
