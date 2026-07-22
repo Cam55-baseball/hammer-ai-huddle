@@ -46,6 +46,7 @@ export function usePlayerDrillLibrary() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortOption>('recommended');
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
@@ -70,39 +71,21 @@ export function usePlayerDrillLibrary() {
 
       setPlayerContext({ sport, position, experienceLevel, detectedIssues });
 
-      // 2. Get progression range
-      const range = getProgressionRange(experienceLevel);
-
-      // 3. Fetch drills
+      // 2. Fetch full drill library for this sport (level filtering happens client-side)
       let query = supabase
         .from('drills')
         .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at, instructions')
         .eq('is_published', true)
         .eq('is_active', true)
-        .eq('sport', sport)
-        .gte('progression_level', range[0])
-        .lte('progression_level', range[1]);
+        .eq('sport', sport);
 
       // Backend subscription filtering: don't return premium drills to free users
       if (!userHasPremium) {
         query = query.eq('premium', false);
       }
 
-      let { data: drillRows, error } = await query;
-
-      // Fallback: expand range if no drills found
-      if (!error && (!drillRows || drillRows.length === 0)) {
-        const expanded = expandRange(range);
-        const fallback = await supabase
-          .from('drills')
-          .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at, instructions')
-          .eq('is_published', true)
-          .eq('is_active', true)
-          .eq('sport', sport)
-          .gte('progression_level', expanded[0])
-          .lte('progression_level', expanded[1]);
-        drillRows = fallback.data;
-      }
+      const { data: drillRows, error } = await query;
+      if (error) throw error;
 
       if (!drillRows || drillRows.length === 0) {
         setDrills([]);
