@@ -144,12 +144,6 @@ export function WkPrescriptionCard({ rx }: { rx: WkRx }) {
                 {rx.why_v2.why_order && <li><span className="text-foreground">Order —</span> {rx.why_v2.why_order}</li>}
                 {rx.why_v2.why_recovery && <li><span className="text-foreground">Recovery —</span> {rx.why_v2.why_recovery}</li>}
               </ul>
-              {(rx.adaptation || rx.engine) && (
-                <div className="mt-1 text-[10px] text-muted-foreground">
-                  {rx.engine && <>engine: <span className="text-foreground">{rx.engine}</span></>}
-                  {rx.adaptation && <> · adaptation: <span className="text-foreground">{rx.adaptation}</span></>}
-                </div>
-              )}
             </div>
           )}
           {reductions.length > 0 && (
