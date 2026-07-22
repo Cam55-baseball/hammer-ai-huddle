@@ -65,7 +65,13 @@ function pickRecorderMime(): string {
   return "video/webm";
 }
 
-export function DelayCam() {
+export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
+  const { user } = useOptionalAuth();
+  const resolvedModule: ClipModule = moduleProp ?? "hitting";
+  const resolvedSport: ClipSport =
+    sportProp ??
+    ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
+      "baseball");
   const liveRef = useRef<HTMLVideoElement>(null);
   const delayedCanvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
