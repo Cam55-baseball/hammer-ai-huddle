@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { getProgressionRange, expandRange } from '@/utils/progressionMapping';
 import { normalizePositionCode, canonicalizePositions } from '@/lib/drills/positionLabels';
+import { drillMatchesLevels, normalizeLevelKey, LEVEL_ORDER, type LevelKey } from '@/utils/drillLevelLabels';
 
 export type SortOption = 'recommended' | 'level' | 'recent';
 
@@ -46,6 +46,7 @@ export function usePlayerDrillLibrary() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortOption>('recommended');
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
@@ -70,39 +71,21 @@ export function usePlayerDrillLibrary() {
 
       setPlayerContext({ sport, position, experienceLevel, detectedIssues });
 
-      // 2. Get progression range
-      const range = getProgressionRange(experienceLevel);
-
-      // 3. Fetch drills
+      // 2. Fetch full drill library for this sport (level filtering happens client-side)
       let query = supabase
         .from('drills')
         .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at, instructions')
         .eq('is_published', true)
         .eq('is_active', true)
-        .eq('sport', sport)
-        .gte('progression_level', range[0])
-        .lte('progression_level', range[1]);
+        .eq('sport', sport);
 
       // Backend subscription filtering: don't return premium drills to free users
       if (!userHasPremium) {
         query = query.eq('premium', false);
       }
 
-      let { data: drillRows, error } = await query;
-
-      // Fallback: expand range if no drills found
-      if (!error && (!drillRows || drillRows.length === 0)) {
-        const expanded = expandRange(range);
-        const fallback = await supabase
-          .from('drills')
-          .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at, instructions')
-          .eq('is_published', true)
-          .eq('is_active', true)
-          .eq('sport', sport)
-          .gte('progression_level', expanded[0])
-          .lte('progression_level', expanded[1]);
-        drillRows = fallback.data;
-      }
+      const { data: drillRows, error } = await query;
+      if (error) throw error;
 
       if (!drillRows || drillRows.length === 0) {
         setDrills([]);
@@ -185,6 +168,10 @@ export function usePlayerDrillLibrary() {
       result = posFiltered.length > 0 ? posFiltered : result;
     }
 
+    if (selectedLevels.length > 0) {
+      result = result.filter(d => drillMatchesLevels(d.difficulty_levels, selectedLevels));
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(d =>
@@ -207,7 +194,7 @@ export function usePlayerDrillLibrary() {
     }
 
     return result;
-  }, [drills, search, sort, positionFilter]);
+  }, [drills, search, sort, positionFilter, selectedLevels]);
 
   // Unique canonical positions across all drills, deduped + scorecard-ordered.
   const availablePositions = useMemo(() => {
@@ -216,6 +203,24 @@ export function usePlayerDrillLibrary() {
     return canonicalizePositions(raws);
   }, [drills]);
 
+  // Unique canonical level keys present across the loaded library.
+  const availableLevels = useMemo<LevelKey[]>(() => {
+    const seen = new Set<LevelKey>();
+    for (const d of drills) {
+      for (const l of d.difficulty_levels || []) {
+        const k = normalizeLevelKey(l);
+        if (k) seen.add(k);
+      }
+    }
+    return LEVEL_ORDER.filter(k => seen.has(k));
+  }, [drills]);
+
+  const clearFilters = useCallback(() => {
+    setSearch('');
+    setPositionFilter(null);
+    setSelectedLevels([]);
+  }, []);
+
   return {
     drills: filteredDrills,
     loading,
@@ -223,6 +228,9 @@ export function usePlayerDrillLibrary() {
     search, setSearch,
     sort, setSort,
     positionFilter, setPositionFilter,
+    selectedLevels, setSelectedLevels,
     availablePositions,
+    availableLevels,
+    clearFilters,
   };
 }
