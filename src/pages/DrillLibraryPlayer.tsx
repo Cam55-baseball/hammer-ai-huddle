@@ -6,11 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Star, Search, Shield } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Play, Star, Search, Shield, SlidersHorizontal, X } from 'lucide-react';
 
 import { usePlayerDrillLibrary, type SortOption, type LibraryDrill } from '@/hooks/usePlayerDrillLibrary';
 import { DrillDetailDialog } from '@/components/practice/DrillDetailDialog';
-import { getProgressionLabel } from '@/utils/progressionMapping';
+import { getDrillLevelLabel, LEVEL_LABELS, LEVEL_ORDER, type LevelKey } from '@/utils/drillLevelLabels';
 import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
 import { positionLabel, positionShort, canonicalizePositions, normalizePositionCode } from '@/lib/drills/positionLabels';
@@ -40,7 +42,7 @@ function DrillCard({ drill, onClick }: { drill: LibraryDrill; onClick: () => voi
             </Badge>
           )}
           <Badge variant="outline" className="text-[10px]">
-            {getProgressionLabel(drill.progression_level)}
+            {getDrillLevelLabel(drill.difficulty_levels)}
           </Badge>
         </div>
 
