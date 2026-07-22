@@ -734,13 +734,25 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
         <Badge variant={running ? "default" : "outline"} className="text-[10px]">
-          {running ? "Recording" : "Idle"}
+          {!running
+            ? "Idle"
+            : hidden
+              ? "Paused (background)"
+              : streamOnly
+                ? "Streaming"
+                : "Recording buffer"}
         </Badge>
         <span>Delay {delay}s</span>
         <span>·</span>
         <span>Buffer {bufferedSec.toFixed(1)}s</span>
         <span>·</span>
         <span>Camera: {facing === "user" ? "Front" : "Rear"}</span>
+        {streamOnly && running && (
+          <>
+            <span>·</span>
+            <span>Long-session mode</span>
+          </>
+        )}
       </div>
     </Card>
   );
