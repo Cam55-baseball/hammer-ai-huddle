@@ -40,7 +40,7 @@ export function WkSpeedCard() {
             <Zap className={`h-4 w-4 shrink-0 ${isGameDay ? "text-amber-600" : "text-violet-500"}`} />
             <span className="truncate">Speed</span>
             <Badge variant="outline" className="text-[10px]">
-              {isGameDay ? "Game day · activation" : "Pre-lift · fresh CNS"}
+              {isGameDay ? "Game day · activation" : "Warm and ready"}
             </Badge>
           </div>
           {!isGameDay && (
