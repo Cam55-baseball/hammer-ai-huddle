@@ -289,89 +289,81 @@ ${recoveryWarning ? `⚠️ RECOVERY ALERT: ${recoveryWarning.reason}\nAI Sugges
 
 Please create personalized workout recommendations that respect my current recovery state.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "recommend_workouts",
-              description: "Return 2-3 personalized, recovery-aware workout recommendations",
-              parameters: {
-                type: "object",
-                properties: {
-                  recommendations: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        name: { type: "string" },
-                        focus: { type: "string", enum: ["strength", "cardio", "recovery", "balanced"] },
-                        exercises: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              id: { type: "string" },
-                              name: { type: "string" },
-                              type: { type: "string", enum: ["strength", "cardio", "flexibility", "plyometric", "baseball", "core"] },
-                              sets: { type: "number" },
-                              reps: { type: "number" },
-                              durationSeconds: { type: "number" },
-                              restSeconds: { type: "number" },
-                              supersetGroupId: { type: "string" },
-                              supersetOrder: { type: "number" }
-                            },
-                            required: ["id", "name", "type"]
-                          }
-                        },
-                        reasoning: { type: "string" },
-                        estimatedDuration: { type: "number" },
-                        confidence: { type: "number" },
-                        isLighterAlternative: { type: "boolean" }
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "recommend_workouts",
+            description: "Return 2-3 personalized, recovery-aware workout recommendations",
+            parameters: {
+              type: "object",
+              properties: {
+                recommendations: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      name: { type: "string" },
+                      focus: { type: "string", enum: ["strength", "cardio", "recovery", "balanced"] },
+                      exercises: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string" },
+                            name: { type: "string" },
+                            type: { type: "string", enum: ["strength", "cardio", "flexibility", "plyometric", "baseball", "core"] },
+                            sets: { type: "number" },
+                            reps: { type: "number" },
+                            durationSeconds: { type: "number" },
+                            restSeconds: { type: "number" },
+                            supersetGroupId: { type: "string" },
+                            supersetOrder: { type: "number" }
+                          },
+                          required: ["id", "name", "type"]
+                        }
                       },
-                      required: ["id", "name", "focus", "exercises", "reasoning", "estimatedDuration", "confidence"]
-                    }
+                      reasoning: { type: "string" },
+                      estimatedDuration: { type: "number" },
+                      confidence: { type: "number" },
+                      isLighterAlternative: { type: "boolean" }
+                    },
+                    required: ["id", "name", "focus", "exercises", "reasoning", "estimatedDuration", "confidence"]
                   }
-                },
-                required: ["recommendations"]
-              }
+                }
+              },
+              required: ["recommendations"]
             }
           }
-        ],
-        tool_choice: { type: "function", function: { name: "recommend_workouts" } },
-      }),
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "recommend_workouts" } },
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[recommend-workout] AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
+    if (!aiResult.ok) {
+      console.error("[recommend-workout] AI provider error:", aiResult.provider, aiResult.status, aiResult.errorBody);
+
+      if (aiResult.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later.", recommendations: [], recoveryWarning: recoveryWarning || undefined }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace.", recommendations: [], recoveryWarning: recoveryWarning || undefined }), {
+      if (aiResult.status === 402) {
+        return new Response(JSON.stringify({ error: "AI provider quota exhausted.", recommendations: [], recoveryWarning: recoveryWarning || undefined }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`AI provider error (${aiResult.provider}): ${aiResult.status}`);
     }
 
-    const aiResponse = await response.json();
+    const aiResponse = aiResult.data;
 
     let recommendations: WorkoutRecommendation[] = [];
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
