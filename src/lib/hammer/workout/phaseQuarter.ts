@@ -49,7 +49,10 @@ export function resolveWkPhase(
   settings: SeasonSettingsLike | null | undefined,
   now: Date = new Date(),
 ): WkPhaseResolution {
-  const seasonRes = resolveSeasonPhase(settings);
+  const normalized = settings
+    ? { ...settings, season_status: normalizeSeasonStatus(settings.season_status) ?? settings.season_status }
+    : settings;
+  const seasonRes = resolveSeasonPhase(normalized);
 
   if (seasonRes.phase === 'in_season') {
     return {
