@@ -429,6 +429,57 @@ function OverviewPanel({
         dossier={editingPitcher}
       />
 
+      <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs uppercase tracking-wide">Opponent hitters — team pitching plan</Label>
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setNewHitterOpen(true)}>
+            + New
+          </Button>
+        </div>
+        {attachedHitters.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {attachedHitters.map((h) => (
+              <Badge
+                key={h.id}
+                variant="default"
+                onClick={() => toggleHitter(h.id)}
+                className="cursor-pointer"
+                title="Tap to remove"
+              >
+                {h.name}{h.bats ? ` · ${h.bats}HB` : ""} ×
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[11px] text-muted-foreground">Attach hitters below to unlock the team pitching plan for each one.</div>
+        )}
+        {availableHitters.length > 0 && (
+          <Select
+            value=""
+            onValueChange={(v) => { if (v) toggleHitter(v); }}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="+ Attach a hitter…" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableHitters.map((h) => (
+                <SelectItem key={h.id} value={h.id}>
+                  {h.name}{h.team ? ` · ${h.team}` : ""}{h.bats ? ` · ${h.bats}HB` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      <HitterDossierDrawer
+        open={!!editingHitter || newHitterOpen}
+        onOpenChange={(o) => { if (!o) { setEditingHitter(null); setNewHitterOpen(false); } }}
+        sport={game.sport}
+        dossier={editingHitter}
+      />
+
+
       <div className="space-y-1.5">
         <Label>Positions played (tap to toggle — multiple ok)</Label>
         <div className="flex flex-wrap gap-1.5">
