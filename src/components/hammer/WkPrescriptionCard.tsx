@@ -106,13 +106,43 @@ export function WkPrescriptionCard({
     ? `Rebuilding to match ${phaseDisplay ?? "your current phase"}.`
     : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
   const reductions = why?.reductions ?? [];
-  const dosage =
-    [
-      rx.sets ? `${rx.sets} sets` : null,
-      rx.reps ? `× ${rx.reps}` : null,
-      rx.tempo ? `tempo ${rx.tempo}` : null,
-      rx.load_pct ? `${rx.load_pct}% 1RM` : null,
-    ].filter(Boolean).join(" • ") || "Engine-selected dosage";
+  // Precise, age-8-readable dosage. Every card must show at least one
+  // concrete number (sets/reps, seconds, feet, or total contacts) so athletes
+  // know exactly what to execute — no more vague "1 × 1" placeholders.
+  const unit = (rx.dosage_unit ?? "reps").toLowerCase();
+  const dosageParts: string[] = [];
+  if (rx.sets && rx.reps) {
+    const repsLabel =
+      unit === "seconds" ? `${rx.reps} sec` :
+      unit === "feet" ? `${rx.reps} ft` :
+      unit === "contacts" ? `${rx.reps} contacts` :
+      unit === "throws" ? `${rx.reps} throws` :
+      unit === "each" ? `${rx.reps} each side` :
+      `${rx.reps} reps`;
+    dosageParts.push(`${rx.sets} sets × ${repsLabel}`);
+  } else if (rx.sets) {
+    dosageParts.push(`${rx.sets} sets`);
+  } else if (rx.reps) {
+    dosageParts.push(`${rx.reps} reps`);
+  }
+  if (rx.duration_seconds) {
+    dosageParts.push(
+      rx.duration_seconds >= 60
+        ? `${Math.round(rx.duration_seconds / 60)} min per set`
+        : `${rx.duration_seconds} sec per set`
+    );
+  }
+  if (rx.distance_feet) dosageParts.push(`${rx.distance_feet} feet per rep`);
+  if (rx.total_reps && rx.total_reps !== rx.reps) {
+    const totalLabel =
+      unit === "contacts" ? `${rx.total_reps} total contacts` :
+      unit === "throws" ? `${rx.total_reps} total throws` :
+      `${rx.total_reps} total`;
+    dosageParts.push(totalLabel);
+  }
+  if (rx.tempo) dosageParts.push(`tempo ${rx.tempo}`);
+  if (rx.load_pct) dosageParts.push(`${rx.load_pct}% 1RM`);
+  const dosage = dosageParts.length > 0 ? dosageParts.join(" • ") : "Follow the cue below";
 
   return (
     <Card className={`p-3 border ${rx.status === "completed" ? "opacity-60" : ""}`}>
