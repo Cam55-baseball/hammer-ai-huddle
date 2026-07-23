@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Droplets, Heart, Leaf, Moon, Sun, Apple, Scale, Salad, Pill, Sparkles, Dumbbell, Zap, Trophy, Activity, Brain, FlaskConical, Waves } from 'lucide-react';
+import { ChevronDown, Droplets, Heart, Leaf, Moon, Sun, Apple, Scale, Salad, Pill, Sparkles, Dumbbell, Zap, Trophy, Activity, Brain, FlaskConical, Waves, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useNutritionCategoryTips, type CategoryTip } from '@/hooks/useNutritionCategoryTips';
+import { TipDetailDialog } from './TipDetailDialog';
 
 interface CategoryInfo {
   id: string;
@@ -8,8 +11,10 @@ interface CategoryInfo {
   icon: React.ReactNode;
   descriptionKey: string;
   color: string;
-  contentKeys: string[];
+  contentKeys?: string[];
+  dynamic?: boolean;
 }
+
 
 const CATEGORIES: CategoryInfo[] = [
   {
