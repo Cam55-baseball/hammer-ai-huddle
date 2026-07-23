@@ -174,8 +174,7 @@ serve(async (req) => {
           },
         );
       }
-      const errText = await aiResp.text();
-      console.error("AI gateway error", aiResp.status, errText);
+      console.error("AI provider error", aiResp.provider, aiResp.status, aiResp.errorBody);
       return new Response(
         JSON.stringify({ error: "ai_gateway_error" }),
         {
@@ -185,7 +184,7 @@ serve(async (req) => {
       );
     }
 
-    const aiData = await aiResp.json();
+    const aiData = aiResp.data;
     const rawContent = aiData?.choices?.[0]?.message?.content ?? "";
 
     let parsed: any;
