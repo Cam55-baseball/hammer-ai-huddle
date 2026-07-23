@@ -280,14 +280,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       }
 
       const verdict = evaluateProbe(probed);
-      if (!verdict.ok) {
+      if (verdict.ok === false) {
+        const reason = verdict.reason;
         console.warn("[DelayCam] probe rejected", verdict);
         toast.error(
-          verdict.reason === "reject_low_fps"
+          reason === "reject_low_fps"
             ? `Recorded clip fps too low (${probed.fps_true.toFixed(1)}). Try again with better lighting.`
-            : verdict.reason === "reject_low_resolution"
+            : reason === "reject_low_resolution"
               ? `Recorded clip too small (${probed.width}×${probed.height}).`
-              : verdict.reason === "reject_duration_out_of_bounds"
+              : reason === "reject_duration_out_of_bounds"
                 ? `Clip length ${probed.duration_sec.toFixed(1)}s is outside the accepted range.`
                 : "Recorded clip couldn't be validated for analysis.",
           { id: toastId },
