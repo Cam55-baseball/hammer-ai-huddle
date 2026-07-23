@@ -9,7 +9,7 @@
  *   - In-season: Concentric primer + FP pre-pregame, Speed q96h
  *   - Post-season: Decompress / concentric primer + mixed mobility
  */
-import { resolveSeasonPhase, type SeasonSettingsLike } from '@/lib/seasonPhase';
+import { resolveSeasonPhase, normalizeSeasonStatus, type SeasonSettingsLike } from '@/lib/seasonPhase';
 
 export type WkPhase =
   | 'os_q1'
