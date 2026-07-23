@@ -21,6 +21,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
+import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
+import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
+import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
+import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
 type ClipModule = "hitting" | "pitching" | "throwing";
@@ -72,6 +76,10 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     sportProp ??
     ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
       "baseball");
+  const sideDiscipline: "hit" | "throw" = resolvedModule === "hitting" ? "hit" : "throw";
+  const { selectedSide, shouldShowPicker } = useSideContext();
+  const activeSide = selectedSide[sideDiscipline];
+  const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
   const liveRef = useRef<HTMLVideoElement>(null);
   const delayedCanvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -220,9 +228,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       toast.error("Sign in to save clips to Players Club.");
       return;
     }
+    if (requiresSideConfirmation && !activeSide) {
+      toast.error(
+        sideDiscipline === "hit"
+          ? "Confirm the batting side used in this clip before saving."
+          : "Confirm the throwing hand used in this clip before saving.",
+      );
+      return;
+    }
     const items = timedChunksRef.current;
     if (items.length === 0) {
-      toast.error("Nothing to save yet — wait for the buffer to fill.");
+      toast.error("Nothing to save yet — record a clip first.");
       return;
     }
     const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
@@ -238,12 +254,48 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     );
 
     try {
+      // Session preflight — surface a clear error instead of a silent RLS reject.
+      const { data: sessionCheck } = await supabase.auth.getSession();
+      const liveSession = sessionCheck?.session ?? null;
+      if (!liveSession?.user?.id || liveSession.user.id !== user.id) {
+        toast.error("Your session expired. Sign in again to save this clip.", { id: toastId });
+        setSaving(null);
+        return;
+      }
+
       const ext = mime.includes("mp4") ? "mp4" : "webm";
       const ts = Date.now();
       const filePath = `${user.id}/delaycam/${ts}.${ext}`;
-
-      // Wrap Blob as File so downstream tools (thumbnail generator) can read .name.
       const file = new File([blob], `delaycam-${ts}.${ext}`, { type: mime });
+
+      // Phase 0 probe — required by the videos schema + analyze-video edge fn.
+      let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
+      try {
+        probed = await probeVideoMetadata(file);
+      } catch (probeErr) {
+        console.error("[DelayCam] probe failed", probeErr);
+        toast.error("Couldn't read the recorded clip. Try recording again.", { id: toastId });
+        setSaving(null);
+        return;
+      }
+
+      const verdict = evaluateProbe(probed);
+      if (verdict.ok === false) {
+        const reason = verdict.reason;
+        console.warn("[DelayCam] probe rejected", verdict);
+        toast.error(
+          reason === "reject_low_fps"
+            ? `Recorded clip fps too low (${probed.fps_true.toFixed(1)}). Try again with better lighting.`
+            : reason === "reject_low_resolution"
+              ? `Recorded clip too small (${probed.width}×${probed.height}).`
+              : reason === "reject_duration_out_of_bounds"
+                ? `Clip length ${probed.duration_sec.toFixed(1)}s is outside the accepted range.`
+                : "Recorded clip couldn't be validated for analysis.",
+          { id: toastId },
+        );
+        setSaving(null);
+        return;
+      }
 
       const { error: uploadError } = await supabase.storage
         .from("videos")
@@ -263,6 +315,12 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         console.warn("[DelayCam] thumbnail generation failed", thumbErr);
       }
 
+      const sideStamp = shouldShowPicker(sideDiscipline)
+        ? sideDiscipline === "hit"
+          ? { batting_side: activeSide }
+          : { throwing_hand: activeSide }
+        : {};
+
       const { data: videoRow, error: insertError } = await supabase
         .from("videos")
         .insert([{
@@ -273,35 +331,63 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           thumbnail_url: thumbnailUrl,
           status: opts.analyze ? "processing" : "completed",
           library_title: `DelayCam replay — ${new Date().toLocaleString()}`,
+          saved_to_library: true,
+          sha256_hex: probed.sha256_hex,
+          fps_true: probed.fps_true,
+          duration_sec: probed.duration_sec,
+          width: probed.width,
+          height: probed.height,
+          orientation: probed.orientation,
+          ...sideStamp,
         }] as never)
         .select("id")
         .single();
       if (insertError) throw insertError;
 
       if (opts.analyze) {
-        // Fire-and-forget analysis. The videos row is already saved to
-        // Players Club regardless of analysis outcome.
-        supabase.functions
-          .invoke("analyze-video", {
+        // Extract deterministic frames + call analyze-video with the full payload.
+        toast.loading("Extracting frames for analysis…", { id: toastId });
+        try {
+          const extraction = await extractKeyFramesDeterministic({
+            videoFile: file,
+            fps_true: probed.fps_true,
+            duration_sec: probed.duration_sec,
+            landingTime: null,
+          });
+          if (extraction.frames.length < 3) {
+            throw new Error("not_enough_frames");
+          }
+          const frames = extraction.frames.map((f) => f.dataUrl);
+          const frameExtractions = extraction.frames.map((f) => ({
+            frame_index: f.frame_index,
+            timestamp_seconds: f.timestamp_seconds,
+            sha256_hex: f.sha256_hex,
+            width: f.width,
+            height: f.height,
+          }));
+
+          toast.loading("Hammer is analyzing your clip…", { id: toastId });
+          const { error: fnError } = await supabase.functions.invoke("analyze-video", {
             body: {
               videoId: (videoRow as { id: string }).id,
               module: resolvedModule,
               sport: resolvedSport,
               userId: user.id,
+              frames,
+              frameExtractions,
             },
-          })
-          .then(({ error }) => {
-            if (error) {
-              console.error("[DelayCam] analyze-video failed", error);
-              toast.error("Saved, but analysis failed. Open it in Players Club to retry.");
-            } else {
-              toast.success("Analysis complete — open Players Club to view results.");
-            }
-          })
-          .catch((e) => {
-            console.error("[DelayCam] analyze-video threw", e);
           });
-        toast.success("Saved to Players Club. Analysis running in the background.", { id: toastId });
+          if (fnError) throw fnError;
+          toast.success("Saved to Players Club — analysis complete.", { id: toastId });
+        } catch (analyzeErr: any) {
+          console.error("[DelayCam] analyze failed", analyzeErr);
+          toast.error(
+            analyzeErr?.message === "not_enough_frames"
+              ? "Saved to Players Club. Clip was too short for analysis."
+              : "Saved to Players Club. Analysis failed — open the clip to retry.",
+            { id: toastId },
+          );
+        }
       } else {
         toast.success("Saved to Players Club.", { id: toastId });
       }
@@ -311,7 +397,16 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     } finally {
       setSaving(null);
     }
-  }, [buildDecodableBlob, resolvedModule, resolvedSport, user]);
+  }, [
+    activeSide,
+    buildDecodableBlob,
+    requiresSideConfirmation,
+    resolvedModule,
+    resolvedSport,
+    shouldShowPicker,
+    sideDiscipline,
+    user,
+  ]);
 
 
   const start = useCallback(async (nextMode: "streaming" | "recording", nextFacing?: Facing) => {
