@@ -23,10 +23,24 @@ export interface SeasonSettingsLike {
 
 const VALID: SeasonPhase[] = ['preseason', 'in_season', 'post_season', 'off_season'];
 
+/** Normalize short/legacy season status values to canonical strings. */
+export function normalizeSeasonStatus(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim().toLowerCase();
+  if (!s) return null;
+  if (s === 'in' || s === 'in_season' || s === 'inseason') return 'in_season';
+  if (s === 'post' || s === 'post_season' || s === 'postseason') return 'post_season';
+  if (s === 'pre' || s === 'preseason' || s === 'pre_season') return 'preseason';
+  if (s === 'off' || s === 'off_season' || s === 'offseason') return 'off_season';
+  return s;
+}
+
 export function resolveSeasonPhase(settings: SeasonSettingsLike | null | undefined): SeasonResolution {
   if (!settings) {
     return { phase: 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' };
   }
+  const normalizedStatus = normalizeSeasonStatus(settings.season_status);
+  settings = { ...settings, season_status: normalizedStatus };
   const today = new Date().toISOString().split('T')[0];
   const phases: { status: SeasonPhase; start: string | null | undefined; end: string | null | undefined }[] = [
     { status: 'preseason', start: settings.preseason_start_date, end: settings.preseason_end_date },
