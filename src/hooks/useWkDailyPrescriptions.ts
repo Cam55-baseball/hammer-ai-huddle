@@ -58,6 +58,10 @@ export interface WkRx {
   reps: number | null;
   tempo: string | null;
   load_pct: number | null;
+  duration_seconds: number | null;
+  distance_feet: number | null;
+  total_reps: number | null;
+  dosage_unit: string | null;
   cns_cost: number;
   cns_clamped: boolean;
   substituted_from_slug: string | null;
