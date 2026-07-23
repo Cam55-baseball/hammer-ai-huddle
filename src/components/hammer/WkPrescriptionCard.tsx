@@ -87,6 +87,9 @@ export function WkPrescriptionCard({
         sets_completed: rx.sets ?? null,
         reps_completed: rx.sets && rx.reps ? Array.from({ length: rx.sets }, () => rx.reps as number) : null,
         load_used: rx.load_pct ?? null,
+        duration_seconds_completed: rx.duration_seconds ?? null,
+        distance_feet_completed: rx.distance_feet ?? null,
+        total_reps_completed: rx.total_reps ?? null,
         rpe: null,
       }).then(({ error: logErr }) => {
         if (logErr) console.warn("wk_session_logs insert failed", logErr);
