@@ -521,7 +521,25 @@ const handler = async (req: Request): Promise<Response> => {
       usedNamesThisSession.add(nameKey);
       const setsBase = overrides.sets ?? s.movement.default_sets ?? null;
       const repsBase = overrides.reps ?? s.movement.default_reps ?? null;
-      const clamped = (cnsUsed + s.movement.cns_cost) > cnsCap;
+      const totalDose =
+        (overrides as any).total_reps ?? s.movement.default_total_reps ?? null;
+      const durationDose =
+        (overrides as any).duration_seconds ?? s.movement.default_duration_seconds ?? null;
+      const distanceDose =
+        (overrides as any).distance_feet ?? s.movement.default_distance_feet ?? null;
+      const dosageUnitRaw =
+        (overrides as any).dosage_unit ?? s.movement.dosage_unit ?? "reps";
+      // Total-dose movements (innings, contacts, seconds, feet) use `sets` as
+      // a container, not a load lever. Clamping "sets" on a 9-inning sim
+      // would create the 8-sets-vs-9-innings mismatch users reported. For
+      // those movements we never reduce `sets`; the sport-specific total
+      // stays intact and CNS budget just accepts the movement in full.
+      const isTotalDose =
+        typeof totalDose === "number" ||
+        typeof durationDose === "number" ||
+        typeof distanceDose === "number" ||
+        (dosageUnitRaw && dosageUnitRaw !== "reps");
+      const clamped = !isTotalDose && (cnsUsed + s.movement.cns_cost) > cnsCap;
       cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
 
       // Override provenance
@@ -559,10 +577,10 @@ const handler = async (req: Request): Promise<Response> => {
         engine: wicEngine,
         generator_version: WIC_VERSION,
       });
-      const durationSeconds = (overrides as any).duration_seconds ?? s.movement.default_duration_seconds ?? null;
-      const distanceFeet = (overrides as any).distance_feet ?? s.movement.default_distance_feet ?? null;
-      const totalReps = (overrides as any).total_reps ?? s.movement.default_total_reps ?? null;
-      const dosageUnit = (overrides as any).dosage_unit ?? s.movement.dosage_unit ?? "reps";
+      const durationSeconds = durationDose;
+      const distanceFeet = distanceDose;
+      const totalReps = totalDose;
+      const dosageUnit = dosageUnitRaw;
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
@@ -790,7 +808,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // -------- Conditioning (its own card, placed next to practice) --------
-    if (!isGameDay && !isPostSeason) {
+    // Respect the adaptation selector's suppression list. On recovery /
+    // cadence-rest days conditioning must not reappear after a refresh.
+    const conditioningSuppressed =
+      Array.isArray(adaptationDecision.suppressed) &&
+      adaptationDecision.suppressed.includes("conditioning");
+    if (!isGameDay && !isPostSeason && !conditioningSuppressed) {
       const conditioning: MovementRow[] = [
         lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
         conditioningForPosition(lib, position, eligible),

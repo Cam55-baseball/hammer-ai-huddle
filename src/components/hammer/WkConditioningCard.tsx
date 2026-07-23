@@ -57,7 +57,7 @@ export function WkConditioningCard() {
         ) : isLoading ? (
           <Skeleton className="h-14 w-full rounded" />
         ) : (
-          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
+          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} generating={generating} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
         {items.length > 0 && <CardActions modality="conditioning" items={items} phaseDisplay={label} />}

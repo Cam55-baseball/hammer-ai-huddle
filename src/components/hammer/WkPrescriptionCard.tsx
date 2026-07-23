@@ -57,10 +57,12 @@ export function WkPrescriptionCard({
   rx,
   phaseDisplay,
   phaseKey,
+  generating,
 }: {
   rx: WkRx;
   phaseDisplay?: string | null;
   phaseKey?: string | null;
+  generating?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
@@ -101,12 +103,18 @@ export function WkPrescriptionCard({
 
   const why = rx.why_payload;
   const storedPhase = why?.phase ?? rx.phase ?? null;
-  const phaseMismatch = !!phaseKey && !!storedPhase && storedPhase !== phaseKey;
-  const athleteWhy = phaseMismatch
+  // Only surface the "older season" language when the plan is settled. While
+  // Hammer is regenerating, show a softer "Updating..." note so athletes
+  // aren't alarmed by a transient mismatch.
+  const rawMismatch = !!phaseKey && !!storedPhase && storedPhase !== phaseKey;
+  const phaseMismatch = rawMismatch && !generating;
+  const athleteWhy = generating && rawMismatch
+    ? `Updating your plan to match ${phaseDisplay ?? "your current phase"}…`
+    : phaseMismatch
     ? `This movement was generated under an older season setting. Hammer is rebuilding today's plan so it matches ${phaseDisplay ?? "your current phase"}.`
     : cleanAthleteCopy(rx.why_v2?.why_exercise ?? why?.why ?? null);
-  const todayLine = phaseMismatch
-    ? `Rebuilding to match ${phaseDisplay ?? "your current phase"}.`
+  const todayLine = phaseMismatch || (generating && rawMismatch)
+    ? null
     : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
   const reductions = why?.reductions ?? [];
   // Precise, age-8-readable dosage. Every card must show at least one
@@ -114,10 +122,15 @@ export function WkPrescriptionCard({
   // know exactly what to execute — no more vague "1 × 1" placeholders.
   const unit = (rx.dosage_unit ?? "reps").toLowerCase();
   const dosageParts: string[] = [];
-  // A "1 × 1" pair is a placeholder, not a real dose — suppress unless it's
-  // paired with an explicit duration / distance / total-reps target below.
+  // For total-dose movements (innings, contacts, seconds, feet) the primary
+  // number is `total_reps` — do NOT render "X sets × 1 reps" alongside it.
+  const isTotalDoseUnit =
+    unit === "innings" || unit === "contacts" || unit === "throws" ||
+    unit === "seconds" || unit === "feet";
+  const hasTotalDose = !!rx.total_reps || !!rx.duration_seconds || !!rx.distance_feet;
   const setsRepsMeaningful =
-    !!rx.sets && !!rx.reps && !(rx.sets === 1 && rx.reps === 1);
+    !!rx.sets && !!rx.reps && !(rx.sets === 1 && rx.reps === 1) &&
+    !(isTotalDoseUnit && hasTotalDose);
   if (setsRepsMeaningful) {
     const repsLabel =
       unit === "seconds" ? `${rx.reps} sec` :
@@ -127,9 +140,9 @@ export function WkPrescriptionCard({
       unit === "each" ? `${rx.reps} each side` :
       `${rx.reps} reps`;
     dosageParts.push(`${rx.sets} sets × ${repsLabel}`);
-  } else if (rx.sets && rx.sets > 1) {
+  } else if (rx.sets && rx.sets > 1 && !(isTotalDoseUnit && hasTotalDose)) {
     dosageParts.push(`${rx.sets} sets`);
-  } else if (rx.reps && rx.reps > 1) {
+  } else if (rx.reps && rx.reps > 1 && !(isTotalDoseUnit && hasTotalDose)) {
     dosageParts.push(`${rx.reps} reps`);
   }
   if (rx.duration_seconds) {
@@ -142,6 +155,7 @@ export function WkPrescriptionCard({
   if (rx.distance_feet) dosageParts.push(`${rx.distance_feet} feet per rep`);
   if (rx.total_reps && rx.total_reps !== rx.reps) {
     const totalLabel =
+      unit === "innings" ? `${rx.total_reps} total innings` :
       unit === "contacts" ? `${rx.total_reps} total contacts` :
       unit === "throws" ? `${rx.total_reps} total throws` :
       `${rx.total_reps} total`;
