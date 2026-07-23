@@ -195,18 +195,12 @@ Customize the warmup to:
 5. Consider their position-specific needs (${goals.position || 'general athlete'})`;
     }
 
-    // Call Lovable AI for warmup generation
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
+    // Call AI via Google AI Studio (with Lovable Gateway fallback)
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
             content: `You are a ${sport} training specialist creating sport-specific warmup routines.
 Create warmups that prepare athletes for their specific workout by targeting the relevant muscle groups and movement patterns.
 
