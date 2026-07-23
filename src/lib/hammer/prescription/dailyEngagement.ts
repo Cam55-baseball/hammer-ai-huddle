@@ -32,9 +32,17 @@ const STREAK_GRACE_DAYS = 1;
 
 export type CompletionState = "done" | "skipped";
 
+/**
+ * Superset of ModalityKey — extended with Wk-workout card slots
+ * (Lifts, Speed, Bat-Speed, Conditioning) so card-level Done/Skip can be
+ * persisted alongside the generic modality blocks without touching every
+ * ModalityKey switch. UI-only.
+ */
+export type EngagementKey = ModalityKey | "lifts" | "bat_speed" | "conditioning";
+
 export interface DayEntry {
   readonly date: string; // YYYY-MM-DD
-  readonly completions: Partial<Record<ModalityKey, CompletionState>>;
+  readonly completions: Partial<Record<EngagementKey, CompletionState>>;
   /** phase signature per modality — powers rotation detection. */
   readonly phases: Partial<Record<ModalityKey, BlockPhase>>;
 }
