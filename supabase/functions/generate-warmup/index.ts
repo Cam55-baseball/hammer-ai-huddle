@@ -35,7 +35,14 @@ interface PersonalizationGoals {
   position?: string;
 }
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { chatCompletion } from "../_shared/googleAi.ts";
+
+// AI credentials are read inside the helper (GOOGLE_AI_API_KEY primary,
+// LOVABLE_API_KEY fallback). We keep this flag only to preserve the existing
+// "AI credentials not configured" guard behavior.
+const HAS_AI_CREDENTIALS = Boolean(
+  Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("LOVABLE_API_KEY"),
+);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -101,8 +108,8 @@ serve(async (req) => {
       warmupContext?: string;
     };
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!HAS_AI_CREDENTIALS) {
+      throw new Error("No AI credentials configured (GOOGLE_AI_API_KEY or LOVABLE_API_KEY)");
     }
 
     // Analyze the workout to determine warmup needs
@@ -188,18 +195,12 @@ Customize the warmup to:
 5. Consider their position-specific needs (${goals.position || 'general athlete'})`;
     }
 
-    // Call Lovable AI for warmup generation
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
+    // Call AI via Google AI Studio (with Lovable Gateway fallback)
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
             content: `You are a ${sport} training specialist creating sport-specific warmup routines.
 Create warmups that prepare athletes for their specific workout by targeting the relevant muscle groups and movement patterns.
 
@@ -287,47 +288,45 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
           }
         ],
         tool_choice: { type: "function", function: { name: "generate_warmup" } },
-      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ 
+    if (!aiResult.ok) {
+      console.error("AI provider error:", aiResult.provider, aiResult.status, aiResult.errorBody);
+
+      if (aiResult.status === 429) {
+        return new Response(JSON.stringify({
           error: "Rate limits exceeded, please try again later.",
-          warmupExercises: [] 
+          warmupExercises: []
         }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: "Payment required, please add funds to your Lovable AI workspace.",
-          warmupExercises: [] 
+
+      if (aiResult.status === 402) {
+        return new Response(JSON.stringify({
+          error: "AI provider quota exhausted.",
+          warmupExercises: []
         }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
-      throw new Error(`AI gateway error: ${response.status}`);
+
+      throw new Error(`AI provider error (${aiResult.provider}): ${aiResult.status}`);
     }
 
-    const aiResponse = await response.json();
-    console.log("AI Response:", JSON.stringify(aiResponse, null, 2));
+    const aiResponse = aiResult.data;
+    console.log(`AI Response (provider=${aiResult.provider}):`, JSON.stringify(aiResponse, null, 2));
 
     interface WarmupResult {
       warmupExercises: WarmupExercise[];
       reasoning: string;
       estimatedDuration: number;
     }
-    
+
     let result: WarmupResult = { warmupExercises: [], reasoning: '', estimatedDuration: 8 };
-    
+
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       try {

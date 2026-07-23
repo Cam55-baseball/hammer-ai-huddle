@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,8 +184,9 @@ async function aiRefine(
   athleteProfile: AthleteProfile,
   readinessScore: number,
 ): Promise<PrescriptionResult[]> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return deterministicResults;
+  if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("LOVABLE_API_KEY")) {
+    return deterministicResults;
+  }
 
   const drillList = deterministicResults.map(r => ({
     drill_id: r.drill_id, name: r.name, module: r.module,
@@ -212,56 +215,49 @@ RULES:
 - Rationale must reference the specific pattern data`;
 
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "You are a sports science prescription engine. Return valid JSON only." },
-          { role: "user", content: prompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "set_prescriptions",
-            description: "Set the adjusted drill prescriptions",
-            parameters: {
-              type: "object",
-              properties: {
-                prescriptions: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      drill_id: { type: "string" },
-                      reps: { type: "number" },
-                      velocity_band: { type: "string" },
-                      duration_sec: { type: "number" },
-                      intensity_pct: { type: "number" },
-                      rationale: { type: "string" },
-                    },
-                    required: ["drill_id", "reps", "rationale"],
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You are a sports science prescription engine. Return valid JSON only." },
+        { role: "user", content: prompt },
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: "set_prescriptions",
+          description: "Set the adjusted drill prescriptions",
+          parameters: {
+            type: "object",
+            properties: {
+              prescriptions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    drill_id: { type: "string" },
+                    reps: { type: "number" },
+                    velocity_band: { type: "string" },
+                    duration_sec: { type: "number" },
+                    intensity_pct: { type: "number" },
+                    rationale: { type: "string" },
                   },
+                  required: ["drill_id", "reps", "rationale"],
                 },
               },
-              required: ["prescriptions"],
             },
+            required: ["prescriptions"],
           },
-        }],
-        tool_choice: { type: "function", function: { name: "set_prescriptions" } },
-      }),
+        },
+      }],
+      tool_choice: { type: "function", function: { name: "set_prescriptions" } },
     });
 
-    if (!response.ok) {
-      console.error(`AI gateway error: ${response.status}`);
+    if (!aiResult.ok) {
+      console.error(`AI provider error (${aiResult.provider}): ${aiResult.status}`);
       return deterministicResults;
     }
 
-    const data = await response.json();
+    const data = aiResult.data;
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) return deterministicResults;
 

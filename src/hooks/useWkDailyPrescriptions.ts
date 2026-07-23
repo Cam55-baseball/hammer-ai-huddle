@@ -26,7 +26,7 @@ import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
 import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 import { resolveWkPhase } from "@/lib/hammer/workout/phaseQuarter";
 
-const WK_GENERATOR_VERSION = "wic_v1.2";
+const WK_GENERATOR_VERSION = "wic_v1.3_google";
 
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
 

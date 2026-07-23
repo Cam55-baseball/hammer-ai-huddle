@@ -10,6 +10,7 @@
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,10 +118,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
+    if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("LOVABLE_API_KEY")) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        JSON.stringify({ error: "AI credentials not configured" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -142,28 +142,18 @@ serve(async (req) => {
 
     const prompt = buildPrompt(snapshot);
 
-    const aiResp = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are Coach Hammer. Return ONLY valid JSON. Never include markdown fences or commentary.",
         },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are Coach Hammer. Return ONLY valid JSON. Never include markdown fences or commentary.",
-            },
-            { role: "user", content: prompt },
-          ],
-          response_format: { type: "json_object" },
-        }),
-      },
-    );
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+    });
 
     if (!aiResp.ok) {
       if (aiResp.status === 429) {
@@ -184,8 +174,7 @@ serve(async (req) => {
           },
         );
       }
-      const errText = await aiResp.text();
-      console.error("AI gateway error", aiResp.status, errText);
+      console.error("AI provider error", aiResp.provider, aiResp.status, aiResp.errorBody);
       return new Response(
         JSON.stringify({ error: "ai_gateway_error" }),
         {
@@ -195,7 +184,7 @@ serve(async (req) => {
       );
     }
 
-    const aiData = await aiResp.json();
+    const aiData = aiResp.data;
     const rawContent = aiData?.choices?.[0]?.message?.content ?? "";
 
     let parsed: any;
