@@ -114,7 +114,11 @@ export function WkPrescriptionCard({
   // know exactly what to execute — no more vague "1 × 1" placeholders.
   const unit = (rx.dosage_unit ?? "reps").toLowerCase();
   const dosageParts: string[] = [];
-  if (rx.sets && rx.reps) {
+  // A "1 × 1" pair is a placeholder, not a real dose — suppress unless it's
+  // paired with an explicit duration / distance / total-reps target below.
+  const setsRepsMeaningful =
+    !!rx.sets && !!rx.reps && !(rx.sets === 1 && rx.reps === 1);
+  if (setsRepsMeaningful) {
     const repsLabel =
       unit === "seconds" ? `${rx.reps} sec` :
       unit === "feet" ? `${rx.reps} ft` :
@@ -123,9 +127,9 @@ export function WkPrescriptionCard({
       unit === "each" ? `${rx.reps} each side` :
       `${rx.reps} reps`;
     dosageParts.push(`${rx.sets} sets × ${repsLabel}`);
-  } else if (rx.sets) {
+  } else if (rx.sets && rx.sets > 1) {
     dosageParts.push(`${rx.sets} sets`);
-  } else if (rx.reps) {
+  } else if (rx.reps && rx.reps > 1) {
     dosageParts.push(`${rx.reps} reps`);
   }
   if (rx.duration_seconds) {
