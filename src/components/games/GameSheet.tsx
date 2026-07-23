@@ -43,8 +43,9 @@ import { GameTotalsHeader } from "./GameTotalsHeader";
 import { GameDayMode } from "./GameDayMode";
 import { ActivePlanCard } from "./ActivePlanCard";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
-import { usePitcherDossiers } from "@/hooks/useGameDossiers";
+import { usePitcherDossiers, useOpponentHitters } from "@/hooks/useGameDossiers";
 import { PitcherDossierDrawer } from "./PitcherDossierDrawer";
+import { HitterDossierDrawer } from "./HitterDossierDrawer";
 import { NumberField } from "@/components/games/NumberField";
 
 
@@ -285,11 +286,26 @@ function OverviewPanel({
 }) {
   const [positions, setPositions] = useState<string[]>(game.my_positions ?? []);
   const pitcherDossiers = usePitcherDossiers(game.sport);
+  const hitterDossiers = useOpponentHitters(game.sport);
   const [editingPitcher, setEditingPitcher] = useState<any | null>(null);
   const [newPitcherOpen, setNewPitcherOpen] = useState(false);
+  const [editingHitter, setEditingHitter] = useState<any | null>(null);
+  const [newHitterOpen, setNewHitterOpen] = useState(false);
+  const attachedHitterIds: string[] = Array.isArray(game.opponent_hitter_dossier_ids)
+    ? game.opponent_hitter_dossier_ids
+    : [];
+  const attachedHitters = (hitterDossiers.list.data ?? []).filter((h) => attachedHitterIds.includes(h.id));
+  const availableHitters = (hitterDossiers.list.data ?? []).filter((h) => !attachedHitterIds.includes(h.id));
   const currentPitcher = (pitcherDossiers.list.data ?? []).find(
     (p) => p.id === game.probable_pitcher_dossier_id,
   );
+
+  const toggleHitter = (id: string) => {
+    const next = attachedHitterIds.includes(id)
+      ? attachedHitterIds.filter((x) => x !== id)
+      : [...attachedHitterIds, id];
+    onPatch({ opponent_hitter_dossier_ids: next });
+  };
 
   const togglePos = (p: string) => {
     const next = positions.includes(p)
@@ -412,6 +428,57 @@ function OverviewPanel({
         sport={game.sport}
         dossier={editingPitcher}
       />
+
+      <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs uppercase tracking-wide">Opponent hitters — team pitching plan</Label>
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setNewHitterOpen(true)}>
+            + New
+          </Button>
+        </div>
+        {attachedHitters.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {attachedHitters.map((h) => (
+              <Badge
+                key={h.id}
+                variant="default"
+                onClick={() => toggleHitter(h.id)}
+                className="cursor-pointer"
+                title="Tap to remove"
+              >
+                {h.name}{h.bats ? ` · ${h.bats}HB` : ""} ×
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[11px] text-muted-foreground">Attach hitters below to unlock the team pitching plan for each one.</div>
+        )}
+        {availableHitters.length > 0 && (
+          <Select
+            value=""
+            onValueChange={(v) => { if (v) toggleHitter(v); }}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="+ Attach a hitter…" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableHitters.map((h) => (
+                <SelectItem key={h.id} value={h.id}>
+                  {h.name}{h.team ? ` · ${h.team}` : ""}{h.bats ? ` · ${h.bats}HB` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      <HitterDossierDrawer
+        open={!!editingHitter || newHitterOpen}
+        onOpenChange={(o) => { if (!o) { setEditingHitter(null); setNewHitterOpen(false); } }}
+        sport={game.sport}
+        dossier={editingHitter}
+      />
+
 
       <div className="space-y-1.5">
         <Label>Positions played (tap to toggle — multiple ok)</Label>

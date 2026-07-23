@@ -1,0 +1,1 @@
+ALTER TABLE public.gp_games ADD COLUMN IF NOT EXISTS opponent_hitter_dossier_ids jsonb NOT NULL DEFAULT '[]'::jsonb;

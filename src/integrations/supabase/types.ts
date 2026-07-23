@@ -4876,6 +4876,7 @@ export type Database = {
           my_positions: string[] | null
           my_score: number | null
           opp_score: number | null
+          opponent_hitter_dossier_ids: Json
           opponent_team: string | null
           philosophy_post: string | null
           philosophy_pre: string | null
@@ -4902,6 +4903,7 @@ export type Database = {
           my_positions?: string[] | null
           my_score?: number | null
           opp_score?: number | null
+          opponent_hitter_dossier_ids?: Json
           opponent_team?: string | null
           philosophy_post?: string | null
           philosophy_pre?: string | null
@@ -4928,6 +4930,7 @@ export type Database = {
           my_positions?: string[] | null
           my_score?: number | null
           opp_score?: number | null
+          opponent_hitter_dossier_ids?: Json
           opponent_team?: string | null
           philosophy_post?: string | null
           philosophy_pre?: string | null
