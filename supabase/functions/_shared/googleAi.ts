@@ -104,20 +104,24 @@ function toGoogleModel(model: string): string {
 // OpenAI ↔ Google translation
 // -----------------------------------------------------------------------------
 
-function toGooglePayload(req: ChatCompletionRequest): Record<string, unknown> {
+async function toGooglePayload(req: ChatCompletionRequest): Promise<Record<string, unknown>> {
   const systemParts: string[] = [];
   const contents: Array<Record<string, unknown>> = [];
 
   for (const m of req.messages) {
     if (m.role === "system") {
       if (typeof m.content === "string") systemParts.push(m.content);
+      else if (Array.isArray(m.content)) {
+        for (const b of m.content) {
+          const t = (b as any)?.text;
+          if (typeof t === "string") systemParts.push(t);
+        }
+      }
       continue;
     }
     const role = m.role === "assistant" ? "model" : "user";
-    const text = typeof m.content === "string"
-      ? m.content
-      : JSON.stringify(m.content);
-    contents.push({ role, parts: [{ text }] });
+    const parts = await messageContentToGoogleParts(m.content);
+    if (parts.length > 0) contents.push({ role, parts });
   }
 
   const generationConfig: Record<string, unknown> = {};
@@ -146,16 +150,80 @@ function toGooglePayload(req: ChatCompletionRequest): Record<string, unknown> {
         })),
       },
     ];
-    // Force the model to call one of the declared functions when the caller
-    // specified tool_choice: { type: "function", ... } (matches OpenAI intent).
     const tc = req.tool_choice as { type?: string } | undefined;
-    if (tc && (tc.type === "function" || tc === "required" as unknown)) {
+    if (tc && (tc.type === "function" || (tc as unknown) === "required")) {
       payload.toolConfig = { functionCallingConfig: { mode: "ANY" } };
     }
   }
 
   return payload;
 }
+
+/**
+ * Convert an OpenAI-style message `content` (string | content-block[]) into
+ * Google `parts`. Handles `text`, `image_url` (data-URI or https URL), and
+ * `input_audio` blocks. Non-data-URI https URLs are fetched and inlined.
+ */
+async function messageContentToGoogleParts(
+  content: string | Array<Record<string, unknown>>,
+): Promise<Array<Record<string, unknown>>> {
+  if (typeof content === "string") return [{ text: content }];
+  const parts: Array<Record<string, unknown>> = [];
+  for (const block of content) {
+    const type = (block as any)?.type;
+    if (type === "text" && typeof (block as any).text === "string") {
+      parts.push({ text: (block as any).text });
+      continue;
+    }
+    if (type === "image_url") {
+      const url: string | undefined = (block as any).image_url?.url;
+      if (!url) continue;
+      const inline = await urlToInlineData(url, "image/jpeg");
+      if (inline) parts.push({ inlineData: inline });
+      continue;
+    }
+    if (type === "input_audio") {
+      const data: string | undefined = (block as any).input_audio?.data;
+      const fmt: string | undefined = (block as any).input_audio?.format;
+      if (data && fmt) {
+        parts.push({ inlineData: { mimeType: `audio/${fmt}`, data } });
+      }
+      continue;
+    }
+    // Fallback: stringify unknown block as text so we don't lose info.
+    const t = (block as any)?.text;
+    if (typeof t === "string") parts.push({ text: t });
+  }
+  return parts;
+}
+
+async function urlToInlineData(
+  url: string,
+  fallbackMime: string,
+): Promise<{ mimeType: string; data: string } | null> {
+  try {
+    if (url.startsWith("data:")) {
+      const match = url.match(/^data:([^;,]+)?(?:;base64)?,(.*)$/);
+      if (!match) return null;
+      const mimeType = match[1] || fallbackMime;
+      const data = match[2] || "";
+      // If it wasn't base64, encode.
+      if (url.includes(";base64,")) return { mimeType, data };
+      return { mimeType, data: btoa(decodeURIComponent(data)) };
+    }
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const mimeType = resp.headers.get("content-type")?.split(";")[0] || fallbackMime;
+    const buf = new Uint8Array(await resp.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+    return { mimeType, data: btoa(binary) };
+  } catch (err) {
+    console.warn("[googleAi] urlToInlineData failed", err);
+    return null;
+  }
+}
+
 
 /**
  * Google's function-calling schema is a subset of JSON Schema. Strip fields
@@ -257,10 +325,11 @@ async function callGoogle(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    const body = JSON.stringify(await toGooglePayload(req));
     const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toGooglePayload(req)),
+      body,
       signal: controller.signal,
     });
     if (!resp.ok) {

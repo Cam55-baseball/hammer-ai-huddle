@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1177,13 +1178,7 @@ Use the analyze_mechanics tool to return your structured analysis.`
     }
 
     // Use tool calling for guaranteed structured output - enhanced schema matching analyze-video
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const aiResult = await chatCompletion({
         model: 'google/gemini-2.5-flash', // Vision-capable model
         messages: [
           { role: 'system', content: systemPrompt },
@@ -1322,30 +1317,28 @@ Use the analyze_mechanics tool to return your structured analysis.`
           }
         ],
         tool_choice: { type: 'function', function: { name: 'analyze_mechanics' } }
-      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      
-      if (response.status === 429) {
+    if (!aiResult.ok) {
+      console.error('AI provider error:', aiResult.provider, aiResult.status, aiResult.errorBody);
+
+      if (aiResult.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limited' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
+      if (aiResult.status === 402) {
         return new Response(JSON.stringify({ error: 'Payment required' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      
-      throw new Error(`AI Gateway error: ${response.status}`);
+
+      throw new Error(`AI provider error: ${aiResult.status}`);
     }
 
-    const data = await response.json();
+    const data = aiResult.data;
     console.log('AI response received, processing...');
     
     // Extract from tool call
