@@ -39,6 +39,7 @@ import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
 import { certifyArmCare } from "../_shared/wic/armCare/sessionBuilder.ts";
+import { pickArmCarePrimary, type ArmCareCatalogRow } from "../_shared/wic/armCare/picker.ts";
 import {
   GAME_DAY_PRIMER_SLUGS,
   CROSS_SPORT_LOW_IMPACT_PREFERRED,
@@ -604,9 +605,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!isGameDay) {
       // WIC strength engine — full-body roles.
-      // 1) Arm care — every session, non-negotiable
-      const armCare = pickFirst(StrengthEngine.ARM_CARE_SLUGS);
-      if (armCare) push("lift", "arm_care", armCare, { sets: 1, reps: 1 }, "Non-negotiable shoulder prep. Every session opens here.");
+      // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
+      const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
+      const isPitcherRole = /pitch/i.test((profile as any)?.primary_position ?? (ctx as any)?.primary_position ?? "");
+      const isCatcherRole = /catch/i.test((profile as any)?.primary_position ?? "");
+      const armCarePicked = pickArmCarePrimary(lib as unknown as ArmCareCatalogRow[], {
+        sport,
+        isPitcher: isPitcherRole,
+        isCatcher: isCatcherRole,
+        isThrowingDay: !isGameDay,
+        isRecoveryDay: !!(decision?.primary === "recovery"),
+        isGameDay: !!isGameDay,
+        trainingAge: trainingAgeYears,
+        ageYears: Math.max(0, Math.floor(trainingAgeYears) + 6),
+        daySeed: daySeedForArmCare,
+        fatigueFlag: cnsReadiness < 5 ? "high" : cnsReadiness < 7 ? "moderate" : "low",
+      });
+      const armCareRow = armCarePicked && eligible(armCarePicked as unknown as MovementRow)
+        ? (armCarePicked as unknown as MovementRow)
+        : pickFirst(StrengthEngine.ARM_CARE_SLUGS);
+      if (armCareRow) push("lift", "arm_care", armCareRow, { sets: armCareRow.default_sets ?? 1, reps: armCareRow.default_reps ?? 1 }, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
 
       // 2) Trunk primer — every session
       const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
