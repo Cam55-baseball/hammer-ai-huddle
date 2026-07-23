@@ -164,58 +164,99 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
   switch (modality) {
     case "warmup": {
-      const inSeason = seasonPhase === "in";
-      const offSeason = seasonPhase === "off";
-      const drills: DrillStep[] = inSeason
-        ? [
-            { name: "Light cardio (jog/jump rope)", dosage: "3 min easy", cue: "nose breathing only" },
-            { name: "World's greatest stretch", dosage: "5 per side", cue: "elbow to inside of front foot, then rotate up" },
-            { name: "Hip airplanes", dosage: "5 per side", cue: "control the lower-down, no wobble" },
-            { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "2 sets x 8 steps each way", cue: "knees track over toes, hips stay level", stopIf: "knee or hip pain" },
-            { name: "Pogo hops", dosage: "2 sets x 10 quick contacts", cue: "stiff ankles, ground feels hot" },
-            // In-season cross-sport neural activation lives INSIDE the warm-up
-            // (never on the back end of an in-season day). Keeps carry-over
-            // patterns from decaying without adding a separate CNS block.
-            { name: "Cross-sport activation — shuffle + change-of-direction", dosage: "2 sets x 20 sec each direction", cue: "athletic stance, quick feet, react like a defender", stopIf: "knee/ankle pain" },
-            { name: "Cross-sport activation — med-ball rotational toss", setup: "6-8 lb ball vs wall or partner", dosage: "2 sets x 4 per side", cue: "hips lead, arms finish — mimic a swing / throw" },
-          ]
-        : offSeason
-          ? [
-              { name: "Light cardio (jog/bike/rope)", dosage: "8 min easy", cue: "build heart rate slowly" },
-              { name: "World's greatest stretch", dosage: "5 per side" },
-              { name: "90/90 hip switches", dosage: "8 per side", cue: "slow, no momentum" },
-              { name: "T-spine open books", dosage: "8 per side", cue: "reach long, exhale at end range" },
-              { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "3 sets x 10 steps each way", cue: "knees out, ribs down", stopIf: "knee or hip pain" },
-              { name: "Mini-band monster walks", setup: "band above knees", dosage: "3 sets x 8 forward + 8 back" },
-              { name: "Pogo hops", dosage: "3 sets x 12 contacts", cue: "stiff ankles, fast off ground" },
-              { name: "Med-ball slams", setup: "6 lb ball", dosage: "2 sets x 6", cue: "full exhale on slam" },
-            ]
-          : [
-              { name: "Light cardio (jog/jump rope)", dosage: "5 min easy" },
-              { name: "World's greatest stretch", dosage: "5 per side" },
-              { name: "Hip openers (90/90)", dosage: "6 per side" },
-              { name: "T-spine rotations", dosage: "6 per side" },
-              { name: "Mini-band lateral walks", setup: "light mini-band above knees", dosage: "2 sets x 10 steps each way", cue: "knees track toes" },
-              { name: "Pogo hops", dosage: "2 sets x 12 contacts" },
-            ];
-      const dur = inSeason ? 12 : offSeason ? 18 : 12;
+      // Elite warmup library — fascial / ECM / fast-twitch / mobility /
+      // activation / arm-care, composed by context (game / practice / speed
+      // day / lift day / throwing / hitting / off-season / recovery / travel)
+      // and scaled by training-age lifecycle so beginners → pros all get an
+      // appropriate prep sequence.
+      const {
+        buildWarmup,
+        resolveWarmupContext,
+        lifecycleFor,
+      } = require("./warmupLibrary") as typeof import("./warmupLibrary");
+      const scheduleAny = proj as unknown as { schedule?: { isGameDay?: boolean; isPracticeDay?: boolean; isTravelDay?: boolean; isRecoveryDay?: boolean } };
+      const sched = scheduleAny?.schedule ?? {};
+      const isGameDay = !!sched.isGameDay;
+      const isPracticeDay = !!sched.isPracticeDay;
+      const isTravelDay = !!sched.isTravelDay;
+      const isRecoveryDay = !!sched.isRecoveryDay || recoverDay;
+      const lifecycle = lifecycleFor(lifecycleBand, liftingAge);
+      // Day-of-year seed so drills rotate day-to-day but stay stable within a day.
+      const now = new Date();
+      const daySeed = (now.getUTCFullYear() * 366) + (now.getUTCMonth() * 31) + now.getUTCDate();
+      const context = resolveWarmupContext({
+        seasonPhase: seasonPhase as "off" | "pre" | "in" | "post" | null,
+        isGameDay,
+        isPracticeDay,
+        isTravelDay,
+        isRecoveryDay,
+        modalityBias: null,
+      });
+      const built = buildWarmup({ context, lifecycle, gameDay: isGameDay, daySeed });
+      const drills: DrillStep[] = built.drills.map((d) => ({
+        name: d.name,
+        setup: d.setup,
+        dosage: d.dosage,
+        cue: d.cue,
+        stopIf: d.stopIf,
+      }));
+      const titleByContext: Record<string, string> = {
+        game_day: "Warm-up — game-day neural primer",
+        in_season_practice: "Warm-up — practice-ready",
+        in_season_default: "Warm-up — in-season maintenance",
+        speed_day: "Warm-up — speed-day fast-twitch prep",
+        lift_day: "Warm-up — lift-day joint + stability prep",
+        throwing_day: "Warm-up — throwing-day arm-care prep",
+        hitting_day: "Warm-up — hitting-day rotational prep",
+        offseason_extended: "Warm-up — off-season extended (fascial + fast-twitch)",
+        recovery_day: "Warm-up — recovery flow",
+        travel_day: "Warm-up — travel-day movement prep",
+        default: "Warm-up — dynamic",
+      };
+      const whyByContext: Record<string, string> = {
+        game_day: "Prime the fascial system and fire fast-twitch pathways without spending — you want the CNS awake, not fatigued.",
+        in_season_practice: "Restore tissue glide, wake up stabilizers, spark the fast-twitch reflex — carry patterns stay sharp inside the warm-up so you save legs for practice.",
+        in_season_default: "Short elite prep so you're honest before skill work — CARs and fascial rotation open the joints, low-cost neural priming keeps quickness alive.",
+        speed_day: "Fast-twitch prep is the whole point — CARs open the joints, ankle bounces and pogos wake stiffness, altitude drops sharpen ground contact.",
+        lift_day: "Joint CARs and stability activation earn your right to load — Pallof and Copenhagen bulletproof the trunk before the barbell.",
+        throwing_day: "Warm the tissue, open the thorax, and progress arm-care so the shoulder complex is ready before the first throw.",
+        hitting_day: "Fascial rotation, hip mobility, and low-volume rotational power ready the swing without pre-fatiguing it.",
+        offseason_extended: "Full spectrum — tissue hydration, CARs, fascial spirals, mobility, stability, neural priming, and fast-twitch primer — because volume today demands honest prep.",
+        recovery_day: "Breathwork, tissue prep, and slow CARs to move fluid, drop tone, and set the parasympathetic state.",
+        travel_day: "Reset the ribcage, decompress the spine, wake the glutes — undo the seat.",
+        default: "Elite prep calibrated to today's session length.",
+      };
+      const roadmapByContext: Record<string, string> = {
+        game_day: "Game today — short neural primer so the CNS is on but not spent.",
+        in_season_practice: "Practice today — enough prep to move well, low enough cost to save legs.",
+        in_season_default: "In-season maintenance — quick tissue prep, CARs, and neural spark.",
+        speed_day: "Speed day — the warm-up IS part of the stimulus. Wake the ankle stiffness first.",
+        lift_day: "Lift day — earn the load with CARs, activation, and stability primers.",
+        throwing_day: "Throwing day — arm-care volume front-loaded so the shoulder is ready.",
+        hitting_day: "Hitting day — rotational prep primes elastic transfer through the swing.",
+        offseason_extended: "Off-season — extended prep so you can handle today's volume honestly.",
+        recovery_day: "Readiness is low — moving fluid, downshifting tone, no CNS spend.",
+        travel_day: "Travel day — undo the seat, restore breathing, wake the posterior chain.",
+        default: "Standard elite warm-up.",
+      };
+      const dur = built.estMinutes;
+      const contextKey = built.context;
       return {
         modality,
-        title: inSeason ? "Warm-up — game-ready + cross-sport" : offSeason ? "Warm-up — extended" : "Warm-up — dynamic",
-        why: inSeason
-          ? "Prime your CNS without spending, then a short cross-sport activation to keep athleticism sharp — carry-over patterns live INSIDE the warm-up in-season, never on the back end."
-          : "Open the joints, switch the nervous system on, get the body honest before output.",
-        roadmapReason: inSeason
-          ? "In-season — short warm-up with embedded cross-sport neural spark so you save legs for the game."
-          : offSeason
-            ? "Off-season — extended prep so you can handle today's higher volume work."
-            : "Default warm-up sequence calibrated to today's session length.",
-        phase: inSeason ? "maintain" : "build",
+        title: titleByContext[contextKey] ?? titleByContext.default,
+        why: whyByContext[contextKey] ?? whyByContext.default,
+        roadmapReason: roadmapByContext[contextKey] ?? roadmapByContext.default,
+        phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
-        cues: ["Move slow first, fast last.", "If something feels tight, one more set, then move on."],
+        cues: [
+          "Move slow first, fast last — tissue before intent.",
+          "Every rep is honest — no drift, no going through the motions.",
+          "Fascial and fast-twitch drills earn everything downstream.",
+        ],
         stopRules: [
           "Sharp pain (not muscle soreness) — stop and tell Hammer where.",
+          "Any pull or tightness on a fast-twitch drill — end the fast-twitch portion.",
           "Dizziness or shortness of breath — pause, hydrate, restart slower.",
         ],
         durationMin: dur,
@@ -225,14 +266,14 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         missing: [],
         missingContextKeys: [],
         gamePlanTemplate: {
-          title: inSeason ? "Hammer warm-up (game day)" : offSeason ? "Hammer warm-up (extended)" : "Hammer warm-up",
+          title: titleByContext[contextKey] ?? "Hammer warm-up",
           activityType: "warmup",
           icon: "flame",
           color: "#f97316",
           durationMinutes: dur,
-          description: "Daily dynamic warm-up prescribed by Hammer.",
+          description: whyByContext[contextKey] ?? "Daily dynamic warm-up prescribed by Hammer.",
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.warmup",
+          source: `hammer.daily.warmup.${contextKey}`,
         },
       };
     }
