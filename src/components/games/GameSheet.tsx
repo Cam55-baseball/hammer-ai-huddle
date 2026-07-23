@@ -43,8 +43,9 @@ import { GameTotalsHeader } from "./GameTotalsHeader";
 import { GameDayMode } from "./GameDayMode";
 import { ActivePlanCard } from "./ActivePlanCard";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
-import { usePitcherDossiers } from "@/hooks/useGameDossiers";
+import { usePitcherDossiers, useOpponentHitters } from "@/hooks/useGameDossiers";
 import { PitcherDossierDrawer } from "./PitcherDossierDrawer";
+import { HitterDossierDrawer } from "./HitterDossierDrawer";
 import { NumberField } from "@/components/games/NumberField";
 
 
