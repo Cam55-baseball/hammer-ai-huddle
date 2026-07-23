@@ -40,15 +40,17 @@ export function compoundSlugsFor(phase: WkPhase, dayOfWeek: number = 0): string[
   const lateOff = phase === "os_q3" || phase === "os_q4";
 
   if (inSeason) {
-    // In-season: tempo, single-leg, posterior — no max effort
+    // In-season: lead with a true compound_lower so the generator and
+    // certifier agree before rotating into posterior-chain maintenance.
     return [
+      "goblet_squat",
+      "back_squat_concentric",
       "hip_thrust_concentric",
       "lift_bb_hip_thrust",
       "lift_sl_hip_thrust",
       "lift_heavy_sled_march",
       "lift_snatch_grip_rdl",
       "rdl_concentric",
-      "back_squat_concentric",
     ];
   }
 

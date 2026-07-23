@@ -68,7 +68,7 @@ const GOV_VERSION = "gov_v1";
 // users unblocked even if a bad seed slips in later.
 const CANONICAL_SET = new Set<string>(ALL_CATEGORIES as readonly string[]);
 
-function coerceCanonicalCategory(cat: Partial<CatalogEntry> | undefined): MovementCategory | null {
+export function coerceCanonicalCategory(cat: Partial<CatalogEntry> | undefined): MovementCategory | null {
   if (!cat) return null;
   const raw = (cat as { movement_category?: string | null }).movement_category ?? null;
   if (raw && CANONICAL_SET.has(raw)) return raw as MovementCategory;
