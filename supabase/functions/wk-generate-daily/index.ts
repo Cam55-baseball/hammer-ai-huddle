@@ -25,7 +25,7 @@ import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/se
 import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
 // WIC engine modules — canonical slug pools per engine.
 import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
-import { sprintSlugs } from "../_shared/wic/engines/sprint.ts";
+import { selectSpeedPicks } from "../_shared/wic/engines/speed.ts";
 import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
@@ -701,12 +701,39 @@ const handler = async (req: Request): Promise<Response> => {
     const hoursSinceSpeed = lastSpeed.data?.plan_date
       ? Math.floor((new Date(planDate + "T00:00:00").getTime() - new Date(lastSpeed.data.plan_date + "T00:00:00").getTime()) / 3600000)
       : 9999;
-    if (!isGameDay && hoursSinceSpeed >= block.speed_cadence_hours - 6) {
-      const speedSet: MovementRow[] = sprintSlugs(sport)
-        .map((s) => lib.find((m) => m.slug === s && eligible(m)))
-        .filter(Boolean) as MovementRow[];
-      for (const m of speedSet) {
-        push("speed", "speed", m, {}, `${sport === "baseball" ? "Baseball" : "Softball"} Speed Lab — cadence every ${block.speed_cadence_hours}h.`);
+    // Game-day still gets a short primer via the Phase 9 game_day_primer template.
+    if (isGameDay || hoursSinceSpeed >= block.speed_cadence_hours - 6) {
+      const dayOfYearSeed = Math.floor(
+        (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
+      );
+      const speedSelection = selectSpeedPicks({
+        catalog: lib as any,
+        template: {
+          seasonPhase: trainingContext.season_phase,
+          dayType: trainingContext.day_type,
+          trainingAge: (trainingAgeContext as any)?.classification,
+          primaryAdaptation: adaptationDecision.primary,
+          isGameDay,
+          isPracticeDay,
+          isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+          isReturnToPlay: false,
+        },
+        eligible: (m: any) => eligible(m as MovementRow),
+        sport,
+        dayOfYearSeed,
+        cnsBudget: Math.max(2, Math.round(cnsCap * 0.6)),
+        trainingAgeClass: (trainingAgeContext as any)?.classification,
+      });
+      for (const pick of speedSelection.picks) {
+        const m = pick.movement as unknown as MovementRow;
+        push(
+          "speed",
+          "speed",
+          m,
+          {},
+          `${speedSelection.template.displayName} — ${pick.category.replace(/_/g, " ")}. ${pick.reason}`,
+          { speed_template_id: speedSelection.template.id, speed_required_category: pick.category },
+        );
       }
     }
 
