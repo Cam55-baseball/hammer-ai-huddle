@@ -1856,7 +1856,7 @@ function ensureFullBodyLift(
   if (!hasLiftRole("arm_care")) {
     const m = pickFirstCategory(["crossover_symmetry_full", "jband_full_chart", "lift_er_at_90", "lift_band_pullapart"], "arm_care") ??
       pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
-    if (m) push("lift", "arm_care", m, { sets: 1, reps: 1 }, "Full-body guardrail: arm care is mandatory, not optional.");
+    if (m) push("lift", "arm_care", m, {}, "Full-body guardrail: arm care is mandatory, not optional.");
   }
 
   if (!hasLiftRole("trunk_primer")) {
