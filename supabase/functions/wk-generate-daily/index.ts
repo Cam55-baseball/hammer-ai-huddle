@@ -108,6 +108,12 @@ interface MovementRow {
   default_reps: number | null;
   default_tempo: string | null;
   default_load_pct: number | null;
+  // Precise-dosage fields (added 2026-07-23) — every prescription must carry
+  // at least one concrete number the athlete can execute without interpretation.
+  default_duration_seconds: number | null;
+  default_distance_feet: number | null;
+  default_total_reps: number | null;
+  dosage_unit: string | null;
   family: string | null;
   intensity_class: string | null;
   phase_allow: string[] | null;
@@ -165,6 +171,10 @@ interface Prescription {
   reps: number | null;
   tempo: string | null;
   load_pct: number | null;
+  duration_seconds: number | null;
+  distance_feet: number | null;
+  total_reps: number | null;
+  dosage_unit: string | null;
   cns_cost: number;
   cns_clamped: boolean;
   substituted_from_slug: string | null;
@@ -549,6 +559,10 @@ const handler = async (req: Request): Promise<Response> => {
         engine: wicEngine,
         generator_version: WIC_VERSION,
       });
+      const durationSeconds = (overrides as any).duration_seconds ?? s.movement.default_duration_seconds ?? null;
+      const distanceFeet = (overrides as any).distance_feet ?? s.movement.default_distance_feet ?? null;
+      const totalReps = (overrides as any).total_reps ?? s.movement.default_total_reps ?? null;
+      const dosageUnit = (overrides as any).dosage_unit ?? s.movement.dosage_unit ?? "reps";
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
@@ -556,6 +570,10 @@ const handler = async (req: Request): Promise<Response> => {
         reps: repsBase,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
+        duration_seconds: durationSeconds,
+        distance_feet: distanceFeet,
+        total_reps: totalReps,
+        dosage_unit: dosageUnit,
         cns_cost: s.movement.cns_cost,
         cns_clamped: clamped,
         substituted_from_slug: s.substitutedFrom,
@@ -604,7 +622,7 @@ const handler = async (req: Request): Promise<Response> => {
           "cross_sport",
           "cross_sport",
           primer,
-          { sets: 1, reps: 1 },
+          {},
           "Game-day crossover activation — short, early, and low-cost. It starts the day after warm-up instead of sitting on the back end.",
           { placement: "early_activation", sequencing_hint: "Do after warm-up and before the game. Stop before fatigue shows up." },
         );
@@ -793,7 +811,7 @@ const handler = async (req: Request): Promise<Response> => {
         "cross_sport",
         "cross_sport",
         cross,
-        { sets: 1, reps: 1 },
+        {},
         `Offseason cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns after the main training day.`,
         { placement: "offseason_back_end", sequencing_hint: "Offseason only: do after the primary work, never before an in-season game." },
       );
@@ -1611,6 +1629,10 @@ const handler = async (req: Request): Promise<Response> => {
       reps: r.reps,
       tempo: r.tempo ?? null,
       load_pct: r.load_pct ?? null,
+      duration_seconds: (r as any).duration_seconds ?? null,
+      distance_feet: (r as any).distance_feet ?? null,
+      total_reps: (r as any).total_reps ?? null,
+      dosage_unit: (r as any).dosage_unit ?? null,
       cns_cost: r.cns_cost,
       cns_clamped: r.cns_clamped,
       substituted_from_slug: r.substituted_from_slug ?? null,
@@ -1838,7 +1860,7 @@ function ensureFullBodyLift(
   if (!hasLiftRole("arm_care")) {
     const m = pickFirstCategory(["crossover_symmetry_full", "jband_full_chart", "lift_er_at_90", "lift_band_pullapart"], "arm_care") ??
       pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
-    if (m) push("lift", "arm_care", m, { sets: 1, reps: 1 }, "Full-body guardrail: arm care is mandatory, not optional.");
+    if (m) push("lift", "arm_care", m, {}, "Full-body guardrail: arm care is mandatory, not optional.");
   }
 
   if (!hasLiftRole("trunk_primer")) {
