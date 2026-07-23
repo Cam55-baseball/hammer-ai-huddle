@@ -40,7 +40,7 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'weight_falls_forward',
     ],
     summary:
-      'Slow, controlled, balanced back-hip load BEFORE the hand load, timed to the pitcher starting delivery. Bigger hip load = more swing power.',
+      'Slow, controlled, balanced back-hip load BEFORE the hand load, timed to pitcher release. A bigger leg-load pre-hand-load establishes midline, preserves separation, and expands launch angle + power.',
     feltOrder: 1,
   },
   P2: {
@@ -57,7 +57,8 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'front_shoulder_pulls_out',
       'chest_not_square_to_plate',
     ],
-    summary: 'Bat/scap/knob load behind the head locks the balance Phase 1 created.',
+    summary:
+      'Scap-pack / hand / knob load coils on the loaded back hip and locks the midline. Sets up Oh\'s top triangle (elbow forward, hands back) so the back-knee bottom triangle can form in P4.',
     feltOrder: 2,
   },
   P3: {
@@ -103,7 +104,7 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'shoulders_open_before_elbow_extends',
     ],
     summary:
-      'Knob = fulcrum. Back elbow drives forward first; hands stay back; barrel catapults last. Hitter feels this as the third conscious action; P3 (stride/heel plant) emerges from it.',
+      'Knob = fulcrum. Only ONE thing goes forward first — back elbow (or front of the bicep) — with hands staying back. That turns the barrel behind the ball (square to fair), keeps the swing on plane, and lets you catch velocity at low effort. Hitter feels this third; P3 emerges from it.',
     feltOrder: 3,
   },
 };

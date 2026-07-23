@@ -47,6 +47,36 @@ const EMPTY_COPY: Record<string, string> = {
     'Hitting doctrine ready — see causal chain and roadmap below.',
 };
 
+// Rotating philosophy reminders — sport-agnostic (baseball + softball share the same laws).
+// Deterministic rotation by UTC day so athletes and coaches see the same reminder on the same day.
+const PHILOSOPHY_REMINDERS: { title: string; body: string }[] = [
+  {
+    title: 'Back hip load = midline + power',
+    body: 'Back hip load with hand load / scap pack coils the hip, creates the midline, and leaves the room to separate. A bigger leg load BEFORE the hand load unlocks more launch angle and more power.',
+  },
+  {
+    title: "Top triangle → bottom triangle (Sadaharu Oh)",
+    body: 'If the elbow moves forward with the hands staying back it creates a triangle. That top triangle makes the back knee turn forward — forming the bottom triangle in the back leg.',
+  },
+  {
+    title: 'Only two things go forward at once',
+    body: 'Either your elbow (or the front of your bicep) brings the barrel — with the hands staying back — or your hands bring the barrel. Elbow leading with hands back is the perfection version.',
+  },
+  {
+    title: 'Square to fair',
+    body: 'Taking your elbow (or the front of your bicep) to the ball with the hands back turns your barrel BEHIND the ball, which gets your bat square to fair — the shape the pros are actually describing.',
+  },
+  {
+    title: 'On plane = low-effort velocity',
+    body: 'Being on plane gives you a longer contact window. Hitters must catch velocity at low effort — hands back, elbow (or front of the bicep) forward. "Just late" is usually off-plane, not slow.',
+  },
+];
+
+function pickPhilosophyReminder() {
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  return PHILOSOPHY_REMINDERS[dayIndex % PHILOSOPHY_REMINDERS.length];
+}
+
 export function HittingDoctrineBlock({ doctrine, title }: Props) {
   if (!doctrine) {
     return (
@@ -105,6 +135,7 @@ export function HittingDoctrineBlock({ doctrine, title }: Props) {
   }
 
   const chain = causal_chains[priority_phase]!;
+  const reminder = pickPhilosophyReminder();
 
   return (
     <div className="space-y-3">
@@ -118,6 +149,12 @@ export function HittingDoctrineBlock({ doctrine, title }: Props) {
       </div>
       <HittingCausalChainCard chain={chain} />
       <HittingRoadmapLadder roadmap={roadmap} />
+      <div className="rounded-md border border-border/60 bg-muted/40 p-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Philosophy reminder · {reminder.title}
+        </p>
+        <p className="mt-1 text-xs text-foreground/90">{reminder.body}</p>
+      </div>
       <p className="text-[10px] text-muted-foreground/70">
         engine_version <code>{doctrine.engine_version}</code> · violated{' '}
         {doctrine.violated_phases.join(', ') || '—'}
