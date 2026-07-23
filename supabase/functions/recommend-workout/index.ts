@@ -204,8 +204,8 @@ serve(async (req) => {
       recoveryContext?: RecoveryContext;
     };
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!HAS_AI_CREDENTIALS) {
+      throw new Error("No AI credentials configured (GOOGLE_AI_API_KEY or LOVABLE_API_KEY)");
     }
 
     const recoveryWarning = analyzeRecoveryStatus(recoveryContext);
