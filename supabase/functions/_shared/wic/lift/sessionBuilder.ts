@@ -201,13 +201,13 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     stamps.set(rx.movement_slug, {
       template_id: template.id,
       template_name: template.displayName,
-      category: (cat.movement_category ?? null) as MovementCategory | null,
+      category: resolvedCategory,
       substitution_family: cat.substitution_family ?? null,
       substitution_ladder: ladder,
       ladder_score: score,
       ladder_complete: complete,
-      why_category: cat.movement_category
-        ? `Categorized as ${cat.movement_category} in the Phase 8 governance registry.`
+      why_category: resolvedCategory
+        ? `Categorized as ${resolvedCategory} in the Phase 8 governance registry.`
         : `Category missing — governance version pending.`,
       why_template: `Placed under the ${template.displayName} template because season=${input.template.seasonPhase ?? "n/a"}, adaptation=${input.template.primaryAdaptation ?? "n/a"}, day_type=${input.template.dayType ?? "n/a"}.`,
       why_substitution_ladder: familySize > 0
@@ -216,11 +216,13 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     });
   }
 
-  // Category coverage → full-body check.
+  // Category coverage → full-body check. Use the coerced canonical category so
+  // the certifier is resilient to legacy philosophy labels in the catalog.
   const categorized = liftRxs.map((r) => ({
     slug: r.movement_slug,
-    movement_category: catalogBySlug.get(r.movement_slug)?.movement_category ?? null,
+    movement_category: coerceCanonicalCategory(catalogBySlug.get(r.movement_slug)),
   }));
+
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
   const fullBodyOk = missing.length === 0;
