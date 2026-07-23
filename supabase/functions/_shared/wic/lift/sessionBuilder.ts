@@ -60,6 +60,56 @@ export interface CertifyLiftResult {
 
 const GOV_VERSION = "gov_v1";
 
+// Belt-and-braces coercion: if the catalog's movement_category is missing or
+// non-canonical, infer the canonical MovementCategory from the row's other
+// governance columns (category, pattern) so the certifier never fails purely
+// because of a stale/dirty philosophy label in the catalog column. The primary
+// fix is the database canonicalization; this is the safety net that keeps
+// users unblocked even if a bad seed slips in later.
+const CANONICAL_SET = new Set<string>(ALL_CATEGORIES as readonly string[]);
+
+function coerceCanonicalCategory(cat: Partial<CatalogEntry> | undefined): MovementCategory | null {
+  if (!cat) return null;
+  const raw = (cat as { movement_category?: string | null }).movement_category ?? null;
+  if (raw && CANONICAL_SET.has(raw)) return raw as MovementCategory;
+
+  const pattern = ((cat as { pattern?: string | null }).pattern ?? "").toLowerCase();
+  const category = ((cat as { category?: string | null }).category ?? "").toLowerCase();
+
+  // Pattern first (strongest signal).
+  if (pattern === "squat") return "compound_lower";
+  if (pattern === "hinge") return "posterior_chain";
+  if (pattern === "hinge_squat") return "compound_lower";
+  if (pattern === "push" || pattern === "upper_push") return "compound_upper_push";
+  if (pattern === "pull" || pattern === "upper_pull") return "compound_upper_pull";
+  if (pattern === "carry_antirotation") return "carry";
+  if (pattern === "rotational") return "rotation";
+  if (pattern === "trunk") return "core";
+  if (pattern === "mobility") return "mobility";
+  if (pattern === "plyometric" || pattern === "plyo") return "jump_landing";
+  if (pattern === "arm_care") return "arm_care";
+
+  // Category fallback.
+  if (category === "arm_care") return "arm_care";
+  if (category === "unilateral_lower") return "single_leg";
+  if (category === "unilateral_pull") return "compound_upper_pull";
+  if (category === "unilateral_push") return "compound_upper_push";
+  if (category === "carry_antirotation") return "carry";
+  if (category === "trunk") return "core";
+  if (category === "warmup" || category === "conditioning" || category === "cross_sport" || category === "functional_patterning") return "mobility";
+  if (category === "kot" || category === "summers") return "single_leg";
+  if (category === "westside" || category === "olympic" || category === "compound" || category === "strength") return "compound_lower";
+  if (category === "strongfirst") return "carry";
+  if (category === "cressey_sp" || category === "driveline") return "arm_care";
+  if (category === "heenan" || category === "ido_portal" || category === "marinovich" || category === "speed_lab") return "mobility";
+  if (category === "pap_bridge" || category === "bat_speed") return "rotation";
+  if (category === "supplemental") return "posterior_chain";
+
+  return null;
+}
+
+
+
 export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
   const template = resolveLiftTemplate(input.template);
   const liftRxs = input.prescriptions.filter((r) => r.slot === "lift");
