@@ -622,7 +622,7 @@ const handler = async (req: Request): Promise<Response> => {
           "cross_sport",
           "cross_sport",
           primer,
-          { sets: 1, reps: 1 },
+          {},
           "Game-day crossover activation — short, early, and low-cost. It starts the day after warm-up instead of sitting on the back end.",
           { placement: "early_activation", sequencing_hint: "Do after warm-up and before the game. Stop before fatigue shows up." },
         );
