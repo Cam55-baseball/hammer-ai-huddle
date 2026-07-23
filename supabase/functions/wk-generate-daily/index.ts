@@ -108,6 +108,12 @@ interface MovementRow {
   default_reps: number | null;
   default_tempo: string | null;
   default_load_pct: number | null;
+  // Precise-dosage fields (added 2026-07-23) — every prescription must carry
+  // at least one concrete number the athlete can execute without interpretation.
+  default_duration_seconds: number | null;
+  default_distance_feet: number | null;
+  default_total_reps: number | null;
+  dosage_unit: string | null;
   family: string | null;
   intensity_class: string | null;
   phase_allow: string[] | null;
@@ -165,6 +171,10 @@ interface Prescription {
   reps: number | null;
   tempo: string | null;
   load_pct: number | null;
+  duration_seconds: number | null;
+  distance_feet: number | null;
+  total_reps: number | null;
+  dosage_unit: string | null;
   cns_cost: number;
   cns_clamped: boolean;
   substituted_from_slug: string | null;
