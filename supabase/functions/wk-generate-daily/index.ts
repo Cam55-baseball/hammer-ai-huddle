@@ -811,7 +811,7 @@ const handler = async (req: Request): Promise<Response> => {
         "cross_sport",
         "cross_sport",
         cross,
-        { sets: 1, reps: 1 },
+        {},
         `Offseason cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns after the main training day.`,
         { placement: "offseason_back_end", sequencing_hint: "Offseason only: do after the primary work, never before an in-season game." },
       );
