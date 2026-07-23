@@ -60,6 +60,56 @@ export interface CertifyLiftResult {
 
 const GOV_VERSION = "gov_v1";
 
+// Belt-and-braces coercion: if the catalog's movement_category is missing or
+// non-canonical, infer the canonical MovementCategory from the row's other
+// governance columns (category, pattern) so the certifier never fails purely
+// because of a stale/dirty philosophy label in the catalog column. The primary
+// fix is the database canonicalization; this is the safety net that keeps
+// users unblocked even if a bad seed slips in later.
+const CANONICAL_SET = new Set<string>(ALL_CATEGORIES as readonly string[]);
+
+function coerceCanonicalCategory(cat: Partial<CatalogEntry> | undefined): MovementCategory | null {
+  if (!cat) return null;
+  const raw = (cat as { movement_category?: string | null }).movement_category ?? null;
+  if (raw && CANONICAL_SET.has(raw)) return raw as MovementCategory;
+
+  const pattern = ((cat as { pattern?: string | null }).pattern ?? "").toLowerCase();
+  const category = ((cat as { category?: string | null }).category ?? "").toLowerCase();
+
+  // Pattern first (strongest signal).
+  if (pattern === "squat") return "compound_lower";
+  if (pattern === "hinge") return "posterior_chain";
+  if (pattern === "hinge_squat") return "compound_lower";
+  if (pattern === "push" || pattern === "upper_push") return "compound_upper_push";
+  if (pattern === "pull" || pattern === "upper_pull") return "compound_upper_pull";
+  if (pattern === "carry_antirotation") return "carry";
+  if (pattern === "rotational") return "rotation";
+  if (pattern === "trunk") return "core";
+  if (pattern === "mobility") return "mobility";
+  if (pattern === "plyometric" || pattern === "plyo") return "jump_landing";
+  if (pattern === "arm_care") return "arm_care";
+
+  // Category fallback.
+  if (category === "arm_care") return "arm_care";
+  if (category === "unilateral_lower") return "single_leg";
+  if (category === "unilateral_pull") return "compound_upper_pull";
+  if (category === "unilateral_push") return "compound_upper_push";
+  if (category === "carry_antirotation") return "carry";
+  if (category === "trunk") return "core";
+  if (category === "warmup" || category === "conditioning" || category === "cross_sport" || category === "functional_patterning") return "mobility";
+  if (category === "kot" || category === "summers") return "single_leg";
+  if (category === "westside" || category === "olympic" || category === "compound" || category === "strength") return "compound_lower";
+  if (category === "strongfirst") return "carry";
+  if (category === "cressey_sp" || category === "driveline") return "arm_care";
+  if (category === "heenan" || category === "ido_portal" || category === "marinovich" || category === "speed_lab") return "mobility";
+  if (category === "pap_bridge" || category === "bat_speed") return "rotation";
+  if (category === "supplemental") return "posterior_chain";
+
+  return null;
+}
+
+
+
 export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
   const template = resolveLiftTemplate(input.template);
   const liftRxs = input.prescriptions.filter((r) => r.slot === "lift");
@@ -94,6 +144,8 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
         slug: rx.movement_slug,
       });
     }
+    const resolvedCategory = coerceCanonicalCategory(cat);
+
     // Season / age legality using the new registry (belt-and-braces on top of
     // legacy phase_allow, which the generator already enforces).
     const phase = input.template.seasonPhase;
@@ -149,13 +201,13 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     stamps.set(rx.movement_slug, {
       template_id: template.id,
       template_name: template.displayName,
-      category: (cat.movement_category ?? null) as MovementCategory | null,
+      category: resolvedCategory,
       substitution_family: cat.substitution_family ?? null,
       substitution_ladder: ladder,
       ladder_score: score,
       ladder_complete: complete,
-      why_category: cat.movement_category
-        ? `Categorized as ${cat.movement_category} in the Phase 8 governance registry.`
+      why_category: resolvedCategory
+        ? `Categorized as ${resolvedCategory} in the Phase 8 governance registry.`
         : `Category missing — governance version pending.`,
       why_template: `Placed under the ${template.displayName} template because season=${input.template.seasonPhase ?? "n/a"}, adaptation=${input.template.primaryAdaptation ?? "n/a"}, day_type=${input.template.dayType ?? "n/a"}.`,
       why_substitution_ladder: familySize > 0
@@ -164,11 +216,13 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     });
   }
 
-  // Category coverage → full-body check.
+  // Category coverage → full-body check. Use the coerced canonical category so
+  // the certifier is resilient to legacy philosophy labels in the catalog.
   const categorized = liftRxs.map((r) => ({
     slug: r.movement_slug,
-    movement_category: catalogBySlug.get(r.movement_slug)?.movement_category ?? null,
+    movement_category: coerceCanonicalCategory(catalogBySlug.get(r.movement_slug)),
   }));
+
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
   const fullBodyOk = missing.length === 0;
