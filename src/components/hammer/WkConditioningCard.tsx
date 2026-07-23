@@ -16,6 +16,7 @@ import { getCard } from "@/lib/wic/cardRegistry";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
+import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 
 export function WkConditioningCard() {
   const gp = useGpSignal();
@@ -60,6 +61,7 @@ export function WkConditioningCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} generating={generating} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <WkCardCompletion modality="conditioning" modalityLabel="Conditioning" items={items} />}
         {items.length > 0 && <CardActions modality="conditioning" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>

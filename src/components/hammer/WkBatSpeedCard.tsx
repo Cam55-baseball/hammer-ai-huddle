@@ -15,6 +15,7 @@ import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
+import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 
 export function WkBatSpeedCard() {
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
@@ -59,6 +60,7 @@ export function WkBatSpeedCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <WkCardCompletion modality="bat_speed" modalityLabel="Bat Speed" items={items} />}
         {items.length > 0 && <CardActions modality="bat_speed" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
