@@ -286,11 +286,26 @@ function OverviewPanel({
 }) {
   const [positions, setPositions] = useState<string[]>(game.my_positions ?? []);
   const pitcherDossiers = usePitcherDossiers(game.sport);
+  const hitterDossiers = useOpponentHitters(game.sport);
   const [editingPitcher, setEditingPitcher] = useState<any | null>(null);
   const [newPitcherOpen, setNewPitcherOpen] = useState(false);
+  const [editingHitter, setEditingHitter] = useState<any | null>(null);
+  const [newHitterOpen, setNewHitterOpen] = useState(false);
+  const attachedHitterIds: string[] = Array.isArray(game.opponent_hitter_dossier_ids)
+    ? game.opponent_hitter_dossier_ids
+    : [];
+  const attachedHitters = (hitterDossiers.list.data ?? []).filter((h) => attachedHitterIds.includes(h.id));
+  const availableHitters = (hitterDossiers.list.data ?? []).filter((h) => !attachedHitterIds.includes(h.id));
   const currentPitcher = (pitcherDossiers.list.data ?? []).find(
     (p) => p.id === game.probable_pitcher_dossier_id,
   );
+
+  const toggleHitter = (id: string) => {
+    const next = attachedHitterIds.includes(id)
+      ? attachedHitterIds.filter((x) => x !== id)
+      : [...attachedHitterIds, id];
+    onPatch({ opponent_hitter_dossier_ids: next });
+  };
 
   const togglePos = (p: string) => {
     const next = positions.includes(p)
