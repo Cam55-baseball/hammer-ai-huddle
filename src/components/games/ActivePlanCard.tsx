@@ -14,11 +14,13 @@ import { useQuery } from "@tanstack/react-query";
 import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
 import { useLogPlanOutcome, usePregamePlans } from "@/hooks/usePregamePlan";
+import { useOpponentHitters } from "@/hooks/useGameDossiers";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, Sparkles, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Sparkles, Loader2, Users } from "lucide-react";
 import { SITUATION_MATRIX } from "@/lib/games/situationalMatrix";
+import { TeamPitchingPlanCard } from "./TeamPitchingPlanCard";
 
 export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) {
   const { user } = useAuth();
