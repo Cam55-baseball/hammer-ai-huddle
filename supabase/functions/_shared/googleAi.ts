@@ -325,10 +325,11 @@ async function callGoogle(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    const body = JSON.stringify(await toGooglePayload(req));
     const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toGooglePayload(req)),
+      body,
       signal: controller.signal,
     });
     if (!resp.ok) {
