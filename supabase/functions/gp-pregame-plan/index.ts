@@ -329,8 +329,21 @@ function renderMarkdown(p: any): string {
     const lines: string[] = [];
     if (p.headline) lines.push(`### ${p.headline}`);
     if (p.vibe) lines.push("", p.vibe);
+    if (p.team_game_plan) {
+      const g = p.team_game_plan;
+      lines.push("", "**Team game plan**");
+      if (g.early_game) lines.push(`- **Early:** ${g.early_game}`);
+      if (g.mid_game) lines.push(`- **Mid:** ${g.mid_game}`);
+      if (g.late_game) lines.push(`- **Late:** ${g.late_game}`);
+      if (g.key_adjustment) lines.push(`- **Adjust:** ${g.key_adjustment}`);
+      if (g.risk) lines.push(`- **Risk:** ${g.risk}`);
+      if (g.why) lines.push(`- **Why:** ${g.why}`);
+    }
     if (p.my_attack_on_pitcher?.best_pitch_to_hunt) {
       lines.push("", `**Hunt:** ${p.my_attack_on_pitcher.best_pitch_to_hunt}`);
+    }
+    if (p.pitching_plan?.putaway_pitch) {
+      lines.push("", `**Putaway:** ${p.pitching_plan.putaway_pitch}${p.pitching_plan.putaway_zone ? ` (${p.pitching_plan.putaway_zone})` : ""}`);
     }
     if (Array.isArray(p.cues) && p.cues.length) {
       lines.push("", "**Cues**");
