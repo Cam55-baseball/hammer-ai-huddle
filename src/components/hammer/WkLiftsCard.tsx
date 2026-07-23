@@ -50,6 +50,7 @@ export function WkLiftsCard() {
   const [overrideTarget, setOverrideTarget] = useState<BlockedMovement | null>(null);
   const [overrideReason, setOverrideReason] = useState("");
   const [overrideSubmitting, setOverrideSubmitting] = useState(false);
+  const [armCareOpen, setArmCareOpen] = useState(false);
 
   const submitAck = async () => {
     if (!user?.id) return;
