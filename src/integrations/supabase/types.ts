@@ -7627,6 +7627,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string | null
+          details: Json | null
           generated_at: string | null
           id: string
           is_ai_generated: boolean | null
@@ -7636,6 +7637,7 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string | null
+          details?: Json | null
           generated_at?: string | null
           id?: string
           is_ai_generated?: boolean | null
@@ -7645,6 +7647,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string | null
+          details?: Json | null
           generated_at?: string | null
           id?: string
           is_ai_generated?: boolean | null

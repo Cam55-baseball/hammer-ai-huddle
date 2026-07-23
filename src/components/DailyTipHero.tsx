@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Lightbulb, RefreshCw, Sparkles, Clock, Heart } from 'lucide-react';
+import { Lightbulb, RefreshCw, Sparkles, Clock, Heart, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useVault } from '@/hooks/useVault';
 import { toast } from 'sonner';
 import { showBadgeUnlockToast } from '@/components/NutritionBadgeUnlockToast';
+import { TipDetailDialog } from '@/components/TipDetailDialog';
+import type { CategoryTipDetails } from '@/hooks/useNutritionCategoryTips';
 
 interface StreakData {
   currentStreak: number;
@@ -32,6 +34,7 @@ interface TipData {
   category: string;
   tip_text: string;
   is_ai_generated: boolean;
+  details?: CategoryTipDetails | null;
 }
 
 export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
@@ -47,6 +50,8 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
   const [dailyTipsRemaining, setDailyTipsRemaining] = useState(2);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+
 
   // Check if current tip is already saved
   useEffect(() => {
@@ -235,9 +240,20 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
                 {t('nutrition.percentExplored', { percent: viewedPercentage })}
               </span>
               <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                {tip.details && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDetailOpen(true)}
+                    className="gap-1 h-7 px-2"
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    <span className="hidden xs:inline">Learn more</span>
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleSaveTip}
                   disabled={isSaved || saving}
                   className={`gap-1 h-7 px-2 ${isSaved ? 'text-red-500' : ''}`}
@@ -247,9 +263,9 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
                     {isSaved ? t('nutrition.tipSaved') : t('nutrition.saveTip')}
                   </span>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fetchTip(true)}
                   disabled={refreshing || dailyTipsRemaining <= 0}
                   className="gap-1 h-7 px-2"
@@ -262,6 +278,13 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
           </div>
         </div>
       </CardContent>
+      <TipDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        tipText={tip.tip_text}
+        categoryName={categoryName || null}
+        details={tip.details ?? null}
+      />
     </Card>
   );
 }

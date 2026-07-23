@@ -24,7 +24,8 @@ const CATEGORY_NAMES: Record<string, string> = {
   performance: 'Performance Priming',
   ingame_hydration: 'In-Game Hydration',
   supplements: 'NSF-Approved Supplements',
-  holistic: 'Holistic Health'
+  holistic: 'Holistic Health',
+  ecm_health: 'ECM & Connective Tissue Health'
 };
 
 const BADGE_MILESTONES = [
@@ -224,7 +225,7 @@ serve(async (req) => {
 
     let query = serviceClient
       .from('nutrition_daily_tips')
-      .select('id, category, tip_text, sport, is_ai_generated')
+      .select('id, category, tip_text, sport, is_ai_generated, details')
       .or(`sport.eq.both,sport.eq.${sport}`);
 
     if (category) {
@@ -274,7 +275,7 @@ serve(async (req) => {
         console.error('LOVABLE_API_KEY not configured');
         const { data: fallbackTip } = await serviceClient
           .from('nutrition_daily_tips')
-          .select('id, category, tip_text, sport, is_ai_generated')
+          .select('id, category, tip_text, sport, is_ai_generated, details')
           .or(`sport.eq.both,sport.eq.${sport}`)
           .limit(1)
           .single();
@@ -349,7 +350,7 @@ Generate ONLY the tip text — no labels, no headers, no quotation marks.`;
     if (!selectedTip) {
       const { data: randomTip } = await serviceClient
         .from('nutrition_daily_tips')
-        .select('id, category, tip_text, sport, is_ai_generated')
+        .select('id, category, tip_text, sport, is_ai_generated, details')
         .or(`sport.eq.both,sport.eq.${sport}`)
         .order('created_at', { ascending: false })
         .limit(1)

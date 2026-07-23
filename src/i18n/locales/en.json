@@ -1403,7 +1403,9 @@
       "holistic": "Holistic Health",
       "holisticDesc": "Mind-body nutrition connection",
       "dailyNutrition": "Daily Nutrition Tips",
-      "dailyNutritionDesc": "Quick daily tips for better eating"
+      "dailyNutritionDesc": "Quick daily tips for better eating",
+      "ecmHealth": "ECM & Connective Tissue Health",
+      "ecmHealthDesc": "Fascia, tendons, cartilage, collagen, hyaluronic acid, and ECM water"
     },
     "barcode": {
       "camera": "Camera",

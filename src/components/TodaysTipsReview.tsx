@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, Heart, Sparkles, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Heart, Sparkles, Clock, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useVault } from '@/hooks/useVault';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { TipDetailDialog } from './TipDetailDialog';
+import type { CategoryTipDetails } from '@/hooks/useNutritionCategoryTips';
 
 interface TodayTip {
   id: string;
@@ -18,6 +20,7 @@ interface TodayTip {
   is_ai_generated: boolean;
   sport: string | null;
   viewed_at: string;
+  details?: CategoryTipDetails | null;
 }
 
 export function TodaysTipsReview() {
@@ -29,6 +32,8 @@ export function TodaysTipsReview() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savedTipIds, setSavedTipIds] = useState<Set<string>>(new Set());
+  const [detailTip, setDetailTip] = useState<TodayTip | null>(null);
+
 
   const fetchTodaysTips = useCallback(async () => {
     if (!user) return;
@@ -145,24 +150,50 @@ export function TodaysTipsReview() {
                       </span>
                     </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSaveTip(tip)}
-                      disabled={isSaved}
-                      className={`h-8 w-8 p-0 flex-shrink-0 ${isSaved ? 'text-red-500' : 'hover:text-red-500'}`}
-                    >
-                      <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-                    </Button>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {tip.details && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDetailTip(tip)}
+                          className="h-8 w-8 p-0"
+                          title="Learn more"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSaveTip(tip)}
+                        disabled={isSaved}
+                        className={`h-8 w-8 p-0 ${isSaved ? 'text-red-500' : 'hover:text-red-500'}`}
+                      >
+                        <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <p className="text-sm leading-relaxed">{tip.tip_text}</p>
+
+                  <button
+                    type="button"
+                    onClick={() => tip.details && setDetailTip(tip)}
+                    className={`text-sm leading-relaxed text-left w-full ${tip.details ? 'hover:text-primary transition-colors cursor-pointer' : 'cursor-default'}`}
+                  >
+                    {tip.tip_text}
+                  </button>
                 </div>
               );
             })}
           </CardContent>
         </CollapsibleContent>
       </Card>
+      <TipDetailDialog
+        open={!!detailTip}
+        onOpenChange={(open) => { if (!open) setDetailTip(null); }}
+        tipText={detailTip?.tip_text ?? ''}
+        categoryName={detailTip?.categoryName ?? null}
+        details={detailTip?.details ?? null}
+      />
     </Collapsible>
   );
 }

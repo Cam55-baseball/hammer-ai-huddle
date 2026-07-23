@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Droplets, Heart, Leaf, Moon, Sun, Apple, Scale, Salad, Pill, Sparkles, Dumbbell, Zap, Trophy, Activity, Brain, FlaskConical, Waves } from 'lucide-react';
+import { ChevronDown, Droplets, Heart, Leaf, Moon, Sun, Apple, Scale, Salad, Pill, Sparkles, Dumbbell, Zap, Trophy, Activity, Brain, FlaskConical, Waves, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useNutritionCategoryTips, type CategoryTip } from '@/hooks/useNutritionCategoryTips';
+import { TipDetailDialog } from './TipDetailDialog';
 
 interface CategoryInfo {
   id: string;
@@ -8,8 +11,10 @@ interface CategoryInfo {
   icon: React.ReactNode;
   descriptionKey: string;
   color: string;
-  contentKeys: string[];
+  contentKeys?: string[];
+  dynamic?: boolean;
 }
+
 
 const CATEGORIES: CategoryInfo[] = [
   {
@@ -263,44 +268,106 @@ const CATEGORIES: CategoryInfo[] = [
       'nutrition.categoryContent.holistic.content4',
       'nutrition.categoryContent.holistic.content5',
     ]
+  },
+  {
+    id: 'ecm_health',
+    nameKey: 'nutrition.categories.ecmHealth',
+    icon: <Layers className="h-5 w-5" />,
+    color: 'text-fuchsia-400',
+    descriptionKey: 'nutrition.categories.ecmHealthDesc',
+    dynamic: true,
   }
 ];
 
+function DynamicCategoryList({
+  category,
+  color,
+  onSelect,
+}: {
+  category: string;
+  color: string;
+  onSelect: (tip: CategoryTip) => void;
+}) {
+  const { data: tips, isLoading } = useNutritionCategoryTips(category);
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading tips…</p>;
+  }
+  if (!tips || tips.length === 0) {
+    return <p className="text-sm text-muted-foreground">No tips available yet.</p>;
+  }
+  return (
+    <ul className="space-y-2">
+      {tips.map((tip) => (
+        <li key={tip.id}>
+          <button
+            type="button"
+            onClick={() => onSelect(tip)}
+            className="w-full text-left flex items-start gap-2 text-sm text-foreground hover:text-primary transition-colors px-2 py-1.5 rounded-md hover:bg-muted/40"
+          >
+            <span className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${color.replace('text-', 'bg-')}`} />
+            <span className="flex-1">{tip.tip_text}</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide mt-1">Details →</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function NutritionCategory() {
   const { t } = useTranslation();
+  const [selectedTip, setSelectedTip] = useState<CategoryTip | null>(null);
 
   return (
-    <Accordion type="multiple" className="space-y-3">
-      {CATEGORIES.map((category) => (
-        <AccordionItem 
-          key={category.id} 
-          value={category.id}
-          className="border rounded-lg bg-card/50 overflow-hidden"
-        >
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
-            <div className="flex items-center gap-3 text-left">
-              <div className={`p-2 rounded-lg bg-muted ${category.color}`}>
-                {category.icon}
+    <>
+      <Accordion type="multiple" className="space-y-3">
+        {CATEGORIES.map((category) => (
+          <AccordionItem
+            key={category.id}
+            value={category.id}
+            className="border rounded-lg bg-card/50 overflow-hidden"
+          >
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
+              <div className="flex items-center gap-3 text-left">
+                <div className={`p-2 rounded-lg bg-muted ${category.color}`}>
+                  {category.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm sm:text-base">{t(category.nameKey)}</h3>
+                  <p className="text-xs text-muted-foreground hidden sm:block">{t(category.descriptionKey)}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm sm:text-base">{t(category.nameKey)}</h3>
-                <p className="text-xs text-muted-foreground hidden sm:block">{t(category.descriptionKey)}</p>
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-3 sm:hidden">{t(category.descriptionKey)}</p>
-            <ul className="space-y-2">
-              {category.contentKeys.map((contentKey, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${category.color.replace('text-', 'bg-')}`} />
-                  <span>{t(contentKey)}</span>
-                </li>
-              ))}
-            </ul>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <p className="text-xs text-muted-foreground mb-3 sm:hidden">{t(category.descriptionKey)}</p>
+              {category.dynamic ? (
+                <DynamicCategoryList
+                  category={category.id}
+                  color={category.color}
+                  onSelect={setSelectedTip}
+                />
+              ) : (
+                <ul className="space-y-2">
+                  {category.contentKeys?.map((contentKey, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <span className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${category.color.replace('text-', 'bg-')}`} />
+                      <span>{t(contentKey)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+
+      <TipDetailDialog
+        open={!!selectedTip}
+        onOpenChange={(open) => { if (!open) setSelectedTip(null); }}
+        tipText={selectedTip?.tip_text ?? ''}
+        categoryName={selectedTip ? t('nutrition.categories.ecmHealth') : null}
+        details={selectedTip?.details ?? null}
+      />
+    </>
   );
 }

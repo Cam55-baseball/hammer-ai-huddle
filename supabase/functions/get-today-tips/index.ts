@@ -49,7 +49,8 @@ serve(async (req) => {
           tip_text,
           category,
           is_ai_generated,
-          sport
+          sport,
+          details
         )
       `)
       .eq('user_id', user.id)
@@ -84,6 +85,7 @@ serve(async (req) => {
       'in_game_hydration': 'In-Game Hydration',
       'supplements': 'NSF Supplements',
       'holistic': 'Holistic Health',
+      'ecm_health': 'ECM & Connective Tissue Health',
       'general': 'General Nutrition',
     };
 
@@ -96,6 +98,7 @@ serve(async (req) => {
         categoryName: categoryNames[tip?.category] || 'General Nutrition',
         is_ai_generated: tip?.is_ai_generated || false,
         sport: tip?.sport,
+        details: tip?.details || null,
         viewed_at: vt.viewed_at,
       };
     }) || [];
