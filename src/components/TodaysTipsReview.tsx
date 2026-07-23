@@ -187,6 +187,13 @@ export function TodaysTipsReview() {
           </CardContent>
         </CollapsibleContent>
       </Card>
+      <TipDetailDialog
+        open={!!detailTip}
+        onOpenChange={(open) => { if (!open) setDetailTip(null); }}
+        tipText={detailTip?.tip_text ?? ''}
+        categoryName={detailTip?.categoryName ?? null}
+        details={detailTip?.details ?? null}
+      />
     </Collapsible>
   );
 }
