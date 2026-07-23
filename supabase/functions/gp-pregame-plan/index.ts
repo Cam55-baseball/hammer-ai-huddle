@@ -231,7 +231,8 @@ serve(async (req) => {
     };
 
     // ---- AI call ----
-    const prompt = `${SYSTEM_PROMPT}\n\nINPUT:\n${JSON.stringify(inputs_snapshot).slice(0, 180_000)}`;
+    const systemPrompt = role === "hitter" ? PITCHER_SYSTEM_PROMPT : HITTER_SYSTEM_PROMPT;
+    const prompt = `${systemPrompt}\n\nINPUT:\n${JSON.stringify(inputs_snapshot).slice(0, 180_000)}`;
     const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE}`, "Content-Type": "application/json" },
