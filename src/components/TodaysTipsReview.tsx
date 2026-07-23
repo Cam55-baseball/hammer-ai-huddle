@@ -150,18 +150,37 @@ export function TodaysTipsReview() {
                       </span>
                     </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSaveTip(tip)}
-                      disabled={isSaved}
-                      className={`h-8 w-8 p-0 flex-shrink-0 ${isSaved ? 'text-red-500' : 'hover:text-red-500'}`}
-                    >
-                      <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-                    </Button>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {tip.details && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDetailTip(tip)}
+                          className="h-8 w-8 p-0"
+                          title="Learn more"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSaveTip(tip)}
+                        disabled={isSaved}
+                        className={`h-8 w-8 p-0 ${isSaved ? 'text-red-500' : 'hover:text-red-500'}`}
+                      >
+                        <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <p className="text-sm leading-relaxed">{tip.tip_text}</p>
+
+                  <button
+                    type="button"
+                    onClick={() => tip.details && setDetailTip(tip)}
+                    className={`text-sm leading-relaxed text-left w-full ${tip.details ? 'hover:text-primary transition-colors cursor-pointer' : 'cursor-default'}`}
+                  >
+                    {tip.tip_text}
+                  </button>
                 </div>
               );
             })}
