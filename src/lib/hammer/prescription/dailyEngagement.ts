@@ -109,7 +109,7 @@ function upsertToday(state: EngagementState, mutator: (d: DayEntry) => DayEntry)
 
 export function recordCompletion(
   userId: string | null | undefined,
-  modality: ModalityKey,
+  modality: EngagementKey,
   status: CompletionState,
 ): EngagementState {
   const state = loadEngagement(userId);
@@ -137,7 +137,7 @@ export function recordPhaseSignature(
 
 export function todayCompletion(
   state: EngagementState,
-  modality: ModalityKey,
+  modality: EngagementKey,
 ): CompletionState | null {
   const t = state.days.find((d) => d.date === todayKey());
   return (t?.completions[modality] as CompletionState | undefined) ?? null;
