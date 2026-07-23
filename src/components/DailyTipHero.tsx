@@ -240,9 +240,20 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
                 {t('nutrition.percentExplored', { percent: viewedPercentage })}
               </span>
               <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                {tip.details && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDetailOpen(true)}
+                    className="gap-1 h-7 px-2"
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    <span className="hidden xs:inline">Learn more</span>
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleSaveTip}
                   disabled={isSaved || saving}
                   className={`gap-1 h-7 px-2 ${isSaved ? 'text-red-500' : ''}`}
@@ -252,9 +263,9 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
                     {isSaved ? t('nutrition.tipSaved') : t('nutrition.saveTip')}
                   </span>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fetchTip(true)}
                   disabled={refreshing || dailyTipsRemaining <= 0}
                   className="gap-1 h-7 px-2"
@@ -267,6 +278,13 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
           </div>
         </div>
       </CardContent>
+      <TipDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        tipText={tip.tip_text}
+        categoryName={categoryName || null}
+        details={tip.details ?? null}
+      />
     </Card>
   );
 }
