@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chatCompletion } from "../_shared/googleAi.ts";
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -302,23 +304,13 @@ ${excludedTips}
 Generate ONLY the tip text — no labels, no headers, no quotation marks.`;
 
         try {
-          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                { role: 'user', content: prompt }
-              ],
-            }),
+          const aiResult = await chatCompletion({
+            model: 'google/gemini-2.5-flash',
+            messages: [{ role: 'user', content: prompt }],
           });
 
-          if (aiResponse.ok) {
-            const aiData = await aiResponse.json();
-            const generatedTip = aiData.choices?.[0]?.message?.content?.trim();
+          if (aiResult.ok) {
+            const generatedTip = aiResult.data.choices?.[0]?.message?.content?.trim();
 
             if (generatedTip && generatedTip.length > 10) {
               const { data: newTip, error: insertError } = await serviceClient
@@ -339,7 +331,7 @@ Generate ONLY the tip text — no labels, no headers, no quotation marks.`;
               }
             }
           } else {
-            console.error('AI API error:', await aiResponse.text());
+            console.error('AI API error:', aiResult.status, aiResult.errorBody);
           }
         } catch (aiError) {
           console.error('AI generation error:', aiError);

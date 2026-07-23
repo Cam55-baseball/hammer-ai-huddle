@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 // Phase macro tilts: percentage shifts applied to remaining macro targets.
 const PHASE_MACRO_TILTS: Record<SeasonPhase, { carbs: number; protein: number; fats: number; note: string }> = {
@@ -106,22 +107,16 @@ serve(async (req) => {
     };
     console.log(`[suggest-meals] user=${user.id} phase=${seasonResolution.phase} source=${seasonResolution.source}`);
     
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a sports nutrition expert helping athletes hit their macro targets. Provide practical, accessible meal suggestions that help fill macro gaps. Consider the athlete's recent food choices for personalization.\n\nSEASON PHASE: ${phaseProfile.label}. ${tilt.note}\nTone: ${phaseProfile.toneGuidance}`
-          },
-          {
-            role: "user",
-            content: `An athlete needs to fill these remaining macros for the day (already adjusted for ${phaseProfile.label}):
+    const result = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are a sports nutrition expert helping athletes hit their macro targets. Provide practical, accessible meal suggestions that help fill macro gaps. Consider the athlete's recent food choices for personalization.\n\nSEASON PHASE: ${phaseProfile.label}. ${tilt.note}\nTone: ${phaseProfile.toneGuidance}`
+        },
+        {
+          role: "user",
+          content: `An athlete needs to fill these remaining macros for the day (already adjusted for ${phaseProfile.label}):
 - Calories: ${tiltedMacros.calories} kcal
 - Protein: ${tiltedMacros.protein}g
 - Carbs: ${tiltedMacros.carbs}g
@@ -130,73 +125,70 @@ serve(async (req) => {
 Their recent foods: ${recentFoodNames.slice(0, 10).join(', ') || 'No recent data'}
 
 Suggest 4-5 practical meal/snack options that would help hit these targets. For each suggestion, explain WHY it's a good choice based on the macro gaps and the current season phase (${phaseProfile.label}).`
-          }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "suggest_meals",
-              description: "Provide meal suggestions to help hit macro targets",
-              parameters: {
-                type: "object",
-                properties: {
-                  suggestions: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string", description: "Meal or food name" },
-                        description: { type: "string", description: "Brief description" },
-                        reason: { type: "string", description: "Why this helps fill macro gaps" },
-                        estimatedMacros: {
-                          type: "object",
-                          properties: {
-                            calories: { type: "number" },
-                            protein: { type: "number" },
-                            carbs: { type: "number" },
-                            fats: { type: "number" }
-                          }
-                        },
-                        priority: { type: "string", enum: ["high", "medium", "low"], description: "How well it fits the gaps" }
+        }
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "suggest_meals",
+            description: "Provide meal suggestions to help hit macro targets",
+            parameters: {
+              type: "object",
+              properties: {
+                suggestions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "Meal or food name" },
+                      description: { type: "string", description: "Brief description" },
+                      reason: { type: "string", description: "Why this helps fill macro gaps" },
+                      estimatedMacros: {
+                        type: "object",
+                        properties: {
+                          calories: { type: "number" },
+                          protein: { type: "number" },
+                          carbs: { type: "number" },
+                          fats: { type: "number" }
+                        }
                       },
-                      required: ["name", "description", "reason", "estimatedMacros", "priority"]
-                    }
-                  },
-                  macroAnalysis: {
-                    type: "string",
-                    description: "Brief analysis of what the athlete needs most"
+                      priority: { type: "string", enum: ["high", "medium", "low"], description: "How well it fits the gaps" }
+                    },
+                    required: ["name", "description", "reason", "estimatedMacros", "priority"]
                   }
                 },
-                required: ["suggestions", "macroAnalysis"]
-              }
+                macroAnalysis: {
+                  type: "string",
+                  description: "Brief analysis of what the athlete needs most"
+                }
+              },
+              required: ["suggestions", "macroAnalysis"]
             }
           }
-        ],
-        tool_choice: { type: "function", function: { name: "suggest_meals" } }
-      }),
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "suggest_meals" } }
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (!result.ok) {
+      if (result.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      if (response.status === 402) {
+      if (result.status === 402) {
         return new Response(
           JSON.stringify({ error: "Payment required, please add funds to your workspace." }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("AI gateway error:", result.status, result.errorBody);
       throw new Error("Failed to generate suggestions");
     }
 
-    const aiResult = await response.json();
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = result.data.choices?.[0]?.message?.tool_calls?.[0];
     
     if (!toolCall?.function?.arguments) {
       throw new Error("Failed to generate meal suggestions");
