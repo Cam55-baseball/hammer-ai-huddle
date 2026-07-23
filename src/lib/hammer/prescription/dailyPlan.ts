@@ -32,6 +32,7 @@ import {
   CATEGORY_LABELS,
   summarizeGoals,
 } from "@/lib/hammer/goals/categoryGoals";
+import { buildWarmup, resolveWarmupContext, lifecycleFor } from "./warmupLibrary";
 
 
 export type ModalityKey =
@@ -169,11 +170,6 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       // day / lift day / throwing / hitting / off-season / recovery / travel)
       // and scaled by training-age lifecycle so beginners → pros all get an
       // appropriate prep sequence.
-      const {
-        buildWarmup,
-        resolveWarmupContext,
-        lifecycleFor,
-      } = require("./warmupLibrary") as typeof import("./warmupLibrary");
       const scheduleAny = proj as unknown as { schedule?: { isGameDay?: boolean; isPracticeDay?: boolean; isTravelDay?: boolean; isRecoveryDay?: boolean } };
       const sched = scheduleAny?.schedule ?? {};
       const isGameDay = !!sched.isGameDay;
