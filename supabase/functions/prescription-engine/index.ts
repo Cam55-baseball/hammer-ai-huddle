@@ -184,8 +184,9 @@ async function aiRefine(
   athleteProfile: AthleteProfile,
   readinessScore: number,
 ): Promise<PrescriptionResult[]> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return deterministicResults;
+  if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("LOVABLE_API_KEY")) {
+    return deterministicResults;
+  }
 
   const drillList = deterministicResults.map(r => ({
     drill_id: r.drill_id, name: r.name, module: r.module,
