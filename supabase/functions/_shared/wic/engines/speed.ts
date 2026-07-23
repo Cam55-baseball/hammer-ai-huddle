@@ -92,6 +92,14 @@ export interface SpeedCatalogRow {
   substitution_family?: string | null;
   transfer_group?: string | null;
   equipment?: string[] | null;
+  // Precise-dosage fields — every prescription must carry at least one
+  // concrete number the athlete can execute without interpretation.
+  default_sets?: number | null;
+  default_reps?: number | null;
+  default_duration_seconds?: number | null;
+  default_total_reps?: number | null;
+  default_distance_feet?: number | null;
+  dosage_unit?: string | null;
 }
 
 export interface SelectSpeedInput {

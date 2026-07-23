@@ -128,42 +128,61 @@ export function WkPrescriptionCard({
     unit === "innings" || unit === "contacts" || unit === "throws" ||
     unit === "seconds" || unit === "feet";
   const hasTotalDose = !!rx.total_reps || !!rx.duration_seconds || !!rx.distance_feet;
-  const setsRepsMeaningful =
-    !!rx.sets && !!rx.reps && !(rx.sets === 1 && rx.reps === 1) &&
-    !(isTotalDoseUnit && hasTotalDose);
-  if (setsRepsMeaningful) {
-    const repsLabel =
-      unit === "seconds" ? `${rx.reps} sec` :
-      unit === "feet" ? `${rx.reps} ft` :
-      unit === "contacts" ? `${rx.reps} contacts` :
-      unit === "throws" ? `${rx.reps} throws` :
-      unit === "each" ? `${rx.reps} each side` :
-      `${rx.reps} reps`;
-    dosageParts.push(`${rx.sets} sets × ${repsLabel}`);
-  } else if (rx.sets && rx.sets > 1 && !(isTotalDoseUnit && hasTotalDose)) {
-    dosageParts.push(`${rx.sets} sets`);
-  } else if (rx.reps && rx.reps > 1 && !(isTotalDoseUnit && hasTotalDose)) {
-    dosageParts.push(`${rx.reps} reps`);
-  }
-  if (rx.duration_seconds) {
+
+  // Time-based mobility/warmup: render a single clean total-duration string
+  // instead of "1 sets × 1 reps" or "45 sec per set".
+  const isSecondsOnly =
+    unit === "seconds" && !!rx.duration_seconds &&
+    (!rx.sets || rx.sets <= 1) && (!rx.reps || rx.reps <= 1) &&
+    !rx.total_reps && !rx.distance_feet;
+
+  if (isSecondsOnly) {
+    const secs = rx.duration_seconds as number;
     dosageParts.push(
-      rx.duration_seconds >= 60
-        ? `${Math.round(rx.duration_seconds / 60)} min per set`
-        : `${rx.duration_seconds} sec per set`
+      secs >= 60
+        ? `${Math.round(secs / 60)} min total`
+        : `${secs} sec total`
     );
+  } else {
+    const setsRepsMeaningful =
+      !!rx.sets && !!rx.reps && !(rx.sets === 1 && rx.reps === 1) &&
+      !(isTotalDoseUnit && hasTotalDose);
+    if (setsRepsMeaningful) {
+      const repsLabel =
+        unit === "seconds" ? `${rx.reps} sec` :
+        unit === "feet" ? `${rx.reps} ft` :
+        unit === "contacts" ? `${rx.reps} contacts` :
+        unit === "throws" ? `${rx.reps} throws` :
+        unit === "each" ? `${rx.reps} each side` :
+        `${rx.reps} reps`;
+      dosageParts.push(`${rx.sets} sets × ${repsLabel}`);
+    } else if (rx.sets && rx.sets > 1 && !(isTotalDoseUnit && hasTotalDose)) {
+      dosageParts.push(`${rx.sets} sets`);
+    } else if (rx.reps && rx.reps > 1 && !(isTotalDoseUnit && hasTotalDose)) {
+      dosageParts.push(`${rx.reps} reps`);
+    }
+    if (rx.duration_seconds) {
+      dosageParts.push(
+        rx.duration_seconds >= 60
+          ? `${Math.round(rx.duration_seconds / 60)} min per set`
+          : `${rx.duration_seconds} sec per set`
+      );
+    }
+    if (rx.distance_feet) dosageParts.push(`${rx.distance_feet} feet per rep`);
+    if (rx.total_reps && rx.total_reps !== rx.reps) {
+      const totalLabel =
+        unit === "innings" ? `${rx.total_reps} total innings` :
+        unit === "contacts" ? `${rx.total_reps} total contacts` :
+        unit === "throws" ? `${rx.total_reps} total throws` :
+        `${rx.total_reps} total`;
+      dosageParts.push(totalLabel);
+    }
+    if (rx.tempo) dosageParts.push(`tempo ${rx.tempo}`);
+    if (rx.load_pct) dosageParts.push(`${rx.load_pct}% 1RM`);
   }
-  if (rx.distance_feet) dosageParts.push(`${rx.distance_feet} feet per rep`);
-  if (rx.total_reps && rx.total_reps !== rx.reps) {
-    const totalLabel =
-      unit === "innings" ? `${rx.total_reps} total innings` :
-      unit === "contacts" ? `${rx.total_reps} total contacts` :
-      unit === "throws" ? `${rx.total_reps} total throws` :
-      `${rx.total_reps} total`;
-    dosageParts.push(totalLabel);
-  }
-  if (rx.tempo) dosageParts.push(`tempo ${rx.tempo}`);
-  if (rx.load_pct) dosageParts.push(`${rx.load_pct}% 1RM`);
-  const dosage = dosageParts.length > 0 ? dosageParts.join(" • ") : "Follow the cue below";
+  const dosage = dosageParts.length > 0
+    ? dosageParts.join(" • ")
+    : "Complete as described in the cue below.";
 
   return (
     <Card className={`p-3 border ${rx.status === "completed" ? "opacity-60" : ""}`}>

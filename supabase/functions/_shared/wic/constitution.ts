@@ -3,7 +3,7 @@
 // and the enumerated engine list. This is doctrine — do not mutate
 // without a Phase XX amendment.
 
-export const WIC_VERSION = "wic_v1";
+export const WIC_VERSION = "wic_v1.1";
 
 // Constitutional priority order — evaluated top-down before any exercise
 // selection. If a higher layer forbids a modality, no engine below it may
