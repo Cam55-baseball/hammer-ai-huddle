@@ -1,63 +1,49 @@
-# DelayCam Record/Stream Toggle Redesign
+DelayCam Players Club Save — E2E Fix Plan
 
-## Goal
-Replace the existing "Replay + Save" vs "Stream only" segmented toggle with two clearly labeled action buttons: **Record** and **Stream**. Clicking **Record** starts a normal recording session (delayed mirror + MediaRecorder buffer); clicking **Stream** starts a long-session stream (delayed mirror only). After **Stop** is pressed, the recorded clip remains available for replay and save actions.
+Root cause (verified by reading code + DB)
+- `DelayCam` inserts a `videos` row but never sets `saved_to_library = true`. `get-player-library` filters with `.eq('saved_to_library', true)`, so the saved clip is invisible in Players Club.
+- The `videos` row is also missing the Phase 0 metadata fields (`sha256_hex`, `fps_true`, `duration_sec`, `width`, `height`, `orientation`) that the `analyze-video` edge function now requires before it will run.
+- The current "Save & Analyze" call only sends `videoId/module/sport/userId`, but `analyze-video` requires `frames` (≥3 data URLs) + `frameExtractions`.
+- No side confirmation/stamp for switch hitters or ambidextrous throwers.
 
-## Current state (verified in `src/components/analyze/DelayCam.tsx`)
-- A single `Start` button begins the camera.
-- A segmented toggle chooses `streamOnly` mode (`Replay + Save` vs `Stream only`).
-- Save buttons are disabled when `!running || streamOnly`.
-- Replay buttons are disabled when `!running || streamOnly`.
-- `stop()` calls `cleanup()`, which clears `timedChunksRef`, `initChunkRef`, and `framesRef`, so no clip survives after stopping.
-- The existing buffer leak fix and background-tab pause logic from the previous plan are already present.
+What I will build
+1. Probe metadata before saving
+   - In `saveToPlayersClub`, convert the recorded blob into a `File` and run `probeVideoMetadata()` from the existing analysis pipeline.
+   - Validate width, height, fps, and duration against the same thresholds in `src/lib/biomech/videoAcceptance.ts` used by the upload flow.
+   - If validation fails, show a specific toast and abort before any storage/database write.
 
-## What we will build
+2. Write a complete `videos` row that Players Club can see
+   - Add `saved_to_library: true`.
+   - Persist `sha256_hex`, `fps_true`, `duration_sec`, `width`, `height`, `orientation`.
+   - Keep `library_title` and `thumbnail_url` as-is.
 
-### 1. Mode-centric state model
-- Introduce a `mode` state with values: `"idle" | "streaming" | "recording"`.
-- Remove the boolean `streamOnly` state; migrate all references to `mode`.
-- `mode` is only `"idle"` before the camera starts; after start it is either `"streaming"` or `"recording"`.
+3. Side-aware save gate
+   - Pull `useSideContext()` inside `DelayCam` to determine the active discipline (`hit` for `hitting`, `throw` for `pitching`/`throwing`).
+   - If the picker should show for that discipline, require an explicit side selection before save and stamp `batting_side` or `throwing_hand` on the insert.
+   - If a non-switch/non-ambi athlete saves, the side is derived from their profile and stored as well.
 
-### 2. Record and Stream start buttons
-- Replace the segmented toggle with two primary action buttons in the header:
-  - **Record** — starts the camera with `MediaRecorder` running. Use `Video` icon.
-  - **Stream** — starts the camera without `MediaRecorder`. Use `Eye` icon.
-- When the camera is already running, show a **Stop** button (current destructive style) and also display the current mode as a small badge/status text so the user knows which mode is active.
-- Allow switching between modes while running: tapping the inactive start button stops the current session and immediately restarts in the other mode. This satisfies the user's "switch freely" preference without leaving a dead buffer behind.
+4. Make "Save & Analyze" actually run analysis
+   - After the `videos` row is inserted, call `extractKeyFramesDeterministic()` with the probed metadata.
+   - Build the `frameExtractions` array and pass it plus the `frames` data URLs to `supabase.functions.invoke('analyze-video', …)`.
+   - `landingTime` is not available in DelayCam, so `landingFrameIndex` will be `null` (the edge function accepts this).
+   - Show a "Saving…" → "Analysis running…" → success/error toast sequence.
 
-### 3. Preserve recorded clip after Stop
-- Refactor `stop()` so that in `"recording"` mode it stops the camera stream and frame loops but **does not** clear `timedChunksRef`, `initChunkRef`, or `framesRef`.
-- In `"streaming"` mode, `stop()` can clear the frame ring buffer (no clip exists to preserve).
-- Keep `replayUrl` and `replayUrlRef` intact after a recording stop so the replay player remains visible.
-- Add a `stopAndKeepClip()` helper or branch in `stop()` that distinguishes the two modes.
+5. Auth/session guard before upload
+   - Mirror the `AnalyzeVideo` pre-upload check: call `supabase.auth.getSession()` and verify the live user matches the `user` from the hook before uploading. If not, show the same "Your session expired" toast with a sign-in action instead of silently kicking the user out.
 
-### 4. Enable save/replay after Stop
-- Change save button `disabled` logic from `!running` to `mode !== "recording" || timedChunksRef.current.length === 0`.
-- Save buttons remain available after stopping a recording session, using the preserved buffer.
-- Replay buttons similarly become enabled after stopping a recording, using the same buffer.
-- Add a clear guard: if the user starts a new stream or recording, clear the old buffer first (so stale clips from the previous session do not accidentally save).
+6. UI polish
+   - Disable save buttons while saving/analyzing.
+   - Add a clear "No clip recorded" state and a "Confirm your side" prompt when needed.
 
-### 5. UI/UX updates
-- Update the status badge to show "Recording", "Streaming", or "Stopped (clip ready)" as appropriate.
-- Update tooltips on save buttons: explain they require a Record session when disabled, and that they save the most recent clip.
-- Keep the camera/draw loop pause-on-background-tab behavior unchanged; it applies equally to both modes.
+7. Verification
+   - Use a Playwright test to record a short DelayCam clip in `/analyze-video/:module`, click "Save to Players Club", and assert the clip appears in the `/players-club` grid.
+   - Run a second test for "Save & Analyze" and confirm the video row reaches `status = 'completed'` and `ai_analysis` is populated.
 
-### 6. Safety checks
-- Ensure `cleanup()` is still used as the full teardown path (e.g., on unmount or on mode switch), but a new `stop()` path is used for the normal Stop-after-Record flow.
-- Prevent accidental double-click of Record/Stream by disabling those buttons while the camera is already transitioning.
-- Maintain all existing error handling and permissions flow.
+Files to touch
+- `src/components/analyze/DelayCam.tsx` (main fix)
+- `src/pages/AnalyzeVideo.tsx` (no major change; confirm it still passes `module` and `sport` correctly to `DelayCam`)
+- No DB/edge function migrations needed; the existing `videos` table and `analyze-video` function already support these fields.
 
-## Files to edit
-- `src/components/analyze/DelayCam.tsx` — state model, button wiring, stop behavior, save/replay enablement, status badges.
-
-## Out of scope
-- No backend changes; storage/analysis logic stays the same.
-- No changes to `AnalyzeVideo.tsx` or other callers unless `DelayCam` props need adjustment (they should not).
-
-## Success criteria
-- A user sees two buttons: **Record** and **Stream**.
-- Clicking **Record** starts the camera and the buffer; the status badge says "Recording".
-- Clicking **Stop** stops the camera but leaves the recorded buffer available; the status shows "Stopped (clip ready)" and the save/replay buttons are enabled.
-- Clicking **Stream** starts the camera without the buffer; save/replay buttons are disabled while streaming and after stopping a stream.
-- Switching modes while running restarts cleanly without leaking old buffers.
-- Background-tab pause and long-session memory safety remain intact.
+Risk notes
+- Probing + frame extraction for a 55-second clip is CPU-heavy; we will only run it for "Save & Analyze", not for plain "Save to Players Club".
+- The recorded blob is typically WebM; the acceptance thresholds already handle WebM/MKV from phone cameras.
