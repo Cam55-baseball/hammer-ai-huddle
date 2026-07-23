@@ -23,6 +23,22 @@ export interface SeasonSettingsLike {
 
 const VALID: SeasonPhase[] = ['preseason', 'in_season', 'post_season', 'off_season'];
 
+/**
+ * Normalize short/legacy season status strings ('in', 'post', 'pre', 'off')
+ * to the canonical values the resolver understands. Keeps the UI and the
+ * `wk-generate-daily` edge function in agreement.
+ */
+export function normalizeSeasonStatus(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim().toLowerCase();
+  if (!s) return null;
+  if (s === 'in' || s === 'in_season' || s === 'inseason') return 'in_season';
+  if (s === 'post' || s === 'post_season' || s === 'postseason') return 'post_season';
+  if (s === 'pre' || s === 'preseason' || s === 'pre_season') return 'preseason';
+  if (s === 'off' || s === 'off_season' || s === 'offseason') return 'off_season';
+  return s;
+}
+
 function todayStr(): string {
   const d = new Date();
   const y = d.getFullYear();
@@ -35,6 +51,10 @@ export function resolveSeasonPhase(settings: SeasonSettingsLike | null | undefin
   if (!settings) {
     return { phase: 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' };
   }
+  // Normalize the stored status so short values like 'in' don't fall through
+  // to the default off_season branch.
+  const normalizedStatus = normalizeSeasonStatus(settings.season_status);
+  settings = { ...settings, season_status: normalizedStatus };
   const today = todayStr();
   const phases: { status: SeasonPhase; start: string | null | undefined; end: string | null | undefined }[] = [
     { status: 'preseason', start: settings.preseason_start_date, end: settings.preseason_end_date },

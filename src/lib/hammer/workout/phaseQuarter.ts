@@ -9,7 +9,7 @@
  *   - In-season: Concentric primer + FP pre-pregame, Speed q96h
  *   - Post-season: Decompress / concentric primer + mixed mobility
  */
-import { resolveSeasonPhase, type SeasonSettingsLike } from '@/lib/seasonPhase';
+import { resolveSeasonPhase, normalizeSeasonStatus, type SeasonSettingsLike } from '@/lib/seasonPhase';
 
 export type WkPhase =
   | 'os_q1'
@@ -49,7 +49,10 @@ export function resolveWkPhase(
   settings: SeasonSettingsLike | null | undefined,
   now: Date = new Date(),
 ): WkPhaseResolution {
-  const seasonRes = resolveSeasonPhase(settings);
+  const normalized = settings
+    ? { ...settings, season_status: normalizeSeasonStatus(settings.season_status) ?? settings.season_status }
+    : settings;
+  const seasonRes = resolveSeasonPhase(normalized);
 
   if (seasonRes.phase === 'in_season') {
     return {

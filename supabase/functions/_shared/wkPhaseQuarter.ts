@@ -1,6 +1,23 @@
 // Server mirror of src/lib/hammer/workout/phaseQuarter.ts — keep in sync.
 import { resolveSeasonPhase, type SeasonSettingsLike } from "./seasonPhase.ts";
 
+/**
+ * Normalize legacy / short season status values ('in', 'post', 'pre', 'off')
+ * so the resolver reads the same canonical strings the UI uses. Prevents an
+ * `athlete_context.season_phase = 'in'` row from silently falling back to
+ * Offseason Q1.
+ */
+export function normalizeSeasonStatus(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim().toLowerCase();
+  if (!s) return null;
+  if (s === "in" || s === "in_season" || s === "inseason") return "in_season";
+  if (s === "post" || s === "post_season" || s === "postseason") return "post_season";
+  if (s === "pre" || s === "preseason" || s === "pre_season") return "preseason";
+  if (s === "off" || s === "off_season" || s === "offseason") return "off_season";
+  return s;
+}
+
 export type WkPhase =
   | "os_q1"
   | "os_q2"
