@@ -1177,13 +1177,7 @@ Use the analyze_mechanics tool to return your structured analysis.`
     }
 
     // Use tool calling for guaranteed structured output - enhanced schema matching analyze-video
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const aiResult = await chatCompletion({
         model: 'google/gemini-2.5-flash', // Vision-capable model
         messages: [
           { role: 'system', content: systemPrompt },
