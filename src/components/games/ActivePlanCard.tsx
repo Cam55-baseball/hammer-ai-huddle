@@ -113,6 +113,8 @@ export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) 
     log.mutate({ planId: plan.id, recommendation_key: key, recommendation_text: text, followed: true, worked });
 
   return (
+  return (
+    <div className="space-y-3">
     <Card className="p-3 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
