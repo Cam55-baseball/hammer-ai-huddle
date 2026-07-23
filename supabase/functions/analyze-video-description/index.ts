@@ -88,65 +88,57 @@ Deno.serve(async (req) => {
 
     const userPrompt = `Title: ${video.title}\nDescription: ${video.description || ''}\nCoach's Notes to Hammer (primary intent): ${video.ai_description || ''}\nFormula Linkage Phases: ${formulaPhases.join(', ') || 'none'}\nFormula Linkage Notes: ${formulaNotes}\nSkill domains: ${(video.skill_domains || []).join(', ') || 'unknown'}\n\nVocabulary by layer:\nmovement_pattern: ${vocab.movement_pattern.join(', ')}\nresult: ${vocab.result.join(', ')}\ncontext: ${vocab.context.join(', ')}\ncorrection: ${vocab.correction.join(', ')}\n\nReturn proposed tags with confidence 0-1 and short reasoning per tag. Treat the coach's notes as the source of truth; the formula phases tell you which teaching checkpoints this video targets.`;
 
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'propose_tags',
-            description: 'Propose structured tags for the video',
-            parameters: {
-              type: 'object',
-              properties: {
-                tags: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      layer: { type: 'string', enum: ['movement_pattern', 'result', 'context', 'correction'] },
-                      key: { type: 'string' },
-                      confidence: { type: 'number' },
-                      reasoning: { type: 'string' },
-                    },
-                    required: ['layer', 'key', 'confidence', 'reasoning'],
+    const aiResult = await chatCompletion({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      tools: [{
+        type: 'function',
+        function: {
+          name: 'propose_tags',
+          description: 'Propose structured tags for the video',
+          parameters: {
+            type: 'object',
+            properties: {
+              tags: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    layer: { type: 'string', enum: ['movement_pattern', 'result', 'context', 'correction'] },
+                    key: { type: 'string' },
+                    confidence: { type: 'number' },
+                    reasoning: { type: 'string' },
                   },
+                  required: ['layer', 'key', 'confidence', 'reasoning'],
                 },
               },
-              required: ['tags'],
             },
+            required: ['tags'],
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'propose_tags' } },
-      }),
+        },
+      }],
+      tool_choice: { type: 'function', function: { name: 'propose_tags' } },
     });
 
-    if (!aiResp.ok) {
-      const t = await aiResp.text();
-      console.error('AI gateway error', aiResp.status, t);
-      if (aiResp.status === 429) {
+    if (!aiResult.ok) {
+      console.error('AI provider error', aiResult.provider, aiResult.status, aiResult.errorBody);
+      if (aiResult.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limited' }), {
           status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (aiResp.status === 402) {
+      if (aiResult.status === 402) {
         return new Response(JSON.stringify({ error: 'Credits required' }), {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`AI gateway: ${aiResp.status}`);
+      throw new Error(`AI provider: ${aiResult.status}`);
     }
 
-    const aiData = await aiResp.json();
+    const aiData = aiResult.data;
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
       return new Response(JSON.stringify({ ok: true, inserted: 0, note: 'no tags' }), {
