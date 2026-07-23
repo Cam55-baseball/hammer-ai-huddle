@@ -2,8 +2,9 @@
 // over the athlete's own history (notes, journals, logs, sessions, at-bats).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
-const MODEL = "google/gemini-3-flash-preview";
+const MODEL = "google/gemini-3.6-flash";
 
 const SYSTEM_PROMPT = `You are Hammer — the athlete's private recall + clarity coach.
 
@@ -244,32 +245,23 @@ async function retrieveContext(
 
 // ---------- LLM ----------
 async function askLLM(
-  apiKey: string,
+  _apiKey: string,
   history: Array<{ role: string; content: string }>,
   contextBlock: string,
 ): Promise<string> {
   const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
-    { role: "system", content: contextBlock },
-    ...history,
+    { role: "system" as const, content: SYSTEM_PROMPT },
+    { role: "system" as const, content: contextBlock },
+    ...history.map((m) => ({
+      role: (m.role === "assistant" ? "assistant" : "user") as "assistant" | "user",
+      content: m.content,
+    })),
   ];
-  const res = await fetch(
-    "https://ai.gateway.lovable.dev/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({ model: MODEL, messages, temperature: 0.5 }),
-    },
-  );
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Gateway ${res.status}: ${body}`);
+  const result = await chatCompletion({ model: MODEL, messages, temperature: 0.5 });
+  if (!result.ok) {
+    throw new Error(`ai_provider_${result.status}: ${result.errorBody?.slice(0, 200) ?? ""}`);
   }
-  const j = await res.json();
-  return j?.choices?.[0]?.message?.content ?? "I don't have that in your log yet.";
+  return result.data?.choices?.[0]?.message?.content ?? "I don't have that in your log yet.";
 }
 
 // ---------- Handler ----------
