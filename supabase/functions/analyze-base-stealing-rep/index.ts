@@ -121,56 +121,48 @@ If you surface any movement fault in your notes/feedback, express it as a 5-link
       requiredFields.push("firstTwoStepsCompleteFrameIndex");
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "report_movement_analysis",
-              description: "Report the detected movement direction, timing, and step analysis from the base-stealing drill frames.",
-              parameters: {
-                type: "object",
-                properties: toolProperties,
-                required: requiredFields,
-                additionalProperties: false,
-              },
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent as any },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "report_movement_analysis",
+            description: "Report the detected movement direction, timing, and step analysis from the base-stealing drill frames.",
+            parameters: {
+              type: "object",
+              properties: toolProperties,
+              required: requiredFields,
+              additionalProperties: false,
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "report_movement_analysis" } },
-      }),
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "report_movement_analysis" } },
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (!aiResult.ok) {
+      if (aiResult.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded, please try again shortly." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (aiResult.status === 402) {
         return new Response(
           JSON.stringify({ error: "AI credits exhausted. Please add credits in Settings." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-      throw new Error(`AI gateway returned ${response.status}`);
+      console.error("AI provider error:", aiResult.provider, aiResult.status, aiResult.errorBody);
+      throw new Error(`AI provider returned ${aiResult.status}`);
     }
 
-    const data = await response.json();
+    const data = aiResult.data;
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
