@@ -1,6 +1,7 @@
 // Owner-triggered: analyzes a video's ai_description + title with Lovable AI
 // and inserts proposals into video_tag_suggestions for owner review.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { chatCompletion } from '../_shared/googleAi.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
