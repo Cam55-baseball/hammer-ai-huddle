@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,28 +27,18 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
   const targetLangName = languageNames[targetLanguage] || targetLanguage;
 
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `Translate to ${targetLangName}. Return ONLY the translation, no explanations.`,
-          },
-          { role: "user", content: text },
-        ],
-      }),
+    const result = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `Translate to ${targetLangName}. Return ONLY the translation, no explanations.`,
+        },
+        { role: "user", content: text },
+      ],
     });
-
-    if (!response.ok) return text;
-
-    const data = await response.json();
-    return data.choices[0]?.message?.content?.trim() || text;
+    if (!result.ok) return text;
+    return result.data.choices[0]?.message?.content?.trim() || text;
   } catch (error) {
     console.error("Translation error:", error);
     return text;

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,52 +40,41 @@ serve(async (req) => {
 
     const targetLangName = languageNames[targetLanguage] || targetLanguage;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a professional translator. Translate the following text to ${targetLangName}. 
+    const result = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional translator. Translate the following text to ${targetLangName}. 
             - Preserve any formatting, line breaks, and punctuation
             - Keep proper nouns, names, and technical terms as-is when appropriate
             - Return ONLY the translated text, no explanations or notes`,
-          },
-          {
-            role: "user",
-            content: text,
-          },
-        ],
-      }),
+        },
+        { role: "user", content: text },
+      ],
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (!result.ok) {
+      if (result.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded", translatedText: text }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (result.status === 402) {
         return new Response(
           JSON.stringify({ error: "Payment required", translatedText: text }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      console.error("AI gateway error:", response.status);
+      console.error("AI gateway error:", result.status);
       return new Response(
         JSON.stringify({ error: "Translation failed", translatedText: text }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const data = await response.json();
-    const translatedText = data.choices[0]?.message?.content?.trim() || text;
+    const translatedText = result.data.choices[0]?.message?.content?.trim() || text;
 
     return new Response(
       JSON.stringify({ translatedText }),

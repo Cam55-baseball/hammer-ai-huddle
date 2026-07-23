@@ -1,3 +1,5 @@
+import { chatCompletion } from "../_shared/googleAi.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -48,18 +50,12 @@ Deno.serve(async (req) => {
 
     console.log(`[parse-food-text] Parsing: "${text}"`);
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a nutrition expert. Parse food descriptions and return accurate nutritional estimates.
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are a nutrition expert. Parse food descriptions and return accurate nutritional estimates.
 Use USDA standard values. For compound foods, break them into individual items.
 Be conservative with estimates - use typical serving sizes unless specified.
 Confidence levels: "high" for common foods with known values, "medium" for estimates, "low" for unusual items.
@@ -74,81 +70,80 @@ MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
 - Evening items (steak, pasta, casserole, dinner plate, roast, grilled fish) → "dinner"
 - Small items (bar, nuts, fruit, chips, yogurt, crackers) → "snack"
 - ONLY beverages with zero or minimal calories (water, black coffee, unsweetened tea) → "hydration"`,
-          },
-          {
-            role: "user",
-            content: `Parse this food description and return nutritional information: "${text}"`,
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "parse_food_nutrition",
-              description: "Extract nutritional information from a food description",
-              parameters: {
-                type: "object",
-                properties: {
-                  foods: {
-                    type: "array",
-                    description: "List of individual food items identified",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string", description: "Name of the food item" },
-                        quantity: { type: "number", description: "Amount/quantity" },
-                        unit: { type: "string", description: "Unit of measurement" },
-                        calories: { type: "number", description: "Calories (kcal)" },
-                        protein_g: { type: "number", description: "Protein in grams" },
-                        carbs_g: { type: "number", description: "Carbohydrates in grams" },
-                        fats_g: { type: "number", description: "Fats in grams" },
-                        confidence: { type: "string", enum: ["high", "medium", "low"] },
-                        micros: {
-                          type: "object",
-                          description: "Micronutrients for this food item. ALL 13 keys are required with USDA-based values.",
-                          properties: microProperties,
-                          required: MICRO_KEYS,
-                        },
-                      },
-                      required: ["name", "quantity", "unit", "calories", "protein_g", "carbs_g", "fats_g", "confidence", "micros"],
-                    },
-                  },
-                  totals: {
+        },
+        {
+          role: "user",
+          content: `Parse this food description and return nutritional information: "${text}"`,
+        },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "parse_food_nutrition",
+            description: "Extract nutritional information from a food description",
+            parameters: {
+              type: "object",
+              properties: {
+                foods: {
+                  type: "array",
+                  description: "List of individual food items identified",
+                  items: {
                     type: "object",
-                    description: "Combined totals for all foods",
                     properties: {
-                      calories: { type: "number" },
-                      protein_g: { type: "number" },
-                      carbs_g: { type: "number" },
-                      fats_g: { type: "number" },
-                      hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned" },
+                      name: { type: "string", description: "Name of the food item" },
+                      quantity: { type: "number", description: "Amount/quantity" },
+                      unit: { type: "string", description: "Unit of measurement" },
+                      calories: { type: "number", description: "Calories (kcal)" },
+                      protein_g: { type: "number", description: "Protein in grams" },
+                      carbs_g: { type: "number", description: "Carbohydrates in grams" },
+                      fats_g: { type: "number", description: "Fats in grams" },
+                      confidence: { type: "string", enum: ["high", "medium", "low"] },
                       micros: {
                         type: "object",
-                        description: "Aggregated micronutrients across all foods.",
+                        description: "Micronutrients for this food item. ALL 13 keys are required with USDA-based values.",
                         properties: microProperties,
                         required: MICRO_KEYS,
                       },
                     },
-                    required: ["calories", "protein_g", "carbs_g", "fats_g", "hydration_oz", "micros"],
+                    required: ["name", "quantity", "unit", "calories", "protein_g", "carbs_g", "fats_g", "confidence", "micros"],
                   },
-                  suggested_meal_type: {
-                    type: "string",
-                    enum: ["breakfast", "lunch", "dinner", "snack", "hydration"],
-                    description: "Inferred meal type",
-                  },
-                  mealDescription: { type: "string", description: "Brief description of the meal" },
                 },
-                required: ["foods", "totals", "suggested_meal_type"],
+                totals: {
+                  type: "object",
+                  description: "Combined totals for all foods",
+                  properties: {
+                    calories: { type: "number" },
+                    protein_g: { type: "number" },
+                    carbs_g: { type: "number" },
+                    fats_g: { type: "number" },
+                    hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned" },
+                    micros: {
+                      type: "object",
+                      description: "Aggregated micronutrients across all foods.",
+                      properties: microProperties,
+                      required: MICRO_KEYS,
+                    },
+                  },
+                  required: ["calories", "protein_g", "carbs_g", "fats_g", "hydration_oz", "micros"],
+                },
+                suggested_meal_type: {
+                  type: "string",
+                  enum: ["breakfast", "lunch", "dinner", "snack", "hydration"],
+                  description: "Inferred meal type",
+                },
+                mealDescription: { type: "string", description: "Brief description of the meal" },
               },
+              required: ["foods", "totals", "suggested_meal_type"],
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "parse_food_nutrition" } },
-      }),
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "parse_food_nutrition" } },
     });
 
-    if (!aiResponse.ok) {
-      const status = aiResponse.status;
+    if (!aiResult.ok) {
+      const status = aiResult.status;
       console.error(`[parse-food-text] AI gateway error: ${status}`);
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
@@ -168,8 +163,7 @@ MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
       });
     }
 
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = aiResult.data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
       console.error("[parse-food-text] No tool call in AI response");
