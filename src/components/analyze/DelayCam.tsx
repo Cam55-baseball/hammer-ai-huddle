@@ -76,6 +76,10 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     sportProp ??
     ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
       "baseball");
+  const sideDiscipline: "hit" | "throw" = resolvedModule === "hitting" ? "hit" : "throw";
+  const { selectedSide, shouldShowPicker } = useSideContext();
+  const activeSide = selectedSide[sideDiscipline];
+  const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
   const liveRef = useRef<HTMLVideoElement>(null);
   const delayedCanvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
