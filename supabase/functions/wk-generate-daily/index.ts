@@ -577,10 +577,31 @@ const handler = async (req: Request): Promise<Response> => {
         engine: wicEngine,
         generator_version: WIC_VERSION,
       });
-      const durationSeconds = durationDose;
-      const distanceFeet = distanceDose;
-      const totalReps = totalDose;
-      const dosageUnit = dosageUnitRaw;
+      let durationSeconds = durationDose;
+      let distanceFeet = distanceDose;
+      let totalReps = totalDose;
+      let dosageUnit = dosageUnitRaw;
+      // Dosage safety net — never emit a "1 sets × 1 reps" row with no other
+      // dose. If the catalog defaults are missing, backfill from the raw
+      // movement row, then classify by category so mobility/warmup/FRC always
+      // land on a duration and lifts land on rep counts.
+      const noDose =
+        (finalSets === 1 || finalSets == null) &&
+        (repsBase === 1 || repsBase == null) &&
+        !durationSeconds && !distanceFeet && !totalReps;
+      if (noDose) {
+        const cat = (s.movement.movement_category ?? s.movement.category ?? "").toLowerCase();
+        const isTimeBased = cat.includes("mobility") || cat.includes("warmup") ||
+          cat.includes("activation") || cat.includes("recovery") ||
+          cat.includes("functional_patterning") || s.movement.slug.startsWith("frc_");
+        if (isTimeBased) {
+          durationSeconds = 120;
+          dosageUnit = "seconds";
+        } else {
+          // Rep-based fallback for anything else — 3 x 8 is a safe default.
+          dosageUnit = dosageUnit === "reps" ? "reps" : dosageUnit;
+        }
+      }
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
