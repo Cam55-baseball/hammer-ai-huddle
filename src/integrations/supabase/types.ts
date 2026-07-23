@@ -14259,11 +14259,15 @@ export type Database = {
           created_at: string
           cross_sport_category: string | null
           cue: string
+          default_distance_feet: number | null
+          default_duration_seconds: number | null
           default_load_pct: number | null
           default_reps: number | null
           default_sets: number | null
           default_tempo: string | null
+          default_total_reps: number | null
           demo_video_url: string | null
+          dosage_unit: string | null
           duplicate_group: string | null
           eccentric_profile: string | null
           elastic_emphasis: boolean | null
@@ -14346,11 +14350,15 @@ export type Database = {
           created_at?: string
           cross_sport_category?: string | null
           cue: string
+          default_distance_feet?: number | null
+          default_duration_seconds?: number | null
           default_load_pct?: number | null
           default_reps?: number | null
           default_sets?: number | null
           default_tempo?: string | null
+          default_total_reps?: number | null
           demo_video_url?: string | null
+          dosage_unit?: string | null
           duplicate_group?: string | null
           eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
@@ -14433,11 +14441,15 @@ export type Database = {
           created_at?: string
           cross_sport_category?: string | null
           cue?: string
+          default_distance_feet?: number | null
+          default_duration_seconds?: number | null
           default_load_pct?: number | null
           default_reps?: number | null
           default_sets?: number | null
           default_tempo?: string | null
+          default_total_reps?: number | null
           demo_video_url?: string | null
+          dosage_unit?: string | null
           duplicate_group?: string | null
           eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
@@ -14600,6 +14612,9 @@ export type Database = {
           cns_clamped: boolean
           cns_cost: number
           created_at: string
+          distance_feet: number | null
+          dosage_unit: string | null
+          duration_seconds: number | null
           engine: string | null
           generator_version: string | null
           id: string
@@ -14618,6 +14633,7 @@ export type Database = {
           substituted_from_slug: string | null
           substitution_reason: string | null
           tempo: string | null
+          total_reps: number | null
           updated_at: string
           user_id: string
           validator_report: Json | null
@@ -14629,6 +14645,9 @@ export type Database = {
           cns_clamped?: boolean
           cns_cost?: number
           created_at?: string
+          distance_feet?: number | null
+          dosage_unit?: string | null
+          duration_seconds?: number | null
           engine?: string | null
           generator_version?: string | null
           id?: string
@@ -14647,6 +14666,7 @@ export type Database = {
           substituted_from_slug?: string | null
           substitution_reason?: string | null
           tempo?: string | null
+          total_reps?: number | null
           updated_at?: string
           user_id: string
           validator_report?: Json | null
@@ -14658,6 +14678,9 @@ export type Database = {
           cns_clamped?: boolean
           cns_cost?: number
           created_at?: string
+          distance_feet?: number | null
+          dosage_unit?: string | null
+          duration_seconds?: number | null
           engine?: string | null
           generator_version?: string | null
           id?: string
@@ -14676,6 +14699,7 @@ export type Database = {
           substituted_from_slug?: string | null
           substitution_reason?: string | null
           tempo?: string | null
+          total_reps?: number | null
           updated_at?: string
           user_id?: string
           validator_report?: Json | null
@@ -14718,6 +14742,8 @@ export type Database = {
         Row: {
           bar_feel: string | null
           created_at: string
+          distance_feet_completed: number | null
+          duration_seconds_completed: number | null
           id: string
           load_used: number | null
           movement_slug: string
@@ -14727,12 +14753,15 @@ export type Database = {
           reps_completed: number[] | null
           rpe: number | null
           sets_completed: number | null
+          total_reps_completed: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           bar_feel?: string | null
           created_at?: string
+          distance_feet_completed?: number | null
+          duration_seconds_completed?: number | null
           id?: string
           load_used?: number | null
           movement_slug: string
@@ -14742,12 +14771,15 @@ export type Database = {
           reps_completed?: number[] | null
           rpe?: number | null
           sets_completed?: number | null
+          total_reps_completed?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           bar_feel?: string | null
           created_at?: string
+          distance_feet_completed?: number | null
+          duration_seconds_completed?: number | null
           id?: string
           load_used?: number | null
           movement_slug?: string
@@ -14757,6 +14789,7 @@ export type Database = {
           reps_completed?: number[] | null
           rpe?: number | null
           sets_completed?: number | null
+          total_reps_completed?: number | null
           updated_at?: string
           user_id?: string
         }
