@@ -559,6 +559,10 @@ const handler = async (req: Request): Promise<Response> => {
         engine: wicEngine,
         generator_version: WIC_VERSION,
       });
+      const durationSeconds = (overrides as any).duration_seconds ?? s.movement.default_duration_seconds ?? null;
+      const distanceFeet = (overrides as any).distance_feet ?? s.movement.default_distance_feet ?? null;
+      const totalReps = (overrides as any).total_reps ?? s.movement.default_total_reps ?? null;
+      const dosageUnit = (overrides as any).dosage_unit ?? s.movement.dosage_unit ?? "reps";
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
@@ -566,6 +570,10 @@ const handler = async (req: Request): Promise<Response> => {
         reps: repsBase,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
+        duration_seconds: durationSeconds,
+        distance_feet: distanceFeet,
+        total_reps: totalReps,
+        dosage_unit: dosageUnit,
         cns_cost: s.movement.cns_cost,
         cns_clamped: clamped,
         substituted_from_slug: s.substitutedFrom,
