@@ -283,7 +283,7 @@ export function detectMonotony(
   return notes;
 }
 
-function labelForModality(m: ModalityKey): string {
+function labelForModality(m: EngagementKey): string {
   switch (m) {
     case "warmup": return "Warm-up";
     case "speed": return "Speed";
@@ -295,6 +295,10 @@ function labelForModality(m: ModalityKey): string {
     case "game_iq": return "Game IQ";
     case "fueling": return "Fueling";
     case "recovery": return "Recovery";
+    case "lifts": return "Lifts";
+    case "bat_speed": return "Bat Speed";
+    case "conditioning": return "Conditioning";
+    default: return String(m);
   }
 }
 
