@@ -756,7 +756,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // -------- Cross-sport (its own slot, appended) --------
-    const cross = lib.find((m) => m.category === "cross_sport" && eligible(m));
+    // Prefer Weightless Object Sport Training coordination for youth/beginner
+    // athletes; fall back to any legal cross-sport movement in the catalog.
+    const cross =
+      pickFirst(CROSS_SPORT_COORDINATION_PREFERRED) ??
+      lib.find((m) => m.category === "cross_sport" && eligible(m));
     if (cross && isOffseason && !isGameDay) {
       push(
         "cross_sport",

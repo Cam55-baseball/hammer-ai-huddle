@@ -213,6 +213,18 @@ For ${sport} athletes, always consider:
 - Shoulder/arm activation if throwing is involved
 - Hip mobility for athletic movements
 - Core activation for power transfer
+
+WEIGHTLESS OBJECT SPORT TRAINING (WOST) — coordination pillar:
+For YOUTH and BEGINNER athletes, prioritize including 1-2 weightless coordination drills
+that develop hand-eye, rhythm, and fast-twitch CNS patterning WITHOUT load. Examples:
+- Tennis ball self-rally, cross-body catch, clap-catch, one-hand catch
+- Scarf juggling (2-3 scarves), scarf cross-body catch, scarf one-hand snatch
+- Balloon keep-up, balloon hand-switch, balloon partner volley
+- Beanbag toss-catch, beanbag balance walk on the head, beanbag foot flip
+- Reaction drop-catch, mini frisbee toss/catch, badminton shuttle tap-up
+For INTERMEDIATE / ADVANCED / ELITE athletes, include ONE weightless coordination drill
+only when the context is general/hitting/throwing warmup — never spend a fast-twitch or
+speed-day slot on it. Never assign these on recovery-only days.
 ${warmupContextPrompt}${personalizedContext}
 
 Always respond using the generate_warmup function.`
