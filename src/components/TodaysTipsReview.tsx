@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, Heart, Sparkles, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Heart, Sparkles, Clock, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useVault } from '@/hooks/useVault';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { TipDetailDialog } from './TipDetailDialog';
+import type { CategoryTipDetails } from '@/hooks/useNutritionCategoryTips';
 
 interface TodayTip {
   id: string;
@@ -18,6 +20,7 @@ interface TodayTip {
   is_ai_generated: boolean;
   sport: string | null;
   viewed_at: string;
+  details?: CategoryTipDetails | null;
 }
 
 export function TodaysTipsReview() {
@@ -29,6 +32,8 @@ export function TodaysTipsReview() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savedTipIds, setSavedTipIds] = useState<Set<string>>(new Set());
+  const [detailTip, setDetailTip] = useState<TodayTip | null>(null);
+
 
   const fetchTodaysTips = useCallback(async () => {
     if (!user) return;
