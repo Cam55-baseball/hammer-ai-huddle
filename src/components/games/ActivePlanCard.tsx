@@ -25,6 +25,11 @@ import { TeamPitchingPlanCard } from "./TeamPitchingPlanCard";
 export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) {
   const { user } = useAuth();
   const pitcherId = game?.probable_pitcher_dossier_id ?? null;
+  const attachedHitterIds: string[] = Array.isArray(game?.opponent_hitter_dossier_ids)
+    ? game.opponent_hitter_dossier_ids
+    : [];
+  const oppHitters = useOpponentHitters(game?.sport);
+  const attachedHitters = (oppHitters.list.data ?? []).filter((h) => attachedHitterIds.includes(h.id));
 
   const planQ = useQuery({
     queryKey: ["active-plan", user?.id, gameId, pitcherId],
@@ -48,10 +53,21 @@ export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) 
   const situational = planQ.data?.plan_json?.situational_hitting ?? {};
   const attack = planQ.data?.plan_json?.my_attack_on_pitcher ?? {};
 
-  if (!pitcherId) {
+  const teamPlanBlock = attachedHitters.length > 0 && (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <Users className="h-3.5 w-3.5" /> Team pitching plan · {attachedHitters.length} hitter{attachedHitters.length === 1 ? "" : "s"}
+      </div>
+      {attachedHitters.map((h) => (
+        <TeamPitchingPlanCard key={h.id} gameId={gameId} game={game} hitter={h} />
+      ))}
+    </div>
+  );
+
+  if (!pitcherId && attachedHitters.length === 0) {
     return (
       <Card className="p-3 text-xs text-muted-foreground">
-        Tag a probable pitcher on this game's Overview tab to surface your elite plan here.
+        Tag a probable pitcher and/or attach opponent hitters on the Overview tab to surface your elite plan here.
       </Card>
     );
   }
