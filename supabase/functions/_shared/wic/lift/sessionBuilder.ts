@@ -144,6 +144,8 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
         slug: rx.movement_slug,
       });
     }
+    const resolvedCategory = coerceCanonicalCategory(cat);
+
     // Season / age legality using the new registry (belt-and-braces on top of
     // legacy phase_allow, which the generator already enforces).
     const phase = input.template.seasonPhase;
