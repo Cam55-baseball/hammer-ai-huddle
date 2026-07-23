@@ -333,10 +333,10 @@ export function buildDailyIntent(
   })();
   const yesterday = state.days.find((d) => d.date === yKey);
   const yDone = yesterday
-    ? Object.entries(yesterday.completions).filter(([, v]) => v === "done").map(([k]) => k as ModalityKey)
+    ? Object.entries(yesterday.completions).filter(([, v]) => v === "done").map(([k]) => k as EngagementKey)
     : [];
   const ySkipped = yesterday
-    ? Object.entries(yesterday.completions).filter(([, v]) => v === "skipped").map(([k]) => k as ModalityKey)
+    ? Object.entries(yesterday.completions).filter(([, v]) => v === "skipped").map(([k]) => k as EngagementKey)
     : [];
 
   const yesterdayCopy = (() => {
