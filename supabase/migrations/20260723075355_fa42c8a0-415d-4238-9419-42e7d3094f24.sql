@@ -1,0 +1,1 @@
+ALTER TABLE public.nutrition_daily_tips ADD COLUMN IF NOT EXISTS details JSONB;
