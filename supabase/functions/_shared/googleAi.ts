@@ -396,3 +396,198 @@ async function callLovable(
     clearTimeout(timer);
   }
 }
+
+// -----------------------------------------------------------------------------
+// Streaming API — returns an OpenAI-shaped SSE stream:
+//   data: {"choices":[{"delta":{"content":"..."}}]}\n\n
+//   ...
+//   data: [DONE]\n\n
+// Google is tried first (streamGenerateContent, SSE mode). If Google fails
+// before any bytes are emitted, we fall back to Lovable Gateway's OpenAI
+// streaming endpoint and pass its stream body through unchanged.
+// -----------------------------------------------------------------------------
+
+export interface StreamChatCompletionResult {
+  ok: boolean;
+  status: number;
+  provider: "google" | "lovable" | "none";
+  body: ReadableStream<Uint8Array> | null;
+  errorBody?: string;
+}
+
+export async function streamChatCompletion(
+  req: ChatCompletionRequest,
+  opts: { timeoutMs?: number; allowFallback?: boolean } = {},
+): Promise<StreamChatCompletionResult> {
+  const timeoutMs = opts.timeoutMs ?? 60_000;
+  const allowFallback = opts.allowFallback ?? true;
+
+  const googleKey = Deno.env.get("GOOGLE_AI_API_KEY");
+  if (googleKey) {
+    const google = await callGoogleStream(req, googleKey, timeoutMs);
+    if (google.ok) return google;
+    console.warn(
+      `[googleAi] Google stream failed status=${google.status} — ${allowFallback ? "falling back to Lovable Gateway" : "no fallback"}`,
+      google.errorBody?.slice(0, 200),
+    );
+    if (!allowFallback) return google;
+  } else {
+    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using Lovable Gateway stream");
+  }
+
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!lovableKey) {
+    return { ok: false, status: 500, provider: "none", body: null, errorBody: "no_ai_credentials" };
+  }
+  return await callLovableStream(req, lovableKey, timeoutMs);
+}
+
+async function callGoogleStream(
+  req: ChatCompletionRequest,
+  apiKey: string,
+  timeoutMs: number,
+): Promise<StreamChatCompletionResult> {
+  const model = toGoogleModel(req.model);
+  const url = `${GOOGLE_BASE}/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const body = JSON.stringify(await toGooglePayload(req));
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      signal: controller.signal,
+    });
+    if (!resp.ok || !resp.body) {
+      const errorBody = await resp.text().catch(() => "");
+      clearTimeout(timer);
+      return { ok: false, status: resp.status, provider: "google", body: null, errorBody };
+    }
+    const openaiStream = googleSseToOpenAiSse(resp.body, () => clearTimeout(timer));
+    return { ok: true, status: 200, provider: "google", body: openaiStream };
+  } catch (err) {
+    clearTimeout(timer);
+    return {
+      ok: false,
+      status: 599,
+      provider: "google",
+      body: null,
+      errorBody: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+async function callLovableStream(
+  req: ChatCompletionRequest,
+  apiKey: string,
+  timeoutMs: number,
+): Promise<StreamChatCompletionResult> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const body: Record<string, unknown> = {
+      model: req.model,
+      messages: req.messages,
+      stream: true,
+    };
+    if (req.tools) body.tools = req.tools;
+    if (req.tool_choice) body.tool_choice = req.tool_choice;
+    if (req.response_format) body.response_format = req.response_format;
+    if (typeof req.temperature === "number") body.temperature = req.temperature;
+    if (typeof req.max_tokens === "number") body.max_tokens = req.max_tokens;
+
+    const resp = await fetch(LOVABLE_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!resp.ok || !resp.body) {
+      const errorBody = await resp.text().catch(() => "");
+      clearTimeout(timer);
+      return { ok: false, status: resp.status, provider: "lovable", body: null, errorBody };
+    }
+    // Lovable already emits OpenAI-shaped SSE; pass through.
+    const passthrough = new ReadableStream<Uint8Array>({
+      async start(controller2) {
+        const reader = resp.body!.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) controller2.enqueue(value);
+          }
+        } finally {
+          clearTimeout(timer);
+          controller2.close();
+        }
+      },
+    });
+    return { ok: true, status: 200, provider: "lovable", body: passthrough };
+  } catch (err) {
+    clearTimeout(timer);
+    return {
+      ok: false,
+      status: 599,
+      provider: "lovable",
+      body: null,
+      errorBody: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/**
+ * Convert Google's SSE stream (each `data:` line is a JSON with
+ * `candidates[0].content.parts[i].text`) into OpenAI-shaped SSE where each
+ * chunk is `{ choices: [{ delta: { content } }] }`.
+ */
+function googleSseToOpenAiSse(
+  input: ReadableStream<Uint8Array>,
+  onClose: () => void,
+): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const reader = input.getReader();
+      let buffer = "";
+      const emit = (obj: unknown) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      };
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buffer.indexOf("\n")) !== -1) {
+            const rawLine = buffer.slice(0, idx).replace(/\r$/, "");
+            buffer = buffer.slice(idx + 1);
+            if (!rawLine.startsWith("data: ")) continue;
+            const jsonStr = rawLine.slice(6).trim();
+            if (!jsonStr || jsonStr === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const parts = parsed?.candidates?.[0]?.content?.parts ?? [];
+              let text = "";
+              for (const p of parts) if (typeof p?.text === "string") text += p.text;
+              if (text) emit({ choices: [{ delta: { content: text } }] });
+            } catch {
+              // Skip malformed frame
+            }
+          }
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      } catch (err) {
+        console.warn("[googleAi] stream translation error", err);
+      } finally {
+        onClose();
+        controller.close();
+      }
+    },
+  });
+}

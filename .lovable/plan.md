@@ -1,52 +1,64 @@
-# Plan: Migrate Video Analysis Pipeline to Google AI Studio
+# Plan: Migrate Ask Hammer to Google AI Studio Direct
 
 ## Goal
-Move the app's video analysis AI calls from Lovable AI Gateway to **Google AI Studio directly**, so Lovable credits are reserved for building. Keep Lovable Gateway as a transparent fallback when Google fails. The first target is the core video analysis pipeline (`analyze-video` and related functions).
+Move every Ask Hammer conversational backend (`hammer-chat`, `ai-chat`, `hammer-recall`) from Lovable AI Gateway to direct Google AI Studio calls, keeping Lovable Gateway as a transparent fallback only on failure. Preserve the streaming experience in the Progress Dashboard Ask Hammer panel.
 
 ## Current state
-- `supabase/functions/analyze-video/index.ts` sends sequential frames via `image_url` blocks to `https://ai.gateway.lovable.dev/v1/chat/completions` using `google/gemini-2.5-flash` and tool-calling for structured output.
-- `supabase/functions/analyze-video-description/index.ts` is text-only and also uses Lovable Gateway.
-- `supabase/functions/analyze-base-stealing-rep/index.ts`, `analyze-realtime-playback/index.ts`, and `reanalyze-videos-for-new-tag/index.ts` are part of the video/playback analysis surface and also use Lovable Gateway.
-- `supabase/functions/_shared/googleAi.ts` already exists for the workout-AI migration and provides a `chatCompletion` helper with **Google primary → Lovable Gateway fallback**, but it currently converts `image_url` blocks into JSON-stringified text instead of real Google image parts.
-- `GOOGLE_AI_API_KEY` was already added in the previous workout-AI migration.
+- `hammer-chat` (`supabase/functions/hammer-chat/index.ts`) — unified Coach Hammer chat, non-streaming, calls `https://ai.gateway.lovable.dev/v1/chat/completions` with `google/gemini-3-flash-preview`.
+- `ai-chat` (`supabase/functions/ai-chat/index.ts`) — legacy general coaching chat, supports both streaming (`stream: true`) and non-streaming. Used by `ChatWidget`, `AnalysisCoachChat`, `AskHammerPanel` (streaming), and `RoyalTimingModule` (non-streaming).
+- `hammer-recall` (`supabase/functions/hammer-recall/index.ts`) — recall/clarity chat, non-streaming, calls `https://ai.gateway.lovable.dev/v1/chat/completions` with `google/gemini-3-flash-preview`.
+- `supabase/functions/_shared/googleAi.ts` exists and already handles direct Google → Lovable fallback for non-streaming, multimodal chat completions. It does not yet expose a streaming helper.
+- `GOOGLE_AI_API_KEY` was added in the earlier workout-AI migration and is available to edge functions.
 
 ## Proposed implementation
 
-### Phase 1 — Upgrade the shared helper for true multimodal support
-Edit `supabase/functions/_shared/googleAi.ts` so the direct Google path correctly handles `image_url` blocks:
-- Detect data-URI frames (`data:image/...;base64,...`) and inline them as `inlineData` parts in the Google `contents` payload.
-- Detect HTTPS image URLs and use `fileData` / URI reference where appropriate, or fetch and inline as a fallback.
-- Preserve text parts and system instructions.
-- Keep Lovable Gateway fallback unchanged.
+### Phase 1 — Extend `googleAi.ts` for streaming
+- Add a new `streamChatCompletion` export in `supabase/functions/_shared/googleAi.ts`.
+- It mirrors the same request shape as `chatCompletion` but targets Google's `streamGenerateContent` endpoint.
+- On success, return a `ReadableStream`/`Response` shaped as OpenAI-style SSE (`data: {...}\n\n`).
+- On non-2xx from Google, fall back to Lovable Gateway's streaming endpoint (`stream: true`).
+- If neither provider succeeds, return a response with the final provider's status and body so the caller can surface the right error (429, 402, etc.).
+- Keep the existing `chatCompletion` non-streaming API unchanged so `hammer-chat` and `hammer-recall` continue to work with a simple swap.
+- Standardize on `google/gemini-3.6-flash` as the Ask Hammer model across all three functions (fallback to the direct model name where Google requires it). The helper's `toGoogleModel` alias table already handles older aliases; it will strip `google/` for the live request.
 
-### Phase 2 — Migrate `analyze-video` (core video analysis)
-Refactor `supabase/functions/analyze-video/index.ts`:
-- Replace the raw `retryFetch("https://ai.gateway.lovable.dev/v1/chat/completions", ...)` call with `chatCompletion(...)` from `googleAi.ts`.
-- Keep the same `messages`, `tools`, `tool_choice`, `temperature`, `seed`, and structured-output schema.
-- Adapt response parsing to the `ChatCompletionResult` shape returned by the helper (`result.data.choices[0].message.tool_calls`).
-- Preserve the existing `retryFetch` wrapper for transient network errors if needed, or rely on the helper's internal fallback.
-- Maintain existing audit/error paths (429/402 classification, video status updates, `video_analysis_runs` outcomes).
+### Phase 2 — Migrate `hammer-chat`
+- Replace the raw `fetch` to Lovable Gateway with `chatCompletion` from `googleAi.ts`.
+- Keep the same `messages`, system prompt builder, `temperature`, and CORS headers.
+- Parse `result.data.choices[0].message.content` and return `{ reply }` as before.
+- Preserve `startHeartbeat` logging: `hb.success()` / `hb.fail()` with the provider used and status.
+- Handle `result.ok === false` by returning the same JSON error envelope with status propagation (e.g., 429/402 where applicable).
 
-### Phase 3 — Migrate `analyze-video-description`
-Refactor `supabase/functions/analyze-video-description/index.ts` to use `chatCompletion` with the same system prompt, tool definition, and tag proposal logic. This is text-only, so it requires no multimodal changes.
+### Phase 3 — Migrate `hammer-recall`
+- Replace the internal `askLLM` fetch with `chatCompletion`.
+- Keep the retrieval logic (`retrieveContext`), thread creation/ownership, and message persistence unchanged.
+- Return the same `{ threadId, answer, sources }` envelope.
+- Maintain the existing `SYSTEM_PROMPT` and `temperature: 0.5`.
 
-### Phase 4 — Migrate remaining video/playback analysis functions
-Apply the same `chatCompletion` pattern to:
-- `supabase/functions/analyze-base-stealing-rep/index.ts`
-- `supabase/functions/analyze-realtime-playback/index.ts`
-- `supabase/functions/reanalyze-videos-for-new-tag/index.ts`
-
-These functions are inspected and confirmed to use Lovable Gateway for AI calls. The vision-capable ones will benefit from the multimodal helper updates in Phase 1.
+### Phase 4 — Migrate `ai-chat` and preserve streaming
+- Use `streamChatCompletion` when `stream === true`.
+- In the streaming path:
+  - On success, return the provider's stream body directly with CORS headers and `Content-Type: text/event-stream`.
+  - On failure, return the same 429/402/500 JSON errors the client currently expects.
+- In the non-streaming path (`stream === false` or omitted), use `chatCompletion` and return `{ message: ... }` exactly as today.
+- Keep all auth, owner-bio lookup, subscription/progress context, season-phase prompt, and hitting doctrine injection unchanged.
+- Ensure the CORS `Access-Control-Allow-Headers` still includes the headers sent by the Supabase client (`x-supabase-client-*`).
 
 ### Phase 5 — Deploy and verify
-- Deploy the migrated functions (`supabase/functions/analyze-video`, `analyze-video-description`, and the Phase 4 functions) using the standard edge-function deploy flow.
-- Confirm the app still successfully analyzes a video end-to-end and returns the same structured fields (`efficiency_score`, `violations`, `summary`, `feedback`, `positives`, `drills`, `scorecard`, `metrics`, `causal_chains`, `roadmap`, etc.).
-- Verify fallback behavior by reviewing logs: a deliberate or observed Google failure should route to Lovable Gateway and still produce a valid response.
+- Deploy the three edge functions (`hammer-chat`, `ai-chat`, `hammer-recall`).
+- End-to-end smoke tests across the user-facing surfaces:
+  - `HammerChat` (dashboard, today plan, report-card dialog) → `hammer-chat`
+  - `ChatWidget` → `ai-chat` non-streaming
+  - `AnalysisCoachChat` → `ai-chat` non-streaming
+  - `AskHammerPanel` (Progress / The General) → `ai-chat` streaming
+  - `RoyalTimingModule` → `ai-chat` non-streaming
+  - `HammerRecall` page → `hammer-recall`
+- Verify structured JSON response shape and streaming word-by-word appearance.
+- Verify fallback behavior in edge-function logs: a deliberate or observed Google failure should route to Lovable Gateway and still produce a valid response.
 
-## Out of scope for this plan
-- Food/photo analysis (`analyze-food-photo`, `analyze-hydration-beverage`) are not video analysis; they can be migrated in a follow-up if requested.
-- "Ask Hammer" chat / RAG pipeline is a separate surface and is not included here.
-- Workout generation (`wk-generate-daily`) is already deterministic and does not use AI; it remains untouched.
+## Out of scope
+- Video analysis functions (`analyze-video`, `analyze-video-description`, etc.) were already migrated in the previous turn.
+- Workout/generation functions (`wk-generate-daily`, `prescription-engine`, etc.) were already migrated earlier.
+- Game-plan / pregame dossier functions (`gp-pregame-plan`, etc.) are not part of the Ask Hammer conversational surface.
 
 ## Expected result
-Video analysis calls run through Google AI Studio first, reducing Lovable AI credit usage. If Google's API is unavailable or returns an error, the call falls back to Lovable Gateway transparently. No user-facing behavior changes beyond continued reliable analysis.
+Every Ask Hammer chat surface calls Google AI Studio first. Lovable AI credits are used only when Google fails, and only for building. User-facing behavior remains the same, including the streaming dashboard panel.

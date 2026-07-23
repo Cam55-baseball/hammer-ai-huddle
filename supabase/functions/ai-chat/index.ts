@@ -5,6 +5,7 @@ import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
 import { buildCausalContractPromptSuffix } from "../_shared/causalContract.ts";
 import { summarizeAnyDomain } from "../_shared/domainPhaseDoctrine.ts";
+import { chatCompletion, streamChatCompletion } from "../_shared/googleAi.ts";
 
 const UNIVERSAL_CAUSE_EFFECT_PROMPT = `\n\n=== UNIVERSAL CAUSE→EFFECT MANDATE (ALL DOMAINS) ===
 Every diagnostic answer — hitting, pitching, defense, baserunning, strength, regulation/recovery, nutrition, mental — MUST be expressed as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) followed by a 4-step roadmap. Two registers: athlete voice + a one-line "Coach's note:" with the technical mechanism. Multi-violation answers stack chains in phase order (P1 → P2 → P3 → P4). Severity model is universal: NN hard cap 50, NN soft cap 70, standard cap 80, secondary 75/85, two-or-more violations cap 65, elite execution +5.
@@ -64,10 +65,8 @@ serve(async (req) => {
 
     const userId = user.id;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    // Provider credentials handled inside chatCompletion / streamChatCompletion
+    // (Google AI Studio primary, Lovable Gateway fallback).
 
     // Fetch owner's profile to get coaching philosophy
     let ownerBio = "";
@@ -204,56 +203,59 @@ When the conversation touches HITTING, you MUST answer through the 1-2-3-4 phase
 Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.${UNIVERSAL_CAUSE_EFFECT_PROMPT}`;
 
     const useStreaming = stream === true;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        ...(useStreaming ? { stream: true } : {}),
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI gateway error");
-    }
+    const modelId = "google/gemini-3.6-flash";
+    const chatMessages = [
+      { role: "system" as const, content: systemPrompt },
+      ...messages,
+    ];
 
     if (useStreaming) {
-      return new Response(response.body, {
+      const streamResult = await streamChatCompletion({
+        model: modelId,
+        messages: chatMessages,
+      });
+      if (!streamResult.ok || !streamResult.body) {
+        if (streamResult.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        if (streamResult.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        console.error("AI provider stream error:", streamResult.status, streamResult.errorBody);
+        return new Response(
+          JSON.stringify({ error: "AI provider error", detail: streamResult.errorBody?.slice(0, 400) }),
+          { status: streamResult.status || 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(streamResult.body, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
 
-    const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    const result = await chatCompletion({ model: modelId, messages: chatMessages });
+    if (!result.ok) {
+      if (result.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (result.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      console.error("AI provider error:", result.status, result.errorBody);
+      throw new Error("AI provider error");
+    }
+    const assistantMessage = result.data?.choices?.[0]?.message?.content ?? "";
 
     return new Response(JSON.stringify({ message: assistantMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

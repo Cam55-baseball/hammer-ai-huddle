@@ -14,6 +14,7 @@
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,52 +92,37 @@ serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
-      await hb.fail(new Error("missing_lovable_api_key"));
-      return new Response(JSON.stringify({ error: "missing_lovable_api_key" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": apiKey,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: buildSystem(
-              body.context ?? null,
-              body.nextStep ?? null,
-              body.categoryFocus ?? null,
-            ),
-          },
-          ...messages,
-        ],
-      }),
+    const result = await chatCompletion({
+      model: "google/gemini-3.6-flash",
+      messages: [
+        {
+          role: "system",
+          content: buildSystem(
+            body.context ?? null,
+            body.nextStep ?? null,
+            body.categoryFocus ?? null,
+          ),
+        },
+        ...messages,
+      ],
     });
 
-    if (!resp.ok) {
-      const text = await resp.text();
-      await hb.fail(new Error(`ai_gateway_${resp.status}`), { detail: text.slice(0, 200) });
-      return new Response(JSON.stringify({ error: "ai_gateway_error", detail: text.slice(0, 400) }), {
-        status: resp.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!result.ok) {
+      await hb.fail(new Error(`ai_provider_${result.status}`), {
+        provider: result.provider,
+        detail: result.errorBody?.slice(0, 200),
       });
+      return new Response(
+        JSON.stringify({ error: "ai_provider_error", provider: result.provider, detail: result.errorBody?.slice(0, 400) }),
+        { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    const data = await resp.json();
     const reply =
-      data?.choices?.[0]?.message?.content ??
+      result.data?.choices?.[0]?.message?.content ??
       "I don't have enough to say yet — tell me what's going on and I'll work with you.";
 
-    await hb.success({ message_count: messages.length, reply_length: reply.length });
+    await hb.success({ message_count: messages.length, reply_length: reply.length, provider: result.provider });
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
