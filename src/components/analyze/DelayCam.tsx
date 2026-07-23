@@ -21,6 +21,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
+import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
+import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
+import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
+import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
 type ClipModule = "hitting" | "pitching" | "throwing";
