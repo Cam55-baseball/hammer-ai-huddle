@@ -39,7 +39,11 @@ import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
 import { certifyArmCare } from "../_shared/wic/armCare/sessionBuilder.ts";
-import { GAME_DAY_PRIMER_SLUGS } from "../_shared/wic/engines/crossSport.ts";
+import {
+  GAME_DAY_PRIMER_SLUGS,
+  CROSS_SPORT_LOW_IMPACT_PREFERRED,
+  CROSS_SPORT_COORDINATION_PREFERRED,
+} from "../_shared/wic/engines/crossSport.ts";
 // Phase 11–12 — Global determinism, snapshot immutability, validator registry,
 // unified why_v2, and cross-engine conflict resolution.
 import {
@@ -581,14 +585,17 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     if (isGameDay) {
-      // WIC cross-sport engine
-      const primer = pickFirst(GAME_DAY_PRIMER_SLUGS);
+      // WIC cross-sport engine — Weightless Object Sport Training preferred
+      // for zero-CNS coordination priming before competition.
+      const primer =
+        pickFirst(CROSS_SPORT_LOW_IMPACT_PREFERRED) ??
+        pickFirst(GAME_DAY_PRIMER_SLUGS);
       if (primer) {
         push(
           "cross_sport",
           "cross_sport",
           primer,
-          { sets: 1, reps: primer.slug === "contralateral_cross_crawl" ? 20 : 1 },
+          { sets: 1, reps: 1 },
           "Game-day crossover activation — short, early, and low-cost. It starts the day after warm-up instead of sitting on the back end.",
           { placement: "early_activation", sequencing_hint: "Do after warm-up and before the game. Stop before fatigue shows up." },
         );
@@ -749,7 +756,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // -------- Cross-sport (its own slot, appended) --------
-    const cross = lib.find((m) => m.category === "cross_sport" && eligible(m));
+    // Prefer Weightless Object Sport Training coordination for youth/beginner
+    // athletes; fall back to any legal cross-sport movement in the catalog.
+    const cross =
+      pickFirst(CROSS_SPORT_COORDINATION_PREFERRED) ??
+      lib.find((m) => m.category === "cross_sport" && eligible(m));
     if (cross && isOffseason && !isGameDay) {
       push(
         "cross_sport",
