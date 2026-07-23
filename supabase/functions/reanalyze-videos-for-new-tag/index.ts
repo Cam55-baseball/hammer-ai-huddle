@@ -3,6 +3,7 @@
 // where the description / existing tags support it. Proposals land in
 // video_tag_suggestions with source='taxonomy_expansion' for owner review.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { chatCompletion } from '../_shared/googleAi.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
