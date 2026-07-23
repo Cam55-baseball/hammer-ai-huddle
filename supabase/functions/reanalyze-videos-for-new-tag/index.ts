@@ -183,57 +183,48 @@ Deno.serve(async (req) => {
         `Decide ONLY if the new tag (${newTag.layer}:${newTag.key}) is explicitly supported by the title/description/intent or coherent with the existing tags. If yes, propose it with a confidence 0–1 and a one-sentence reason. If not, return an empty array. Do not propose any other tags.`,
       ].filter(Boolean).join('\n');
 
-      const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: 'system', content: 'You are an elite baseball/softball biomechanics tagger. Be conservative — only propose a tag if explicitly supported by the evidence.' },
-            { role: 'user', content: userPrompt },
-          ],
-          tools: [{
-            type: 'function',
-            function: {
-              name: 'propose_tag',
-              description: 'Propose the new tag for this video if supported',
-              parameters: {
-                type: 'object',
-                properties: {
-                  proposals: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        confidence: { type: 'number' },
-                        reasoning: { type: 'string' },
-                      },
-                      required: ['confidence', 'reasoning'],
+      const aiResult = await chatCompletion({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: 'You are an elite baseball/softball biomechanics tagger. Be conservative — only propose a tag if explicitly supported by the evidence.' },
+          { role: 'user', content: userPrompt },
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'propose_tag',
+            description: 'Propose the new tag for this video if supported',
+            parameters: {
+              type: 'object',
+              properties: {
+                proposals: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      confidence: { type: 'number' },
+                      reasoning: { type: 'string' },
                     },
+                    required: ['confidence', 'reasoning'],
                   },
                 },
-                required: ['proposals'],
               },
+              required: ['proposals'],
             },
-          }],
-          tool_choice: { type: 'function', function: { name: 'propose_tag' } },
-        }),
+          },
+        }],
+        tool_choice: { type: 'function', function: { name: 'propose_tag' } },
       });
 
-      if (!aiResp.ok) {
-        if (aiResp.status === 429 || aiResp.status === 402) {
-          // Stop early on quota/rate-limit; return what we have
+      if (!aiResult.ok) {
+        if (aiResult.status === 429 || aiResult.status === 402) {
           break;
         }
-        const t = await aiResp.text();
-        console.error('AI gateway error', aiResp.status, t);
+        console.error('AI provider error', aiResult.provider, aiResult.status, aiResult.errorBody);
         continue;
       }
 
-      const aiData = await aiResp.json();
+      const aiData = aiResult.data;
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
       if (!toolCall) continue;
       let args: any;
