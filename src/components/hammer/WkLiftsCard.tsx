@@ -109,9 +109,15 @@ export function WkLiftsCard() {
             <Dumbbell className="h-4 w-4 text-blue-500 shrink-0" />
             <span className="truncate">Lifts — Full Body</span>
           </div>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
-            {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setArmCareOpen(true)} title="Arm Care Library">
+              <BookOpen className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
+              {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            </Button>
+          </div>
+          <ArmCareLibraryDialog open={armCareOpen} onOpenChange={setArmCareOpen} />
         </CardTitle>
         {/* Phase display hidden from athlete UI — engine still uses phaseKey/phaseDisplay internally. */}
       </CardHeader>
