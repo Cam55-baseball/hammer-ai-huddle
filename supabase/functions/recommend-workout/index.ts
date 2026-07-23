@@ -66,7 +66,9 @@ interface RecoveryWarning {
   suggestions: string[];
 }
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const HAS_AI_CREDENTIALS = Boolean(
+  Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("LOVABLE_API_KEY"),
+);
 
 function extractExercisesFromTemplate(exercisesField: any): any[] {
   if (!exercisesField) return [];
