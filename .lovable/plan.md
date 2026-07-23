@@ -1,63 +1,47 @@
-#### Root cause confirmed by code + database reads
+The user has two concrete issues in Hammers Today Plan:
 
-1. **Dosage mismatch: card shows 8 sets, cue says 9 innings.**
-   - `inning_restart_sim_bb` in `wk_movement_catalog` has `default_sets: 9`, `default_reps: 1`, and the cue says "Repeat for 9 innings."
-   - In `supabase/functions/wk-generate-daily/index.ts`, when the CNS budget is exceeded, the generator clamps `sets` to `setsBase - 1`. For this user the `sets` value dropped from 9 to 8, so the card shows 8 sets while the cue still references 9 innings.
+1. **FRC/mobility prescriptions (and any movement) are vague** — e.g., "FRC CARs — Full Body" shows "1 sets × 1 reps" with no duration, reps, or distance, so the athlete doesn't know how much to do.
+2. **Workout cards (Lifts, Speed, Bat Speed, Conditioning) have no card-level Done/Skip button** unlike the other modality blocks. The user wants to mark the whole card done/skipped and have that state drive tomorrow's rest/cadence logic.
 
-2. **Phase mismatch: "This movement was generated under an older season setting..."**
-   - The user's `athlete_context.season_phase` is stored as `'in'`, but the generator only recognizes `'in_season'`. The generator falls back to the default `os_q1` phase.
-   - The UI's `useSeasonStatus` defaults to `'in_season'` when no `athlete_mpi_settings` row exists, so the card's expected phase is `in_season` while the stored prescription is `os_q1`. This triggers the phase-mismatch banner, and the plan keeps regenerating into the same mismatch.
+Current state (verified from DB and code):
+- `wk_movement_catalog` has 5 rows with `default_sets=1`, `default_reps=1`, and no `duration_seconds`, `total_reps`, or `distance_feet`: `frc_cars_full_body`, `wu_lacrosse_ball_pec`, `wu_lacrosse_ball_glute`, `wu_barefoot_towel_scrunch`, `wu_calf_softball_pin`. These are the only catalog entries that will produce a vague "1×1" dosage.
+- `WkPrescriptionCard` renders dosage from `wk_prescriptions` rows and falls back to "Follow the cue below" when the structured fields are empty.
+- The four workout cards (`WkLiftsCard`, `WkSpeedCard`, `WkBatSpeedCard`, `WkConditioningCard`) only render `CardActions` (Game Plan / chat actions). They do not include `BlockCompletionControls`, which is used by the generic modality blocks in `HammerDailyPlan`.
+- `ModalityKey` currently does not include `bat_speed`, `lifts`, `conditioning`, or `cross_sport`, so we must extend the engagement model to support card-level completion for these slots.
 
-3. **Cadence-rest leakage: running reappears after refresh.**
-   - The speed card can show a "cadence rest" or recovery day, but the conditioning block in `wk-generate-daily/index.ts` is not gated by the adaptation selector's `suppressed` list or by speed cadence. High-CNS sprint conditioning (like `inning_restart_sim_bb`) still shows up even when speed work is suppressed.
+Plan
 
-#### Plan
+1. **Dosage specificity — fix 1×1 placeholders in the catalog**
+   - Update the 5 flagged `wk_movement_catalog` rows with precise, athlete-friendly structured dosage:
+     - `frc_cars_full_body` → 45 seconds per joint, 1 set, dosage unit `seconds`, `default_duration_seconds = 300` (or a meaningful total), and remove the count from the cue.
+     - `wu_lacrosse_ball_pec`, `wu_lacrosse_ball_glute`, `wu_calf_softball_pin` → 60 seconds per side, `default_duration_seconds = 120`.
+     - `wu_barefoot_towel_scrunch` → 20 reps, `default_total_reps = 20`, `default_sets = 1`, `default_reps = 20`, `dosage_unit = reps`.
+   - Backfill the same values into `cue` so the old fallback text is still precise if any row still renders through the cue.
 
-1. **Database — correct the inning-restart dosage model**
-   - Update `inning_restart_sim_bb` in `wk_movement_catalog`: set `default_sets: 1`, `default_reps: 1`, `default_total_reps: 9`, `dosage_unit: 'innings'`.
-   - Update `inning_restart_sim_sb` (softball mirror): set `default_sets: 1`, `default_reps: 1`, `default_total_reps: 7`, `dosage_unit: 'innings'`.
-   - Rewrite the cue to remove the hardcoded inning count (e.g. "Sit 3–5 minutes to simulate a between-inning rest, then fire one sprint. Repeat for the prescribed number of innings.").
-   - Audit the cue column for any other hardcoded numbers that can contradict the structured dosage columns and fix those too.
+2. **Generator hardening — prevent vague 1×1 prescriptions**
+   - In `wk-generate-daily/index.ts`, after a prescription is built, add a guard: if the row has `sets=1`, `reps=1`, and no `duration_seconds/total_reps/distance_feet`, then use the source library's `baseDose` or catalog `default_*` fields to inject a real dose. If still unresolved, the prescription is flagged for substitution rather than emitted to the athlete.
+   - Ensure the guard is applied to every engine path (warmup, speed, bat speed, lifts, conditioning, cross-sport, arm care, recovery) so the error can never reach the user.
 
-2. **Database — normalize season status strings**
-   - Add a short helper that maps `athlete_context.season_phase` values to canonical values: `'in' → 'in_season'`, `'post' → 'post_season'`, `'pre' → 'preseason'`, `'off' → 'off_season'`.
-   - Apply this normalization in the `wk-generate-daily` edge function before passing the season status into `resolveWkPhase`.
-   - Apply the same normalization in the client-side `src/lib/seasonPhase.ts` and `src/lib/hammer/workout/phaseQuarter.ts` so the UI and generator always agree.
+3. **UI hardening — never show an empty dose to the athlete**
+   - Update `WkPrescriptionCard.tsx` dosage rendering so that if `sets=1` and `reps=1` with no other dose, it displays a clear, safe fallback instead of the vague cue-only message: e.g., "Complete as described in the cue" plus a note that the dose is being reconciled. If the structured dose is present, it is rendered as "N sets × M reps", "N seconds", "N feet", or "N reps total".
 
-3. **Generator — fix CNS clamping for total-based dosage**
-   - In `wk-generate-daily/index.ts` `push()`, before reducing `sets`, check if the primary dose is `total_reps`, `duration_seconds`, or `distance_feet` (movements where `sets` is just a container, such as `innings`, `contacts`, `seconds`, or `feet`).
-   - For those movements, do not reduce `sets`. Instead reduce the total dose by a bounded percentage (e.g., max 25% with a floor of 1) and update the `why_volume` string to reflect the new value.
-   - For `innings` specifically, keep `sets = 1` and reduce `total_reps` only if needed; ensure the UI renders "X total innings".
+4. **Card-level completion controls for the four Wk cards**
+   - Add `BlockCompletionControls` to the footer of `WkLiftsCard`, `WkSpeedCard`, `WkBatSpeedCard`, and `WkConditioningCard`.
+   - Extend `ModalityKey` in `src/lib/hammer/prescription/dailyPlan.ts` to include `bat_speed`, `lifts`, `conditioning`, and `cross_sport` (optional, if cross-sport is promoted to its own card later).
+   - Extend `src/lib/hammer/prescription/dailyEngagement.ts` to:
+     - Add labels for `bat_speed`, `lifts`, `conditioning`.
+     - Treat these as block-level states that persist to local storage, like the existing modalities.
+     - Include them in the "healing rules" logic that sets `BLOCK_PHASE` (e.g., a completed `lifts` block becomes `cooling` for the next 24–48 h, and the daily intent header reflects that the CNS is recovering).
+   - Wire the Wk cards to `HammerDailyPlan` via the existing `onEngagementChanged` callback so marking a card done updates the daily intent header and adaptive narrative.
 
-4. **Generator — respect adaptation suppression for conditioning**
-   - Before the conditioning block runs, check `adaptationDecision.suppressed`. If `conditioning` is in the list, skip the block entirely and let the UI show the rest message.
-   - Also skip high-CNS sprint conditioning (e.g., `inning_restart_sim_*`, `if_lateral_repeat_*`) when the speed card is a cadence-rest or the day is a recovery-only day, so "running" does not reappear after refresh.
+5. **Optional: persist block-level completion to `wk_prescriptions.status`**
+   - When a card is marked Done, also update all `wk_prescriptions` rows for that slot on that date to `status = 'completed'` (and `skipped` when skipped). This gives the generator a real signal to read the next day and avoids the "prescribed again after I completed it" complaint.
+   - If this is too large for this turn, the immediate fix is the local storage + daily intent update; this item can be noted as a fast-follow.
 
-5. **UI — tighten dosage rendering and phase mismatch copy**
-   - Update `WkPrescriptionCard.tsx` to render `total_reps` with `dosage_unit: 'innings'` as "X total innings" instead of "X sets × 1 innings".
-   - While the prescription is regenerating, soften the phase-mismatch banner to "Updating your plan..." instead of the alarming "older season setting" message.
-   - Ensure `WkConditioningCard.tsx` shows a clear "Recovery day — no conditioning work" state when the block is suppressed.
+6. **Validation**
+   - Re-run the query to confirm the 5 catalog rows no longer have 1×1 placeholders with no dose.
+   - Trigger a fresh `wk-generate-daily` run for the test athlete and verify the FRC/mobility rows show meaningful dosage in the UI.
+   - Check that the four Wk cards now display Done/Skip buttons and that clicking them updates the daily intent header and persists after refresh.
+   - Run the existing `wk` and `hammer` tests to ensure no regressions in the plan pipeline.
 
-6. **Edge function deployment and regeneration**
-   - Deploy the `wk-generate-daily` edge function.
-   - Delete today's `wk_prescriptions` rows for the affected user and force a regeneration so the corrected dosage, phase, and suppression logic apply immediately.
-   - Optionally regenerate the next 3-7 days so the fix is consistent across the near-term plan.
-
-7. **Verification**
-   - Query `wk_prescriptions` for today to confirm `inning_restart_sim_bb` rows now have `sets=1`, `total_reps=9`, `dosage_unit='innings'`, and `phase` matches the user's actual season status.
-   - Confirm that a recovery/cadence-rest day has no conditioning sprint in the DB.
-   - Use the app preview to verify the card shows the correct dosage and no phase mismatch banner.
-
-#### Files expected to change
-- `supabase/migrations/<new>.sql` — catalog dosage fixes, cue audit, season status normalization (if needed on DB side)
-- `supabase/functions/wk-generate-daily/index.ts` — CNS clamp logic, suppression gating, season status normalization
-- `supabase/functions/_shared/wkPhaseQuarter.ts` — normalize helper
-- `src/lib/seasonPhase.ts` — normalize short season status values
-- `src/lib/hammer/workout/phaseQuarter.ts` — mirror normalization
-- `src/components/hammer/WkPrescriptionCard.tsx` — dosage rendering and phase-mismatch copy
-- `src/components/hammer/WkConditioningCard.tsx` — suppressed state display
-
-#### Outcome
-- Conditioning cards show precise, cue-aligned doses (e.g., "9 total innings" instead of "8 sets × 1 innings").
-- Season phase mismatch warnings disappear for users whose `athlete_context.season_phase` is stored as a short value like `'in'`.
-- Recovery/cadence-rest days no longer leak high-CNS sprint conditioning, so the plan stays consistent after refresh.
+Out of scope (not requested): adding new exercises, changing the philosophy, or rebuilding the workout intelligence constitution. The focus is precise dosage and card-level completion.

@@ -17,11 +17,11 @@ import {
   recordCompletion,
   todayCompletion,
   type CompletionState,
+  type EngagementKey,
 } from "@/lib/hammer/prescription/dailyEngagement";
-import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
 
 interface Props {
-  readonly modality: ModalityKey;
+  readonly modality: EngagementKey;
   readonly modalityLabel: string;
   readonly onChanged: () => void;
 }

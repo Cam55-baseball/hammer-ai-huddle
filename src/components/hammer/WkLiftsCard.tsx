@@ -34,6 +34,7 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { ArmCareLibraryDialog } from "@/components/hammer/ArmCareLibraryDialog";
 import { BookOpen } from "lucide-react";
+import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
@@ -158,6 +159,7 @@ export function WkLiftsCard() {
 
         {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+        {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
         {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
       </CardContent>
 

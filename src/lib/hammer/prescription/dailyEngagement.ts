@@ -32,9 +32,17 @@ const STREAK_GRACE_DAYS = 1;
 
 export type CompletionState = "done" | "skipped";
 
+/**
+ * Superset of ModalityKey — extended with Wk-workout card slots
+ * (Lifts, Speed, Bat-Speed, Conditioning) so card-level Done/Skip can be
+ * persisted alongside the generic modality blocks without touching every
+ * ModalityKey switch. UI-only.
+ */
+export type EngagementKey = ModalityKey | "lifts" | "bat_speed" | "conditioning";
+
 export interface DayEntry {
   readonly date: string; // YYYY-MM-DD
-  readonly completions: Partial<Record<ModalityKey, CompletionState>>;
+  readonly completions: Partial<Record<EngagementKey, CompletionState>>;
   /** phase signature per modality — powers rotation detection. */
   readonly phases: Partial<Record<ModalityKey, BlockPhase>>;
 }
@@ -101,7 +109,7 @@ function upsertToday(state: EngagementState, mutator: (d: DayEntry) => DayEntry)
 
 export function recordCompletion(
   userId: string | null | undefined,
-  modality: ModalityKey,
+  modality: EngagementKey,
   status: CompletionState,
 ): EngagementState {
   const state = loadEngagement(userId);
@@ -129,7 +137,7 @@ export function recordPhaseSignature(
 
 export function todayCompletion(
   state: EngagementState,
-  modality: ModalityKey,
+  modality: EngagementKey,
 ): CompletionState | null {
   const t = state.days.find((d) => d.date === todayKey());
   return (t?.completions[modality] as CompletionState | undefined) ?? null;
@@ -275,7 +283,7 @@ export function detectMonotony(
   return notes;
 }
 
-function labelForModality(m: ModalityKey): string {
+function labelForModality(m: EngagementKey): string {
   switch (m) {
     case "warmup": return "Warm-up";
     case "speed": return "Speed";
@@ -287,6 +295,10 @@ function labelForModality(m: ModalityKey): string {
     case "game_iq": return "Game IQ";
     case "fueling": return "Fueling";
     case "recovery": return "Recovery";
+    case "lifts": return "Lifts";
+    case "bat_speed": return "Bat Speed";
+    case "conditioning": return "Conditioning";
+    default: return String(m);
   }
 }
 
@@ -321,10 +333,10 @@ export function buildDailyIntent(
   })();
   const yesterday = state.days.find((d) => d.date === yKey);
   const yDone = yesterday
-    ? Object.entries(yesterday.completions).filter(([, v]) => v === "done").map(([k]) => k as ModalityKey)
+    ? Object.entries(yesterday.completions).filter(([, v]) => v === "done").map(([k]) => k as EngagementKey)
     : [];
   const ySkipped = yesterday
-    ? Object.entries(yesterday.completions).filter(([, v]) => v === "skipped").map(([k]) => k as ModalityKey)
+    ? Object.entries(yesterday.completions).filter(([, v]) => v === "skipped").map(([k]) => k as EngagementKey)
     : [];
 
   const yesterdayCopy = (() => {
