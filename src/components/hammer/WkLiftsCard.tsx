@@ -32,6 +32,8 @@ import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
+import { ArmCareLibraryDialog } from "@/components/hammer/ArmCareLibraryDialog";
+import { BookOpen } from "lucide-react";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
