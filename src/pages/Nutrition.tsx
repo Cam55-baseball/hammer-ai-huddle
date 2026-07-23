@@ -139,7 +139,7 @@ export default function Nutrition() {
         <div className="space-y-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <span>{t('nutrition.categoriesTitle')}</span>
-            <span className="text-xs text-muted-foreground font-normal">{t('nutrition.topicsCount', { count: 18 })}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t('nutrition.topicsCount', { count: 19 })}</span>
           </h2>
           <NutritionCategory />
         </div>
