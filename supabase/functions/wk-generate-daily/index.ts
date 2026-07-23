@@ -465,6 +465,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
       return undefined;
     };
+    const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {
+      for (const s of slugs) {
+        const m = lib.find((x) => x.slug === s);
+        if (eligible(m) && coerceCanonicalCategory(m as any) === category) return m;
+      }
+      return undefined;
+    };
     const pickCat = (cat: string): MovementRow | undefined =>
       lib.find((m) => m.category === cat && eligible(m));
 
@@ -633,7 +640,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
-      const compound = pickFirst(compoundSlugsByPhase) ?? lib.find((m) => m.category === "compound" && eligible(m) && ["squat", "hinge"].includes(m.pattern ?? ""));
+      const compound = pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
+        lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "compound_lower");
       if (compound) {
         const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
         const reps = isInSeason ? 3 : clamp(3, block.compound_min_reps, block.compound_max_reps);
