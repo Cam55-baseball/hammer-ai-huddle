@@ -1,28 +1,44 @@
-Plan: integrate the new hitting philosophy concepts into the existing Hitting Doctrine surface (client-side copy + edge function mirrors), identical for baseball and softball, with both athlete and coach voices.
+Plan: Elite Team Game Plan inside the Game Hub
 
-What we will change:
+What we will change
 
-1. Update `src/lib/hittingCausalChains.ts` (and its mirror `supabase/functions/_shared/hittingCausalChains.ts`) to weave the new concepts into the P1, P2, and P4 cause→effect chains:
+1. Data model — attach opponent hitters to a game
+   - Add a `opponent_hitter_dossier_ids` JSONB array column to `gp_games` with default `[]`.
+   - No new table needed; existing `gp_pregame_plans.hitter_dossier_id` will store the generated plans per hitter.
 
-- **P1 Hip Load** — back hip load, leg-load size creating launch angle and power, scap pack coiling the hip, establishing midline, and preserving separation.
-- **P2 Hand Load** — hand/scap/knob load, "top triangle" (Sadaharu Oh), elbow and back-knee relationship, hands staying back to create the bottom triangle.
-- **P4 Hitter's Move** — only the elbow or front of the bicep goes forward while hands stay back, barrel delivered behind the ball, "square to fair", on-plane contact, low-effort velocity.
+2. Edge function `gp-pregame-plan` — role-aware game-plan schema
+   - Keep the existing schema for `role="pitcher"` (personal hitting plan vs. this pitcher).
+   - For `role="hitter"` (i.e., how the user pitches to this opponent hitter), return a new pitcher-centric schema that includes:
+     - `team_game_plan`: `early_game`, `mid_game`, `late_game`, `key_adjustment`, `risk`, `why` — written in the exact style of the example ("offspeed early to allow fastballs to overpower this guy later…").
+     - `pitching_plan`: primary sequence, putaway pitch, pitches to avoid, count plan, situational pitching notes.
+     - `cues`, `in_game_triggers`, `mental_anchors`, `matchup_grade`, `confidence`, `rationale`.
+   - Feed the dossier's spray tendency, chase zones, first-pitch swing %, and the user's direct pitching history vs. that hitter when available.
 
-Each updated chain keeps the existing trigger/cause/mechanism/result/fix structure but enriches the athlete and coach language with the new philosophy cues.
+3. GameSheet Overview tab — opponent-hitter lineup builder
+   - Add a multi-select row to attach/remove opponent hitter dossiers to the current game.
+   - Persist changes to `gp_games.opponent_hitter_dossier_ids`.
 
-2. Update `src/lib/hittingPhases.ts` (and its mirror `supabase/functions/_shared/hittingPhases.ts`) to refresh the phase `summary` strings and failure-symptom language so the one-line definitions match the new chain copy.
+4. ActivePlanCard — richer, two-sided plan surface
+   - Keep the existing personal hitting plan vs. the probable pitcher at the top.
+   - Add a new "Team pitching plan" section below it:
+     - List each attached opponent hitter.
+     - Show a one-tap "Generate plan" button if none exists.
+     - Once generated, surface the `team_game_plan` narrative (early/mid/late strategy) and the top 3–4 cues.
+     - Add thumbs-up / thumbs-down quick outcome buttons for each entry, feeding the same `gp_plan_outcomes` + `gp-update-priors` learning loop.
+   - Empty state: prompt the user to tag a probable pitcher and/or opponent hitters.
 
-3. Add philosophy reminder cues inside `src/components/hitting/HittingDoctrineBlock.tsx`:
-   - A small, rotatable "Philosophy reminder" chip/drawer below the roadmap that surfaces one of the new concepts per view (e.g., "Hands back — elbow or bicep forward brings the barrel").
-   - Reminders are derived from the same canonical chain data, so they stay in sync and do not introduce a second source of truth.
+5. Hooks
+   - Extend `usePregamePlans` to already handle both roles (no change to its signature, but ensure role="hitter" reads/writes correctly).
+   - Add a small `useGameOpponentHitters` mutation to update the lineup column on `gp_games`.
 
-4. No database changes are needed; this is purely client-side copy and edge-function mirror updates.
+6. Verification
+   - Run a type check and build to confirm no UI/TS regressions.
+   - Deploy the updated edge function and test both `role="pitcher"` and `role="hitter"` plan generation.
 
-5. Verify the build and run a type check to ensure the edge-function mirrors remain in sync with the client types.
+What we will NOT do
 
-What we will NOT do:
-- Create a separate "Hitting Philosophy" reference page.
-- Change the phase structure (P1→P2→P4→P3 emerges remains intact).
-- Add sport-specific softball variants beyond what already exists in the slap path.
+- Build a full team/coach roster manager (this stays individual-athlete scoped).
+- Add real-time pitch-by-pitch linking to opponent hitter IDs in this phase.
+- Change the existing `gp_pregame_plans` schema for `role="pitcher"`; only the `role="hitter"` branch gets new fields.
 
-The result: hitters see the new philosophy cues inside the existing Hitting Doctrine cards and roadmap, reinforced by rotating reminders, with the same voice for both baseball and softball.
+The result: inside any game, the ActivePlanCard will read like a premium scouting report — both how the user should attack the opposing pitcher and how the user should pitch to each opponent hitter, with early/mid/late game strategy and quick outcome feedback.
