@@ -175,5 +175,7 @@ export function ActivePlanCard({ gameId, game }: { gameId: string; game: any }) 
         </details>
       )}
     </Card>
+    {teamPlanBlock}
+    </div>
   );
 }
