@@ -39,6 +39,7 @@ import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
 import { certifyArmCare } from "../_shared/wic/armCare/sessionBuilder.ts";
+import { pickArmCarePrimary, type ArmCareCatalogRow } from "../_shared/wic/armCare/picker.ts";
 import {
   GAME_DAY_PRIMER_SLUGS,
   CROSS_SPORT_LOW_IMPACT_PREFERRED,
