@@ -35,7 +35,14 @@ interface PersonalizationGoals {
   position?: string;
 }
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+import { chatCompletion } from "../_shared/googleAi.ts";
+
+// AI credentials are read inside the helper (GOOGLE_AI_API_KEY primary,
+// LOVABLE_API_KEY fallback). We keep this flag only to preserve the existing
+// "AI credentials not configured" guard behavior.
+const HAS_AI_CREDENTIALS = Boolean(
+  Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("LOVABLE_API_KEY"),
+);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
