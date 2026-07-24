@@ -124,6 +124,7 @@ export function useSeasonStatus() {
   return {
     seasonStatus: query.data?.season_status ?? 'in_season',
     resolvedPhase: resolution.phase,
+    phaseStartedAt: resolution.phaseStartedAt,
     phaseDaysIn: resolution.daysIntoPhase,
     phaseDaysRemaining: resolution.daysUntilNextPhase,
     phaseSource: resolution.source,

@@ -1,0 +1,119 @@
+import { describe, it, expect } from "vitest";
+import {
+  evaluateRecoveryWindow,
+  applyRecoveryWindows,
+  type RecentCompletions,
+} from "@/lib/hammer/roadmap/recoveryWindows";
+import { resolveSeasonQuarter, quartersFromWeeks } from "@/lib/hammer/roadmap/seasonQuarters";
+import { rungByKey, RUNG_ORDER } from "@/lib/hammer/roadmap/roadmapLadder";
+import { prescribeThrowingLadder } from "@/lib/hammer/roadmap/throwingLadder";
+import { resolveEliteTarget } from "@/lib/hammer/roadmap/eliteTarget";
+
+// Minimal QuarterDescriptor stub for isolated math.
+const Q2_OFF = resolveSeasonQuarter(
+  { seasonPhase: "off" } as never,
+  null,
+  new Date("2026-01-15T12:00:00Z"),
+);
+
+describe("roadmap — determinism guards", () => {
+  it("every rung has a valid descriptor and monotonically increasing index", () => {
+    let prev = 0;
+    for (const k of RUNG_ORDER) {
+      const d = rungByKey(k);
+      expect(d.rung).toBe(k);
+      expect(d.index).toBeGreaterThan(prev);
+      expect(d.volumeCeilings.throwsPerWeekCeiling).toBeGreaterThan(0);
+      prev = d.index;
+    }
+  });
+
+  it("season quarter is Q2 middle when phaseStartedAt is unknown", () => {
+    expect(Q2_OFF.quarter).toBe(2);
+    expect(Q2_OFF.phase).toBe("off");
+  });
+
+  it("quartersFromWeeks partitions ~12 weeks into 4 quarters", () => {
+    expect(quartersFromWeeks(0)).toBe(1);
+    expect(quartersFromWeeks(3)).toBe(2);
+    expect(quartersFromWeeks(6)).toBe(3);
+    expect(quartersFromWeeks(9)).toBe(4);
+    expect(quartersFromWeeks(30)).toBe(4);
+  });
+
+  it("recovery clock: same inputs → same outputs (pure)", () => {
+    const today = new Date("2026-02-01T12:00:00Z");
+    const recent: RecentCompletions = [
+      { modality: "heavy_lift", at: new Date("2026-01-31T12:00:00Z"), side: null },
+    ];
+    const a = evaluateRecoveryWindow("heavy_lift", null, "bridge", Q2_OFF, recent, today);
+    const b = evaluateRecoveryWindow("heavy_lift", null, "bridge", Q2_OFF, recent, today);
+    expect(a).toEqual(b);
+  });
+
+  it("recovery clock: 24h since heavy lift on Bridge (72h window) → off (>75% remaining)", () => {
+    const today = new Date("2026-02-02T12:00:00Z");
+    const recent: RecentCompletions = [
+      { modality: "heavy_lift", at: new Date("2026-02-02T00:00:00Z"), side: null }, // 12h ago
+    ];
+    const dec = evaluateRecoveryWindow("heavy_lift", null, "bridge", Q2_OFF, recent, today);
+    expect(dec.action).toBe("off");
+    expect(dec.nextAvailableAt).not.toBeNull();
+  });
+
+  it("recovery clock: outside window → primary", () => {
+    const today = new Date("2026-02-10T12:00:00Z");
+    const recent: RecentCompletions = [
+      { modality: "heavy_lift", at: new Date("2026-02-01T12:00:00Z"), side: null },
+    ];
+    const dec = evaluateRecoveryWindow("heavy_lift", null, "bridge", Q2_OFF, recent, today);
+    expect(dec.action).toBe("primary");
+  });
+
+  it("laterality: L attempt does NOT gate R attempt for bat speed", () => {
+    const today = new Date("2026-02-02T12:00:00Z");
+    const recent: RecentCompletions = [
+      { modality: "bat_speed_max", at: new Date("2026-02-02T06:00:00Z"), side: "L" },
+    ];
+    const leftDec = evaluateRecoveryWindow("bat_speed_max", "L", "bridge", Q2_OFF, recent, today);
+    const rightDec = evaluateRecoveryWindow("bat_speed_max", "R", "bridge", Q2_OFF, recent, today);
+    expect(leftDec.action).not.toBe("primary");
+    expect(rightDec.action).toBe("primary");
+  });
+
+  it("throwing ladder scales with rung — Foundation < Peak", () => {
+    const foundation = prescribeThrowingLadder("foundation", Q2_OFF, "OF");
+    const peak = prescribeThrowingLadder("peak", Q2_OFF, "OF");
+    expect(foundation.throwsToday).toBeLessThan(peak.throwsToday);
+    expect(foundation.longTossUnlocked).toBe(false);
+    expect(peak.longTossUnlocked).toBe(true);
+  });
+
+  it("pitchers get higher throw counts than position players at the same rung", () => {
+    const pitcher = prescribeThrowingLadder("bridge", Q2_OFF, "P");
+    const positional = prescribeThrowingLadder("bridge", Q2_OFF, "SS");
+    expect(pitcher.throwsToday).toBeGreaterThan(positional.throwsToday);
+  });
+
+  it("elite target: baseball → MLB, softball → AUSL, unknown → baseball default", () => {
+    expect(resolveEliteTarget("baseball").league).toBe("MLB");
+    expect(resolveEliteTarget("softball").league).toBe("AUSL");
+    expect(resolveEliteTarget(null).league).toBe("MLB");
+  });
+
+  it("applyRecoveryWindows never promotes a suppressed/awaiting/off-day block", () => {
+    const today = new Date("2026-02-10T12:00:00Z");
+    const blocks = [
+      {
+        modality: "strength" as const,
+        status: "awaiting-input" as const,
+        title: "Lifts — awaiting",
+        why: "", roadmapReason: "", phase: "build" as const,
+        drills: [], steps: [], cues: [], stopRules: [],
+        durationMin: 45, gamePlanTemplate: null, side: null,
+      },
+    ];
+    const out = applyRecoveryWindows(blocks as never, "peak", Q2_OFF, [], today);
+    expect(out[0].status).toBe("awaiting-input");
+  });
+});

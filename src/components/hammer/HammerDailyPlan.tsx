@@ -17,6 +17,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
+import { useSeasonStatus } from "@/hooks/useSeasonStatus";
+import { useRecentMaxIntentCompletions } from "@/hooks/useRecentMaxIntentCompletions";
 import { BlockCompletionControls } from "@/components/hammer/BlockCompletionControls";
 import {
   projectAdaptiveAdjustments,
@@ -259,9 +261,20 @@ function HammerDailyPlanBody() {
     () => ({ isSwitchHitter, isAmbidextrousThrower }),
     [isSwitchHitter, isAmbidextrousThrower],
   );
+  const { phaseStartedAt } = useSeasonStatus();
+  const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const rawPlan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan, identityOverride),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride],
+    () =>
+      buildHammerDailyPlan(
+        ctx,
+        scheduleSignal,
+        sideBias,
+        gpForPlan,
+        identityOverride,
+        new Date(),
+        { recentCompletions: recentCompletions ?? [], phaseStartedAt: phaseStartedAt ?? null },
+      ),
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
