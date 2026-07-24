@@ -1889,15 +1889,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
         {/* Bold Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-primary">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="p-2.5 rounded-lg bg-primary shrink-0">
               <Target className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
             </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase truncate">
                 {t('gamePlan.title')}
               </h2>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
                 <span className="text-xs text-muted-foreground">•</span>
                 <span className="text-xs sm:text-sm text-muted-foreground font-medium">
@@ -1905,20 +1905,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </span>
               </div>
             </div>
+            <GamePlanVisibilityToggle
+              hidden={planHidden}
+              onToggle={() => setPlanHidden(!planHidden)}
+            />
           </div>
-          
-          {/* Action buttons row */}
-          <div className="flex items-center gap-1 flex-wrap">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setPlanHidden(true)}
-              className="h-8 px-2 gap-1 text-xs text-white/70 hover:text-white"
-              title="Hide Game Plan"
-            >
-              <EyeOff className="h-4 w-4" />
-              <span className="hidden sm:inline">Hide</span>
-            </Button>
+        </div>
+        
+        {/* Action buttons row */}
+        <div className="flex items-center gap-1 flex-wrap">
+          <SchedulePracticeDialog />
             <SchedulePracticeDialog />
             {/* Skip Day / Undo Skip */}
             <Button
