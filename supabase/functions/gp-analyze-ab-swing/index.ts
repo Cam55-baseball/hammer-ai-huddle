@@ -45,7 +45,8 @@ serve(async (req) => {
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const LOVABLE = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+    const GOOGLE = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!LOVABLE && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, ANON, { global: { headers: { Authorization: auth } } });
@@ -87,18 +88,13 @@ serve(async (req) => {
       content.push({ type: "text", text: `Asset (${mime}) base64 head:\n${b64.slice(0, 180_000)}` });
     }
 
-    const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content }],
-        temperature: 0.2,
-      }),
-    });
-    if (!ai.ok) throw new Error(`Gemini ${ai.status}: ${(await ai.text()).slice(0, 400)}`);
-    const aiJson = await ai.json();
-    const raw = String(aiJson?.choices?.[0]?.message?.content ?? "");
+    const ai = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content }],
+      temperature: 0.2,
+    }, { timeoutMs: 90_000 });
+    if (!ai.ok) throw new Error(`AI provider ${ai.status}: ${(ai.errorBody ?? "").slice(0, 400)}`);
+    const raw = String(ai.data.choices?.[0]?.message?.content ?? "");
     const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
     let parsed: any = {};
     try { parsed = JSON.parse(cleaned); } catch { parsed = { summary: cleaned }; }

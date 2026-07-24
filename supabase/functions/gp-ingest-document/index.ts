@@ -17,6 +17,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +62,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const LOVABLE = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+    const GOOGLE = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!LOVABLE && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
@@ -87,32 +89,26 @@ serve(async (req) => {
 
     // 2. call gemini
     await admin.from("gp_documents").update({ parse_status: "processing" }).eq("id", documentId);
-    const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp",
-        messages: [{
-          role: "user",
-          content: [
-            { type: "text", text: `${SCHEMA_PROMPT}\n\nSport: ${sport ?? "baseball"}` },
-            mime.startsWith("image/")
-              ? { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } }
-              : { type: "text", text: `Document (${mime}) base64:\n${base64.slice(0, 200_000)}` },
-          ],
-        }],
-        temperature: 0,
-      }),
-    });
+    const ai = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: `${SCHEMA_PROMPT}\n\nSport: ${sport ?? "baseball"}` },
+          mime.startsWith("image/")
+            ? { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } }
+            : { type: "text", text: `Document (${mime}) base64:\n${base64.slice(0, 200_000)}` },
+        ],
+      }],
+      temperature: 0,
+    }, { timeoutMs: 90_000 });
     if (!ai.ok) {
-      const t = await ai.text();
       await admin.from("gp_documents").update({
-        parse_status: "error", parse_error: `gemini ${ai.status}`,
+        parse_status: "error", parse_error: `ai ${ai.status}`,
       }).eq("id", documentId);
-      throw new Error(`Gemini error ${ai.status}: ${t.slice(0, 400)}`);
+      throw new Error(`AI provider ${ai.status}: ${(ai.errorBody ?? "").slice(0, 400)}`);
     }
-    const aiJson = await ai.json();
-    const raw = aiJson?.choices?.[0]?.message?.content ?? "";
+    const raw = ai.data.choices?.[0]?.message?.content ?? "";
     const cleaned = String(raw).replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
     let parsed: any = {};
     try { parsed = JSON.parse(cleaned); } catch { parsed = {}; }
