@@ -435,6 +435,12 @@ function HammerDailyPlanBody() {
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
 
+              <HammerCheckInCard
+                quizType="morning"
+                completed={vaultQuizzes.hasCompleted("morning")}
+                onOpen={() => setCheckInQuiz("morning")}
+              />
+
               {warmupBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
@@ -448,6 +454,11 @@ function HammerDailyPlanBody() {
                 );
               })}
               <WarmupCrossoverAddons />
+              <HammerCheckInCard
+                quizType="pre_lift"
+                completed={vaultQuizzes.hasCompleted("pre_lift")}
+                onOpen={() => setCheckInQuiz("pre_lift")}
+              />
               <ErrorBoundary label="wk-speed">
                 <WkSpeedCard />
               </ErrorBoundary>
@@ -472,6 +483,11 @@ function HammerDailyPlanBody() {
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
+              <HammerCheckInCard
+                quizType="night"
+                completed={vaultQuizzes.hasCompleted("night")}
+                onOpen={() => setCheckInQuiz("night")}
+              />
             </ArmCareBudgetProvider>
           );
         })()}
