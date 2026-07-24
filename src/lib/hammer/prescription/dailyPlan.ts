@@ -869,6 +869,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       const tournamentToday = !!(defenseSchedAny?.schedule?.tournamentToday || defenseSchedAny?.schedule?.isTournamentDay);
 
       const defenseSport = normalizeSport(sportRaw) === "softball" ? "softball" : "baseball";
+      const defenseTier = resolveDefenseTier(liftingAge, seasonPhase as string | null);
       const prescription = selectDefenseDrills({
         position: pos,
         secondaryPositions: secondaryRaw,
@@ -877,6 +878,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         injuryRegions: [...injuryRegions],
         tournamentToday,
         goal,
+        tier: defenseTier,
       });
 
       // Fallback to a safe generic prescription if the catalog somehow returns
