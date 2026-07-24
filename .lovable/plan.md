@@ -1,22 +1,25 @@
-## Goal
-Add a per-user toggle on the Dashboard's Game Plan card that collapses the entire plan body, leaving only the "THE GAME PLAN" header and two working buttons — **Log Meal** and **Quick Note**.
+Current state
+--------------
+In `src/components/GamePlanCard.tsx`, the Hide/Show toggle is currently in the right-hand action-button row:
+- Expanded view: lines ~1896-1905 ("Hide" with `EyeOff` icon)
+- Collapsed view: lines ~1798-1807 ("Show plan" with `Eye` icon)
+On mobile, the label is hidden via `hidden sm:inline`, so users see only the icon and do not know what it means.
 
-## Behavior
-- New "Show plan" switch lives in the header action row of `GamePlanCard` (next to Sort mode / Lock buttons).
-- Preference persists per-user in `localStorage` via `safeStorage` under key `gamePlan.hidden.v1` (client-only preference, no schema change needed).
-- Default: shown (existing behavior preserved).
-- When toggled **off**:
-  - Hide: `StandardAwarenessHeader`, all task sections (check-ins, training, tracking, custom activities, coach activities, pending approvals, timeline, calendar), NN strip, and every header action button except the new toggle itself.
-  - Keep: The bold header block (Target icon, "THE GAME PLAN" title, date/subtitle) + a compact action row with just two buttons — **Log Meal** (calls existing `handleQuickLogClick`) and **Quick Note** (opens existing `QuickNoteDialog` via `setQuickNoteOpen(true)`).
-  - `QuickNoteDialog` remains mounted so it opens correctly.
-- When toggled **on**: everything returns to current state.
+Plan
+----
+1. Move the Hide/Show toggle into the top-right of the Game Plan card header so it is a standalone, discoverable control.
+2. Keep an icon + label ("Hide" / "Show plan") visible at all breakpoints so users know what the button does.
+3. Preserve the existing `planHidden` localStorage state and the collapsed behavior (when hidden, only the title + "Log Meal" + "Quick Note" remain).
+4. In the collapsed view, place the "Show plan" button in the same top-right corner.
+5. Ensure the button does not overlap the title or the decorative stripe on small screens.
 
-## Files to change
-- `src/components/GamePlanCard.tsx`
-  - Add `const [planHidden, setPlanHidden] = useState(() => safeGet('gamePlan.hidden.v1') === '1')`.
-  - Add a `Switch` (from `@/components/ui/switch`) or small `Button` toggle with `EyeOff/Eye` icon in the header action row, always visible.
-  - When `planHidden`, early-return a slim `Card` containing just the header block + the two buttons + the `QuickNoteDialog` mount.
-  - Persist toggle via `safeSet`.
+Technical details
+-----------------
+- Refactor the two toggle buttons in `GamePlanCard.tsx` into a single small component (e.g., `GamePlanVisibilityToggle`) that receives `hidden` and `onToggle`.
+- Render it inside the card header row, aligned to the far right using flex (`ml-auto` / `justify-between`) rather than absolute positioning, to avoid overlap with long titles on mobile.
+- Remove the `hidden sm:inline` restriction on the toggle's label for this button; use a compact `size="sm"` to keep mobile fit.
+- Keep `title` and `aria-label` for accessibility.
+- Leave the other action buttons (Schedule Practice, Skip Day, etc.) in their existing row below the header.
+- Verify the result at 393px mobile width and desktop.
 
-## No backend changes
-Pure UI/state change; no DB, RLS, or edge function work.
+No backend or data-model changes are required.
