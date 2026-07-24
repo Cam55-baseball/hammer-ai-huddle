@@ -19,7 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle, Dumbbell, Loader2, RefreshCw, Lock } from "lucide-react";
+import { AlertTriangle, Dumbbell, Loader2, RefreshCw, Lock, ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
@@ -102,6 +107,7 @@ export function WkLiftsCard() {
     : grouped.lifts;
   const blockedItems = blocked.data ?? [];
 
+  const [open, setOpen] = useState<boolean>(true);
   return (
     <Card
       className="border-blue-500/30"
@@ -109,69 +115,78 @@ export function WkLiftsCard() {
       data-display-order={entry.displayOrder}
       data-generation-id={snapshotIdentity.generation_id ?? ""}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Dumbbell className="h-4 w-4 text-blue-500 shrink-0" />
-            <span className="truncate">Lifts — Full Body</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setArmCareOpen(true)} title="Arm Care Library">
-              <BookOpen className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
-              {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-            </Button>
-          </div>
-          <ArmCareLibraryDialog open={armCareOpen} onOpenChange={setArmCareOpen} />
-        </CardTitle>
-        {/* Phase display hidden from athlete UI — engine still uses phaseKey/phaseDisplay internally. */}
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {suppressArmCareInLifts && (
-          <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
-            Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.
-          </div>
-        )}
-        {reductions.length > 0 && !acked && (
-          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-amber-800 dark:text-amber-200">Volume reduced today</div>
-                <ul className="mt-1 space-y-0.5 text-amber-900/80 dark:text-amber-100/80">
-                  {reductions.map((r, i) => <li key={i}>• {r.detail}</li>)}
-                </ul>
-                <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>I will recover</Button>
-                {ackOpen && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button size="sm" onClick={submitAck}>Confirm</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setAckOpen(false)}>Cancel</Button>
-                  </div>
-                )}
-              </div>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
+            <CollapsibleTrigger asChild>
+              <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={open}>
+                <Dumbbell className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="truncate">Lifts — Full Body</span>
+                <ChevronDown className={`h-4 w-4 ml-auto text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setArmCareOpen(true)} title="Arm Care Library">
+                <BookOpen className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
+                {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              </Button>
             </div>
-          </div>
-        )}
-        {failed ? (
-          <WkCardFailureNotice engine="lift" failure={failureReason} retry={retry} retrying={generating} />
-        ) : isLoading ? (
-          <>
-            <Skeleton className="h-14 w-full rounded" />
-            <Skeleton className="h-14 w-full rounded" />
-            <Skeleton className="h-14 w-full rounded" />
-          </>
-        ) : items.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">Tap refresh to generate today's full-body template.</p>
-        ) : (
-          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} />)
-        )}
+            <ArmCareLibraryDialog open={armCareOpen} onOpenChange={setArmCareOpen} />
+          </CardTitle>
+          {/* Phase display hidden from athlete UI — engine still uses phaseKey/phaseDisplay internally. */}
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent className="space-y-2">
+            {suppressArmCareInLifts && (
+              <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
+                Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.
+              </div>
+            )}
+            {reductions.length > 0 && !acked && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-amber-800 dark:text-amber-200">Volume reduced today</div>
+                    <ul className="mt-1 space-y-0.5 text-amber-900/80 dark:text-amber-100/80">
+                      {reductions.map((r, i) => <li key={i}>• {r.detail}</li>)}
+                    </ul>
+                    <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>I will recover</Button>
+                    {ackOpen && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button size="sm" onClick={submitAck}>Confirm</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setAckOpen(false)}>Cancel</Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {failed ? (
+              <WkCardFailureNotice engine="lift" failure={failureReason} retry={retry} retrying={generating} />
+            ) : isLoading ? (
+              <>
+                <Skeleton className="h-14 w-full rounded" />
+                <Skeleton className="h-14 w-full rounded" />
+                <Skeleton className="h-14 w-full rounded" />
+              </>
+            ) : items.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">Tap refresh to generate today's full-body template.</p>
+            ) : (
+              items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} />)
+            )}
 
-        {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}
-        <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
-        {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
-        {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
-      </CardContent>
+            {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}
+            <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+            {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
+            {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+
+
 
 
       <Dialog open={!!overrideTarget} onOpenChange={(o) => { if (!o) { setOverrideTarget(null); setOverrideReason(""); } }}>

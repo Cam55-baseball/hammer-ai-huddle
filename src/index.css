@@ -507,6 +507,19 @@ All colors MUST be HSL.
   animation: glow-pulse-amber 2s ease-in-out infinite;
 }
 
+/* Hammers Today — subtle primary-tinted pulse for cards that glow until opened today */
+@keyframes hammer-today-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45);
+  }
+  50% {
+    box-shadow: 0 0 18px 4px hsl(var(--primary) / 0.35);
+  }
+}
+.animate-hammer-today-glow {
+  animation: hammer-today-glow 2s ease-in-out infinite;
+}
+
 /* Prevent Radix ScrollArea table-layout from causing horizontal overflow */
 .scroll-area-no-hscroll [data-radix-scroll-area-viewport] > div {
   display: block !important;

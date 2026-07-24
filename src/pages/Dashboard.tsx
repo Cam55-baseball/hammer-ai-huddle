@@ -29,7 +29,7 @@ import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { TodaysHammerPick } from "@/components/dashboard/TodaysHammerPick";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
-import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
+// HumanPerformanceCard now rendered inside HammerDailyPlan itself.
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Sparkles as SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -94,8 +94,8 @@ function DashboardTodayPlan() {
         <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
           <div className="p-3 sm:p-4 border-t border-border/60 space-y-3">
             <TodaysHammerPick />
-            <HumanPerformanceCard />
             <HammerDailyPlan />
+            {/* HumanPerformanceCard moved inside HammerDailyPlan (positioned under Today's Wisdom). */}
           </div>
         </CollapsibleContent>
       </Collapsible>

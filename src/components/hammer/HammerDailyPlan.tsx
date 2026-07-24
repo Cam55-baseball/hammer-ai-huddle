@@ -71,6 +71,9 @@ import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
+import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
+import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
@@ -422,8 +425,15 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        {/* 1. Schedule & What Changed — dropdown, starts closed */}
+        <ScheduleDropdownWrapper />
+        {/* 2. Today's Wisdom */}
+        <TodaysWisdomCard />
+        {/* 3. Human Performance Intelligence — dropdown, glows until opened */}
+        <HumanPerformanceCard />
+        {/* 4. Start Line (DailyIntentHeader) — closed, glows until opened */}
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
-        <WeeklyRoadmapStrip plan={plan} />
+        {/* 5. Ask Hammer — Recall & Clarity */}
         <button
           type="button"
           onClick={() => navigate("/hammer/recall")}
@@ -440,7 +450,8 @@ function HammerDailyPlanBody() {
           </div>
           <span className="text-xs text-primary">Open →</span>
         </button>
-        <HammerScheduleStrip />
+        {/* 6. Weekly rhythm + in-game advisory + do-in-this-order */}
+        <WeeklyRoadmapStrip plan={plan} />
         <GpInGameAdvisoryStrip />
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
           <span className="font-medium text-foreground">Do in this order:</span>{" "}
@@ -544,6 +555,62 @@ function HammerDailyPlanBody() {
   );
 }
 
+
+/**
+ * ScheduleDropdownWrapper — collapsible wrapper around HammerScheduleStrip
+ * that starts closed and is clearly labeled so athletes know where to update
+ * games, season dates, cancels/reschedules, and tell Hammer what changed.
+ * Per-day open state persists in localStorage.
+ */
+function ScheduleDropdownWrapper() {
+  const dayKey = `hammer.today.schedule.open.${new Date().toISOString().slice(0, 10)}`;
+  const [open, setOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(dayKey) === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(dayKey, open ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [open, dayKey]);
+  return (
+    <Card className="border-border/60">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted/40 transition-colors rounded-md"
+            aria-expanded={open}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <CalendarClock className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-semibold leading-tight">Schedule & What Changed</div>
+                <div className="text-[11px] text-muted-foreground leading-tight">
+                  Games, season dates, cancels/reschedules, and tell Hammer what changed.
+                </div>
+              </div>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                open ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="px-1 pb-1">
+          <HammerScheduleStrip />
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
+
 /**
  * In-season crossover primer, rendered inside the Warm-up card as a short
  * "finish the warm-up with this" addon. Sourced from the backend
@@ -552,24 +619,44 @@ function HammerDailyPlanBody() {
 function WarmupCrossoverAddons() {
   const { grouped } = useHammersToday();
   const addons = grouped.warmupAddons ?? [];
+  const [open, setOpen] = useState<boolean>(true);
   if (addons.length === 0) return null;
   return (
     <Card className="border-rose-400/30 bg-rose-500/5">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <HeartPulse className="h-4 w-4 text-rose-500" />
-          <span>Finish the warm-up — crossover primer</span>
-          <Badge variant="outline" className="text-[10px]">In-season</Badge>
-        </CardTitle>
-        <div className="text-[11px] text-muted-foreground">
-          Short, low-cost coordination drill folded into the warm-up. Frees the nervous system from sport patterns without stealing freshness from the day.
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {addons.map((rx) => (
-          <WkPrescriptionCard key={rx.id} rx={rx} />
-        ))}
-      </CardContent>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="w-full text-left"
+            aria-expanded={open}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <HeartPulse className="h-4 w-4 text-rose-500 shrink-0" />
+                  <span className="truncate">Finish the warm-up — crossover primer</span>
+                  <Badge variant="outline" className="text-[10px]">In-season</Badge>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                    open ? "rotate-180" : ""
+                  }`}
+                />
+              </CardTitle>
+              <div className="text-[11px] text-muted-foreground">
+                Short, low-cost coordination drill folded into the warm-up. Frees the nervous system from sport patterns without stealing freshness from the day.
+              </div>
+            </CardHeader>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-2 pt-0">
+            {addons.map((rx) => (
+              <WkPrescriptionCard key={rx.id} rx={rx} />
+            ))}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
