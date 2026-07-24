@@ -1488,7 +1488,9 @@ function applyGpSignalBias(
  *   emitted twice. The non-dominant side keeps neural prep and light
  *   catch-play only — max-intent work (pulldowns, long-toss) stays on the
  *   dominant arm for arm-health safety.
- * - Suppressed / awaiting-input blocks are never split (no reps to duplicate).
+ * - Suppressed blocks are never split. Awaiting-input hitting/throwing blocks
+ *   ARE split so switch/ambi athletes can answer/log each side independently
+ *   instead of seeing one misleading primary-side card.
  * - Missingness-permissive: if we can't identify bats/throws, we return
  *   blocks unchanged.
  */
@@ -1544,7 +1546,7 @@ function splitLateralityBlocks(
 
   const out: PrescribedBlock[] = [];
   for (const b of blocks) {
-    if (b.status !== "ready") {
+    if (b.status === "suppressed") {
       out.push(b);
       continue;
     }

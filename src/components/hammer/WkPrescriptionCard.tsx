@@ -60,11 +60,13 @@ export function WkPrescriptionCard({
   phaseDisplay,
   phaseKey,
   generating,
+  side = null,
 }: {
   rx: WkRx;
   phaseDisplay?: string | null;
   phaseKey?: string | null;
   generating?: boolean;
+  side?: "L" | "R" | null;
 }) {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
@@ -74,19 +76,22 @@ export function WkPrescriptionCard({
     taskId: rx.id,
     source: "wk_prescription" as const,
     sourceRef: rx.slot,
-    payload: { name: rx.movement_name, slug: rx.movement_slug },
+    side,
+    payload: { name: rx.movement_name, slug: rx.movement_slug, side },
   };
-  const checked = rx.status === "completed" || tasks.isDone(rx.id);
+  const checked = side ? tasks.isDone(rx.id, side) : rx.status === "completed" || tasks.isDone(rx.id);
 
   const mark = async (status: "completed" | "skipped") => {
     if (!user?.id) return;
-    const { error } = await supabase
-      .from("wk_prescriptions" as any)
-      .update({ status })
-      .eq("id", rx.id);
-    if (error) {
-      toast.error("Could not update");
-      return;
+    if (!side) {
+      const { error } = await supabase
+        .from("wk_prescriptions" as any)
+        .update({ status })
+        .eq("id", rx.id);
+      if (error) {
+        toast.error("Could not update");
+        return;
+      }
     }
     tasks.toggleTask(taskSeed, status === "completed");
     // On completion, persist a session log row so the Learning Loop has real
@@ -104,6 +109,7 @@ export function WkPrescriptionCard({
         distance_feet_completed: rx.distance_feet ?? null,
         total_reps_completed: rx.total_reps ?? null,
         rpe: null,
+        notes: side ? `${side}-side bat speed completed` : null,
       }).then(({ error: logErr }) => {
         if (logErr) console.warn("wk_session_logs insert failed", logErr);
       });
@@ -114,7 +120,7 @@ export function WkPrescriptionCard({
 
   const toggleCheckbox = (next: boolean) => {
     void mark(next ? "completed" : "skipped");
-    if (!next) {
+    if (!next && !side) {
       // Return the row to planned when the athlete unchecks after completing.
       void supabase
         .from("wk_prescriptions" as any)
