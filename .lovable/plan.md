@@ -1,62 +1,49 @@
-## Plan: Lifestyle & Constitution intake consolidation
+Plan: Breath placement clarity + cross-sport template fix
 
-### Current state
-- The **Lifestyle & constitution** screen is a standalone onboarding step (`ConstitutionStep.tsx`) shown during first-run setup and reachable via the HPI card’s "Add lifestyle intake" link.
-- It asks for **sleep target, actual sleep, water, stress, constitutional lean, and training window**.
-- Those same topics are already collected elsewhere:
-  - **Fuel & Recovery step** asks sleep target + water goal.
-  - **Daily Vault quizzes** (morning/night) ask hours slept, sleep quality, stress, mood.
-  - **Nutrition log** tracks daily hydration ounces.
-- The number inputs on the current page use `parseFloat(value) || default`, which resets the field to its default when the user clears it, making mobile editing feel blocked.
-- The HPI card currently sends the user back into the onboarding flow to edit these values, which feels like an extra tab.
+### 1. Clarify the two breathing cues
 
-### Goal
-Remove the standalone onboarding step and surface these questions only where they already naturally fit:
-1. Onboarding **Fuel & Recovery** step (static baseline).
-2. Daily **Vault quizzes** and **nutrition log** (dynamic daily values).
-3. An **inline edit sheet** from the HPI card, never a full onboarding tab.
+The HPI breath primer at the top of the Hammers Today Plan is a **morning readiness / pre-activity** primer. The Recovery "Breathing / down-regulation" step is an **evening / post-session** downshift. Both are correct, but they are currently not labeled, so they look like duplicates.
 
-### Changes
+Changes:
 
-1. **Fix the input bug first**
-   - Change the sleep / water number fields to use string state while editing, parsing to number on blur or save.
-   - Keep the sliders for water and stress but ensure they are not swallowed by the onboarding shell’s horizontal stepper.
+- `src/components/hpi/BreathPrimer.tsx`
+  - Add a `timeOfDay` prop and render a schedule chip above the timer.
+  - Default label: "First today — pre-activity".
 
-2. **Build a reusable `LifestyleIntakeBlock`**
-   - Captures all six fields: sleep target, typical actual sleep, water goal, stress level, constitutional lean, preferred training window.
-   - Writes to `hpi:lifestyle:v1` localStorage and, during onboarding, to the `fuel-recovery` draft slot.
-   - Can be rendered inline inside a step or inside a sheet/dialog.
+- `src/components/hpi/HumanPerformanceCard.tsx`
+  - Add a one-line schedule cue above the primer: "Use this before warm-up, at-bats, or pitches."
+  - Pass the schedule chip to `BreathPrimer`.
 
-3. **Merge into the Fuel & Recovery onboarding step**
-   - Rename the step label to **"Fuel & recovery"** or **"Fuel & daily rhythms"**.
-   - Keep diet style / allergies.
-   - Add the `LifestyleIntakeBlock` at the bottom of `FuelRecoveryStep.tsx`.
-   - On continue, persist `sleep_target_hrs`, `water_goal_oz`, and `diet_style` to `athlete_context` (existing columns) and the full lifestyle snapshot to `hpi:lifestyle:v1`.
+- `src/lib/hammer/prescription/dailyPlan.ts` (recovery block)
+  - Rename the step from "Breathing / down-regulation" to "Evening / post-session down-regulation".
+  - Append a clarifying note to the `why` text so the recovery block explicitly distinguishes itself from the HPI morning primer.
 
-4. **Remove the standalone Constitution step**
-   - Delete the `ConstitutionStep.tsx` file from the onboarding steps.
-   - Remove `"Constitution"` from the onboarding step list, `STEP_CONSTITUTION`, and the render branch in `AthleteOnboarding.tsx`.
-   - Remove `constitution` from `EDIT_TARGETS`.
-   - Keep `constitution` out of `ReviewAnswersStep` keys (it is already not listed).
+- `src/components/hammer/HammerDailyPlan.tsx`
+  - Confirm the HPI card is already first in the plan; add a small "Today starts here" cue to the HPI card header so it reads as the first scheduled item, not a floating widget.
 
-5. **Sync daily Vault data into the HPI signal**
-   - After a focus quiz is saved, update `hpi:lifestyle:v1` with the latest `sleepActualHours` and `stressLevel`.
-   - After a nutrition log is saved, update `waterOz` with the day’s total hydration.
-   - The HPI card will then reflect today’s real data without another manual intake page.
+### 2. Fix the "Template xs.coordination requires: coordination" failure
 
-6. **Update the HPI card edit path**
-   - Replace the "Add lifestyle intake" onboarding link with a button that opens a `LifestyleIntakeSheet`.
-   - The sheet uses the same `LifestyleIntakeBlock`, so the UI stays consistent but lives inline on the Dashboard/Command surfaces.
+Root cause: In `supabase/functions/wk-generate-daily/index.ts`, the in-season non-game cross-sport block picks a low-impact WOST movement (`cross_sport_category: low_impact`), but the certifier resolves the default cross-sport template `xs.coordination`, which requires a movement with `cross_sport_category: coordination`. The mismatch is fatal and kills the entire daily plan, so Speed, Bat Speed, and Lifts cards all show the same error.
 
-7. **Tests**
-   - Update `hpiSignal.test.ts` if needed to keep the existing baseline/constitution tests passing.
-   - Add a quick Playwright check that the merged onboarding step can be filled and the HPI card updates after a daily quiz.
+Changes:
 
-### Verification
-- Onboarding completes without the "Constitution" step.
-- Sleep target, water goal, stress, and constitutional lean entered during onboarding are reflected in the HPI card immediately.
-- Daily quiz / nutrition-log updates change the HPI card within the same session.
-- The number inputs can be cleared and re-typed without resetting to a default.
+- `supabase/functions/wk-generate-daily/index.ts` (cross-sport selection block)
+  - Resolve the cross-sport template **before** selecting a movement.
+  - Map contexts deterministically:
+    - Game day → `xs.low_impact`, pick from `CROSS_SPORT_LOW_IMPACT_PREFERRED`.
+    - In-season non-game / off-season → `xs.coordination`, pick from `CROSS_SPORT_COORDINATION_PREFERRED` or `wk_movement_catalog` where `cross_sport_category = 'coordination'`.
+    - Recovery-focused day → `xs.recovery_transfer`, pick a `recovery_transfer` movement.
+  - If the catalog has no matching movement for the resolved template, skip the cross-sport block instead of failing the whole plan.
+  - Pass the resolved `primaryAdaptation` / `dayType` into `certifyCrossSport` so the certifier resolves the same template.
 
-### Decision point
-I am assuming you want the standalone **Lifestyle & constitution** step removed entirely and folded into the flows above. If instead you want to keep that page as a profile/settings screen and only fix the inputs, reject this plan and I’ll revise.
+- `supabase/functions/_shared/wic/crossSport/templates.ts`
+  - Optionally expose `resolveCrossSportTemplate` as a public helper if the generator needs to resolve it before selection.
+  - Keep the existing template definitions unchanged.
+
+### 3. Verify
+
+- Run the edge function against an in-season non-game day profile and confirm the plan publishes with no `wic_validation_failed` / `xs_unresolved_template` error.
+- In the preview, confirm Speed, Bat Speed, and Lifts cards load drills instead of the error notice.
+- Confirm the HPI breath primer shows the "First today — pre-activity" chip.
+- Confirm the Recovery card shows "Evening / post-session down-regulation".
+- Run `vitest run src/test/hpiSignal.test.ts` and any relevant daily-plan tests to avoid regressions.

@@ -65,7 +65,10 @@ export function HumanPerformanceCard() {
       <CardContent className="space-y-3">
         <p className="text-sm text-foreground/90">{signal.narrative}</p>
 
-        <BreathPrimer primer={signal.breathPrimer} />
+        <p className="text-xs text-muted-foreground">
+          Today starts here. Use this breath primer before warm-up, at-bats, or pitches. The recovery card at the end of the day has its own down-regulation breath — this one is for activation.
+        </p>
+        <BreathPrimer primer={signal.breathPrimer} scheduleLabel="Now — pre-activity primer" />
 
         <div className="rounded-md border border-border bg-muted/20 p-3">
           <div className="flex items-center gap-2 text-xs font-medium">

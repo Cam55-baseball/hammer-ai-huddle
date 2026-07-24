@@ -37,6 +37,7 @@ import { resolveBatSpeedTemplate } from "../_shared/wic/batSpeed/templates.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
+import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
 import { certifyArmCare } from "../_shared/wic/armCare/sessionBuilder.ts";
 import { pickArmCarePrimary, type ArmCareCatalogRow } from "../_shared/wic/armCare/picker.ts";
@@ -485,6 +486,32 @@ const handler = async (req: Request): Promise<Response> => {
     const pickCat = (cat: string): MovementRow | undefined =>
       lib.find((m) => m.category === cat && eligible(m));
 
+    // Cross-sport picker: must match the template's required category so the
+    // certifier's `xs.<category>` template resolves cleanly. Otherwise the
+    // whole plan fails with `xs_unresolved_template`.
+    const pickCrossSportForTemplate = (
+      requiredCategories: readonly string[],
+      preferredSlugPools: string[][],
+    ): MovementRow | undefined => {
+      const requiredSet = new Set(requiredCategories);
+      const matchesRequired = (m: MovementRow | undefined | null) =>
+        !!m && requiredSet.has(String((m as any).cross_sport_category ?? ""));
+      // 1) Preferred pools that match the required category.
+      for (const pool of preferredSlugPools) {
+        for (const slug of pool) {
+          const m = lib.find((x) => x.slug === slug);
+          if (eligible(m) && matchesRequired(m)) return m;
+        }
+      }
+      // 2) Any eligible cross-sport movement with the required category.
+      return lib.find(
+        (m) =>
+          m.category === "cross_sport" &&
+          eligible(m) &&
+          matchesRequired(m),
+      );
+    };
+
     // -------- Rotate unilateral lower / upper push across the week --------
     const dayOfWeek = new Date(planDate + "T00:00:00").getDay(); // 0..6
 
@@ -650,12 +677,27 @@ const handler = async (req: Request): Promise<Response> => {
       return true;
     };
 
+    // Resolve the cross-sport template once, so the movement we pick matches
+    // the exact category the certifier will require. Mismatches produce
+    // `xs_unresolved_template` and take the entire plan down.
+    const xsTemplate = resolveCrossSportTemplate({
+      seasonPhase: trainingContext.season_phase,
+      dayType: trainingContext.day_type,
+      trainingAge: (trainingAgeContext as any)?.classification,
+      primaryAdaptation: adaptationDecision.primary,
+      isGameDay,
+      isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+    });
+    const xsRequired = xsTemplate.requiredCategories as readonly string[];
+
     if (isGameDay) {
       // WIC cross-sport engine — Weightless Object Sport Training preferred
       // for zero-CNS coordination priming before competition.
-      const primer =
-        pickFirst(CROSS_SPORT_LOW_IMPACT_PREFERRED) ??
-        pickFirst(GAME_DAY_PRIMER_SLUGS);
+      const primer = pickCrossSportForTemplate(xsRequired, [
+        CROSS_SPORT_LOW_IMPACT_PREFERRED,
+        CROSS_SPORT_COORDINATION_PREFERRED,
+        GAME_DAY_PRIMER_SLUGS,
+      ]);
       if (primer) {
         push(
           "cross_sport",
@@ -663,7 +705,7 @@ const handler = async (req: Request): Promise<Response> => {
           primer,
           {},
           "Game-day crossover activation — short, early, and low-cost. It starts the day after warm-up instead of sitting on the back end.",
-          { placement: "early_activation", sequencing_hint: "Do after warm-up and before the game. Stop before fatigue shows up." },
+          { placement: "early_activation", sequencing_hint: "Do after warm-up and before the game. Stop before fatigue shows up.", cross_sport_template_id: xsTemplate.id, cross_sport_required_category: xsRequired[0] ?? null },
         );
       }
     }
@@ -673,10 +715,11 @@ const handler = async (req: Request): Promise<Response> => {
     // keeps sport-crossover work at the start of training in-season and
     // reserves the back-end "offseason_back_end" slot for the offseason.
     if (isInSeason && !isGameDay) {
-      const inSeasonPrimer =
-        pickFirst(CROSS_SPORT_LOW_IMPACT_PREFERRED) ??
-        pickFirst(GAME_DAY_PRIMER_SLUGS) ??
-        pickFirst(CROSS_SPORT_COORDINATION_PREFERRED);
+      const inSeasonPrimer = pickCrossSportForTemplate(xsRequired, [
+        CROSS_SPORT_COORDINATION_PREFERRED,
+        CROSS_SPORT_LOW_IMPACT_PREFERRED,
+        GAME_DAY_PRIMER_SLUGS,
+      ]);
       if (inSeasonPrimer) {
         push(
           "cross_sport",
@@ -684,10 +727,11 @@ const handler = async (req: Request): Promise<Response> => {
           inSeasonPrimer,
           {},
           "In-season crossover primer — short, low-cost coordination drill folded into the warm-up. Frees CNS from sport patterns without stealing freshness from the day.",
-          { placement: "warmup_integration", sequencing_hint: "In-season: finish the warm-up with this before speed / bat speed / lifts." },
+          { placement: "warmup_integration", sequencing_hint: "In-season: finish the warm-up with this before speed / bat speed / lifts.", cross_sport_template_id: xsTemplate.id, cross_sport_required_category: xsRequired[0] ?? null },
         );
       }
     }
+
 
     if (!isGameDay) {
       // WIC strength engine — full-body roles.
@@ -867,19 +911,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Cross-sport (its own slot, appended) --------
     // Prefer Weightless Object Sport Training coordination for youth/beginner
-    // athletes; fall back to any legal cross-sport movement in the catalog.
-    const cross =
-      pickFirst(CROSS_SPORT_COORDINATION_PREFERRED) ??
-      lib.find((m) => m.category === "cross_sport" && eligible(m));
-    if (cross && isOffseason && !isGameDay) {
-      push(
-        "cross_sport",
-        "cross_sport",
-        cross,
-        {},
-        `Offseason cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns after the main training day.`,
-        { placement: "offseason_back_end", sequencing_hint: "Offseason only: do after the primary work, never before an in-season game." },
-      );
+    // athletes; select a movement whose cross_sport_category matches the
+    // resolved template. If nothing matches, skip cleanly — an unmatched
+    // pick would fail the certifier and kill the whole plan.
+    if (isOffseason && !isGameDay) {
+      const cross = pickCrossSportForTemplate(xsRequired, [
+        CROSS_SPORT_COORDINATION_PREFERRED,
+        CROSS_SPORT_LOW_IMPACT_PREFERRED,
+      ]);
+      if (cross) {
+        push(
+          "cross_sport",
+          "cross_sport",
+          cross,
+          {},
+          `Offseason cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns after the main training day.`,
+          { placement: "offseason_back_end", sequencing_hint: "Offseason only: do after the primary work, never before an in-season game.", cross_sport_template_id: xsTemplate.id, cross_sport_required_category: xsRequired[0] ?? null },
+        );
+      }
     }
 
     // Phase 2 Fix 5 — deterministic canonical ordering. This is the ONLY
