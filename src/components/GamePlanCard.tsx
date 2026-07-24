@@ -112,6 +112,28 @@ function DraggableTaskItem({
   );
 }
 
+function GamePlanVisibilityToggle({
+  hidden,
+  onToggle,
+}: {
+  hidden: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onToggle}
+      className="h-8 px-2 gap-1 text-xs text-white/70 hover:text-white shrink-0"
+      title={hidden ? 'Show Game Plan' : 'Hide Game Plan'}
+      aria-label={hidden ? 'Show Game Plan' : 'Hide Game Plan'}
+    >
+      {hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+      <span className="whitespace-nowrap">{hidden ? 'Show plan' : 'Hide'}</span>
+    </Button>
+  );
+}
+
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
