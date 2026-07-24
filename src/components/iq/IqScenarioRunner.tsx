@@ -360,6 +360,24 @@ export function IqScenarioRunner({ situationId, situationSlug, situationTitle, s
                     <p>{fb.yourJob}</p>
                   </div>
                 )}
+                {fb.footwork && (
+                  <div className="flex gap-2">
+                    <RefreshCw className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5 rotate-45" />
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Footwork</div>
+                      <p>{fb.footwork}</p>
+                    </div>
+                  </div>
+                )}
+                {fb.eyes && (
+                  <div className="flex gap-2">
+                    <Eye className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Eyes</div>
+                      <p>{fb.eyes}</p>
+                    </div>
+                  </div>
+                )}
                 {fb.read && (
                   <div className="flex gap-2">
                     <Eye className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
