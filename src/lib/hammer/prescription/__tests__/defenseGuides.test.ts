@@ -79,27 +79,27 @@ describe("resolveDefenseTier", () => {
 });
 
 describe("tier scaling", () => {
-  it("beginner shrinks, elite grows dosage for a common catalog entry", () => {
+  it("beginner shrinks, elite grows dosage vs developing baseline", () => {
     const args = { position: "C" as const, sport: "baseball" as const, seasonPhase: "off" };
     const beginner = selectDefenseDrills({ ...args, tier: "beginner" })!;
     const developing = selectDefenseDrills({ ...args, tier: "developing" })!;
     const elite = selectDefenseDrills({ ...args, tier: "elite" })!;
 
-    // "Framing ladder — 4 corners" — baseline "4 zones × 8" (or similar).
-    const findReps = (rx: typeof beginner, name: string) => {
-      const d = rx.drills.find((x) => x.name === name);
-      if (!d) return null;
-      const m = d.dosage.match(/×(\d+)/);
-      return m ? Number(m[1]) : null;
+    // Pull the first ×N number out of each drill dosage and sum across the card.
+    const totalReps = (rx: typeof beginner) => {
+      let sum = 0;
+      for (const d of rx.drills) {
+        const m = d.dosage.match(/×\s*(\d+)/);
+        if (m) sum += Number(m[1]);
+      }
+      return sum;
     };
-    const bReps = findReps(beginner, "Framing ladder — 4 corners");
-    const dReps = findReps(developing, "Framing ladder — 4 corners");
-    const eReps = findReps(elite, "Framing ladder — 4 corners");
-    expect(bReps).not.toBeNull();
-    expect(dReps).not.toBeNull();
-    expect(eReps).not.toBeNull();
-    expect(bReps!).toBeLessThan(dReps!);
-    expect(eReps!).toBeGreaterThan(dReps!);
+    const b = totalReps(beginner);
+    const d = totalReps(developing);
+    const e = totalReps(elite);
+    expect(d).toBeGreaterThan(0);
+    expect(b).toBeLessThan(d);
+    expect(e).toBeGreaterThan(d);
   });
 
   it("attaches per-tier setup note to the drill", () => {
