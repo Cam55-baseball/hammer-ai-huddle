@@ -466,7 +466,14 @@ function HammerDailyPlanBody() {
                 <WkSpeedCard />
               </ErrorBoundary>
               <ErrorBoundary label="wk-bat-speed">
-                <WkBatSpeedCard />
+                {isSwitchHitter ? (
+                  <>
+                    <WkBatSpeedCard side="L" />
+                    <WkBatSpeedCard side="R" />
+                  </>
+                ) : (
+                  <WkBatSpeedCard />
+                )}
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
                 <WkLiftsCard />
