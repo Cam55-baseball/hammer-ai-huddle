@@ -502,17 +502,87 @@ function durationFor(phase: DefensePhase, position: DefensePosition): number {
   return position === "C" || position === "P" ? 28 : 25;
 }
 
+// ---- tier resolution & scaling ----------------------------------------------
+
+/**
+ * Map training age (years of consistent training) + season phase to a
+ * default drill tier. Pure — no context lookups.
+ *
+ *   trainingAge < 1 → beginner
+ *   1–2 yrs         → developing
+ *   3–5 yrs         → advanced
+ *   6+ yrs          → elite
+ *
+ * In-season shifts one tier DOWN (mgmt of volume/CNS); tournament clamps
+ * to at most "developing" (primer intent, no elite volume today).
+ */
+export function resolveDefenseTier(
+  trainingAgeYears: number | null | undefined,
+  phase: DefensePhase | "post" | "unknown" | string | null | undefined,
+): DefenseTier {
+  const age = typeof trainingAgeYears === "number" && trainingAgeYears >= 0 ? trainingAgeYears : 1;
+  let base: DefenseTier =
+    age < 1 ? "beginner" : age < 3 ? "developing" : age < 6 ? "advanced" : "elite";
+  const p = (phase ?? "").toString().toLowerCase();
+  if (p === "in" || p === "in_season" || p === "inseason") {
+    // In-season prescriptions are shorter and lower-volume; step tier down one.
+    base = base === "elite" ? "advanced" : base === "advanced" ? "developing" : base === "developing" ? "beginner" : "beginner";
+  }
+  if (p === "tournament") {
+    base = base === "elite" || base === "advanced" ? "developing" : "beginner";
+  }
+  return base;
+}
+
+const TIER_SCALE: Record<DefenseTier, number> = {
+  beginner: 0.5,
+  developing: 0.75,
+  advanced: 1.0,
+  elite: 1.25,
+};
+
+/** Scale numeric reps inside a dosage string. Preserves format and units. */
+function scaleDosage(dosage: string, factor: number): string {
+  // "3×15" / "3x15" — scale the rep count (second number).
+  let out = dosage.replace(/(\d+)\s*[×x]\s*(\d+)/g, (_m, sets: string, reps: string) => {
+    const scaled = Math.max(1, Math.round(Number(reps) * factor));
+    return `${sets}×${scaled}`;
+  });
+  // "20 reps" / "10 reps" — scale the leading integer.
+  out = out.replace(/^(\d+)(\s+)(reps?|throws?|pitches?|rounds?)\b/i, (_m, n: string, sp: string, unit: string) => {
+    const scaled = Math.max(1, Math.round(Number(n) * factor));
+    return `${scaled}${sp}${unit}`;
+  });
+  return out;
+}
+
+/** Attach tier metadata + guide + tier note to a single drill. */
+function decorateDrill(step: DrillStep, tier: DefenseTier): DrillStep {
+  const guide = guideForDefense(step.name) ?? undefined;
+  const tierNote = tierNoteForDefense(step.name, tier);
+  const scaledDosage = scaleDosage(step.dosage, TIER_SCALE[tier]);
+  const setup = tierNote
+    ? step.setup
+      ? `${step.setup}\n\nTier — ${tier}: ${tierNote}`
+      : `Tier — ${tier}: ${tierNote}`
+    : step.setup;
+  const next: DrillStep = { ...step, dosage: scaledDosage };
+  if (setup !== undefined) (next as { setup?: string }).setup = setup;
+  if (guide) (next as { guide?: unknown }).guide = guide;
+  return next;
+}
+
 // ---- public API --------------------------------------------------------------
 
 export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescription | null {
   const position = normalizeDefensePosition(input.position);
   const sport = input.sport;
   const phase = normalizePhase(input.seasonPhase, !!input.tournamentToday);
+  const tier: DefenseTier = input.tier ?? "developing";
 
   let drills = catalogFor(position, sport, phase);
   if (drills.length === 0) return null;
 
-  // Optional: blend one secondary-position primer.
   if (input.secondaryPositions && input.secondaryPositions.length > 0) {
     const secondary = normalizeDefensePosition(input.secondaryPositions[0]);
     if (secondary !== position && secondary !== "utility") {
@@ -520,13 +590,14 @@ export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescri
     }
   }
 
-  // Injury gating.
   drills = gateForInjury(drills, input.injuryRegions);
 
-  // Tournament taper if we got here without hitting the tournament catalog.
   if (phase === "tournament") drills = taperForTournament(drills);
 
   if (drills.length === 0) return null;
+
+  // Decorate every drill with the tier note, scaled dosage, and its guide.
+  drills = drills.map((d) => decorateDrill(d, tier));
 
   const posLabel = position === "utility" ? "utility" : position;
   const phaseLabel =
@@ -537,7 +608,7 @@ export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescri
         : phase === "tournament"
           ? "primer"
           : "sharpen";
-  const title = `Defense — ${posLabel} (${phaseLabel})`;
+  const title = `Defense — ${posLabel} · ${tier} (${phaseLabel})`;
   const why =
     (phase === "in"
       ? "Game-rep quality over volume — the reps that show up in the game."
@@ -552,11 +623,14 @@ export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescri
     position,
     sport,
     phase,
+    tier,
     drills,
     cues: cuesFor(position, sport),
     stopRules: STOP_RULES,
     durationMin: durationFor(phase, position),
     title,
     why,
+  };
+}
   };
 }
