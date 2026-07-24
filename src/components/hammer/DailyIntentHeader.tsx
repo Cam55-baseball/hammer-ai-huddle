@@ -62,15 +62,35 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
   for (let i = 6; i >= 0; i--) rotatedLabels.push(dayLabels[(todayIdx - i + 7) % 7]);
   const activeCount = streak.weekArc.filter(Boolean).length;
 
+  const [open, setOpen] = useState<boolean>(false);
+  const { shouldGlow, markOpened } = useOpenedOnceToday("start-line");
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (next) markOpened();
+  };
+
   return (
-    <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent p-3 space-y-2.5">
-      <Collapsible defaultOpen={false}>
+    <div
+      className={`rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent p-3 space-y-2.5 transition-shadow ${
+        shouldGlow ? "ring-2 ring-primary/50 animate-hammer-today-glow" : ""
+      }`}
+    >
+      <Collapsible open={open} onOpenChange={handleOpenChange}>
         <div className="flex items-start justify-between gap-3">
           <CollapsibleTrigger className="flex items-start gap-2 text-left min-w-0 flex-1 hover:opacity-90 transition-opacity">
             <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-            <div className="min-w-0 flex-1 flex items-start justify-between gap-2">
-              <div className="text-sm font-semibold leading-tight">{intent.headline}</div>
-              <ChevronDown className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80 leading-none mb-0.5">
+                Start Line{shouldGlow ? " · New today" : ""}
+              </div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-sm font-semibold leading-tight">{intent.headline}</div>
+                <ChevronDown
+                  className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${
+                    open ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
             </div>
           </CollapsibleTrigger>
 
