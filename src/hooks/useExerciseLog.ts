@@ -6,11 +6,13 @@ export interface ExerciseLogPayload {
   prescription_id: string;
   plan_date: string;
   movement_slug: string;
-  rounds: Record<string, number | null>[];
+  rounds: Record<string, number | string | null>[];
   rpe?: number | null;
   bar_feel?: string | null;
   notes?: string | null;
   ai_readback?: string | null;
+  template_id?: string | null;
+  field_schema?: Array<{ key: string; label: string; unit?: string; kind: string }> | null;
 }
 
 /** Latest log for prefill / edit-in-place. */
