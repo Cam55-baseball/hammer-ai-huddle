@@ -4,6 +4,7 @@
 // persists rows after explicit athlete review.
 
 import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
 
   const hb = startHeartbeat("parse-season-schedule", { intervalMs: 6_000 });
   try {
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
     if (!apiKey) {
       await hb.fail(new Error("AI service not configured"));
       return json({ error: "AI service not configured" }, 500);
@@ -116,22 +117,15 @@ Deno.serve(async (req) => {
       return json({ error: "mode must be 'text' or 'image'" }, 400);
     }
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userContent },
-        ],
-        tools: [TOOL_SCHEMA],
-        tool_choice: { type: "function", function: { name: "emit_schedule" } },
-      }),
-    });
+    const res = await chatCompletion({
+      model: MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContent as any },
+      ],
+      tools: [TOOL_SCHEMA],
+      tool_choice: { type: "function", function: { name: "emit_schedule" } },
+    }, { timeoutMs: 60_000 });
 
     if (res.status === 429) {
       return json({ error: "AI rate limit — please try again in a moment." }, 429);
@@ -140,14 +134,11 @@ Deno.serve(async (req) => {
       return json({ error: "AI credits exhausted — workspace needs more credits." }, 402);
     }
     if (!res.ok) {
-      const t = await res.text();
-      console.error("[parse-season-schedule] gateway error", res.status, t.slice(0, 500));
-      return json({ error: `AI gateway ${res.status}` }, 502);
+      console.error("[parse-season-schedule] AI error", res.status, (res.errorBody ?? "").slice(0, 500));
+      return json({ error: `AI provider ${res.status}` }, 502);
     }
 
-    const data = await res.json();
-    const args =
-      data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const args = res.data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!args) {
       return json({ events: [] });
     }

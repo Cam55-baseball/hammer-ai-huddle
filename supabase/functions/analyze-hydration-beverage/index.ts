@@ -7,6 +7,7 @@ import {
   inferCategory, isComplete, applyFallbacks, describeMissing,
   REQUIRED_MICROS, type Category, type MicroKey,
 } from "../_shared/hydrationCategoryRules.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,7 +139,7 @@ const TOOL_SCHEMA = {
 };
 
 async function callAI(
-  apiKey: string,
+  _apiKey: string,
   name: string,
   category: string | null,
   opts: { strict?: boolean; missing?: MicroKey[]; categoryLabel?: Category } = {},
@@ -153,25 +154,19 @@ async function callAI(
     userMsg = `Beverage: "${name}"${category ? `\nCategory: ${category}` : ""}\nReturn per-oz macros and micros.`;
   }
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userMsg },
-      ],
-      tools: [TOOL_SCHEMA],
-      tool_choice: { type: "function", function: { name: "analyze_beverage" } },
-    }),
-  });
+  const res = await chatCompletion({
+    model: "google/gemini-2.5-flash",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: userMsg },
+    ],
+    tools: [TOOL_SCHEMA],
+    tool_choice: { type: "function", function: { name: "analyze_beverage" } },
+  }, { timeoutMs: 60_000 });
   if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`AI gateway ${res.status}: ${t.slice(0, 200)}`);
+    throw new Error(`AI provider ${res.status}: ${(res.errorBody ?? "").slice(0, 200)}`);
   }
-  const data = await res.json();
-  const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+  const args = res.data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
   if (!args) throw new Error("No tool call returned");
   return sanitize(JSON.parse(args));
 }
@@ -196,7 +191,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
