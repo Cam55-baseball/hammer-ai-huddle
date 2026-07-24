@@ -1830,6 +1830,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         <QuickNutritionLogDialog
           open={quickLogOpen}
           onOpenChange={setQuickLogOpen}
+          onSuccess={refetch}
         />
       </Card>
     );
