@@ -108,6 +108,9 @@ export function BreathPrimer({ primer, scheduleLabel = "First today — pre-acti
         <Wind className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <div>
           <div className="font-medium">Breath primer</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {scheduleLabel}
+          </div>
           <div className="mt-0.5 text-muted-foreground">{primer}</div>
         </div>
       </div>
@@ -127,6 +130,9 @@ export function BreathPrimer({ primer, scheduleLabel = "First today — pre-acti
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
           Round {round}/{cadence.rounds}
         </span>
+      </div>
+      <div className="mt-1 text-[10px] uppercase tracking-wider text-primary/80">
+        {scheduleLabel}
       </div>
       <div className="mt-2 text-muted-foreground">{primer}</div>
       <div className="mt-3 flex items-center gap-3">
