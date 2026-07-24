@@ -617,9 +617,10 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       }
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
-      const batsRaw = (ctx.get<string>("bats_hand")?.value as string | null) ?? null;
-      const isSwitchHitter = batsRaw === "S";
-      const baseDrills: DrillStep[] = inSeason
+      // NOTE: switch-hitter split is handled downstream by splitLateralityBlocks,
+      // which duplicates this block into two full-volume side-tagged blocks
+      // (Left and Right). Do NOT halve volume or interleave sides here.
+      const drills: DrillStep[] = inSeason
         ? [
             { name: "Tee work — barrel path", dosage: "10 quality swings", cue: "stay through the ball, do not pull off" },
             { name: "Front toss — pitch recognition", dosage: "10 swings", cue: "see ball deep, hands stay back" },
@@ -638,32 +639,9 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               { name: "Live BP or machine", dosage: "25 swings" },
               { name: "Video + tag in PIE", dosage: "best 5 swings flagged" },
             ];
-      // Switch hitters train BOTH sides. We split each drill's swing volume
-      // roughly in half across L and R so total load stays sane, then keep
-      // the video/tag drill single (shared review).
-      const halveDosage = (dosage: string): string => {
-        const m = dosage.match(/^(\d+)([\s\S]*)$/);
-        if (!m) return dosage;
-        const n = Math.max(1, Math.round(parseInt(m[1], 10) / 2));
-        return `${n}${m[2]}`;
-      };
-      const drills: DrillStep[] = isSwitchHitter
-        ? baseDrills.flatMap((d) => {
-            if (/video|PIE|tag/i.test(d.name)) return [d];
-            const half = { ...d, dosage: halveDosage(d.dosage) };
-            return [
-              { ...half, name: `${d.name} — Left side` },
-              { ...half, name: `${d.name} — Right side` },
-            ];
-          })
-        : baseDrills;
-      const switchCue = isSwitchHitter
-        ? "Switch hitter — work BOTH sides today. If one side is sore or protected, skip it and tell Hammer."
-        : null;
       return {
         modality,
-        title: (inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting")
-          + (isSwitchHitter ? " (both sides)" : ""),
+        title: inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
         why: (inSeason ? "Sharpen timing without spending." : offSeason ? "Volume + mechanical rebuild." : "Quality reps targeting your weakness pattern.") + (goal ? ` ${goal}` : ""),
         roadmapReason: inSeason
           ? "In-season — focus on timing and feel, not volume."
@@ -674,7 +652,6 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         steps: drillsToSteps(drills),
         drills,
         cues: [
-          ...(switchCue ? [switchCue] : []),
           "Track every pitch, even no-swings.",
           "Quality first — bail on a round if you start grooving bad habits.",
         ],
@@ -686,14 +663,12 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         missing: [],
         missingContextKeys: [],
         gamePlanTemplate: {
-          title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}${isSwitchHitter ? " (both sides)" : ""}`,
+          title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}`,
           activityType: "practice",
           icon: "target",
           color: "#8b5cf6",
           durationMinutes: inSeason ? 20 : offSeason ? 45 : 35,
-          description: isSwitchHitter
-            ? "Hitting block with tee, toss, and live BP — worked on BOTH sides for the switch hitter."
-            : "Hitting block with tee, toss, and live BP work.",
+          description: "Hitting block with tee, toss, and live BP work.",
           checklist: drillsToChecklist(drills),
           source: "hammer.daily.hitting",
         },
