@@ -213,10 +213,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const body = (await req.json().catch(() => ({}))) as {
       plan_date?: string;
+      side_hit?: "L" | "R" | null;
+      side_throw?: "L" | "R" | null;
       recent_ack?: { reduction_reason?: string; reduction_payload?: unknown; acknowledged_at?: string } | null;
     };
     const planDate = body.plan_date ?? todayStr();
     const recentAck = body.recent_ack ?? null;
+    const sideOverride =
+      (body.side_hit === "L" || body.side_hit === "R" || body.side_throw === "L" || body.side_throw === "R")
+        ? { hit: (body.side_hit as any) ?? null, throw: (body.side_throw as any) ?? null }
+        : null;
 
     // -------- Load athlete context --------
     const [
