@@ -34,6 +34,7 @@ import {
 } from "@/lib/hammer/goals/categoryGoals";
 import { buildWarmup, resolveWarmupContext, lifecycleFor } from "./warmupLibrary";
 import { guideFor as _guideForMovement } from "./movementGuide";
+import { getSeasonHPI } from "@/lib/seasonPhase";
 import {
   buildEassPrescription,
   normalizePosition,
