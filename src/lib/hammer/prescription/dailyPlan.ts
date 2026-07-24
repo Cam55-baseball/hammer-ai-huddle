@@ -210,6 +210,31 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         stopIf: d.stopIf,
         guide: d.guide,
       }));
+      // Su Wen / Neijing micro-dose: on low-readiness / recovery days, lead the
+      // warm-up with a 60-second season-aware breath primer so we downshift
+      // sympathetic tone before any movement load. Additive only — never
+      // replaces a drill, only prepends a primer step.
+      if (isRecoveryDay || recoverDay) {
+        const primer = getSeasonHPI(seasonPhase);
+        drills.unshift({
+          name: "Breath primer (60 sec)",
+          slug: "hpi-breath-primer",
+          setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
+          dosage: primer.breathPrimer,
+          cue: `${primer.element} phase — ${primer.qiDirective}`,
+          stopIf: "Lightheaded — stop, breathe normally, then continue.",
+          guide: {
+            what: "A short breath-first primer that regulates the autonomic system before movement.",
+            setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
+            goodRep: ["Slow, quiet nasal breathing.", "Ribs expand 360°, not just the chest.", "Exhale is longer than the inhale."],
+            badRep: ["Mouth breathing.", "Shoulders shrugging up on the inhale.", "Rushing the tempo."],
+            feel: "Calm, warm, slightly heavier — sympathetic tone dropping.",
+            whyToday: "Long exhales bias parasympathetic recovery; box breathing steadies focus before performance.",
+            nextLink: "hammer:open-hpi",
+            stopIf: "Lightheaded — stop, breathe normally, then continue.",
+          },
+        });
+      }
       const titleByContext: Record<string, string> = {
         game_day: "Warm-up — game-day neural primer",
         in_season_practice: "Warm-up — practice-ready",
