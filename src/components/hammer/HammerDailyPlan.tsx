@@ -662,9 +662,11 @@ function BlockCard({
     }
   }
 
+  const sideSuffix = block.side ? `-${block.side.toLowerCase()}` : "";
+  const domId = `hammer-plan-${block.modality}${sideSuffix}`;
   return (
     <div
-      id={`hammer-plan-${block.modality}`}
+      id={domId}
       className={`rounded-lg border p-3 scroll-mt-24 ${STATUS_TONE[block.status]}`}
     >
       <Collapsible open={open} onOpenChange={setOpen}>
@@ -672,6 +674,11 @@ function BlockCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold capitalize">{block.title}</span>
+              {block.side && (
+                <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
+                  {block.side === "L" ? "Left" : "Right"}
+                </Badge>
+              )}
               <BlockSideBadge modality={block.modality} />
               {block.durationMin !== null && block.durationMin > 0 && (
                 <Badge variant="secondary" className="text-[10px]">
