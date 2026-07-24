@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
+import { LandingDemoVideoManager } from "@/components/landing/LandingDemoVideoManager";
 import heroImage from "@/assets/hero-baseball.jpg";
 
 const Index = () => {
@@ -65,6 +67,8 @@ const Index = () => {
               Transform your game with advanced motion capture, real-time analytics, 
               and professional development tools used by elite athletes worldwide.
             </p>
+            <LandingDemoVideo />
+            <LandingDemoVideoManager />
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button onClick={handleGetStarted} size="lg">
                 Get Started

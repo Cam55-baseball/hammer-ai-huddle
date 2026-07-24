@@ -1,37 +1,73 @@
-## Problem
+# Landing Page Demo Video (Owner-Managed)
 
-The "How?" sheet on defense drills (DP pivot primer, Backhand primer, Deep-hole primer, PFP, scoop, framing, blocking, relays, slap-bunt reads, etc.) falls back to the placeholder text "A full step-by-step guide for this movement is on the way…" because `movementGuide.ts` has **zero entries for any defense drill** — only warmup / EASS / lift / bat-speed movements are covered. On the card itself, cues are one short line, and every athlete sees the same rep count regardless of training age or rung, so young players are lost and elite players are unchallenged.
+Add a self-serve demo video slot on the landing page (`/`) between the hero paragraph and the "Get Started" button. Owner can upload a video file OR paste a URL (YouTube / Vimeo / X / TikTok / direct MP4) at any time, toggle it hidden/visible, or remove it — no Lovable credits needed. Public visitors see it inline and play it in-page.
 
-## Fix — Elite Defense Drill Intelligence
+## User-visible behavior
 
-### 1. Zero-knowledge guides for every defense drill (`defenseGuides.ts`, new)
-- Author `MovementGuide` entries for every drill name in `defenseLibrary.ts` (~55 unique drills across C / P / 1B / 2B / SS / 3B / OF, both sports). Each guide follows the existing schema: `what · setup · goodRep[] · badRep[] · feel · whyToday · nextLink · stopIf`.
-- Keyed by normalized drill name so `guideFor()` finds them without touching `MovementGuideSheet.tsx`.
-- Register the catalog inside `movementGuide.ts` (single `Object.assign(GUIDES, DEFENSE_GUIDES)` call at module load — no lookup-path change).
+**Visitors (logged out or non-owner)**
+- If a video exists AND is set to visible → video player renders inline between the hero paragraph and "Get Started". Plays in-page (no redirect).
+- If no video, or owner hid it → the whole slot is invisible (no empty box, no placeholder).
 
-### 2. Difficulty ladder on every drill (`defenseLibrary.ts`)
-- Extend `DrillStep` (defense-only field) with `variants: { beginner, developing, advanced, elite }`, each carrying its own dosage + a coach-legible progression note (e.g. beginner = tennis balls on knees, elite = live BP short-hops with pop-time timer).
-- Add a `selectDefenseTier()` helper that maps the athlete's `rung` (Foundation → Sustain from the roadmap ladder we already ship) + `liftingAgeYears` + `lifecycleBand` to a tier, and rewrites each drill's `dosage`/`setup` to match.
-- The card still shows one drill, but the dosage line + setup swap based on tier so a 10-year-old and a college shortstop each get real work.
+**Owner (signed in as owner)**
+- Sees the same slot with a small "Manage demo video" panel underneath it:
+  - Upload from device (photo library / file picker) OR paste a URL
+  - Toggle **Visible to public** on/off
+  - **Remove** button clears the slot
+- Owner can also see the slot when hidden (with a "Hidden from public" badge) so they can preview before publishing.
+- Changes take effect immediately for all visitors on next page load.
 
-### 3. Card copy — coach-legible detail
-- Every drill in the catalog gets a `setup` string (many are missing today) and a longer `cue` (2 phrases: intent + failure mode). No behavior change — same shape, richer content.
-- Add per-position `stopRules` expansion (arm tightness, hop-count ceiling, knee pain on blocking) so `WkDefenseCard.tsx` renders them under the drill list.
+## Data model
 
-### 4. Tier badge on the card
-- `WkDefenseCard.tsx` renders a small "Tier: Developing" chip beside the position badge, plus a "See how a pro does this" affordance that opens the guide sheet already wired to `MovementGuideSheet`.
+Single-row settings table (only one demo video exists at a time).
 
-### 5. Determinism + drift guards
-- Extend `scripts/check-skill-frequency-ceiling.ts` (or add a sibling) to assert **every drill name in `defenseLibrary.ts` has a `guideFor()` hit** — CI fails if a new drill lands without a guide. Locks the "no vague defense drill, ever" invariant.
-- Add unit tests: `resolveDefensePrescription()` at each tier returns the expected dosage strings; injury gating still fires; every drill exposes a guide.
+```
+public.landing_demo_video
+  id            uuid pk default gen_random_uuid()
+  video_url     text not null
+  video_type    text not null  -- 'upload' | 'youtube' | 'vimeo' | 'twitter' | 'tiktok' | 'external'
+  title         text
+  is_visible    boolean not null default true
+  updated_by    uuid references auth.users(id)
+  updated_at    timestamptz not null default now()
+```
 
-### 6. Scope discipline
-- No schema migration, no auth touches, no changes to microcycle / roadmap logic. Pure additive content + one type extension + one UI badge.
+RLS + GRANTs:
+- `GRANT SELECT` to `anon` and `authenticated` — but SELECT policy only returns rows where `is_visible = true` OR caller `has_role(auth.uid(), 'owner')`.
+- INSERT / UPDATE / DELETE restricted to `has_role(auth.uid(), 'owner')`.
+- `GRANT ALL` to `service_role`.
+
+## Storage
+
+New public bucket `landing-demo` for uploaded video files.
+- Public read (so `<video src>` works for everyone).
+- RLS on `storage.objects`: only `owner` role may INSERT / UPDATE / DELETE in this bucket.
+- File size cap 2 GB, formats reuse `VIDEO_LIMITS` from `src/data/videoLimits.ts`.
+
+## Components
+
+- **`src/hooks/useLandingDemoVideo.ts`** — fetches the single row, exposes `{ video, loading, save, remove, setVisibility }`. Uses existing `supabase` client. Public-safe (no auth required to read).
+- **`src/components/landing/LandingDemoVideo.tsx`** — renders the player using the existing `<VideoPlayer>` from `src/components/video-library/VideoPlayer.tsx` (already handles YouTube/Vimeo/X/TikTok/uploads). Returns `null` for public visitors when no visible video exists.
+- **`src/components/landing/LandingDemoVideoManager.tsx`** — owner-only card shown directly below the player. URL input + file upload + visibility toggle + remove. Uses `useOwnerAccess()` to gate rendering.
+
+## Integration
+
+Edit `src/pages/Index.tsx` hero block (around line 67–68): insert `<LandingDemoVideo />` between the paragraph `<p>` and the Get Started button div. Owner-only `<LandingDemoVideoManager />` renders just below when `isOwner === true`.
+
+Player wrapper constrains width (`max-w-2xl mx-auto`) and keeps 16:9 aspect ratio to preserve hero layout on mobile (402px viewport) and desktop.
 
 ## Technical notes
-- **Files edited:** `src/lib/hammer/prescription/defenseLibrary.ts`, `src/lib/hammer/prescription/movementGuide.ts`, `src/components/hammer/WkDefenseCard.tsx`, `scripts/check-skill-frequency-ceiling.ts` (or new sibling), plus new `src/lib/hammer/prescription/defenseGuides.ts` and test file.
-- **Guide count:** ~55 defense guides. Written in the same voice as the existing warmup/EASS guides (concrete, safety-first, 8-year-old-legible).
-- **Determinism:** guides and tier resolution are pure functions; drift-guard script wires into `scripts/preflight.sh` next to the skill-frequency lint.
 
-## Out of scope
-- Video demos, external URLs, animated diagrams. Text guides only for this pass — the sheet is already built for text and this closes the vague-card gap without new asset infra.
+- Reuses existing `VideoPlayer` — no new embed code paths, so YouTube/Vimeo/X/TikTok/direct MP4 all work out of the box and play in-page.
+- Upload flow reuses the pattern from `src/lib/uploadHelpers.ts` (Supabase Storage `upload` with `upsert: true`, then `getPublicUrl`).
+- Video type is auto-detected via `detectPlatform()` from `src/lib/videoEmbed.ts`; falls back to `'upload'` for direct file uploads and `'external'` for unknown URLs.
+- No changes to auth, routing, or any other page.
+- No Lovable credits consumed on updates — pure Supabase storage + one row update.
+
+## Migration
+
+One migration file:
+1. `CREATE TABLE public.landing_demo_video ...`
+2. `GRANT` statements (SELECT to anon/authenticated, ALL to service_role)
+3. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
+4. `CREATE POLICY` (public read of visible rows, owner full write)
+5. Bucket creation handled via `supabase--storage_create_bucket` tool (public=true), then storage.objects policies restricting writes to owner role.
