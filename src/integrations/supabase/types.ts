@@ -5368,6 +5368,48 @@ export type Database = {
           },
         ]
       }
+      hammer_daily_task_completions: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          payload: Json
+          plan_date: string
+          source: string
+          source_ref: string
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          plan_date: string
+          source: string
+          source_ref: string
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          plan_date?: string
+          source?: string
+          source_ref?: string
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hammer_state_explanations_v2: {
         Row: {
           confidence: number
