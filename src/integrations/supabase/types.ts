@@ -6715,6 +6715,39 @@ export type Database = {
           },
         ]
       }
+      landing_demo_video: {
+        Row: {
+          created_at: string
+          id: string
+          is_visible: boolean
+          title: string | null
+          updated_at: string
+          updated_by: string | null
+          video_type: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          video_type?: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          video_type?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       launch_events: {
         Row: {
           created_at: string
