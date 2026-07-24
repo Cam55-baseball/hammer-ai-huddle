@@ -102,7 +102,11 @@ export function useSaveExerciseLog() {
         bar_feel: p.bar_feel ?? null,
         notes: p.notes ?? null,
         ai_readback: p.ai_readback ?? null,
-        metrics: { rounds: p.rounds },
+        metrics: {
+          rounds: p.rounds,
+          template_id: p.template_id ?? null,
+          field_schema: p.field_schema ?? null,
+        },
       };
 
       // Upsert-style: delete the previous log for this prescription, then insert.
