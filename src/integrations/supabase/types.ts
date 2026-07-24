@@ -14818,12 +14818,14 @@ export type Database = {
       }
       wk_session_logs: {
         Row: {
+          ai_readback: string | null
           bar_feel: string | null
           created_at: string
           distance_feet_completed: number | null
           duration_seconds_completed: number | null
           id: string
           load_used: number | null
+          metrics: Json
           movement_slug: string
           notes: string | null
           plan_date: string
@@ -14836,12 +14838,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_readback?: string | null
           bar_feel?: string | null
           created_at?: string
           distance_feet_completed?: number | null
           duration_seconds_completed?: number | null
           id?: string
           load_used?: number | null
+          metrics?: Json
           movement_slug: string
           notes?: string | null
           plan_date: string
@@ -14854,12 +14858,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_readback?: string | null
           bar_feel?: string | null
           created_at?: string
           distance_feet_completed?: number | null
           duration_seconds_completed?: number | null
           id?: string
           load_used?: number | null
+          metrics?: Json
           movement_slug?: string
           notes?: string | null
           plan_date?: string
