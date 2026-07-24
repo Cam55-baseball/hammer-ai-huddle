@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ShieldCheck, CheckCircle2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
