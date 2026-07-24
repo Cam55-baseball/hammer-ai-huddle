@@ -501,6 +501,11 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   const preSeason = ctx.seasonPhase === "pre";
   const postSeason = ctx.seasonPhase === "post";
 
+  // Position scaling: only pitchers get the full elastic/overload/intent stack.
+  // Position players get band prep + one fast-object + regulation catch-play +
+  // position skill — enough to keep the arm healthy without a pitcher's volume.
+  const isPositionPlayer = !isPitcher;
+
   const prep = isSoftball ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL;
   const tennisBall = isSoftball ? TENNIS_BALL_SOFTBALL : TENNIS_BALL_BASEBALL;
   const underload = isSoftball ? UNDERLOAD_SOFTBALL : UNDERLOAD_BASEBALL;
@@ -508,22 +513,34 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   const positionSkill = isSoftball ? positionSkillSoftball(ctx.position, inSeason)
                                    : positionSkillBaseball(ctx.position, inSeason);
 
-  const drills: EassDrill[] = [...prep, ...tennisBall.slice(0, 1), ...underload.slice(0, offSeason ? 3 : 1), ...regulation];
+  // Position players: shorter band prep (halve dosage 2x→1x), no underload, no long-toss, no intent, no overload.
+  const scaledPrep = isPositionPlayer
+    ? prep.map((d) => ({ ...d, dosage: d.dosage.replace(/2x/g, "1x") }))
+    : prep;
+  const underloadCount = isPositionPlayer ? 0 : (offSeason ? 3 : 1);
+  const regulationTrimmed = isPositionPlayer ? regulation.slice(0, 2) : regulation;
 
-  // Long-toss on off/pre only, always regulation weight
-  if (offSeason || preSeason) {
+  const drills: EassDrill[] = [
+    ...scaledPrep,
+    ...tennisBall.slice(0, 1),
+    ...underload.slice(0, underloadCount),
+    ...regulationTrimmed,
+  ];
+
+  // Long-toss on off/pre only, always regulation weight — pitchers + OF only.
+  if ((offSeason || preSeason) && (isPitcher || ctx.position === "outfield")) {
     drills.push(...(isSoftball ? longTossSoftball() : longTossBaseball(ctx.position === "outfield")));
   }
 
-  // Intent / pulldowns — heavily gated
-  const intentOk = intentEligible(ctx);
+  // Intent / pulldowns — heavily gated, pitchers only.
+  const intentOk = isPitcher && intentEligible(ctx);
   if (intentOk) {
-    if (isSoftball && isPitcher) drills.push(...INTENT_SOFTBALL);
-    else if (!isSoftball && (isPitcher || offSeason)) drills.push(...INTENT_BASEBALL);
+    if (isSoftball) drills.push(...INTENT_SOFTBALL);
+    else drills.push(...INTENT_BASEBALL);
   }
 
-  // Overload — baseball only, off-season only, older/experienced only
-  const overloadOk = overloadEligible(ctx);
+  // Overload — baseball pitchers only, off-season only, older/experienced only
+  const overloadOk = isPitcher && overloadEligible(ctx);
   if (overloadOk) drills.push(...OVERLOAD_BASEBALL);
 
   drills.push(...positionSkill, ...COOLDOWN_UNIVERSAL);
@@ -532,16 +549,22 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   const seasonLabel = inSeason ? "in-season" : offSeason ? "off-season" : preSeason ? "pre-season" : postSeason ? "post-season" : "standard";
   const mode: EassMode = inSeason ? "throwing_day_maintain" : preSeason ? "throwing_day_ramp" : "throwing_day_build";
 
-  const durationMin = inSeason ? 22 : offSeason ? 48 : preSeason ? 35 : postSeason ? 22 : 30;
+  // Position players run shorter sessions than pitchers (arm care ≠ arm build).
+  const pitcherDuration = inSeason ? 22 : offSeason ? 48 : preSeason ? 35 : postSeason ? 22 : 30;
+  const positionPlayerDuration = inSeason ? 12 : offSeason ? 22 : preSeason ? 18 : postSeason ? 12 : 15;
+  const durationMin = isPositionPlayer ? positionPlayerDuration : pitcherDuration;
 
   const cues = [...UNIVERSAL_CUES];
   if (overloadOk) cues.push(...OVERLOAD_CUES);
   if (isSoftball && isPitcher) cues.push("Windmill velo lives in the circle path — protect it.");
+  if (isPositionPlayer) cues.push("Position-player arm care — enough to stay healthy, never a pitcher's volume.");
 
   return {
     mode,
     title: `EASS Throwing — ${seasonLabel} ${posLabel}${isSoftball && isPitcher ? " (windmill)" : ""}`,
-    why: `Whole-body elastic ${isSoftball && isPitcher ? "windmill" : "throwing"} stack: band prep → fast-object → underload → regulation${offSeason || preSeason ? " → long-toss" : ""}${intentOk ? " → intent" : ""}${overloadOk ? " → overload" : ""} → position skill → cooldown.`,
+    why: isPositionPlayer
+      ? `Position-player arm care: band prep → fast-object → short regulation catch → position skill → cooldown. No pitcher-load work.`
+      : `Whole-body elastic ${isSoftball && isPitcher ? "windmill" : "throwing"} stack: band prep → fast-object → underload → regulation${offSeason || preSeason ? " → long-toss" : ""}${intentOk ? " → intent" : ""}${overloadOk ? " → overload" : ""} → position skill → cooldown.`,
     roadmapReason: `${seasonLabel.charAt(0).toUpperCase() + seasonLabel.slice(1)} — ${offSeason ? "build the elastic base now so you can spend it in season." : inSeason ? "maintain freshness; save max throws for competition." : preSeason ? "ramp intent week over week without overspend." : "protect the joint while staying connected."}`,
     drills, cues, stopRules: UNIVERSAL_STOP, durationMin,
     overloadUsed: overloadOk,

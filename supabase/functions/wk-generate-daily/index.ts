@@ -213,10 +213,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const body = (await req.json().catch(() => ({}))) as {
       plan_date?: string;
+      side_hit?: "L" | "R" | null;
+      side_throw?: "L" | "R" | null;
       recent_ack?: { reduction_reason?: string; reduction_payload?: unknown; acknowledged_at?: string } | null;
     };
     const planDate = body.plan_date ?? todayStr();
     const recentAck = body.recent_ack ?? null;
+    const sideOverride =
+      (body.side_hit === "L" || body.side_hit === "R" || body.side_throw === "L" || body.side_throw === "R")
+        ? { hit: (body.side_hit as any) ?? null, throw: (body.side_throw as any) ?? null }
+        : null;
 
     // -------- Load athlete context --------
     const [
@@ -322,6 +328,7 @@ const handler = async (req: Request): Promise<Response> => {
       gamesToday: gamesToday ?? [],
       practicesToday: practicesToday ?? [],
       trainingAgeCtx: trainingAgeContext,
+      sideOverride,
     });
 
     // -------- Phase 6: Personalization Context --------
@@ -739,22 +746,31 @@ const handler = async (req: Request): Promise<Response> => {
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
       const isPitcherRole = /pitch/i.test((profile as any)?.primary_position ?? (ctx as any)?.primary_position ?? "");
       const isCatcherRole = /catch/i.test((profile as any)?.primary_position ?? "");
-      const armCarePicked = pickArmCarePrimary(lib as unknown as ArmCareCatalogRow[], {
-        sport,
-        isPitcher: isPitcherRole,
-        isCatcher: isCatcherRole,
-        isThrowingDay: !isGameDay,
-        isRecoveryDay: !!(decision?.primary === "recovery"),
-        isGameDay: !!isGameDay,
-        trainingAge: trainingAgeYears,
-        ageYears: Math.max(0, Math.floor(trainingAgeYears) + 6),
-        daySeed: daySeedForArmCare,
-        fatigueFlag: cnsReadiness < 5 ? "high" : cnsReadiness < 7 ? "moderate" : "low",
-      });
-      const armCareRow = armCarePicked && eligible(armCarePicked as unknown as MovementRow)
-        ? (armCarePicked as unknown as MovementRow)
-        : pickFirst(StrengthEngine.ARM_CARE_SLUGS);
-      if (armCareRow) push("lift", "arm_care", armCareRow, { sets: armCareRow.default_sets ?? 1, reps: armCareRow.default_reps ?? 1 }, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
+      // Dedup: skip lift-slot arm care when today is an active throwing day —
+      // the EASS throwing block (client-composed) already opens with band prep.
+      // Non-throwing / recovery days still get lift-slot arm care so the arm
+      // is never neglected.
+      const isThrowingDayForArmCare = !!(ctxAny.throwing_day) || isPitcherRole;
+      const isRecoveryDay = !!(decision?.primary === "recovery");
+      const skipLiftArmCare = isThrowingDayForArmCare && !isRecoveryDay;
+      if (!skipLiftArmCare) {
+        const armCarePicked = pickArmCarePrimary(lib as unknown as ArmCareCatalogRow[], {
+          sport,
+          isPitcher: isPitcherRole,
+          isCatcher: isCatcherRole,
+          isThrowingDay: !isGameDay,
+          isRecoveryDay,
+          isGameDay: !!isGameDay,
+          trainingAge: trainingAgeYears,
+          ageYears: Math.max(0, Math.floor(trainingAgeYears) + 6),
+          daySeed: daySeedForArmCare,
+          fatigueFlag: cnsReadiness < 5 ? "high" : cnsReadiness < 7 ? "moderate" : "low",
+        });
+        const armCareRow = armCarePicked && eligible(armCarePicked as unknown as MovementRow)
+          ? (armCarePicked as unknown as MovementRow)
+          : pickFirst(StrengthEngine.ARM_CARE_SLUGS);
+        if (armCareRow) push("lift", "arm_care", armCareRow, { sets: armCareRow.default_sets ?? 1, reps: armCareRow.default_reps ?? 1 }, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
+      }
 
       // 2) Trunk primer — every session
       const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
