@@ -4,11 +4,17 @@
  * Placed BEFORE lifts so athletes hit sprint targets while CNS is fresh.
  * Game-day: renders the backend-prescribed short crossover activation.
  */
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, RefreshCw, Zap } from "lucide-react";
+import { Loader2, RefreshCw, Zap, ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
