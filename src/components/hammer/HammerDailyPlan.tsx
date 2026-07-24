@@ -493,6 +493,21 @@ function HammerDailyPlanBody() {
         })()}
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
+      {checkInQuiz && (
+        <VaultFocusQuizDialog
+          open={checkInQuiz !== null}
+          onOpenChange={(v) => { if (!v) setCheckInQuiz(null); }}
+          quizType={checkInQuiz}
+          existingNightQuiz={checkInQuiz === "night" ? nightQuizRow ? { id: nightQuizRow.id } : null : null}
+          onSubmit={async (data) => {
+            const res = await vaultQuizzes.saveFocusQuiz(checkInQuiz, data as Record<string, unknown>);
+            if (res.success) {
+              setTimeout(() => setCheckInQuiz(null), 400);
+            }
+            return res;
+          }}
+        />
+      )}
     </Card>
   );
 }
