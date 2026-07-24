@@ -89,8 +89,12 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
 
   const roundsToPayload = () =>
     rounds.map((r) => {
-      const out: Record<string, number | null> = {};
-      for (const f of template.fields) out[f.key] = toNum(r[f.key] ?? "");
+      const out: Record<string, number | string | null> = {};
+      for (const f of template.fields) {
+        const raw = r[f.key] ?? "";
+        if (f.kind === "side") out[f.key] = raw || null;
+        else out[f.key] = toNum(raw);
+      }
       return out;
     });
 
