@@ -22,6 +22,11 @@
  */
 import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilters";
 import type { ModalityKey } from "./dailyPlan";
+import {
+  SKILL_MODALITIES,
+  SKILL_DAYS_CEILING,
+  type SkillModality,
+} from "@/lib/hammer/roadmap/skillFrequencyLadder";
 
 /** Day-of-week using JS getDay(): 0=Sun … 6=Sat */
 export type Dow = 0 | 1 | 2 | 3 | 4 | 5 | 6;
