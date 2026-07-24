@@ -186,18 +186,12 @@ Customize exercises to:
       ? `\nEXISTING EXERCISES IN BLOCK (avoid duplicates): ${existingExercises.join(', ')}`
       : '';
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are an elite ${sport} strength and conditioning specialist generating exercises for a specific training block.
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are an elite ${sport} strength and conditioning specialist generating exercises for a specific training block.
 
 BLOCK CONTEXT:
 - Block Type: ${blockType.toUpperCase()} - ${blockDescription}
@@ -227,72 +221,69 @@ BLOCK-SPECIFIC FOCUS:
 - Recovery: Gentle movement (2 sets, 10-15 reps or timed)
 
 Always respond using the generate_block_exercises function.`
-          },
-          {
-            role: "user",
-            content: `Generate exercises for a ${blockType} block with ${blockFocus} focus for a ${sport} athlete.
+        },
+        {
+          role: "user",
+          content: `Generate exercises for a ${blockType} block with ${blockFocus} focus for a ${sport} athlete.
 ${personalize ? '\nThis is a PERSONALIZED request - include reasoning that mentions the athlete\'s specific goals and any modifications made for their needs.' : ''}
 
 Return 3-6 exercises that are optimal for this block type and focus.`
-          }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_block_exercises",
-              description: "Generate exercises for a specific training block",
-              parameters: {
-                type: "object",
-                properties: {
-                  exercises: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        name: { type: "string" },
-                        sets: { type: "number" },
-                        reps: { type: "number" },
-                        rest: { type: "number" },
-                        tempo: { type: "string" },
-                        velocity_intent: { type: "string", enum: ["slow", "moderate", "fast", "ballistic"] },
-                        cns_demand: { type: "string", enum: ["low", "medium", "high"] },
-                        coaching_cues: { type: "array", items: { type: "string" } }
-                      },
-                      required: ["id", "name", "sets", "reps"]
-                    }
-                  },
-                  reasoning: { type: "string" },
-                  estimatedDuration: { type: "number" }
+        }
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "generate_block_exercises",
+            description: "Generate exercises for a specific training block",
+            parameters: {
+              type: "object",
+              properties: {
+                exercises: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      name: { type: "string" },
+                      sets: { type: "number" },
+                      reps: { type: "number" },
+                      rest: { type: "number" },
+                      tempo: { type: "string" },
+                      velocity_intent: { type: "string", enum: ["slow", "moderate", "fast", "ballistic"] },
+                      cns_demand: { type: "string", enum: ["low", "medium", "high"] },
+                      coaching_cues: { type: "array", items: { type: "string" } }
+                    },
+                    required: ["id", "name", "sets", "reps"]
+                  }
                 },
-                required: ["exercises", "reasoning", "estimatedDuration"]
-              }
+                reasoning: { type: "string" },
+                estimatedDuration: { type: "number" }
+              },
+              required: ["exercises", "reasoning", "estimatedDuration"]
             }
           }
-        ],
-        tool_choice: { type: "function", function: { name: "generate_block_exercises" } },
-      }),
-    });
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "generate_block_exercises" } },
+    }, { timeoutMs: 90_000 });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
+    if (!aiResp.ok) {
+      console.error("AI provider error:", aiResp.status, aiResp.errorBody?.slice(0, 300));
+      if (aiResp.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later.", exercises: [] }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
+      if (aiResp.status === 402) {
         return new Response(JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace.", exercises: [] }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`AI provider error: ${aiResp.status}`);
     }
 
-    const aiResponse = await response.json();
+    const aiResponse = aiResp.data;
 
     interface BlockWorkoutResult {
       exercises: GeneratedExercise[];
