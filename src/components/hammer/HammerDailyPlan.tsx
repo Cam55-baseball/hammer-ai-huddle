@@ -66,6 +66,7 @@ import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
+import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
