@@ -52,6 +52,26 @@ import {
   type RoadmapDay,
   type WeeklyTemplate,
 } from "./weeklyMicrocycle";
+import {
+  resolveRoadmapRung,
+  type RoadmapRungDescriptor,
+} from "@/lib/hammer/roadmap/roadmapLadder";
+import {
+  resolveSeasonQuarter,
+  type QuarterDescriptor,
+} from "@/lib/hammer/roadmap/seasonQuarters";
+import {
+  applyRecoveryWindows,
+  type RecentCompletions,
+} from "@/lib/hammer/roadmap/recoveryWindows";
+import {
+  prescribeThrowingLadder,
+  type ThrowingLadderPrescription,
+} from "@/lib/hammer/roadmap/throwingLadder";
+import {
+  resolveEliteTarget,
+  type EliteTarget,
+} from "@/lib/hammer/roadmap/eliteTarget";
 
 
 
@@ -1183,6 +1203,18 @@ export interface HammerDailyPlanResult {
   readonly weeklyRoadmap: ReadonlyArray<RoadmapDay>;
   /** Selected weekly template — surfaced so the UI can label the week. */
   readonly weeklyTemplate: WeeklyTemplate;
+  /**
+   * Elite roadmap position — rung on the long build toward MLB/AUSL loads
+   * and the current season quarter mesocycle. Interpretive-only; the plan
+   * never authors organism truth from this.
+   */
+  readonly roadmap: {
+    readonly rung: RoadmapRungDescriptor;
+    readonly rungRationale: string;
+    readonly quarter: QuarterDescriptor;
+    readonly eliteTarget: EliteTarget;
+    readonly throwingLadder: ThrowingLadderPrescription | null;
+  };
 }
 
 
@@ -1729,6 +1761,11 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 }
 
 
+export interface RoadmapInputs {
+  readonly recentCompletions?: RecentCompletions;
+  readonly phaseStartedAt?: string | null;
+}
+
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
   scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
@@ -1736,6 +1773,7 @@ export function buildHammerDailyPlan(
   gpSignal: GpSignalForPlan | null = null,
   identityOverride?: { isSwitchHitter?: boolean; isAmbidextrousThrower?: boolean },
   today: Date = new Date(),
+  roadmapInputs: RoadmapInputs = {},
 ): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
@@ -1744,6 +1782,14 @@ export function buildHammerDailyPlan(
   const weeklyTemplate = resolveWeeklyTemplate(proj);
   const microcycle = applyMicrocycle(weeklyTemplate, today);
   const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today);
+
+  // Roadmap primitives — rung + season quarter + elite target + throwing ladder.
+  const rung = resolveRoadmapRung(proj);
+  const quarter = resolveSeasonQuarter(proj, roadmapInputs.phaseStartedAt ?? null, today);
+  const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
+  const positionRaw = (ctx.get<string>("position_primary")?.value as string | null) ?? null;
+  const eliteTarget = resolveEliteTarget(sportRaw);
+  const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
 
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
@@ -1756,7 +1802,29 @@ export function buildHammerDailyPlan(
   // needed (schedule posture stays supreme over microcycle rest).
   const cycled = applyWeeklyMicrocycle(ordered, microcycle);
 
-  const modulated = applyScheduleModulation(cycled, scheduleSignal);
+  // Timestamp-driven recovery windows (24/48/72/96h) — trims lift/speed/bat-
+  // speed/throwing blocks based on when they were last completed. Never
+  // promotes a block; safety-first layers ran already.
+  const recovered = applyRecoveryWindows(
+    cycled,
+    rung.descriptor.rung,
+    quarter,
+    roadmapInputs.recentCompletions ?? [],
+    today,
+  );
+
+  // Stamp the throwing volume ladder into the throwing block(s).
+  const withThrowingLadder = recovered.map((b) => {
+    if (b.modality !== "throwing") return b;
+    if (b.status !== "ready") return b;
+    return {
+      ...b,
+      steps: [throwingLadder.headline, ...b.steps],
+      roadmapReason: `${throwingLadder.rationale} · ${b.roadmapReason}`,
+    };
+  });
+
+  const modulated = applyScheduleModulation(withThrowingLadder, scheduleSignal);
   const sided = applySideBias(modulated, sideBias);
   const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
 
@@ -1772,7 +1840,9 @@ export function buildHammerDailyPlan(
   }
   if (typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
-    console.debug(`[dailyPlan] microcycle=${weeklyTemplate.id} (${weeklyTemplate.label})`);
+    console.debug(
+      `[dailyPlan] microcycle=${weeklyTemplate.id} · rung=${rung.descriptor.rung} · ${quarter.label}`,
+    );
   }
   if (gpBiasTags.length > 0 && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -1790,6 +1860,13 @@ export function buildHammerDailyPlan(
     microcycle,
     weeklyRoadmap,
     weeklyTemplate,
+    roadmap: {
+      rung: rung.descriptor,
+      rungRationale: rung.rationale,
+      quarter,
+      eliteTarget,
+      throwingLadder,
+    },
   };
 }
 
