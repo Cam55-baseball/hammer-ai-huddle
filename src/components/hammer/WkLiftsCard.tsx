@@ -19,7 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle, Dumbbell, Loader2, RefreshCw, Lock } from "lucide-react";
+import { AlertTriangle, Dumbbell, Loader2, RefreshCw, Lock, ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
