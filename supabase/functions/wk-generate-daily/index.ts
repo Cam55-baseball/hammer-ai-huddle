@@ -328,6 +328,7 @@ const handler = async (req: Request): Promise<Response> => {
       gamesToday: gamesToday ?? [],
       practicesToday: practicesToday ?? [],
       trainingAgeCtx: trainingAgeContext,
+      sideOverride,
     });
 
     // -------- Phase 6: Personalization Context --------
