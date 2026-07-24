@@ -7,6 +7,7 @@ import {
   inferCategory, isComplete, applyFallbacks, describeMissing,
   REQUIRED_MICROS, type Category, type MicroKey,
 } from "../_shared/hydrationCategoryRules.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
