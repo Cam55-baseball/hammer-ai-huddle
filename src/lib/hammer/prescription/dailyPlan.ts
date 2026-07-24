@@ -1585,7 +1585,8 @@ export function buildHammerDailyPlan(
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
-  const guarded = applyMinorParentSupremacy(rawBlocks, proj);
+  const lateralized = splitLateralityBlocks(rawBlocks, ctx);
+  const guarded = applyMinorParentSupremacy(lateralized, proj);
   const ordered = applyCategoryGoalOrdering(guarded, proj);
   // Schedule modulation runs AFTER goal ordering so the calendar can
   // visibly bend today's plan around games/tournaments/camps/travel.
