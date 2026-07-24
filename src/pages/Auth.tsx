@@ -340,6 +340,15 @@ const Auth = () => {
                 <UserPlus className="h-4 w-4 mr-2" />
                 {t('auth.dontHaveAccount')}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="w-full mt-3"
+              >
+                Landing Page
+              </Button>
             </div>
           ) : !isForgotPassword && !isLogin ? (
             <div className="mt-6">
