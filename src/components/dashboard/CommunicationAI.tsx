@@ -191,7 +191,7 @@ export function CommunicationAI({ className }: Props) {
         ) : null}
       </div>
 
-      <div className="relative mt-3">
+      <div className="relative mt-3 flex flex-wrap items-center gap-3">
         <Button
           size="sm"
           onClick={() => handleCta(step.ctaRoute)}
@@ -199,8 +199,18 @@ export function CommunicationAI({ className }: Props) {
         >
           {step.ctaLabel}
         </Button>
+        {lifestyleStale && (
+          <button
+            type="button"
+            onClick={() => setIntakeOpen(true)}
+            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+          >
+            Personalize your signal
+          </button>
+        )}
       </div>
       <QuickCheckInSheet open={checkInOpen} onOpenChange={setCheckInOpen} />
+      <LifestyleIntakeSheet open={intakeOpen} onOpenChange={setIntakeOpen} />
     </section>
   );
 }
