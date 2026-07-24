@@ -1,73 +1,49 @@
-Hammer Today Checklist Tracking
+Goal: switch hitters and ambidextrous throwers are no longer silently defaulted to "R" in the Today Plan, and arm-care exposure is appropriate, role-aware, and never duplicated.
 
-Goal: Give every card in Hammer Today a persistent, per-drill checklist that athletes can check off while keeping the existing card-level Done/Skip button. Checking all tasks marks the card done; marking the card done checks all tasks.
+What we learned from the codebase
+- `SideContext` already knows who is a switch hitter / ambidextrous thrower and stores `last_used_side` in `athlete_side_preferences`, but the side pickers were intentionally removed from the Today Plan header.
+- `HammerDailyPlan` renders `BlockSideBadge` from `SideContext`, but the plan builder (`buildHammerDailyPlan`) only consumes a computed "weaker-side bias" cache; it does not receive the active selected side.
+- `useWkDailyPrescriptions` already sends `side_hit` and `side_throw` to the `wk-generate-daily` edge function, but the edge function ignores them: the request body type only declares `plan_date`/`recent_ack`, and `resolveAthleteContext` reads non-existent `sidePreference.throwing_side`/`hitting_side` instead of the request body fields.
+- Arm care is generated twice: the EASS throwing block always starts with band prep, and the `wk-generate-daily` lift composer always injects an `arm_care` role into the lift slot. The UI suppresses the lift-card display via `ArmCareBudgetContext`, but the underlying prescription still exists and can confuse the user.
+- Arm care is not meaningfully scaled by position: infielders/outfielders receive the same full EASS stack as pitchers, and the two-way template is the only position-aware variant.
 
+Proposed changes
 
-### What we'll build
+1. Restore side pickers in the Today Plan header
+   - Add a compact L/R toggle for `hit` when `isSwitchHitter` is true, and for `throw` when `isAmbidextrousThrower` is true.
+   - Wire each toggle to `SideContext.setSide`, which persists to `athlete_side_preferences`.
+   - Update the `BlockSideBadge` tooltip so it says "Toggle here or in Analyze/DelayCam".
 
-1. Database table for task completions
-   - New table `public.hammer_daily_task_completions` keyed by `user_id`, `plan_date`, `task_id`.
-   - Columns: `source` (wk_prescription | block_drill), `source_ref` (modality or prescription id), `payload` JSONB (drill name/dosage), `completed` boolean, `completed_at`, `created_at`, `updated_at`.
-   - RLS policy: users can only see/change their own rows.
-   - GRANTs: `authenticated` gets SELECT/INSERT/UPDATE/DELETE; `service_role` gets ALL.
-   - `updated_at` trigger.
+2. Thread the active side into the daily plan builder
+   - Change `buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan)` to accept `activeSide: { hit: Side; throw: Side }`.
+   - In the `hitting` block: if the athlete is a switch hitter, default to the active side but still expose both sides (keep the current split). When the user explicitly selects a single side, surface that side first and make the weaker side optional. Add a side note explaining why both sides are shown.
+   - In the `throwing` block: if the athlete is ambidextrous, mirror low-cost neural prep on the non-dominant arm (already present) but keep max-intent work on the active selected side. Add a `BlockSideBadge` for throwing/defense.
+   - In the `defense` block: tag the active throwing side for fielding drills (e.g., glove hand / throwing-side first-step cue).
 
-2. Stable task identifiers
-   - Wk cards: `task_id = <prescription_id>`; card-level status comes from `wk_prescriptions.status`.
-   - Block cards (warmup, hitting, throwing, defense, baserunning, game_iq, fueling, recovery): `task_id = <modality>:<drill.slug or slugified name>:<plan_date>`; `source_ref = modality`.
+3. Make the workout generator respect the active side
+   - Update the `wk-generate-daily` request body type to include `side_hit?: "L" | "R"` and `side_throw?: "L" | "R"`.
+   - Map the `athlete_side_preferences` row (which stores `discipline`/`last_used_side`/`dominant_side`) to the correct active side before passing to `resolveAthleteContext`.
+   - Override `athleteContext.identity.hitting_side` and `throwing_side` with the request body value when present; otherwise fall back to profile/bats/throws.
+   - Store the active side in `wk_prescriptions.why_payload.side` so the Wk cards can render a side note on bat-speed, lift, and conditioning prescriptions where relevant.
+   - Update `WkPrescriptionCard` to show the side tag when `why_payload.side` is present and the athlete is switch/ambi.
 
-3. Data hook
-   - New `useHammerDailyTasks(planDate)` hook in `src/hooks/useHammerDailyTasks.ts`.
-   - Fetches all completion rows for the user + date.
-   - Returns helpers: `toggleTask(taskId, completed)`, `completeAll(sourceRef, tasks[])`, `resetAll(sourceRef)`.
-   - Optimistic UI updates + invalidates `wk-rx` and `hammer-context` queries as needed.
-   - For Wk tasks, it will also read `wk_prescriptions.status` from the canonical `HammersTodayProvider` snapshot and treat `completed` as checked, `skipped` as skipped.
+4. Audit and scale arm-care volume by role and phase
+   - In `eassLibrary.ts`, reduce the default throwing-day stack for non-pitcher position players: in-season infielders/outfielders get `band prep + regulation catch + position skill + cooldown` (remove tennis ball, underload, long-toss, intent, overload). Off/pre-season non-pitchers get a short underload/regulation pair.
+   - Keep the full stack for pitchers, catchers (pop-time work), and two-way players because the throwing load is central to their role.
+   - Add a `roleBudget` to the EASS context: `position_player` (≤15 min), `catcher` (≤18 min), `pitcher`/`two_way` (≤30 min in off-season, ≤22 min in-season). Clamp `durationMin` to the budget.
+   - In `wk-generate-daily`, do not auto-inject `arm_care` into the lift slot when the training context indicates a throwing block is being rendered that day (use the existing `isThrowingDay` or `game_today` flags). The lift card will instead show the existing "Arm care handled by throwing block" message.
+   - On non-throwing days, keep the single `arm_care` lift primer from the catalog picker, but cap it to one movement and reduce volume for position players.
+   - Expose a one-line rationale on the throwing block: e.g., "Pitcher — full arm-care stack today" or "Infielder — short maintenance arm care" so the athlete understands why the volume is what it is.
 
-4. Card-level UI
-   - `WkPrescriptionCard`: add a checkbox in the card header. Checked = `status === 'completed'`. Unchecking returns status to `planned`. Keep the existing Complete/Skip buttons inside the expanded content (they do the same thing).
-   - `BlockCard`: add a checkbox to each `DrillRow`. Checked = task completion row exists and `completed = true`. When all drills are checked, the card-level `BlockCompletionControls` shows "Done" and the card visually dims/completes.
-   - Progress mini-badge: each card shows "X/Y done" in the header when partially complete.
+5. Validation / regression
+   - Add/update unit tests for:
+     - `resolveAthleteContext` with request body side overrides.
+     - `buildEassPrescription` duration budgets for position_player vs pitcher.
+     - `buildHammerDailyPlan` hitting block splits for switch hitters and active-side selection.
+   - Run the existing side-context E2E fixture (`tests/e2e/side-context/switch-hitter.spec.ts`) and extend it to verify the side picker changes the Today Plan badge.
+   - Verify the `wk-generate-daily` edge function compiles and the EASS throwing block still publishes for pitcher, catcher, and infielder roles.
 
-5. Bidirectional sync
-   - Card-level "Done" (BlockCompletionControls / WkCardCompletion) writes:
-     - For Wk: bulk update `wk_prescriptions.status = 'completed'` for all rows in that slot + insert/update task rows.
-     - For Block: insert/update all task rows to `completed = true` and record the localStorage engagement state as done.
-   - Card-level "Skip" writes all tasks skipped (or suppressed) and updates engagement state.
-   - Checking the last unchecked task in a card automatically triggers the card-level "Done" path.
-   - Unchecking the only checked task in a done card reverts the card to "planned".
-   - All mutations emit canonical row-level updates and the Learning Loop session-log insert where applicable (already done for Wk prescriptions; Block drills are best-effort only via the existing Game Plan path).
-
-6. Streaks & engagement continuity
-   - Keep `dailyEngagement` localStorage for the streak/rotation engine, but derive the card-level completion state from the database first when available.
-   - `BlockCompletionControls` and `WkCardCompletion` will read actual task/prescription status rather than relying solely on localStorage so buttons stay accurate after refresh.
-
-
-### Files to change
-
-- `supabase/migrations/...` (new migration for `hammer_daily_task_completions`)
-- `src/integrations/supabase/types.ts` (regenerated after migration)
-- `src/hooks/useHammerDailyTasks.ts` (new)
-- `src/components/hammer/WkPrescriptionCard.tsx` (add checkbox + sync)
-- `src/components/hammer/WkCardCompletion.tsx` (derive state from DB + bulk sync)
-- `src/components/hammer/BlockCompletionControls.tsx` (derive state from DB + bulk sync)
-- `src/components/hammer/HammerDailyPlan.tsx` (wire task hook into `BlockCard` and `DrillRow`, show progress badge)
-- `src/components/hammer/HammersTodayProvider.tsx` (expose `planDate` so cards can build stable task IDs)
-
-
-### Technical details
-
-- The plan date used by `HammersTodayProvider` defaults to `todayStr()`; we'll expose it in the context so `BlockCard` and `DrillRow` can build `task_id` without recomputing it.
-- Wk prescription rows are already uniquely identified by `id` and have a `status` column; the checklist will mirror that status through the new hook, writing a task row on completion to keep Block and Wk cards consistent.
-- For Block cards that do not have a drill slug (warmup drills are sometimes dynamic), we fall back to a deterministic slugified version of the drill name + dosage so the same drill on the same day gets the same id.
-- UI checkboxes use the `Checkbox` component from `@/components/ui/checkbox`.
-- Mutations use TanStack Query for optimistic updates and `toast` for success/error.
-
-
-### Verification
-
-1. Build passes and TypeScript types are consistent.
-2. Manual preview check: open Hammer Today, verify each card shows checkboxes, check individual drills, confirm "Done" state updates.
-3. Test bidirectional sync: mark a card done → all boxes check; uncheck one box → card reverts to in-progress.
-4. Refresh the page → completed state persists.
-5. Streaks/Daily Intent header still react to card-level completion.
-6. No duplicate or missing task IDs (slugified names unique per modality per day).
+Out of scope
+- No new tables; `athlete_side_preferences` already exists and is the source of truth.
+- No backend secrets or external APIs needed.
+- No changes to the global design tokens; only the plan header and badges use existing UI components.
