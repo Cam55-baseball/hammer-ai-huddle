@@ -171,6 +171,7 @@ const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
   "awaiting-input": "border-amber-500/30 bg-amber-500/5",
   suppressed: "border-muted/30 opacity-60",
+  "off-day": "border-muted/40 bg-muted/5 opacity-75",
 };
 
 const PHASE_TONE: Record<string, string> = {
