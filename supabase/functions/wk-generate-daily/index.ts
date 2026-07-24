@@ -486,6 +486,32 @@ const handler = async (req: Request): Promise<Response> => {
     const pickCat = (cat: string): MovementRow | undefined =>
       lib.find((m) => m.category === cat && eligible(m));
 
+    // Cross-sport picker: must match the template's required category so the
+    // certifier's `xs.<category>` template resolves cleanly. Otherwise the
+    // whole plan fails with `xs_unresolved_template`.
+    const pickCrossSportForTemplate = (
+      requiredCategories: readonly string[],
+      preferredSlugPools: string[][],
+    ): MovementRow | undefined => {
+      const requiredSet = new Set(requiredCategories);
+      const matchesRequired = (m: MovementRow | undefined | null) =>
+        !!m && requiredSet.has(String((m as any).cross_sport_category ?? ""));
+      // 1) Preferred pools that match the required category.
+      for (const pool of preferredSlugPools) {
+        for (const slug of pool) {
+          const m = lib.find((x) => x.slug === slug);
+          if (eligible(m) && matchesRequired(m)) return m;
+        }
+      }
+      // 2) Any eligible cross-sport movement with the required category.
+      return lib.find(
+        (m) =>
+          m.category === "cross_sport" &&
+          eligible(m) &&
+          matchesRequired(m),
+      );
+    };
+
     // -------- Rotate unilateral lower / upper push across the week --------
     const dayOfWeek = new Date(planDate + "T00:00:00").getDay(); // 0..6
 
