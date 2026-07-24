@@ -72,6 +72,13 @@ import {
   resolveEliteTarget,
   type EliteTarget,
 } from "@/lib/hammer/roadmap/eliteTarget";
+import {
+  SKILL_MODALITIES,
+  resolveSkillDaysTarget,
+  projectSkillLadder,
+  type SkillModality,
+  type SkillLadderRow,
+} from "@/lib/hammer/roadmap/skillFrequencyLadder";
 
 
 
