@@ -1776,6 +1776,65 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Calendar view removed - now use dedicated /calendar page
   // Users can access via navigation sidebar
 
+  if (planHidden) {
+    return (
+      <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 transform rotate-45 translate-x-20 -translate-y-20" />
+        <CardContent className="relative p-4 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-primary">
+                <Target className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+                  {t('gamePlan.title')}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPlanHidden(false)}
+              className="h-8 px-2 gap-1 text-xs text-white/70 hover:text-white"
+              title="Show Game Plan"
+            >
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">Show plan</span>
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={handleQuickLogClick}
+              className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
+            >
+              <Utensils className="h-4 w-4" />
+              {t('customActivity.logMeal')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setQuickNoteOpen(true)}
+              className="gap-2 border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+            >
+              <NotebookPen className="h-4 w-4" />
+              Quick Note
+            </Button>
+          </div>
+        </CardContent>
+        <QuickNoteDialog open={quickNoteOpen} onOpenChange={setQuickNoteOpen} />
+        <QuickNutritionLogDialog
+          open={quickLogOpen}
+          onOpenChange={setQuickLogOpen}
+        />
+      </Card>
+    );
+  }
+
   return (
     <Card
       className={cn(
