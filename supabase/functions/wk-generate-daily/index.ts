@@ -911,19 +911,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Cross-sport (its own slot, appended) --------
     // Prefer Weightless Object Sport Training coordination for youth/beginner
-    // athletes; fall back to any legal cross-sport movement in the catalog.
-    const cross =
-      pickFirst(CROSS_SPORT_COORDINATION_PREFERRED) ??
-      lib.find((m) => m.category === "cross_sport" && eligible(m));
-    if (cross && isOffseason && !isGameDay) {
-      push(
-        "cross_sport",
-        "cross_sport",
-        cross,
-        {},
-        `Offseason cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns after the main training day.`,
-        { placement: "offseason_back_end", sequencing_hint: "Offseason only: do after the primary work, never before an in-season game." },
-      );
+    // athletes; select a movement whose cross_sport_category matches the
+    // resolved template. If nothing matches, skip cleanly — an unmatched
+    // pick would fail the certifier and kill the whole plan.
+    if (isOffseason && !isGameDay) {
+      const cross = pickCrossSportForTemplate(xsRequired, [
+        CROSS_SPORT_COORDINATION_PREFERRED,
+        CROSS_SPORT_LOW_IMPACT_PREFERRED,
+      ]);
+      if (cross) {
+        push(
+          "cross_sport",
+          "cross_sport",
+          cross,
+          {},
+          `Offseason cross-sport conditioning (${block.cross_sport_cadence.replace(/_/g, " ")}). Frees CNS from sport patterns after the main training day.`,
+          { placement: "offseason_back_end", sequencing_hint: "Offseason only: do after the primary work, never before an in-season game.", cross_sport_template_id: xsTemplate.id, cross_sport_required_category: xsRequired[0] ?? null },
+        );
+      }
     }
 
     // Phase 2 Fix 5 — deterministic canonical ordering. This is the ONLY
