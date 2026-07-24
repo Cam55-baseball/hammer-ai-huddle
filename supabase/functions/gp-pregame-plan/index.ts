@@ -133,8 +133,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const LOVABLE = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+    const LOVABLE = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!LOVABLE) return json({ error: "No AI credentials configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, ANON, {
