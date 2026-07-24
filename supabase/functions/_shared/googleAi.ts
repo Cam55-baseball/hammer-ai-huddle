@@ -129,6 +129,8 @@ async function toGooglePayload(req: ChatCompletionRequest): Promise<Record<strin
   const generationConfig: Record<string, unknown> = {};
   if (typeof req.temperature === "number") generationConfig.temperature = req.temperature;
   if (typeof req.max_tokens === "number") generationConfig.maxOutputTokens = req.max_tokens;
+  if (typeof req.top_p === "number") generationConfig.topP = req.top_p;
+  if (typeof req.seed === "number") generationConfig.seed = req.seed;
   if (req.response_format?.type === "json_object") {
     generationConfig.responseMimeType = "application/json";
   }
