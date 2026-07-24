@@ -11,6 +11,7 @@ import { RecentEventsPreview } from "@/components/command/cards/RecentEventsPrev
 import { HammerOnboardingChat } from "@/components/hammer/HammerOnboardingChat";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
 import { HammerChat } from "@/components/hammer/HammerChat";
+import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
 
 /**
  * Athlete Command Center deep-link route. Canonical Coach Hammer surface.
@@ -55,6 +56,8 @@ export default function AthleteCommand() {
         {/* UHRC report card removed from Command Center — now lives per-analysis under each video result. */}
 
         <CommandCenterSection defaultSignalsOpen />
+
+        <HumanPerformanceCard />
 
         <HammerDailyPlan />
 
