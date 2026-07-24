@@ -105,14 +105,20 @@ export function resolveAthleteContext(input: {
   gamesToday: any[] | null;
   practicesToday: any[] | null;
   trainingAgeCtx: TrainingAgeContext;
+  /** Optional per-request overrides — Today Plan side picker (switch/ambi). */
+  sideOverride?: { hit?: Side; throw?: Side } | null;
 }): AthleteContext {
   const p = input.profile ?? {};
   const sport: Sport = (p.sport === "softball" ? "softball" : "baseball");
   const missing: string[] = [];
   const need = (present: boolean, key: string) => { if (!present) missing.push(key); };
 
-  const throwingSide = toSide(input.sidePreference?.throwing_side ?? p.throwing_hand ?? p.throws);
-  const hittingSide = toSide(input.sidePreference?.hitting_side ?? p.batting_hand ?? p.bats);
+  const throwingSide =
+    (input.sideOverride?.throw as Side) ??
+    toSide(input.sidePreference?.throwing_side ?? p.throwing_hand ?? p.throws);
+  const hittingSide =
+    (input.sideOverride?.hit as Side) ??
+    toSide(input.sidePreference?.hitting_side ?? p.batting_hand ?? p.bats);
   const handedness = toSide(p.handedness) ?? throwingSide;
   const primary = p.primary_position ?? p.position ?? null;
   const secondary = p.secondary_position ?? null;
