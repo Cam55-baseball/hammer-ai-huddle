@@ -17,7 +17,12 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 
-export function WkBatSpeedCard() {
+interface Props {
+  /** For switch hitters, render this card twice — once per side. */
+  readonly side?: "L" | "R" | null;
+}
+
+export function WkBatSpeedCard({ side = null }: Props = {}) {
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
   const entry = getCard("bat_speed")!;
   const items = grouped.batSpeedCard;
@@ -27,18 +32,26 @@ export function WkBatSpeedCard() {
     snapshotIdentity.season_phase,
   );
 
+  const sideLabel = side === "L" ? "Left-handed" : side === "R" ? "Right-handed" : null;
+
   return (
     <Card
       className="border-fuchsia-500/30"
       data-card-type={entry.cardType}
       data-display-order={entry.displayOrder}
       data-generation-id={snapshotIdentity.generation_id ?? ""}
+      data-side={side ?? ""}
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Bolt className="h-4 w-4 text-fuchsia-500 shrink-0" />
-            <span className="truncate">Bat Speed</span>
+            <span className="truncate">Bat Speed{sideLabel ? ` — ${sideLabel}` : ""}</span>
+            {sideLabel && (
+              <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
+                {side}
+              </Badge>
+            )}
             <Badge variant="outline" className="text-[10px]">
               {isGameDay ? "Game day · light" : "Warm and ready"}
             </Badge>
@@ -60,7 +73,14 @@ export function WkBatSpeedCard() {
           items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
         )}
         <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
-        {items.length > 0 && <WkCardCompletion modality="bat_speed" modalityLabel="Bat Speed" items={items} />}
+        {items.length > 0 && (
+          <WkCardCompletion
+            modality="bat_speed"
+            modalityLabel={sideLabel ? `Bat Speed (${sideLabel})` : "Bat Speed"}
+            items={items}
+            side={side}
+          />
+        )}
         {items.length > 0 && <CardActions modality="bat_speed" items={items} phaseDisplay={label} />}
       </CardContent>
     </Card>
