@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +15,8 @@ serve(async (req) => {
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!LOVABLE_API_KEY && !GOOGLE_AI_API_KEY) throw new Error("No AI credentials configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -108,20 +110,12 @@ serve(async (req) => {
         )
         .join("\n\n");
 
-      const response = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              {
-                role: "system",
-                content: `You are an elite baseball/softball coaching expert who writes GAME-SPEED, FIELD-READY drill instructions. Every instruction set must enable a player to execute the drill PERFECTLY at full intensity WITHOUT a video and WITHOUT a coach present.
+      const aiResp = await chatCompletion({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: `You are an elite baseball/softball coaching expert who writes GAME-SPEED, FIELD-READY drill instructions. Every instruction set must enable a player to execute the drill PERFECTLY at full intensity WITHOUT a video and WITHOUT a coach present.
 
 ELITE STANDARD — EVERY DRILL MUST MEET ALL OF THESE:
 
@@ -164,111 +158,60 @@ NEVER use: "focus on", "work on", "improve", "practice", "try to", "make sure to
 
 ═══ REQUIRED VERBS ═══
 Use these: drive, explode, snap, rotate, extend, plant, fire, whip, rip, punch, load, transfer, engage, brace, attack, funnel, channel, lock, release, clear`,
-              },
-              {
-                role: "user",
-                content: `Generate ELITE-LEVEL, field-ready instructions for these ${batch.length} drills. Every drill must meet ALL standards above — 6+ execution steps, specific distances, reps/sets, yellable cues, detailed mistakes with causes, and concrete progressions.\n\n${drillDescriptions}\n\nReturn structured data using the generate_instructions function.`,
-              },
-            ],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "generate_instructions",
-                  description:
-                    "Generate elite field-ready drill instructions for each drill",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      instructions: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            drill_index: {
-                              type: "integer",
-                              description: "0-based index matching the drill order",
-                            },
-                            purpose: {
-                              type: "string",
-                              description:
-                                "WHY this drill matters in a game context. 1-2 sentences connecting to real game situations.",
-                            },
-                            setup: {
-                              type: "string",
-                              description:
-                                "EXACT setup with: distances in feet/yards, all equipment, starting stance with body positions (feet/hands/hips/eyes), specific reps AND sets.",
-                            },
-                            execution: {
-                              type: "array",
-                              items: { type: "string" },
-                              minItems: 6,
-                              description:
-                                "MINIMUM 6 step-by-step instructions. EACH step must include: specific body movement + direction + timing/sequencing. No vague steps allowed.",
-                            },
-                            coaching_cues: {
-                              type: "array",
-                              items: { type: "string" },
-                              minItems: 3,
-                              maxItems: 5,
-                              description:
-                                "3-5 short (3-6 word) cues a coach yells MID-REP. Imperative voice, action verbs only.",
-                            },
-                            mistakes: {
-                              type: "array",
-                              items: { type: "string" },
-                              minItems: 3,
-                              description:
-                                "3+ mistakes. EACH must state: (1) the incorrect movement, (2) why it happens, (3) what game consequence it causes.",
-                            },
-                            progression: {
-                              type: "array",
-                              items: { type: "string" },
-                              minItems: 3,
-                              description:
-                                "3+ progressions using specific mechanisms: speed, reaction, movement, pressure, or constraint. Each must be concrete and measurable.",
-                            },
-                          },
-                          required: [
-                            "drill_index",
-                            "purpose",
-                            "setup",
-                            "execution",
-                            "coaching_cues",
-                            "mistakes",
-                            "progression",
-                          ],
-                        },
+          },
+          {
+            role: "user",
+            content: `Generate ELITE-LEVEL, field-ready instructions for these ${batch.length} drills. Every drill must meet ALL standards above — 6+ execution steps, specific distances, reps/sets, yellable cues, detailed mistakes with causes, and concrete progressions.\n\n${drillDescriptions}\n\nReturn structured data using the generate_instructions function.`,
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "generate_instructions",
+              description: "Generate elite field-ready drill instructions for each drill",
+              parameters: {
+                type: "object",
+                properties: {
+                  instructions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        drill_index: { type: "integer" },
+                        purpose: { type: "string" },
+                        setup: { type: "string" },
+                        execution: { type: "array", items: { type: "string" }, minItems: 6 },
+                        coaching_cues: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 5 },
+                        mistakes: { type: "array", items: { type: "string" }, minItems: 3 },
+                        progression: { type: "array", items: { type: "string" }, minItems: 3 },
                       },
+                      required: ["drill_index", "purpose", "setup", "execution", "coaching_cues", "mistakes", "progression"],
                     },
-                    required: ["instructions"],
                   },
                 },
+                required: ["instructions"],
               },
-            ],
-            tool_choice: {
-              type: "function",
-              function: { name: "generate_instructions" },
             },
-          }),
-        }
-      );
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "generate_instructions" } },
+      }, { timeoutMs: 120_000 });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error(`AI error for batch ${i / batchSize}:`, response.status, errText);
-        if (response.status === 429) {
+      if (!aiResp.ok) {
+        console.error(`AI error for batch ${i / batchSize}:`, aiResp.status, aiResp.errorBody?.slice(0, 200));
+        if (aiResp.status === 429) {
           console.log("Rate limited, waiting 30s...");
           await new Promise((r) => setTimeout(r, 30000));
           i -= batchSize;
           continue;
         }
-        errors.push(`Batch ${i / batchSize}: AI error ${response.status}`);
+        errors.push(`Batch ${i / batchSize}: AI error ${aiResp.status}`);
         failedCount += batch.length;
         continue;
       }
 
-      const aiResult = await response.json();
+      const aiResult = aiResp.data;
       const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
       if (!toolCall) {
         errors.push(`Batch ${i / batchSize}: No tool call in response`);

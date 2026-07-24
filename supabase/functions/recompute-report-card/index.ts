@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 import {
   getContractFor,
   buildMetricsSchema,
@@ -30,7 +31,7 @@ const BodySchema = z.object({
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY") ?? "";
 
 /**
  * Validate the model's metrics object against the contract. Drop unknown keys,
@@ -145,49 +146,41 @@ ${promptBlock}`;
       .filter(Boolean)
       .join("\n\n");
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        temperature: 0,
-        top_p: 0,
-        seed: stableSeed(video.id),
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "return_metrics",
-              description: "Return the Hammer Report Card structured metrics object.",
-              parameters: {
-                type: "object",
-                properties: { metrics: buildMetricsSchema(contract) },
-                required: ["metrics"],
-              },
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      temperature: 0,
+      top_p: 0,
+      seed: stableSeed(video.id),
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "return_metrics",
+            description: "Return the Hammer Report Card structured metrics object.",
+            parameters: {
+              type: "object",
+              properties: { metrics: buildMetricsSchema(contract) },
+              required: ["metrics"],
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "return_metrics" } },
-      }),
-    });
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "return_metrics" } },
+    }, { timeoutMs: 60_000 });
 
     if (!aiResp.ok) {
-      const txt = await aiResp.text();
-      console.error("[recompute-report-card] AI gateway error", aiResp.status, txt);
-      return new Response(JSON.stringify({ error: "AI gateway error", status: aiResp.status }), {
+      console.error("[recompute-report-card] AI provider error", aiResp.status, aiResp.errorBody?.slice(0, 300));
+      return new Response(JSON.stringify({ error: "AI provider error", status: aiResp.status }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await aiResp.json();
+    const data = aiResp.data;
     const toolCalls = data?.choices?.[0]?.message?.tool_calls;
     let rawMetrics: Record<string, unknown> | null = null;
     if (toolCalls && toolCalls.length > 0) {

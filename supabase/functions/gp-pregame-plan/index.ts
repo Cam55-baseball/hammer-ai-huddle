@@ -18,6 +18,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { startHeartbeat } from "../_shared/withHeartbeat.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -132,8 +133,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const LOVABLE = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+    const LOVABLE = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!LOVABLE) return json({ error: "No AI credentials configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, ANON, {
@@ -233,21 +234,16 @@ serve(async (req) => {
     // ---- AI call ----
     const systemPrompt = role === "hitter" ? PITCHER_SYSTEM_PROMPT : HITTER_SYSTEM_PROMPT;
     const prompt = `${systemPrompt}\n\nINPUT:\n${JSON.stringify(inputs_snapshot).slice(0, 180_000)}`;
-    const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4,
-        response_format: { type: "json_object" },
-      }),
-    });
+    const ai = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+    }, { timeoutMs: 90_000 });
     if (!ai.ok) {
-      const t = await ai.text();
-      throw new Error(`Gemini ${ai.status}: ${t.slice(0, 400)}`);
+      throw new Error(`AI provider ${ai.status}: ${(ai.errorBody ?? "").slice(0, 400)}`);
     }
-    const aiJson = await ai.json();
+    const aiJson = ai.data;
     const raw = String(aiJson?.choices?.[0]?.message?.content ?? "");
     const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
     let plan_json: any = {};

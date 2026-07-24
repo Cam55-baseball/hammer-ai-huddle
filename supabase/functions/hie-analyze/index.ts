@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
 import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctrine.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1162,7 +1163,7 @@ async function generateSmartWeekPlan(
   developmentStatus: string,
   sessionCount: number,
 ): Promise<any[]> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
   if (!LOVABLE_API_KEY) {
     return buildFallbackWeekPlan(weaknesses, readinessScore);
   }
@@ -1186,24 +1187,17 @@ Rules:
 
 Return ONLY the JSON array, no other text.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash-lite",
+      messages: [{ role: "user", content: prompt }],
+    }, { timeoutMs: 60_000 });
 
-    if (!response.ok) {
-      console.error("AI gateway error:", response.status);
+    if (!aiResp.ok) {
+      console.error("AI provider error:", aiResp.status);
       return buildFallbackWeekPlan(weaknesses, readinessScore);
     }
 
-    const result = await response.json();
+    const result = aiResp.data;
     const content = result.choices?.[0]?.message?.content ?? "";
     const match = content.match(/\[[\s\S]*\]/);
     if (match) {

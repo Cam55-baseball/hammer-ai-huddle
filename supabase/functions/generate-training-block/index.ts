@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveSeasonPhase, getSeasonProfile, buildPhasePromptBlock } from "../_shared/seasonPhase.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,7 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 interface WorkoutExercise {
@@ -318,7 +320,7 @@ serve(async (req) => {
     // Active-block guard removed — RPC is the single source of truth for CREATE vs ADAPT.
     console.log("MODE:", force_new ? "ADAPT" : "CREATE");
 
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY && !GOOGLE_AI_API_KEY) throw new Error("No AI credentials configured");
 
     // ─── Resolve schedule: season-aware + calendar-conflict-aware ───
     const planStart = new Date();
@@ -350,18 +352,12 @@ serve(async (req) => {
     console.log('Scheduling resolved:', { seasonPhase, userAvailability, finalAvailability: availability, conflicts: conflictDates.size });
 
     // Call Lovable AI
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are an elite ${sport} strength and conditioning specialist creating a complete 6-week training block.
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are an elite ${sport} strength and conditioning specialist creating a complete 6-week training block.
 
 ATHLETE CONTEXT:
 - Goal: ${goal}
@@ -385,94 +381,92 @@ PROGRAMMING RULES (must respect SEASON PHASE above):
 8. For ${sport} athletes, prioritize rotational power, arm health, and posterior chain
 
 Always respond using the generate_training_block function.`
-          },
-          {
-            role: "user",
-            content: `Generate a complete 6-week ${goal} training block for a ${experienceLevel} ${sport} ${position}. ${workoutsPerWeek} workouts per week. Respect the SEASON PHASE constraints strictly.`
-          }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_training_block",
-              description: "Generate a complete 6-week periodized training block",
-              parameters: {
-                type: "object",
-                properties: {
-                  goal: { type: "string" },
-                  weeks: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        week: { type: "number" },
-                        focus: { type: "string" },
-                        workouts: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              day: { type: "string" },
-                              type: { type: "string" },
-                              estimated_duration: { type: "number" },
-                              exercises: {
-                                type: "array",
-                                items: {
-                                  type: "object",
-                                  properties: {
-                                    name: { type: "string" },
-                                    sets: { type: "number" },
-                                    reps: { type: "number" },
-                                    weight: { type: "number" },
-                                    tempo: { type: "string" },
-                                    rest_seconds: { type: "number" },
-                                    velocity_intent: { type: "string", enum: ["slow", "moderate", "fast", "ballistic"] },
-                                    cns_demand: { type: "string", enum: ["low", "medium", "high"] },
-                                    coaching_cues: { type: "array", items: { type: "string" } }
-                                  },
-                                  required: ["name", "sets", "reps"],
-                                  additionalProperties: false
-                                }
+        },
+        {
+          role: "user",
+          content: `Generate a complete 6-week ${goal} training block for a ${experienceLevel} ${sport} ${position}. ${workoutsPerWeek} workouts per week. Respect the SEASON PHASE constraints strictly.`
+        }
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "generate_training_block",
+            description: "Generate a complete 6-week periodized training block",
+            parameters: {
+              type: "object",
+              properties: {
+                goal: { type: "string" },
+                weeks: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      week: { type: "number" },
+                      focus: { type: "string" },
+                      workouts: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            day: { type: "string" },
+                            type: { type: "string" },
+                            estimated_duration: { type: "number" },
+                            exercises: {
+                              type: "array",
+                              items: {
+                                type: "object",
+                                properties: {
+                                  name: { type: "string" },
+                                  sets: { type: "number" },
+                                  reps: { type: "number" },
+                                  weight: { type: "number" },
+                                  tempo: { type: "string" },
+                                  rest_seconds: { type: "number" },
+                                  velocity_intent: { type: "string", enum: ["slow", "moderate", "fast", "ballistic"] },
+                                  cns_demand: { type: "string", enum: ["low", "medium", "high"] },
+                                  coaching_cues: { type: "array", items: { type: "string" } }
+                                },
+                                required: ["name", "sets", "reps"],
+                                additionalProperties: false
                               }
-                            },
-                            required: ["day", "type", "exercises"],
-                            additionalProperties: false
-                          }
+                            }
+                          },
+                          required: ["day", "type", "exercises"],
+                          additionalProperties: false
                         }
-                      },
-                      required: ["week", "focus", "workouts"],
-                      additionalProperties: false
-                    }
+                      }
+                    },
+                    required: ["week", "focus", "workouts"],
+                    additionalProperties: false
                   }
-                },
-                required: ["goal", "weeks"],
-                additionalProperties: false
-              }
+                }
+              },
+              required: ["goal", "weeks"],
+              additionalProperties: false
             }
           }
-        ],
-        tool_choice: { type: "function", function: { name: "generate_training_block" } },
-      }),
-    });
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "generate_training_block" } },
+    }, { timeoutMs: 120_000 });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      if (response.status === 429) {
+    if (!aiResp.ok) {
+      console.error("AI provider error:", aiResp.status, aiResp.errorBody?.slice(0, 300));
+      if (aiResp.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
+      if (aiResp.status === 402) {
         return new Response(JSON.stringify({ error: "Payment required" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`AI provider error: ${aiResp.status}`);
     }
 
-    const aiResponse = await response.json();
+    const aiResponse = aiResp.data;
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
       throw new Error('Invalid AI response — no tool call returned');

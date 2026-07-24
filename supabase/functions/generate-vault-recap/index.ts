@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chatCompletion } from "../_shared/googleAi.ts";
 import { buildGlobalContext } from "./contextEngine.ts";
 import { getInterpretationProfile } from "./interpretationProfiles.ts";
 import { computeCorrelations } from "./correlationEngine.ts";
@@ -1243,7 +1244,7 @@ serve(async (req) => {
 
 
     // ========== ELITE AI PROMPT ==========
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
     
     let aiContent: any = {
       executive_summary: `You completed ${totalWorkouts} program workouts and ${combinedStrengthSessions} custom strength sessions over the past 6 weeks${combinedVolumeLbs > 0 ? `, with a combined volume of ${combinedVolumeLbs.toLocaleString()} lbs` : ''}.`,
@@ -1767,23 +1768,16 @@ Return ONLY valid JSON with this exact structure:
   }
 }`;
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-pro", // Upgraded for elite analysis
-            messages: [
-              { role: "system", content: "You are an elite sports performance analyst with 20+ years of experience coaching professional and Olympic athletes. Provide specific, data-driven insights with authority. Return ONLY valid JSON." },
-              { role: "user", content: elitePrompt },
-            ],
-          }),
-        });
+        const aiResp = await chatCompletion({
+          model: "google/gemini-2.5-pro",
+          messages: [
+            { role: "system", content: "You are an elite sports performance analyst with 20+ years of experience coaching professional and Olympic athletes. Provide specific, data-driven insights with authority. Return ONLY valid JSON." },
+            { role: "user", content: elitePrompt },
+          ],
+        }, { timeoutMs: 120_000 });
 
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
+        if (aiResp.ok) {
+          const aiData = aiResp.data;
           const aiText = aiData.choices?.[0]?.message?.content || "";
           console.log("AI response received, parsing...");
           
@@ -1819,7 +1813,7 @@ Return ONLY valid JSON with this exact structure:
             console.log("AI content parsed successfully");
           }
         } else {
-          console.error("AI API error:", await aiResponse.text());
+          console.error("AI API error:", aiResp.status, aiResp.errorBody?.slice(0, 200));
         }
       } catch (aiError) {
         console.error("AI generation error:", aiError);

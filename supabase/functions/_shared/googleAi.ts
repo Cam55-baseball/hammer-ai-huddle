@@ -59,6 +59,8 @@ export interface ChatCompletionRequest {
   response_format?: { type?: string } & Record<string, unknown>;
   temperature?: number;
   max_tokens?: number;
+  top_p?: number;
+  seed?: number;
 }
 
 export interface ChatCompletionResult {
@@ -127,6 +129,8 @@ async function toGooglePayload(req: ChatCompletionRequest): Promise<Record<strin
   const generationConfig: Record<string, unknown> = {};
   if (typeof req.temperature === "number") generationConfig.temperature = req.temperature;
   if (typeof req.max_tokens === "number") generationConfig.maxOutputTokens = req.max_tokens;
+  if (typeof req.top_p === "number") generationConfig.topP = req.top_p;
+  if (typeof req.seed === "number") generationConfig.seed = req.seed;
   if (req.response_format?.type === "json_object") {
     generationConfig.responseMimeType = "application/json";
   }
@@ -368,6 +372,8 @@ async function callLovable(
     if (req.response_format) body.response_format = req.response_format;
     if (typeof req.temperature === "number") body.temperature = req.temperature;
     if (typeof req.max_tokens === "number") body.max_tokens = req.max_tokens;
+    if (typeof req.top_p === "number") body.top_p = req.top_p;
+    if (typeof req.seed === "number") body.seed = req.seed;
 
     const resp = await fetch(LOVABLE_URL, {
       method: "POST",
