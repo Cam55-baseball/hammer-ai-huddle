@@ -379,7 +379,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       // New card-scoped buckets — Phase 3 splits Speed and Bat Speed into
       // independent cards. Cross-sport at early_activation placement remains
       // available for the Speed card banner on game days; content itself is
-      // owned by the cross_sport card.
+      // owned by the cross_sport card. `warmup_integration` placement is
+      // rendered inside the Warm-up card (in-season crossover primer).
+      warmupAddons: rxs.filter(
+        (r) => r.slot === "cross_sport" && r.why_payload?.placement === "warmup_integration",
+      ),
       speedCard: [
         ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
         ...rxs.filter((r) => r.slot === "speed"),
@@ -391,7 +395,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       ],
       conditioningCard: [
         ...rxs.filter((r) => r.slot === "conditioning"),
-        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement !== "early_activation"),
+        ...rxs.filter(
+          (r) =>
+            r.slot === "cross_sport" &&
+            r.why_payload?.placement !== "early_activation" &&
+            r.why_payload?.placement !== "warmup_integration",
+        ),
       ],
       // Legacy alias kept for any lingering imports; will be removed after
       // callers are migrated. Prefer speedCard + batSpeedCard.
