@@ -1813,7 +1813,7 @@ Return ONLY valid JSON with this exact structure:
             console.log("AI content parsed successfully");
           }
         } else {
-          console.error("AI API error:", await aiResponse.text());
+          console.error("AI API error:", aiResp.status, aiResp.errorBody?.slice(0, 200));
         }
       } catch (aiError) {
         console.error("AI generation error:", aiError);
