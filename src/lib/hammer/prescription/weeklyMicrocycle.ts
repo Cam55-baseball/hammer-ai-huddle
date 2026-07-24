@@ -380,14 +380,54 @@ export interface ResolvedMicrocycle {
   readonly template: WeeklyTemplate;
   readonly today: Dow;
   readonly perModality: Record<ModalityKey, ModalityDayDecision>;
+  /** Effective days-per-week each skill modality is scheduled after ladder slicing. */
+  readonly skillDays: Record<SkillModality, ReadonlyArray<Dow>>;
+}
+
+/** Per-skill day-count target from the skill-frequency ladder. */
+export type SkillDayTargets = Partial<Record<SkillModality, number>>;
+
+/**
+ * Compute the effective set of days for a skill modality after applying
+ * the ladder's day-count target. Days come from `priorityDayOrder`
+ * (fallback: sorted template days). Days beyond the template's original
+ * slots count as *earned overflow* — the caller uses `overflowDays` to
+ * force `activation` intensity on them (stack days before intensity).
+ */
+export function resolveSkillDays(
+  template: WeeklyTemplate,
+  modality: SkillModality,
+  target: number,
+): { days: ReadonlyArray<Dow>; baseline: ReadonlyArray<Dow>; overflowDays: ReadonlyArray<Dow> } {
+  const baselineArr = template.perModality[modality] ?? [];
+  const baseline = [...new Set(baselineArr)].sort((a, b) => a - b);
+  const priority = template.priorityDayOrder?.[modality] ?? baseline;
+  const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target));
+  // Deterministic pick: dedupe while preserving priority order.
+  const picked: Dow[] = [];
+  for (const d of priority) {
+    if (picked.length >= clamped) break;
+    if (!picked.includes(d)) picked.push(d);
+  }
+  // If priority list doesn't cover the target, top up from the remaining
+  // days of the week in ascending order so the result is fully deterministic.
+  for (let d = 0 as Dow; picked.length < clamped && d <= 6; d = (d + 1) as Dow) {
+    if (!picked.includes(d)) picked.push(d);
+    if (d === 6) break;
+  }
+  const baselineSet = new Set(baseline);
+  const overflowDays = picked.filter((d) => !baselineSet.has(d));
+  return { days: picked, baseline, overflowDays };
 }
 
 export function applyMicrocycle(
   template: WeeklyTemplate,
   today: Date,
+  skillTargets: SkillDayTargets = {},
 ): ResolvedMicrocycle {
   const dow = today.getDay() as Dow;
   const perModality = {} as Record<ModalityKey, ModalityDayDecision>;
+  const skillDays = {} as Record<SkillModality, ReadonlyArray<Dow>>;
 
   const allKeys: ModalityKey[] = [
     ...ANCHOR_MODALITIES,
@@ -395,7 +435,19 @@ export function applyMicrocycle(
   ] as ModalityKey[];
 
   for (const m of allKeys) {
-    const dows = template.perModality[m] ?? [];
+    const isSkill = (SKILL_MODALITIES as ReadonlyArray<string>).includes(m);
+    let dows: ReadonlyArray<Dow>;
+    let overflowSet: Set<Dow>;
+    if (isSkill && skillTargets[m as SkillModality] !== undefined) {
+      const resolved = resolveSkillDays(template, m as SkillModality, skillTargets[m as SkillModality]!);
+      dows = resolved.days;
+      overflowSet = new Set(resolved.overflowDays);
+      skillDays[m as SkillModality] = resolved.days;
+    } else {
+      dows = template.perModality[m] ?? [];
+      overflowSet = new Set();
+      if (isSkill) skillDays[m as SkillModality] = dows;
+    }
     const isScheduled = dows.includes(dow);
     const isAnchor = ANCHOR_MODALITIES.includes(m);
 
@@ -437,13 +489,18 @@ export function applyMicrocycle(
       continue;
     }
 
-    const intensity =
+    // Earned-overflow days (added on top of template baseline via the
+    // ladder) are forced to `activation` — days are earned before intensity.
+    const isOverflowToday = overflowSet.has(dow);
+    const templateIntensity =
       template.intensityOverrides?.[m]?.[dow] ?? ("primary" as ModalityIntensity);
+    const intensity: ModalityIntensity = isOverflowToday ? "activation" : templateIntensity;
     const accent = template.dayLabels?.[m]?.[dow];
     const position = todayPositionLabel(dows, dow);
+    const overflowNote = isOverflowToday ? " · earned overflow (activation only)" : "";
     const microcycleLabel = accent
-      ? `${position} · ${accent}`
-      : position;
+      ? `${position} · ${accent}${overflowNote}`
+      : `${position}${overflowNote}`;
     const nxt = nextScheduled(dow, dows);
     const nxtLabel =
       nxt === null || nxt === dow
@@ -467,7 +524,7 @@ export function applyMicrocycle(
     };
   }
 
-  return { template, today: dow, perModality };
+  return { template, today: dow, perModality, skillDays };
 }
 
 /* ── Weekly roadmap projection for the UI strip ─────────────────────────── */
