@@ -1221,6 +1221,12 @@ export interface HammerDailyPlanResult {
     readonly quarter: QuarterDescriptor;
     readonly eliteTarget: EliteTarget;
     readonly throwingLadder: ThrowingLadderPrescription | null;
+    /**
+     * Skill-frequency ladder — days/week per skill modality the athlete is
+     * building toward, with earned days from the last 7d. "Stack days
+     * first, then intensity" — the plan progresses days before volume.
+     */
+    readonly skillLadder: ReadonlyArray<SkillLadderRow>;
   };
 }
 
