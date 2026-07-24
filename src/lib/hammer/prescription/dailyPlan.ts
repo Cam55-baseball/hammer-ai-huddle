@@ -1102,16 +1102,20 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               : seasonPhase === "in"
                 ? "Recovery — in-season"
                 : "Recovery",
-        why: recoverDay
-          ? "Readiness is low. Recovery outranks training today."
-          : workloadHigh
-            ? "Workload is elevated — recovery is today's priority."
-            : injuryRegions.length > 0
-              ? `Injury-aware recovery (${injuryRegions.join(", ")}).`
-              : seasonPhase === "in"
-                ? "In-season — parasympathetic downshift between games."
-                : "Lock in sleep, mobility, and parasympathetic downshift.",
-        roadmapReason: recoverDay ? "Readiness below threshold — recovery first." : workloadHigh ? "Recent 7-day workload elevated." : "Default recovery block.",
+        why: (() => {
+          const base = recoverDay
+            ? "Readiness is low. Recovery outranks training today."
+            : workloadHigh
+              ? "Workload is elevated — recovery is today's priority."
+              : injuryRegions.length > 0
+                ? `Injury-aware recovery (${injuryRegions.join(", ")}).`
+                : seasonPhase === "in"
+                  ? "In-season — parasympathetic downshift between games."
+                  : "Lock in sleep, mobility, and parasympathetic downshift.";
+          const hpi = getSeasonHPI(seasonPhase);
+          return `${base} ${hpi.qiDirective} Breath primer: ${hpi.breathPrimer}`;
+        })(),
+        roadmapReason: `${recoverDay ? "Readiness below threshold — recovery first." : workloadHigh ? "Recent 7-day workload elevated." : "Default recovery block."} (${getSeasonHPI(seasonPhase).element} phase — ${getSeasonHPI(seasonPhase).yinYangEmphasis})`,
         phase: "recover",
         steps: drillsToSteps(drills),
         drills,
