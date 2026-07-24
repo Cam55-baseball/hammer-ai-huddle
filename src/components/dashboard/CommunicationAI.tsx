@@ -156,65 +156,81 @@ export function CommunicationAI({ className }: Props) {
         className,
       )}
     >
-      <div className="relative flex items-center justify-between gap-3 mb-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" aria-hidden />
-          <h2
-            id="communication-ai-heading"
-            className="text-[11px] font-black uppercase tracking-[0.22em] text-foreground"
-          >
-            Coach Hammer · Next Best Step
-          </h2>
-        </div>
-        <span
-          className={cn(
-            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-            TIER_TONE[step.tier],
-          )}
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger
+          className="relative flex items-center justify-between gap-3 w-full text-left bg-transparent border-none p-0 mb-2"
+          aria-labelledby="communication-ai-heading"
         >
-          {step.tierLabel}
-        </span>
-      </div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+            <h2
+              id="communication-ai-heading"
+              className="text-[11px] font-black uppercase tracking-[0.22em] text-foreground"
+            >
+              Coach Hammer · Next Best Step
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                TIER_TONE[step.tier],
+              )}
+            >
+              {step.tierLabel}
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                open && "rotate-180",
+              )}
+              aria-hidden
+            />
+          </div>
+        </CollapsibleTrigger>
 
-      <div className="relative space-y-1.5 max-w-2xl">
-        <h3 className="text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight">
-          {step.title}
-        </h3>
-        {step.analysis ? (
-          <p className="text-xs text-muted-foreground italic">
-            {step.analysis}
-          </p>
-        ) : null}
-        <p className="text-sm font-medium text-foreground flex items-start gap-2">
-          <ArrowRight
-            className="h-4 w-4 mt-0.5 shrink-0 text-primary"
-            aria-hidden
-          />
-          <span>{step.instruction}</span>
-        </p>
-        {step.why ? (
-          <p className="text-xs text-muted-foreground">{step.why}</p>
-        ) : null}
-      </div>
+        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+          <div className="relative space-y-1.5 max-w-2xl">
+            <h3 className="text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight">
+              {step.title}
+            </h3>
+            {step.analysis ? (
+              <p className="text-xs text-muted-foreground italic">
+                {step.analysis}
+              </p>
+            ) : null}
+            <p className="text-sm font-medium text-foreground flex items-start gap-2">
+              <ArrowRight
+                className="h-4 w-4 mt-0.5 shrink-0 text-primary"
+                aria-hidden
+              />
+              <span>{step.instruction}</span>
+            </p>
+            {step.why ? (
+              <p className="text-xs text-muted-foreground">{step.why}</p>
+            ) : null}
+          </div>
 
-      <div className="relative mt-3 flex flex-wrap items-center gap-3">
-        <Button
-          size="sm"
-          onClick={() => handleCta(step.ctaRoute)}
-          className="font-semibold"
-        >
-          {step.ctaLabel}
-        </Button>
-        {lifestyleStale && (
-          <button
-            type="button"
-            onClick={() => setIntakeOpen(true)}
-            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-          >
-            Personalize your signal
-          </button>
-        )}
-      </div>
+          <div className="relative mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              size="sm"
+              onClick={() => handleCta(step.ctaRoute)}
+              className="font-semibold"
+            >
+              {step.ctaLabel}
+            </Button>
+            {lifestyleStale && (
+              <button
+                type="button"
+                onClick={() => setIntakeOpen(true)}
+                className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Personalize your signal
+              </button>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
       <QuickCheckInSheet open={checkInOpen} onOpenChange={setCheckInOpen} />
       <LifestyleIntakeSheet open={intakeOpen} onOpenChange={setIntakeOpen} />
     </section>
