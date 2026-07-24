@@ -692,7 +692,6 @@ function BlockCard({
                   {block.side === "L" ? "Left" : "Right"}
                 </Badge>
               )}
-              <BlockSideBadge modality={block.modality} />
               {block.durationMin !== null && block.durationMin > 0 && (
                 <Badge variant="secondary" className="text-[10px]">
                   {block.durationMin} min
