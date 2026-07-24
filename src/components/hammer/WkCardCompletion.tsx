@@ -2,13 +2,9 @@
  * WkCardCompletion — card-level Done/Skip for the four Wk workout cards
  * (Lifts, Speed, Bat-Speed, Conditioning).
  *
- * Persists:
- *   - Local engagement state via `dailyEngagement.recordCompletion` so the
- *     daily intent header + healing/cadence narrative can react immediately.
- *   - Row-level `wk_prescriptions.status` for every prescription in the slot,
- *     giving the generator a real signal for tomorrow's plan.
- *
- * Presentation-only. Never authors organism truth. Never mutates the ledger.
+ * Bulk-updates every wk_prescription row for the slot AND writes matching
+ * task rows in `hammer_daily_task_completions` so the per-row checkboxes
+ * stay in lockstep with this card-level control.
  */
 import { useMemo, useState } from "react";
 import { Check, X, Loader2 } from "lucide-react";
@@ -24,6 +20,7 @@ import {
   type EngagementKey,
 } from "@/lib/hammer/prescription/dailyEngagement";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { useHammerDailyTasks, type TaskSeed } from "@/hooks/useHammerDailyTasks";
 
 interface Props {
   readonly modality: EngagementKey;
@@ -34,6 +31,8 @@ interface Props {
 export function WkCardCompletion({ modality, modalityLabel, items }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const planDate = items[0]?.plan_date ?? new Date().toISOString().slice(0, 10);
+  const tasks = useHammerDailyTasks(planDate);
   const [current, setCurrent] = useState(() =>
     todayCompletion(loadEngagement(user?.id), modality),
   );
@@ -95,6 +94,14 @@ export function WkCardCompletion({ modality, modalityLabel, items }: Props) {
             });
           }
         }
+        // 3) mirror to the checklist so per-row checkboxes flip together
+        const seeds: TaskSeed[] = items.map((r) => ({
+          taskId: r.id,
+          source: "wk_prescription",
+          sourceRef: r.slot,
+          payload: { name: r.movement_name, slug: r.movement_slug },
+        }));
+        void tasks.bulkSet(seeds, status === "done");
         qc.invalidateQueries({ queryKey: ["wk-rx", user.id] });
       }
 

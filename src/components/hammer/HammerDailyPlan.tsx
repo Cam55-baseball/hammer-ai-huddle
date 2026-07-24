@@ -88,15 +88,42 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Sliders } from "lucide-react";
 import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTasks";
 
-function DrillRow({ drill: d }: { drill: DrillStep }) {
+function DrillRow({
+  drill: d,
+  modality,
+  planDate,
+}: {
+  drill: DrillStep;
+  modality: string;
+  planDate: string;
+}) {
   const [open, setOpen] = useState(false);
+  const tasks = useHammerDailyTasks(planDate);
+  const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
+  const checked = tasks.isDone(taskId);
+  const seed = {
+    taskId,
+    source: "block_drill" as const,
+    sourceRef: modality,
+    payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null },
+  };
   return (
-    <li className="text-xs rounded-md border border-border/50 bg-muted/30 p-2">
+    <li className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 ${checked ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="font-medium">{d.name}</div>
-          <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={(v) => tasks.toggleTask(seed, !!v)}
+            className="mt-0.5 shrink-0"
+            aria-label={`Mark ${d.name} done`}
+          />
+          <div className="min-w-0 flex-1">
+            <div className={`font-medium ${checked ? "line-through" : ""}`}>{d.name}</div>
+            <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
+          </div>
         </div>
         <button
           type="button"
@@ -496,6 +523,8 @@ function BlockCard({
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const wkSnap = useHammersToday();
+  const planDate = wkSnap.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const sport = (ctx.get<string>("sport_primary")?.value as
     | "baseball"
     | "softball"
@@ -674,7 +703,7 @@ function BlockCard({
               </div>
               <ul className="space-y-1.5">
                 {block.drills.map((d, i) => (
-                  <DrillRow key={i} drill={d} />
+                  <DrillRow key={i} drill={d} modality={block.modality} planDate={planDate} />
                 ))}
               </ul>
             </div>
@@ -780,6 +809,8 @@ function BlockCard({
                 modality={block.modality}
                 modalityLabel={block.title}
                 onChanged={() => onEngagementChanged?.()}
+                drills={block.drills}
+                planDate={planDate}
               />
             </div>
           </div>

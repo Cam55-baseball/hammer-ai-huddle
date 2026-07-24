@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ShieldCheck, CheckCircle2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -67,6 +69,14 @@ export function WkPrescriptionCard({
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const qc = useQueryClient();
+  const tasks = useHammerDailyTasks(rx.plan_date);
+  const taskSeed = {
+    taskId: rx.id,
+    source: "wk_prescription" as const,
+    sourceRef: rx.slot,
+    payload: { name: rx.movement_name, slug: rx.movement_slug },
+  };
+  const checked = rx.status === "completed" || tasks.isDone(rx.id);
 
   const mark = async (status: "completed" | "skipped") => {
     if (!user?.id) return;
@@ -78,6 +88,7 @@ export function WkPrescriptionCard({
       toast.error("Could not update");
       return;
     }
+    tasks.toggleTask(taskSeed, status === "completed");
     // On completion, persist a session log row so the Learning Loop has real
     // execution data (not just a status flip). Best-effort, non-blocking.
     if (status === "completed") {
@@ -99,6 +110,22 @@ export function WkPrescriptionCard({
     }
     toast.success(status === "completed" ? "Logged — nice work." : "Skipped");
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+  };
+
+  const toggleCheckbox = (next: boolean) => {
+    void mark(next ? "completed" : "skipped");
+    if (!next) {
+      // Return the row to planned when the athlete unchecks after completing.
+      void supabase
+        .from("wk_prescriptions" as any)
+        .update({ status: "planned" })
+        .eq("id", rx.id)
+        .then(({ error }) => {
+          if (!error && user?.id) {
+            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+          }
+        });
+    }
   };
 
   const why = rx.why_payload;
@@ -185,9 +212,15 @@ export function WkPrescriptionCard({
     : "Complete as described in the cue below.";
 
   return (
-    <Card className={`p-3 border ${rx.status === "completed" ? "opacity-60" : ""}`}>
+    <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
       <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex items-start justify-between gap-2">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={(v) => toggleCheckbox(!!v)}
+            className="mt-0.5 shrink-0"
+            aria-label={`Mark ${rx.movement_name} done`}
+          />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
