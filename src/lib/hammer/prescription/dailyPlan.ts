@@ -769,7 +769,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       return {
         modality,
-        title: eass.title,
+        title: eass.title + (isAmbi && !armProtected ? " (both arms)" : ""),
         why: eass.why + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
         phase:
@@ -780,7 +780,13 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               : "build",
         steps: drillsToSteps(drills),
         drills,
-        cues: [...eass.cues, ...anthroCues],
+        cues: [
+          ...eass.cues,
+          ...anthroCues,
+          ...(isAmbi && !armProtected
+            ? ["Ambidextrous thrower — mirror the neural prep on both sides; max-intent work stays on the dominant arm today."]
+            : []),
+        ],
         stopRules: eass.stopRules,
         durationMin: eass.durationMin,
         route: "/practice?module=throwing",
