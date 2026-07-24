@@ -363,9 +363,9 @@ function HammerDailyPlanBody() {
                   : `Throw ${plan.sideBias!.throw!.weakerSide}`}
               </Badge>
             )}
-            {/* Switch-hitter / ambi-thrower side pickers — active side flows into
-                today's prescription (wk-generate-daily reads side_hit / side_throw). */}
-            <HeaderSidePickers />
+            {/* Header side pickers removed — switch/ambi athletes see L/R via
+                duplicated hitting / bat-speed / throwing cards below. */}
+
 
             <Button
               size="sm"
