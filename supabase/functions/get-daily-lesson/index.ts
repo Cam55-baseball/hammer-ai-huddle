@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -248,119 +249,103 @@ serve(async (req) => {
         // Generate AI lesson when 80%+ viewed or no lessons available
         console.log(`[get-daily-lesson] Generating AI lesson. Viewed: ${viewedPercentage.toFixed(1)}%`);
         
-        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-        
-        if (LOVABLE_API_KEY) {
-          try {
-            const categories = ['mental_mastery', 'emotional_balance', 'leadership', 'life_mastery'];
-            const contentTypes = ['lesson', 'quote', 'mantra', 'acronym', 'teaching', 'principle'];
-            const subcategories: Record<string, string[]> = {
-              mental_mastery: ['focus_concentration', 'confidence', 'pressure_handling', 'visualization', 'goal_setting', 'mental_toughness'],
-              emotional_balance: ['calm_techniques', 'failure_response', 'joy_passion', 'emotional_regulation', 'gratitude'],
-              leadership: ['captain_mindset', 'serving_team', 'holding_accountable', 'communication', 'trust_building'],
-              life_mastery: ['discipline', 'time_management', 'selfless_service', 'process_journey', 'legacy_mindset', 'continuous_improvement'],
-            };
-            
-            const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
-            const selectedType = contentTypes[Math.floor(Math.random() * contentTypes.length)];
-            const categorySubcats = subcategories[selectedCategory];
-            const selectedSubcategory = categorySubcats[Math.floor(Math.random() * categorySubcats.length)];
-            
-            const sportContext = sport === 'both' ? 'baseball and softball' : sport;
-            
-            const typeInstructions: Record<string, string> = {
-              lesson: `Write a 2–4 sentence LESSON grounded in neuroscience or sport psychology. Include: (1) the psychological or neurological basis for the concept (e.g., "The prefrontal cortex, which governs elite decision-making, goes offline under acute threat — here is how to keep it online"), and (2) one specific action the athlete applies TODAY during practice or competition. Never be vague.`,
-              teaching: `Write a 2–4 sentence TEACHING that connects a core principle of human performance to a concrete moment in ${sportContext}. Cite the cognitive or physiological basis. End with a specific in-game or in-practice application.`,
-              principle: `Write a 2–4 sentence PRINCIPLE that top 0.001% performers operate by. Ground it in sports psychology research or elite coaching philosophy. Give one explicit example of how this manifests in a ${sportContext} context.`,
-              quote: `Write a powerful QUOTE (1–2 sentences max) attributed ONLY to a real, verified person — a proven coach, elite athlete, philosopher, or performance scientist. Format: "[Quote text]" — [Full Name], [Role/Context]. NEVER invent people. NEVER use generic "ancient wisdom" without attribution.`,
-              mantra: `Write a MANTRA: 10 words or fewer, rhythmic, designed to be repeated in a high-pressure moment in ${sportContext}. It must be anchored to a specific performance state (e.g., at-bat, pre-pitch, after an error, in a slump). Return only the mantra text.`,
-              acronym: `Create a PERFORMANCE ACRONYM where each letter stands for an elite mindset principle relevant to ${sportContext}. Format: STATE THE ACRONYM WORD, then each letter on its own line as "X — [principle]", then 1 sentence explaining the full concept in action.`,
-            };
+        try {
+          const categories = ['mental_mastery', 'emotional_balance', 'leadership', 'life_mastery'];
+          const contentTypes = ['lesson', 'quote', 'mantra', 'acronym', 'teaching', 'principle'];
+          const subcategories: Record<string, string[]> = {
+            mental_mastery: ['focus_concentration', 'confidence', 'pressure_handling', 'visualization', 'goal_setting', 'mental_toughness'],
+            emotional_balance: ['calm_techniques', 'failure_response', 'joy_passion', 'emotional_regulation', 'gratitude'],
+            leadership: ['captain_mindset', 'serving_team', 'holding_accountable', 'communication', 'trust_building'],
+            life_mastery: ['discipline', 'time_management', 'selfless_service', 'process_journey', 'legacy_mindset', 'continuous_improvement'],
+          };
 
-            const instruction = typeInstructions[selectedType] || typeInstructions['lesson'];
+          const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+          const selectedType = contentTypes[Math.floor(Math.random() * contentTypes.length)];
+          const categorySubcats = subcategories[selectedCategory];
+          const selectedSubcategory = categorySubcats[Math.floor(Math.random() * categorySubcats.length)];
 
-            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                'Content-Type': 'application/json',
+          const sportContext = sport === 'both' ? 'baseball and softball' : sport;
+
+          const typeInstructions: Record<string, string> = {
+            lesson: `Write a 2–4 sentence LESSON grounded in neuroscience or sport psychology. Include: (1) the psychological or neurological basis for the concept (e.g., "The prefrontal cortex, which governs elite decision-making, goes offline under acute threat — here is how to keep it online"), and (2) one specific action the athlete applies TODAY during practice or competition. Never be vague.`,
+            teaching: `Write a 2–4 sentence TEACHING that connects a core principle of human performance to a concrete moment in ${sportContext}. Cite the cognitive or physiological basis. End with a specific in-game or in-practice application.`,
+            principle: `Write a 2–4 sentence PRINCIPLE that top 0.001% performers operate by. Ground it in sports psychology research or elite coaching philosophy. Give one explicit example of how this manifests in a ${sportContext} context.`,
+            quote: `Write a powerful QUOTE (1–2 sentences max) attributed ONLY to a real, verified person — a proven coach, elite athlete, philosopher, or performance scientist. Format: "[Quote text]" — [Full Name], [Role/Context]. NEVER invent people. NEVER use generic "ancient wisdom" without attribution.`,
+            mantra: `Write a MANTRA: 10 words or fewer, rhythmic, designed to be repeated in a high-pressure moment in ${sportContext}. It must be anchored to a specific performance state (e.g., at-bat, pre-pitch, after an error, in a slump). Return only the mantra text.`,
+            acronym: `Create a PERFORMANCE ACRONYM where each letter stands for an elite mindset principle relevant to ${sportContext}. Format: STATE THE ACRONYM WORD, then each letter on its own line as "X — [principle]", then 1 sentence explaining the full concept in action.`,
+          };
+
+          const instruction = typeInstructions[selectedType] || typeInstructions['lesson'];
+
+          const aiResult = await chatCompletion({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'system',
+                content: `You are a world-class mental performance coach working exclusively with elite ${sportContext} athletes — the top 0.001% of performers. You operate at the intersection of neuroscience, sport psychology, and high-performance philosophy. Every word you produce must be elite-grade: specific, actionable, and grounded in real performance science. You build selfless, limitless, unbreakable athletes. NEVER produce surface-level motivational content. NEVER be generic. Return ONLY the requested content with no preamble, labels, or meta-commentary.`,
               },
-              body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
-                messages: [
-                  {
-                    role: 'system',
-                    content: `You are a world-class mental performance coach working exclusively with elite ${sportContext} athletes — the top 0.001% of performers. You operate at the intersection of neuroscience, sport psychology, and high-performance philosophy. Every word you produce must be elite-grade: specific, actionable, and grounded in real performance science. You build selfless, limitless, unbreakable athletes. NEVER produce surface-level motivational content. NEVER be generic. Return ONLY the requested content with no preamble, labels, or meta-commentary.`,
-                  },
-                  {
-                    role: 'user',
-                    content: `Category: ${selectedCategory.replace(/_/g, ' ')} | Topic: ${selectedSubcategory.replace(/_/g, ' ')} | Type: ${selectedType}\n\n${instruction}`,
-                  }
-                ],
-              }),
-            });
-            
-            if (aiResponse.status === 429) {
-              console.log('[get-daily-lesson] Rate limit hit for AI generation');
-            } else if (aiResponse.status === 402) {
-              console.log('[get-daily-lesson] Payment required for AI generation');
-            } else if (aiResponse.ok) {
-              const aiData = await aiResponse.json();
-              const generatedText = aiData.choices?.[0]?.message?.content?.trim();
-              
-              if (generatedText && generatedText.length > 10) {
-                // Insert AI-generated lesson to database
-                const { data: newLesson, error: insertLessonError } = await supabase
-                  .from('mind_fuel_lessons')
+              {
+                role: 'user',
+                content: `Category: ${selectedCategory.replace(/_/g, ' ')} | Topic: ${selectedSubcategory.replace(/_/g, ' ')} | Type: ${selectedType}\n\n${instruction}`,
+              }
+            ],
+          });
+
+          if (!aiResult.ok) {
+            console.log('[get-daily-lesson] AI generation failed', aiResult.status, aiResult.provider);
+          } else {
+            const generatedText = aiResult.data.choices?.[0]?.message?.content?.trim();
+
+            if (generatedText && generatedText.length > 10) {
+              // Insert AI-generated lesson to database
+              const { data: newLesson, error: insertLessonError } = await supabase
+                .from('mind_fuel_lessons')
+                .insert({
+                  category: selectedCategory,
+                  subcategory: selectedSubcategory,
+                  content_type: selectedType,
+                  lesson_text: generatedText,
+                  sport: sport === 'both' ? null : sport,
+                  is_ai_generated: true,
+                  author: 'AI Coach',
+                })
+                .select()
+                .single();
+
+              if (!insertLessonError && newLesson) {
+                lesson = newLesson;
+                isNewLesson = true;
+
+                // Mark as viewed
+                await supabase
+                  .from('user_viewed_lessons')
                   .insert({
-                    category: selectedCategory,
-                    subcategory: selectedSubcategory,
-                    content_type: selectedType,
-                    lesson_text: generatedText,
-                    sport: sport === 'both' ? null : sport,
-                    is_ai_generated: true,
-                    author: 'AI Coach',
-                  })
-                  .select()
-                  .single();
-                
-                if (!insertLessonError && newLesson) {
-                  lesson = newLesson;
-                  isNewLesson = true;
-                  
-                  // Mark as viewed
-                  await supabase
-                    .from('user_viewed_lessons')
-                    .insert({
-                      user_id: userId,
-                      lesson_id: lesson.id,
-                    });
-                  
-                  lessonsCollected += 1;
-                  categoriesExplored[selectedCategory] = (categoriesExplored[selectedCategory] || 0) + 1;
-                  
-                  // Check for category badges
-                  for (const badge of CATEGORY_BADGES) {
-                    if (
-                      categoriesExplored[badge.category] >= badge.threshold &&
-                      !badgesEarned.includes(badge.id)
-                    ) {
-                      badgesEarned = [...badgesEarned, badge.id];
-                      newBadges.push(badge.id);
-                    }
+                    user_id: userId,
+                    lesson_id: lesson.id,
+                  });
+
+                lessonsCollected += 1;
+                categoriesExplored[selectedCategory] = (categoriesExplored[selectedCategory] || 0) + 1;
+
+                // Check for category badges
+                for (const badge of CATEGORY_BADGES) {
+                  if (
+                    categoriesExplored[badge.category] >= badge.threshold &&
+                    !badgesEarned.includes(badge.id)
+                  ) {
+                    badgesEarned = [...badgesEarned, badge.id];
+                    newBadges.push(badge.id);
                   }
-                  
-                  console.log(`[get-daily-lesson] AI lesson generated: ${lesson.id}`);
-                } else {
-                  console.error('[get-daily-lesson] Error inserting AI lesson:', insertLessonError);
                 }
+
+                console.log(`[get-daily-lesson] AI lesson generated: ${lesson.id}`);
+              } else {
+                console.error('[get-daily-lesson] Error inserting AI lesson:', insertLessonError);
               }
             }
-          } catch (aiError) {
-            console.error('[get-daily-lesson] AI generation error:', aiError);
           }
-        } else {
-          console.log('[get-daily-lesson] No LOVABLE_API_KEY configured for AI generation');
+        } catch (aiError) {
+          console.error('[get-daily-lesson] AI generation error:', aiError);
         }
       }
     }

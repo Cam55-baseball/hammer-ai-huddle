@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
+import { chatCompletion } from '../_shared/googleAi.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +8,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 const PER_CALL_TIMEOUT_MS = 5_000;
 const AI_RETRIES = 2;
@@ -164,28 +164,23 @@ function deterministicHeadline(snapshot: Snapshot, deltas: Deltas): string {
 }
 
 // ---------- Bounded retry AI call ----------
-async function callAIWithRetry(payload: unknown): Promise<string | null> {
-  if (!LOVABLE_API_KEY) return null;
+async function callAIWithRetry(payload: {
+  model: string;
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+}): Promise<string | null> {
   let attempt = 0;
   let lastErr: unknown = null;
   while (attempt <= AI_RETRIES) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), PER_CALL_TIMEOUT_MS);
     try {
-      const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
-        body: JSON.stringify(payload),
-      });
-      clearTimeout(t);
+      const r = await chatCompletion(
+        { model: payload.model, messages: payload.messages },
+        { timeoutMs: PER_CALL_TIMEOUT_MS },
+      );
       if (!r.ok) throw new Error(`ai_status_${r.status}`);
-      const j = await r.json();
-      const text = j?.choices?.[0]?.message?.content;
+      const text = r.data?.choices?.[0]?.message?.content;
       if (typeof text === 'string' && text.trim()) return text.trim();
       throw new Error('ai_empty_response');
     } catch (e) {
-      clearTimeout(t);
       lastErr = e;
       if (attempt === AI_RETRIES) break;
       await new Promise(res => setTimeout(res, AI_BASE_DELAY_MS * Math.pow(2, attempt)));
