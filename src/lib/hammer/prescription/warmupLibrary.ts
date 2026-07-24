@@ -14,6 +14,7 @@
  *   - Anatomy Trains (Myers) fascial line preparation
  *   - Weightless Object Sport Training (WOST) — hand-eye, rhythm, fast-twitch CNS patterning without load
  */
+import { guideFor, type MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 
 export type WarmupRole =
   | "breathwork"
@@ -124,7 +125,7 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
   { slug: "wu_a_skip", name: "A-skip", role: "neural_priming", cue: "tall posture, front-side mechanics — knee up, toe up", gameDayLegal: true, minLifecycle: "youth", source: "Track & field canon", baseDose: "2 x 20 yards" },
   { slug: "wu_b_skip", name: "B-skip", role: "neural_priming", cue: "same as A, but paw the ground down and back", gameDayLegal: true, minLifecycle: "intermediate", source: "Track & field canon", baseDose: "2 x 20 yards" },
   { slug: "wu_wickets_low", name: "Low wicket runs (rhythm)", role: "neural_priming", setup: "Line up 8 mini hurdles (6-8 inches tall) in a straight line, exactly 5 feet apart — about 40 feet total. If you have no hurdles, use rolled towels or shoes as markers.", cue: "Jog in and start running at 75% speed as you hit the first hurdle. Stay tall (chest up, eyes forward). Let each foot land BETWEEN the hurdles — pick the knee straight up and let it cycle down under your hip. Do not stride out to reach for a hurdle. Walk back to the start between reps.", gameDayLegal: true, minLifecycle: "intermediate", source: "Alfred Chan / ALTIS", baseDose: "3 runs through — walk back between each" },
-  { slug: "wu_reaction_ball_wall", name: "Reaction ball vs wall", role: "neural_priming", cue: "athletic stance, hands ready — read early", gameDayLegal: true, minLifecycle: "beginner", source: "Marinovich reflex training", baseDose: "3 x 20 sec" },
+  { slug: "wu_reaction_ball_wall", name: "Reaction ball vs wall", role: "neural_priming", setup: "Stand 6-10 ft from a solid wall with a reaction ball (lumpy rubber ball) or a lacrosse/pinky ball. Feet shoulder-width, athletic stance.", cue: "Throw the ball into the wall, then catch it with two hands before it bounces twice. The ball will kick unpredictably — react early, stay light on your feet, and reset your stance between throws.", stopIf: "rolled ankle, shoulder pinch, or dizziness", gameDayLegal: true, minLifecycle: "beginner", source: "Marinovich reflex training", baseDose: "3 rounds of 20 sec — reset between" },
 
   // Fast-twitch primer
   { slug: "wu_pogo_double", name: "Pogo hops (double-leg)", role: "fast_twitch", cue: "stiff ankles, ground contact under 0.2s", stopIf: "shin or achilles pain", gameDayLegal: true, minLifecycle: "youth", source: "Verkhoshansky", baseDose: "3 x 12 contacts", beginnerDose: "2 x 8 contacts" },
@@ -209,9 +210,12 @@ const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
     "breathwork", "tissue_prep", "cars", "mobility_joint",
     "activation", "weightless_coordination", "stability", "neural_priming", "fast_twitch",
   ],
+  // Throwing days: arm care is OWNED BY THE THROWING BLOCK (EASS band prep + cooldown).
+  // The warmup does NOT include arm_care on throwing days — that keeps arm care to exactly
+  // one exposure per day. See ArmCareBudgetContext.
   throwing_day: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
-    "activation", "weightless_coordination", "arm_care", "arm_care", "movement_bridge",
+    "activation", "weightless_coordination", "movement_bridge",
   ],
   hitting_day: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
@@ -228,7 +232,7 @@ const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
   ],
   travel_day: [
     "breathwork", "cars", "mobility_joint", "activation",
-    "weightless_coordination", "arm_care",
+    "weightless_coordination",
   ],
   default: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
@@ -273,6 +277,8 @@ export interface BuildWarmupInput {
   readonly lifecycle: LifecycleClass;
   readonly gameDay: boolean;
   readonly daySeed?: number;
+  /** When true, strip any arm_care role picks. Used when the throwing block already owns arm care. */
+  readonly suppressArmCare?: boolean;
 }
 
 export interface BuiltWarmupDrill {
@@ -284,6 +290,7 @@ export interface BuiltWarmupDrill {
   readonly cue?: string;
   readonly stopIf?: string;
   readonly source: string;
+  readonly guide?: MovementGuide;
 }
 
 export interface BuiltWarmup {
@@ -293,7 +300,9 @@ export interface BuiltWarmup {
 }
 
 export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
-  const roles = templateFor(input.context, input.lifecycle);
+  const roles = templateFor(input.context, input.lifecycle).filter(
+    (r) => !(input.suppressArmCare && r === "arm_care"),
+  );
   const seedBase = input.daySeed ?? 0;
   const seen = new Set<string>();
   const drills: BuiltWarmupDrill[] = [];
@@ -316,6 +325,7 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
       cue: pick.cue,
       stopIf: pick.stopIf,
       source: pick.source,
+      guide: guideFor(pick.slug) ?? guideFor(pick.name) ?? undefined,
     });
   });
   const est = Math.max(8, Math.round((drills.length * 90) / 60));
