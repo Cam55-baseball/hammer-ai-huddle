@@ -475,7 +475,7 @@ function HammerDailyPlanBody() {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
                   <BlockCard
-                    key={b.modality}
+                    key={`${b.modality}-${b.side ?? "x"}`}
                     block={b}
                     onNavigate={(r) => navigate(r)}
                     onEngagementChanged={bumpEngagement}
