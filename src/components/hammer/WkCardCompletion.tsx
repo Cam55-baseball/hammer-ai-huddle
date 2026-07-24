@@ -101,7 +101,8 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
           taskId: r.id,
           source: "wk_prescription",
           sourceRef: r.slot,
-          payload: { name: r.movement_name, slug: r.movement_slug },
+          side,
+          payload: { name: r.movement_name, slug: r.movement_slug, side },
         }));
         void tasks.bulkSet(seeds, status === "done");
         qc.invalidateQueries({ queryKey: ["wk-rx", user.id] });
