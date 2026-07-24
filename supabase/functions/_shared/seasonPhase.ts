@@ -64,6 +64,18 @@ export function resolveSeasonPhase(settings: SeasonSettingsLike | null | undefin
   return { phase: 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' };
 }
 
+export type NeijingElement = 'Wood' | 'Fire' | 'Earth' | 'Metal' | 'Water';
+
+export interface SeasonHPIProfile {
+  element: NeijingElement;
+  elementQuality: string;
+  organEmphasis: string;
+  yinYangEmphasis: string;
+  qiDirective: string;
+  seasonalAdaptation: string;
+  breathPrimer: string;
+}
+
 export interface SeasonProgrammingProfile {
   phase: SeasonPhase;
   label: string;
@@ -76,7 +88,52 @@ export interface SeasonProgrammingProfile {
   maxHighCnsPerWeek: number;
   toneGuidance: string;
   directives: string[];
+  hpi: SeasonHPIProfile;
 }
+
+const HPI_BY_PHASE: Record<SeasonPhase, SeasonHPIProfile> = {
+  preseason: {
+    element: 'Wood',
+    elementQuality: 'Wood — flexible, rising, decisive.',
+    organEmphasis: 'Liver / Wood — smooth rotation, clear vision, sharp reactions.',
+    yinYangEmphasis: 'Yang rising — sharpen without over-heating.',
+    qiDirective: 'Circulate Qi before intent — flow first, then game-speed reps.',
+    seasonalAdaptation: 'Lean into greens, sour notes, and early-day sunlight; give the body a real warm-up before max effort.',
+    breathPrimer: 'Nasal in 4 · out 6 — 6 rounds. Wake the diaphragm without spiking tone.',
+  },
+  in_season: {
+    element: 'Fire',
+    elementQuality: 'Fire — bright, expressive, easy to over-spend.',
+    organEmphasis: 'Heart / Fire — protect the shen (focus, sleep, confidence).',
+    yinYangEmphasis: 'Yang expressed, Yin protected — spend on game day, restore between.',
+    qiDirective: 'Preserve sharpness — small, frequent doses beat heroic sessions.',
+    seasonalAdaptation: 'Hydrate ahead of thirst, seek cooling foods after games, guard sleep as a performance asset.',
+    breathPrimer: 'Box breath 4-4-4-4 — 5 rounds. Steady the shen before pitches or at-bats.',
+  },
+  post_season: {
+    element: 'Metal',
+    elementQuality: 'Metal — refined, quiet, letting go of what is done.',
+    organEmphasis: 'Lung / Metal — full breath, clean tissue, resolve lingering pain.',
+    yinYangEmphasis: 'Yin restoration — the season descends before it rises again.',
+    qiDirective: 'Downshift and repair — sleep, breathe, walk, decompress.',
+    seasonalAdaptation: 'Warmer clothing on cool mornings, hydrating meals, early-to-bed rhythm.',
+    breathPrimer: 'Long-exhale breath: in 4 · out 8 — 8 rounds. Deep parasympathetic reset.',
+  },
+  off_season: {
+    element: 'Water',
+    elementQuality: 'Water — deep, patient, storing power for the year ahead.',
+    organEmphasis: 'Kidney / Water — build reserves, honor sleep, respect fear signals.',
+    yinYangEmphasis: 'Yin storing, Yang forged — deep tank now becomes explosive later.',
+    qiDirective: 'Build the engine — patient volume, honest loading, deep recovery.',
+    seasonalAdaptation: "Warming, protein-rich foods; salt intelligently; guard sleep and don't chase daily peaks.",
+    breathPrimer: 'Diaphragmatic 5-5 breath — 8 rounds. Fill the tank before heavy work.',
+  },
+};
+
+export function getSeasonHPI(phase: SeasonPhase): SeasonHPIProfile {
+  return HPI_BY_PHASE[phase] ?? HPI_BY_PHASE.off_season;
+}
+
 
 export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
   preseason: {
