@@ -69,6 +69,14 @@ export function WkPrescriptionCard({
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const qc = useQueryClient();
+  const tasks = useHammerDailyTasks(rx.plan_date);
+  const taskSeed = {
+    taskId: rx.id,
+    source: "wk_prescription" as const,
+    sourceRef: rx.slot,
+    payload: { name: rx.movement_name, slug: rx.movement_slug },
+  };
+  const checked = rx.status === "completed" || tasks.isDone(rx.id);
 
   const mark = async (status: "completed" | "skipped") => {
     if (!user?.id) return;
@@ -80,6 +88,7 @@ export function WkPrescriptionCard({
       toast.error("Could not update");
       return;
     }
+    tasks.toggleTask(taskSeed, status === "completed");
     // On completion, persist a session log row so the Learning Loop has real
     // execution data (not just a status flip). Best-effort, non-blocking.
     if (status === "completed") {
@@ -101,6 +110,22 @@ export function WkPrescriptionCard({
     }
     toast.success(status === "completed" ? "Logged — nice work." : "Skipped");
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+  };
+
+  const toggleCheckbox = (next: boolean) => {
+    void mark(next ? "completed" : "skipped");
+    if (!next) {
+      // Return the row to planned when the athlete unchecks after completing.
+      void supabase
+        .from("wk_prescriptions" as any)
+        .update({ status: "planned" })
+        .eq("id", rx.id)
+        .then(({ error }) => {
+          if (!error && user?.id) {
+            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+          }
+        });
+    }
   };
 
   const why = rx.why_payload;
