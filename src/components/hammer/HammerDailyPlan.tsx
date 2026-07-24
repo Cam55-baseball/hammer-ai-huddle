@@ -98,20 +98,23 @@ function DrillRow({
   drill: d,
   modality,
   planDate,
+  side = null,
 }: {
   drill: DrillStep;
   modality: string;
   planDate: string;
+  side?: "L" | "R" | null;
 }) {
   const [open, setOpen] = useState(false);
   const tasks = useHammerDailyTasks(planDate);
   const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
-  const checked = tasks.isDone(taskId);
+  const checked = tasks.isDone(taskId, side);
   const seed = {
     taskId,
     source: "block_drill" as const,
     sourceRef: modality,
-    payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null },
+    side,
+    payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null, side },
   };
   return (
     <li className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 ${checked ? "opacity-60" : ""}`}>
@@ -219,6 +222,7 @@ export function HammerDailyPlan() {
 
 function HammerDailyPlanBody() {
   const ctx = useHammerAthleteContext();
+  const { isSwitchHitter } = useSideContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
@@ -445,7 +449,7 @@ function HammerDailyPlanBody() {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
                   <BlockCard
-                    key={b.modality}
+                    key={`${b.modality}-${b.side ?? "x"}`}
                     block={b}
                     onNavigate={(r) => navigate(r)}
                     onEngagementChanged={bumpEngagement}
@@ -463,7 +467,14 @@ function HammerDailyPlanBody() {
                 <WkSpeedCard />
               </ErrorBoundary>
               <ErrorBoundary label="wk-bat-speed">
-                <WkBatSpeedCard />
+                {isSwitchHitter ? (
+                  <>
+                    <WkBatSpeedCard side="L" />
+                    <WkBatSpeedCard side="R" />
+                  </>
+                ) : (
+                  <WkBatSpeedCard />
+                )}
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
                 <WkLiftsCard />
@@ -472,7 +483,7 @@ function HammerDailyPlanBody() {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
                   <BlockCard
-                    key={b.modality}
+                    key={`${b.modality}-${b.side ?? "x"}`}
                     block={b}
                     onNavigate={(r) => navigate(r)}
                     onEngagementChanged={bumpEngagement}
@@ -659,9 +670,11 @@ function BlockCard({
     }
   }
 
+  const sideSuffix = block.side ? `-${block.side.toLowerCase()}` : "";
+  const domId = `hammer-plan-${block.modality}${sideSuffix}`;
   return (
     <div
-      id={`hammer-plan-${block.modality}`}
+      id={domId}
       className={`rounded-lg border p-3 scroll-mt-24 ${STATUS_TONE[block.status]}`}
     >
       <Collapsible open={open} onOpenChange={setOpen}>
@@ -669,6 +682,11 @@ function BlockCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold capitalize">{block.title}</span>
+              {block.side && (
+                <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
+                  {block.side === "L" ? "Left" : "Right"}
+                </Badge>
+              )}
               <BlockSideBadge modality={block.modality} />
               {block.durationMin !== null && block.durationMin > 0 && (
                 <Badge variant="secondary" className="text-[10px]">
@@ -713,7 +731,7 @@ function BlockCard({
                   if (focusGaps.length === 0) setChatOpen(true);
                   // Defer scroll until the collapsible has expanded.
                   requestAnimationFrame(() => {
-                    const el = document.getElementById(`hammer-plan-${block.modality}`);
+                    const el = document.getElementById(domId);
                     el?.scrollIntoView({ behavior: "smooth", block: "start" });
                   });
                   return;
@@ -744,7 +762,7 @@ function BlockCard({
               </div>
               <ul className="space-y-1.5">
                 {block.drills.map((d, i) => (
-                  <DrillRow key={i} drill={d} modality={block.modality} planDate={planDate} />
+                  <DrillRow key={i} drill={d} modality={block.modality} planDate={planDate} side={block.side ?? null} />
                 ))}
               </ul>
             </div>

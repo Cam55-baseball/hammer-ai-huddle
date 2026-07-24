@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+export type LateralSide = "L" | "R" | null;
+
 export interface TaskRow {
   id: string;
   user_id: string;
@@ -22,6 +24,7 @@ export interface TaskRow {
   source: "wk_prescription" | "block_drill";
   source_ref: string;
   payload: Record<string, unknown>;
+  side: LateralSide;
   completed: boolean;
   completed_at: string | null;
 }
@@ -30,6 +33,7 @@ export interface TaskSeed {
   taskId: string;
   source: "wk_prescription" | "block_drill";
   sourceRef: string;
+  side?: LateralSide;
   payload?: Record<string, unknown>;
 }
 
@@ -45,6 +49,11 @@ export function slugifyDrillName(name: string): string {
 export function makeBlockTaskId(modality: string, slugOrName: string): string {
   const s = slugOrName.startsWith("slug:") ? slugOrName.slice(5) : slugifyDrillName(slugOrName);
   return `${modality}:${s || "drill"}`;
+}
+
+/** Composite local key so L and R completions don't collide in the byId map. */
+function localKey(taskId: string, side: LateralSide | undefined): string {
+  return `${taskId}::${side ?? ""}`;
 }
 
 export function useHammerDailyTasks(planDate: string) {
@@ -68,9 +77,12 @@ export function useHammerDailyTasks(planDate: string) {
   });
 
   const byId = new Map<string, TaskRow>();
-  for (const r of query.data ?? []) byId.set(r.task_id, r);
+  for (const r of query.data ?? []) byId.set(localKey(r.task_id, r.side ?? null), r);
 
-  const isDone = useCallback((taskId: string) => !!byId.get(taskId)?.completed, [byId]);
+  const isDone = useCallback(
+    (taskId: string, side: LateralSide = null) => !!byId.get(localKey(taskId, side))?.completed,
+    [byId],
+  );
 
   const upsertMut = useMutation({
     mutationFn: async ({ seed, completed }: { seed: TaskSeed; completed: boolean }) => {
@@ -85,27 +97,30 @@ export function useHammerDailyTasks(planDate: string) {
             source: seed.source,
             source_ref: seed.sourceRef,
             payload: seed.payload ?? {},
+            side: seed.side ?? null,
             completed,
             completed_at: completed ? new Date().toISOString() : null,
           },
-          { onConflict: "user_id,plan_date,task_id" },
+          { onConflict: "user_id,plan_date,task_id,side" },
         );
       if (error) throw error;
     },
     onMutate: async ({ seed, completed }) => {
       await qc.cancelQueries({ queryKey });
       const prev = qc.getQueryData<TaskRow[]>(queryKey) ?? [];
-      const filtered = prev.filter((r) => r.task_id !== seed.taskId);
+      const key = localKey(seed.taskId, seed.side ?? null);
+      const filtered = prev.filter((r) => localKey(r.task_id, r.side ?? null) !== key);
       const next: TaskRow[] = [
         ...filtered,
         {
-          id: `optimistic-${seed.taskId}`,
+          id: `optimistic-${key}`,
           user_id: user?.id ?? "",
           plan_date: planDate,
           task_id: seed.taskId,
           source: seed.source,
           source_ref: seed.sourceRef,
           payload: seed.payload ?? {},
+          side: seed.side ?? null,
           completed,
           completed_at: completed ? new Date().toISOString() : null,
         },
@@ -138,12 +153,13 @@ export function useHammerDailyTasks(planDate: string) {
         source: s.source,
         source_ref: s.sourceRef,
         payload: s.payload ?? {},
+        side: s.side ?? null,
         completed,
         completed_at: completed ? new Date().toISOString() : null,
       }));
       const { error } = await supabase
         .from("hammer_daily_task_completions" as any)
-        .upsert(rows, { onConflict: "user_id,plan_date,task_id" });
+        .upsert(rows, { onConflict: "user_id,plan_date,task_id,side" });
       if (error) throw error;
     },
     onSettled: () => qc.invalidateQueries({ queryKey }),
@@ -155,10 +171,11 @@ export function useHammerDailyTasks(planDate: string) {
   );
 
   const countDone = useCallback(
-    (sourceRef: string, taskIds: string[]) =>
-      taskIds.filter((id) => byId.get(id)?.completed).length,
+    (_sourceRef: string, taskIds: string[], side: LateralSide = null) =>
+      taskIds.filter((id) => byId.get(localKey(id, side))?.completed).length,
     [byId],
   );
+
 
   return {
     isLoading: query.isLoading,

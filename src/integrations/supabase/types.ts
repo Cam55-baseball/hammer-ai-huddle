@@ -5376,6 +5376,7 @@ export type Database = {
           id: string
           payload: Json
           plan_date: string
+          side: string | null
           source: string
           source_ref: string
           task_id: string
@@ -5389,6 +5390,7 @@ export type Database = {
           id?: string
           payload?: Json
           plan_date: string
+          side?: string | null
           source: string
           source_ref: string
           task_id: string
@@ -5402,6 +5404,7 @@ export type Database = {
           id?: string
           payload?: Json
           plan_date?: string
+          side?: string | null
           source?: string
           source_ref?: string
           task_id?: string

@@ -86,6 +86,8 @@ export interface GamePlanTemplateSeed {
   readonly source: string;
 }
 
+export type LateralSide = "L" | "R" | null;
+
 export interface PrescribedBlock {
   readonly modality: ModalityKey;
   readonly title: string;
@@ -104,6 +106,13 @@ export interface PrescribedBlock {
   /** Knowledge-gap ids the UI can ask inline (Answer Hammer). */
   readonly missingContextKeys: ReadonlyArray<string>;
   readonly gamePlanTemplate: GamePlanTemplateSeed | null;
+  /**
+   * Laterality tag for switch hitters / ambidextrous throwers — when set,
+   * this block represents ONE side (L or R) and is expected to appear
+   * alongside a mirror-side block. UI keys DOM ids + completion task ids
+   * off this so L and R checklists stay independent.
+   */
+  readonly side?: LateralSide;
 }
 
 const ALL_MODALITIES: ModalityKey[] = [
@@ -608,9 +617,10 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       }
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
-      const batsRaw = (ctx.get<string>("bats_hand")?.value as string | null) ?? null;
-      const isSwitchHitter = batsRaw === "S";
-      const baseDrills: DrillStep[] = inSeason
+      // NOTE: switch-hitter split is handled downstream by splitLateralityBlocks,
+      // which duplicates this block into two full-volume side-tagged blocks
+      // (Left and Right). Do NOT halve volume or interleave sides here.
+      const drills: DrillStep[] = inSeason
         ? [
             { name: "Tee work — barrel path", dosage: "10 quality swings", cue: "stay through the ball, do not pull off" },
             { name: "Front toss — pitch recognition", dosage: "10 swings", cue: "see ball deep, hands stay back" },
@@ -629,32 +639,9 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               { name: "Live BP or machine", dosage: "25 swings" },
               { name: "Video + tag in PIE", dosage: "best 5 swings flagged" },
             ];
-      // Switch hitters train BOTH sides. We split each drill's swing volume
-      // roughly in half across L and R so total load stays sane, then keep
-      // the video/tag drill single (shared review).
-      const halveDosage = (dosage: string): string => {
-        const m = dosage.match(/^(\d+)([\s\S]*)$/);
-        if (!m) return dosage;
-        const n = Math.max(1, Math.round(parseInt(m[1], 10) / 2));
-        return `${n}${m[2]}`;
-      };
-      const drills: DrillStep[] = isSwitchHitter
-        ? baseDrills.flatMap((d) => {
-            if (/video|PIE|tag/i.test(d.name)) return [d];
-            const half = { ...d, dosage: halveDosage(d.dosage) };
-            return [
-              { ...half, name: `${d.name} — Left side` },
-              { ...half, name: `${d.name} — Right side` },
-            ];
-          })
-        : baseDrills;
-      const switchCue = isSwitchHitter
-        ? "Switch hitter — work BOTH sides today. If one side is sore or protected, skip it and tell Hammer."
-        : null;
       return {
         modality,
-        title: (inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting")
-          + (isSwitchHitter ? " (both sides)" : ""),
+        title: inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
         why: (inSeason ? "Sharpen timing without spending." : offSeason ? "Volume + mechanical rebuild." : "Quality reps targeting your weakness pattern.") + (goal ? ` ${goal}` : ""),
         roadmapReason: inSeason
           ? "In-season — focus on timing and feel, not volume."
@@ -665,7 +652,6 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         steps: drillsToSteps(drills),
         drills,
         cues: [
-          ...(switchCue ? [switchCue] : []),
           "Track every pitch, even no-swings.",
           "Quality first — bail on a round if you start grooving bad habits.",
         ],
@@ -677,14 +663,12 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         missing: [],
         missingContextKeys: [],
         gamePlanTemplate: {
-          title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}${isSwitchHitter ? " (both sides)" : ""}`,
+          title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}`,
           activityType: "practice",
           icon: "target",
           color: "#8b5cf6",
           durationMinutes: inSeason ? 20 : offSeason ? 45 : 35,
-          description: isSwitchHitter
-            ? "Hitting block with tee, toss, and live BP — worked on BOTH sides for the switch hitter."
-            : "Hitting block with tee, toss, and live BP work.",
+          description: "Hitting block with tee, toss, and live BP work.",
           checklist: drillsToChecklist(drills),
           source: "hammer.daily.hitting",
         },
@@ -743,14 +727,9 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       const eass = buildEassPrescription(eassCtx);
 
-      // Ambidextrous throwers: mirror the neural prep + a short light-catch
-      // set on the non-dominant arm. Max-intent work (pulldowns, overload,
-      // long-toss) stays dominant-side only for arm-health safety.
-      const throwsRaw = (ctx.get<string>("throws_hand")?.value as string | null) ?? null;
-      const isAmbi = throwsRaw === "S";
-      const armProtected = eass.mode === "arm_protected" || eass.mode === "recovery_day";
-      const primaryHand = eassCtx.sport === "softball" ? "windmill" : "dominant";
-      const nonDominant = primaryHand === "windmill" ? "overhand (non-dominant)" : "non-dominant";
+      // Ambidextrous throwers get TWO independent throwing cards downstream
+      // via splitLateralityBlocks (dominant + non-dominant), each with its own
+      // dosage envelope and completion checklist. Do not push mirror drills here.
 
       // Map EASS drills → DrillStep shape used by the UI.
       const drills: DrillStep[] = eass.drills.map((d) => ({
@@ -762,22 +741,6 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
       }));
-
-      if (isAmbi && !armProtected) {
-        // Mirror only the low-cost neural / catch-play tier on the other arm.
-        drills.push({
-          name: `Band prep — ${nonDominant} arm (mirror)`,
-          dosage: "ER 1x10, IR 1x10, scap pulls 1x10",
-          cue: "wake the other cuff — slow, deliberate, no snap-backs",
-          stopIf: "any twinge on the non-dominant arm — stop and skip the mirror catch",
-        });
-        drills.push({
-          name: `Light catch-play — ${nonDominant} arm`,
-          dosage: "40ft x 8 throws at 50-60% intent",
-          cue: "form throws only — the non-dominant arm learns speed slowly, never chase distance",
-          stopIf: "any pain, command loss, or fatigue — stop, dominant-arm work is the priority today",
-        });
-      }
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
@@ -796,7 +759,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       return {
         modality,
-        title: eass.title + (isAmbi && !armProtected ? " (both arms)" : ""),
+        title: eass.title,
         why: eass.why + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
         phase:
@@ -807,13 +770,8 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               : "build",
         steps: drillsToSteps(drills),
         drills,
-        cues: [
-          ...eass.cues,
-          ...anthroCues,
-          ...(isAmbi && !armProtected
-            ? ["Ambidextrous thrower — mirror the neural prep on both sides; max-intent work stays on the dominant arm today."]
-            : []),
-        ],
+        cues: [...eass.cues, ...anthroCues],
+
         stopRules: eass.stopRules,
         durationMin: eass.durationMin,
         route: "/practice?module=throwing",
@@ -1518,6 +1476,105 @@ function applyGpSignalBias(
   const otherReady = ready.filter((b) => !biased.has(b.modality));
   return { blocks: [...biasedReady, ...otherReady, ...suppressed], tags };
 }
+/**
+ * Laterality splitter — duplicates hitting for switch hitters and throwing
+ * for ambidextrous throwers into two side-tagged blocks so each side has
+ * its own dosage envelope, DOM anchor, and completion checklist.
+ *
+ * - Switch hitter (`bats_hand === "S"`): the hitting block is emitted twice
+ *   at FULL volume for each side. This is intentional — half-volume "share"
+ *   splits under-trained one side and read as unclear to athletes/parents.
+ * - Ambidextrous thrower (`throws_hand === "S"`): the throwing block is
+ *   emitted twice. The non-dominant side keeps neural prep and light
+ *   catch-play only — max-intent work (pulldowns, long-toss) stays on the
+ *   dominant arm for arm-health safety.
+ * - Suppressed / awaiting-input blocks are never split (no reps to duplicate).
+ * - Missingness-permissive: if we can't identify bats/throws, we return
+ *   blocks unchanged.
+ */
+function splitLateralityBlocks(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  ctx: HammerAthleteContext,
+): ReadonlyArray<PrescribedBlock> {
+  const bats = (ctx.get<string>("bats_hand")?.value as string | null) ?? null;
+  const throws = (ctx.get<string>("throws_hand")?.value as string | null) ?? null;
+  const isSwitchHitter = bats === "S";
+  const isAmbi = throws === "S";
+  if (!isSwitchHitter && !isAmbi) return blocks;
+
+  const NON_DOM_KEEP = /(band|prep|scap|cuff|warm|activation|neural|catch-play|light)/i;
+
+  const cloneSide = (
+    b: PrescribedBlock,
+    side: "L" | "R",
+    sideLabel: string,
+    opts?: { drillsFilter?: (d: DrillStep) => boolean; dosageScale?: number; extraCue?: string },
+  ): PrescribedBlock => {
+    const filter = opts?.drillsFilter ?? (() => true);
+    const scale = opts?.dosageScale ?? 1;
+    const scaleDosage = (dosage: string): string => {
+      if (scale === 1) return dosage;
+      return dosage.replace(/\b(\d+)\b/, (_m, n) => {
+        const scaled = Math.max(1, Math.round(parseInt(n, 10) * scale));
+        return `${scaled}`;
+      });
+    };
+    const drills = b.drills.filter(filter).map((d) =>
+      scale === 1 ? d : { ...d, dosage: scaleDosage(d.dosage) },
+    );
+    return {
+      ...b,
+      side,
+      title: `${b.title} — ${sideLabel}`,
+      drills,
+      steps: drillsToSteps(drills),
+      cues: opts?.extraCue ? [opts.extraCue, ...b.cues] : b.cues,
+      gamePlanTemplate: b.gamePlanTemplate
+        ? {
+            ...b.gamePlanTemplate,
+            title: `${b.gamePlanTemplate.title} — ${sideLabel}`,
+            checklist: drillsToChecklist(drills),
+            source: `${b.gamePlanTemplate.source}.${side.toLowerCase()}`,
+          }
+        : null,
+    };
+  };
+
+  const out: PrescribedBlock[] = [];
+  for (const b of blocks) {
+    if (b.status !== "ready") {
+      out.push(b);
+      continue;
+    }
+    if (isSwitchHitter && b.modality === "hitting") {
+      out.push(
+        cloneSide(b, "L", "Left-handed", {
+          extraCue: "Switch hitter — left-handed reps. Full volume; treat this side like your only side today.",
+        }),
+        cloneSide(b, "R", "Right-handed", {
+          extraCue: "Switch hitter — right-handed reps. Full volume; treat this side like your only side today.",
+        }),
+      );
+      continue;
+    }
+    if (isAmbi && b.modality === "throwing") {
+      out.push(
+        cloneSide(b, "R", "Dominant arm", {
+          extraCue: "Ambidextrous thrower — dominant-arm workload. Full EASS envelope.",
+        }),
+        cloneSide(b, "L", "Non-dominant arm", {
+          drillsFilter: (d) => NON_DOM_KEEP.test(d.name),
+          dosageScale: 0.5,
+          extraCue: "Ambidextrous thrower — non-dominant arm keeps neural prep + light catch only. Never chase distance or intent here.",
+        }),
+      );
+      continue;
+    }
+    out.push(b);
+  }
+  return out;
+}
+
 
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
@@ -1528,7 +1585,8 @@ export function buildHammerDailyPlan(
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
-  const guarded = applyMinorParentSupremacy(rawBlocks, proj);
+  const lateralized = splitLateralityBlocks(rawBlocks, ctx);
+  const guarded = applyMinorParentSupremacy(lateralized, proj);
   const ordered = applyCategoryGoalOrdering(guarded, proj);
   // Schedule modulation runs AFTER goal ordering so the calendar can
   // visibly bend today's plan around games/tournaments/camps/travel.
