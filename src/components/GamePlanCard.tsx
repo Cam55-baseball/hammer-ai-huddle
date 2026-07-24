@@ -1915,7 +1915,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Action buttons row */}
         <div className="flex items-center gap-1 flex-wrap">
           <SchedulePracticeDialog />
-            <SchedulePracticeDialog />
             {/* Skip Day / Undo Skip */}
             <Button
               variant="ghost"
