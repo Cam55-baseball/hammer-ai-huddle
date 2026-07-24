@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BookOpen, Lightbulb, AlertTriangle, Sparkles, Play } from "lucide-react";
+import { ArrowLeft, BookOpen, Lightbulb, AlertTriangle, Sparkles, Play, Eye, Footprints, Megaphone } from "lucide-react";
 import { IqDiamond, legendForAssignments } from "@/components/iq/IqDiamond";
 import { IqScenarioRunner } from "@/components/iq/IqScenarioRunner";
 import { IqPlaybackControls } from "@/components/iq/IqPlaybackControls";
@@ -328,37 +328,58 @@ export default function GameIqSituation() {
             </div>
 
 
-            {hoveredActor && (
+            {hoveredActor && (() => {
+              const ha = hoveredActor as typeof hoveredActor & {
+                footwork_cue?: string | null;
+                eyes_target?: string | null;
+              };
+              return (
               <Card className="p-5 space-y-3 animate-fade-in">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold">{ROLE_LABELS[hoveredActor.role]}</h3>
-                  <Badge style={{ background: ASSIGNMENT_COLOR[hoveredActor.assignment], color: "hsl(var(--iq-field))" }}>
-                    {ASSIGNMENT_LABELS[hoveredActor.assignment]}
+                  <h3 className="font-bold">{ROLE_LABELS[ha.role]}</h3>
+                  <Badge style={{ background: ASSIGNMENT_COLOR[ha.assignment], color: "hsl(var(--iq-field))" }}>
+                    {ASSIGNMENT_LABELS[ha.assignment]}
                   </Badge>
                 </div>
-                {hoveredActor.coaching_note && (
-                  <p className="text-sm leading-relaxed">{hoveredActor.coaching_note}</p>
+                {ha.coaching_note && (
+                  <p className="text-sm leading-relaxed">{ha.coaching_note}</p>
                 )}
-                {hoveredActor.communication_call && (
-                  <p className="text-sm"><span className="font-semibold">Call:</span> "{hoveredActor.communication_call}"</p>
-                )}
-                {hoveredActor.secondary_read && (
-                  <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">If…</span> {hoveredActor.secondary_read}</p>
-                )}
-                {hoveredActor.elite_cue && (
-                  <div className="flex gap-2 items-start rounded bg-primary/5 border border-primary/20 p-2">
-                    <Lightbulb className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-xs"><span className="font-semibold">Elite cue:</span> {hoveredActor.elite_cue}</p>
+                {ha.footwork_cue && (
+                  <div className="flex gap-2 items-start rounded bg-muted/40 border border-border/60 p-2">
+                    <Footprints className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-xs"><span className="font-semibold">Footwork:</span> {ha.footwork_cue}</p>
                   </div>
                 )}
-                {hoveredActor.common_mistake && (
+                {ha.eyes_target && (
+                  <div className="flex gap-2 items-start rounded bg-muted/40 border border-border/60 p-2">
+                    <Eye className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-xs"><span className="font-semibold">Eyes:</span> {ha.eyes_target}</p>
+                  </div>
+                )}
+                {ha.communication_call && (
+                  <div className="flex gap-2 items-start rounded bg-muted/40 border border-border/60 p-2">
+                    <Megaphone className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-xs"><span className="font-semibold">Call:</span> "{ha.communication_call}"</p>
+                  </div>
+                )}
+                {ha.secondary_read && (
+                  <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">If…</span> {ha.secondary_read}</p>
+                )}
+                {ha.elite_cue && (
+                  <div className="flex gap-2 items-start rounded bg-primary/5 border border-primary/20 p-2">
+                    <Lightbulb className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-xs"><span className="font-semibold">Elite cue:</span> {ha.elite_cue}</p>
+                  </div>
+                )}
+                {ha.common_mistake && (
                   <div className="flex gap-2 items-start rounded bg-destructive/5 border border-destructive/20 p-2">
                     <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-xs"><span className="font-semibold">Common mistake:</span> {hoveredActor.common_mistake}</p>
+                    <p className="text-xs"><span className="font-semibold">Common mistake:</span> {ha.common_mistake}</p>
                   </div>
                 )}
               </Card>
-            )}
+              );
+            })()}
 
             {situation.sources?.length > 0 && (
               <Card className="p-4">

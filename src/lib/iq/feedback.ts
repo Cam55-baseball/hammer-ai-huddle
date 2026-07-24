@@ -27,6 +27,10 @@ export interface ScenarioFeedback {
   roleLabel: string;
   /** "Your job on this play" — one sentence from the chosen role's actor. */
   yourJob: string | null;
+  /** First-move footwork cue for the chosen role. */
+  footwork: string | null;
+  /** Where the chosen role's eyes go, in order. */
+  eyes: string | null;
   /** What to read pre-pitch / post-contact. */
   read: string | null;
   /** What to communicate. */
@@ -149,6 +153,8 @@ export function buildScenarioFeedback(input: {
     correctAssignmentLabel: ASSIGNMENT_LABELS[correctAssignment],
     roleLabel,
     yourJob: myActor?.coaching_note?.trim() || null,
+    footwork: (myActor as { footwork_cue?: string | null } | null)?.footwork_cue?.trim() || null,
+    eyes: (myActor as { eyes_target?: string | null } | null)?.eyes_target?.trim() || null,
     read: myActor?.secondary_read?.trim() || null,
     call: myActor?.communication_call?.trim() || null,
     eliteCue: myActor?.elite_cue?.trim() || null,
