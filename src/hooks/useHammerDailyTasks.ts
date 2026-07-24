@@ -77,9 +77,12 @@ export function useHammerDailyTasks(planDate: string) {
   });
 
   const byId = new Map<string, TaskRow>();
-  for (const r of query.data ?? []) byId.set(r.task_id, r);
+  for (const r of query.data ?? []) byId.set(localKey(r.task_id, r.side ?? null), r);
 
-  const isDone = useCallback((taskId: string) => !!byId.get(taskId)?.completed, [byId]);
+  const isDone = useCallback(
+    (taskId: string, side: LateralSide = null) => !!byId.get(localKey(taskId, side))?.completed,
+    [byId],
+  );
 
   const upsertMut = useMutation({
     mutationFn: async ({ seed, completed }: { seed: TaskSeed; completed: boolean }) => {
@@ -94,27 +97,30 @@ export function useHammerDailyTasks(planDate: string) {
             source: seed.source,
             source_ref: seed.sourceRef,
             payload: seed.payload ?? {},
+            side: seed.side ?? null,
             completed,
             completed_at: completed ? new Date().toISOString() : null,
           },
-          { onConflict: "user_id,plan_date,task_id" },
+          { onConflict: "user_id,plan_date,task_id,side" },
         );
       if (error) throw error;
     },
     onMutate: async ({ seed, completed }) => {
       await qc.cancelQueries({ queryKey });
       const prev = qc.getQueryData<TaskRow[]>(queryKey) ?? [];
-      const filtered = prev.filter((r) => r.task_id !== seed.taskId);
+      const key = localKey(seed.taskId, seed.side ?? null);
+      const filtered = prev.filter((r) => localKey(r.task_id, r.side ?? null) !== key);
       const next: TaskRow[] = [
         ...filtered,
         {
-          id: `optimistic-${seed.taskId}`,
+          id: `optimistic-${key}`,
           user_id: user?.id ?? "",
           plan_date: planDate,
           task_id: seed.taskId,
           source: seed.source,
           source_ref: seed.sourceRef,
           payload: seed.payload ?? {},
+          side: seed.side ?? null,
           completed,
           completed_at: completed ? new Date().toISOString() : null,
         },
@@ -147,12 +153,13 @@ export function useHammerDailyTasks(planDate: string) {
         source: s.source,
         source_ref: s.sourceRef,
         payload: s.payload ?? {},
+        side: s.side ?? null,
         completed,
         completed_at: completed ? new Date().toISOString() : null,
       }));
       const { error } = await supabase
         .from("hammer_daily_task_completions" as any)
-        .upsert(rows, { onConflict: "user_id,plan_date,task_id" });
+        .upsert(rows, { onConflict: "user_id,plan_date,task_id,side" });
       if (error) throw error;
     },
     onSettled: () => qc.invalidateQueries({ queryKey }),
@@ -164,10 +171,11 @@ export function useHammerDailyTasks(planDate: string) {
   );
 
   const countDone = useCallback(
-    (sourceRef: string, taskIds: string[]) =>
-      taskIds.filter((id) => byId.get(id)?.completed).length,
+    (_sourceRef: string, taskIds: string[], side: LateralSide = null) =>
+      taskIds.filter((id) => byId.get(localKey(id, side))?.completed).length,
     [byId],
   );
+
 
   return {
     isLoading: query.isLoading,
