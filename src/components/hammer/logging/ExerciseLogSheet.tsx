@@ -34,7 +34,7 @@ function toNum(v: string): number | null {
 }
 
 export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) {
-  const template = useMemo(() => pickTemplate(rx), [rx]);
+  const template = useMemo(() => resolveTemplate(rx), [rx]);
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const { data: previous } = usePreviousMovementLog(rx.movement_slug, rx.id);
   const save = useSaveExerciseLog();
