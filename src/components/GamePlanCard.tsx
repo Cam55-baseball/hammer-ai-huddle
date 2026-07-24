@@ -1893,6 +1893,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           
           {/* Action buttons row */}
           <div className="flex items-center gap-1 flex-wrap">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPlanHidden(true)}
+              className="h-8 px-2 gap-1 text-xs text-white/70 hover:text-white"
+              title="Hide Game Plan"
+            >
+              <EyeOff className="h-4 w-4" />
+              <span className="hidden sm:inline">Hide</span>
+            </Button>
             <SchedulePracticeDialog />
             {/* Skip Day / Undo Skip */}
             <Button
