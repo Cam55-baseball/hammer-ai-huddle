@@ -37,6 +37,7 @@ interface Props {
   readonly onChanged: () => void;
   readonly drills?: ReadonlyArray<DrillLike>;
   readonly planDate?: string;
+  readonly side?: "L" | "R" | null;
 }
 
 export function BlockCompletionControls({
@@ -45,10 +46,11 @@ export function BlockCompletionControls({
   onChanged,
   drills,
   planDate,
+  side = null,
 }: Props) {
   const { user } = useAuth();
   const [current, setCurrent] = useState<CompletionState | null>(() =>
-    todayCompletion(loadEngagement(user?.id), modality),
+    todayCompletion(loadEngagement(user?.id), modality, side),
   );
   const date = planDate ?? new Date().toISOString().slice(0, 10);
   const tasks = useHammerDailyTasks(date);
@@ -64,7 +66,7 @@ export function BlockCompletionControls({
   }, []);
 
   function mark(status: CompletionState) {
-    recordCompletion(user?.id, modality, status);
+    recordCompletion(user?.id, modality, status, side);
     setCurrent(status);
     onChanged();
     // Bulk-sync every drill task in this card so checkboxes reflect the
@@ -74,7 +76,8 @@ export function BlockCompletionControls({
         taskId: makeBlockTaskId(String(modality), d.slug ?? d.name),
         source: "block_drill",
         sourceRef: String(modality),
-        payload: { name: d.name, dosage: d.dosage ?? null, slug: d.slug ?? null },
+        side,
+        payload: { name: d.name, dosage: d.dosage ?? null, slug: d.slug ?? null, side },
       }));
       void tasks.bulkSet(seeds, status === "done");
     }

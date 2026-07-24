@@ -39,10 +39,19 @@ export type CompletionState = "done" | "skipped";
  * ModalityKey switch. UI-only.
  */
 export type EngagementKey = ModalityKey | "lifts" | "bat_speed" | "conditioning";
+export type LateralityCompletionKey = EngagementKey | `${EngagementKey}:L` | `${EngagementKey}:R`;
+
+function completionKey(modality: EngagementKey, side?: "L" | "R" | null): LateralityCompletionKey {
+  return side ? `${modality}:${side}` as LateralityCompletionKey : modality;
+}
+
+function baseCompletionKey(key: string): EngagementKey {
+  return key.split(":")[0] as EngagementKey;
+}
 
 export interface DayEntry {
   readonly date: string; // YYYY-MM-DD
-  readonly completions: Partial<Record<EngagementKey, CompletionState>>;
+  readonly completions: Partial<Record<LateralityCompletionKey, CompletionState>>;
   /** phase signature per modality — powers rotation detection. */
   readonly phases: Partial<Record<ModalityKey, BlockPhase>>;
 }
@@ -111,11 +120,13 @@ export function recordCompletion(
   userId: string | null | undefined,
   modality: EngagementKey,
   status: CompletionState,
+  side?: "L" | "R" | null,
 ): EngagementState {
   const state = loadEngagement(userId);
+  const key = completionKey(modality, side);
   const next = upsertToday(state, (d) => ({
     ...d,
-    completions: { ...d.completions, [modality]: status },
+    completions: { ...d.completions, [key]: status },
   }));
   saveEngagement(next);
   return next;
@@ -138,9 +149,10 @@ export function recordPhaseSignature(
 export function todayCompletion(
   state: EngagementState,
   modality: EngagementKey,
+  side?: "L" | "R" | null,
 ): CompletionState | null {
   const t = state.days.find((d) => d.date === todayKey());
-  return (t?.completions[modality] as CompletionState | undefined) ?? null;
+  return (t?.completions[completionKey(modality, side)] as CompletionState | undefined) ?? null;
 }
 
 // ---------- streaks + milestones ----------
@@ -407,12 +419,12 @@ export function projectAdaptiveAdjustments(
   const skipped = new Set<ModalityKey>(
     Object.entries(today.completions)
       .filter(([, v]) => v === "skipped")
-      .map(([k]) => k as ModalityKey),
+      .map(([k]) => baseCompletionKey(k) as ModalityKey),
   );
   const done = new Set<ModalityKey>(
     Object.entries(today.completions)
       .filter(([, v]) => v === "done")
-      .map(([k]) => k as ModalityKey),
+      .map(([k]) => baseCompletionKey(k) as ModalityKey),
   );
   if (skipped.size === 0 && done.size === 0) return [];
 

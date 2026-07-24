@@ -692,7 +692,6 @@ function BlockCard({
                   {block.side === "L" ? "Left" : "Right"}
                 </Badge>
               )}
-              <BlockSideBadge modality={block.modality} />
               {block.durationMin !== null && block.durationMin > 0 && (
                 <Badge variant="secondary" className="text-[10px]">
                   {block.durationMin} min
@@ -875,6 +874,7 @@ function BlockCard({
                 onChanged={() => onEngagementChanged?.()}
                 drills={block.drills}
                 planDate={planDate}
+                side={block.side ?? null}
               />
             </div>
           </div>
@@ -1056,62 +1056,6 @@ function InlineBlockChat({ block }: { block: PrescribedBlock }) {
 }
 
 /**
- * Tiny L/R badge that auto-decides which side context applies to a block
- * (hitting → hit picker; throwing/pitching/defense → throw picker). Hidden
- * for non-switch / non-ambi athletes.
+ * Legacy header picker and selected-side badges were removed. Split cards now
+ * carry their own side as the only source of truth.
  */
-function BlockSideBadge({ modality }: { modality: string }) {
-  const { shouldShowPicker, selectedSide } = useSideContext();
-  const discipline: "hit" | "throw" | null =
-    modality === "hitting"
-      ? "hit"
-      : modality === "throwing" || modality === "defense"
-        ? "throw"
-        : null;
-  if (!discipline || !shouldShowPicker(discipline)) return null;
-  const s = selectedSide[discipline];
-  return (
-    <Badge
-      variant="outline"
-      className="text-[10px] font-bold"
-      title={`Programmed for ${s === "L" ? "Left" : "Right"} ${discipline === "hit" ? "swing" : "arm"} — toggle in header`}
-    >
-      {s}
-    </Badge>
-  );
-}
-
-/**
- * Header pickers — visible only for switch hitters / ambi throwers.
- * Toggling refetches today's plan via useWkDailyPrescriptions (side flows to
- * the edge function through side_hit / side_throw in the request body).
- */
-function HeaderSidePickers() {
-  const { shouldShowPicker, selectedSide, setSide } = useSideContext();
-  const showHit = shouldShowPicker("hit");
-  const showThrow = shouldShowPicker("throw");
-  if (!showHit && !showThrow) return null;
-  const Toggle = ({ label, value, onPick }: { label: string; value: "L" | "R"; onPick: (s: "L" | "R") => void }) => (
-    <div className="inline-flex items-center gap-1 rounded-md border bg-background px-1.5 py-0.5">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
-      {(["L", "R"] as const).map((s) => (
-        <button
-          key={s}
-          type="button"
-          aria-pressed={value === s}
-          onClick={() => onPick(s)}
-          className={`h-5 min-w-[22px] rounded px-1 text-[10px] font-bold ${value === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-          title={`Program today for ${s === "L" ? "Left" : "Right"} ${label === "Bat" ? "swing" : "arm"}`}
-        >
-          {s}
-        </button>
-      ))}
-    </div>
-  );
-  return (
-    <div className="flex items-center gap-1.5">
-      {showHit && <Toggle label="Bat" value={selectedSide.hit} onPick={(s) => setSide("hit", s)} />}
-      {showThrow && <Toggle label="Arm" value={selectedSide.throw} onPick={(s) => setSide("throw", s)} />}
-    </div>
-  );
-}

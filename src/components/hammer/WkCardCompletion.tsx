@@ -36,7 +36,7 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
   const planDate = items[0]?.plan_date ?? new Date().toISOString().slice(0, 10);
   const tasks = useHammerDailyTasks(planDate);
   const [current, setCurrent] = useState(() =>
-    todayCompletion(loadEngagement(user?.id), modality),
+    todayCompletion(loadEngagement(user?.id), modality, side),
   );
   const [busy, setBusy] = useState(false);
 
@@ -56,21 +56,51 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
     setBusy(true);
     try {
       // 1) local engagement — drives Daily Intent header + healing narrative
-      recordCompletion(user?.id, modality, status);
+      recordCompletion(user?.id, modality, status, side);
       setCurrent(status);
 
       // 2) persist to wk_prescriptions.status so the generator sees real
-      //    completion tomorrow (best-effort; never blocks the UI).
+      //    completion tomorrow (best-effort; never blocks the UI). Side-split
+      //    duplicate cards cannot write the shared row status or one side would
+      //    incorrectly mark the other side complete.
       if (user?.id && items.length > 0) {
-        const ids = items.map((r) => r.id);
-        const rowStatus = status === "done" ? "completed" : "skipped";
-        const { error } = await supabase
-          .from("wk_prescriptions" as any)
-          .update({ status: rowStatus })
-          .in("id", ids);
-        if (error) {
-          console.warn("wk_prescriptions bulk status update failed", error);
-        } else if (status === "done") {
+        if (!side) {
+          const ids = items.map((r) => r.id);
+          const rowStatus = status === "done" ? "completed" : "skipped";
+          const { error } = await supabase
+            .from("wk_prescriptions" as any)
+            .update({ status: rowStatus })
+            .in("id", ids);
+          if (error) {
+            console.warn("wk_prescriptions bulk status update failed", error);
+          } else if (status === "done") {
+            // Best-effort session-log rows for the Learning Loop.
+            const planDate = items[0]?.plan_date;
+            if (planDate) {
+              supabase.from("wk_session_logs" as any).insert(
+                items.map((r) => ({
+                  user_id: user.id,
+                  prescription_id: r.id,
+                  plan_date: r.plan_date,
+                  movement_slug: r.movement_slug,
+                  sets_completed: r.sets ?? null,
+                  reps_completed:
+                    r.sets && r.reps
+                      ? Array.from({ length: r.sets }, () => r.reps as number)
+                      : null,
+                  load_used: r.load_pct ?? null,
+                  duration_seconds_completed: r.duration_seconds ?? null,
+                  distance_feet_completed: r.distance_feet ?? null,
+                  total_reps_completed: r.total_reps ?? null,
+                  rpe: null,
+                })),
+              ).then(({ error: logErr }) => {
+                if (logErr) console.warn("wk_session_logs bulk insert failed", logErr);
+              });
+            }
+          }
+        }
+        if (side && status === "done") {
           // Best-effort session-log rows for the Learning Loop.
           const planDate = items[0]?.plan_date;
           if (planDate) {
@@ -90,6 +120,7 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
                 distance_feet_completed: r.distance_feet ?? null,
                 total_reps_completed: r.total_reps ?? null,
                 rpe: null,
+                notes: `${side}-side bat speed completed`,
               })),
             ).then(({ error: logErr }) => {
               if (logErr) console.warn("wk_session_logs bulk insert failed", logErr);

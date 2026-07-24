@@ -1,46 +1,28 @@
-## Root cause
-
-The switch-hitter split lives in `splitLateralityBlocks` (`src/lib/hammer/prescription/dailyPlan.ts:1495`) and gates purely on the acquisition context values:
-
-```
-const bats = ctx.get<string>("bats_hand")?.value;   // must equal "S"
-const throws = ctx.get<string>("throws_hand")?.value; // must equal "S"
-```
-
-But `SideContext` (`src/contexts/SideContext.tsx:66`) treats a user as a switch hitter when **either** `athlete_mpi_settings.is_switch_hitter` is true **or** `bats === "S"`. Athletes who onboarded with a primary side ("R") and later flipped the switch-hitter flag through the identity picker end up with `bats_hand === "R"` in `athlete_context` but `is_switch_hitter === true` in `athlete_mpi_settings`. The prescription splitter never sees the flag, so hitting stays single-card. Same shape for ambidextrous throwers.
-
-Bat Speed already renders two cards because `HammerDailyPlan` gates that on `useSideContext().isSwitchHitter` — which reads the mpi flag directly. So Bat Speed and actual Hitting disagree.
-
-Separately, `<HeaderSidePickers />` still renders in the Hammers Today header (`HammerDailyPlan.tsx:363`) and the user wants it gone from that surface.
-
 ## Plan
 
-**1. Trust the mpi flag inside the prescription engine**
+1. **Split hitting before the awaiting-input gate**
+   - Update the laterality splitter so switch hitters get two Hitting cards even when the hitting block is currently `awaiting-input` for equipment.
+   - Keep suppressed blocks unsplit, but allow `ready` and `awaiting-input` hitting/throwing blocks to become side-specific.
+   - Result: the current screenshot state becomes two cards: `Hitting — Left-handed — Waiting On Equipment` and `Hitting — Right-handed — Waiting On Equipment`, each with its own side badge and Answer Hammer path.
 
-- Extend `buildHammerDailyPlan` to accept an optional `identityOverride: { isSwitchHitter?: boolean; isAmbidextrousThrower?: boolean }`.
-- Update `splitLateralityBlocks` to compute:
-  - `isSwitchHitter = identityOverride?.isSwitchHitter ?? (bats === "S")`
-  - `isAmbi = identityOverride?.isAmbidextrousThrower ?? (throws === "S")`
-- Thread the override from `useWkDailyPrescriptions` (which already calls `buildHammerDailyPlan`) using `useSideContext()` so the client hook and the splitter share one truth.
-- If `useWkDailyPrescriptions` runs outside the SideContext provider, read `athlete_mpi_settings.is_switch_hitter / is_ambidextrous_thrower` in the same query that assembles the plan context and pass those booleans in.
+2. **Make side identity impossible to miss**
+   - Use the same switch/ambidextrous identity source everywhere Hammers Today builds the plan.
+   - Preserve fallback checks from handedness values (`bats_hand === "S"`, `throws_hand === "S"`) so older onboarding data still works.
 
-**2. Preserve full-volume hitting split**
+3. **Separate card-level completion by side**
+   - Pass `block.side` into `BlockCompletionControls`.
+   - Store local Done/Skip engagement with side-specific keys like `hitting:L`, `hitting:R`, `throwing:L`, `throwing:R`, so completing/skipping one side does not mark the other side.
+   - Bulk checklist sync will also include the side so each drill checkbox remains independent.
 
-`cloneSide` already emits full-volume L + R for hitting and dominant + non-dominant (0.5×, prep-only filter) for throwing. No change needed once the gate opens correctly.
+4. **Clean remaining picker-era UI**
+   - Remove the unused `HeaderSidePickers` component code.
+   - Update/remove `BlockSideBadge` so it no longer shows the old single selected `R`/`L` picker state on side-split cards. The actual side badge from the duplicated prescription becomes the only source of truth.
 
-**3. Remove the header side pickers from Hammers Today**
+5. **Ambidextrous thrower coverage**
+   - Apply the same side-card behavior to throwing: dominant and non-dominant cards can be logged independently.
+   - Keep non-dominant throwing safety logic intact: light prep/catch-only filtering and reduced dosage.
 
-Delete the `<HeaderSidePickers />` render at `HammerDailyPlan.tsx:363` and drop the now-unused `HeaderSidePickers` function + `useSideContext` picker wiring in that file. Switch/ambi athletes will see the L/R distinction only through the duplicated cards and the per-card side badges already implemented. Side selection for uploads/report card continues to live where it belongs — inside those surfaces — not on the daily plan header.
-
-**4. Verify E2E**
-
-- Typecheck.
-- Confirm a switch-hitter fixture (mpi `is_switch_hitter=true`, `bats_hand="R"`) renders: two Hitting blocks (L + R, full volume), two Bat Speed cards (already working), no header picker.
-- Confirm an ambi-thrower fixture (mpi `is_ambidextrous_thrower=true`, `throws_hand="R"`) renders: dominant-arm throwing block + non-dominant prep-only block, no header picker.
-- Confirm a non-switch, non-ambi athlete sees exactly one Hitting card, one Bat Speed card, one Throwing card, and no picker.
-
-### Technical notes
-
-- Files touched: `src/lib/hammer/prescription/dailyPlan.ts`, `src/hooks/useWkDailyPrescriptions.ts`, `src/components/hammer/HammerDailyPlan.tsx`. No DB migration — the mpi flag column already exists and is populated.
-- No changes to `useHammerDailyTasks` / `hammer_daily_task_completions` — the composite `(task_id, side)` unique key already handles independent L/R completion state.
-- Prescription-engine identity precedence stays: explicit mpi flag > `bats_hand`/`throws_hand` value. This mirrors `SideContext` so the two surfaces cannot drift.
+6. **Verify**
+   - Typecheck after changes.
+   - Confirm the plan-building path produces two Hitting cards for switch hitters, including when equipment is missing.
+   - Confirm completion keys/checklist task rows are side-aware for both switch hitters and ambidextrous throwers.
