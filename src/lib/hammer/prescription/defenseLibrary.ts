@@ -632,5 +632,3 @@ export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescri
     why,
   };
 }
-  };
-}
