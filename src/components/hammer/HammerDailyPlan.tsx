@@ -345,9 +345,10 @@ function HammerDailyPlanBody() {
                   : `Throw ${plan.sideBias!.throw!.weakerSide}`}
               </Badge>
             )}
-            {/* Side pickers intentionally removed from Today Plan — athletes set side
-                inside AnalyzeVideo / DelayCam / drill logging. Weaker-side bias still
-                runs silently via readSideBias() above. */}
+            {/* Switch-hitter / ambi-thrower side pickers — active side flows into
+                today's prescription (wk-generate-daily reads side_hit / side_throw). */}
+            <HeaderSidePickers />
+
             <Button
               size="sm"
               variant="ghost"
