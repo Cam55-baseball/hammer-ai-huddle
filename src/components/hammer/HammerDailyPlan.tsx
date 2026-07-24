@@ -723,7 +723,7 @@ function BlockCard({
                   if (focusGaps.length === 0) setChatOpen(true);
                   // Defer scroll until the collapsible has expanded.
                   requestAnimationFrame(() => {
-                    const el = document.getElementById(`hammer-plan-${block.modality}`);
+                    const el = document.getElementById(domId);
                     el?.scrollIntoView({ behavior: "smooth", block: "start" });
                   });
                   return;
