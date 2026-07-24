@@ -1476,6 +1476,105 @@ function applyGpSignalBias(
   const otherReady = ready.filter((b) => !biased.has(b.modality));
   return { blocks: [...biasedReady, ...otherReady, ...suppressed], tags };
 }
+/**
+ * Laterality splitter — duplicates hitting for switch hitters and throwing
+ * for ambidextrous throwers into two side-tagged blocks so each side has
+ * its own dosage envelope, DOM anchor, and completion checklist.
+ *
+ * - Switch hitter (`bats_hand === "S"`): the hitting block is emitted twice
+ *   at FULL volume for each side. This is intentional — half-volume "share"
+ *   splits under-trained one side and read as unclear to athletes/parents.
+ * - Ambidextrous thrower (`throws_hand === "S"`): the throwing block is
+ *   emitted twice. The non-dominant side keeps neural prep and light
+ *   catch-play only — max-intent work (pulldowns, long-toss) stays on the
+ *   dominant arm for arm-health safety.
+ * - Suppressed / awaiting-input blocks are never split (no reps to duplicate).
+ * - Missingness-permissive: if we can't identify bats/throws, we return
+ *   blocks unchanged.
+ */
+function splitLateralityBlocks(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  ctx: HammerAthleteContext,
+): ReadonlyArray<PrescribedBlock> {
+  const bats = (ctx.get<string>("bats_hand")?.value as string | null) ?? null;
+  const throws = (ctx.get<string>("throws_hand")?.value as string | null) ?? null;
+  const isSwitchHitter = bats === "S";
+  const isAmbi = throws === "S";
+  if (!isSwitchHitter && !isAmbi) return blocks;
+
+  const NON_DOM_KEEP = /(band|prep|scap|cuff|warm|activation|neural|catch-play|light)/i;
+
+  const cloneSide = (
+    b: PrescribedBlock,
+    side: "L" | "R",
+    sideLabel: string,
+    opts?: { drillsFilter?: (d: DrillStep) => boolean; dosageScale?: number; extraCue?: string },
+  ): PrescribedBlock => {
+    const filter = opts?.drillsFilter ?? (() => true);
+    const scale = opts?.dosageScale ?? 1;
+    const scaleDosage = (dosage: string): string => {
+      if (scale === 1) return dosage;
+      return dosage.replace(/\b(\d+)\b/, (_m, n) => {
+        const scaled = Math.max(1, Math.round(parseInt(n, 10) * scale));
+        return `${scaled}`;
+      });
+    };
+    const drills = b.drills.filter(filter).map((d) =>
+      scale === 1 ? d : { ...d, dosage: scaleDosage(d.dosage) },
+    );
+    return {
+      ...b,
+      side,
+      title: `${b.title} — ${sideLabel}`,
+      drills,
+      steps: drillsToSteps(drills),
+      cues: opts?.extraCue ? [opts.extraCue, ...b.cues] : b.cues,
+      gamePlanTemplate: b.gamePlanTemplate
+        ? {
+            ...b.gamePlanTemplate,
+            title: `${b.gamePlanTemplate.title} — ${sideLabel}`,
+            checklist: drillsToChecklist(drills),
+            source: `${b.gamePlanTemplate.source}.${side.toLowerCase()}`,
+          }
+        : null,
+    };
+  };
+
+  const out: PrescribedBlock[] = [];
+  for (const b of blocks) {
+    if (b.status !== "ready") {
+      out.push(b);
+      continue;
+    }
+    if (isSwitchHitter && b.modality === "hitting") {
+      out.push(
+        cloneSide(b, "L", "Left-handed", {
+          extraCue: "Switch hitter — left-handed reps. Full volume; treat this side like your only side today.",
+        }),
+        cloneSide(b, "R", "Right-handed", {
+          extraCue: "Switch hitter — right-handed reps. Full volume; treat this side like your only side today.",
+        }),
+      );
+      continue;
+    }
+    if (isAmbi && b.modality === "throwing") {
+      out.push(
+        cloneSide(b, "R", "Dominant arm", {
+          extraCue: "Ambidextrous thrower — dominant-arm workload. Full EASS envelope.",
+        }),
+        cloneSide(b, "L", "Non-dominant arm", {
+          drillsFilter: (d) => NON_DOM_KEEP.test(d.name),
+          dosageScale: 0.5,
+          extraCue: "Ambidextrous thrower — non-dominant arm keeps neural prep + light catch only. Never chase distance or intent here.",
+        }),
+      );
+      continue;
+    }
+    out.push(b);
+  }
+  return out;
+}
+
 
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
