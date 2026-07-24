@@ -581,7 +581,9 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       }
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
-      const drills: DrillStep[] = inSeason
+      const batsRaw = (ctx.get<string>("bats_hand")?.value as string | null) ?? null;
+      const isSwitchHitter = batsRaw === "S";
+      const baseDrills: DrillStep[] = inSeason
         ? [
             { name: "Tee work — barrel path", dosage: "10 quality swings", cue: "stay through the ball, do not pull off" },
             { name: "Front toss — pitch recognition", dosage: "10 swings", cue: "see ball deep, hands stay back" },
@@ -600,9 +602,32 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               { name: "Live BP or machine", dosage: "25 swings" },
               { name: "Video + tag in PIE", dosage: "best 5 swings flagged" },
             ];
+      // Switch hitters train BOTH sides. We split each drill's swing volume
+      // roughly in half across L and R so total load stays sane, then keep
+      // the video/tag drill single (shared review).
+      const halveDosage = (dosage: string): string => {
+        const m = dosage.match(/^(\d+)([\s\S]*)$/);
+        if (!m) return dosage;
+        const n = Math.max(1, Math.round(parseInt(m[1], 10) / 2));
+        return `${n}${m[2]}`;
+      };
+      const drills: DrillStep[] = isSwitchHitter
+        ? baseDrills.flatMap((d) => {
+            if (/video|PIE|tag/i.test(d.name)) return [d];
+            const half = { ...d, dosage: halveDosage(d.dosage) };
+            return [
+              { ...half, name: `${d.name} — Left side` },
+              { ...half, name: `${d.name} — Right side` },
+            ];
+          })
+        : baseDrills;
+      const switchCue = isSwitchHitter
+        ? "Switch hitter — work BOTH sides today. If one side is sore or protected, skip it and tell Hammer."
+        : null;
       return {
         modality,
-        title: inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
+        title: (inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting")
+          + (isSwitchHitter ? " (both sides)" : ""),
         why: (inSeason ? "Sharpen timing without spending." : offSeason ? "Volume + mechanical rebuild." : "Quality reps targeting your weakness pattern.") + (goal ? ` ${goal}` : ""),
         roadmapReason: inSeason
           ? "In-season — focus on timing and feel, not volume."
@@ -612,7 +637,11 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         phase: inSeason ? "sharpen" : offSeason ? "build" : "skill",
         steps: drillsToSteps(drills),
         drills,
-        cues: ["Track every pitch, even no-swings.", "Quality first — bail on a round if you start grooving bad habits."],
+        cues: [
+          ...(switchCue ? [switchCue] : []),
+          "Track every pitch, even no-swings.",
+          "Quality first — bail on a round if you start grooving bad habits.",
+        ],
         stopRules: ["Hand or wrist pain — stop and switch to dry swings only.", "If timing breaks down badly, end the round, reset, restart."],
         durationMin: inSeason ? 20 : offSeason ? 45 : 35,
         route: "/practice?module=hitting",
@@ -621,12 +650,14 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         missing: [],
         missingContextKeys: [],
         gamePlanTemplate: {
-          title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}`,
+          title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}${isSwitchHitter ? " (both sides)" : ""}`,
           activityType: "practice",
           icon: "target",
           color: "#8b5cf6",
           durationMinutes: inSeason ? 20 : offSeason ? 45 : 35,
-          description: "Hitting block with tee, toss, and live BP work.",
+          description: isSwitchHitter
+            ? "Hitting block with tee, toss, and live BP — worked on BOTH sides for the switch hitter."
+            : "Hitting block with tee, toss, and live BP work.",
           checklist: drillsToChecklist(drills),
           source: "hammer.daily.hitting",
         },
@@ -685,6 +716,15 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       const eass = buildEassPrescription(eassCtx);
 
+      // Ambidextrous throwers: mirror the neural prep + a short light-catch
+      // set on the non-dominant arm. Max-intent work (pulldowns, overload,
+      // long-toss) stays dominant-side only for arm-health safety.
+      const throwsRaw = (ctx.get<string>("throws_hand")?.value as string | null) ?? null;
+      const isAmbi = throwsRaw === "S";
+      const armProtected = eass.mode === "arm_protected" || eass.mode === "recovery_day";
+      const primaryHand = eassCtx.sport === "softball" ? "windmill" : "dominant";
+      const nonDominant = primaryHand === "windmill" ? "overhand (non-dominant)" : "non-dominant";
+
       // Map EASS drills → DrillStep shape used by the UI.
       const drills: DrillStep[] = eass.drills.map((d) => ({
         name: d.name,
@@ -695,6 +735,22 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
       }));
+
+      if (isAmbi && !armProtected) {
+        // Mirror only the low-cost neural / catch-play tier on the other arm.
+        drills.push({
+          name: `Band prep — ${nonDominant} arm (mirror)`,
+          dosage: "ER 1x10, IR 1x10, scap pulls 1x10",
+          cue: "wake the other cuff — slow, deliberate, no snap-backs",
+          stopIf: "any twinge on the non-dominant arm — stop and skip the mirror catch",
+        });
+        drills.push({
+          name: `Light catch-play — ${nonDominant} arm`,
+          dosage: "40ft x 8 throws at 50-60% intent",
+          cue: "form throws only — the non-dominant arm learns speed slowly, never chase distance",
+          stopIf: "any pain, command loss, or fatigue — stop, dominant-arm work is the priority today",
+        });
+      }
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
@@ -713,7 +769,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       return {
         modality,
-        title: eass.title,
+        title: eass.title + (isAmbi && !armProtected ? " (both arms)" : ""),
         why: eass.why + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
         phase:
@@ -724,7 +780,13 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               : "build",
         steps: drillsToSteps(drills),
         drills,
-        cues: [...eass.cues, ...anthroCues],
+        cues: [
+          ...eass.cues,
+          ...anthroCues,
+          ...(isAmbi && !armProtected
+            ? ["Ambidextrous thrower — mirror the neural prep on both sides; max-intent work stays on the dominant arm today."]
+            : []),
+        ],
         stopRules: eass.stopRules,
         durationMin: eass.durationMin,
         route: "/practice?module=throwing",

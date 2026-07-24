@@ -668,6 +668,27 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // In-season, non-game days: fold a short cross-sport / WOST activation
+    // into the front of the day (rendered inside the Warm-up card). This
+    // keeps sport-crossover work at the start of training in-season and
+    // reserves the back-end "offseason_back_end" slot for the offseason.
+    if (isInSeason && !isGameDay) {
+      const inSeasonPrimer =
+        pickFirst(CROSS_SPORT_LOW_IMPACT_PREFERRED) ??
+        pickFirst(GAME_DAY_PRIMER_SLUGS) ??
+        pickFirst(CROSS_SPORT_COORDINATION_PREFERRED);
+      if (inSeasonPrimer) {
+        push(
+          "cross_sport",
+          "cross_sport",
+          inSeasonPrimer,
+          {},
+          "In-season crossover primer — short, low-cost coordination drill folded into the warm-up. Frees CNS from sport patterns without stealing freshness from the day.",
+          { placement: "warmup_integration", sequencing_hint: "In-season: finish the warm-up with this before speed / bat speed / lifts." },
+        );
+      }
+    }
+
     if (!isGameDay) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
