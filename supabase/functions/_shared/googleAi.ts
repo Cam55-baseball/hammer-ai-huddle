@@ -372,6 +372,8 @@ async function callLovable(
     if (req.response_format) body.response_format = req.response_format;
     if (typeof req.temperature === "number") body.temperature = req.temperature;
     if (typeof req.max_tokens === "number") body.max_tokens = req.max_tokens;
+    if (typeof req.top_p === "number") body.top_p = req.top_p;
+    if (typeof req.seed === "number") body.seed = req.seed;
 
     const resp = await fetch(LOVABLE_URL, {
       method: "POST",
