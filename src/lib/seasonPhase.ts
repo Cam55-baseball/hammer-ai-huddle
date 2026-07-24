@@ -80,6 +80,24 @@ export function resolveSeasonPhase(settings: SeasonSettingsLike | null | undefin
 
 // ---------- Programming profiles per phase ----------
 
+export type NeijingElement = 'Wood' | 'Fire' | 'Earth' | 'Metal' | 'Water';
+
+/**
+ * Huangdi Neijing Su Wen "performance climate" overlay.
+ * Interpretive-only — never authors organism truth. Blends TCM framing with
+ * modern sports-science guidance so athletes understand *why* the phase is
+ * shaped the way it is.
+ */
+export interface SeasonHPIProfile {
+  element: NeijingElement;
+  elementQuality: string;      // one-line "flavor" of the element
+  organEmphasis: string;       // which channel/organ the phase asks us to protect
+  yinYangEmphasis: string;     // e.g. "Yang rising", "Yin restoration"
+  qiDirective: string;         // what the athlete is asked to cultivate
+  seasonalAdaptation: string;  // practical climate/food/lifestyle note
+  breathPrimer: string;        // short breath drill matched to phase
+}
+
 export interface SeasonProgrammingProfile {
   phase: SeasonPhase;
   label: string;
@@ -95,6 +113,8 @@ export interface SeasonProgrammingProfile {
   toneGuidance: string;
   // Coach-style summary for prompts
   directives: string[];
+  // Neijing / Human Performance Intelligence overlay (interpretive-only).
+  hpi: SeasonHPIProfile;
 }
 
 export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
@@ -115,6 +135,15 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'Cap brand-new movement patterns; refine what already exists.',
       'Schedule one full recovery day for every 3 high-CNS days.',
     ],
+    hpi: {
+      element: 'Wood',
+      elementQuality: 'Wood — flexible, rising, decisive.',
+      organEmphasis: 'Liver / Wood — smooth rotation, clear vision, sharp reactions.',
+      yinYangEmphasis: 'Yang rising — sharpen without over-heating.',
+      qiDirective: 'Circulate Qi before intent — flow first, then game-speed reps.',
+      seasonalAdaptation: 'Lean into greens, sour notes, and early-day sunlight; give the body a real warm-up before max effort.',
+      breathPrimer: 'Nasal in 4 · out 6 — 6 rounds. Wake the diaphragm without spiking tone.',
+    },
   },
   in_season: {
     phase: 'in_season',
@@ -134,6 +163,15 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'No more than 1 high-CNS strength session per week.',
       'Refinement cues only — no new motor patterns.',
     ],
+    hpi: {
+      element: 'Fire',
+      elementQuality: 'Fire — bright, expressive, easy to over-spend.',
+      organEmphasis: 'Heart / Fire — protect the shen (focus, sleep, confidence).',
+      yinYangEmphasis: 'Yang expressed, Yin protected — spend on game day, restore between.',
+      qiDirective: 'Preserve sharpness — small, frequent doses beat heroic sessions.',
+      seasonalAdaptation: 'Hydrate ahead of thirst, seek cooling foods after games, guard sleep as a performance asset.',
+      breathPrimer: 'Box breath 4-4-4-4 — 5 rounds. Steady the shen before pitches or at-bats.',
+    },
   },
   post_season: {
     phase: 'post_season',
@@ -152,6 +190,15 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'Address lingering pain and asymmetries before any rebuild.',
       'Begin foundational movement quality work in the final 2 weeks.',
     ],
+    hpi: {
+      element: 'Metal',
+      elementQuality: 'Metal — refined, quiet, letting go of what is done.',
+      organEmphasis: 'Lung / Metal — full breath, clean tissue, resolve lingering pain.',
+      yinYangEmphasis: 'Yin restoration — the season descends before it rises again.',
+      qiDirective: 'Downshift and repair — sleep, breathe, walk, decompress.',
+      seasonalAdaptation: 'Warmer clothing on cool mornings, hydrating meals, early-to-bed rhythm.',
+      breathPrimer: 'Long-exhale breath: in 4 · out 8 — 8 rounds. Deep parasympathetic reset.',
+    },
   },
   off_season: {
     phase: 'off_season',
@@ -170,8 +217,43 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'Push CNS load with planned deload weeks every 4th week.',
       'Introduce new movement patterns and skill work freely.',
     ],
+    hpi: {
+      element: 'Water',
+      elementQuality: 'Water — deep, patient, storing power for the year ahead.',
+      organEmphasis: 'Kidney / Water — build reserves, honor sleep, respect fear signals.',
+      yinYangEmphasis: 'Yin storing, Yang forged — deep tank now becomes explosive later.',
+      qiDirective: 'Build the engine — patient volume, honest loading, deep recovery.',
+      seasonalAdaptation: 'Warming, protein-rich foods; salt intelligently; guard sleep and don\'t chase daily peaks.',
+      breathPrimer: 'Diaphragmatic 5-5 breath — 8 rounds. Fill the tank before heavy work.',
+    },
   },
 };
+
+// ---------- HPI (Human Performance Intelligence) helpers ----------
+
+/** Short-code alias used by the daily-plan builder ("off"/"pre"/"in"/"post"). */
+export type SeasonShortCode = 'off' | 'pre' | 'in' | 'post';
+
+const SHORT_TO_PHASE: Record<SeasonShortCode, SeasonPhase> = {
+  off: 'off_season',
+  pre: 'preseason',
+  in: 'in_season',
+  post: 'post_season',
+};
+
+export function seasonPhaseFromShort(code: string | null | undefined): SeasonPhase {
+  if (!code) return 'off_season';
+  return SHORT_TO_PHASE[code as SeasonShortCode] ?? 'off_season';
+}
+
+/** Fetch the Neijing / HPI profile for a season phase (accepts short or full codes). */
+export function getSeasonHPI(phaseOrShort: SeasonPhase | SeasonShortCode | string | null | undefined): SeasonHPIProfile {
+  const phase = (phaseOrShort && VALID.includes(phaseOrShort as SeasonPhase))
+    ? (phaseOrShort as SeasonPhase)
+    : seasonPhaseFromShort(phaseOrShort as string | null | undefined);
+  return SEASON_PROFILES[phase].hpi;
+}
+
 
 export function getSeasonProfile(phase: SeasonPhase): SeasonProgrammingProfile {
   return SEASON_PROFILES[phase] ?? SEASON_PROFILES.off_season;

@@ -26,6 +26,7 @@ import {
   type EngagementState,
 } from "@/lib/hammer/prescription/dailyEngagement";
 import type { HammerDailyPlanResult } from "@/lib/hammer/prescription/dailyPlan";
+import { getSeasonHPI, seasonPhaseFromShort } from "@/lib/seasonPhase";
 
 interface Props {
   readonly plan: HammerDailyPlanResult;
@@ -83,6 +84,24 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
         </div>
 
         <CollapsibleContent className="space-y-2.5 pt-2">
+          {(() => {
+            const phaseShort = (plan as unknown as { seasonPhase?: string | null }).seasonPhase ?? null;
+            const hpi = getSeasonHPI(phaseShort);
+            const phaseLabel = seasonPhaseFromShort(phaseShort).replace('_', '-');
+            return (
+              <div className="pl-6 rounded-md border border-primary/15 bg-primary/5 p-2">
+                <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80">
+                  Today's Focus · {phaseLabel} · {hpi.element}
+                </div>
+                <div className="text-[11px] text-foreground/85 mt-0.5 leading-snug">
+                  {hpi.qiDirective}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  <span className="font-medium text-foreground/70">Breath primer:</span> {hpi.breathPrimer}
+                </div>
+              </div>
+            );
+          })()}
           <div className="pl-6">
             <div className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="text-foreground/80">Yesterday:</span> {intent.yesterday}

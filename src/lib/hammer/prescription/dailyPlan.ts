@@ -34,6 +34,7 @@ import {
 } from "@/lib/hammer/goals/categoryGoals";
 import { buildWarmup, resolveWarmupContext, lifecycleFor } from "./warmupLibrary";
 import { guideFor as _guideForMovement } from "./movementGuide";
+import { getSeasonHPI } from "@/lib/seasonPhase";
 import {
   buildEassPrescription,
   normalizePosition,
@@ -250,11 +251,12 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       };
       const dur = built.estMinutes;
       const contextKey = built.context;
+      const hpi = getSeasonHPI(seasonPhase);
       return {
         modality,
         title: titleByContext[contextKey] ?? titleByContext.default,
-        why: whyByContext[contextKey] ?? whyByContext.default,
-        roadmapReason: roadmapByContext[contextKey] ?? roadmapByContext.default,
+        why: `${whyByContext[contextKey] ?? whyByContext.default} ${hpi.qiDirective}`,
+        roadmapReason: `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
         phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
@@ -1100,16 +1102,20 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
               : seasonPhase === "in"
                 ? "Recovery — in-season"
                 : "Recovery",
-        why: recoverDay
-          ? "Readiness is low. Recovery outranks training today."
-          : workloadHigh
-            ? "Workload is elevated — recovery is today's priority."
-            : injuryRegions.length > 0
-              ? `Injury-aware recovery (${injuryRegions.join(", ")}).`
-              : seasonPhase === "in"
-                ? "In-season — parasympathetic downshift between games."
-                : "Lock in sleep, mobility, and parasympathetic downshift.",
-        roadmapReason: recoverDay ? "Readiness below threshold — recovery first." : workloadHigh ? "Recent 7-day workload elevated." : "Default recovery block.",
+        why: (() => {
+          const base = recoverDay
+            ? "Readiness is low. Recovery outranks training today."
+            : workloadHigh
+              ? "Workload is elevated — recovery is today's priority."
+              : injuryRegions.length > 0
+                ? `Injury-aware recovery (${injuryRegions.join(", ")}).`
+                : seasonPhase === "in"
+                  ? "In-season — parasympathetic downshift between games."
+                  : "Lock in sleep, mobility, and parasympathetic downshift.";
+          const hpi = getSeasonHPI(seasonPhase);
+          return `${base} ${hpi.qiDirective} Breath primer: ${hpi.breathPrimer}`;
+        })(),
+        roadmapReason: `${recoverDay ? "Readiness below threshold — recovery first." : workloadHigh ? "Recent 7-day workload elevated." : "Default recovery block."} (${getSeasonHPI(seasonPhase).element} phase — ${getSeasonHPI(seasonPhase).yinYangEmphasis})`,
         phase: "recover",
         steps: drillsToSteps(drills),
         drills,
