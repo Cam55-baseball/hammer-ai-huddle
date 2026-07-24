@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+export type LateralSide = "L" | "R" | null;
+
 export interface TaskRow {
   id: string;
   user_id: string;
@@ -22,6 +24,7 @@ export interface TaskRow {
   source: "wk_prescription" | "block_drill";
   source_ref: string;
   payload: Record<string, unknown>;
+  side: LateralSide;
   completed: boolean;
   completed_at: string | null;
 }
@@ -30,6 +33,7 @@ export interface TaskSeed {
   taskId: string;
   source: "wk_prescription" | "block_drill";
   sourceRef: string;
+  side?: LateralSide;
   payload?: Record<string, unknown>;
 }
 
@@ -45,6 +49,11 @@ export function slugifyDrillName(name: string): string {
 export function makeBlockTaskId(modality: string, slugOrName: string): string {
   const s = slugOrName.startsWith("slug:") ? slugOrName.slice(5) : slugifyDrillName(slugOrName);
   return `${modality}:${s || "drill"}`;
+}
+
+/** Composite local key so L and R completions don't collide in the byId map. */
+function localKey(taskId: string, side: LateralSide | undefined): string {
+  return `${taskId}::${side ?? ""}`;
 }
 
 export function useHammerDailyTasks(planDate: string) {
