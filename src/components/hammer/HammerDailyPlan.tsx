@@ -432,7 +432,7 @@ function HammerDailyPlanBody() {
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
-            </>
+            </ArmCareBudgetProvider>
           );
         })()}
       </CardContent>
