@@ -1,5 +1,9 @@
 project_id = "wysikbsjalfvjwqzkihj"
 
+[functions.exercise-log-coach]
+verify_jwt = true
+
+
 [functions.parse-food-text]
 verify_jwt = true
 
