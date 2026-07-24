@@ -1,51 +1,44 @@
-Wave 3 — Migrate structured report and plan generators to Google AI Studio
+Smoke-test results for the four representative Wave functions:
 
-Goal: Move all remaining Wave 3 edge functions from direct Lovable Gateway fetches to direct Google AI Studio calls via the shared `googleAi.ts` helper, keeping Lovable Gateway as a transparent fallback only on failure. This preserves the same request/response parsing logic in each function.
+| Wave | Function | Result | Provider actually used |
+|------|----------|--------|------------------------|
+| 1 | `hie-team-plan` | HTTP 200, valid drill blocks | Lovable Gateway (fallback) |
+| 2 | `generate-drills` | HTTP 200, generated count 2 | Lovable Gateway (fallback) |
+| 3 | `gp-pregame-plan` | HTTP 401 — no auth header injected | Could not test |
+| 4 | `analyze-food-photo` | HTTP 401 — no auth header injected | Could not test |
 
-Wave 3 functions (8):
-- `generate-drills`
-- `generate-block-workout`
-- `generate-training-block`
-- `populate-drill-instructions`
-- `recompute-report-card`
-- `generate-vault-recap`
-- `gp-pregame-plan`
-- `hie-analyze`
+Root cause: the Google AI Studio direct path is returning 404 for `models/gemini-2.5-flash` with the project's API key. The edge-function logs show:
 
-Current state:
-- All eight functions currently call `https://ai.gateway.lovable.dev/v1/chat/completions` with `Authorization: Bearer <LOVABLE_API_KEY>`.
-- `googleAi.ts` already supports OpenAI-shaped `chatCompletion` requests with tools, tool_choice, response_format, and temperature, and transparently falls back to Lovable Gateway if the Google call fails.
-- `recompute-report-card` passes `top_p` and `seed` for deterministic scoring, which `googleAi.ts` currently drops before sending to Google.
-- `generate-vault-recap` uses `google/gemini-2.5-pro` for the elite recap; `gp-pregame-plan` uses `google/gemini-2.5-flash` with `json_object`.
-- `hie-analyze` uses `google/gemini-2.5-flash-lite` (helper maps this alias to `gemini-2.5-flash`).
+```
+[googleAi] Google call failed status=404 — falling back to Lovable Gateway
+{"error":{"code":404,"message":"This model models/gemini-2.5-flash is no longer available to new users..."}}
+```
 
-Plan:
+This means the migration is still routing most AI traffic through Lovable Gateway, which defeats the goal of separating build credits from runtime AI spend.
 
-1. Extend `googleAi.ts` to forward `top_p` and `seed`.
-   - Map `req.top_p` → `generationConfig.topP`.
-   - Map `req.seed` → `generationConfig.seed` when present.
-   - This keeps `recompute-report-card` deterministic without requiring any changes in that function.
+AI Gateway logs confirm two Lovable `chat_completions` calls (model `google/gemini-2.5-flash`) at the exact test timestamps, proving fallback was triggered.
 
-2. Migrate each Wave 3 function with the same pattern:
-   - Add `import { chatCompletion } from "../_shared/googleAi.ts";`.
-   - Replace `const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")` / `if (!LOVABLE_API_KEY) ...` checks with a check for either `LOVABLE_API_KEY` or `GOOGLE_AI_API_KEY` (Google is required for the primary path; Lovable is only the fallback).
-   - Replace the raw `fetch("https://ai.gateway.lovable.dev/v1/chat/completions", { ... })` block with a `chatCompletion({ ... })` call, preserving the existing `model`, `messages`, `tools`, `tool_choice`, `response_format`, `temperature`, and any new `top_p`/`seed` fields.
-   - Replace the existing `response.ok` / `response.text()` error handling with the helper's `ChatCompletionResult` shape: `if (!res.ok) throw new Error(...)` or return the same rate-limit/credit error responses the functions currently emit.
-   - Keep the existing response parsing exactly as-is (e.g., `data.choices[0].message.tool_calls[0].function.arguments`, `data.choices[0].message.content`, JSON.parse, regex extraction, fallback builders).
+Plan
+----
+1. Update `supabase/functions/_shared/googleAi.ts` model aliases so the migrated `google/gemini-2.5-*` IDs map to stable models available to the project's key:
+   - `gemini-2.5-flash` → `gemini-3.6-flash`
+   - `gemini-2.5-flash-lite` → `gemini-3.6-flash`
+   - `gemini-2.5-flash-image` → `gemini-3.1-flash-image`
+   - `gemini-2.5-pro` → `gemini-3.5-pro`
+   - Keep existing `gemini-2.0-flash-exp` and `gemini-3-flash-preview` aliases intact.
 
-3. Per-function special cases:
-   - `generate-drills`: tool-call response → `parsed.drills` loop.
-   - `generate-block-workout`: tool-call response → `BlockWorkoutResult` fallback.
-   - `generate-training-block`: tool-call response → `GeneratedBlock` validation and scheduling.
-   - `populate-drill-instructions`: batched tool-call response → `parsed.instructions` loop with 6-step validation.
-   - `recompute-report-card`: tool-call response → `args.metrics` → `validateMetrics`.
-   - `generate-vault-recap`: free-form JSON text response → regex parse into `aiContent`.
-   - `gp-pregame-plan`: `json_object` response → content strip + JSON parse + save plan.
-   - `hie-analyze`: free-form array response → regex parse or fallback week plan.
+2. Deploy the four representative functions to pick up the shared-file change:
+   - `hie-team-plan`
+   - `generate-drills`
+   - `gp-pregame-plan`
+   - `analyze-food-photo`
 
-4. Verify and deploy:
-   - Run `supabase--test_edge_functions` on the migrated functions if tests exist.
-   - Deploy all 8 functions with `supabase--deploy_edge_functions`.
-   - Smoke-test one representative call per function to confirm the Google path returns valid JSON and fallback behavior is never hit under normal conditions.
+3. Re-run the same four representative smoke tests.
 
-No UI changes are required; this is purely a backend routing change.
+4. Verify the fix by checking:
+   - Edge-function logs no longer contain the `Google call failed status=404` warning for these functions.
+   - AI Gateway logs show no new Lovable Gateway calls for the tested functions during the test window (proving the Google path is primary and no fallback is triggered).
+
+5. Optional follow-up: if you log in to the preview so auth tokens are injected, I can also validate the authenticated Wave-3 and Wave-4 functions end-to-end with real data.
+
+No code changes have been made yet; this plan requires your approval before implementation.
