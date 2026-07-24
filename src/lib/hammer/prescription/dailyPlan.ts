@@ -1792,11 +1792,6 @@ export function buildHammerDailyPlan(
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
 
-  // Resolve the weekly microcycle FIRST so we can thread its label into blocks.
-  const weeklyTemplate = resolveWeeklyTemplate(proj);
-  const microcycle = applyMicrocycle(weeklyTemplate, today);
-  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today);
-
   // Roadmap primitives — rung + season quarter + elite target + throwing ladder.
   const rung = resolveRoadmapRung(proj);
   const quarter = resolveSeasonQuarter(proj, roadmapInputs.phaseStartedAt ?? null, today);
@@ -1804,6 +1799,27 @@ export function buildHammerDailyPlan(
   const positionRaw = (ctx.get<string>("position_primary")?.value as string | null) ?? null;
   const eliteTarget = resolveEliteTarget(sportRaw);
   const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+
+  // Skill-frequency ladder — stack days first, then intensity. Feed the
+  // targets into the microcycle so priorityDayOrder is honoured, and count
+  // earned days from the last 7d of max-intent completions.
+  const skillTargets = SKILL_MODALITIES.reduce<Partial<Record<SkillModality, number>>>((acc, m) => {
+    acc[m] = resolveSkillDaysTarget(
+      rung.descriptor.rung, m, positionRaw, proj.injuryRegions, proj.lifecycleBand, proj.liftingAgeYears,
+    );
+    return acc;
+  }, {});
+  const earnedDaysByModality = countEarnedSkillDays(roadmapInputs.recentCompletions ?? [], today);
+  const rungIdx = RUNG_ORDER.indexOf(rung.descriptor.rung);
+  const nextRung = rungIdx >= 0 && rungIdx < RUNG_ORDER.length - 1 ? RUNG_ORDER[rungIdx + 1] : null;
+  const skillLadder = projectSkillLadder(
+    rung.descriptor.rung, nextRung, proj, positionRaw, earnedDaysByModality,
+  );
+
+  // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
+  const weeklyTemplate = resolveWeeklyTemplate(proj);
+  const microcycle = applyMicrocycle(weeklyTemplate, today, skillTargets);
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, skillTargets);
 
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
