@@ -42,6 +42,17 @@ import {
   type EassContext,
 } from "./eassLibrary";
 import { selectDefenseDrills } from "./defenseLibrary";
+import {
+  resolveWeeklyTemplate,
+  applyMicrocycle,
+  projectWeeklyRoadmap,
+  SCHEDULABLE_MODALITIES,
+  type ResolvedMicrocycle,
+  type ModalityDayDecision,
+  type RoadmapDay,
+  type WeeklyTemplate,
+} from "./weeklyMicrocycle";
+
 
 
 export type ModalityKey =
