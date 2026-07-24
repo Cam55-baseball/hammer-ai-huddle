@@ -64,6 +64,8 @@ import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
+import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
+import { BookOpen } from "lucide-react";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
@@ -76,6 +78,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +86,52 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Sliders } from "lucide-react";
+import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
+
+function DrillRow({ drill: d }: { drill: DrillStep }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <li className="text-xs rounded-md border border-border/50 bg-muted/30 p-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="font-medium">{d.name}</div>
+          <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          aria-label={`How to do ${d.name}`}
+        >
+          <BookOpen className="h-3 w-3" />
+          <span>How?</span>
+        </button>
+      </div>
+      {d.setup && (
+        <div className="text-[11px] text-muted-foreground mt-1">Setup: {d.setup}</div>
+      )}
+      {d.cue && (
+        <div className="text-[11px] text-foreground/80 mt-0.5">Cue: {d.cue}</div>
+      )}
+      {d.stopIf && (
+        <div className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 flex items-start gap-1">
+          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>Stop if: {d.stopIf}</span>
+        </div>
+      )}
+      <MovementGuideSheet
+        open={open}
+        onOpenChange={setOpen}
+        name={d.name}
+        slug={d.slug ?? null}
+        guideOverride={d.guide ?? null}
+        fallbackCue={d.cue ?? null}
+        fallbackSetup={d.setup ?? null}
+        fallbackStopIf={d.stopIf ?? null}
+      />
+    </li>
+  );
+}
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -338,13 +387,16 @@ function HammerDailyPlanBody() {
         </div>
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup");
-          // Modalities owned by dedicated Wk cards (Speed / Bat Speed / Lifts /
-          // Conditioning / Cross-sport) must not also render as generic blocks
-          // here — otherwise users see duplicate category cards.
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
           const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup" && !WK_OWNED.has(b.modality));
+          // Arm-care budget: throwing block owns arm care whenever it's rendered
+          // as a real block (ready/awaiting-input). Otherwise the lift card carries it.
+          const throwingBlock = plan.blocks.find((b) => b.modality === "throwing");
+          const armCareOwner: import("@/components/hammer/ArmCareBudgetContext").ArmCareOwner =
+            throwingBlock && throwingBlock.status !== "suppressed" ? "throwing" : "lift";
           return (
-            <>
+            <ArmCareBudgetProvider owner={armCareOwner}>
+
               {warmupBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
@@ -381,7 +433,7 @@ function HammerDailyPlanBody() {
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
-            </>
+            </ArmCareBudgetProvider>
           );
         })()}
       </CardContent>
@@ -589,29 +641,7 @@ function BlockCard({
               </div>
               <ul className="space-y-1.5">
                 {block.drills.map((d, i) => (
-                  <li
-                    key={i}
-                    className="text-xs rounded-md border border-border/50 bg-muted/30 p-2"
-                  >
-                    <div className="font-medium">{d.name}</div>
-                    <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
-                    {d.setup && (
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        Setup: {d.setup}
-                      </div>
-                    )}
-                    {d.cue && (
-                      <div className="text-[11px] text-foreground/80 mt-0.5">
-                        Cue: {d.cue}
-                      </div>
-                    )}
-                    {d.stopIf && (
-                      <div className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 flex items-start gap-1">
-                        <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                        <span>Stop if: {d.stopIf}</span>
-                      </div>
-                    )}
-                  </li>
+                  <DrillRow key={i} drill={d} />
                 ))}
               </ul>
             </div>

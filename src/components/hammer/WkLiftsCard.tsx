@@ -35,6 +35,7 @@ import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { ArmCareLibraryDialog } from "@/components/hammer/ArmCareLibraryDialog";
 import { BookOpen } from "lucide-react";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
+import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
@@ -94,7 +95,11 @@ export function WkLiftsCard() {
     );
   }
 
-  const items = grouped.lifts;
+  const budget = useArmCareBudget();
+  const suppressArmCareInLifts = budget.suppressFor("lift");
+  const items = suppressArmCareInLifts
+    ? grouped.lifts.filter((r) => r.sequence_role !== "arm_care")
+    : grouped.lifts;
   const blockedItems = blocked.data ?? [];
 
   return (
@@ -123,6 +128,11 @@ export function WkLiftsCard() {
         {/* Phase display hidden from athlete UI — engine still uses phaseKey/phaseDisplay internally. */}
       </CardHeader>
       <CardContent className="space-y-2">
+        {suppressArmCareInLifts && (
+          <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
+            Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.
+          </div>
+        )}
         {reductions.length > 0 && !acked && (
           <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs">
             <div className="flex items-start gap-2">
