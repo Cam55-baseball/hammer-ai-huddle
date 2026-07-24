@@ -152,6 +152,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
+  const [planHidden, setPlanHiddenState] = useState<boolean>(() => {
+    try { return (typeof window !== 'undefined') && window.localStorage?.getItem('gamePlan.hidden.v1') === '1'; } catch { return false; }
+  });
+  const setPlanHidden = (v: boolean) => {
+    setPlanHiddenState(v);
+    try { window.localStorage?.setItem('gamePlan.hidden.v1', v ? '1' : '0'); } catch { /* noop */ }
+  };
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
