@@ -774,6 +774,24 @@ export function useVault() {
       // Invalidate Nutrition Hub queries so they refresh immediately
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+      // Bridge today's total hydration into HPI so the signal reflects
+      // real intake without a separate lifestyle intake tab.
+      try {
+        const { data: todayLogs } = await supabase
+          .from('vault_nutrition_logs')
+          .select('hydration_oz')
+          .eq('user_id', user.id)
+          .eq('entry_date', today);
+        const totalOz = (todayLogs || []).reduce(
+          (sum, l) => sum + (Number((l as { hydration_oz: number | null }).hydration_oz) || 0),
+          0,
+        );
+        if (totalOz > 0) {
+          mergeHpiLifestyle({ waterOz: Math.max(24, Math.min(200, Math.round(totalOz))) });
+        }
+      } catch {
+        /* best-effort */
+      }
     }
     return { success: !error };
   }, [user, today, updateStreak, fetchNutritionLogs, queryClient]);
