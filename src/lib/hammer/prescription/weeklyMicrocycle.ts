@@ -53,6 +53,13 @@ export type WeeklyTemplate = {
   readonly intensityOverrides?: Partial<Record<ModalityKey, Partial<Record<Dow, ModalityIntensity>>>>;
   /** Optional per-day accent label (e.g. "Heavy lower" for Mon lift). */
   readonly dayLabels?: Partial<Record<ModalityKey, Partial<Record<Dow, string>>>>;
+  /**
+   * Deterministic priority order for skill days when the ladder target is
+   * lower or higher than the template's base slots. Days earlier in the
+   * list are picked/kept first; extra days added beyond template slots
+   * come from the tail of this ordering and render at `activation`.
+   */
+  readonly priorityDayOrder?: Partial<Record<ModalityKey, ReadonlyArray<Dow>>>;
 };
 
 /** Modalities the microcycle actually schedules on/off. */
