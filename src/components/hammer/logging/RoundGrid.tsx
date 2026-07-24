@@ -13,6 +13,9 @@ interface Props {
   maxRounds?: number;
 }
 
+const QUALITY_SCALE = [1, 2, 3, 4, 5] as const;
+const SIDES = ["L", "R"] as const;
+
 export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds = 20 }: Props) {
   const setCell = (idx: number, key: string, value: string) => {
     const next = rounds.map((r, i) => (i === idx ? { ...r, [key]: value } : r));
@@ -53,17 +56,63 @@ export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds =
           style={{ gridTemplateColumns: `28px repeat(${fields.length}, minmax(0, 1fr))` }}
         >
           <div className="text-[11px] font-medium text-muted-foreground text-center">{idx + 1}</div>
-          {fields.map((f) => (
-            <Input
-              key={f.key}
-              inputMode="decimal"
-              type="text"
-              value={round[f.key] ?? ""}
-              placeholder="—"
-              onChange={(e) => setCell(idx, f.key, e.target.value.replace(/[^\d.]/g, ""))}
-              className="h-9 text-sm px-2"
-            />
-          ))}
+          {fields.map((f) => {
+            const value = round[f.key] ?? "";
+            if (f.kind === "quality") {
+              return (
+                <div key={f.key} className="flex gap-0.5">
+                  {QUALITY_SCALE.map((n) => {
+                    const active = value === String(n);
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setCell(idx, f.key, active ? "" : String(n))}
+                        className={`h-8 flex-1 min-w-0 rounded-md border text-xs transition-colors ${
+                          active ? "border-primary bg-primary text-primary-foreground" : "bg-muted/30 hover:bg-accent"
+                        }`}
+                        aria-label={`${f.label} ${n}`}
+                      >
+                        {n}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            }
+            if (f.kind === "side") {
+              return (
+                <div key={f.key} className="flex gap-1">
+                  {SIDES.map((s) => {
+                    const active = value === s;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setCell(idx, f.key, active ? "" : s)}
+                        className={`h-9 flex-1 rounded-md border text-xs font-medium transition-colors ${
+                          active ? "border-primary bg-primary text-primary-foreground" : "bg-muted/30 hover:bg-accent"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            }
+            return (
+              <Input
+                key={f.key}
+                inputMode="decimal"
+                type="text"
+                value={value}
+                placeholder="—"
+                onChange={(e) => setCell(idx, f.key, e.target.value.replace(/[^\d.]/g, ""))}
+                className="h-9 text-sm px-2"
+              />
+            );
+          })}
         </div>
       ))}
 
