@@ -17,6 +17,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
+import { useSeasonStatus } from "@/hooks/useSeasonStatus";
+import { useRecentMaxIntentCompletions } from "@/hooks/useRecentMaxIntentCompletions";
 import { BlockCompletionControls } from "@/components/hammer/BlockCompletionControls";
 import {
   projectAdaptiveAdjustments,
