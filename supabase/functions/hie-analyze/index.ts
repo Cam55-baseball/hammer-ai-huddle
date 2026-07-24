@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
 import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctrine.ts";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
