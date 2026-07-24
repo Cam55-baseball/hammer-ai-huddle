@@ -1244,7 +1244,7 @@ serve(async (req) => {
 
 
     // ========== ELITE AI PROMPT ==========
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
     
     let aiContent: any = {
       executive_summary: `You completed ${totalWorkouts} program workouts and ${combinedStrengthSessions} custom strength sessions over the past 6 weeks${combinedVolumeLbs > 0 ? `, with a combined volume of ${combinedVolumeLbs.toLocaleString()} lbs` : ''}.`,
