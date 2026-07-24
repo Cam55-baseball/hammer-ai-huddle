@@ -148,6 +148,7 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'Cap brand-new movement patterns; refine what already exists.',
       'Schedule one full recovery day for every 3 high-CNS days.',
     ],
+    hpi: HPI_BY_PHASE.preseason,
   },
   in_season: {
     phase: 'in_season', label: 'In-Season',
@@ -162,6 +163,7 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'No more than 1 high-CNS strength session per week.',
       'Refinement cues only — no new motor patterns.',
     ],
+    hpi: HPI_BY_PHASE.in_season,
   },
   post_season: {
     phase: 'post_season', label: 'Post-Season',
@@ -175,6 +177,7 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'Address lingering pain and asymmetries before any rebuild.',
       'Begin foundational movement quality work in the final 2 weeks.',
     ],
+    hpi: HPI_BY_PHASE.post_season,
   },
   off_season: {
     phase: 'off_season', label: 'Off-Season',
@@ -188,6 +191,7 @@ export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
       'Push CNS load with planned deload weeks every 4th week.',
       'Introduce new movement patterns and skill work freely.',
     ],
+    hpi: HPI_BY_PHASE.off_season,
   },
 };
 
