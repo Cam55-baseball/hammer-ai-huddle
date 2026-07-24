@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { emitAsbEvent } from "@/lib/asb/emit";
 import { ENGINE_VERSION, computeIdempotencyKey } from "@/lib/asb/engineVersion";
+import { mergeHpiLifestyle, type StressLevel } from "@/lib/hpi/lifestyleStore";
 
 interface Props {
   open: boolean;
