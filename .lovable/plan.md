@@ -1,60 +1,134 @@
-# Elite Defensive Drill System
+## The problem (verified in code)
 
-## Problem
-The Defense card in Hammers Today prescribes 3–4 generic drills ("Footwork ladder", "Position-specific glove work", "Live game-rep") regardless of the athlete's position or sport. That is not elite, not coach-legible, and does not differentiate C vs SS vs CF vs P, or baseball vs softball.
+Right now `buildHammerDailyPlan` in `src/lib/hammer/prescription/dailyPlan.ts` builds **all 10 modalities every single day** (line 1617: `ALL_MODALITIES.map((m) => builder(...))`). The only "scheduling" that exists is:
 
-Source: `src/lib/hammer/prescription/dailyPlan.ts` lines 798–867 — the `defense` case emits generic `DrillStep`s with no position/sport branching beyond the title.
+- Speed can flip into `deload` / `tempo_recovery` mode via `selectSpeedFocus`, but the card still appears daily.
+- Strength appears every day regardless of season phase, workload, or yesterday's session.
+- `applyScheduleModulation` only reacts to games/tournaments/travel — it has no concept of a weekly microcycle.
+- `TRAINING_DEFAULT_SCHEDULES` (day-of-week map) exists in `src/constants/trainingSchedules.ts` but is only consumed by the Calendar / Game Plan module, never by the daily Hammer plan.
 
-## Solution
-Build a real defensive drill library keyed by `(position, sport, seasonPhase)` and drive the daily Defense block from it, matching the depth and structure we already ship for EASS, warmups, and lifts.
+That is exactly why users see "lifts every day, speed sometimes" — there is no per-modality frequency rule, no CNS pairing rule, no rest-day rule, and no visible roadmap of what's coming Tue/Wed/Thu. The plan looks fake because it is fake: it's a full 10-card menu re-rendered daily with cosmetic phase-labels.
 
-### 1. New library: `src/lib/hammer/prescription/defenseLibrary.ts`
-Position × sport × phase catalog. Coverage:
+## What this plan builds
 
-- **Catcher (C)** — receiving/framing (Driveline one-knee, Yadi glove-load), blocking (short-hop, angled recoveries, runner-on-3rd blocks), pop-time footwork (jab-replace, rock-and-throw to 2B/3B), pitch calling reads, foul-pop turn-and-find. Softball adds slap-bunt pop-ups and slapper block reads.
-- **Pitcher (P)** — PFPs: 1-3-1, comebackers, bunt fielding to all bases, covering 1B on 3-6-1, backing up bases, holding runners (baseball) / rise-ball hold-and-throw (softball).
-- **1B** — scoop/short-hop ladder, 3-6-1 & 3-6-3 turn, holding runners, bunt charge, pick footwork.
-- **2B / SS** — double-play footwork (feed, pivot, tag+throw, flip, backhand-glove-flip), backhand/forehand range, slow-roller barehand, DP depth vs corners depth, relay cuts.
-- **3B** — slow-roller barehand-and-throw, bunt charge & throw, backhand at the line, in-between hop reads.
-- **OF (LF/CF/RF)** — drop-step reads, crossover first step, do-or-die charge, fence work, one-hop throws to bases, cutoff communication, sun-ball tracking. CF adds gap reads & communication authority. Softball OF adds rise-ball tracking and shorter fences.
-- **Utility / IF-flex / OF-flex** — merge two nearest positions at reduced volume.
+A single **Weekly Microcycle Engine** that is the sole authority for "does this modality run today, why, and when does it come back?" It composes cleanly with the existing schedule posture, injury gates, readiness, workload, and side-split logic — none of those are weakened, and organism truth stays owned by the existing envelope.
 
-Each drill = `{ name, dosage, cue, stopIf?, coachingKey, tags }` with 3–5 drills per phase (in/pre/off/tournament) per position per sport. Off-season prioritizes volume + range; in-season prioritizes reads + finishes; tournament reduces to primer only.
+### 1. New module: `src/lib/hammer/prescription/weeklyMicrocycle.ts`
 
-### 2. Sport differentiation
-Read `sport_primary` (already available at `dailyPlan.ts:702`). Softball branches:
-- 60' bases → shorter throws, quicker exchanges emphasized
-- rise-ball tracking for OF/1B pop-ups
-- slap-hitter reads for MIF and C
-- fastpitch-specific pitcher fielding (no lead-off in most rulesets)
+Pure, deterministic, replay-safe (no I/O, no clocks beyond an injected `today: Date`). Exports:
 
-### 3. Rewire `defense` case (`dailyPlan.ts` ~798–867)
-Replace the hardcoded drill arrays with `selectDefenseDrills({ position, sport, seasonPhase, injuries, goal })`. Keep the existing `awaiting-input` gate when `pos` is missing. Preserve `gamePlanTemplate` and route.
+- `resolveWeeklyTemplate(proj, ctx)` → picks a canonical template based on:
+  - `seasonPhase` (off / pre / in / post)
+  - `weeklyAvailabilityDays` (3, 4, 5, 6)
+  - `competitionLevel` + `liftingAgeYears` (youth vs HS+ vs college+)
+  - Primary position (pitcher vs position player vs two-way)
+  - Primary category-goal (speed / power / hitting / throwing / fielding)
+  - `injuryRegions`, `workloadHigh`, `readinessScore`
 
-### 4. Two-way / multi-position awareness
-When the athlete has secondary positions logged, add one primer drill from the secondary position so utility players stay sharp on both. Bounded to 1 extra drill to avoid card bloat.
+- `applyMicrocycle(today, template)` → returns:
+  ```ts
+  Record<ModalityKey, {
+    scheduled: boolean;
+    intensity: "primary" | "secondary" | "activation" | "off";
+    microcycleLabel: string;   // "Day 2 of 5 · Heavy lift"
+    nextScheduled: string;     // "Next speed: Thu"
+    reason: string;            // "Speed and lower-body lift never stacked back-to-back heavy."
+  }>
+  ```
 
-### 5. Injury-aware gating
-- Knee/ankle/hip injuries → suppress charge & change-of-direction drills, keep glove work.
-- Shoulder injury → suppress long throws, keep footwork + exchange dry reps.
-- Reuses `injuryRegions` already computed in `dailyPlan.ts`.
+### 2. Canonical templates (season × availability)
 
-### 6. Coach-legible copy
-Every drill gets a plain-English "How?" one-liner (already the pattern from Movement Guides). Hidden behind the same "Show me how" affordance we use for EASS/lifts, so cards stay clean.
+Each template is a 7-slot week keyed to `getDay()`. Rules baked in:
 
-## Files
-- **New**: `src/lib/hammer/prescription/defenseLibrary.ts` — catalog + `selectDefenseDrills()`
-- **Edit**: `src/lib/hammer/prescription/dailyPlan.ts` — `defense` case calls the selector
-- **Edit (optional)**: `src/lib/hammer/prescription/movementGuide.ts` — add defensive drill keys so the "How?" sheet resolves
+- **Off-season (5-6 days):** Lift 4×, Speed 2-3× (Mon/Wed/Fri CNS spacing), Hit 4-5×, Throw per-position, Conditioning 1×, Full rest 1×, Active recovery 1×.
+- **Pre-season (5 days):** Lift 3×, Speed 3×, Hit 5×, Throw 5× (pitcher long-toss cycle), Defense 3×, Rest 1×, Recovery 1×.
+- **In-season (3-4 days):** Lift 2× (maintenance), Speed 1× (freshness only), Hit daily (activation), Throw governed by pitcher rotation, Recovery day locked after outings.
+- **Post-season / deload:** Recovery-first; every high-CNS modality drops to 1×.
+- **Youth / low training age:** Motor-learning bias — Hit/Throw/Defense daily at low volume, Lift capped at 2×, Speed 2× (ATP-CP short reps only), mandatory Sat rest.
 
-## Out of scope
-- Team defense / cutoff-relay choreography (that lives in Game IQ / Game Hub)
-- New DB tables — this is a static library like EASS/warmups
-- UI changes beyond what the existing `BlockCard` already renders
+CNS pairing invariants enforced across all templates:
+- Never max-speed the day before or after max-lift lower.
+- Never two consecutive high-CNS days without a recovery buffer.
+- Pitcher throwing schedule (starter D+1 recovery, D+2 flat, D+3 bullpen, D+4 tune-up, D+5 rest) supersedes generic throwing frequency.
+- Switch hitters / ambidextrous throwers keep their laterality split — the template schedules the *block*, then `splitLateralityBlocks` continues to duplicate cards.
 
-## Verification
-- Switch position from SS → C → CF → P in profile, confirm Defense card drills change per position.
-- Toggle sport baseball ↔ softball, confirm softball-specific drills appear (rise-ball, slapper reads).
-- Simulate knee injury, confirm charge drills drop out and glove/footwork remain.
-- Confirm off/pre/in/tournament phase changes the drill mix and volume.
-- Typecheck clean.
+### 3. Wire the engine into `dailyPlan.ts`
+
+- Add `"off-day"` to `BlockStatus`.
+- Before `builder()` runs, call `applyMicrocycle` and pass the per-modality decision in as `BuilderArgs.schedule`.
+- Each `case "…"` in `builder()`:
+  - If `schedule.scheduled === false` → return an `off-day` block with:
+    - `title`: e.g. "Speed — off today (returns Thu)"
+    - `roadmapReason`: the CNS-pairing rationale
+    - `steps`: 1-2 optional micro-activations (mobility, breath, film) — never full drills
+    - `gamePlanTemplate: null` so nothing spawns a loggable session
+  - If `schedule.intensity === "activation"` → cap volume at ~30% (e.g. tee-only hitting, catch-play throwing, single-set lift primer).
+  - If `schedule.intensity === "secondary"` → cap at ~60%.
+  - Append `microcycleLabel` and `nextScheduled` into `roadmapReason` for every block so the "why today" text finally reflects the plan.
+
+### 4. Modality-specific tightening
+
+- **Strength:** Add a `liftDayType` derived from template (`heavy_lower`, `heavy_upper`, `dynamic_effort`, `repetition_effort`, `maintenance`) so consecutive lift days don't repeat the same pattern.
+- **Speed:** `selectSpeedFocus` becomes a two-step decision — template picks *whether* today is a speed day and *which slot* (acceleration / max-velocity / tempo); the existing focus enum picks *how* to execute given readiness.
+- **Conditioning:** Add a proper `conditioning` modality (currently folded into `recovery`) with 1× / week baseline, 0× in-season during heavy game weeks.
+- **Throwing:** Feed the pitcher rotation state (from `athlete_professional_status` / `training_focus`) into template so bullpen-day never lands on start-day-minus-one.
+- **Recovery day:** Convert the day the microcycle assigns as "rest" into a full-card recovery day (sleep, hydration, breath, mobility) — not just a suppressed lift.
+
+### 5. Roadmap UI surface
+
+A new `WeeklyRoadmapStrip` component above the daily plan on `HammerDailyPlan.tsx` renders the 7-day template:
+
+```text
+Mon    Tue    Wed    Thu    Fri    Sat    Sun
+Lift+  Speed+ Rest   Lift+  Speed+ Hit    Recov
+Hit    Throw         Hit    Throw  Field
+```
+
+- Today is highlighted.
+- Tap a day → shows that day's scheduled modalities and the reason each is on/off.
+- One button: "Override this week" → temporary user shift (stored in `game_plan_task_schedule` so it survives across sessions and remains the constitutional source of truth).
+
+### 6. Integration order (unchanged constitutional stack)
+
+`buildHammerDailyPlan` becomes:
+
+```text
+projectEnvelope
+  → selectSpeedFocus
+  → resolveWeeklyTemplate  ← NEW
+  → applyMicrocycle(today) ← NEW
+  → builder() per modality (now schedule-aware)
+  → splitLateralityBlocks
+  → applyMinorParentSupremacy
+  → applyCategoryGoalOrdering
+  → applyScheduleModulation   (games/tournaments override microcycle)
+  → applySideBias
+  → applyGpSignalBias
+```
+
+Suppression precedence stays: **injury > parent supremacy > game/tournament posture > microcycle off-day > readiness deload > goal ordering**. Microcycle can *turn a modality off* but never *unlock* one that a higher rule suppressed.
+
+### 7. Files to add / change
+
+- **New:** `src/lib/hammer/prescription/weeklyMicrocycle.ts`
+- **New:** `src/lib/hammer/prescription/microcycleTemplates.ts` (the season×availability tables)
+- **New:** `src/components/hammer/WeeklyRoadmapStrip.tsx`
+- **Edit:** `src/lib/hammer/prescription/dailyPlan.ts` — add `off-day` status, thread `schedule` into `BuilderArgs`, update each modality's `case` block, extend `roadmapReason` output.
+- **Edit:** `src/components/hammer/WkPrescriptionCard.tsx` — render `off-day` variant (grayed card with "Returns Thu" and 1 optional micro-primer).
+- **Edit:** `src/components/hammer/HammerDailyPlan.tsx` — mount `WeeklyRoadmapStrip`.
+- **Edit:** `src/lib/hammer/context/decisionFilters.ts` — expose `competitionLevel` and `primaryPosition` in the projection if not already surfaced.
+- **Tests:** `src/test/weeklyMicrocycle.test.ts` covering (a) each season × availability template is CNS-legal, (b) in-season pitcher throwing rotation never collides with heavy lift, (c) game/tournament posture still overrides the microcycle, (d) injury still suppresses regardless of scheduled day.
+
+### 8. Non-goals (explicit)
+
+- No new database tables. Microcycle is derived from existing context.
+- No changes to Game Plan / Calendar scheduling (already user-owned).
+- No changes to the WIC constitution, envelope ownership, or replay/lineage boundaries.
+- No AI calls — the template is deterministic; AI stays for the "why" explainer only.
+
+## What the user will see after this
+
+- Speed shows up on scheduled days only (e.g. Mon/Wed/Fri in off-season) with "Next speed: Wed" on off days.
+- Lifts drop to 2×/week in-season with a visible "Maintenance week — 2 heavy days" label instead of showing every day.
+- A 7-day strip at the top of Hammers Today explaining the week's shape.
+- Every block's "why today" line ends with "Day 2 of 5 — heavy lower. Recovery day tomorrow." so the plan reads like a real program, not a menu.
