@@ -1,87 +1,48 @@
-# Plan: Migrate remaining Wave 1 AI functions to Google AI Studio direct
+Wave 1 (text-only functions) is deployed and using Google AI Studio with Lovable Gateway fallback. We now move to the next wave of functions that still call `ai.gateway.lovable.dev` directly.
 
-## Goal
-Move the four remaining text-only Wave 1 functions off raw Lovable Gateway fetches and onto the shared `supabase/functions/_shared/googleAi.ts` helper. Google AI Studio becomes the primary provider; Lovable Gateway is used only when Google fails.
+## Wave 2 scope — Multimodal / vision / document ingestion
 
-## Files to change
-- `supabase/functions/_shared/googleAi.ts` — minor alias/schema sanitizer updates if needed
-- `supabase/functions/session-insights/index.ts`
-- `supabase/functions/get-daily-lesson/index.ts`
-- `supabase/functions/hie-team-plan/index.ts`
-- `supabase/functions/generate-follower-reports/index.ts`
+Migrate the remaining 8 functions that handle images, video, documents, or external URLs to `supabase/functions/_shared/googleAi.ts`, with Google AI Studio as primary and Lovable Gateway as automatic fallback.
 
-## Implementation
+Functions in Wave 2:
 
-### 1. Shared helper
-- Confirm `toGoogleModel()` covers the model ids used in these files (`google/gemini-2.5-pro`, `google/gemini-2.5-flash`). Add an alias if any preview id appears.
-- Verify `sanitizeJsonSchemaForGoogle()` strips fields that would cause a 400 on the `coaching_report` tool schema (it already removes `$schema`, `additionalProperties`, and `$id`).
+1. `analyze-food-photo` — photo of food → macro/nutrition analysis (image + text)
+2. `analyze-hydration-beverage` — beverage label/photo → hydration analysis (image + text)
+3. `analyze-hydration-text` — typed hydration log → structured hydration feedback (text + JSON)
+4. `gp-analyze-ab-swing` — at-bat video clip + pitcher dossier → swing mechanics JSON (video + text + tools)
+5. `gp-ingest-dossier-asset` — pitcher/hitter intel from screenshot, CSV, PDF, video frames, or notes (multimodal + JSON)
+6. `gp-ingest-document` — document ingestion for game-plan/scouting material (text + structured extraction)
+7. `parse-season-schedule` — text or photo of schedule → structured calendar events (text + image + tool calling)
+8. `parse-recipe-url` — URL fetch + HTML → structured recipe JSON (text + structured output)
 
-### 2. `session-insights`
-- Import `chatCompletion` from `../_shared/googleAi.ts`.
-- Replace the `fetch("https://ai.gateway.lovable.dev/v1/chat/completions", ...)` block with:
-  ```ts
-  await chatCompletion({
-    model: "google/gemini-2.5-pro",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    tools: [coachingReportTool],
-    tool_choice: { type: "function", function: { name: "coaching_report" } },
-  });
-  ```
-- Keep the existing tool-call extraction and DB cache logic unchanged.
-- Map `!aiResult.ok` statuses: `429` → "Rate limited, try again shortly", `402` → "AI credits exhausted", otherwise `500` → "AI generation failed".
+## What changes
 
-### 3. `get-daily-lesson`
-- Import `chatCompletion`.
-- Replace the raw Lovable fetch with:
-  ```ts
-  await chatCompletion({
-    model: "google/gemini-2.5-flash",
-    messages: [
-      { role: "system", content: sysPrompt },
-      { role: "user", content: userMsg },
-    ],
-    temperature: 0.7,
-  });
-  ```
-- Preserve existing behavior: if the AI succeeds, insert the generated lesson; if the AI fails (any status), log the failure and continue so the response still returns streak data with `lesson: null`.
-- No `response_format` is needed because the output is free-form text.
+- Replace raw `fetch("https://ai.gateway.lovable.dev/v1/chat/completions", ...)` with `chatCompletion(...)` from `../_shared/googleAi.ts`.
+- Preserve existing request shapes (messages, tools, tool_choice, response_format, temperature, model strings like `google/gemini-2.5-flash`).
+- For image/video/document inputs, pass them as OpenAI-style `content` blocks (`image_url`, `input_audio`, text). `googleAi.ts` already translates these to Google's inline-data / file parts.
+- Maintain structured output by keeping `response_format: { type: "json_object" }` or tool-calling schemas; `googleAi.ts` sets `responseMimeType: application/json` when needed.
+- Keep existing auth, subscription/role checks, heartbeat wrappers, CORS headers, and Supabase client setup unchanged.
+- Add a 45–60 second timeout per call (via `chatCompletion({ timeoutMs: 60_000 })` or `streamChatCompletion` where streaming is already used).
 
-### 4. `hie-team-plan`
-- Import `chatCompletion`.
-- Replace the `fetch("https://ai.lovable.dev/api/v1/chat/completions", ...)` call with:
-  ```ts
-  await chatCompletion({
-    model: "google/gemini-2.5-flash",
-    messages: [
-      { role: "system", content: "You are a professional baseball/softball development coach. Return ONLY valid JSON, no markdown." },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.7,
-  });
-  ```
-- Keep the JSON-array parsing from the returned content string (the existing markdown-code-fence cleanup stays).
-- Map non-OK responses to the existing `500` "AI generation failed" error.
+## Validation
 
-### 5. `generate-follower-reports`
-- Import `chatCompletion`.
-- Replace the `callAIWithRetry` implementation with a Google-first retry that calls `chatCompletion` with `timeoutMs: 5_000` and retries up to 2 times, matching the current behavior.
-- If `result.ok` is true, extract `text` from `result.data.choices[0].message.content`.
-- If all retries fail, return `null` so the deterministic headline fallback still applies.
-- Remove the top-level `LOVABLE_API_KEY` read; the helper reads credentials internally.
+After each function is migrated and deployed, test the representative path:
 
-### 6. Secrets
-- Verify `GOOGLE_AI_API_KEY` is set as a runtime secret (it is already required for earlier Wave 1 migrations).
-- Keep `LOVABLE_API_KEY` in place so the fallback path continues to work.
+- `analyze-food-photo` — send a base64 image and verify nutrition JSON is returned.
+- `parse-season-schedule` — send text schedule and verify `events[]` JSON is returned.
+- `gp-analyze-ab-swing` — upload a test video and verify `mechanics_json` + `drills` JSON is returned.
+- Confirm in function logs that the provider is `google` when `GOOGLE_AI_API_KEY` is present, and that calls only fall back to `lovable` on a Google failure.
+- Confirm no regressions in response shape expected by the React callers.
 
-## Verification
-- Deploy the four functions.
-- Send a representative request for each (UI flow or direct curl to the function URL).
-- Inspect function logs for `provider: "google"` on success; `provider: "lovable"` should appear only when Google fails.
-- Watch for 400s caused by unsupported tool schemas and adjust the helper's schema sanitizer if needed.
-- Optionally confirm the fallback path by temporarily removing `GOOGLE_AI_API_KEY` in a dev test.
+## Deployment order
 
-## Rollout
-- After these four functions are verified, proceed to the Wave 2 structured-generation functions (`generate-training-block`, `generate-block-workout`, `generate-drills`, `populate-drill-instructions`, `generate-vault-recap`).
+1. Update the 8 functions in parallel batches where there are no dependencies.
+2. Deploy via `supabase--deploy_edge_functions`.
+3. Run targeted tests for each migrated function.
+4. Report Wave 2 completion and propose Wave 3 (remaining structured report/plan generators: `generate-drills`, `generate-block-workout`, `generate-training-block`, `populate-drill-instructions`, `recompute-report-card`, `generate-vault-recap`, `gp-pregame-plan`, `hie-analyze`).
+
+## Notes
+
+- `GOOGLE_AI_API_KEY` is already configured; no new secrets are needed.
+- The `googleAi.ts` helper already supports multimodal content and function calling, so no new shared code is required for Wave 2.
+- If a migrated function uses streaming, it will use `streamChatCompletion` instead of `chatCompletion` to preserve the SSE contract with the browser.
