@@ -523,6 +523,8 @@ function BlockCard({
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const wkSnap = useHammersToday();
+  const planDate = wkSnap.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const sport = (ctx.get<string>("sport_primary")?.value as
     | "baseball"
     | "softball"
