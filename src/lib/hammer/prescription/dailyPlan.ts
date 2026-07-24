@@ -666,7 +666,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         seasonPhase: seasonPhase as EassContext["seasonPhase"],
         ageYears,
         trainingAgeYears: liftingAge ?? null,
-        injuryRegions,
+        injuryRegions: [...injuryRegions],
         armSore,
         isGameDay: !!sched.isGameDay,
         // If schedule doesn't declare throwing day explicitly, treat non-game days as throwing days
