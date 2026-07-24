@@ -58,10 +58,12 @@ export type BlockPhase = "build" | "sharpen" | "maintain" | "deload" | "recover"
 
 export interface DrillStep {
   readonly name: string;
+  readonly slug?: string;
   readonly setup?: string;
   readonly dosage: string;
   readonly cue?: string;
   readonly stopIf?: string;
+  readonly guide?: import("./movementGuide").MovementGuide;
 }
 
 export interface GamePlanTemplateSeed {
@@ -194,13 +196,17 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         isRecoveryDay,
         modalityBias: null,
       });
-      const built = buildWarmup({ context, lifecycle, gameDay: isGameDay, daySeed });
+      // Arm care is ALWAYS owned by the throwing block (EASS band prep / cooldown / arm-protected mode).
+      // Strip arm_care from the warmup so arm care is never duplicated.
+      const built = buildWarmup({ context, lifecycle, gameDay: isGameDay, daySeed, suppressArmCare: true });
       const drills: DrillStep[] = built.drills.map((d) => ({
         name: d.name,
+        slug: d.slug,
         setup: d.setup,
         dosage: d.dosage,
         cue: d.cue,
         stopIf: d.stopIf,
+        guide: d.guide,
       }));
       const titleByContext: Record<string, string> = {
         game_day: "Warm-up — game-day neural primer",
@@ -679,12 +685,15 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       const eass = buildEassPrescription(eassCtx);
 
       // Map EASS drills → DrillStep shape used by the UI.
+      const { guideFor: _guideFor } = await import("./movementGuide");
       const drills: DrillStep[] = eass.drills.map((d) => ({
         name: d.name,
+        slug: (d as { slug?: string }).slug,
         setup: d.setup,
         dosage: d.dosage,
         cue: d.cue,
         stopIf: d.stopIf,
+        guide: _guideFor((d as { slug?: string }).slug) ?? _guideFor(d.name) ?? undefined,
       }));
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
