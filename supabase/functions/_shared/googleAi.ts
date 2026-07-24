@@ -92,12 +92,16 @@ export interface ChatCompletionResult {
 
 function toGoogleModel(model: string): string {
   const stripped = model.startsWith("google/") ? model.slice("google/".length) : model;
-  // Map any preview/dated aliases used in the codebase to the closest stable
-  // Google AI Studio equivalent so a direct call actually works.
+  // Map preview/dated aliases to stable Google AI Studio models available to
+  // the project's key. `gemini-2.5-flash` returns 404 for new keys, so route
+  // Flash workloads to `gemini-3.6-flash` and Pro workloads to `gemini-3.5-pro`.
   const alias: Record<string, string> = {
-    "gemini-3-flash-preview": "gemini-2.5-flash",
+    "gemini-3-flash-preview": "gemini-3.6-flash",
     "gemini-2.0-flash-exp": "gemini-2.0-flash",
-    "gemini-2.5-flash-lite": "gemini-2.5-flash",
+    "gemini-2.5-flash-lite": "gemini-3.6-flash",
+    "gemini-2.5-flash": "gemini-3.6-flash",
+    "gemini-2.5-pro": "gemini-3.5-pro",
+    "gemini-2.5-flash-image": "gemini-3.1-flash-image",
   };
   return alias[stripped] ?? stripped;
 }
