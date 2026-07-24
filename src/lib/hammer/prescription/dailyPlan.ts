@@ -1177,6 +1177,12 @@ export interface HammerDailyPlanResult {
   readonly sideBias: SideBiasForPlan | null;
   /** Rolling 7d game-performance bias tags applied to today's ordering. */
   readonly gpBiasTags: ReadonlyArray<string>;
+  /** Weekly microcycle resolved for today — powers the roadmap strip UI. */
+  readonly microcycle: ResolvedMicrocycle;
+  /** 7-day roadmap projection for the WeeklyRoadmapStrip. */
+  readonly weeklyRoadmap: ReadonlyArray<RoadmapDay>;
+  /** Selected weekly template — surfaced so the UI can label the week. */
+  readonly weeklyTemplate: WeeklyTemplate;
 }
 
 
