@@ -113,68 +113,59 @@ Be thorough but realistic. If the image shows no food or is too unclear, indicat
 If you surface any nutrition limiter (low protein, missing micros, poor hydration quality, broken habit), express it as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step Notice→Swap→Lock→Sustain roadmap, in dual register (athlete voice + "Coach's note:" technical mechanism). Nutrition phases: P1 Macro Floor protein (NN, hard cap 50), P2 Micro Coverage (cap 75), P3 Hydration Quality (cap 85), P4 Habit Lock-in (cap 80, +5 elite). Multi-violation chains stack 1→4.
 === END CONTRACT ===`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Identify all foods in this meal photo. Estimate portions and provide nutrition data for each item.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
-            ]
-          }
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'identify_foods',
-              description: 'Return identified foods with nutrition estimates from the photo',
-              parameters: {
-                type: 'object',
-                properties: {
-                  foods: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        name: { type: 'string' },
-                        quantity: { type: 'number' },
-                        unit: { type: 'string' },
-                        calories: { type: 'number' },
-                        protein: { type: 'number' },
-                        carbs: { type: 'number' },
-                        fats: { type: 'number' },
-                        confidence: { type: 'string', enum: ['high', 'medium', 'low'] }
-                      },
-                      required: ['name', 'quantity', 'unit', 'calories', 'protein', 'carbs', 'fats', 'confidence']
-                    }
-                  },
-                  mealDescription: { type: 'string' },
-                  portionNotes: { type: 'string' },
-                  noFoodDetected: { type: 'boolean' },
-                  imageQualityIssue: { type: 'string' }
+    const response = await chatCompletion({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Identify all foods in this meal photo. Estimate portions and provide nutrition data for each item.' },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+          ]
+        }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'identify_foods',
+            description: 'Return identified foods with nutrition estimates from the photo',
+            parameters: {
+              type: 'object',
+              properties: {
+                foods: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string' },
+                      quantity: { type: 'number' },
+                      unit: { type: 'string' },
+                      calories: { type: 'number' },
+                      protein: { type: 'number' },
+                      carbs: { type: 'number' },
+                      fats: { type: 'number' },
+                      confidence: { type: 'string', enum: ['high', 'medium', 'low'] }
+                    },
+                    required: ['name', 'quantity', 'unit', 'calories', 'protein', 'carbs', 'fats', 'confidence']
+                  }
                 },
-                required: ['foods', 'mealDescription', 'noFoodDetected']
-              }
+                mealDescription: { type: 'string' },
+                portionNotes: { type: 'string' },
+                noFoodDetected: { type: 'boolean' },
+                imageQualityIssue: { type: 'string' }
+              },
+              required: ['foods', 'mealDescription', 'noFoodDetected']
             }
           }
-        ],
-        tool_choice: { type: 'function', function: { name: 'identify_foods' } }
-      }),
-    });
+        }
+      ],
+      tool_choice: { type: 'function', function: { name: 'identify_foods' } }
+    }, { timeoutMs: 60_000 });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      
+      console.error('AI provider error:', response.status, response.errorBody?.slice(0, 300));
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
           status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -190,8 +181,7 @@ If you surface any nutrition limiter (low protein, missing micros, poor hydratio
       });
     }
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = response.data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall || toolCall.function.name !== 'identify_foods') {
       return new Response(JSON.stringify({ error: 'Failed to parse food identification result' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
