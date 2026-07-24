@@ -58,20 +58,12 @@ serve(async (req) => {
       ? `Focus on drills that address these specific issues: ${target_issues.join(", ")}.`
       : "";
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            {
-              role: "system",
-              content: `You are an elite baseball/softball defensive coaching expert. Generate unique, practical defensive drills with FIELD-READY instructions. Each drill must have a clear purpose, specific positions it helps, and a progression level from 1-7 (1=Tee Ball, 2=Youth, 3=Middle School, 4=High School, 5=College, 6=Pro, 7=Elite). Drills must be unique and not duplicates of: ${Array.from(existingNames).slice(0, 50).join(", ")}
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are an elite baseball/softball defensive coaching expert. Generate unique, practical defensive drills with FIELD-READY instructions. Each drill must have a clear purpose, specific positions it helps, and a progression level from 1-7 (1=Tee Ball, 2=Youth, 3=Middle School, 4=High School, 5=College, 6=Pro, 7=Elite). Drills must be unique and not duplicates of: ${Array.from(existingNames).slice(0, 50).join(", ")}
 
 INSTRUCTION REQUIREMENTS:
 - Setup MUST include: exact distances (feet/yards), required equipment, starting body position, recommended reps
@@ -81,96 +73,87 @@ INSTRUCTION REQUIREMENTS:
 - Progression MUST increase difficulty via speed, reaction, movement, constraint, or pressure
 - BANNED phrases: "work on", "focus on", "improve", "practice", "try to"
 - USE action verbs: "drive", "explode", "snap", "drop", "rotate", "extend"`,
-            },
-            {
-              role: "user",
-              content: `Generate ${count} unique ${sport} ${module} drills. ${issueContext} Return structured data using the generate_drills function.`,
-            },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "generate_drills",
-                description: "Generate defensive drill suggestions",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    drills: {
-                      type: "array",
-                      items: {
+        },
+        {
+          role: "user",
+          content: `Generate ${count} unique ${sport} ${module} drills. ${issueContext} Return structured data using the generate_drills function.`,
+        },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "generate_drills",
+            description: "Generate defensive drill suggestions",
+            parameters: {
+              type: "object",
+              properties: {
+                drills: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      sport: { type: "string", enum: ["baseball", "softball"] },
+                      positions: { type: "array", items: { type: "string" } },
+                      progression_level: { type: "integer", minimum: 1, maximum: 7 },
+                      tags: {
                         type: "object",
                         properties: {
-                          title: { type: "string" },
-                          description: { type: "string" },
-                          sport: { type: "string", enum: ["baseball", "softball"] },
-                          positions: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          progression_level: { type: "integer", minimum: 1, maximum: 7 },
-                          tags: {
-                            type: "object",
-                            properties: {
-                              error_type: { type: "array", items: { type: "string" } },
-                              skill: { type: "array", items: { type: "string" } },
-                              situation: { type: "array", items: { type: "string" } },
-                            },
-                            required: ["error_type", "skill", "situation"],
-                          },
-                          ai_context: { type: "string" },
-                          module: { type: "string" },
-                          skill_target: { type: "string" },
-                          instructions: {
-                            type: "object",
-                            properties: {
-                              purpose: { type: "string" },
-                              setup: { type: "string" },
-                              execution: { type: "array", items: { type: "string" } },
-                              coaching_cues: { type: "array", items: { type: "string" } },
-                              mistakes: { type: "array", items: { type: "string" } },
-                              progression: { type: "array", items: { type: "string" } },
-                            },
-                            required: ["purpose", "setup", "execution", "coaching_cues", "mistakes", "progression"],
-                          },
+                          error_type: { type: "array", items: { type: "string" } },
+                          skill: { type: "array", items: { type: "string" } },
+                          situation: { type: "array", items: { type: "string" } },
                         },
-                        required: [
-                          "title", "description", "sport", "positions",
-                          "progression_level", "tags", "ai_context", "module", "skill_target", "instructions",
-                        ],
+                        required: ["error_type", "skill", "situation"],
+                      },
+                      ai_context: { type: "string" },
+                      module: { type: "string" },
+                      skill_target: { type: "string" },
+                      instructions: {
+                        type: "object",
+                        properties: {
+                          purpose: { type: "string" },
+                          setup: { type: "string" },
+                          execution: { type: "array", items: { type: "string" } },
+                          coaching_cues: { type: "array", items: { type: "string" } },
+                          mistakes: { type: "array", items: { type: "string" } },
+                          progression: { type: "array", items: { type: "string" } },
+                        },
+                        required: ["purpose", "setup", "execution", "coaching_cues", "mistakes", "progression"],
                       },
                     },
+                    required: [
+                      "title", "description", "sport", "positions",
+                      "progression_level", "tags", "ai_context", "module", "skill_target", "instructions",
+                    ],
                   },
-                  required: ["drills"],
                 },
               },
+              required: ["drills"],
             },
-          ],
-          tool_choice: { type: "function", function: { name: "generate_drills" } },
-        }),
-      }
-    );
+          },
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "generate_drills" } },
+    }, { timeoutMs: 90_000 });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-
-      if (response.status === 429) {
+    if (!aiResp.ok) {
+      console.error("AI provider error:", aiResp.status, aiResp.errorBody?.slice(0, 300));
+      if (aiResp.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited. Try again shortly." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
+      if (aiResp.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
-      throw new Error(`AI gateway returned ${response.status}`);
+      throw new Error(`AI provider returned ${aiResp.status}`);
     }
 
-    const aiResult = await response.json();
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = aiResp.data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) throw new Error("No tool call in AI response");
 
     const parsed = JSON.parse(toolCall.function.arguments);
