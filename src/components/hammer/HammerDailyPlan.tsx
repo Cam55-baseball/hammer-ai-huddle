@@ -443,6 +443,37 @@ function HammerDailyPlanBody() {
   );
 }
 
+/**
+ * In-season crossover primer, rendered inside the Warm-up card as a short
+ * "finish the warm-up with this" addon. Sourced from the backend
+ * `cross_sport` slot at `placement: "warmup_integration"`.
+ */
+function WarmupCrossoverAddons() {
+  const { grouped } = useHammersToday();
+  const addons = grouped.warmupAddons ?? [];
+  if (addons.length === 0) return null;
+  return (
+    <Card className="border-rose-400/30 bg-rose-500/5">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <HeartPulse className="h-4 w-4 text-rose-500" />
+          <span>Finish the warm-up — crossover primer</span>
+          <Badge variant="outline" className="text-[10px]">In-season</Badge>
+        </CardTitle>
+        <div className="text-[11px] text-muted-foreground">
+          Short, low-cost coordination drill folded into the warm-up. Frees the nervous system from sport patterns without stealing freshness from the day.
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {addons.map((rx) => (
+          <WkPrescriptionCard key={rx.id} rx={rx} />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+
 function BlockCard({
   block,
   onNavigate,
