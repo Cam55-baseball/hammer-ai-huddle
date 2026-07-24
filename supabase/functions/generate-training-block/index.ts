@@ -320,7 +320,7 @@ serve(async (req) => {
     // Active-block guard removed — RPC is the single source of truth for CREATE vs ADAPT.
     console.log("MODE:", force_new ? "ADAPT" : "CREATE");
 
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY && !GOOGLE_AI_API_KEY) throw new Error("No AI credentials configured");
 
     // ─── Resolve schedule: season-aware + calendar-conflict-aware ───
     const planStart = new Date();
