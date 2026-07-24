@@ -85,6 +85,52 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Sliders } from "lucide-react";
+import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
+
+function DrillRow({ drill: d }: { drill: DrillStep }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <li className="text-xs rounded-md border border-border/50 bg-muted/30 p-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="font-medium">{d.name}</div>
+          <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          aria-label={`How to do ${d.name}`}
+        >
+          <BookOpen className="h-3 w-3" />
+          <span>How?</span>
+        </button>
+      </div>
+      {d.setup && (
+        <div className="text-[11px] text-muted-foreground mt-1">Setup: {d.setup}</div>
+      )}
+      {d.cue && (
+        <div className="text-[11px] text-foreground/80 mt-0.5">Cue: {d.cue}</div>
+      )}
+      {d.stopIf && (
+        <div className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 flex items-start gap-1">
+          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>Stop if: {d.stopIf}</span>
+        </div>
+      )}
+      <MovementGuideSheet
+        open={open}
+        onOpenChange={setOpen}
+        name={d.name}
+        slug={d.slug ?? null}
+        guideOverride={d.guide ?? null}
+        fallbackCue={d.cue ?? null}
+        fallbackSetup={d.setup ?? null}
+        fallbackStopIf={d.stopIf ?? null}
+      />
+    </li>
+  );
+}
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
