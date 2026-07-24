@@ -67,6 +67,8 @@ const Index = () => {
               Transform your game with advanced motion capture, real-time analytics, 
               and professional development tools used by elite athletes worldwide.
             </p>
+            <LandingDemoVideo />
+            <LandingDemoVideoManager />
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button onClick={handleGetStarted} size="lg">
                 Get Started
