@@ -2193,7 +2193,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </>
             )}
           </div>
-        </div>
 
         {/* 6-Week Recap Countdown - Compact Box */}
         <div className={cn(
