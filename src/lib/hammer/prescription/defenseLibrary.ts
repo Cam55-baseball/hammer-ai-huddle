@@ -46,12 +46,20 @@ export interface DefenseSelectorInput {
   /** true if today is a tournament / stacked-game day per schedule signal. */
   readonly tournamentToday?: boolean;
   readonly goal?: string | null;
+  /**
+   * Difficulty tier for the drill variants. If omitted, caller-agnostic
+   * default is "developing" — safe and useful for the median athlete.
+   * Callers with rung/training-age context should pass an explicit tier
+   * via `resolveDefenseTier()`.
+   */
+  readonly tier?: DefenseTier;
 }
 
 export interface DefensePrescription {
   readonly position: DefensePosition;
   readonly sport: DefenseSport;
   readonly phase: DefensePhase;
+  readonly tier: DefenseTier;
   readonly drills: ReadonlyArray<DrillStep>;
   readonly cues: ReadonlyArray<string>;
   readonly stopRules: ReadonlyArray<string>;
