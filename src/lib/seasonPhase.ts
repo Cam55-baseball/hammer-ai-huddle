@@ -80,6 +80,24 @@ export function resolveSeasonPhase(settings: SeasonSettingsLike | null | undefin
 
 // ---------- Programming profiles per phase ----------
 
+export type NeijingElement = 'Wood' | 'Fire' | 'Earth' | 'Metal' | 'Water';
+
+/**
+ * Huangdi Neijing Su Wen "performance climate" overlay.
+ * Interpretive-only — never authors organism truth. Blends TCM framing with
+ * modern sports-science guidance so athletes understand *why* the phase is
+ * shaped the way it is.
+ */
+export interface SeasonHPIProfile {
+  element: NeijingElement;
+  elementQuality: string;      // one-line "flavor" of the element
+  organEmphasis: string;       // which channel/organ the phase asks us to protect
+  yinYangEmphasis: string;     // e.g. "Yang rising", "Yin restoration"
+  qiDirective: string;         // what the athlete is asked to cultivate
+  seasonalAdaptation: string;  // practical climate/food/lifestyle note
+  breathPrimer: string;        // short breath drill matched to phase
+}
+
 export interface SeasonProgrammingProfile {
   phase: SeasonPhase;
   label: string;
@@ -95,6 +113,8 @@ export interface SeasonProgrammingProfile {
   toneGuidance: string;
   // Coach-style summary for prompts
   directives: string[];
+  // Neijing / Human Performance Intelligence overlay (interpretive-only).
+  hpi: SeasonHPIProfile;
 }
 
 export const SEASON_PROFILES: Record<SeasonPhase, SeasonProgrammingProfile> = {
