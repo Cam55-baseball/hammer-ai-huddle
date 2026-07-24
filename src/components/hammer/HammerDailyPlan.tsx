@@ -410,6 +410,7 @@ function HammerDailyPlanBody() {
       </CardHeader>
       <CardContent className="space-y-2">
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
+        <WeeklyRoadmapStrip plan={plan} />
         <button
           type="button"
           onClick={() => navigate("/hammer/recall")}
