@@ -86,6 +86,8 @@ export interface GamePlanTemplateSeed {
   readonly source: string;
 }
 
+export type LateralSide = "L" | "R" | null;
+
 export interface PrescribedBlock {
   readonly modality: ModalityKey;
   readonly title: string;
@@ -104,6 +106,13 @@ export interface PrescribedBlock {
   /** Knowledge-gap ids the UI can ask inline (Answer Hammer). */
   readonly missingContextKeys: ReadonlyArray<string>;
   readonly gamePlanTemplate: GamePlanTemplateSeed | null;
+  /**
+   * Laterality tag for switch hitters / ambidextrous throwers — when set,
+   * this block represents ONE side (L or R) and is expected to appear
+   * alongside a mirror-side block. UI keys DOM ids + completion task ids
+   * off this so L and R checklists stay independent.
+   */
+  readonly side?: LateralSide;
 }
 
 const ALL_MODALITIES: ModalityKey[] = [
