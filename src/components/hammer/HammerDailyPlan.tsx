@@ -871,14 +871,20 @@ function BlockCard({
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
             <div className="ml-auto">
-              <BlockCompletionControls
-                modality={block.modality}
-                modalityLabel={block.title}
-                onChanged={() => onEngagementChanged?.()}
-                drills={block.drills}
-                planDate={planDate}
-                side={block.side ?? null}
-              />
+              {block.status === "off-day" ? (
+                <span className="text-[11px] text-muted-foreground italic">
+                  No log today — resting this modality.
+                </span>
+              ) : (
+                <BlockCompletionControls
+                  modality={block.modality}
+                  modalityLabel={block.title}
+                  onChanged={() => onEngagementChanged?.()}
+                  drills={block.drills}
+                  planDate={planDate}
+                  side={block.side ?? null}
+                />
+              )}
             </div>
           </div>
 
