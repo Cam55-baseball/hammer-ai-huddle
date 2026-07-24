@@ -56,7 +56,7 @@ function parseCadence(primer: string): Cadence | null {
   return null;
 }
 
-export function BreathPrimer({ primer }: { primer: string }) {
+export function BreathPrimer({ primer, scheduleLabel = "First today — pre-activity" }: { primer: string; scheduleLabel?: string }) {
   const cadence = parseCadence(primer);
   const [running, setRunning] = useState(false);
   const [round, setRound] = useState(1);
