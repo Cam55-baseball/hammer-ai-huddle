@@ -234,21 +234,16 @@ serve(async (req) => {
     // ---- AI call ----
     const systemPrompt = role === "hitter" ? PITCHER_SYSTEM_PROMPT : HITTER_SYSTEM_PROMPT;
     const prompt = `${systemPrompt}\n\nINPUT:\n${JSON.stringify(inputs_snapshot).slice(0, 180_000)}`;
-    const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4,
-        response_format: { type: "json_object" },
-      }),
-    });
+    const ai = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+    }, { timeoutMs: 90_000 });
     if (!ai.ok) {
-      const t = await ai.text();
-      throw new Error(`Gemini ${ai.status}: ${t.slice(0, 400)}`);
+      throw new Error(`AI provider ${ai.status}: ${(ai.errorBody ?? "").slice(0, 400)}`);
     }
-    const aiJson = await ai.json();
+    const aiJson = ai.data;
     const raw = String(aiJson?.choices?.[0]?.message?.content ?? "");
     const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
     let plan_json: any = {};
