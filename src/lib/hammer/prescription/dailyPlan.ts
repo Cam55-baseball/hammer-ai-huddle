@@ -818,36 +818,60 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       }
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
-      const drills: DrillStep[] = inSeason
-        ? [
-            { name: "Pre-pitch + first-step reads", dosage: "10 reps", cue: "low athletic stance, weight on balls of feet" },
-            { name: "Position-specific glove work", dosage: "8 reps", cue: "field through the ball, do not stab" },
-            { name: "Live game-rep", dosage: "10 reps" },
-          ]
-        : offSeason
-          ? [
-              { name: "Footwork ladder", dosage: "8 min variations", cue: "quick feet, head still" },
-              { name: "Pre-pitch + first-step reads", dosage: "30 reps" },
-              { name: "Position-specific glove work", dosage: "25 reps" },
-              { name: "Live or simulated game-rep", dosage: "15 reps" },
-            ]
-          : [
-              { name: "Footwork ladder", dosage: "5 min" },
-              { name: "Pre-pitch + first-step reads", dosage: "20 reps" },
-              { name: "Position-specific glove work", dosage: "15 reps" },
-              { name: "Live or simulated game-rep", dosage: "10 reps" },
-            ];
+
+      // Elite defensive drill library — position × sport × phase, with
+      // secondary-position blend, injury gating, and tournament tapering.
+      const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
+      const secondaryRaw = (ctx.get<string[]>("position_secondary")?.value as string[] | null)
+        ?? (ctx.get<string[]>("positions_secondary")?.value as string[] | null)
+        ?? null;
+      const defenseSchedAny = proj as unknown as { schedule?: { tournamentToday?: boolean; isTournamentDay?: boolean } };
+      const tournamentToday = !!(defenseSchedAny?.schedule?.tournamentToday || defenseSchedAny?.schedule?.isTournamentDay);
+
+      const defenseSport = normalizeSport(sportRaw) === "softball" ? "softball" : "baseball";
+      const prescription = selectDefenseDrills({
+        position: pos,
+        secondaryPositions: secondaryRaw,
+        sport: defenseSport,
+        seasonPhase: seasonPhase as string | null,
+        injuryRegions: [...injuryRegions],
+        tournamentToday,
+        goal,
+      });
+
+      // Fallback to a safe generic prescription if the catalog somehow returns
+      // nothing (unknown position + heavy injury gating). Never fabricate —
+      // just keep the modality visible with a "come back tomorrow" note.
+      const drills: DrillStep[] = prescription?.drills
+        ? [...prescription.drills]
+        : [
+            { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
+            { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
+          ];
+      const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
+      const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and tell Hammer."];
+      const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
+      const title = prescription?.title ?? `Defense — ${pos}`;
+      const why = prescription?.why
+        ?? ((inSeason ? "Game-rep quality over volume." : offSeason ? "Footwork and range building." : "Position-specific reads, footwork, and finishes.") + (goal ? ` ${goal}` : ""));
+
       return {
         modality,
-        title: `Defense — ${pos}${inSeason ? " (game-rep)" : offSeason ? " (volume)" : ""}`,
-        why: (inSeason ? "Game-rep quality over volume." : offSeason ? "Footwork and range building." : "Position-specific reads, footwork, and finishes.") + (goal ? ` ${goal}` : ""),
-        roadmapReason: inSeason ? "In-season — game-rep quality." : offSeason ? "Off-season — load volume + range." : "Default defense block.",
-        phase: inSeason ? "sharpen" : "build",
+        title,
+        why,
+        roadmapReason: tournamentToday
+          ? "Tournament day — primer only, save the legs."
+          : inSeason
+            ? "In-season — game-rep quality."
+            : offSeason
+              ? "Off-season — load volume + range."
+              : "Pre-season — sharpen reads and finishes.",
+        phase: inSeason ? "sharpen" : tournamentToday ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
-        cues: ["Field through the ball.", "Footwork before glove."],
-        stopRules: ["Knee, ankle, or hip pain — stop and tell Hammer."],
-        durationMin: inSeason ? 15 : offSeason ? 35 : 25,
+        cues,
+        stopRules,
+        durationMin,
         route: "/practice?module=defense",
         ctaLabel: "Open defense",
         status: "ready",
@@ -858,8 +882,8 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           activityType: "practice",
           icon: "target",
           color: "#10b981",
-          durationMinutes: inSeason ? 15 : offSeason ? 35 : 25,
-          description: `Defensive block for ${pos}.`,
+          durationMinutes: durationMin,
+          description: `Defensive block for ${pos} (${defenseSport}).`,
           checklist: drillsToChecklist(drills),
           source: "hammer.daily.defense",
         },
