@@ -212,9 +212,15 @@ export function WkPrescriptionCard({
     : "Complete as described in the cue below.";
 
   return (
-    <Card className={`p-3 border ${rx.status === "completed" ? "opacity-60" : ""}`}>
+    <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
       <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex items-start justify-between gap-2">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={(v) => toggleCheckbox(!!v)}
+            className="mt-0.5 shrink-0"
+            aria-label={`Mark ${rx.movement_name} done`}
+          />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
