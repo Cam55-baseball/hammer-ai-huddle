@@ -1,84 +1,62 @@
-# Huangdi Neijing Su Wen Integration Plan
+## Plan: Lifestyle & Constitution intake consolidation
 
-## Goal
-Fold the Su Wen holistic philosophy — seasonal adaptation, Yin-Yang balance, Qi/energy flow, prevention-first recovery, and lifestyle harmony — into Hammers Modality as a single interpretive layer. It must ride the existing Hammers Today Plan pipeline and Command Center signals without adding duplicate cards, parallel storage, or new user-facing modules.
+### Current state
+- The **Lifestyle & constitution** screen is a standalone onboarding step (`ConstitutionStep.tsx`) shown during first-run setup and reachable via the HPI card’s "Add lifestyle intake" link.
+- It asks for **sleep target, actual sleep, water, stress, constitutional lean, and training window**.
+- Those same topics are already collected elsewhere:
+  - **Fuel & Recovery step** asks sleep target + water goal.
+  - **Daily Vault quizzes** (morning/night) ask hours slept, sleep quality, stress, mood.
+  - **Nutrition log** tracks daily hydration ounces.
+- The number inputs on the current page use `parseFloat(value) || default`, which resets the field to its default when the user clears it, making mobile editing feel blocked.
+- The HPI card currently sends the user back into the onboarding flow to edit these values, which feels like an extra tab.
 
-## Chosen approach
-- **Terminology**: blend modern sports science with concise Neijing explanations (e.g., "circulate blood and Qi before intent").
-- **Scope**: all baseball/softball positions, served through the existing context envelope.
-- **Level**: first version targets serious developing athletes, with cues simple enough for youth and deep enough for elite users.
-- **First milestone**: Daily Plan Intelligence Layer — the surface every athlete already opens every day.
+### Goal
+Remove the standalone onboarding step and surface these questions only where they already naturally fit:
+1. Onboarding **Fuel & Recovery** step (static baseline).
+2. Daily **Vault quizzes** and **nutrition log** (dynamic daily values).
+3. An **inline edit sheet** from the HPI card, never a full onboarding tab.
 
----
+### Changes
 
-## Phase 1 — Seasonal Philosophy Overlay for Hammers Today Plan
+1. **Fix the input bug first**
+   - Change the sleep / water number fields to use string state while editing, parsing to number on blur or save.
+   - Keep the sliders for water and stress but ensure they are not swallowed by the onboarding shell’s horizontal stepper.
 
-Extend the existing seasonal authority so every phase carries a Su Wen "performance climate" in addition to the current programming clamps.
+2. **Build a reusable `LifestyleIntakeBlock`**
+   - Captures all six fields: sleep target, typical actual sleep, water goal, stress level, constitutional lean, preferred training window.
+   - Writes to `hpi:lifestyle:v1` localStorage and, during onboarding, to the `fuel-recovery` draft slot.
+   - Can be rendered inline inside a step or inside a sheet/dialog.
 
-1. **Extend `src/lib/seasonPhase.ts`**
-   - Add narrative fields to `SeasonProgrammingProfile`:
-     - `element` (Wood/Fire/Earth/Metal/Water) + `elementQuality` text
-     - `organEmphasis` (e.g., Liver/Wood for flexibility/planning, Kidney/Water for stamina/fear response)
-     - `qiDirective` (what the phase asks the athlete to cultivate)
-     - `yinYangEmphasis` (e.g., "Yang rising" or "Yin restoration")
-     - `seasonalAdaptation` (practical climate/food/clothing notes)
-   - Populate `SEASON_PROFILES` with authentic, accessible framing for each of the four phases.
+3. **Merge into the Fuel & Recovery onboarding step**
+   - Rename the step label to **"Fuel & recovery"** or **"Fuel & daily rhythms"**.
+   - Keep diet style / allergies.
+   - Add the `LifestyleIntakeBlock` at the bottom of `FuelRecoveryStep.tsx`.
+   - On continue, persist `sleep_target_hrs`, `water_goal_oz`, and `diet_style` to `athlete_context` (existing columns) and the full lifestyle snapshot to `hpi:lifestyle:v1`.
 
-2. **Thread narrative into `src/lib/hammer/prescription/dailyPlan.ts`**
-   - Warm-up block: `roadmapReason` and `why` include the seasonal Qi directive (e.g., off-season = "Yang rising — build the engine with honest movement before adding load").
-   - Recovery block: blend modern parasympathetic downshift with Yin restoration language and seasonal notes.
-   - Fueling block: add seasonal food/thermal guidance (e.g., warming foods in cold, cooling foods in heat) as a `DrillStep` or cue.
+4. **Remove the standalone Constitution step**
+   - Delete the `ConstitutionStep.tsx` file from the onboarding steps.
+   - Remove `"Constitution"` from the onboarding step list, `STEP_CONSTITUTION`, and the render branch in `AthleteOnboarding.tsx`.
+   - Remove `constitution` from `EDIT_TARGETS`.
+   - Keep `constitution` out of `ReviewAnswersStep` keys (it is already not listed).
 
-3. **Update `src/components/hammer/DailyIntentHeader.tsx`**
-   - If seasonal data is present, prepend the daily intent headline with the phase's element/quality (e.g., "In-Season Metal phase — preserve sharpness, protect freshness").
-   - Keep the existing mentor voice and streak/rotation logic untouched.
+5. **Sync daily Vault data into the HPI signal**
+   - After a focus quiz is saved, update `hpi:lifestyle:v1` with the latest `sleepActualHours` and `stressLevel`.
+   - After a nutrition log is saved, update `waterOz` with the day’s total hydration.
+   - The HPI card will then reflect today’s real data without another manual intake page.
 
-## Phase 2 — Human Performance Intelligence (HPI) Signal
+6. **Update the HPI card edit path**
+   - Replace the "Add lifestyle intake" onboarding link with a button that opens a `LifestyleIntakeSheet`.
+   - The sheet uses the same `LifestyleIntakeBlock`, so the UI stays consistent but lives inline on the Dashboard/Command surfaces.
 
-Compute a lightweight, read-only HPI score from the existing canonical data and surface it as "Today's Focus" inside the Today Plan.
+7. **Tests**
+   - Update `hpiSignal.test.ts` if needed to keep the existing baseline/constitution tests passing.
+   - Add a quick Playwright check that the merged onboarding step can be filled and the HPI card updates after a daily quiz.
 
-1. **Derive HPI in `src/lib/hammer/context/athleteContext.ts`**
-   - Inputs: latest HIE readiness, `wk_recovery_acks` trend, sleep hours, hydration log, 7-day workload, current season phase.
-   - Output: `{ score: 0-100, focus: string, balance: "yang-heavy" | "yin-heavy" | "balanced" | null, why: string }`.
-   - No new DB table — computed at read-time from existing tables.
+### Verification
+- Onboarding completes without the "Constitution" step.
+- Sleep target, water goal, stress, and constitutional lean entered during onboarding are reflected in the HPI card immediately.
+- Daily quiz / nutrition-log updates change the HPI card within the same session.
+- The number inputs can be cleared and re-typed without resetting to a default.
 
-2. **Surface in `DailyIntentHeader`**
-   - Add a "Today's Focus" line below the headline: score, balance state, and one actionable insight (e.g., "Yang-heavy week — prioritize the breathing block").
-
-3. **Use HPI to bias existing blocks in `dailyPlan.ts`**
-   - If balance is "yang-heavy" → expand recovery breathing dose, reduce optional high-CNS blocks.
-   - If balance is "yin-heavy" (low readiness) → front-load movement and circulation work, keep skill work light.
-   - Keep all changes inside the existing block logic; no new cards.
-
-## Phase 3 — Seasonal Wisdom & Breathing Micro-Doses
-
-Add small, coach-educational touches that explain why the plan is structured the way it is.
-
-1. **Extend `DailyTipHero.tsx` / tip system**
-   - Add a `seasonal` tip category with 10–15 Neijing-based tips (e.g., "Summer Yang peak — front-load intense work, cool down with hydrating foods").
-   - Reuse the existing `get-daily-tip` edge function and `nutrition_daily_tips` table structure.
-
-2. **Add breathing/mindfulness micro-doses**
-   - In `dailyPlan.ts` recovery block, include a season-aware breathing drill (e.g., long exhales for down-regulation, box breathing before a game).
-   - In warm-up block on low-readiness days, add a 60-second "breath-first" primer step.
-
-3. **Inline "Why this works" tooltips**
-   - Add short Su Wen-style explanations to the existing movement guide for warm-up and recovery drills (e.g., "Hip CARs open the Liver/Wood channel so rotation flows").
-
-4. **Backend mirror & tests**
-   - Mirror `SEASON_PROFILES` changes in `supabase/functions/_shared/seasonPhase.ts` so edge functions and frontend stay in lockstep.
-   - Add regression tests in `src/test/seasonPhase.test.ts` verifying the new narrative fields are populated and do not break existing clamps.
-
----
-
-## Out of scope (for now)
-- New dashboard page or dedicated HPI tab — would duplicate Command Center signals.
-- New onboarding questionnaire — can be added later if the HPI data proves useful, but the first version derives everything from existing context.
-- Wearable integrations — uses existing HIE/wearable data if present; does not add new integrations.
-- Literal TCM therapies (acupuncture, herbs) — app stays within education, self-massage, breathing, and recovery guidance.
-
-## Success criteria
-- Hammers Today Plan opens without new cards and shows season-aware, readiness-aware language.
-- Warm-up, recovery, and fueling blocks reference the seasonal Neijing framing in their `why` or `roadmapReason`.
-- `DailyIntentHeader` displays a "Today's Focus" line with a derived HPI signal.
-- No duplicate cards, no duplicate DB tables, and no parallel storage.
+### Decision point
+I am assuming you want the standalone **Lifestyle & constitution** step removed entirely and folded into the flows above. If instead you want to keep that page as a profile/settings screen and only fix the inputs, reject this plan and I’ll revise.
