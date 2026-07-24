@@ -276,6 +276,12 @@ function HammerDailyPlanBody() {
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
+  const [checkInQuiz, setCheckInQuiz] = useState<VaultQuizType | null>(null);
+  const vaultQuizzes = useVaultQuizzesForDate();
+  const nightQuizRow = useMemo(
+    () => vaultQuizzes.quizzes.find((q) => q.quiz_type === "night") ?? null,
+    [vaultQuizzes.quizzes],
+  );
   // Bump on every done/skip so intent header + adaptive notes re-derive.
   const [engagementTick, setEngagementTick] = useState(0);
   const bumpEngagement = () => setEngagementTick((t) => t + 1);
