@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar, Target } from "lucide-react";
 import type {
   HammerDailyPlanResult,
 } from "@/lib/hammer/prescription/dailyPlan";
@@ -8,6 +8,7 @@ import type {
   ModalityIntensity,
 } from "@/lib/hammer/prescription/weeklyMicrocycle";
 import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
+import { RoadmapExplainerSheet } from "./RoadmapExplainerSheet";
 
 const MODALITY_ABBR: Record<ModalityKey, string> = {
   warmup: "WU",
@@ -43,31 +44,46 @@ const INTENSITY_TONE: Record<ModalityIntensity, string> = {
 };
 
 interface Props {
-  readonly plan: Pick<HammerDailyPlanResult, "weeklyRoadmap" | "weeklyTemplate" | "microcycle">;
+  readonly plan: Pick<HammerDailyPlanResult, "weeklyRoadmap" | "weeklyTemplate" | "microcycle" | "roadmap">;
 }
 
 export function WeeklyRoadmapStrip({ plan }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
-  const { weeklyRoadmap, weeklyTemplate, microcycle } = plan;
+  const [explainerOpen, setExplainerOpen] = useState(false);
+  const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
 
   return (
     <section
       aria-label="Weekly training roadmap"
       className="rounded-lg border border-primary/25 bg-gradient-to-b from-primary/5 to-transparent p-3"
     >
-      <header className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-primary" />
-          <div>
-            <div className="text-xs font-semibold text-foreground">
-              This week: {weeklyTemplate.label}
+      <header className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Calendar className="h-4 w-4 text-primary shrink-0" />
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-foreground truncate">
+              {roadmap.rung.label} · {roadmap.quarter.label}
             </div>
-            <div className="text-[11px] text-muted-foreground">
-              Tap a day to see what's on — full = primary · lighter = activation.
+            <div className="text-[11px] text-muted-foreground truncate">
+              {weeklyTemplate.label} · builds toward {roadmap.eliteTarget.league} 6-game weeks
             </div>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setExplainerOpen(true)}
+          className="flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/20 shrink-0"
+        >
+          <Target className="h-3 w-3" />
+          Rung {roadmap.rung.index}/5
+        </button>
       </header>
+      <RoadmapExplainerSheet
+        open={explainerOpen}
+        onOpenChange={setExplainerOpen}
+        roadmap={roadmap}
+      />
+
 
       <div className="grid grid-cols-7 gap-1">
         {weeklyRoadmap.map((day, idx) => (
