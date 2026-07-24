@@ -340,6 +340,7 @@ const App = () => {
               <Route path="/owner/iq/alignments/audit" element={<IqAlignmentAudit />} />
               <Route path="/owner/iq/situations" element={<IqSituationsAuthoring />} />
               <Route path="/owner/workouts/library" element={<WorkoutLibraryViewer />} />
+              <Route path="/owner/landing-demo" element={<LandingDemoManager />} />
 
 
 

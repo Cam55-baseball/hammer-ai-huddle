@@ -234,6 +234,16 @@ const Auth = () => {
                 ? t('auth.signInDescription') 
                 : t('auth.signUpDescription')}
             </p>
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/")}
+              >
+                Landing Page
+              </Button>
+            </div>
           </div>
 
           {state?.fromPayment && (
