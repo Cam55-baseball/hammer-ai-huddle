@@ -26,9 +26,11 @@ interface Props {
   readonly modality: EngagementKey;
   readonly modalityLabel: string;
   readonly items: ReadonlyArray<WkRx>;
+  /** Optional laterality tag for switch hitters / ambi throwers (L or R). */
+  readonly side?: "L" | "R" | null;
 }
 
-export function WkCardCompletion({ modality, modalityLabel, items }: Props) {
+export function WkCardCompletion({ modality, modalityLabel, items, side = null }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const planDate = items[0]?.plan_date ?? new Date().toISOString().slice(0, 10);
