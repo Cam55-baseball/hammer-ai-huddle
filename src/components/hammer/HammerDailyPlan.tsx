@@ -90,6 +90,9 @@ import { MoreVertical, Sliders } from "lucide-react";
 import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTasks";
+import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
+import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
+import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
 
 function DrillRow({
   drill: d,
@@ -273,6 +276,12 @@ function HammerDailyPlanBody() {
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
+  const [checkInQuiz, setCheckInQuiz] = useState<VaultQuizType | null>(null);
+  const vaultQuizzes = useVaultQuizzesForDate();
+  const nightQuizRow = useMemo(
+    () => vaultQuizzes.quizzes.find((q) => q.quiz_type === "night") ?? null,
+    [vaultQuizzes.quizzes],
+  );
   // Bump on every done/skip so intent header + adaptive notes re-derive.
   const [engagementTick, setEngagementTick] = useState(0);
   const bumpEngagement = () => setEngagementTick((t) => t + 1);
@@ -426,6 +435,12 @@ function HammerDailyPlanBody() {
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
 
+              <HammerCheckInCard
+                quizType="morning"
+                completed={vaultQuizzes.hasCompleted("morning")}
+                onOpen={() => setCheckInQuiz("morning")}
+              />
+
               {warmupBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
@@ -439,6 +454,11 @@ function HammerDailyPlanBody() {
                 );
               })}
               <WarmupCrossoverAddons />
+              <HammerCheckInCard
+                quizType="pre_lift"
+                completed={vaultQuizzes.hasCompleted("pre_lift")}
+                onOpen={() => setCheckInQuiz("pre_lift")}
+              />
               <ErrorBoundary label="wk-speed">
                 <WkSpeedCard />
               </ErrorBoundary>
@@ -463,11 +483,31 @@ function HammerDailyPlanBody() {
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
+              <HammerCheckInCard
+                quizType="night"
+                completed={vaultQuizzes.hasCompleted("night")}
+                onOpen={() => setCheckInQuiz("night")}
+              />
             </ArmCareBudgetProvider>
           );
         })()}
       </CardContent>
       <ReportInjuryDialog open={injuryOpen} onOpenChange={setInjuryOpen} />
+      {checkInQuiz && (
+        <VaultFocusQuizDialog
+          open={checkInQuiz !== null}
+          onOpenChange={(v) => { if (!v) setCheckInQuiz(null); }}
+          quizType={checkInQuiz}
+          existingNightQuiz={checkInQuiz === "night" ? nightQuizRow ? { id: nightQuizRow.id } : null : null}
+          onSubmit={async (data) => {
+            const res = await vaultQuizzes.saveFocusQuiz(checkInQuiz, data as Record<string, unknown>);
+            if (res.success) {
+              setTimeout(() => setCheckInQuiz(null), 400);
+            }
+            return res;
+          }}
+        />
+      )}
     </Card>
   );
 }
