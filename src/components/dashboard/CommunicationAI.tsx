@@ -8,8 +8,13 @@
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useEscalationFeed } from "@/hooks/command/useEscalationFeed";
