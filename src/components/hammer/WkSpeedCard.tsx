@@ -34,6 +34,8 @@ export function WkSpeedCard() {
     snapshotIdentity.season_phase,
   );
 
+  const [open, setOpen] = useState<boolean>(true);
+
   return (
     <Card
       className={isGameDay ? "border-amber-500/40 bg-amber-500/5" : "border-violet-500/30"}
@@ -41,39 +43,46 @@ export function WkSpeedCard() {
       data-display-order={entry.displayOrder}
       data-generation-id={snapshotIdentity.generation_id ?? ""}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Zap className={`h-4 w-4 shrink-0 ${isGameDay ? "text-amber-600" : "text-violet-500"}`} />
-            <span className="truncate">Speed</span>
-            <Badge variant="outline" className="text-[10px]">
-              {isGameDay ? "Game day · activation" : "Warm and ready"}
-            </Badge>
-          </div>
-          {!isGameDay && (
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
-              {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-            </Button>
-          )}
-        </CardTitle>
-        {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {failed ? (
-          <WkCardFailureNotice engine="speed" failure={failureReason} retry={retry} retrying={generating} />
-        ) : isLoading || generating ? (
-          <Skeleton className="h-14 w-full rounded" />
-        ) : items.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">
-            {isGameDay ? "No activation programmed (rest)." : "No sprint work today (cadence rest)."}
-          </p>
-        ) : (
-          items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
-        )}
-        <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
-        {items.length > 0 && <WkCardCompletion modality="speed" modalityLabel="Speed" items={items} />}
-        {items.length > 0 && <CardActions modality="speed" items={items} phaseDisplay={label} />}
-      </CardContent>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
+            <CollapsibleTrigger asChild>
+              <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={open}>
+                <Zap className={`h-4 w-4 shrink-0 ${isGameDay ? "text-amber-600" : "text-violet-500"}`} />
+                <span className="truncate">Speed</span>
+                <Badge variant="outline" className="text-[10px]">
+                  {isGameDay ? "Game day · activation" : "Warm and ready"}
+                </Badge>
+                <ChevronDown className={`h-4 w-4 ml-auto text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+            {!isGameDay && (
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => generate()} disabled={generating}>
+                {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              </Button>
+            )}
+          </CardTitle>
+          {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent className="space-y-2">
+            {failed ? (
+              <WkCardFailureNotice engine="speed" failure={failureReason} retry={retry} retrying={generating} />
+            ) : isLoading || generating ? (
+              <Skeleton className="h-14 w-full rounded" />
+            ) : items.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">
+                {isGameDay ? "No activation programmed (rest)." : "No sprint work today (cadence rest)."}
+              </p>
+            ) : (
+              items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
+            )}
+            <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
+            {items.length > 0 && <WkCardCompletion modality="speed" modalityLabel="Speed" items={items} />}
+            {items.length > 0 && <CardActions modality="speed" items={items} phaseDisplay={label} />}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
