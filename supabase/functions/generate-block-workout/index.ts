@@ -154,8 +154,8 @@ serve(async (req) => {
       sport?: string;
     };
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY && !GOOGLE_AI_API_KEY) {
+      throw new Error("No AI credentials configured");
     }
 
     console.log("Generating block workout:", { blockType, blockIntent, blockFocus, personalize, sport });
