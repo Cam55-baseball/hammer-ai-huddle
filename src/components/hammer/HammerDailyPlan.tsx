@@ -98,20 +98,23 @@ function DrillRow({
   drill: d,
   modality,
   planDate,
+  side = null,
 }: {
   drill: DrillStep;
   modality: string;
   planDate: string;
+  side?: "L" | "R" | null;
 }) {
   const [open, setOpen] = useState(false);
   const tasks = useHammerDailyTasks(planDate);
   const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
-  const checked = tasks.isDone(taskId);
+  const checked = tasks.isDone(taskId, side);
   const seed = {
     taskId,
     source: "block_drill" as const,
     sourceRef: modality,
-    payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null },
+    side,
+    payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null, side },
   };
   return (
     <li className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 ${checked ? "opacity-60" : ""}`}>
