@@ -716,6 +716,15 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       const eass = buildEassPrescription(eassCtx);
 
+      // Ambidextrous throwers: mirror the neural prep + a short light-catch
+      // set on the non-dominant arm. Max-intent work (pulldowns, overload,
+      // long-toss) stays dominant-side only for arm-health safety.
+      const throwsRaw = (ctx.get<string>("throws_hand")?.value as string | null) ?? null;
+      const isAmbi = throwsRaw === "S";
+      const armProtected = eass.mode === "arm_protected" || eass.mode === "recovery_day";
+      const primaryHand = eassCtx.sport === "softball" ? "windmill" : "dominant";
+      const nonDominant = primaryHand === "windmill" ? "overhand (non-dominant)" : "non-dominant";
+
       // Map EASS drills → DrillStep shape used by the UI.
       const drills: DrillStep[] = eass.drills.map((d) => ({
         name: d.name,
@@ -726,6 +735,22 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
       }));
+
+      if (isAmbi && !armProtected) {
+        // Mirror only the low-cost neural / catch-play tier on the other arm.
+        drills.push({
+          name: `Band prep — ${nonDominant} arm (mirror)`,
+          dosage: "ER 1x10, IR 1x10, scap pulls 1x10",
+          cue: "wake the other cuff — slow, deliberate, no snap-backs",
+          stopIf: "any twinge on the non-dominant arm — stop and skip the mirror catch",
+        });
+        drills.push({
+          name: `Light catch-play — ${nonDominant} arm`,
+          dosage: "40ft x 8 throws at 50-60% intent",
+          cue: "form throws only — the non-dominant arm learns speed slowly, never chase distance",
+          stopIf: "any pain, command loss, or fatigue — stop, dominant-arm work is the priority today",
+        });
+      }
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
