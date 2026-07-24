@@ -68,3 +68,20 @@ export function defaultLifestyle(): Omit<HpiLifestyle, "savedAt"> {
     trainingWindow: "midday",
   };
 }
+
+/**
+ * Merge partial signals (from daily quizzes, nutrition logs, etc.) into the
+ * existing HPI lifestyle snapshot without overwriting user-set baselines.
+ * Safe on server (no-op) and when storage is unavailable.
+ */
+export function mergeHpiLifestyle(
+  patch: Partial<Omit<HpiLifestyle, "savedAt">>,
+): HpiLifestyle | null {
+  if (typeof window === "undefined") return null;
+  const existing = readHpiLifestyle();
+  const base = existing
+    ? (() => { const { savedAt: _s, ...rest } = existing; return rest; })()
+    : defaultLifestyle();
+  const merged = { ...base, ...patch };
+  return writeHpiLifestyle(merged);
+}

@@ -1,7 +1,8 @@
 /**
- * FuelRecoveryStep — sleep target, hydration goal, diet style, allergies.
- * Best-effort persistence to per-slot draft; server writes deferred to
- * existing Nutrition / Wellness settings surfaces (no schema drift here).
+ * FuelRecoveryStep — sleep target, hydration goal, diet style, allergies,
+ * plus the Lifestyle & Constitution intake (merged from the retired
+ * standalone Constitution step). Best-effort per-slot draft persistence;
+ * lifestyle values persist to `hpi:lifestyle:v1` via LifestyleIntakeBlock.
  */
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Utensils } from "lucide-react";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
+import { LifestyleIntakeBlock } from "@/components/hpi/LifestyleIntakeBlock";
 
 interface FuelDraft {
   sleep_target_hrs?: number | null;
@@ -103,6 +105,8 @@ export function FuelRecoveryStep({ onContinue, onBack }: Props) {
           onChange={(e) => { setAllergies(e.target.value); persist({ allergies: e.target.value }); }}
           placeholder="e.g. peanuts, shellfish, dairy" />
       </div>
+
+      <LifestyleIntakeBlock />
 
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1.5 h-4 w-4" />Back</Button>

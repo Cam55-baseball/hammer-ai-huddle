@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { computeToolGrades } from '@/data/positionToolProfiles';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
+import { mergeHpiLifestyle, type StressLevel } from '@/lib/hpi/lifestyleStore';
 
 export interface VaultEntry {
   id: string;
@@ -608,6 +609,22 @@ export function useVault() {
       await updateStreak();
       await fetchTodaysQuizzes();
 
+      // Bridge daily quiz signals into the HPI lifestyle snapshot so the
+      // Human Performance Intelligence card reflects today's real data
+      // without requiring a separate intake tab.
+      try {
+        const patch: Partial<{ sleepActualHours: number; stressLevel: StressLevel }> = {};
+        if (typeof data.hours_slept === 'number' && data.hours_slept > 0) {
+          patch.sleepActualHours = Math.max(4, Math.min(11, data.hours_slept));
+        }
+        if (typeof data.stress_level === 'number' && data.stress_level >= 1 && data.stress_level <= 5) {
+          patch.stressLevel = Math.round(data.stress_level) as StressLevel;
+        }
+        if (Object.keys(patch).length > 0) mergeHpiLifestyle(patch);
+      } catch {
+        /* HPI sync is best-effort; never block quiz save */
+      }
+
       return { success: true };
     } catch (err) {
       console.error('Error saving focus quiz:', err);
@@ -757,6 +774,24 @@ export function useVault() {
       // Invalidate Nutrition Hub queries so they refresh immediately
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+      // Bridge today's total hydration into HPI so the signal reflects
+      // real intake without a separate lifestyle intake tab.
+      try {
+        const { data: todayLogs } = await supabase
+          .from('vault_nutrition_logs')
+          .select('hydration_oz')
+          .eq('user_id', user.id)
+          .eq('entry_date', today);
+        const totalOz = (todayLogs || []).reduce(
+          (sum, l) => sum + (Number((l as { hydration_oz: number | null }).hydration_oz) || 0),
+          0,
+        );
+        if (totalOz > 0) {
+          mergeHpiLifestyle({ waterOz: Math.max(24, Math.min(200, Math.round(totalOz))) });
+        }
+      } catch {
+        /* best-effort */
+      }
     }
     return { success: !error };
   }, [user, today, updateStreak, fetchNutritionLogs, queryClient]);
