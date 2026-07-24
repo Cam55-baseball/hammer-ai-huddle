@@ -1768,23 +1768,16 @@ Return ONLY valid JSON with this exact structure:
   }
 }`;
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-pro", // Upgraded for elite analysis
-            messages: [
-              { role: "system", content: "You are an elite sports performance analyst with 20+ years of experience coaching professional and Olympic athletes. Provide specific, data-driven insights with authority. Return ONLY valid JSON." },
-              { role: "user", content: elitePrompt },
-            ],
-          }),
-        });
+        const aiResp = await chatCompletion({
+          model: "google/gemini-2.5-pro",
+          messages: [
+            { role: "system", content: "You are an elite sports performance analyst with 20+ years of experience coaching professional and Olympic athletes. Provide specific, data-driven insights with authority. Return ONLY valid JSON." },
+            { role: "user", content: elitePrompt },
+          ],
+        }, { timeoutMs: 120_000 });
 
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
+        if (aiResp.ok) {
+          const aiData = aiResp.data;
           const aiText = aiData.choices?.[0]?.message?.content || "";
           console.log("AI response received, parsing...");
           
