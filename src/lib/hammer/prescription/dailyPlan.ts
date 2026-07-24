@@ -56,7 +56,7 @@ export type ModalityKey =
   | "fueling"
   | "recovery";
 
-export type BlockStatus = "ready" | "awaiting-input" | "suppressed";
+export type BlockStatus = "ready" | "awaiting-input" | "suppressed" | "off-day";
 export type BlockPhase = "build" | "sharpen" | "maintain" | "deload" | "recover" | "skill";
 
 export interface DrillStep {
