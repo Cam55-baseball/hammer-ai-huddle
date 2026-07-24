@@ -40,7 +40,7 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
 
   const sideLabel = side === "L" ? "Left-handed" : side === "R" ? "Right-handed" : null;
 
-  const [open, setOpen] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <Card

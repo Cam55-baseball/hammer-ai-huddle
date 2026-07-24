@@ -107,7 +107,7 @@ export function WkLiftsCard() {
     : grouped.lifts;
   const blockedItems = blocked.data ?? [];
 
-  const [open, setOpen] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
   return (
     <Card
       className="border-blue-500/30"

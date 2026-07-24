@@ -34,7 +34,7 @@ export function WkSpeedCard() {
     snapshotIdentity.season_phase,
   );
 
-  const [open, setOpen] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <Card

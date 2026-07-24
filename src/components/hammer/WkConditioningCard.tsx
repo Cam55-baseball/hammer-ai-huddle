@@ -38,7 +38,7 @@ export function WkConditioningCard() {
   const items = grouped.conditioningCard;
   if (!isLoading && items.length === 0 && !failed) return null;
 
-  const [open, setOpen] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <Card

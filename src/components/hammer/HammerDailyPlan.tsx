@@ -619,7 +619,7 @@ function ScheduleDropdownWrapper() {
 function WarmupCrossoverAddons() {
   const { grouped } = useHammersToday();
   const addons = grouped.warmupAddons ?? [];
-  const [open, setOpen] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
   if (addons.length === 0) return null;
   return (
     <Card className="border-rose-400/30 bg-rose-500/5">
