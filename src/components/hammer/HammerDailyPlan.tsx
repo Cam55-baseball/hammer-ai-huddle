@@ -717,38 +717,32 @@ function BlockCard({
             )}
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
-            <Button
-              size="sm"
-              variant={block.status === "awaiting-input" ? "outline" : "default"}
-              onClick={() => {
-                // Warm-up opens the generator in place — Practice Hub is for
-                // hitting/throwing/defense/baserunning practice sessions, not warm-ups.
-                if (block.route === "hammer:open-warmup-generator") {
-                  setWarmupOpen(true);
-                  return;
-                }
-                // "Answer Hammer" (and any in-page hash route) is an
-                // inline-onboarding affordance, not a real route. Expand the
-                // block, open the gap drawer, and scroll the user to it so
-                // they can answer right where they are.
-                if (block.route.startsWith("#") || block.status === "awaiting-input") {
-                  setOpen(true);
-                  setGapsOpen(true);
-                  // Fall back to chat if there are no structured gaps to ask.
-                  if (focusGaps.length === 0) setChatOpen(true);
-                  // Defer scroll until the collapsible has expanded.
-                  requestAnimationFrame(() => {
-                    const el = document.getElementById(domId);
-                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  });
-                  return;
-                }
-                onNavigate(block.route);
-              }}
-              className="text-xs"
-            >
-              {block.ctaLabel}
-            </Button>
+            {block.status !== "off-day" && (
+              <Button
+                size="sm"
+                variant={block.status === "awaiting-input" ? "outline" : "default"}
+                onClick={() => {
+                  if (block.route === "hammer:open-warmup-generator") {
+                    setWarmupOpen(true);
+                    return;
+                  }
+                  if (block.route.startsWith("#") || block.status === "awaiting-input") {
+                    setOpen(true);
+                    setGapsOpen(true);
+                    if (focusGaps.length === 0) setChatOpen(true);
+                    requestAnimationFrame(() => {
+                      const el = document.getElementById(domId);
+                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                    return;
+                  }
+                  onNavigate(block.route);
+                }}
+                className="text-xs"
+              >
+                {block.ctaLabel}
+              </Button>
+            )}
 
             <CollapsibleTrigger asChild>
               <Button size="sm" variant="ghost" className="text-[11px] h-7 px-2 gap-1">
@@ -871,14 +865,20 @@ function BlockCard({
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
             <div className="ml-auto">
-              <BlockCompletionControls
-                modality={block.modality}
-                modalityLabel={block.title}
-                onChanged={() => onEngagementChanged?.()}
-                drills={block.drills}
-                planDate={planDate}
-                side={block.side ?? null}
-              />
+              {block.status === "off-day" ? (
+                <span className="text-[11px] text-muted-foreground italic">
+                  No log today — resting this modality.
+                </span>
+              ) : (
+                <BlockCompletionControls
+                  modality={block.modality}
+                  modalityLabel={block.title}
+                  onChanged={() => onEngagementChanged?.()}
+                  drills={block.drills}
+                  planDate={planDate}
+                  side={block.side ?? null}
+                />
+              )}
             </div>
           </div>
 
