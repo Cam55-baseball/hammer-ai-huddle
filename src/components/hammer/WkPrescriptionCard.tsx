@@ -221,43 +221,52 @@ export function WkPrescriptionCard({
   return (
     <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
       <Collapsible open={open} onOpenChange={setOpen}>
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <Checkbox
             checked={checked}
             onCheckedChange={(v) => toggleCheckbox(!!v)}
-            className="mt-0.5 shrink-0"
+            className="shrink-0"
             aria-label={`Mark ${rx.movement_name} done`}
           />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
-                {SLOT_LABEL[rx.slot]}
-              </Badge>
-              {rx.substituted_from_slug && (
-                <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/50 text-rose-700 dark:text-rose-300">
-                  <ShieldCheck className="h-3 w-3" /> Injury-swap
-                </Badge>
-              )}
-              {rx.why_payload?.override && (
-                <Badge variant="outline" className="text-[10px] gap-1 border-violet-500/50 text-violet-700 dark:text-violet-300">
-                  Override — 1 session
-                </Badge>
-              )}
-            </div>
-            <div className="mt-1 font-semibold text-sm line-clamp-2 break-words">{rx.movement_name}</div>
-            <div className="text-xs text-muted-foreground mt-0.5 break-words">{dosage}</div>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <LogButton rx={rx} dosageText={dosage} compact />
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 px-2">
-                <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="min-w-0 flex-1 text-left"
+              aria-expanded={open}
+            >
+              <div className="font-semibold text-sm line-clamp-2 break-words">
+                {rx.movement_name}
+              </div>
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0">
+              <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+            </Button>
+          </CollapsibleTrigger>
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
+              {SLOT_LABEL[rx.slot]}
+            </Badge>
+            {rx.substituted_from_slug && (
+              <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/50 text-rose-700 dark:text-rose-300">
+                <ShieldCheck className="h-3 w-3" /> Injury-swap
+              </Badge>
+            )}
+            {rx.why_payload?.override && (
+              <Badge variant="outline" className="text-[10px] gap-1 border-violet-500/50 text-violet-700 dark:text-violet-300">
+                Override — 1 session
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-xs text-muted-foreground break-words flex-1 min-w-0">{dosage}</div>
+            <LogButton rx={rx} dosageText={dosage} compact />
+          </div>
+
           {(() => {
             const hasWhy = athleteWhy || todayLine;
             if (!hasWhy) return null;

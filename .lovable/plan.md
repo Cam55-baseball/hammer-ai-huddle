@@ -1,22 +1,44 @@
 ## Goal
-Every prescribed card on Hammer's Today Plan starts collapsed with a dropdown chevron, matching the pattern already used by BlockCard (Hitting, Throwing, Baserunning, Recovery, Warm-up).
+Every activity under "Lifts" (each `WkPrescriptionCard` row) starts collapsed with only the checkbox, movement name, and a dropdown arrow visible. Tapping the arrow reveals dosage, badges, LogButton, "Why this movement", cue, reductions, and Complete/Skip.
 
-## Current state
-- **BlockCard** (Hitting, Throwing, Baserunning, Recovery, Warm-up, other sport blocks) — already `useState(false)` with chevron. No change needed.
-- **WkSpeedCard, WkBatSpeedCard, WkLiftsCard, WkConditioningCard** — currently `useState<boolean>(true)` (start OPEN). Need to flip default to closed.
-- **WarmupCrossoverAddons** (crossover primer wrapper in `HammerDailyPlan.tsx`) — currently `useState<boolean>(true)`. Need to flip default to closed.
-- **WkPrescriptionCard** (individual prescribed rows inside the crossover primer / other Wk containers) — already `useState(false)`. No change.
+## Scope
+`src/components/hammer/WkPrescriptionCard.tsx` — this same component also renders items under Speed, Bat Speed, Conditioning, and the crossover primer, so this change applies uniformly to every prescribed item across Hammers Today (which matches the user's earlier "every single item needs a dropdown" direction).
 
-## Changes
-1. `src/components/hammer/WkSpeedCard.tsx` — line 37: `useState<boolean>(true)` → `useState<boolean>(false)`.
-2. `src/components/hammer/WkBatSpeedCard.tsx` — line 43: same flip.
-3. `src/components/hammer/WkLiftsCard.tsx` — line 110: same flip.
-4. `src/components/hammer/WkConditioningCard.tsx` — line 41: same flip.
-5. `src/components/hammer/HammerDailyPlan.tsx` — `WarmupCrossoverAddons` (line 622): same flip.
+Default state (`useState(false)`) is already correct — no change there.
 
-All five cards already render a `ChevronDown` inside their `CollapsibleTrigger`, so no markup work is needed — flipping the default state gives the user the "starts closed, dropdown arrow" behavior consistently across every task card on Hammers Today.
+## Changes in WkPrescriptionCard.tsx (lines 221–258)
+
+Restructure the header row so only these are always visible:
+- Checkbox
+- Movement name
+- Chevron toggle (rotates on open)
+
+Move inside `<CollapsibleContent>` (currently always-visible, will be gated):
+- Slot badge, Injury-swap badge, Override badge
+- Dosage line
+- LogButton
+
+The existing `<CollapsibleContent>` block (Why / cue / reductions / Complete-Skip buttons) stays as-is and appears after the new "summary" block when opened.
+
+Result per row when closed:
+```
+[ ]  Barbell Back Squat                                    v
+```
+When opened:
+```
+[ ]  Barbell Back Squat                                    ^
+     [Lift]  [Injury-swap]
+     3 sets × 5 reps • 75% 1RM               [Log]
+     [Why this movement ▸]
+     Cue: …
+     [Complete] [Skip]
+```
 
 ## Not touching
-- Check-in cards (Morning / Pre-lift / Night quiz launchers) — these are single-tap launchers, not collapsible cards, so leaving them as-is preserves their intended one-click flow.
-- BlockCard header behavior — chevron + closed default already correct.
-- Wisdom / HPI / Start Line / Schedule / Ask Hammer — already closed with chevrons from prior work.
+- `WkLiftsCard` container (already collapses closed with chevron).
+- The nested "Why this movement" mini-collapsible inside details (already works).
+- Completion/status logic, `mark()`, dosage computation, phase-mismatch logic — all preserved.
+
+## Verify
+- Typecheck.
+- Visual: lift items start closed showing only checkbox + name + chevron; opening reveals badges, dosage, LogButton, and existing detail block.
