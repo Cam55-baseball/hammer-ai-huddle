@@ -90,6 +90,9 @@ import { MoreVertical, Sliders } from "lucide-react";
 import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTasks";
+import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
+import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
+import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
 
 function DrillRow({
   drill: d,
