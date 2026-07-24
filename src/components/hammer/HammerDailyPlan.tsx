@@ -64,6 +64,8 @@ import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
+import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
+import { BookOpen } from "lucide-react";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
@@ -589,29 +591,7 @@ function BlockCard({
               </div>
               <ul className="space-y-1.5">
                 {block.drills.map((d, i) => (
-                  <li
-                    key={i}
-                    className="text-xs rounded-md border border-border/50 bg-muted/30 p-2"
-                  >
-                    <div className="font-medium">{d.name}</div>
-                    <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
-                    {d.setup && (
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        Setup: {d.setup}
-                      </div>
-                    )}
-                    {d.cue && (
-                      <div className="text-[11px] text-foreground/80 mt-0.5">
-                        Cue: {d.cue}
-                      </div>
-                    )}
-                    {d.stopIf && (
-                      <div className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 flex items-start gap-1">
-                        <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                        <span>Stop if: {d.stopIf}</span>
-                      </div>
-                    )}
-                  </li>
+                  <DrillRow key={i} drill={d} />
                 ))}
               </ul>
             </div>
