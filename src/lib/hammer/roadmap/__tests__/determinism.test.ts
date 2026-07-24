@@ -8,6 +8,11 @@ import { resolveSeasonQuarter, quartersFromWeeks } from "@/lib/hammer/roadmap/se
 import { rungByKey, RUNG_ORDER } from "@/lib/hammer/roadmap/roadmapLadder";
 import { prescribeThrowingLadder } from "@/lib/hammer/roadmap/throwingLadder";
 import { resolveEliteTarget } from "@/lib/hammer/roadmap/eliteTarget";
+import {
+  resolveSkillDaysTarget,
+  SKILL_DAYS_CEILING,
+  SKILL_MODALITIES,
+} from "@/lib/hammer/roadmap/skillFrequencyLadder";
 
 // Minimal QuarterDescriptor stub for isolated math.
 const Q2_OFF = resolveSeasonQuarter(
