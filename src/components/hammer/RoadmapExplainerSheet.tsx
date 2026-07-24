@@ -21,7 +21,7 @@ interface Props {
  * capacity looks like at the top of the ladder. Read-only, interpretive.
  */
 export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
-  const { rung, rungRationale, quarter, eliteTarget, throwingLadder } = roadmap;
+  const { rung, rungRationale, quarter, eliteTarget, throwingLadder, skillLadder } = roadmap;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -75,6 +75,46 @@ export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
                 </div>
               </div>
             </div>
+          </section>
+
+          {/* Skill-frequency ladder — stack days before intensity */}
+          <section className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+              Skill days you've earned
+            </div>
+            <div className="mt-0.5 text-sm text-foreground/90">
+              Stack days first, then intensity. The plan climbs toward{" "}
+              {eliteTarget.gamesPerWeekHigh}/wk skill cadence one day at a time —
+              extra days beyond your baseline start at activation dose.
+            </div>
+            <ul className="mt-2 space-y-1.5">
+              {skillLadder.map((row) => {
+                const pct = row.target > 0 ? Math.min(100, Math.round((row.earned / row.target) * 100)) : 0;
+                const hit = row.target > 0 && row.earned >= row.target;
+                return (
+                  <li key={row.modality} className="rounded-md bg-background/60 border border-muted/40 px-2 py-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-semibold text-foreground capitalize">
+                        {row.modality}
+                      </div>
+                      <div className={`text-[11px] font-semibold ${hit ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                        {row.earned}/{row.target} last 7d
+                        {row.nextRungTarget !== null && row.nextRungTarget > row.target && (
+                          <span className="ml-1 text-muted-foreground">→ {row.nextRungTarget}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted/30">
+                      <div
+                        className={`h-full ${hit ? "bg-emerald-500" : "bg-primary/70"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-[11px] text-muted-foreground">{row.rationale}</div>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
 
           {/* Throwing ladder */}
