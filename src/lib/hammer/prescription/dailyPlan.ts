@@ -1110,7 +1110,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         recoverDay || workloadHigh || seasonPhase === "in" || injuryRegions.length > 0;
       const drills: DrillStep[] = [
         { name: elevated ? "Mobility + foam roll" : "Mobility + foam roll", dosage: elevated ? "15 min full body" : "10 min focus areas", cue: "slow pressure, breathe" },
-        { name: "Breathing / down-regulation", dosage: elevated ? "10 min" : "5 min", cue: "long exhales, longer than inhales" },
+        { name: "Evening down-regulation breath (post-session)", dosage: elevated ? "10 min" : "5 min", cue: "long exhales, longer than inhales — this is the closing breath of the day, distinct from the morning HPI primer" },
         { name: "Hydrate + plan tomorrow's wake time", dosage: "now" },
         ...(injury
           ? [{ name: "Mind your injury note", dosage: injury } as DrillStep]
