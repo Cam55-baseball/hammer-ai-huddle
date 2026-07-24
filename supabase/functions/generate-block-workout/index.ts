@@ -29,6 +29,7 @@ interface GeneratedExercise {
 }
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
 
 const BLOCK_DESCRIPTIONS: Record<string, string> = {
   activation: 'Wake up muscles and nervous system - low intensity prep exercises to increase blood flow and neural readiness',
