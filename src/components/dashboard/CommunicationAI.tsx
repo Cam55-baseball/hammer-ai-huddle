@@ -102,6 +102,7 @@ export function CommunicationAI({ className }: Props) {
   const { unackedCount } = useEscalationFeed({ withinHours: 72 });
   const { step: aiStep, isLoading: aiLoading, error } =
     useCoachHammerNextStep();
+  const [open, setOpen] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [intakeOpen, setIntakeOpen] = useState(false);
   const lifestyleStale = useMemo(() => {
