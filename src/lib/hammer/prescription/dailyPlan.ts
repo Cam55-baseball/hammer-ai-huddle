@@ -223,7 +223,16 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           dosage: primer.breathPrimer,
           cue: `${primer.element} phase — ${primer.qiDirective}`,
           stopIf: "Lightheaded — stop, breathe normally, then continue.",
-          guide: "Breath-first primer regulates the autonomic system before load. Long exhales bias parasympathetic recovery; box breathing steadies focus before performance.",
+          guide: {
+            what: "A short breath-first primer that regulates the autonomic system before movement.",
+            setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
+            goodRep: ["Slow, quiet nasal breathing.", "Ribs expand 360°, not just the chest.", "Exhale is longer than the inhale."],
+            badRep: ["Mouth breathing.", "Shoulders shrugging up on the inhale.", "Rushing the tempo."],
+            feel: "Calm, warm, slightly heavier — sympathetic tone dropping.",
+            whyToday: "Long exhales bias parasympathetic recovery; box breathing steadies focus before performance.",
+            nextLink: "hammer:open-hpi",
+            stopIf: "Lightheaded — stop, breathe normally, then continue.",
+          },
         });
       }
       const titleByContext: Record<string, string> = {
