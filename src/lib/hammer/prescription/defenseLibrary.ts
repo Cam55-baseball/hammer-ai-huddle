@@ -11,6 +11,13 @@
  * handles the awaiting-input state).
  */
 import type { DrillStep } from "./dailyPlan";
+import {
+  guideForDefense,
+  tierNoteForDefense,
+  type DefenseTier,
+} from "./defenseGuides";
+
+export type { DefenseTier } from "./defenseGuides";
 
 export type DefensePosition =
   | "C"
