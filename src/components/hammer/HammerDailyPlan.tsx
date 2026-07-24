@@ -422,8 +422,15 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        {/* 1. Schedule & What Changed — dropdown, starts closed */}
+        <ScheduleDropdownWrapper />
+        {/* 2. Today's Wisdom */}
+        <TodaysWisdomCard />
+        {/* 3. Human Performance Intelligence — dropdown, glows until opened */}
+        <HumanPerformanceCard />
+        {/* 4. Start Line (DailyIntentHeader) — closed, glows until opened */}
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
-        <WeeklyRoadmapStrip plan={plan} />
+        {/* 5. Ask Hammer — Recall & Clarity */}
         <button
           type="button"
           onClick={() => navigate("/hammer/recall")}
@@ -440,7 +447,8 @@ function HammerDailyPlanBody() {
           </div>
           <span className="text-xs text-primary">Open →</span>
         </button>
-        <HammerScheduleStrip />
+        {/* 6. Weekly rhythm + in-game advisory + do-in-this-order */}
+        <WeeklyRoadmapStrip plan={plan} />
         <GpInGameAdvisoryStrip />
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
           <span className="font-medium text-foreground">Do in this order:</span>{" "}
