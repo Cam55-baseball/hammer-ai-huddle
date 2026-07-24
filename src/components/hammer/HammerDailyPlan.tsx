@@ -16,6 +16,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
+import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
 import { BlockCompletionControls } from "@/components/hammer/BlockCompletionControls";
 import {
   projectAdaptiveAdjustments,
@@ -171,6 +172,7 @@ const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
   "awaiting-input": "border-amber-500/30 bg-amber-500/5",
   suppressed: "border-muted/30 opacity-60",
+  "off-day": "border-muted/40 bg-muted/5 opacity-75",
 };
 
 const PHASE_TONE: Record<string, string> = {
@@ -408,6 +410,7 @@ function HammerDailyPlanBody() {
       </CardHeader>
       <CardContent className="space-y-2">
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
+        <WeeklyRoadmapStrip plan={plan} />
         <button
           type="button"
           onClick={() => navigate("/hammer/recall")}
