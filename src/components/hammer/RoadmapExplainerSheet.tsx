@@ -21,7 +21,7 @@ interface Props {
  * capacity looks like at the top of the ladder. Read-only, interpretive.
  */
 export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
-  const { rung, rungRationale, quarter, eliteTarget, throwingLadder } = roadmap;
+  const { rung, rungRationale, quarter, eliteTarget, throwingLadder, skillLadder } = roadmap;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
