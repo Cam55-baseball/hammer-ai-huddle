@@ -19,6 +19,8 @@ import {
   type CoachHammerTier,
 } from "@/hooks/useCoachHammerNextStep";
 import { QuickCheckInSheet } from "@/components/checkin/QuickCheckInSheet";
+import { LifestyleIntakeSheet } from "@/components/hpi/LifestyleIntakeSheet";
+import { readHpiLifestyle } from "@/lib/hpi/lifestyleStore";
 import { cn } from "@/lib/utils";
 
 const TIER_TONE: Record<CoachHammerTier, string> = {
