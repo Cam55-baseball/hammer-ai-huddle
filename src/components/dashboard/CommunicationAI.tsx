@@ -98,6 +98,14 @@ export function CommunicationAI({ className }: Props) {
   const { step: aiStep, isLoading: aiLoading, error } =
     useCoachHammerNextStep();
   const [checkInOpen, setCheckInOpen] = useState(false);
+  const [intakeOpen, setIntakeOpen] = useState(false);
+  const lifestyleStale = useMemo(() => {
+    const l = readHpiLifestyle();
+    if (!l) return true;
+    const savedMs = Date.parse(l.savedAt);
+    if (!Number.isFinite(savedMs)) return true;
+    return Date.now() - savedMs > 7 * 24 * 60 * 60 * 1000;
+  }, [intakeOpen]);
 
   const handleCta = (route: string) => {
     if (route === "/check-in") {
