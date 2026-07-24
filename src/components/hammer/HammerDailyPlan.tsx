@@ -703,7 +703,7 @@ function BlockCard({
               </div>
               <ul className="space-y-1.5">
                 {block.drills.map((d, i) => (
-                  <DrillRow key={i} drill={d} />
+                  <DrillRow key={i} drill={d} modality={block.modality} planDate={planDate} />
                 ))}
               </ul>
             </div>
