@@ -6,11 +6,13 @@ export interface ExerciseLogPayload {
   prescription_id: string;
   plan_date: string;
   movement_slug: string;
-  rounds: Record<string, number | null>[];
+  rounds: Record<string, number | string | null>[];
   rpe?: number | null;
   bar_feel?: string | null;
   notes?: string | null;
   ai_readback?: string | null;
+  template_id?: string | null;
+  field_schema?: Array<{ key: string; label: string; unit?: string; kind: string }> | null;
 }
 
 /** Latest log for prefill / edit-in-place. */
@@ -100,7 +102,11 @@ export function useSaveExerciseLog() {
         bar_feel: p.bar_feel ?? null,
         notes: p.notes ?? null,
         ai_readback: p.ai_readback ?? null,
-        metrics: { rounds: p.rounds },
+        metrics: {
+          rounds: p.rounds,
+          template_id: p.template_id ?? null,
+          field_schema: p.field_schema ?? null,
+        },
       };
 
       // Upsert-style: delete the previous log for this prescription, then insert.
@@ -129,7 +135,7 @@ export function useSaveExerciseLog() {
 export async function fetchAiReadback(input: {
   movementName: string;
   dosageText: string;
-  rounds: Record<string, number | null>[];
+  rounds: Record<string, number | string | null>[];
   rpe: number | null;
   notes: string | null;
 }): Promise<string | null> {

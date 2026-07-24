@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
-import { pickTemplate } from "./logTemplates";
+import { resolveTemplate } from "./logTemplates";
 import { RoundGrid, type Round } from "./RoundGrid";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
@@ -34,7 +34,7 @@ function toNum(v: string): number | null {
 }
 
 export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) {
-  const template = useMemo(() => pickTemplate(rx), [rx]);
+  const template = useMemo(() => resolveTemplate(rx), [rx]);
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const { data: previous } = usePreviousMovementLog(rx.movement_slug, rx.id);
   const save = useSaveExerciseLog();
@@ -89,8 +89,12 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
 
   const roundsToPayload = () =>
     rounds.map((r) => {
-      const out: Record<string, number | null> = {};
-      for (const f of template.fields) out[f.key] = toNum(r[f.key] ?? "");
+      const out: Record<string, number | string | null> = {};
+      for (const f of template.fields) {
+        const raw = r[f.key] ?? "";
+        if (f.kind === "side") out[f.key] = raw || null;
+        else out[f.key] = toNum(raw);
+      }
       return out;
     });
 
@@ -115,10 +119,12 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
         rounds: roundsToPayload(),
-        rpe,
-        bar_feel: barFeel,
+        rpe: template.meta.rpe ? rpe : null,
+        bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
         notes: notes.trim() || null,
         ai_readback: readback,
+        template_id: template.id,
+        field_schema: template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
       });
       setSavedAt(new Date().toISOString());
       toast.success("Saved to your log");
