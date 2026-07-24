@@ -541,15 +541,32 @@ export interface RoadmapDay {
 export function projectWeeklyRoadmap(
   template: WeeklyTemplate,
   today: Date,
+  skillTargets: SkillDayTargets = {},
 ): ReadonlyArray<RoadmapDay> {
   const todayDow = today.getDay() as Dow;
+  // Precompute effective skill day sets + overflow so the strip mirrors reality.
+  const skillDays: Partial<Record<SkillModality, ReadonlyArray<Dow>>> = {};
+  const skillOverflow: Partial<Record<SkillModality, Set<Dow>>> = {};
+  for (const sm of SKILL_MODALITIES) {
+    if (skillTargets[sm] === undefined) continue;
+    const r = resolveSkillDays(template, sm, skillTargets[sm]!);
+    skillDays[sm] = r.days;
+    skillOverflow[sm] = new Set(r.overflowDays);
+  }
   const days: RoadmapDay[] = [];
   for (let d = 0 as Dow; d <= 6; d = (d + 1) as Dow) {
     const modalities: RoadmapDay["modalities"] = SCHEDULABLE_MODALITIES.flatMap((m) => {
-      const dows = template.perModality[m] ?? [];
+      const isSkill = (SKILL_MODALITIES as ReadonlyArray<string>).includes(m);
+      const dows =
+        isSkill && skillDays[m as SkillModality] !== undefined
+          ? skillDays[m as SkillModality]!
+          : (template.perModality[m] ?? []);
       if (!dows.includes(d)) return [];
-      const intensity =
-        template.intensityOverrides?.[m]?.[d] ?? ("primary" as ModalityIntensity);
+      const isOverflow =
+        isSkill && (skillOverflow[m as SkillModality]?.has(d) ?? false);
+      const intensity: ModalityIntensity = isOverflow
+        ? "activation"
+        : (template.intensityOverrides?.[m]?.[d] ?? "primary");
       const accent = template.dayLabels?.[m]?.[d] ?? null;
       return [{ key: m, intensity, accent }];
     });
