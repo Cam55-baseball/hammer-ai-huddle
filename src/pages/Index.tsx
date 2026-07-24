@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
+import { LandingDemoVideoManager } from "@/components/landing/LandingDemoVideoManager";
 import heroImage from "@/assets/hero-baseball.jpg";
 
 const Index = () => {
