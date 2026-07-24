@@ -59,6 +59,8 @@ export interface ChatCompletionRequest {
   response_format?: { type?: string } & Record<string, unknown>;
   temperature?: number;
   max_tokens?: number;
+  top_p?: number;
+  seed?: number;
 }
 
 export interface ChatCompletionResult {
