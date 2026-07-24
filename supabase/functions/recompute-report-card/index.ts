@@ -146,49 +146,41 @@ ${promptBlock}`;
       .filter(Boolean)
       .join("\n\n");
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        temperature: 0,
-        top_p: 0,
-        seed: stableSeed(video.id),
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "return_metrics",
-              description: "Return the Hammer Report Card structured metrics object.",
-              parameters: {
-                type: "object",
-                properties: { metrics: buildMetricsSchema(contract) },
-                required: ["metrics"],
-              },
+    const aiResp = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      temperature: 0,
+      top_p: 0,
+      seed: stableSeed(video.id),
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "return_metrics",
+            description: "Return the Hammer Report Card structured metrics object.",
+            parameters: {
+              type: "object",
+              properties: { metrics: buildMetricsSchema(contract) },
+              required: ["metrics"],
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "return_metrics" } },
-      }),
-    });
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "return_metrics" } },
+    }, { timeoutMs: 60_000 });
 
     if (!aiResp.ok) {
-      const txt = await aiResp.text();
-      console.error("[recompute-report-card] AI gateway error", aiResp.status, txt);
-      return new Response(JSON.stringify({ error: "AI gateway error", status: aiResp.status }), {
+      console.error("[recompute-report-card] AI provider error", aiResp.status, aiResp.errorBody?.slice(0, 300));
+      return new Response(JSON.stringify({ error: "AI provider error", status: aiResp.status }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await aiResp.json();
+    const data = aiResp.data;
     const toolCalls = data?.choices?.[0]?.message?.tool_calls;
     let rawMetrics: Record<string, unknown> | null = null;
     if (toolCalls && toolCalls.length > 0) {
