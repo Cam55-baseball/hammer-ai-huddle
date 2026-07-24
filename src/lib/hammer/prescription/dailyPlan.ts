@@ -1622,34 +1622,144 @@ function splitLateralityBlocks(
 }
 
 
+/**
+ * Weekly Microcycle post-processor — turns modalities that are NOT
+ * scheduled today into `off-day` cards (with "Next: Thu" rationale),
+ * trims volume on activation/secondary days, and appends the microcycle
+ * position to every block's `roadmapReason` so the daily plan finally
+ * reads like a real program instead of a menu.
+ *
+ * Rules:
+ *   - Never promotes a block: `awaiting-input` and `suppressed` blocks
+ *     pass through untouched — injury, parent supremacy, and schedule
+ *     posture always outrank the microcycle.
+ *   - Anchor modalities (warmup / fueling / recovery / game_iq) render
+ *     every day; the microcycle only annotates them.
+ *   - Off-day blocks keep the athlete-visible next-return day so the
+ *     roadmap is legible in the card itself.
+ */
+function applyWeeklyMicrocycle(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  resolved: ResolvedMicrocycle,
+): ReadonlyArray<PrescribedBlock> {
+  return blocks.map((b) => {
+    const decision: ModalityDayDecision | undefined = resolved.perModality[b.modality];
+    if (!decision) return b;
+    if (b.status === "awaiting-input" || b.status === "suppressed") {
+      // Don't fight higher-authority states — just tag the roadmapReason.
+      return {
+        ...b,
+        roadmapReason: `${b.roadmapReason} · ${decision.microcycleLabel}`,
+      };
+    }
+
+    // Off-day rewrite for schedulable modalities.
+    if (!decision.scheduled && SCHEDULABLE_MODALITIES.includes(b.modality)) {
+      const nextLine =
+        decision.nextScheduledLabel !== null
+          ? `Returns ${decision.nextScheduledLabel}.`
+          : "Not scheduled again this week.";
+      return {
+        ...b,
+        status: "off-day" as BlockStatus,
+        title: `${labelForModality(b.modality)} — off today · ${nextLine}`,
+        why: `${decision.reason} Today's slot is intentionally empty so the next session hits fresh.`,
+        roadmapReason: decision.reason,
+        phase: "recover",
+        // Keep at most one low-cost primer (mobility / film / breath).
+        drills: [],
+        steps: [
+          decision.nextScheduledLabel
+            ? `Optional 5-min mobility or film study — full ${b.modality} returns ${decision.nextScheduledLabel}.`
+            : "Optional 5-min mobility or film study.",
+        ],
+        cues: [],
+        stopRules: [],
+        durationMin: 0,
+        gamePlanTemplate: null,
+      };
+    }
+
+    // Scheduled day: annotate + optionally scale volume for activation/secondary.
+    const scale =
+      decision.intensity === "activation" ? 0.3 : decision.intensity === "secondary" ? 0.6 : 1;
+    const scaledDrills =
+      scale === 1
+        ? b.drills
+        : b.drills.map((d) => ({ ...d, dosage: scaleDosageLabel(d.dosage, scale) }));
+    const scaledDuration =
+      scale === 1 || b.durationMin === null
+        ? b.durationMin
+        : Math.max(10, Math.round(b.durationMin * scale));
+    return {
+      ...b,
+      drills: scaledDrills,
+      steps: scale === 1 ? b.steps : drillsToSteps(scaledDrills),
+      durationMin: scaledDuration,
+      roadmapReason: `${decision.microcycleLabel} · ${b.roadmapReason}`,
+    };
+  });
+}
+
+function labelForModality(m: ModalityKey): string {
+  switch (m) {
+    case "warmup": return "Warm-up";
+    case "speed": return "Speed";
+    case "strength": return "Strength";
+    case "hitting": return "Hitting";
+    case "throwing": return "Throwing";
+    case "defense": return "Defense";
+    case "baserunning": return "Baserunning";
+    case "game_iq": return "Game IQ";
+    case "fueling": return "Fueling";
+    case "recovery": return "Recovery";
+  }
+}
+
+/**
+ * Very light dosage scaler: multiplies the leading integer of "N x M …"
+ * dosage strings by `scale`, floor 1.  If we can't parse the string we
+ * return it untouched — never fabricate.
+ */
+function scaleDosageLabel(dosage: string, scale: number): string {
+  const m = /^(\d+)\s*(?:x|×)\s*(\d+)/i.exec(dosage);
+  if (!m) return dosage;
+  const sets = Math.max(1, Math.round(parseInt(m[1], 10) * scale));
+  return dosage.replace(/^(\d+)/, String(sets));
+}
+
+
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
   scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
   sideBias: SideBiasForPlan | null = null,
   gpSignal: GpSignalForPlan | null = null,
   identityOverride?: { isSwitchHitter?: boolean; isAmbidextrousThrower?: boolean },
+  today: Date = new Date(),
 ): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
+
+  // Resolve the weekly microcycle FIRST so we can thread its label into blocks.
+  const weeklyTemplate = resolveWeeklyTemplate(proj);
+  const microcycle = applyMicrocycle(weeklyTemplate, today);
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today);
+
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
   const guarded = applyMinorParentSupremacy(lateralized, proj);
   const ordered = applyCategoryGoalOrdering(guarded, proj);
 
-  // Schedule modulation runs AFTER goal ordering so the calendar can
-  // visibly bend today's plan around games/tournaments/camps/travel.
-  // It still runs BEFORE injury / parent-supremacy ceilings have any
-  // further effect — those were already applied above and remain
-  // dominant because suppressed blocks stay suppressed.
-  const modulated = applyScheduleModulation(ordered, scheduleSignal);
-  // Side-bias rider runs after schedule so suppressed blocks remain suppressed
-  // (no extra reps stacked on a game/tournament/injury suppression).
+  // Weekly microcycle turns not-scheduled-today modalities into off-day cards
+  // and trims activation/secondary volume. Runs BEFORE schedule modulation so
+  // that games/tournaments still override an already-off-day modality when
+  // needed (schedule posture stays supreme over microcycle rest).
+  const cycled = applyWeeklyMicrocycle(ordered, microcycle);
+
+  const modulated = applyScheduleModulation(cycled, scheduleSignal);
   const sided = applySideBias(modulated, sideBias);
-  // GP-signal bias runs LAST so it never overrides schedule suppression,
-  // injury ceilings, parent-supremacy, goal ordering, or side bias; it only
-  // promotes a few modalities to the front of the ready set + adds cues.
   const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
-  // Lineage breadcrumb (dev-only, harmless in prod): summarises which ranking drove ordering.
+
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
     console.debug("[dailyPlan] ordered by ranked goals →", summarizeGoals(proj.categoryGoals));
@@ -1659,6 +1769,10 @@ export function buildHammerDailyPlan(
     console.debug(
       `[dailyPlan] schedule posture=${scheduleSignal.postureToday} — ${scheduleSignal.rationale}`,
     );
+  }
+  if (typeof console !== "undefined" && import.meta.env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.debug(`[dailyPlan] microcycle=${weeklyTemplate.id} (${weeklyTemplate.label})`);
   }
   if (gpBiasTags.length > 0 && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -1673,7 +1787,11 @@ export function buildHammerDailyPlan(
     scheduleSignal,
     sideBias,
     gpBiasTags,
+    microcycle,
+    weeklyRoadmap,
+    weeklyTemplate,
   };
 }
+
 
 
