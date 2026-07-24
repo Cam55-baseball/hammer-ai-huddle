@@ -41,7 +41,7 @@ import {
   normalizeSport,
   type EassContext,
 } from "./eassLibrary";
-import { selectDefenseDrills } from "./defenseLibrary";
+import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import {
   resolveWeeklyTemplate,
   applyMicrocycle,
