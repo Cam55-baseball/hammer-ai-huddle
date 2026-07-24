@@ -79,4 +79,15 @@ describe('SEASON_PROFILES invariants', () => {
       expect(getSeasonProfile(p).phase).toBe(p);
     });
   });
+
+  it('every phase carries a Neijing HPI overlay with all required fields', () => {
+    (['preseason', 'in_season', 'post_season', 'off_season'] as SeasonPhase[]).forEach((p) => {
+      const hpi = SEASON_PROFILES[p].hpi;
+      expect(hpi).toBeDefined();
+      expect(hpi.element).toMatch(/^(Wood|Fire|Earth|Metal|Water)$/);
+      expect(hpi.qiDirective.length).toBeGreaterThan(10);
+      expect(hpi.breathPrimer.length).toBeGreaterThan(10);
+      expect(hpi.yinYangEmphasis.length).toBeGreaterThan(3);
+    });
+  });
 });

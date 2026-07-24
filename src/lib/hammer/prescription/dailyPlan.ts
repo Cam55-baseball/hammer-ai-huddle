@@ -250,11 +250,12 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       };
       const dur = built.estMinutes;
       const contextKey = built.context;
+      const hpi = getSeasonHPI(seasonPhase);
       return {
         modality,
         title: titleByContext[contextKey] ?? titleByContext.default,
-        why: whyByContext[contextKey] ?? whyByContext.default,
-        roadmapReason: roadmapByContext[contextKey] ?? roadmapByContext.default,
+        why: `${whyByContext[contextKey] ?? whyByContext.default} ${hpi.qiDirective}`,
+        roadmapReason: `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
         phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
