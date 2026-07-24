@@ -409,6 +409,7 @@ function HammerDailyPlanBody() {
                   />
                 );
               })}
+              <WarmupCrossoverAddons />
               <ErrorBoundary label="wk-speed">
                 <WkSpeedCard />
               </ErrorBoundary>
