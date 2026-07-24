@@ -103,32 +103,18 @@ serve(async (req) => {
     const systemPrompt = buildSystemPrompt();
     const userPrompt = buildUserPrompt(session, composites, drillBlocks, trendContext);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [coachingReportTool],
-        tool_choice: { type: "function", function: { name: "coaching_report" } },
-      }),
+    const aiResult = await chatCompletion({
+      model: "google/gemini-2.5-pro",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      tools: [coachingReportTool],
+      tool_choice: { type: "function", function: { name: "coaching_report" } },
     });
 
-    if (!aiResponse.ok) {
-      const status = aiResponse.status;
+    if (!aiResult.ok) {
+      const status = aiResult.status;
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited, try again shortly" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -139,16 +125,14 @@ serve(async (req) => {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      console.error("AI gateway error:", status, await aiResponse.text());
+      console.error("AI error:", status, aiResult.provider, aiResult.errorBody?.slice(0, 500));
       return new Response(JSON.stringify({ error: "AI generation failed" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const aiData = await aiResponse.json();
     let report: any = null;
-
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = aiResult.data.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       try {
         report = JSON.parse(toolCall.function.arguments);
