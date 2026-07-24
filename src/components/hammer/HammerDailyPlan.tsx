@@ -78,6 +78,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
