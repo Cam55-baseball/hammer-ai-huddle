@@ -49,9 +49,9 @@ serve(async (req) => {
           role: "system",
           content: `You are a recipe extraction expert. Extract recipe information from HTML content and return it as structured JSON. Be thorough in extracting all ingredients with their quantities and units.`
         },
-          {
-            role: "user",
-            content: `Extract the recipe from this HTML and return ONLY a JSON object with these fields:
+        {
+          role: "user",
+          content: `Extract the recipe from this HTML and return ONLY a JSON object with these fields:
 {
   "name": "recipe name",
   "description": "brief description",
@@ -73,74 +73,69 @@ serve(async (req) => {
 
 HTML content (truncated to first 50000 chars):
 ${html.substring(0, 50000)}`
-          }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extract_recipe",
-              description: "Extract structured recipe data from HTML",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: { type: "string", description: "Recipe name" },
-                  description: { type: "string", description: "Brief description" },
-                  servings: { type: "number", description: "Number of servings" },
-                  prepTime: { type: "number", description: "Prep time in minutes" },
-                  cookTime: { type: "number", description: "Cook time in minutes" },
-                  ingredients: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string" },
-                        quantity: { type: "number" },
-                        unit: { type: "string" },
-                        notes: { type: "string" }
-                      },
-                      required: ["name", "quantity", "unit"]
-                    }
-                  },
-                  instructions: {
-                    type: "array",
-                    items: { type: "string" }
-                  },
-                  estimatedNutrition: {
+        }
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "extract_recipe",
+            description: "Extract structured recipe data from HTML",
+            parameters: {
+              type: "object",
+              properties: {
+                name: { type: "string", description: "Recipe name" },
+                description: { type: "string", description: "Brief description" },
+                servings: { type: "number", description: "Number of servings" },
+                prepTime: { type: "number", description: "Prep time in minutes" },
+                cookTime: { type: "number", description: "Cook time in minutes" },
+                ingredients: {
+                  type: "array",
+                  items: {
                     type: "object",
                     properties: {
-                      calories: { type: "number" },
-                      protein: { type: "number" },
-                      carbs: { type: "number" },
-                      fats: { type: "number" },
-                      fiber: { type: "number" }
-                    }
+                      name: { type: "string" },
+                      quantity: { type: "number" },
+                      unit: { type: "string" },
+                      notes: { type: "string" }
+                    },
+                    required: ["name", "quantity", "unit"]
                   }
                 },
-                required: ["name", "servings", "ingredients"]
-              }
+                instructions: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                estimatedNutrition: {
+                  type: "object",
+                  properties: {
+                    calories: { type: "number" },
+                    protein: { type: "number" },
+                    carbs: { type: "number" },
+                    fats: { type: "number" },
+                    fiber: { type: "number" }
+                  }
+                }
+              },
+              required: ["name", "servings", "ingredients"]
             }
           }
-        ],
-        tool_choice: { type: "function", function: { name: "extract_recipe" } }
-      }),
-    });
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "extract_recipe" } }
+    }, { timeoutMs: 60_000 });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("AI provider error:", response.status, response.errorBody?.slice(0, 300));
       throw new Error("Failed to parse recipe with AI");
     }
 
-    const aiResult = await response.json();
-    console.log("AI response:", JSON.stringify(aiResult, null, 2));
-    
     // Extract the function call result
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = response.data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
       throw new Error("Failed to extract recipe data");
     }
-    
+
     const recipe = JSON.parse(toolCall.function.arguments);
     
     return new Response(
