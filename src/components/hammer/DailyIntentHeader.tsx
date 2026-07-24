@@ -8,7 +8,7 @@
  *
  * Constitutional subordination: Eternal Laws · Megaphase 151–160 · RR-5.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles, Flame, Trophy, ChevronDown } from "lucide-react";
 import {
   Collapsible,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import {
   buildDailyIntent,
   computeMilestones,
