@@ -222,7 +222,7 @@ export function HammerDailyPlan() {
 
 function HammerDailyPlanBody() {
   const ctx = useHammerAthleteContext();
-  const { isSwitchHitter } = useSideContext();
+  const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
@@ -253,10 +253,15 @@ function HammerDailyPlanBody() {
       gpSig.defensivePlays,
     ],
   );
-  const rawPlan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan),
-    [ctx, scheduleSignal, sideBias, gpForPlan],
+  const identityOverride = useMemo(
+    () => ({ isSwitchHitter, isAmbidextrousThrower }),
+    [isSwitchHitter, isAmbidextrousThrower],
   );
+  const rawPlan = useMemo(
+    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan, identityOverride),
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride],
+  );
+
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
   // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
   // hitting/throwing volume doesn't compound the neural cost.
@@ -358,9 +363,9 @@ function HammerDailyPlanBody() {
                   : `Throw ${plan.sideBias!.throw!.weakerSide}`}
               </Badge>
             )}
-            {/* Switch-hitter / ambi-thrower side pickers — active side flows into
-                today's prescription (wk-generate-daily reads side_hit / side_throw). */}
-            <HeaderSidePickers />
+            {/* Header side pickers removed — switch/ambi athletes see L/R via
+                duplicated hitting / bat-speed / throwing cards below. */}
+
 
             <Button
               size="sm"

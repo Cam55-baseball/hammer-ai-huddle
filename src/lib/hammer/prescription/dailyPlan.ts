@@ -1495,12 +1495,14 @@ function applyGpSignalBias(
 function splitLateralityBlocks(
   blocks: ReadonlyArray<PrescribedBlock>,
   ctx: HammerAthleteContext,
+  identityOverride?: { isSwitchHitter?: boolean; isAmbidextrousThrower?: boolean },
 ): ReadonlyArray<PrescribedBlock> {
   const bats = (ctx.get<string>("bats_hand")?.value as string | null) ?? null;
   const throws = (ctx.get<string>("throws_hand")?.value as string | null) ?? null;
-  const isSwitchHitter = bats === "S";
-  const isAmbi = throws === "S";
+  const isSwitchHitter = identityOverride?.isSwitchHitter ?? (bats === "S");
+  const isAmbi = identityOverride?.isAmbidextrousThrower ?? (throws === "S");
   if (!isSwitchHitter && !isAmbi) return blocks;
+
 
   const NON_DOM_KEEP = /(band|prep|scap|cuff|warm|activation|neural|catch-play|light)/i;
 
@@ -1581,13 +1583,15 @@ export function buildHammerDailyPlan(
   scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
   sideBias: SideBiasForPlan | null = null,
   gpSignal: GpSignalForPlan | null = null,
+  identityOverride?: { isSwitchHitter?: boolean; isAmbidextrousThrower?: boolean },
 ): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
-  const lateralized = splitLateralityBlocks(rawBlocks, ctx);
+  const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
   const guarded = applyMinorParentSupremacy(lateralized, proj);
   const ordered = applyCategoryGoalOrdering(guarded, proj);
+
   // Schedule modulation runs AFTER goal ordering so the calendar can
   // visibly bend today's plan around games/tournaments/camps/travel.
   // It still runs BEFORE injury / parent-supremacy ceilings have any
