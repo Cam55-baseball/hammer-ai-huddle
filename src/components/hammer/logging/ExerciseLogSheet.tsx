@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
-import { pickTemplate } from "./logTemplates";
+import { resolveTemplate } from "./logTemplates";
 import { RoundGrid, type Round } from "./RoundGrid";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
