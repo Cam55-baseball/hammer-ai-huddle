@@ -1896,7 +1896,42 @@ export function buildHammerDailyPlan(
       quarter,
       eliteTarget,
       throwingLadder,
+      skillLadder,
     },
+  };
+}
+
+/**
+ * Count *distinct calendar days* in the last 7 days that produced a
+ * max-intent completion for each skill modality. Max-intent bat-speed
+ * completions credit `hitting`; max-intent throwing completions credit
+ * `throwing`. Defense and baserunning have no dedicated completion signal
+ * today, so they always report 0 earned days — this is safe: the ladder
+ * simply reads "aim for X/wk — you've hit 0/7", nudging the athlete to
+ * stack days first before intensity ramps.
+ */
+function countEarnedSkillDays(
+  recent: RecentCompletions,
+  today: Date,
+): Partial<Record<SkillModality, number>> {
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const buckets: Record<SkillModality, Set<string>> = {
+    hitting: new Set(),
+    throwing: new Set(),
+    defense: new Set(),
+    baserunning: new Set(),
+  };
+  for (const c of recent) {
+    if (c.at < sevenDaysAgo || c.at > today) continue;
+    const dayKey = c.at.toISOString().slice(0, 10);
+    if (c.modality === "bat_speed_max") buckets.hitting.add(dayKey);
+    else if (c.modality === "throwing_max") buckets.throwing.add(dayKey);
+  }
+  return {
+    hitting: buckets.hitting.size,
+    throwing: buckets.throwing.size,
+    defense: 0,
+    baserunning: 0,
   };
 }
 
