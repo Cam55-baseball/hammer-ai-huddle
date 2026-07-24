@@ -135,7 +135,7 @@ export function useSaveExerciseLog() {
 export async function fetchAiReadback(input: {
   movementName: string;
   dosageText: string;
-  rounds: Record<string, number | null>[];
+  rounds: Record<string, number | string | null>[];
   rpe: number | null;
   notes: string | null;
 }): Promise<string | null> {
