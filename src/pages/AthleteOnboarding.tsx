@@ -23,6 +23,7 @@ import { FuelRecoveryStep } from "@/components/onboarding/steps/FuelRecoveryStep
 import { MentalCareerStep } from "@/components/onboarding/steps/MentalCareerStep";
 import { ConnectionsStep } from "@/components/onboarding/steps/ConnectionsStep";
 import { ReviewAnswersStep, type ReviewEditKey } from "@/components/onboarding/steps/ReviewAnswersStep";
+import { ConstitutionStep } from "@/components/onboarding/steps/ConstitutionStep";
 import { writeDraftSlot, readDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { ThrowingHandSelector, type ThrowingHandValue } from "@/components/splits/ThrowingHandSelector";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,6 +36,7 @@ const STEPS = [
   "Body",
   "Rank goals",
   "Fuel & recovery",
+  "Constitution",
   "Mental & career",
   "Connections",
   "Schedule today",
@@ -49,21 +51,23 @@ const STEP_PROFILE = 1;
 const STEP_ANTHRO = 2;
 const STEP_GOALS = 3;
 const STEP_FUEL = 4;
-const STEP_MENTAL = 5;
-const STEP_CONNECTIONS = 6;
-const STEP_SCHEDULE = 7;
-const STEP_CONFIRM = 8;
-const STEP_INJURY = 9;
-const STEP_NOTIFICATIONS = 10;
-const STEP_REVIEW = 11;
-const STEP_DONE = 12;
+const STEP_CONSTITUTION = 5;
+const STEP_MENTAL = 6;
+const STEP_CONNECTIONS = 7;
+const STEP_SCHEDULE = 8;
+const STEP_CONFIRM = 9;
+const STEP_INJURY = 10;
+const STEP_NOTIFICATIONS = 11;
+const STEP_REVIEW = 12;
+const STEP_DONE = 13;
 
 /** Deep-link edit keys → owning step index. */
-const EDIT_TARGETS: Record<ReviewEditKey, number> = {
+const EDIT_TARGETS: Record<ReviewEditKey | "constitution", number> = {
   profile: STEP_PROFILE,
   anthropometrics: STEP_ANTHRO,
   goals: STEP_GOALS,
   fuel: STEP_FUEL,
+  constitution: STEP_CONSTITUTION,
   mental: STEP_MENTAL,
   connections: STEP_CONNECTIONS,
   schedule: STEP_SCHEDULE,
@@ -505,6 +509,10 @@ export default function AthleteOnboarding() {
 
       {step === STEP_FUEL && (
         <FuelRecoveryStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_CONSTITUTION && (
+        <ConstitutionStep onContinue={goNext} onBack={goBack} />
       )}
 
       {step === STEP_MENTAL && (
