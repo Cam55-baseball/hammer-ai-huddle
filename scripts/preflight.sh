@@ -9,6 +9,8 @@ bun "$ROOT/scripts/lint-side-context.ts"
 # Game Performance ledger drift guard — no legacy `games` table writes.
 bash "$ROOT/scripts/check-no-legacy-games.sh"
 # Eternity guards — raw lazy(), legacy strings, AuthContext drift, dupe routes.
+# Skill-frequency ladder drift guard — MLB/AUSL cadence ceiling + monotonicity.
+bunx tsx "$ROOT/scripts/check-skill-frequency-ceiling.ts"
 bash "$ROOT/scripts/check-eternity-guards.sh"
 bunx vitest run \
   src/lib/asb/invariants/__tests__ \
