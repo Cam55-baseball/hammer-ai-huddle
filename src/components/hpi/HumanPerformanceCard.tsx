@@ -1,31 +1,22 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Activity, ChevronDown, Sparkles } from "lucide-react";
+import { Activity, Sparkles } from "lucide-react";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { readHpiLifestyle } from "@/lib/hpi/lifestyleStore";
 import { computeHpiSignal } from "@/lib/hpi/hpiSignal";
 import { pickTodaysTip } from "@/lib/hpi/seasonalTips";
 import { BreathPrimer } from "./BreathPrimer";
-import { LifestyleIntakeSheet } from "./LifestyleIntakeSheet";
 
 /**
- * Human Performance Intelligence card — Neijing-inspired overlay surfaced
- * on the Command Center + Dashboard. Interpretive-only; every value is
- * derived from either the season phase (canonical) or the user's own
- * lifestyle intake (self-reported). Never authors organism truth.
+ * Human Performance Intelligence card — Neijing-inspired overlay.
+ * Interpretive-only; never authors organism truth. Lifestyle intake now
+ * flows in through the Quick Check-In and Coach Hammer Next Best Step
+ * surfaces — this card stays lean (score, narrative, primer, wisdom).
  */
 export function HumanPerformanceCard() {
   const { resolvedPhase, phaseProfile, isLoading } = useSeasonStatus();
-  const [lifestyleVersion, setLifestyleVersion] = useState(0);
-  const [intakeOpen, setIntakeOpen] = useState(false);
-  const lifestyle = useMemo(() => readHpiLifestyle(), [lifestyleVersion]);
+  const lifestyle = useMemo(() => readHpiLifestyle(), []);
   const signal = useMemo(
     () => computeHpiSignal(resolvedPhase, lifestyle),
     [resolvedPhase, lifestyle],
@@ -78,65 +69,6 @@ export function HumanPerformanceCard() {
           <div className="mt-1 text-sm font-medium text-foreground">{tip.title}</div>
           <p className="mt-0.5 text-xs text-muted-foreground">{tip.body}</p>
         </div>
-
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-full justify-between px-2 text-xs">
-              What drives this score?
-              <ChevronDown className="h-3.5 w-3.5" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2 space-y-1">
-            {signal.drivers.map((d, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between rounded border border-border/60 bg-background/60 px-2 py-1 text-xs"
-              >
-                <span className="text-muted-foreground">{d.label}</span>
-                <span
-                  className={`font-mono ${
-                    d.delta > 0
-                      ? "text-emerald-500"
-                      : d.delta < 0
-                        ? "text-rose-500"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {d.delta > 0 ? "+" : ""}
-                  {d.delta}
-                </span>
-              </div>
-            ))}
-            <div className="pt-1 text-[10px] text-muted-foreground">
-              Interpretive overlay only — never overrides your organism truth.
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-xs">
-          <div className="font-medium">
-            {lifestyle ? "Update lifestyle intake" : "Personalize this signal"}
-          </div>
-          <p className="mt-0.5 text-muted-foreground">
-            {lifestyle
-              ? "Refresh sleep, hydration, stress, and constitutional lean any time."
-              : "Add a 30-second lifestyle intake so HPI can weight sleep, hydration, and stress properly."}
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="mt-2 h-7 text-xs"
-            onClick={() => setIntakeOpen(true)}
-          >
-            {lifestyle ? "Edit intake" : "Add lifestyle intake"}
-          </Button>
-        </div>
-
-        <LifestyleIntakeSheet
-          open={intakeOpen}
-          onOpenChange={setIntakeOpen}
-          onSaved={() => setLifestyleVersion((v) => v + 1)}
-        />
       </CardContent>
     </Card>
   );

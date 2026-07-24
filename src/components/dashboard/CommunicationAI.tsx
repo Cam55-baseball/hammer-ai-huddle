@@ -19,6 +19,8 @@ import {
   type CoachHammerTier,
 } from "@/hooks/useCoachHammerNextStep";
 import { QuickCheckInSheet } from "@/components/checkin/QuickCheckInSheet";
+import { LifestyleIntakeSheet } from "@/components/hpi/LifestyleIntakeSheet";
+import { readHpiLifestyle } from "@/lib/hpi/lifestyleStore";
 import { cn } from "@/lib/utils";
 
 const TIER_TONE: Record<CoachHammerTier, string> = {
@@ -96,6 +98,14 @@ export function CommunicationAI({ className }: Props) {
   const { step: aiStep, isLoading: aiLoading, error } =
     useCoachHammerNextStep();
   const [checkInOpen, setCheckInOpen] = useState(false);
+  const [intakeOpen, setIntakeOpen] = useState(false);
+  const lifestyleStale = useMemo(() => {
+    const l = readHpiLifestyle();
+    if (!l) return true;
+    const savedMs = Date.parse(l.savedAt);
+    if (!Number.isFinite(savedMs)) return true;
+    return Date.now() - savedMs > 7 * 24 * 60 * 60 * 1000;
+  }, [intakeOpen]);
 
   const handleCta = (route: string) => {
     if (route === "/check-in") {
@@ -181,7 +191,7 @@ export function CommunicationAI({ className }: Props) {
         ) : null}
       </div>
 
-      <div className="relative mt-3">
+      <div className="relative mt-3 flex flex-wrap items-center gap-3">
         <Button
           size="sm"
           onClick={() => handleCta(step.ctaRoute)}
@@ -189,8 +199,18 @@ export function CommunicationAI({ className }: Props) {
         >
           {step.ctaLabel}
         </Button>
+        {lifestyleStale && (
+          <button
+            type="button"
+            onClick={() => setIntakeOpen(true)}
+            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+          >
+            Personalize your signal
+          </button>
+        )}
       </div>
       <QuickCheckInSheet open={checkInOpen} onOpenChange={setCheckInOpen} />
+      <LifestyleIntakeSheet open={intakeOpen} onOpenChange={setIntakeOpen} />
     </section>
   );
 }

@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { emitAsbEvent } from "@/lib/asb/emit";
 import { ENGINE_VERSION, computeIdempotencyKey } from "@/lib/asb/engineVersion";
+import { mergeHpiLifestyle, type StressLevel } from "@/lib/hpi/lifestyleStore";
 
 interface Props {
   open: boolean;
@@ -257,6 +258,26 @@ export function QuickCheckInSheet({ open, onOpenChange }: Props) {
         group_id: groupId,
       }),
     );
+
+    // Melt lifestyle intake into the check-in — patch only fields the athlete
+    // actually logged so we never overwrite baselines with stale defaults.
+    const lifestylePatch: Parameters<typeof mergeHpiLifestyle>[0] = {};
+    if (!skipped.has("sleepHours") && state.sleepHours !== null) {
+      lifestylePatch.sleepActualHours = state.sleepHours;
+    }
+    if (!skipped.has("stress") && state.stress !== null) {
+      // Check-in stress is 1–10; HPI store expects 1–5.
+      const s = Math.max(1, Math.min(5, Math.round(state.stress / 2))) as StressLevel;
+      lifestylePatch.stressLevel = s;
+    }
+    if (!skipped.has("hydration") && state.hydration) {
+      const waterMap = { low: 48, ok: 80, good: 112 } as const;
+      lifestylePatch.waterOz = waterMap[state.hydration];
+    }
+    if (Object.keys(lifestylePatch).length > 0) {
+      try { mergeHpiLifestyle(lifestylePatch); } catch { /* storage may be unavailable */ }
+    }
+
 
     try {
       const results = (await Promise.all(emissions)) as Array<{ ok: boolean; message?: string }>;
