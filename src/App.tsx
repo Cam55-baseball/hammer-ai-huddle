@@ -170,6 +170,7 @@ const IqCombos = lazyWithRetry(() => import("./pages/owner/IqCombos"));
 const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAudit"));
 const IqSituationsAuthoring = lazyWithRetry(() => import("./pages/owner/IqSituationsAuthoring"));
 const WorkoutLibraryViewer = lazyWithRetry(() => import("./pages/owner/WorkoutLibraryViewer"));
+const LandingDemoManager = lazyWithRetry(() => import("./pages/owner/LandingDemoManager"));
 const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
