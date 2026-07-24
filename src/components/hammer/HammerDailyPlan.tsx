@@ -1017,3 +1017,38 @@ function BlockSideBadge({ modality }: { modality: string }) {
     </Badge>
   );
 }
+
+/**
+ * Header pickers — visible only for switch hitters / ambi throwers.
+ * Toggling refetches today's plan via useWkDailyPrescriptions (side flows to
+ * the edge function through side_hit / side_throw in the request body).
+ */
+function HeaderSidePickers() {
+  const { shouldShowPicker, selectedSide, setSide } = useSideContext();
+  const showHit = shouldShowPicker("hit");
+  const showThrow = shouldShowPicker("throw");
+  if (!showHit && !showThrow) return null;
+  const Toggle = ({ label, value, onPick }: { label: string; value: "L" | "R"; onPick: (s: "L" | "R") => void }) => (
+    <div className="inline-flex items-center gap-1 rounded-md border bg-background px-1.5 py-0.5">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      {(["L", "R"] as const).map((s) => (
+        <button
+          key={s}
+          type="button"
+          aria-pressed={value === s}
+          onClick={() => onPick(s)}
+          className={`h-5 min-w-[22px] rounded px-1 text-[10px] font-bold ${value === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+          title={`Program today for ${s === "L" ? "Left" : "Right"} ${label === "Bat" ? "swing" : "arm"}`}
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  );
+  return (
+    <div className="flex items-center gap-1.5">
+      {showHit && <Toggle label="Bat" value={selectedSide.hit} onPick={(s) => setSide("hit", s)} />}
+      {showThrow && <Toggle label="Arm" value={selectedSide.throw} onPick={(s) => setSide("throw", s)} />}
+    </div>
+  );
+}
