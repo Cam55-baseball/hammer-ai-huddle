@@ -122,6 +122,12 @@ const OFF_SEASON_5D: WeeklyTemplate = {
     strength: { 1: "Heavy lower", 2: "Upper push", 4: "Heavy upper", 5: "Lower dynamic" },
     speed:    { 2: "Max velocity", 5: "Acceleration base" },
   },
+  priorityDayOrder: {
+    hitting:     [1, 4, 6, 2, 5, 3, 0],
+    throwing:    [1, 4, 6, 2, 5, 3, 0],
+    defense:     [2, 4, 6, 1, 5, 3, 0],
+    baserunning: [5, 6, 3, 1, 4, 2, 0],
+  },
 };
 
 /** OFF-SEASON — 4-day athlete (drop Fri/Sat volume). */
@@ -143,6 +149,12 @@ const OFF_SEASON_4D: WeeklyTemplate = {
   dayLabels: {
     strength: { 1: "Heavy lower", 2: "Upper", 4: "Heavy upper", 5: "Lower dynamic" },
     speed:    { 2: "Max velocity", 5: "Acceleration" },
+  },
+  priorityDayOrder: {
+    hitting:     [1, 4, 2, 5, 6, 3, 0],
+    throwing:    [1, 4, 2, 5, 6, 3, 0],
+    defense:     [2, 4, 6, 1, 5, 3, 0],
+    baserunning: [5, 6, 3, 1, 4, 2, 0],
   },
 };
 
@@ -169,6 +181,12 @@ const PRE_SEASON_5D: WeeklyTemplate = {
   dayLabels: {
     strength: { 1: "Heavy full-body", 3: "Dynamic effort", 5: "Repetition effort" },
     speed:    { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" },
+  },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
   },
 };
 
@@ -207,6 +225,12 @@ const IN_SEASON: WeeklyTemplate = {
     strength: { 1: "Maintenance", 4: "Maintenance" },
     speed:    { 2: "Freshness (short reps)" },
   },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
+  },
 };
 
 /** POST-SEASON — recovery-first. */
@@ -234,6 +258,12 @@ const POST_SEASON: WeeklyTemplate = {
   dayLabels: {
     strength: { 2: "Rebuild base", 5: "Rebuild base" },
   },
+  priorityDayOrder: {
+    hitting:     [2, 5, 3, 1, 4, 6, 0],
+    throwing:    [3, 1, 5, 2, 4, 6, 0],
+    defense:     [5, 2, 4, 6, 1, 3, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
+  },
 };
 
 /** YOUTH (U14 and below or lifting_age < 1yr) — motor-learning bias. */
@@ -260,6 +290,12 @@ const YOUTH: WeeklyTemplate = {
     strength: { 1: "Movement quality", 4: "Movement quality" },
     speed:    { 2: "Short ATP-CP", 4: "Short ATP-CP" },
   },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
+  },
 };
 
 /** Permissive fallback when we truly can't classify the athlete. */
@@ -277,6 +313,12 @@ const PERMISSIVE_DAILY: WeeklyTemplate = {
     throwing:    [1, 2, 3, 4, 5, 6],
     defense:     [2, 4, 6],
     baserunning: [3, 6],
+  },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
   },
 };
 
