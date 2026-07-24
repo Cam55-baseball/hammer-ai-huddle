@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
+import { LogButton } from "@/components/hammer/logging/LogButton";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -246,11 +247,14 @@ export function WkPrescriptionCard({
             <div className="mt-1 font-semibold text-sm line-clamp-2 break-words">{rx.movement_name}</div>
             <div className="text-xs text-muted-foreground mt-0.5 break-words">{dosage}</div>
           </div>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="shrink-0 h-7 px-2">
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-            </Button>
-          </CollapsibleTrigger>
+          <div className="flex items-center gap-1 shrink-0">
+            <LogButton rx={rx} dosageText={dosage} compact />
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2">
+                <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
