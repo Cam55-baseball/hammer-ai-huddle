@@ -119,10 +119,12 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
         rounds: roundsToPayload(),
-        rpe,
-        bar_feel: barFeel,
+        rpe: template.meta.rpe ? rpe : null,
+        bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
         notes: notes.trim() || null,
         ai_readback: readback,
+        template_id: template.id,
+        field_schema: template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
       });
       setSavedAt(new Date().toISOString());
       toast.success("Saved to your log");
