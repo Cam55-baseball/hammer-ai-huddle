@@ -33,6 +33,7 @@ import {
   summarizeGoals,
 } from "@/lib/hammer/goals/categoryGoals";
 import { buildWarmup, resolveWarmupContext, lifecycleFor } from "./warmupLibrary";
+import { guideFor as _guideForMovement } from "./movementGuide";
 import {
   buildEassPrescription,
   normalizePosition,
@@ -685,7 +686,6 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       const eass = buildEassPrescription(eassCtx);
 
       // Map EASS drills → DrillStep shape used by the UI.
-      const { guideFor: _guideFor } = await import("./movementGuide");
       const drills: DrillStep[] = eass.drills.map((d) => ({
         name: d.name,
         slug: (d as { slug?: string }).slug,
@@ -693,7 +693,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         dosage: d.dosage,
         cue: d.cue,
         stopIf: d.stopIf,
-        guide: _guideFor((d as { slug?: string }).slug) ?? _guideFor(d.name) ?? undefined,
+        guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
       }));
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
