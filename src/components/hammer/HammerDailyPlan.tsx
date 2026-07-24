@@ -809,6 +809,8 @@ function BlockCard({
                 modality={block.modality}
                 modalityLabel={block.title}
                 onChanged={() => onEngagementChanged?.()}
+                drills={block.drills}
+                planDate={planDate}
               />
             </div>
           </div>
