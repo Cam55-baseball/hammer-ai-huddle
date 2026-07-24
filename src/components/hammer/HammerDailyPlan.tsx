@@ -222,6 +222,7 @@ export function HammerDailyPlan() {
 
 function HammerDailyPlanBody() {
   const ctx = useHammerAthleteContext();
+  const { isSwitchHitter } = useSideContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
