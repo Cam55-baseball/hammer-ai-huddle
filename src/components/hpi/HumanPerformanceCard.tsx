@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import { readHpiLifestyle } from "@/lib/hpi/lifestyleStore";
 import { computeHpiSignal } from "@/lib/hpi/hpiSignal";
 import { pickTodaysTip } from "@/lib/hpi/seasonalTips";
 import { BreathPrimer } from "./BreathPrimer";
+import { LifestyleIntakeSheet } from "./LifestyleIntakeSheet";
 
 /**
  * Human Performance Intelligence card — Neijing-inspired overlay surfaced
@@ -24,6 +24,7 @@ import { BreathPrimer } from "./BreathPrimer";
 export function HumanPerformanceCard() {
   const { resolvedPhase, phaseProfile, isLoading } = useSeasonStatus();
   const [lifestyleVersion, setLifestyleVersion] = useState(0);
+  const [intakeOpen, setIntakeOpen] = useState(false);
   const lifestyle = useMemo(() => readHpiLifestyle(), [lifestyleVersion]);
   const signal = useMemo(
     () => computeHpiSignal(resolvedPhase, lifestyle),
@@ -109,20 +110,30 @@ export function HumanPerformanceCard() {
           </CollapsibleContent>
         </Collapsible>
 
-        {!lifestyle && (
-          <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-xs">
-            <div className="font-medium">Personalize this signal</div>
-            <p className="mt-0.5 text-muted-foreground">
-              Add a 30-second lifestyle intake so HPI can weight sleep,
-              hydration, and stress properly.
-            </p>
-            <Button asChild size="sm" variant="outline" className="mt-2 h-7 text-xs">
-              <Link to="/onboarding/athlete?edit=constitution" onClick={() => setLifestyleVersion((v) => v + 1)}>
-                Add lifestyle intake
-              </Link>
-            </Button>
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-xs">
+          <div className="font-medium">
+            {lifestyle ? "Update lifestyle intake" : "Personalize this signal"}
           </div>
-        )}
+          <p className="mt-0.5 text-muted-foreground">
+            {lifestyle
+              ? "Refresh sleep, hydration, stress, and constitutional lean any time."
+              : "Add a 30-second lifestyle intake so HPI can weight sleep, hydration, and stress properly."}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-2 h-7 text-xs"
+            onClick={() => setIntakeOpen(true)}
+          >
+            {lifestyle ? "Edit intake" : "Add lifestyle intake"}
+          </Button>
+        </div>
+
+        <LifestyleIntakeSheet
+          open={intakeOpen}
+          onOpenChange={setIntakeOpen}
+          onSaved={() => setLifestyleVersion((v) => v + 1)}
+        />
       </CardContent>
     </Card>
   );
