@@ -22,6 +22,11 @@
  */
 import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilters";
 import type { ModalityKey } from "./dailyPlan";
+import {
+  SKILL_MODALITIES,
+  SKILL_DAYS_CEILING,
+  type SkillModality,
+} from "@/lib/hammer/roadmap/skillFrequencyLadder";
 
 /** Day-of-week using JS getDay(): 0=Sun … 6=Sat */
 export type Dow = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -53,6 +58,13 @@ export type WeeklyTemplate = {
   readonly intensityOverrides?: Partial<Record<ModalityKey, Partial<Record<Dow, ModalityIntensity>>>>;
   /** Optional per-day accent label (e.g. "Heavy lower" for Mon lift). */
   readonly dayLabels?: Partial<Record<ModalityKey, Partial<Record<Dow, string>>>>;
+  /**
+   * Deterministic priority order for skill days when the ladder target is
+   * lower or higher than the template's base slots. Days earlier in the
+   * list are picked/kept first; extra days added beyond template slots
+   * come from the tail of this ordering and render at `activation`.
+   */
+  readonly priorityDayOrder?: Partial<Record<ModalityKey, ReadonlyArray<Dow>>>;
 };
 
 /** Modalities the microcycle actually schedules on/off. */
@@ -115,6 +127,12 @@ const OFF_SEASON_5D: WeeklyTemplate = {
     strength: { 1: "Heavy lower", 2: "Upper push", 4: "Heavy upper", 5: "Lower dynamic" },
     speed:    { 2: "Max velocity", 5: "Acceleration base" },
   },
+  priorityDayOrder: {
+    hitting:     [1, 4, 6, 2, 5, 3, 0],
+    throwing:    [1, 4, 6, 2, 5, 3, 0],
+    defense:     [2, 4, 6, 1, 5, 3, 0],
+    baserunning: [5, 6, 3, 1, 4, 2, 0],
+  },
 };
 
 /** OFF-SEASON — 4-day athlete (drop Fri/Sat volume). */
@@ -136,6 +154,12 @@ const OFF_SEASON_4D: WeeklyTemplate = {
   dayLabels: {
     strength: { 1: "Heavy lower", 2: "Upper", 4: "Heavy upper", 5: "Lower dynamic" },
     speed:    { 2: "Max velocity", 5: "Acceleration" },
+  },
+  priorityDayOrder: {
+    hitting:     [1, 4, 2, 5, 6, 3, 0],
+    throwing:    [1, 4, 2, 5, 6, 3, 0],
+    defense:     [2, 4, 6, 1, 5, 3, 0],
+    baserunning: [5, 6, 3, 1, 4, 2, 0],
   },
 };
 
@@ -162,6 +186,12 @@ const PRE_SEASON_5D: WeeklyTemplate = {
   dayLabels: {
     strength: { 1: "Heavy full-body", 3: "Dynamic effort", 5: "Repetition effort" },
     speed:    { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" },
+  },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
   },
 };
 
@@ -200,6 +230,12 @@ const IN_SEASON: WeeklyTemplate = {
     strength: { 1: "Maintenance", 4: "Maintenance" },
     speed:    { 2: "Freshness (short reps)" },
   },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
+  },
 };
 
 /** POST-SEASON — recovery-first. */
@@ -227,6 +263,12 @@ const POST_SEASON: WeeklyTemplate = {
   dayLabels: {
     strength: { 2: "Rebuild base", 5: "Rebuild base" },
   },
+  priorityDayOrder: {
+    hitting:     [2, 5, 3, 1, 4, 6, 0],
+    throwing:    [3, 1, 5, 2, 4, 6, 0],
+    defense:     [5, 2, 4, 6, 1, 3, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
+  },
 };
 
 /** YOUTH (U14 and below or lifting_age < 1yr) — motor-learning bias. */
@@ -253,6 +295,12 @@ const YOUTH: WeeklyTemplate = {
     strength: { 1: "Movement quality", 4: "Movement quality" },
     speed:    { 2: "Short ATP-CP", 4: "Short ATP-CP" },
   },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
+  },
 };
 
 /** Permissive fallback when we truly can't classify the athlete. */
@@ -270,6 +318,12 @@ const PERMISSIVE_DAILY: WeeklyTemplate = {
     throwing:    [1, 2, 3, 4, 5, 6],
     defense:     [2, 4, 6],
     baserunning: [3, 6],
+  },
+  priorityDayOrder: {
+    hitting:     [1, 3, 5, 2, 4, 6, 0],
+    throwing:    [1, 3, 5, 2, 4, 6, 0],
+    defense:     [2, 4, 6, 1, 3, 5, 0],
+    baserunning: [3, 6, 1, 5, 2, 4, 0],
   },
 };
 
@@ -326,14 +380,54 @@ export interface ResolvedMicrocycle {
   readonly template: WeeklyTemplate;
   readonly today: Dow;
   readonly perModality: Record<ModalityKey, ModalityDayDecision>;
+  /** Effective days-per-week each skill modality is scheduled after ladder slicing. */
+  readonly skillDays: Record<SkillModality, ReadonlyArray<Dow>>;
+}
+
+/** Per-skill day-count target from the skill-frequency ladder. */
+export type SkillDayTargets = Partial<Record<SkillModality, number>>;
+
+/**
+ * Compute the effective set of days for a skill modality after applying
+ * the ladder's day-count target. Days come from `priorityDayOrder`
+ * (fallback: sorted template days). Days beyond the template's original
+ * slots count as *earned overflow* — the caller uses `overflowDays` to
+ * force `activation` intensity on them (stack days before intensity).
+ */
+export function resolveSkillDays(
+  template: WeeklyTemplate,
+  modality: SkillModality,
+  target: number,
+): { days: ReadonlyArray<Dow>; baseline: ReadonlyArray<Dow>; overflowDays: ReadonlyArray<Dow> } {
+  const baselineArr = template.perModality[modality] ?? [];
+  const baseline = [...new Set(baselineArr)].sort((a, b) => a - b);
+  const priority = template.priorityDayOrder?.[modality] ?? baseline;
+  const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target));
+  // Deterministic pick: dedupe while preserving priority order.
+  const picked: Dow[] = [];
+  for (const d of priority) {
+    if (picked.length >= clamped) break;
+    if (!picked.includes(d)) picked.push(d);
+  }
+  // If priority list doesn't cover the target, top up from the remaining
+  // days of the week in ascending order so the result is fully deterministic.
+  for (let d = 0 as Dow; picked.length < clamped && d <= 6; d = (d + 1) as Dow) {
+    if (!picked.includes(d)) picked.push(d);
+    if (d === 6) break;
+  }
+  const baselineSet = new Set(baseline);
+  const overflowDays = picked.filter((d) => !baselineSet.has(d));
+  return { days: picked, baseline, overflowDays };
 }
 
 export function applyMicrocycle(
   template: WeeklyTemplate,
   today: Date,
+  skillTargets: SkillDayTargets = {},
 ): ResolvedMicrocycle {
   const dow = today.getDay() as Dow;
   const perModality = {} as Record<ModalityKey, ModalityDayDecision>;
+  const skillDays = {} as Record<SkillModality, ReadonlyArray<Dow>>;
 
   const allKeys: ModalityKey[] = [
     ...ANCHOR_MODALITIES,
@@ -341,7 +435,19 @@ export function applyMicrocycle(
   ] as ModalityKey[];
 
   for (const m of allKeys) {
-    const dows = template.perModality[m] ?? [];
+    const isSkill = (SKILL_MODALITIES as ReadonlyArray<string>).includes(m);
+    let dows: ReadonlyArray<Dow>;
+    let overflowSet: Set<Dow>;
+    if (isSkill && skillTargets[m as SkillModality] !== undefined) {
+      const resolved = resolveSkillDays(template, m as SkillModality, skillTargets[m as SkillModality]!);
+      dows = resolved.days;
+      overflowSet = new Set(resolved.overflowDays);
+      skillDays[m as SkillModality] = resolved.days;
+    } else {
+      dows = template.perModality[m] ?? [];
+      overflowSet = new Set();
+      if (isSkill) skillDays[m as SkillModality] = dows;
+    }
     const isScheduled = dows.includes(dow);
     const isAnchor = ANCHOR_MODALITIES.includes(m);
 
@@ -383,13 +489,18 @@ export function applyMicrocycle(
       continue;
     }
 
-    const intensity =
+    // Earned-overflow days (added on top of template baseline via the
+    // ladder) are forced to `activation` — days are earned before intensity.
+    const isOverflowToday = overflowSet.has(dow);
+    const templateIntensity =
       template.intensityOverrides?.[m]?.[dow] ?? ("primary" as ModalityIntensity);
+    const intensity: ModalityIntensity = isOverflowToday ? "activation" : templateIntensity;
     const accent = template.dayLabels?.[m]?.[dow];
     const position = todayPositionLabel(dows, dow);
+    const overflowNote = isOverflowToday ? " · earned overflow (activation only)" : "";
     const microcycleLabel = accent
-      ? `${position} · ${accent}`
-      : position;
+      ? `${position} · ${accent}${overflowNote}`
+      : `${position}${overflowNote}`;
     const nxt = nextScheduled(dow, dows);
     const nxtLabel =
       nxt === null || nxt === dow
@@ -413,7 +524,7 @@ export function applyMicrocycle(
     };
   }
 
-  return { template, today: dow, perModality };
+  return { template, today: dow, perModality, skillDays };
 }
 
 /* ── Weekly roadmap projection for the UI strip ─────────────────────────── */
@@ -430,15 +541,32 @@ export interface RoadmapDay {
 export function projectWeeklyRoadmap(
   template: WeeklyTemplate,
   today: Date,
+  skillTargets: SkillDayTargets = {},
 ): ReadonlyArray<RoadmapDay> {
   const todayDow = today.getDay() as Dow;
+  // Precompute effective skill day sets + overflow so the strip mirrors reality.
+  const skillDays: Partial<Record<SkillModality, ReadonlyArray<Dow>>> = {};
+  const skillOverflow: Partial<Record<SkillModality, Set<Dow>>> = {};
+  for (const sm of SKILL_MODALITIES) {
+    if (skillTargets[sm] === undefined) continue;
+    const r = resolveSkillDays(template, sm, skillTargets[sm]!);
+    skillDays[sm] = r.days;
+    skillOverflow[sm] = new Set(r.overflowDays);
+  }
   const days: RoadmapDay[] = [];
   for (let d = 0 as Dow; d <= 6; d = (d + 1) as Dow) {
     const modalities: RoadmapDay["modalities"] = SCHEDULABLE_MODALITIES.flatMap((m) => {
-      const dows = template.perModality[m] ?? [];
+      const isSkill = (SKILL_MODALITIES as ReadonlyArray<string>).includes(m);
+      const dows =
+        isSkill && skillDays[m as SkillModality] !== undefined
+          ? skillDays[m as SkillModality]!
+          : (template.perModality[m] ?? []);
       if (!dows.includes(d)) return [];
-      const intensity =
-        template.intensityOverrides?.[m]?.[d] ?? ("primary" as ModalityIntensity);
+      const isOverflow =
+        isSkill && (skillOverflow[m as SkillModality]?.has(d) ?? false);
+      const intensity: ModalityIntensity = isOverflow
+        ? "activation"
+        : (template.intensityOverrides?.[m]?.[d] ?? "primary");
       const accent = template.dayLabels?.[m]?.[d] ?? null;
       return [{ key: m, intensity, accent }];
     });

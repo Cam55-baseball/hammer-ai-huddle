@@ -8,6 +8,11 @@ import { resolveSeasonQuarter, quartersFromWeeks } from "@/lib/hammer/roadmap/se
 import { rungByKey, RUNG_ORDER } from "@/lib/hammer/roadmap/roadmapLadder";
 import { prescribeThrowingLadder } from "@/lib/hammer/roadmap/throwingLadder";
 import { resolveEliteTarget } from "@/lib/hammer/roadmap/eliteTarget";
+import {
+  resolveSkillDaysTarget,
+  SKILL_DAYS_CEILING,
+  SKILL_MODALITIES,
+} from "@/lib/hammer/roadmap/skillFrequencyLadder";
 
 // Minimal QuarterDescriptor stub for isolated math.
 const Q2_OFF = resolveSeasonQuarter(
@@ -115,5 +120,38 @@ describe("roadmap — determinism guards", () => {
     ];
     const out = applyRecoveryWindows(blocks as never, "peak", Q2_OFF, [], today);
     expect(out[0].status).toBe("awaiting-input");
+  });
+
+  it("skill-frequency ladder: monotonically climbs foundation → sustain, never exceeds ceiling", () => {
+    const rungs = ["foundation", "build", "bridge", "peak", "sustain"] as const;
+    for (const m of SKILL_MODALITIES) {
+      let prev = -1;
+      for (const r of rungs) {
+        const t = resolveSkillDaysTarget(r, m, null);
+        expect(t).toBeGreaterThanOrEqual(prev);
+        expect(t).toBeLessThanOrEqual(SKILL_DAYS_CEILING);
+        prev = t;
+      }
+    }
+  });
+
+  it("pitcher throwing is bullpen-capped at 5 (never 6) even at Sustain", () => {
+    expect(resolveSkillDaysTarget("sustain", "throwing", "P")).toBe(5);
+    expect(resolveSkillDaysTarget("sustain", "throwing", "SS")).toBe(6);
+  });
+
+  it("leg injury clamps defense + baserunning to ≤ 2 days/wk regardless of rung", () => {
+    expect(resolveSkillDaysTarget("sustain", "defense", "OF", ["hamstring"])).toBeLessThanOrEqual(2);
+    expect(resolveSkillDaysTarget("sustain", "baserunning", "OF", ["knee"])).toBeLessThanOrEqual(2);
+  });
+
+  it("arm injury clamps throwing to ≤ 2 days/wk", () => {
+    expect(resolveSkillDaysTarget("peak", "throwing", "OF", ["shoulder"])).toBeLessThanOrEqual(2);
+  });
+
+  it("youth band never exceeds Bridge target (training-age clamp)", () => {
+    const bridge = resolveSkillDaysTarget("bridge", "hitting", "OF");
+    const youth = resolveSkillDaysTarget("sustain", "hitting", "OF", [], "u12", null);
+    expect(youth).toBeLessThanOrEqual(bridge);
   });
 });

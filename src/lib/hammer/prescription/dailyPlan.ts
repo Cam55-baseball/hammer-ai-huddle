@@ -54,6 +54,7 @@ import {
 } from "./weeklyMicrocycle";
 import {
   resolveRoadmapRung,
+  RUNG_ORDER,
   type RoadmapRungDescriptor,
 } from "@/lib/hammer/roadmap/roadmapLadder";
 import {
@@ -72,6 +73,13 @@ import {
   resolveEliteTarget,
   type EliteTarget,
 } from "@/lib/hammer/roadmap/eliteTarget";
+import {
+  SKILL_MODALITIES,
+  resolveSkillDaysTarget,
+  projectSkillLadder,
+  type SkillModality,
+  type SkillLadderRow,
+} from "@/lib/hammer/roadmap/skillFrequencyLadder";
 
 
 
@@ -1214,6 +1222,12 @@ export interface HammerDailyPlanResult {
     readonly quarter: QuarterDescriptor;
     readonly eliteTarget: EliteTarget;
     readonly throwingLadder: ThrowingLadderPrescription | null;
+    /**
+     * Skill-frequency ladder — days/week per skill modality the athlete is
+     * building toward, with earned days from the last 7d. "Stack days
+     * first, then intensity" — the plan progresses days before volume.
+     */
+    readonly skillLadder: ReadonlyArray<SkillLadderRow>;
   };
 }
 
@@ -1778,11 +1792,6 @@ export function buildHammerDailyPlan(
   const proj = projectEnvelope(ctx);
   const speed = selectSpeedFocus(proj);
 
-  // Resolve the weekly microcycle FIRST so we can thread its label into blocks.
-  const weeklyTemplate = resolveWeeklyTemplate(proj);
-  const microcycle = applyMicrocycle(weeklyTemplate, today);
-  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today);
-
   // Roadmap primitives — rung + season quarter + elite target + throwing ladder.
   const rung = resolveRoadmapRung(proj);
   const quarter = resolveSeasonQuarter(proj, roadmapInputs.phaseStartedAt ?? null, today);
@@ -1790,6 +1799,27 @@ export function buildHammerDailyPlan(
   const positionRaw = (ctx.get<string>("position_primary")?.value as string | null) ?? null;
   const eliteTarget = resolveEliteTarget(sportRaw);
   const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+
+  // Skill-frequency ladder — stack days first, then intensity. Feed the
+  // targets into the microcycle so priorityDayOrder is honoured, and count
+  // earned days from the last 7d of max-intent completions.
+  const skillTargets = SKILL_MODALITIES.reduce<Partial<Record<SkillModality, number>>>((acc, m) => {
+    acc[m] = resolveSkillDaysTarget(
+      rung.descriptor.rung, m, positionRaw, proj.injuryRegions, proj.lifecycleBand, proj.liftingAgeYears,
+    );
+    return acc;
+  }, {});
+  const earnedDaysByModality = countEarnedSkillDays(roadmapInputs.recentCompletions ?? [], today);
+  const rungIdx = RUNG_ORDER.indexOf(rung.descriptor.rung);
+  const nextRung = rungIdx >= 0 && rungIdx < RUNG_ORDER.length - 1 ? RUNG_ORDER[rungIdx + 1] : null;
+  const skillLadder = projectSkillLadder(
+    rung.descriptor.rung, nextRung, proj, positionRaw, earnedDaysByModality,
+  );
+
+  // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
+  const weeklyTemplate = resolveWeeklyTemplate(proj);
+  const microcycle = applyMicrocycle(weeklyTemplate, today, skillTargets);
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, skillTargets);
 
   const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
@@ -1866,7 +1896,42 @@ export function buildHammerDailyPlan(
       quarter,
       eliteTarget,
       throwingLadder,
+      skillLadder,
     },
+  };
+}
+
+/**
+ * Count *distinct calendar days* in the last 7 days that produced a
+ * max-intent completion for each skill modality. Max-intent bat-speed
+ * completions credit `hitting`; max-intent throwing completions credit
+ * `throwing`. Defense and baserunning have no dedicated completion signal
+ * today, so they always report 0 earned days — this is safe: the ladder
+ * simply reads "aim for X/wk — you've hit 0/7", nudging the athlete to
+ * stack days first before intensity ramps.
+ */
+function countEarnedSkillDays(
+  recent: RecentCompletions,
+  today: Date,
+): Partial<Record<SkillModality, number>> {
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const buckets: Record<SkillModality, Set<string>> = {
+    hitting: new Set(),
+    throwing: new Set(),
+    defense: new Set(),
+    baserunning: new Set(),
+  };
+  for (const c of recent) {
+    if (c.at < sevenDaysAgo || c.at > today) continue;
+    const dayKey = c.at.toISOString().slice(0, 10);
+    if (c.modality === "bat_speed_max") buckets.hitting.add(dayKey);
+    else if (c.modality === "throwing_max") buckets.throwing.add(dayKey);
+  }
+  return {
+    hitting: buckets.hitting.size,
+    throwing: buckets.throwing.size,
+    defense: 0,
+    baserunning: 0,
   };
 }
 
