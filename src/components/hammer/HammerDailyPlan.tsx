@@ -222,7 +222,7 @@ export function HammerDailyPlan() {
 
 function HammerDailyPlanBody() {
   const ctx = useHammerAthleteContext();
-  const { isSwitchHitter } = useSideContext();
+  const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
@@ -253,10 +253,15 @@ function HammerDailyPlanBody() {
       gpSig.defensivePlays,
     ],
   );
-  const rawPlan = useMemo(
-    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan),
-    [ctx, scheduleSignal, sideBias, gpForPlan],
+  const identityOverride = useMemo(
+    () => ({ isSwitchHitter, isAmbidextrousThrower }),
+    [isSwitchHitter, isAmbidextrousThrower],
   );
+  const rawPlan = useMemo(
+    () => buildHammerDailyPlan(ctx, scheduleSignal, sideBias, gpForPlan, identityOverride),
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride],
+  );
+
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
   // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
   // hitting/throwing volume doesn't compound the neural cost.
