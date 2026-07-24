@@ -29,7 +29,7 @@ import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { TodaysHammerPick } from "@/components/dashboard/TodaysHammerPick";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
-import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
+// HumanPerformanceCard now rendered inside HammerDailyPlan itself.
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Sparkles as SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
