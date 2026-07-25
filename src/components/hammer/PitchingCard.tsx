@@ -617,6 +617,64 @@ function PitcherSettings({
         </div>
       </div>
 
+      {/* Rehab / RTP */}
+      <div className="space-y-2 rounded-md border border-rose-500/30 bg-rose-500/5 p-2">
+        <label className="flex items-center gap-2 text-xs font-medium">
+          <input
+            type="checkbox"
+            checked={draft.rehab.active}
+            onChange={(e) =>
+              setDraft({
+                ...draft,
+                rehab: {
+                  active: e.target.checked,
+                  program: e.target.checked ? draft.rehab.program ?? "generic" : null,
+                  weekInProgram: e.target.checked ? draft.rehab.weekInProgram ?? 1 : null,
+                },
+              })
+            }
+          />
+          Return-to-throwing program (rehab mode)
+        </label>
+        {draft.rehab.active && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <div className="text-[10px] text-muted-foreground">Program</div>
+              <Select
+                value={draft.rehab.program ?? "generic"}
+                onValueChange={(v) =>
+                  setDraft({ ...draft, rehab: { ...draft.rehab, program: v as "tj_return" | "shoulder_return" | "generic" } })
+                }
+              >
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tj_return">Tommy John return (24 wk)</SelectItem>
+                  <SelectItem value="shoulder_return">Shoulder return (12 wk)</SelectItem>
+                  <SelectItem value="generic">Generic return-to-throw</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[10px] text-muted-foreground">Week in program</div>
+              <Input
+                type="number"
+                min={1}
+                max={30}
+                step={1}
+                value={draft.rehab.weekInProgram ?? 1}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    rehab: { ...draft.rehab, weekInProgram: Math.max(1, Math.min(30, Number(e.target.value) || 1)) },
+                  })
+                }
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-1">
         <div className="text-[11px] font-medium text-muted-foreground">Notes for Hammer</div>
         <Textarea
