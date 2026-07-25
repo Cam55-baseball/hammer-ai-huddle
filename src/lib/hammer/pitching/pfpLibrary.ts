@@ -99,10 +99,11 @@ export function pickPfpDrillsForToday(
   const start = new Date(Date.UTC(today.getUTCFullYear(), 0, 0));
   const doy = Math.floor((today.getTime() - start.getTime()) / 86400_000);
   const i1 = doy % pool.length;
-  const i2 = (doy + 3) % pool.length;
   const first = pool[i1];
-  const second = pool[i2 === i1 ? (i2 + 1) % pool.length : i2];
-  return [first, second];
+  if (pool.length < 2) return [first];
+  let i2 = (doy + 3) % pool.length;
+  if (i2 === i1) i2 = (i2 + 1) % pool.length;
+  return [first, pool[i2]];
 }
 
 export const PFP_CATALOG = CATALOG;

@@ -9,11 +9,11 @@
  */
 import { createContext, useContext } from "react";
 
-export type ArmCareOwner = "throwing" | "lift" | "warmup" | "none";
+export type ArmCareOwner = "throwing" | "pitching" | "lift" | "warmup" | "none";
 
 interface Value {
   readonly owner: ArmCareOwner;
-  /** True when the caller (throwing card, warmup, lifts) is NOT the owner and should suppress its own arm care. */
+  /** True when the caller (throwing card, warmup, lifts, pitching) is NOT the owner and should suppress its own arm care. */
   suppressFor: (caller: Exclude<ArmCareOwner, "none">) => boolean;
 }
 
