@@ -168,13 +168,45 @@ const LONG_TOSS: LogTemplate = {
 
 const BULLPEN: LogTemplate = {
   id: "bullpen_pitching",
-  intro: "Bullpen — pitches and strikes.",
+  intro: "Bullpen — pitches, strikes, and feel.",
   fields: [
     { key: "pitches", label: "Pitches", kind: "number", step: 1, prefillFromRx: (r) => r.reps ?? undefined },
     { key: "strikes", label: "Strikes", kind: "number", step: 1, optional: true },
+    { key: "first_pitch_strikes", label: "1st-pitch strikes", kind: "number", step: 1, optional: true },
     { key: "peak_velo", label: "Peak velo", unit: "mph", kind: "number", step: 1, optional: true },
+    { key: "avg_velo", label: "Avg velo", unit: "mph", kind: "number", step: 1, optional: true },
   ],
-  meta: { armFeel: true },
+  meta: { armFeel: true, intent: true },
+  defaultRounds: 1,
+};
+
+const OUTING: LogTemplate = {
+  id: "pitching_outing",
+  intro: "Start / relief outing — the full line.",
+  fields: [
+    { key: "innings", label: "IP", kind: "number", step: 0.1 },
+    { key: "pitches", label: "Pitches", kind: "number", step: 1, prefillFromRx: (r) => r.reps ?? undefined },
+    { key: "strikes", label: "Strikes", kind: "number", step: 1, optional: true },
+    { key: "first_pitch_strikes", label: "1st-pitch K", kind: "number", step: 1, optional: true },
+    { key: "hits", label: "Hits", kind: "number", step: 1, optional: true },
+    { key: "runs", label: "R / ER", kind: "number", step: 1, optional: true },
+    { key: "walks", label: "BB", kind: "number", step: 1, optional: true },
+    { key: "strikeouts", label: "K", kind: "number", step: 1, optional: true },
+    { key: "peak_velo", label: "Peak velo", unit: "mph", kind: "number", step: 1, optional: true },
+    { key: "whiff_pct", label: "Whiff %", kind: "number", step: 1, optional: true },
+  ],
+  meta: { armFeel: true, intent: true },
+  defaultRounds: 1,
+};
+
+const PFP: LogTemplate = {
+  id: "pfp_fielding",
+  intro: "Pitcher fielding practice — quick log.",
+  fields: [
+    { key: "reps", label: "Reps", kind: "number", step: 1 },
+    { key: "quality", label: "Quality", kind: "quality", optional: true },
+  ],
+  meta: {},
   defaultRounds: 1,
 };
 
@@ -303,7 +335,9 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
   }
 
   // 3. Throwing / arm care
-  if (unit === "throws" || has(slug, /long_toss|pulldown|bullpen|mound|pen_|catch_play|warmup_throwing|plyo_ball|arm_care/)) {
+  if (unit === "throws" || has(slug, /long_toss|pulldown|bullpen|mound|pen_|catch_play|warmup_throwing|plyo_ball|arm_care|outing|start_pitch|game_pitch|pfp/)) {
+    if (has(slug, /outing|start_pitch|game_pitch|competitive_mound/)) return OUTING;
+    if (has(slug, /pfp|fielding_pitcher/)) return PFP;
     if (has(slug, /bullpen|mound|pen_/)) return BULLPEN;
     if (has(slug, /long_toss|pulldown|plyo_ball/)) return LONG_TOSS;
     return CATCH_PLAY;
