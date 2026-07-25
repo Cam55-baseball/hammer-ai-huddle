@@ -33,6 +33,12 @@ export interface PitcherArsenalPitch {
   readonly primary?: boolean;
 }
 
+export interface PitcherRehabState {
+  readonly active: boolean;
+  readonly program: "tj_return" | "shoulder_return" | "generic" | null;
+  readonly weekInProgram: number | null;
+}
+
 export interface PitcherProfile {
   readonly isPitcher: boolean;               // athlete confirmed they pitch this season
   readonly role: PitcherRole;
@@ -41,6 +47,7 @@ export interface PitcherProfile {
   readonly preferredBullpenDow: number | null; // 0..6, JS getDay(); null = no preference
   readonly arsenal: ReadonlyArray<PitcherArsenalPitch>;
   readonly notes: string | null;
+  readonly rehab: PitcherRehabState;
 }
 
 export const DEFAULT_PITCHER_PROFILE: PitcherProfile = {
@@ -51,6 +58,7 @@ export const DEFAULT_PITCHER_PROFILE: PitcherProfile = {
   preferredBullpenDow: null,
   arsenal: [],
   notes: null,
+  rehab: { active: false, program: null, weekInProgram: null },
 };
 
 const KEY_PREFIX = "hammer.pitcher.profile.v1.";
