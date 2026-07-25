@@ -15372,6 +15372,7 @@ export type Database = {
             }
             Returns: string
           }
+      iq_apply_backfill: { Args: { sql: string }; Returns: undefined }
       is_authorizing_parent: {
         Args: { _athlete: string; _parent: string }
         Returns: boolean
