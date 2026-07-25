@@ -84,6 +84,7 @@ import { HammersTodayProvider, useHammersToday } from "@/components/hammer/Hamme
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { PitchingCard } from "@/components/hammer/PitchingCard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
 import {
@@ -510,6 +511,9 @@ function HammerDailyPlanBody() {
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
                 <WkLiftsCard />
+              </ErrorBoundary>
+              <ErrorBoundary label="pitching-card">
+                <PitchingCard />
               </ErrorBoundary>
               {otherBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
