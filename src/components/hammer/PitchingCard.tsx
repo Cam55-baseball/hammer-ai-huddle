@@ -444,6 +444,18 @@ export function PitchingCard() {
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+      {logSheet && (
+        <ExerciseLogSheet
+          open={logSheet !== null}
+          onOpenChange={(b) => !b && setLogSheet(null)}
+          rx={syntheticRx(logSheet)}
+          dosageText={
+            logSheet === "outing" ? `${ladder.outingPitchCap} pitch cap · ~${ladder.targetInnings} IP`
+            : logSheet === "bullpen" ? `${Math.round(ladder.outingPitchCap * 0.5)} pitches · ${ladder.intentPercent}% intent`
+            : `${pfp.map((d) => d.name).join(" + ")}`
+          }
+        />
+      )}
     </Card>
   );
 }
