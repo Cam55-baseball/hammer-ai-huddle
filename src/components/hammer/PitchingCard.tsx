@@ -28,15 +28,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, Settings2, Target, ShieldAlert, Trophy, Timer } from "lucide-react";
+import { ChevronDown, Settings2, Target, ShieldAlert, Trophy, Timer, HeartPulse, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
+import { useRecentPitchingLoad } from "@/hooks/useRecentPitchingLoad";
 import { resolveRoadmapRung } from "@/lib/hammer/roadmap/roadmapLadder";
 import { resolveSeasonQuarter } from "@/lib/hammer/roadmap/seasonQuarters";
+import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
+import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
+import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
   DEFAULT_PITCHER_PROFILE,
   arsenalCatalog,
@@ -55,6 +59,8 @@ import {
 } from "@/lib/hammer/pitching/pitchingMicrocycle";
 import { prescribePitchLadder } from "@/lib/hammer/pitching/pitchLadder";
 import { pickPfpDrillsForToday } from "@/lib/hammer/pitching/pfpLibrary";
+import { clampDayTypeForRecovery } from "@/lib/hammer/pitching/recoveryClamp";
+import { currentStage, progressionFor } from "@/lib/hammer/pitching/rehabProgression";
 
 const DAY_TONE: Record<PitcherDayType, string> = {
   start:         "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30",
