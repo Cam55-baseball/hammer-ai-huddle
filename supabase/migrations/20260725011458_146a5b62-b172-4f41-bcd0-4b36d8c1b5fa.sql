@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.iq_apply_backfill(text);
