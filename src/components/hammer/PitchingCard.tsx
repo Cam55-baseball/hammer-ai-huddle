@@ -75,18 +75,38 @@ const DAY_TONE: Record<PitcherDayType, string> = {
   available:     "bg-primary/10 text-primary border-primary/30",
 };
 
+const ARM_RISK_RE = /(elbow|shoulder|ucl|labrum|arm|rotator)/i;
+
+function detectArmInjury(ctx: ReturnType<typeof useHammerAthleteContext>): string | null {
+  const restrictions = ctx.get<unknown>("active_restrictions")?.value;
+  const list: string[] = Array.isArray(restrictions)
+    ? (restrictions as unknown[]).map((r) => String(r))
+    : typeof restrictions === "string"
+      ? [restrictions]
+      : [];
+  for (const r of list) if (ARM_RISK_RE.test(r)) return r;
+  const injuries = ctx.get<unknown>("injury_state")?.value;
+  if (injuries && typeof injuries === "object") {
+    const parts = JSON.stringify(injuries);
+    if (ARM_RISK_RE.test(parts)) return "arm flag active";
+  }
+  return null;
+}
+
 export function PitchingCard() {
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
   const proj = useMemo(() => projectEnvelope(ctx), [ctx]);
   const { phaseStartedAt } = useSeasonStatus();
   const sched = useScheduleWindow();
+  const armCare = useArmCareBudget();
 
   const sport = (ctx.get<string>("sport_primary")?.value === "softball" ? "softball" : "baseball") as
     | "baseball"
     | "softball";
   const primaryPos = ctx.get<string>("position_primary")?.value ?? null;
   const secondaryPos = ctx.get<string>("position_secondary")?.value ?? null;
+  const armInjury = useMemo(() => detectArmInjury(ctx), [ctx]);
 
   const [profile, setProfileState] = useState<PitcherProfile>(() => readPitcherProfile(user?.id));
   useEffect(() => {
@@ -95,15 +115,19 @@ export function PitchingCard() {
 
   const [open, setOpen] = useState<boolean>(true);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [logSheet, setLogSheet] = useState<null | "outing" | "bullpen" | "pfp">(null);
 
   const show = shouldShowPitchingCard(profile, primaryPos, secondaryPos);
 
   const today = useMemo(() => new Date(), []);
+  const todayIso = useMemo(() => today.toISOString().slice(0, 10), [today]);
   const rung = useMemo(() => resolveRoadmapRung(proj).descriptor.rung, [proj]);
   const quarter = useMemo(
     () => resolveSeasonQuarter(proj, phaseStartedAt ?? null, today),
     [proj, phaseStartedAt, today],
   );
+
+  const recentLoad = useRecentPitchingLoad(7);
 
   // Game dows in the next 7 days from the schedule window
   const gameDows = useMemo<number[]>(() => {
@@ -132,7 +156,7 @@ export function PitchingCard() {
     [sport, rung, quarter, profile, today, gameDows],
   );
 
-  const ladder = useMemo(
+  const plannedLadder = useMemo(
     () =>
       prescribePitchLadder({
         sport,
@@ -144,7 +168,78 @@ export function PitchingCard() {
     [sport, rung, quarter, profile, cycle.today.dayType],
   );
 
+  // ---- Recovery clamp: Pitch Smart rest days + weekly cap enforcement ----
+  const rehabStage = profile.rehab.active && profile.rehab.program && profile.rehab.weekInProgram != null
+    ? currentStage(profile.rehab.program, profile.rehab.weekInProgram)
+    : null;
+
+  const clamp = useMemo(() => {
+    // Rehab overrides everything.
+    if (rehabStage) {
+      const dayType: PitcherDayType = rehabStage.moundAllowed && cycle.today.dayType === "bullpen"
+        ? "bullpen"
+        : rehabStage.maxDistanceFt >= 90
+          ? "long_toss"
+          : rehabStage.maxDistanceFt > 0
+            ? "touch"
+            : "rest";
+      return {
+        dayType,
+        clamped: true,
+        reason: `Rehab · ${rehabStage.label} — ${rehabStage.focus}`,
+        restDaysRemaining: 0,
+      };
+    }
+    // Arm injury hard-clamp.
+    if (armInjury) {
+      return {
+        dayType: "rest" as PitcherDayType,
+        clamped: true,
+        reason: `Arm injury flag active (${armInjury}). No mound work — recovery only.`,
+        restDaysRemaining: 0,
+      };
+    }
+    return clampDayTypeForRecovery({
+      sport,
+      level: profile.level,
+      todayIso,
+      plannedDayType: cycle.today.dayType,
+      plannedPitches:
+        cycle.today.dayType === "start" || cycle.today.dayType === "game"
+          ? plannedLadder.outingPitchCap
+          : cycle.today.dayType === "bullpen"
+            ? Math.round(plannedLadder.outingPitchCap * 0.5)
+            : cycle.today.dayType === "side"
+              ? Math.round(plannedLadder.outingPitchCap * 0.3)
+              : 0,
+      weeklyCap: plannedLadder.weeklyPitchCap,
+      recent: recentLoad.data,
+    });
+  }, [rehabStage, armInjury, sport, profile.level, todayIso, cycle.today.dayType, plannedLadder.outingPitchCap, plannedLadder.weeklyPitchCap, recentLoad.data]);
+
+  const effectiveDayType: PitcherDayType = clamp.dayType;
+  const ladder = useMemo(
+    () =>
+      prescribePitchLadder({
+        sport,
+        rung,
+        quarter,
+        profile,
+        dayType: effectiveDayType,
+      }),
+    [sport, rung, quarter, profile, effectiveDayType],
+  );
+
   const pfp = useMemo(() => pickPfpDrillsForToday(today, rung), [rung, today]);
+
+  const isMoundDay = effectiveDayType === "start" || effectiveDayType === "bullpen" || effectiveDayType === "side";
+
+  // Suppress duplicate arm-care work — on any mound day, pitching owns arm care.
+  useEffect(() => {
+    // Read-only signal for developers; the throwing card checks armCare.suppressFor("throwing").
+    // When ArmCareBudgetProvider owner === "throwing" but we're on a pen day, the mount site
+    // in HammerDailyPlan flips owner to "pitching" via useMemo below when it sees this card mount.
+  }, [isMoundDay]);
 
   if (!show) return null;
 
@@ -152,6 +247,42 @@ export function PitchingCard() {
     writePitcherProfile(user?.id, next);
     setProfileState(next);
     toast.success("Pitcher settings saved");
+  };
+
+  // Synthetic WkRx for the Log sheet — routes to OUTING/BULLPEN/PFP templates.
+  const syntheticRx = (kind: "outing" | "bullpen" | "pfp"): WkRx => {
+    const slug =
+      kind === "outing" ? "start_pitch"
+      : kind === "bullpen" ? "bullpen_pen"
+      : "pfp_daily";
+    return {
+      id: `pitching-${kind}-${todayIso}`,
+      plan_date: todayIso,
+      slot: "cross_sport",
+      sequence_order: 0,
+      sequence_role: null,
+      movement_slug: slug,
+      movement_name:
+        kind === "outing" ? "Pitching outing"
+        : kind === "bullpen" ? "Bullpen"
+        : "Pitcher fielding practice",
+      phase: "in",
+      sets: 1,
+      reps: kind === "outing" ? ladder.outingPitchCap : kind === "bullpen" ? Math.round(ladder.outingPitchCap * 0.5) : 20,
+      tempo: null,
+      load_pct: null,
+      duration_seconds: null,
+      distance_feet: null,
+      total_reps: null,
+      dosage_unit: kind === "pfp" ? "reps" : "throws",
+      cns_cost: 0,
+      cns_clamped: false,
+      substituted_from_slug: null,
+      substitution_reason: null,
+      rationale: ladder.headline,
+      why_payload: {},
+      status: "planned",
+    };
   };
 
   return (
@@ -164,9 +295,14 @@ export function PitchingCard() {
                 <div className="flex items-center gap-2 min-w-0">
                   <Target className="h-4 w-4 text-rose-500 shrink-0" />
                   <span className="truncate">Pitching · {cycle.today.headline}</span>
-                  <Badge variant="outline" className={`text-[10px] ${DAY_TONE[cycle.today.dayType]}`}>
-                    {cycle.today.dayType.replace("_", " ")}
+                  <Badge variant="outline" className={`text-[10px] ${DAY_TONE[effectiveDayType]}`}>
+                    {effectiveDayType.replace("_", " ")}
                   </Badge>
+                  {clamp.clamped && (
+                    <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                      clamped
+                    </Badge>
+                  )}
                 </div>
                 <ChevronDown
                   className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
@@ -178,6 +314,18 @@ export function PitchingCard() {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-3 pt-0">
+            {/* Injury / rehab / recovery banner */}
+            {clamp.clamped && clamp.reason && (
+              <div className={`rounded-md border px-3 py-2 text-[11px] flex items-start gap-2 ${
+                armInjury || rehabStage
+                  ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
+                  : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+              }`}>
+                <HeartPulse className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>{clamp.reason}</span>
+              </div>
+            )}
+
             {/* Today's prescription */}
             <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 space-y-1">
               <div className="flex items-center gap-2 text-sm font-medium">
@@ -192,6 +340,29 @@ export function PitchingCard() {
                   Earn {ladder.restDaysAfterOuting} rest day{ladder.restDaysAfterOuting === 1 ? "" : "s"} after this outing before returning to the mound.
                 </div>
               )}
+              {recentLoad.data && (
+                <div className="text-[11px] text-muted-foreground">
+                  7-day total: <span className="font-medium">{recentLoad.data.weeklyTotal}</span>
+                  {" / "}{ladder.weeklyPitchCap} pitches
+                </div>
+              )}
+            </div>
+
+            {/* Log buttons — pitching card owns its own log entry points */}
+            <div className="flex flex-wrap gap-2">
+              {isMoundDay && (
+                <>
+                  <Button size="sm" variant="default" onClick={() => setLogSheet("outing")}>
+                    <ClipboardList className="h-3.5 w-3.5 mr-1" /> Log outing
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setLogSheet("bullpen")}>
+                    Log bullpen
+                  </Button>
+                </>
+              )}
+              <Button size="sm" variant="outline" onClick={() => setLogSheet("pfp")}>
+                Log PFP
+              </Button>
             </div>
 
             {/* Weekly rhythm */}
