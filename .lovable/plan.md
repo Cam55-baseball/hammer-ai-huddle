@@ -1,33 +1,23 @@
 ## Goal
+Apply the four staged Game IQ actor enrichment SQL batches to the database and report any failures.
 
-Apply the already-generated Game IQ coaching enrichment (~343 actors across ~33 situations) and finish generating + applying the remaining ~78 situations so every position in every situation has role-specific `coaching_note`, `footwork_cue`, `eyes_target`, `communication_call`, `secondary_read`, `elite_cue`, and `common_mistake`.
+## Current state
+- `/tmp/iq/b1.sql` (207 KB, 293 lines)
+- `/tmp/iq/b2.sql` (197 KB, 285 lines)
+- `/tmp/iq/b3.sql` (199 KB, 289 lines)
+- `/tmp/iq/b4.sql` (84 KB, 129 lines)
 
-## Steps
+Each line is one `UPDATE iq_situation_actors SET coaching_note=..., footwork_cue=..., eyes_target=..., communication_call=..., secondary_read=..., elite_cue=..., common_mistake=..., updated_at=now() WHERE situation_id=... AND role=...;` targeting ~886 actor rows across 110 published situations.
 
-1. **Apply staged chunk (~343 actors)**
-   - Split the staged `/tmp/iq_enrich.sql` into per-situation `UPDATE` batches to stay under the migration size limit that previously caused `SUPABASE_BAD_REQUEST`.
-   - Apply via the migration tool in sequential batches (roughly 10 situations per migration).
-   - After each batch: sample-verify a few `(situation_id, role)` rows have the new fields populated.
+`psql` from the sandbox is blocked (permission denied for UPDATE). The `supabase--insert` data-change tool is the correct path.
 
-2. **Resume generation for the remaining ~78 situations**
-   - Re-run the Gemini 1.5 Flash enrichment script against only the situations whose actors still have `NULL`/empty `footwork_cue` or `eyes_target`.
-   - Same schema and guardrails already used in the first pass (role-specific verbs, ≤220 chars per field, assignment-consistent behavior).
-   - Preserve any existing non-empty field unless the new value is clearly richer.
+## Plan
+1. Apply the four batches sequentially through `supabase--insert`, one call per batch, in order b1 → b2 → b3 → b4. Sequential (not parallel) so a mid-batch failure can be isolated to one file.
+2. After each batch, run a quick `supabase--read_query` to count actors updated in the last few minutes as a sanity check.
+3. After all four are applied, run one verification query: for a sample of 5 situations across defense/offense/pitching/baserunning lenses, confirm every actor now has non-empty `coaching_note`, `footwork_cue`, `eyes_target`, `secondary_read`, and that `secondary_read` differs across roles inside the same situation.
+4. Report: rows updated per batch, any SQL errors verbatim, and the verification sample.
 
-3. **Apply the remaining generated SQL**
-   - Same per-situation batching strategy as step 1.
-
-4. **Verify E2E**
-   - Query: every published situation has 0 actors with NULL `footwork_cue` or `eyes_target`.
-   - Spot-check `/iq/squeeze-r3-defense`, one baserunning situation, and one pitching situation in the preview — click each position and confirm the card renders all sections with role-specific content (UI already ships this from the previous turn).
-
-## Technical Details
-
-- Data-only work. No schema changes, no UI changes (UI + feedback surface already shipped).
-- Writes go through the migration tool, one small migration per batch, to avoid the bulk-update failure from last turn.
-- Enrichment script runs in the sandbox against Gemini; only the resulting SQL is committed via migrations.
-
-## Out of Scope
-
-- Any UI, routing, quiz-scoring, or authoring-tool changes.
-- Regenerating fields for situations already fully enriched in the staged chunk.
+## Out of scope
+- No schema changes.
+- No UI changes (the card already renders the seven fields).
+- No regeneration of content — only application of the already-staged SQL.
