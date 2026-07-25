@@ -1,120 +1,108 @@
-# Elite Pitching Development Track — Hammers Today
+# Elite Pitching Track — Full E2E Hardening
 
-Goal: give baseball and softball pitchers a professional-grade daily prescription that scales from first-year pitchers to top-tier arms who've plateaued, sitting on top of the existing throwing ladder, roadmap rungs, seasonal quarters, and arm-care budget. Constitutionally additive — no invariants weakened, all outputs replay-safe under `useHammersToday()`.
+The v1 shipped last turn is structurally right but has real gaps that will cost credibility with elite users. This plan closes every one, adds the missing enforcement layers, and wires the track into the parts of the app it already assumes exist.
 
-## What today is missing
+## Bugs & fragments to fix first
 
-- `throwingLadder.ts` prescribes generic throw count + max intent. No bullpen scheduling, no per-week pitch cap, no role (starter/reliever/closer), no innings ramp, no rest-day arithmetic, no PFP (pitcher fielding practice).
-- No pitcher-specific card on Hammers Today. Pitchers currently get the same throwing/defense cards as position players.
-- No softball vs baseball pitching distinction (windmill mechanics, day-after workload, higher weekly pitch tolerance).
-- No pitch-count-to-innings modeling and no pen scheduling (side day, touch-and-feel, bullpen, live, start).
+1. **Unused import in `PitchingCard.tsx`** — `DEFAULT_PITCHER_PROFILE` is imported but not referenced. Remove.
+2. **PFP double-selection edge case** — when `pool.length === 1`, `second` becomes `pool[0]` after the `+1` wrap and duplicates the first drill. Guard with `length < 2 → return [first]`.
+3. **Undiscoverable arsenal UX** — "right-click to remove" is invisible on mobile. Replace with an explicit "×" affordance on the chip when active, and a "Make primary" dropdown on long-press.
+4. **`softballStarter` in-season clamp** — currently downgrades a non-game "start" to "side" without preserving the athlete's ability to opt back in; add a "protected start" flag driven by `preferredBullpenDow`.
+5. **PitchingCard is not an arm-care owner** — on bullpen/start days the pitching card silently generates arm-care load, but `ArmCareBudgetProvider owner={armCareOwner}` in `HammerDailyPlan.tsx` only knows about `throwing/lift/warmup/none`. When both throwing card and pitching card are mounted on a bullpen day, athletes get double band-work. Extend the ArmCareBudget with a `"pitching"` owner and let PitchingCard call `suppressFor("throwing")` on pen/start days.
 
-## What we're building
+## E2E completeness — the real work
 
-### 1. Pitcher profile (onboarding + settings)
-Add a small pitcher block reachable from onboarding and from a "Pitcher settings" pencil on the new card:
-- Discipline: baseball / softball (already known via sport)
-- Role target: starter / reliever / closer / two-way / undecided
-- Level band: youth / HS / travel / college / pro (already in competition level — reused, not re-asked)
-- Current innings-per-outing capacity (self-reported, editable)
-- Bullpen day-of-week preference
-- Pitch arsenal (multi-select), with a "primary" pick
+### A. Persistence & multi-device continuity
 
-Stored in a new `pitcher_profile` block on `athlete_context` (additive, nullable). Never authored by the engine; athlete/parent/coach only.
+- **Move `PitcherProfile` from `localStorage` → `athlete_context.envelope`** under key `pitching`. Read priority: `athlete_context` value → `localStorage` fallback → `DEFAULT_PITCHER_PROFILE`.
+- On save, write to both `athlete_context` (via existing `useHammerAthleteContext` mutation surface) and mirror to `localStorage` for offline reads.
+- Add a `pitching` block to the `AthleteContext` shape (`src/lib/wic/athleteContext.ts`) so downstream engines can consume it deterministically.
 
-### 2. Weekly pitching microcycle engine
-New pure module `src/lib/hammer/pitching/pitchingMicrocycle.ts` that, given `{sport, role, rung, quarter, level, pitcherProfile, gpGames, calendarEvents}`, returns a 7-day plan of pitching day-types:
+### B. Rest-day and weekly-cap enforcement (not just display)
 
-```text
-Baseball starter (Peak / In-Season Q):
-  Start · Recover · Flush · Bullpen · Touch · Fielding+Long-toss · Start
-Baseball reliever:
-  Available · Available · Side · Available · Available · Available · Available (capacity-based)
-Softball pitcher (higher tolerance):
-  Start · Flush · Side · Start · Flush · Side · Start
-```
+Today the ladder tells the athlete "earn 3 rest days" but nothing stops them from selecting bullpen tomorrow. Elite fix:
 
-Ladder-aware: Foundation rung caps at "learn to throw a pen"; Bridge unlocks live BP; Peak unlocks starts; Sustain protects the ceiling. Quarter multiplier from `seasonQuarters.ts` scales pitch counts, never mechanics.
+- New hook `useRecentPitchingLoad(days: 7)` that reads `wk_session_logs` where template ∈ (`bullpen_pitching`, `pitching_outing`) and sums `pitches` by day.
+- New pure function `clampDayTypeForRecovery(today, plannedDayType, recentLoad, level, sport)`:
+  - Returns `{ dayType, clampedReason }`. If yesterday's outing hasn't served its Pitch Smart rest days, force `flush` (day 1), `touch` (day 2+), etc.
+  - Blocks new mound work if weekly pitch total has hit `weeklyPitchCap` regardless of what the microcycle wants.
+- Surface the clamp in the UI: `Detail: "Clamped from Bullpen → Flush — 2 rest days remaining from Tue's 78-pitch outing."`
+- This makes the track constitutionally survivability-first, per RW-1.
 
-### 3. Pitch-count + innings ladder
-New `src/lib/hammer/pitching/pitchLadder.ts` producing per-day and per-week caps:
-- Per-outing pitch cap (level × role × rung × quarter)
-- Weekly pitch cap = sum of scheduled outings under microcycle
-- Innings target derived from cap ÷ average-pitches-per-inning by level (validated ranges from Pitch Smart / NCAA / NPF references — conservative, never invented)
-- Required rest days after each outing (Pitch Smart-compliant for baseball youth/HS; softball uses conservative day-after protocol)
-- "Earn the next tier" gate: bumps require N clean outings + green recovery clock
+### C. Rehab / RTP mode
 
-### 4. Bullpen + throw prescription
-Extends `throwingLadder.ts` (does not replace it). On pen days the returned prescription includes:
-- Pitch count target, intent %, pitch-type distribution (pulled from arsenal)
-- Warm-up throws + long-toss cap (respects arm-care budget)
-- Cooldown throws
-On non-pen throw days, ladder returns catch-play / touch-and-feel volume tuned to next scheduled outing.
+Notes-field ("rehabbing from TJ") is not enough. Add:
 
-### 5. Pitcher Fielding Practice (PFP) — daily
-New small block in the pitching card: 5–10 minute PFP prescription every training day (comebackers, 1–3 cover, 3-1 put-outs, bunt fielding, PFP-53, pickoffs). Content lives in `src/lib/hammer/pitching/pfpLibrary.ts`, tiered Beginner→Expert like the drill library.
+- `PitcherProfile.rehab: { active: boolean; program: "tj_return" | "shoulder_return" | "generic" | null; weekInProgram: number | null; clearedThroughStage: string | null }`.
+- New library `rehabProgression.ts` with the standard TJ interval-throwing progression (weeks 1-24) and a generic shoulder version. Each stage clamps to `touch`/`long_toss` + PFP only, hides mound work entirely.
+- Rehab mode surfaces its own headline: "TJ Week 14 — up to 90 ft, no mound until Week 20."
 
-### 6. New Hammers Today card: `PitchingCard`
-Only mounts when the athlete is a pitcher or two-way. Collapsible, dropdown-chevron style consistent with other cards. Sections:
-- Today's role (Start / Bullpen / Side / Touch / Rest / Available)
-- Pitch/throw count target + intent %
-- Arm-care coordination via `ArmCareBudgetContext` (pitching owns arm care on pen/start days)
-- PFP prescription
-- Recovery clock until next outing
-- Log button (specialized template: pitches thrown by type, velo, strike %, RPE)
+### D. Injury clamp (HPI / active_restrictions)
 
-Two-way athletes get **both** the position-player throwing card and the pitching card (mirrors the switch-hitter duplication doctrine).
+- Read `readiness.active_restrictions` and any `injury_event` topics from ASB. If elbow or shoulder is flagged, hard-clamp to `rest`/`flush` with a visible "Injury override — arm flag active" banner.
+- Also read HPI arm-feel signal from recent throwing logs (`meta.armFeel`). Two consecutive poor arm-feel logs → downgrade the next mound day by one intensity tier.
 
-### 7. Coordination with existing systems
-- `HammersTodayProvider` remains the single generation entrypoint; pitching prescription is derived inside the same snapshot.
-- `dailyPlan.ts` schedule-aware modulation extended: game-day = no bullpen, day-before-start = touch only.
-- `weeklyMicrocycle.ts` lifts/speed reads the pitching microcycle so leg-heavy lifts don't land the day before or of a start.
-- Season-quarter drift guard already covers phase mismatch; pitching plan inherits it.
+### E. Log-flow parity (single Log button UX)
 
-### 8. Elite plateau + entry ramps
-- Entry ramp: Foundation rung + no self-reported pitching history ⇒ 4-week "learn to throw a pen" onramp (flat-ground → mound intros → first pen).
-- Plateau breaker: Peak/Sustain athletes flagged by session logs (velo/strike% flat for 3+ outings) get a "Variance week" prescription — pitch-design bullpen, constraint pens, weighted-ball plyo work (only if arm-care clock is green and rung is Bridge+).
+Pitching card currently has no direct Log entry, so athletes have to hunt for the throwing card to log an outing.
 
-### 9. Logging
-Add specialized log templates in `logTemplates.ts`:
-- `bullpen` — pitches by type, velo, strike%, feel
-- `start` / `outing` — IP, pitch count, K, BB, hits, whiff%, first-pitch strike%
-- `pfp` — reps by drill, RPE
+- Add a `<Button size="sm">Log outing</Button>` and `Log bullpen`/`Log PFP` in the card that opens `ExerciseLogSheet` with a synthetic `WkRx` shaped to route `resolveTemplate` → OUTING / BULLPEN / PFP.
+- Persist the resulting `wk_session_logs` row with `movement_slug: "start_pitch"` or `bullpen`, `distance_feet: null`, so `useRecentPitchingLoad` (B) can find them.
 
-### 10. QA
-- Unit tests for `pitchingMicrocycle`, `pitchLadder`, PFP rotation (replay-deterministic under fixed inputs, engine_version pinned).
-- Extend `hammers-today/variables-matrix.csv` with new pitcher variables.
-- Storybook state for `PitchingCard`: baseball starter Q3 Peak, softball starter Q1 Foundation, two-way HS reliever, plateau breaker.
+### F. Two-way athlete coordination
 
-## Files touched
+- When `profile.role === "two_way"` AND today's `dayType ∈ {start, game}`: broadcast a `pitchingHighEffort` flag via a lightweight context so the bat-speed card can drop to `bat_speed_tee` + suppress overload work.
+- Bat card reads the flag with `useOptionalPitchingIntent()` — if undefined (non-pitcher), no-op.
 
-New:
-- `src/lib/hammer/pitching/pitchingMicrocycle.ts`
-- `src/lib/hammer/pitching/pitchLadder.ts`
-- `src/lib/hammer/pitching/pfpLibrary.ts`
-- `src/lib/hammer/pitching/pitcherProfile.ts` (types + resolver)
-- `src/components/hammer/PitchingCard.tsx`
-- Tests under `src/lib/hammer/pitching/__tests__/`
+### G. Trends & progress read-out
 
-Edited (additive):
-- `src/lib/hammer/roadmap/throwingLadder.ts` — pen-aware branch
-- `src/components/hammer/HammerDailyPlan.tsx` — mount `PitchingCard`
-- `src/components/hammer/logging/logTemplates.ts` — bullpen/outing/pfp templates
-- `supabase/functions/wk-generate-daily/index.ts` — surface pitcher fields in snapshot
-- `docs/audits/hammers-today/variables-matrix.csv`
-- Onboarding: append optional pitcher block after position step
+Re-use existing `usePitchingV2Trends` to show, in the Pitching card's expanded state:
+- 7d/30d pitch totals vs the ladder cap (progress bars).
+- Strike% and 1st-pitch strike% trend from `bullpen_pitching` + `pitching_outing` logs.
 
-DB migration (additive):
-- `athlete_pitcher_profile` table (user_id PK, sport, role_target, arsenal jsonb, innings_capacity, preferred_bullpen_day) with RLS `auth.uid() = user_id`, GRANTs to `authenticated` + `service_role`, `updated_at` trigger.
+### H. Coach visibility & modulation
 
-## Non-goals
+- New tab under Coach Console → Athlete profile → **Pitching**: read-only mirror of today's headline, this-week rhythm, weekly-cap-vs-thrown, rest debt.
+- Coach cannot author the profile (athlete-owned) but can leave a `pitching_note` (`asb_events` topic `pitching.coach_note`) that renders on the athlete card.
 
-- Not changing hitting/lifts/speed engines.
-- Not authoring organism truth from log data — logs feed observability only.
-- Not auto-scheduling starts on the shared calendar without athlete confirmation.
+### I. Onboarding hook
 
-## Open questions before build
+- If `athlete_context.identity.two_way || primary_position ∈ (P, SP, RP)` AND `pitcher_profile.level === "unknown"`, add a one-step slot at the end of onboarding: role + level + arsenal. Skips cleanly for non-pitchers.
 
-1. For pitch-count caps, do you want strict Pitch Smart limits for baseball youth/HS (safest, defensible) or a slightly athlete-tuned band gated by recovery clock?
-2. Softball pitchers — is your default expectation "pitch most days" (typical HS/travel) or a stricter starter/reliever split like baseball?
-3. Should two-way athletes see the pitching card by default, or only after they confirm "I pitch this season" in onboarding?
+### J. Determinism tests
+
+Because Pitch Smart is legally / medically load-bearing, add vitest suites:
+
+- `pitchLadder.test.ts`: exhaustive matrix asserts USA Pitch Smart daily maxes and rest bands for every `(sport, level, role, rung, quarter)` combination.
+- `pitchingMicrocycle.test.ts`: given game on Fri, baseball starter foundation rung → asserts Sun/Sat "rest", Wed "bullpen or side per rung", Fri "start" or "game".
+- `pfpLibrary.test.ts`: deterministic rotation across a year — no duplicate drill in any single day's picks, coverage of all beginner drills within a week for foundation rung.
+- `clampDayTypeForRecovery.test.ts`: 78-pitch outing at HS clamps next 3 days.
+
+## Technical notes
+
+- `src/components/hammer/ArmCareBudgetContext.tsx::ArmCareOwner` gets a `"pitching"` variant; suppressFor logic already generic.
+- `AthleteContext` gains an optional `pitching?: PitchingBlock` field; migration is additive-only (per Eternal Laws).
+- New files (all additive):
+  - `src/lib/hammer/pitching/recentLoad.ts` + hook `src/hooks/useRecentPitchingLoad.ts`
+  - `src/lib/hammer/pitching/recoveryClamp.ts`
+  - `src/lib/hammer/pitching/rehabProgression.ts`
+  - `src/lib/hammer/pitching/twoWayCoordination.tsx` (context provider + hook)
+  - `src/components/hammer/PitchingLogButtons.tsx`
+  - `src/components/coach/PitchingPanel.tsx`
+  - test files under `src/lib/hammer/pitching/__tests__/`
+- No DB migration required for v2 (uses existing `athlete_context`, `wk_session_logs`, `asb_events`). A dedicated `athlete_pitcher_profile` table can come later if the coach-mutation surface grows.
+
+## Rollout order
+
+1. Bug/fragment sweep (unused import, PFP dedupe, arsenal UX, softball clamp, ArmCareBudget owner).
+2. Persistence to `athlete_context` + `AthleteContext` block.
+3. Rest-day + weekly-cap enforcement (recentLoad + recoveryClamp).
+4. Injury clamp + HPI arm-feel modulation.
+5. Log-flow parity buttons on the card.
+6. Rehab / RTP mode.
+7. Two-way coordination context.
+8. Trends read-out.
+9. Coach panel + onboarding slot.
+10. Vitest suites.
+
+Each step ships behind the existing card mount — no gating flag needed, and every step is additive and replay-safe.
