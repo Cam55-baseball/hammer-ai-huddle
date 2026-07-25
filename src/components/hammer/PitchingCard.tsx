@@ -91,11 +91,13 @@ export function PitchingCard() {
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
 
   const show = shouldShowPitchingCard(profile, primaryPos, secondaryPos);
-  if (!show) return null;
 
-  const today = new Date();
-  const rung = resolveRoadmapRung(proj).descriptor.rung;
-  const quarter = resolveSeasonQuarter(proj, phaseStartedAt ?? null, today);
+  const today = useMemo(() => new Date(), []);
+  const rung = useMemo(() => resolveRoadmapRung(proj).descriptor.rung, [proj]);
+  const quarter = useMemo(
+    () => resolveSeasonQuarter(proj, phaseStartedAt ?? null, today),
+    [proj, phaseStartedAt, today],
+  );
 
   // Game dows in the next 7 days from the schedule window
   const gameDows = useMemo<number[]>(() => {
@@ -121,7 +123,7 @@ export function PitchingCard() {
         gameDows,
         preferredBullpenDow: profile.preferredBullpenDow,
       }),
-    [sport, rung, quarter, profile, gameDows],
+    [sport, rung, quarter, profile, today, gameDows],
   );
 
   const ladder = useMemo(
@@ -137,6 +139,8 @@ export function PitchingCard() {
   );
 
   const pfp = useMemo(() => pickPfpDrillsForToday(today, rung), [rung, today]);
+
+  if (!show) return null;
 
   const saveProfile = (next: PitcherProfile) => {
     writePitcherProfile(user?.id, next);
