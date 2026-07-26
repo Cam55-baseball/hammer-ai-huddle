@@ -16,6 +16,7 @@ import {
   tierNoteForDefense,
   type DefenseTier,
 } from "./defenseGuides";
+import { coercePositionTokens, firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
 
 export type { DefenseTier } from "./defenseGuides";
 
@@ -38,8 +39,8 @@ export type DefenseSport = "baseball" | "softball";
 export type DefensePhase = "off" | "pre" | "in" | "tournament";
 
 export interface DefenseSelectorInput {
-  readonly position: string | null | undefined;
-  readonly secondaryPositions?: ReadonlyArray<string> | null;
+  readonly position: unknown;
+  readonly secondaryPositions?: unknown;
   readonly sport: DefenseSport;
   readonly seasonPhase: "off" | "pre" | "in" | "post" | "unknown" | string | null | undefined;
   readonly injuryRegions?: ReadonlyArray<string>;
@@ -70,9 +71,10 @@ export interface DefensePrescription {
 
 // ---- position normalization (finer than EASS) --------------------------------
 
-export function normalizeDefensePosition(pos: string | null | undefined): DefensePosition {
-  if (!pos) return "utility";
-  const p = pos.trim().toUpperCase();
+export function normalizeDefensePosition(pos: unknown): DefensePosition {
+  const token = firstPositionToken(pos);
+  if (!token) return "utility";
+  const p = token.trim().toUpperCase();
   if (p === "C" || p === "CATCHER") return "C";
   if (p === "P" || p === "PITCHER" || p === "SP" || p === "RP") return "P";
   if (p === "1B" || p === "FIRST" || p === "FIRST_BASE") return "1B";
@@ -583,8 +585,9 @@ export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescri
   let drills = catalogFor(position, sport, phase);
   if (drills.length === 0) return null;
 
-  if (input.secondaryPositions && input.secondaryPositions.length > 0) {
-    const secondary = normalizeDefensePosition(input.secondaryPositions[0]);
+  const secondaryPositions = coercePositionTokens(input.secondaryPositions);
+  if (secondaryPositions.length > 0) {
+    const secondary = normalizeDefensePosition(secondaryPositions[0]);
     if (secondary !== position && secondary !== "utility") {
       drills = blendSecondary(drills, secondary, sport, phase);
     }

@@ -11,6 +11,8 @@
  * pitching settings still gets a safe default profile.
  */
 
+import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
+
 export type PitcherRole =
   | "starter"
   | "reliever"
@@ -92,26 +94,7 @@ export function writePitcherProfile(
 }
 
 export function isPitcherPosition(position: unknown): boolean {
-  if (typeof position !== "string") return false;
-  const p = position.toLowerCase().trim();
-  if (!p) return false;
-  return p === "p" || p === "sp" || p === "rp" || p === "cp" || p.includes("pitch");
-}
-
-/**
- * Coerce an athlete-context position value (which may arrive as a string,
- * an array of strings, null, undefined, or something else entirely) into
- * a normalized list of position tokens.
- */
-function coerceToPositionList(value: unknown): string[] {
-  if (value == null) return [];
-  if (Array.isArray(value)) {
-    return value.filter((v): v is string => typeof v === "string").map((s) => s.trim()).filter(Boolean);
-  }
-  if (typeof value === "string") {
-    return value.split(/[,;/]/).map((s) => s.trim()).filter(Boolean);
-  }
-  return [];
+  return positionTokenIsPitcher(position);
 }
 
 /**
@@ -125,9 +108,7 @@ export function shouldShowPitchingCard(
   secondaryPositions: unknown,
 ): boolean {
   if (profile.isPitcher) return true;
-  if (coerceToPositionList(primaryPosition).some(isPitcherPosition)) return true;
-  if (coerceToPositionList(secondaryPositions).some(isPitcherPosition)) return true;
-  return false;
+  return isPitcherPosition([primaryPosition, secondaryPositions]);
 }
 
 
