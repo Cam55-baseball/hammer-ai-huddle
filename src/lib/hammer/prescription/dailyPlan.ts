@@ -80,6 +80,7 @@ import {
   type SkillModality,
   type SkillLadderRow,
 } from "@/lib/hammer/roadmap/skillFrequencyLadder";
+import { coercePositionTokens, firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
 
 
 
@@ -196,8 +197,8 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
 
 function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
   const pos =
-    (ctx.get<string>("position_primary")?.value as string | null) ??
-    (ctx.get<string>("position")?.value as string | null) ??
+    firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
+    firstPositionToken(ctx.get<unknown>("position")?.value) ??
     null;
   const liftingAge = proj.liftingAgeYears;
   const seasonPhase = proj.seasonPhase;
@@ -739,7 +740,7 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       // EASS — Elastic Arm Speed & Underload Throwing System.
       // Whole-body, fast-object-first, position + sport aware, safety supreme.
-      const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
+      const sportRaw = ctx.get<unknown>("sport_primary")?.value ?? null;
       const scheduleAny = proj as unknown as { schedule?: { isGameDay?: boolean; isRecoveryDay?: boolean; isThrowingDay?: boolean } };
       const sched = scheduleAny?.schedule ?? {};
       const armSore = !!(ctx.get<{ arm_sore?: boolean }>("daily_log")?.value as { arm_sore?: boolean })?.arm_sore;
@@ -861,10 +862,11 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       // Elite defensive drill library — position × sport × phase, with
       // secondary-position blend, injury gating, and tournament tapering.
-      const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
-      const secondaryRaw = (ctx.get<string[]>("position_secondary")?.value as string[] | null)
-        ?? (ctx.get<string[]>("positions_secondary")?.value as string[] | null)
-        ?? null;
+      const sportRaw = ctx.get<unknown>("sport_primary")?.value ?? null;
+      const secondaryRaw = coercePositionTokens([
+        ctx.get<unknown>("position_secondary")?.value,
+        ctx.get<unknown>("positions_secondary")?.value,
+      ]);
       const defenseSchedAny = proj as unknown as { schedule?: { tournamentToday?: boolean; isTournamentDay?: boolean } };
       const tournamentToday = !!(defenseSchedAny?.schedule?.tournamentToday || defenseSchedAny?.schedule?.isTournamentDay);
 
@@ -1798,7 +1800,10 @@ export function buildHammerDailyPlan(
   const rung = resolveRoadmapRung(proj);
   const quarter = resolveSeasonQuarter(proj, roadmapInputs.phaseStartedAt ?? null, today);
   const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
-  const positionRaw = (ctx.get<string>("position_primary")?.value as string | null) ?? null;
+  const positionRaw =
+    ctx.get<unknown>("position_primary")?.value ??
+    ctx.get<unknown>("position")?.value ??
+    null;
   const eliteTarget = resolveEliteTarget(sportRaw);
   const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
 
