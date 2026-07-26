@@ -101,11 +101,12 @@ export function PitchingCard() {
   const sched = useScheduleWindow();
   const armCare = useArmCareBudget();
 
-  const sport = (ctx.get<string>("sport_primary")?.value === "softball" ? "softball" : "baseball") as
+  const sportPrimary = ctx.get<unknown>("sport_primary")?.value;
+  const sport = (sportPrimary === "softball" ? "softball" : "baseball") as
     | "baseball"
     | "softball";
-  const primaryPos = ctx.get<string>("position_primary")?.value ?? null;
-  const secondaryPos = ctx.get<string>("position_secondary")?.value ?? null;
+  const primaryPos = ctx.get<unknown>("position_primary")?.value ?? null;
+  const secondaryPos = ctx.get<unknown>("position_secondary")?.value ?? null;
   const armInjury = useMemo(() => detectArmInjury(ctx), [ctx]);
 
   const [profile, setProfileState] = useState<PitcherProfile>(() => readPitcherProfile(user?.id));

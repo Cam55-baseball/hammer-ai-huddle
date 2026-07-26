@@ -18,6 +18,7 @@
  */
 import type { RoadmapRung } from "./roadmapLadder";
 import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilters";
+import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
 
 export type SkillModality = "hitting" | "throwing" | "defense" | "baserunning";
 
@@ -44,10 +45,8 @@ const PITCHER_THROWING_LADDER: Record<RoadmapRung, number> = {
   foundation: 3, build: 4, bridge: 4, peak: 5, sustain: 5,
 };
 
-function isPitcher(position: string | null): boolean {
-  if (!position) return false;
-  const p = position.toLowerCase();
-  return p === "p" || p === "sp" || p === "rp" || p.includes("pitch");
+function isPitcher(position: unknown): boolean {
+  return positionTokenIsPitcher(position);
 }
 
 const LEG_INJURIES = new Set(["hamstring", "ankle", "knee", "groin", "quad"]);
@@ -61,7 +60,7 @@ const ARM_INJURIES = new Set(["shoulder", "ucl", "elbow", "labrum", "rotator"]);
 export function resolveSkillDaysTarget(
   rung: RoadmapRung,
   modality: SkillModality,
-  position: string | null,
+  position: unknown,
   injuryRegions: ReadonlyArray<string> = [],
   lifecycleBand: string | null = null,
   liftingAgeYears: number | null = null,
@@ -108,7 +107,7 @@ export function projectSkillLadder(
   rung: RoadmapRung,
   nextRung: RoadmapRung | null,
   proj: Pick<AthleteContextProjection, "injuryRegions" | "lifecycleBand" | "liftingAgeYears">,
-  position: string | null,
+  position: unknown,
   earnedDaysByModality: Partial<Record<SkillModality, number>>,
 ): ReadonlyArray<SkillLadderRow> {
   return SKILL_MODALITIES.map((m) => {

@@ -13,6 +13,7 @@
  */
 import type { RoadmapRung } from "./roadmapLadder";
 import type { QuarterDescriptor } from "./seasonQuarters";
+import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
 
 export interface ThrowingLadderPrescription {
   readonly throwsToday: number;
@@ -44,16 +45,14 @@ const POSITION_LADDER: Record<RoadmapRung, LadderRow> = {
   sustain:    { baseThrows: 45, maxIntent: 85, longTossUnlocked: true  },
 };
 
-function isPitcher(position: string | null): boolean {
-  if (!position) return false;
-  const p = position.toLowerCase();
-  return p === "p" || p === "sp" || p === "rp" || p.includes("pitch");
+function isPitcher(position: unknown): boolean {
+  return positionTokenIsPitcher(position);
 }
 
 export function prescribeThrowingLadder(
   rung: RoadmapRung,
   quarter: QuarterDescriptor,
-  position: string | null,
+  position: unknown,
 ): ThrowingLadderPrescription {
   const row = isPitcher(position) ? PITCHER_LADDER[rung] : POSITION_LADDER[rung];
   const throwsToday = Math.max(10, Math.round(row.baseThrows * quarter.volumeCeilingMultiplier));

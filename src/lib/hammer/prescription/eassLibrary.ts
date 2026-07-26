@@ -29,6 +29,8 @@
  *   • Outfield — crow-hop + long-toss carry.
  */
 
+import { firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
+
 export type EassSport = "baseball" | "softball";
 export type EassPosition =
   | "pitcher"
@@ -575,9 +577,10 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
 /**
  * Map an EASS position label from raw position codes stored on the profile.
  */
-export function normalizePosition(pos: string | null | undefined): EassPosition {
-  if (!pos) return "utility";
-  const p = pos.toUpperCase();
+export function normalizePosition(pos: unknown): EassPosition {
+  const token = firstPositionToken(pos);
+  if (!token) return "utility";
+  const p = token.toUpperCase();
   if (p === "P" || p === "PITCHER" || p === "SP" || p === "RP") return "pitcher";
   if (p === "C" || p === "CATCHER") return "catcher";
   if (["1B", "2B", "3B", "SS", "IF", "INFIELD"].includes(p)) return "infield";
@@ -586,8 +589,8 @@ export function normalizePosition(pos: string | null | undefined): EassPosition 
   return "utility";
 }
 
-export function normalizeSport(sport: string | null | undefined): EassSport {
-  const s = (sport ?? "").toLowerCase();
+export function normalizeSport(sport: unknown): EassSport {
+  const s = typeof sport === "string" ? sport.toLowerCase() : "";
   if (s.includes("soft")) return "softball";
   return "baseball";
 }
