@@ -91,10 +91,27 @@ export function writePitcherProfile(
   }
 }
 
-export function isPitcherPosition(position: string | null | undefined): boolean {
-  if (!position) return false;
+export function isPitcherPosition(position: unknown): boolean {
+  if (typeof position !== "string") return false;
   const p = position.toLowerCase().trim();
+  if (!p) return false;
   return p === "p" || p === "sp" || p === "rp" || p === "cp" || p.includes("pitch");
+}
+
+/**
+ * Coerce an athlete-context position value (which may arrive as a string,
+ * an array of strings, null, undefined, or something else entirely) into
+ * a normalized list of position tokens.
+ */
+function coerceToPositionList(value: unknown): string[] {
+  if (value == null) return [];
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === "string").map((s) => s.trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value.split(/[,;/]/).map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
 }
 
 /**
@@ -104,17 +121,15 @@ export function isPitcherPosition(position: string | null | undefined): boolean 
  */
 export function shouldShowPitchingCard(
   profile: PitcherProfile,
-  primaryPosition: string | null | undefined,
-  secondaryPositions: string | null | undefined,
+  primaryPosition: unknown,
+  secondaryPositions: unknown,
 ): boolean {
   if (profile.isPitcher) return true;
-  if (isPitcherPosition(primaryPosition)) return true;
-  if (secondaryPositions) {
-    const parts = secondaryPositions.split(/[,;/]/).map((s) => s.trim());
-    if (parts.some(isPitcherPosition)) return true;
-  }
+  if (coerceToPositionList(primaryPosition).some(isPitcherPosition)) return true;
+  if (coerceToPositionList(secondaryPositions).some(isPitcherPosition)) return true;
   return false;
 }
+
 
 export const BASEBALL_ARSENAL: ReadonlyArray<PitcherArsenalPitch> = [
   { key: "4s", label: "4-seam fastball" },
