@@ -32,13 +32,12 @@ export function WkConditioningCard() {
     snapshotIdentity.season_display,
     snapshotIdentity.season_phase,
   );
+  const [open, setOpen] = useState<boolean>(false);
 
   if (gp.gameToday) return null;
 
   const items = grouped.conditioningCard;
   if (!isLoading && items.length === 0 && !failed) return null;
-
-  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <Card

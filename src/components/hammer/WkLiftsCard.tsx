@@ -58,6 +58,13 @@ export function WkLiftsCard() {
   const [overrideReason, setOverrideReason] = useState("");
   const [overrideSubmitting, setOverrideSubmitting] = useState(false);
   const [armCareOpen, setArmCareOpen] = useState(false);
+  const budget = useArmCareBudget();
+  const suppressArmCareInLifts = budget.suppressFor("lift");
+  const items = suppressArmCareInLifts
+    ? grouped.lifts.filter((r) => r.sequence_role !== "arm_care")
+    : grouped.lifts;
+  const blockedItems = blocked.data ?? [];
+  const [open, setOpen] = useState<boolean>(false);
 
   const submitAck = async () => {
     if (!user?.id) return;
@@ -100,14 +107,6 @@ export function WkLiftsCard() {
     );
   }
 
-  const budget = useArmCareBudget();
-  const suppressArmCareInLifts = budget.suppressFor("lift");
-  const items = suppressArmCareInLifts
-    ? grouped.lifts.filter((r) => r.sequence_role !== "arm_care")
-    : grouped.lifts;
-  const blockedItems = blocked.data ?? [];
-
-  const [open, setOpen] = useState<boolean>(false);
   return (
     <Card
       className="border-blue-500/30"
