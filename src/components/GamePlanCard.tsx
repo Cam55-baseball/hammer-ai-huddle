@@ -1775,29 +1775,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     );
   };
 
-  // Only show skeleton on initial load (when we have no tasks yet)
-  // This prevents the dialog from unmounting during background refreshes
-  if (loading && tasks.length === 0) {
-    return (
-      <Card className="relative overflow-hidden border-3 border-primary/50 bg-secondary">
-        <CardContent className="p-4 sm:p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-56 bg-muted rounded" />
-            <div className="h-4 w-32 bg-muted rounded" />
-            <div className="space-y-3">
-              <div className="h-14 bg-muted rounded-lg" />
-              <div className="h-14 bg-muted rounded-lg" />
-              <div className="h-14 bg-muted rounded-lg" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Calendar view removed - now use dedicated /calendar page
-  // Users can access via navigation sidebar
-
+  // Honor the user's "Hide" choice BEFORE the loading skeleton so it stays
+  // sticky across cold reloads, route remounts, and background refetches
+  // that transiently empty `tasks`.
   if (planHidden) {
     return (
       <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
@@ -1851,6 +1831,30 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       </Card>
     );
   }
+
+  // Only show skeleton on initial load (when we have no tasks yet)
+  // This prevents the dialog from unmounting during background refreshes
+  if (loading && tasks.length === 0) {
+    return (
+      <Card className="relative overflow-hidden border-3 border-primary/50 bg-secondary">
+        <CardContent className="p-4 sm:p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-56 bg-muted rounded" />
+            <div className="h-4 w-32 bg-muted rounded" />
+            <div className="space-y-3">
+              <div className="h-14 bg-muted rounded-lg" />
+              <div className="h-14 bg-muted rounded-lg" />
+              <div className="h-14 bg-muted rounded-lg" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Calendar view removed - now use dedicated /calendar page
+  // Users can access via navigation sidebar
+
 
   return (
     <Card
