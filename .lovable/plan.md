@@ -1,30 +1,32 @@
-## Problem
+**What the error means**
 
-In `src/components/GamePlanCard.tsx`, the "Hide" toggle already writes to `localStorage` (`gamePlan.hidden.v1`) and the initial `useState` reads it back correctly. However, the render order is:
+React error #300 decodes to: `Rendered fewer hooks than expected. This may be caused by an accidental early return statement.` In plain English: one render of a component called a certain set of React hooks, then a later render skipped some of those hooks because the component returned early. React treats that as a crash.
 
-```
-1. if (loading && tasks.length === 0) → return full skeleton  ← ignores planHidden
-2. if (planHidden)                     → return compact hidden card
-3. return full plan
-```
+**Confirmed likely source**
 
-Every time the Dashboard remounts (route change, tab refocus, background refetch that empties tasks momentarily), the user hits branch 1 and sees the full skeleton — which looks exactly like "Hide" was reset. Once data loads they land in the correct hidden branch, but during the load window (and on cold reload) the plan visibly "comes back".
+The console stack points at the Hammers Today conditioning section. In `WkConditioningCard`, the component calls hooks, then returns early for game days / empty states, then calls `useState` after those returns. That can produce exactly this error when the day state changes.
 
-## Fix
+I also found the same hook-order risk in `WkLiftsCard`: it returns early for game day before later hooks are called.
 
-Respect `planHidden` before the skeleton branch, so a hidden user stays hidden through loading and remounts.
+**Fix plan**
 
-### Edit — `src/components/GamePlanCard.tsx`
+1. **Repair hook order in Hammers Today cards**
+   - Move all hooks in `WkConditioningCard` above any `return null` or early return.
+   - Move all hooks in `WkLiftsCard` above the game-day return branch.
+   - Keep the current UI behavior unchanged: conditioning can still hide on game days; lifts can still show the paused game-day card.
 
-Move the `if (planHidden) { return <compact hidden card/> }` block above the `if (loading && tasks.length === 0)` skeleton block (around lines 1780–1853). The compact hidden card doesn't depend on `tasks`, so it's safe to render before data loads.
+2. **Audit sibling workout cards for the same crash class**
+   - Check Speed, Bat Speed, Pitching, Warmup, Arm Care, Recovery, and any Hammers Today subcard for hooks after conditional returns.
+   - Fix any identical pattern found in the same pass.
 
-That single reordering makes Hide sticky across:
-- initial page load / hard refresh
-- Dashboard remounts
-- background refetches that transiently empty `tasks`
+3. **Add a regression guard**
+   - Add/extend a small test or static guard around Hammers Today card rendering so game-day / non-game-day transitions do not trigger hook-order crashes.
+   - Prefer targeted component-level coverage over a broad app rewrite.
 
-### Optional hardening (same file, same edit pass)
+4. **Verify the fix**
+   - Run targeted tests for Hammers Today card rendering.
+   - Use the live preview with a game-day-like state if possible to confirm the section renders instead of showing the ErrorBoundary fallback.
 
-- Scope the storage key to the current user id (`gamePlan.hidden.v1:<user.id>`) so switching accounts on the same device doesn't inherit the other user's hidden state. Uses `useAuth().user?.id` which is already imported in this file.
+**Expected result**
 
-No other files, no backend, no business-logic changes.
+Users should no longer see the “Something went wrong here… Minified React error #300” message on the Hammers Today Plan when the conditioning/lifts sections appear, disappear, or switch to game-day behavior.
