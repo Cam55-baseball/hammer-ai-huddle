@@ -29,6 +29,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Lock as LockIcon } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -221,12 +225,55 @@ function scheduleLine(sched: ReturnType<typeof useScheduleWindow>): string | nul
  * useWkDailyPrescriptions directly.
  */
 export function HammerDailyPlan() {
+  const { modules, loading, initialized } = useSubscription();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const navigate = useNavigate();
+
+  const gateResolved = initialized && !loading && !ownerLoading;
+  const hasAccess = isOwner || modules.length > 0;
+
+  if (!gateResolved) {
+    return (
+      <Card id="hammer-plan" className="scroll-mt-24">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Coach Hammer · today's plan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-24 w-full rounded" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <Card id="hammer-plan" className="scroll-mt-24 border-dashed">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <LockIcon className="h-4 w-4 text-muted-foreground" />
+            Coach Hammer · today's plan
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Your daily plan unlocks with an active Hammers Modality subscription. Pick a module to
+            start receiving prescribed work every day.
+          </p>
+          <Button size="sm" onClick={() => navigate("/pricing")}>
+            View plans
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <HammersTodayProvider>
       <HammerDailyPlanBody />
     </HammersTodayProvider>
   );
 }
+
 
 function HammerDailyPlanBody() {
   const ctx = useHammerAthleteContext();
