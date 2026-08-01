@@ -6,7 +6,7 @@ const corsHeaders = {
    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
 // ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
 // These keywords in feedback text indicate violations - used to override AI's violation flags
@@ -1109,8 +1109,8 @@ serve(async (req) => {
     
     console.log('Analyzing real-time playback:', { videoId, module, sport, language, frameCount: frames.length });
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
     const languageMap: Record<string, string> = {

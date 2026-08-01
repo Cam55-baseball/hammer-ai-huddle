@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -320,7 +320,7 @@ serve(async (req) => {
     // Active-block guard removed — RPC is the single source of truth for CREATE vs ADAPT.
     console.log("MODE:", force_new ? "ADAPT" : "CREATE");
 
-    if (!LOVABLE_API_KEY && !GOOGLE_AI_API_KEY) throw new Error("No AI credentials configured");
+    if (!OPENAI_API_KEY && !GOOGLE_AI_API_KEY) throw new Error("No AI credentials configured");
 
     // ─── Resolve schedule: season-aware + calendar-conflict-aware ───
     const planStart = new Date();

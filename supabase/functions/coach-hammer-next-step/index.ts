@@ -118,7 +118,7 @@ serve(async (req) => {
       });
     }
 
-    if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("LOVABLE_API_KEY")) {
+    if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("OPENAI_API_KEY")) {
       return new Response(
         JSON.stringify({ error: "AI credentials not configured" }),
         {

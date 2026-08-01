@@ -1244,7 +1244,7 @@ serve(async (req) => {
 
 
     // ========== ELITE AI PROMPT ==========
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
     
     let aiContent: any = {
       executive_summary: `You completed ${totalWorkouts} program workouts and ${combinedStrengthSessions} custom strength sessions over the past 6 weeks${combinedVolumeLbs > 0 ? `, with a combined volume of ${combinedVolumeLbs.toLocaleString()} lbs` : ''}.`,
@@ -1282,7 +1282,7 @@ serve(async (req) => {
     // UPDATED: Include custom activities as valid training data for AI analysis
     const hasTrainingData = totalWorkouts > 0 || totalCustomActivities > 0 || (quizzes?.length || 0) > 0;
     
-    if (LOVABLE_API_KEY && hasTrainingData) {
+    if (OPENAI_API_KEY && hasTrainingData) {
       try {
         // Dynamic context prefix for recovery phase athletes
         const recoveryContext = isRecoveryPhase ? `

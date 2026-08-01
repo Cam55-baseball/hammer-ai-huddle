@@ -44,7 +44,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const LOVABLE = Deno.env.get("LOVABLE_API_KEY");
+    const OPENAI = Deno.env.get("OPENAI_API_KEY");
     const GOOGLE = Deno.env.get("GOOGLE_AI_API_KEY");
     if (!LOVABLE && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 

@@ -79,8 +79,8 @@ Deno.serve(async (req) => {
       if (vocab[t.layer]) vocab[t.layer].push(t.key);
     });
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not set');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set');
 
     const systemPrompt = `You are an elite baseball/softball biomechanics tagger. Analyze a video's title, the coach's freeform notes, and any formula linkage notes, then propose structured tags using ONLY the provided vocabulary keys. Be conservative — only propose a tag if explicitly supported by the coach's narrative.`;
 
