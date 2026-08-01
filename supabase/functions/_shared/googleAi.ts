@@ -427,14 +427,14 @@ async function callOpenAI(
 //   ...
 //   data: [DONE]\n\n
 // Google is tried first (streamGenerateContent, SSE mode). If Google fails
-// before any bytes are emitted, we fall back to Lovable Gateway's OpenAI
-// streaming endpoint and pass its stream body through unchanged.
+// before any bytes are emitted, we fall back to OpenAI's streaming endpoint
+// and pass its stream body through unchanged.
 // -----------------------------------------------------------------------------
 
 export interface StreamChatCompletionResult {
   ok: boolean;
   status: number;
-  provider: "google" | "lovable" | "none";
+  provider: "google" | "openai" | "none";
   body: ReadableStream<Uint8Array> | null;
   errorBody?: string;
 }
@@ -451,19 +451,19 @@ export async function streamChatCompletion(
     const google = await callGoogleStream(req, googleKey, timeoutMs);
     if (google.ok) return google;
     console.warn(
-      `[googleAi] Google stream failed status=${google.status} — ${allowFallback ? "falling back to Lovable Gateway" : "no fallback"}`,
+      `[googleAi] Google stream failed status=${google.status} — ${allowFallback ? "falling back to OpenAI" : "no fallback"}`,
       google.errorBody?.slice(0, 200),
     );
     if (!allowFallback) return google;
   } else {
-    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using Lovable Gateway stream");
+    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using OpenAI stream");
   }
 
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!lovableKey) {
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) {
     return { ok: false, status: 500, provider: "none", body: null, errorBody: "no_ai_credentials" };
   }
-  return await callLovableStream(req, lovableKey, timeoutMs);
+  return await callOpenAIStream(req, openaiKey, timeoutMs);
 }
 
 async function callGoogleStream(
