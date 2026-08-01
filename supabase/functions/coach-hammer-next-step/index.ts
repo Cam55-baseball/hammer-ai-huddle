@@ -311,8 +311,18 @@ serve(async (req) => {
       ctaRoute,
     };
 
-    return new Response(JSON.stringify({ step }), {
+    // Persist so refreshes replay this instead of re-prompting the model.
+    const { error: cacheError } = await supabase
+      .from("coach_hammer_steps")
+      .upsert(
+        { user_id: user.id, plan_date: planDate, snapshot_hash: snapshotHash, step },
+        { onConflict: "user_id,plan_date,snapshot_hash" },
+      );
+    if (cacheError) console.error("coach_hammer_steps cache write failed", cacheError);
+
+    return new Response(JSON.stringify({ step, cached: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+
     });
   } catch (error) {
     console.error("coach-hammer-next-step error:", error);
