@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { validateVideoFile } from "@/data/videoLimits";
 import { Loader2, Upload, Trash2, Link as LinkIcon, Eye, EyeOff } from "lucide-react";
+import { DemoCoverPicker } from "@/components/landing/DemoCoverPicker";
 
 /**
  * Owner-only panel for uploading/replacing/hiding/removing the landing demo video.
