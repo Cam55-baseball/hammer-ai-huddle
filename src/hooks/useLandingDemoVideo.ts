@@ -45,12 +45,14 @@ async function sign(path: string | null): Promise<string | null> {
  * External video URLs (YouTube etc.) are passed through untouched.
  */
 async function resolvePlayableUrl(row: LandingDemoVideo): Promise<LandingDemoVideo> {
+  // The DB columns hold storage paths; keep them so deletes can target the object.
   const poster_path = row.poster_url;
+  const video_path = row.video_type === "upload" ? row.video_url : null;
   const poster_url = await sign(poster_path);
   // Only uploads live in our bucket; external links play as-is.
   const video_url =
     row.video_type === "upload" ? ((await sign(row.video_url)) ?? row.video_url) : row.video_url;
-  return { ...row, video_url, poster_url, poster_path };
+  return { ...row, video_url, video_path, poster_url, poster_path };
 }
 
 export function useLandingDemoVideo(includeHidden = false) {
