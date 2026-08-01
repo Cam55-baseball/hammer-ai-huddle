@@ -8,6 +8,10 @@ export interface LandingDemoVideo {
   video_type: string;
   title: string | null;
   is_visible: boolean;
+  /** Signed URL of the cover image, or null when no cover has been set. */
+  poster_url: string | null;
+  /** Raw storage path of the cover, needed so we can replace/delete the object. */
+  poster_path: string | null;
   updated_at: string;
 }
 
@@ -16,24 +20,35 @@ export interface SaveVideoInput {
   video_type?: string;
   title?: string | null;
   is_visible?: boolean;
+  poster_url?: string | null;
 }
 
 const BUCKET = "landing-demo";
+const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 days
 
-/**
- * Convert a storage path in the private landing-demo bucket into a signed URL
- * that plays for anyone with the link (7 day expiry, refreshed on each page load).
- * External URLs (YouTube etc.) are passed through untouched.
- */
-async function resolvePlayableUrl(row: LandingDemoVideo): Promise<LandingDemoVideo> {
-  if (row.video_type !== "upload") return row;
-  // If we stored a storage path (no scheme), sign it. Legacy full URLs pass through.
-  if (/^https?:\/\//i.test(row.video_url)) return row;
+/** Sign a storage path in the private bucket; pass full URLs through untouched. */
+async function sign(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
   const { data, error } = await supabase.storage
     .from(BUCKET)
-    .createSignedUrl(row.video_url, 60 * 60 * 24 * 7);
-  if (error || !data?.signedUrl) return row;
-  return { ...row, video_url: data.signedUrl };
+    .createSignedUrl(path, SIGNED_URL_TTL);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
+/**
+ * Convert storage paths in the private landing-demo bucket into signed URLs
+ * that load for anyone with the link (7 day expiry, refreshed on each page load).
+ * External video URLs (YouTube etc.) are passed through untouched.
+ */
+async function resolvePlayableUrl(row: LandingDemoVideo): Promise<LandingDemoVideo> {
+  const poster_path = row.poster_url;
+  const poster_url = await sign(poster_path);
+  // Only uploads live in our bucket; external links play as-is.
+  const video_url =
+    row.video_type === "upload" ? ((await sign(row.video_url)) ?? row.video_url) : row.video_url;
+  return { ...row, video_url, poster_url, poster_path };
 }
 
 export function useLandingDemoVideo(includeHidden = false) {
