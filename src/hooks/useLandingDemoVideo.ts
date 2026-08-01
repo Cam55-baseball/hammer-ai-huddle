@@ -98,6 +98,8 @@ export function useLandingDemoVideo(includeHidden = false) {
           video_type,
           title: input.title ?? null,
           is_visible: input.is_visible ?? true,
+          // Only touch the cover when the caller says so; `undefined` leaves it alone.
+          ...(input.poster_url !== undefined ? { poster_url: input.poster_url } : {}),
           updated_by: (await supabase.auth.getUser()).data.user?.id ?? null,
         };
 
