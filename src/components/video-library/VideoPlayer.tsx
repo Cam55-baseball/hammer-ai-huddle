@@ -7,6 +7,8 @@ interface VideoPlayerProps {
   videoUrl: string | null;
   videoType: string;
   title: string;
+  /** Cover image shown before playback so the player isn't a black rectangle. */
+  posterUrl?: string | null;
 }
 
 export function VideoPlayer({ videoUrl, videoType, title }: VideoPlayerProps) {
