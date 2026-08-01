@@ -359,7 +359,21 @@ async function callGoogle(
   }
 }
 
-async function callLovable(
+/**
+ * Callers pass Gemini-style ids ("google/gemini-2.5-flash"). Map them to the
+ * closest OpenAI model so the fallback works without touching call sites.
+ * Ids already prefixed with "openai/" (or bare gpt-* ids) pass through.
+ */
+export function toOpenAIModel(model: string): string {
+  if (model.startsWith("openai/")) return model.slice("openai/".length);
+  if (model.startsWith("gpt-") || model.startsWith("o1") || model.startsWith("o3")) return model;
+  const stripped = model.startsWith("google/") ? model.slice("google/".length) : model;
+  // Pro / heavier reasoning workloads → gpt-4o; everything else → gpt-4o-mini.
+  if (stripped.includes("pro")) return "gpt-4o";
+  return "gpt-4o-mini";
+}
+
+async function callOpenAI(
   req: ChatCompletionRequest,
   apiKey: string,
   timeoutMs: number,
@@ -368,7 +382,7 @@ async function callLovable(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const body: Record<string, unknown> = {
-      model: req.model,
+      model: toOpenAIModel(req.model),
       messages: req.messages,
     };
     if (req.tools) body.tools = req.tools;
@@ -379,7 +393,7 @@ async function callLovable(
     if (typeof req.top_p === "number") body.top_p = req.top_p;
     if (typeof req.seed === "number") body.seed = req.seed;
 
-    const resp = await fetch(LOVABLE_URL, {
+    const resp = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -390,15 +404,15 @@ async function callLovable(
     });
     if (!resp.ok) {
       const errorBody = await resp.text().catch(() => "");
-      return { ok: false, status: resp.status, provider: "lovable", data: { choices: [] }, errorBody };
+      return { ok: false, status: resp.status, provider: "openai", data: { choices: [] }, errorBody };
     }
     const json = await resp.json();
-    return { ok: true, status: 200, provider: "lovable", data: json };
+    return { ok: true, status: 200, provider: "openai", data: json };
   } catch (err) {
     return {
       ok: false,
       status: 599,
-      provider: "lovable",
+      provider: "openai",
       data: { choices: [] },
       errorBody: err instanceof Error ? err.message : String(err),
     };
