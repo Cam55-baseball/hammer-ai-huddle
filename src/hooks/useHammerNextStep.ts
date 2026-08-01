@@ -111,8 +111,17 @@ function deriveModuleHintFromRoute(route: string): string {
   return "general";
 }
 
-export function useHammerNextStep(): HammerNextStep {
-  const ai = useCoachHammerNextStep();
+/**
+ * @param options.aiEnabled — opt in to the AI-derived step. Defaults to false:
+ * background surfaces (chat context, card actions) use the deterministic
+ * heuristic so merely mounting a dashboard never spends an AI call. Only a
+ * surface the athlete has explicitly opened should pass true.
+ */
+export function useHammerNextStep(
+  options?: { aiEnabled?: boolean },
+): HammerNextStep {
+  const aiEnabled = options?.aiEnabled ?? false;
+  const ai = useCoachHammerNextStep({ enabled: aiEnabled });
   const heuristic = useNextAction();
 
   return useMemo(() => {

@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { hashSnapshot } from "../_shared/coachSnapshot.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,45 +33,8 @@ const ALLOWED_ROUTES = [
  *  most recent stored step instead of spending another AI call. */
 const DAILY_GENERATION_CAP = 6;
 
-/** Stable JSON stringify so key order can never bust the cache. */
-function stableStringify(value: unknown): string {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
-  const obj = value as Record<string, unknown>;
-  return `{${
-    Object.keys(obj).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(",")
-  }}`;
-}
-
-/** Round volatile fields so trivial jitter (a minute of staleness, one more
- *  logged session) does not force a fresh generation. */
-function coarsen(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(coarsen);
-  if (value && typeof value === "object") {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      if (k === "staleHours" && typeof v === "number") {
-        // bucket staleness into coarse bands: fresh / today / stale / very stale
-        out[k] = v < 6 ? 0 : v < 24 ? 1 : v < 72 ? 2 : 3;
-      } else if (k === "hour" && typeof v === "number") {
-        // morning / midday / evening / night
-        out[k] = v < 11 ? 0 : v < 16 ? 1 : v < 21 ? 2 : 3;
-      } else {
-        out[k] = coarsen(v);
-      }
-    }
-    return out;
-  }
-  return value;
-}
-
-async function hashSnapshot(snapshot: unknown): Promise<string> {
-  const bytes = new TextEncoder().encode(stableStringify(coarsen(snapshot)));
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+// Coarsening + hashing live in _shared/coachSnapshot.ts and are mirrored by
+// src/lib/hammer/coachSnapshot.ts so the client's query key matches this hash.
 
 
 
@@ -190,7 +154,7 @@ serve(async (req) => {
     // The dashboard mounts on every page load; without this the model would run
     // on every refresh. Same athlete + same day + same coarse snapshot => replay.
     const planDate = new Date().toISOString().slice(0, 10);
-    const snapshotHash = await hashSnapshot(snapshot);
+    const snapshotHash = await hashSnapshot(snapshot, planDate);
 
     const { data: cached } = await supabase
       .from("coach_hammer_steps")

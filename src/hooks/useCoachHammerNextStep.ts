@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { coarseKey } from "@/lib/hammer/coachSnapshot";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useEscalationFeed } from "@/hooks/command/useEscalationFeed";
 import { useDayState } from "@/hooks/useDayState";
@@ -128,12 +129,13 @@ export function useCoachHammerNextStep(options?: { enabled?: boolean }) {
       },
     };
   }, [rows, unackedCount, dayType, mpi]);
-  // Key on the snapshot itself (per day) — no time bucket. The edge function
-  // caches per athlete/day/snapshot, so repeats are DB reads, not AI calls.
+  // Key on the SAME coarse projection the edge function hashes (see
+  // src/lib/hammer/coachSnapshot.ts). Identical coarse state on a later page
+  // load reuses the query cache and never re-invokes the function.
   const hashKey = useMemo(() => {
     if (!snapshot) return null;
     const day = new Date().toISOString().slice(0, 10);
-    return JSON.stringify({ ...snapshot, day });
+    return coarseKey(snapshot, day);
   }, [snapshot]);
 
   const query = useQuery({

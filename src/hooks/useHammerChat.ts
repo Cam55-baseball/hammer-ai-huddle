@@ -42,7 +42,8 @@ export interface HammerChatApi {
 
 export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
   const ctx = useHammerAthleteContext();
-  const nextStep = useHammerNextStep();
+  // Heuristic step only — chat context must never trigger an AI generation.
+  const nextStep = useHammerNextStep({ aiEnabled: false });
   const [messages, setMessages] = useState<HammerChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
