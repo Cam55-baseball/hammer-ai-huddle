@@ -11,7 +11,7 @@ interface VideoPlayerProps {
   posterUrl?: string | null;
 }
 
-export function VideoPlayer({ videoUrl, videoType, title }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlayerProps) {
   const info = useMemo(() => getEmbedInfo(videoUrl), [videoUrl]);
 
   if (!videoUrl) {
