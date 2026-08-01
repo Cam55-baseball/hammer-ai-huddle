@@ -145,10 +145,11 @@ export function useLandingDemoVideo(includeHidden = false) {
     if (!video) return;
     setSaving(true);
     try {
-      // Best-effort: delete storage object if it was an upload with a bucket path
-      if (video.video_type === "upload" && !/^https?:\/\//i.test(video.video_url)) {
-        await supabase.storage.from(BUCKET).remove([video.video_url]);
-      }
+      // Best-effort: delete storage objects (video + cover) if they live in our bucket.
+      const orphans = [video.video_path, video.poster_path].filter(
+        (p): p is string => !!p && !/^https?:\/\//i.test(p),
+      );
+      if (orphans.length) await supabase.storage.from(BUCKET).remove(orphans);
       const { error } = await supabase
         .from("landing_demo_video")
         .delete()
@@ -168,11 +169,78 @@ export function useLandingDemoVideo(includeHidden = false) {
         .from(BUCKET)
         .upload(path, file, { upsert: true, contentType: file.type });
       if (error) throw error;
-      // Store the storage path (not a URL) so we can re-sign on each read
-      await save({ video_url: path, video_type: "upload", title: file.name });
+      // Store the storage path (not a URL) so we can re-sign on each read.
+      // A new video invalidates any cover grabbed from the old one.
+      await save({
+        video_url: path,
+        video_type: "upload",
+        title: file.name,
+        poster_url: null,
+      });
     },
     [save],
   );
 
-  return { video, loading, saving, save, setVisibility, remove, uploadFile, reload: load };
+  /** Save a cover image (frame grab or gallery photo) for the current video. */
+  const uploadPoster = useCallback(
+    async (blob: Blob, ext = "jpg") => {
+      if (!video) return;
+      setSaving(true);
+      try {
+        const path = `poster-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(path, blob, { upsert: true, contentType: blob.type || "image/jpeg" });
+        if (upErr) throw upErr;
+
+        const { error } = await supabase
+          .from("landing_demo_video")
+          .update({ poster_url: path })
+          .eq("id", video.id);
+        if (error) throw error;
+
+        // Best-effort cleanup of the cover we just replaced.
+        const previous = video.poster_path;
+        if (previous && !/^https?:\/\//i.test(previous)) {
+          await supabase.storage.from(BUCKET).remove([previous]);
+        }
+        await load();
+      } finally {
+        setSaving(false);
+      }
+    },
+    [video, load],
+  );
+
+  const clearPoster = useCallback(async () => {
+    if (!video) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("landing_demo_video")
+        .update({ poster_url: null })
+        .eq("id", video.id);
+      if (error) throw error;
+      const previous = video.poster_path;
+      if (previous && !/^https?:\/\//i.test(previous)) {
+        await supabase.storage.from(BUCKET).remove([previous]);
+      }
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }, [video, load]);
+
+  return {
+    video,
+    loading,
+    saving,
+    save,
+    setVisibility,
+    remove,
+    uploadFile,
+    uploadPoster,
+    clearPoster,
+    reload: load,
+  };
 }
