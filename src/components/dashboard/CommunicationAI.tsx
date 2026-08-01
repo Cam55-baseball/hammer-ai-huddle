@@ -160,7 +160,14 @@ export function CommunicationAI({ className }: Props) {
         className,
       )}
     >
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (next) setEverOpened(true);
+        }}
+      >
+
         <CollapsibleTrigger
           className="relative flex items-center justify-between gap-3 w-full text-left bg-transparent border-none p-0 mb-2"
           aria-labelledby="communication-ai-heading"
