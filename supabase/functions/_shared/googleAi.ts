@@ -1,12 +1,12 @@
 /**
  * googleAi.ts — Direct Google AI Studio (Generative Language) client that
  * speaks the OpenAI chat-completions request/response shape used across
- * this project, with a transparent Lovable AI Gateway fallback.
+ * this project, with a transparent OpenAI fallback.
  *
- * Why: we want Google to hold runtime AI spend for Hammers Modality so
- * Lovable credits are used only for building. This helper lets every
- * edge function migrate with a near-drop-in replacement of the raw
- * `fetch("https://ai.gateway.lovable.dev/v1/chat/completions", ...)`
+ * Why: Google holds runtime AI spend for Hammers Modality and OpenAI is the
+ * backup provider, so Lovable credits are used strictly for building. No
+ * runtime path calls the Lovable AI Gateway.
+ * `fetch("https://api.openai.com/v1/chat/completions", ...)`
  * call — same body, same returned shape.
  *
  * Usage:
