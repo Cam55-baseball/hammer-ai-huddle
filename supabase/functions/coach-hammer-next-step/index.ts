@@ -154,7 +154,7 @@ serve(async (req) => {
     // The dashboard mounts on every page load; without this the model would run
     // on every refresh. Same athlete + same day + same coarse snapshot => replay.
     const planDate = new Date().toISOString().slice(0, 10);
-    const snapshotHash = await hashSnapshot(snapshot);
+    const snapshotHash = await hashSnapshot(snapshot, planDate);
 
     const { data: cached } = await supabase
       .from("coach_hammer_steps")
