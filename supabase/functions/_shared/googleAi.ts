@@ -24,7 +24,7 @@
  */
 
 const GOOGLE_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-const LOVABLE_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 // -----------------------------------------------------------------------------
 // Types (loose; we mirror only what the callers use)
