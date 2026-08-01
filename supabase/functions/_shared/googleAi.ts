@@ -66,7 +66,7 @@ export interface ChatCompletionRequest {
 export interface ChatCompletionResult {
   ok: boolean;
   status: number;
-  provider: "google" | "lovable" | "none";
+  provider: "google" | "openai" | "none";
   data: {
     choices: Array<{
       message: {
