@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { coarseKey } from "@/lib/hammer/coachSnapshot";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useEscalationFeed } from "@/hooks/command/useEscalationFeed";
 import { useDayState } from "@/hooks/useDayState";
