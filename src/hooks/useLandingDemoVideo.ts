@@ -5,6 +5,8 @@ import { detectPlatform } from "@/lib/videoEmbed";
 export interface LandingDemoVideo {
   id: string;
   video_url: string;
+  /** Raw storage path of the video, needed so we can delete the object. */
+  video_path: string | null;
   video_type: string;
   title: string | null;
   is_visible: boolean;
