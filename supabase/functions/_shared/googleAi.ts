@@ -502,7 +502,7 @@ async function callGoogleStream(
   }
 }
 
-async function callLovableStream(
+async function callOpenAIStream(
   req: ChatCompletionRequest,
   apiKey: string,
   timeoutMs: number,
@@ -511,7 +511,7 @@ async function callLovableStream(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const body: Record<string, unknown> = {
-      model: req.model,
+      model: toOpenAIModel(req.model),
       messages: req.messages,
       stream: true,
     };
@@ -521,7 +521,7 @@ async function callLovableStream(
     if (typeof req.temperature === "number") body.temperature = req.temperature;
     if (typeof req.max_tokens === "number") body.max_tokens = req.max_tokens;
 
-    const resp = await fetch(LOVABLE_URL, {
+    const resp = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -533,9 +533,9 @@ async function callLovableStream(
     if (!resp.ok || !resp.body) {
       const errorBody = await resp.text().catch(() => "");
       clearTimeout(timer);
-      return { ok: false, status: resp.status, provider: "lovable", body: null, errorBody };
+      return { ok: false, status: resp.status, provider: "openai", body: null, errorBody };
     }
-    // Lovable already emits OpenAI-shaped SSE; pass through.
+    // OpenAI already emits OpenAI-shaped SSE; pass through.
     const passthrough = new ReadableStream<Uint8Array>({
       async start(controller2) {
         const reader = resp.body!.getReader();
@@ -551,13 +551,13 @@ async function callLovableStream(
         }
       },
     });
-    return { ok: true, status: 200, provider: "lovable", body: passthrough };
+    return { ok: true, status: 200, provider: "openai", body: passthrough };
   } catch (err) {
     clearTimeout(timer);
     return {
       ok: false,
       status: 599,
-      provider: "lovable",
+      provider: "openai",
       body: null,
       errorBody: err instanceof Error ? err.message : String(err),
     };
