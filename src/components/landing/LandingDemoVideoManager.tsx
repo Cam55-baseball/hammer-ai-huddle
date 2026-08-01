@@ -16,8 +16,17 @@ import { Loader2, Upload, Trash2, Link as LinkIcon, Eye, EyeOff } from "lucide-r
  */
 export function LandingDemoVideoManager() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
-  const { video, loading, saving, save, setVisibility, remove, uploadFile } =
-    useLandingDemoVideo(true);
+  const {
+    video,
+    loading,
+    saving,
+    save,
+    setVisibility,
+    remove,
+    uploadFile,
+    uploadPoster,
+    clearPoster,
+  } = useLandingDemoVideo(true);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState("");
