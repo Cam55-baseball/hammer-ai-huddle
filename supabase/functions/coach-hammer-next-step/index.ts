@@ -28,6 +28,52 @@ const ALLOWED_ROUTES = [
   "/nutrition-hub",
 ] as const;
 
+/** Max model generations allowed per user per day. Beyond this we replay the
+ *  most recent stored step instead of spending another AI call. */
+const DAILY_GENERATION_CAP = 6;
+
+/** Stable JSON stringify so key order can never bust the cache. */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const obj = value as Record<string, unknown>;
+  return `{${
+    Object.keys(obj).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(",")
+  }}`;
+}
+
+/** Round volatile fields so trivial jitter (a minute of staleness, one more
+ *  logged session) does not force a fresh generation. */
+function coarsen(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(coarsen);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k === "staleHours" && typeof v === "number") {
+        // bucket staleness into coarse bands: fresh / today / stale / very stale
+        out[k] = v < 6 ? 0 : v < 24 ? 1 : v < 72 ? 2 : 3;
+      } else if (k === "hour" && typeof v === "number") {
+        // morning / midday / evening / night
+        out[k] = v < 11 ? 0 : v < 16 ? 1 : v < 21 ? 2 : 3;
+      } else {
+        out[k] = coarsen(v);
+      }
+    }
+    return out;
+  }
+  return value;
+}
+
+async function hashSnapshot(snapshot: unknown): Promise<string> {
+  const bytes = new TextEncoder().encode(stableStringify(coarsen(snapshot)));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+
+
 const ALLOWED_TIERS = [
   "survivability",
   "recovery",
@@ -140,7 +186,54 @@ serve(async (req) => {
       );
     }
 
+    // ---- Cache lookup ------------------------------------------------------
+    // The dashboard mounts on every page load; without this the model would run
+    // on every refresh. Same athlete + same day + same coarse snapshot => replay.
+    const planDate = new Date().toISOString().slice(0, 10);
+    const snapshotHash = await hashSnapshot(snapshot);
+
+    const { data: cached } = await supabase
+      .from("coach_hammer_steps")
+      .select("step")
+      .eq("user_id", user.id)
+      .eq("plan_date", planDate)
+      .eq("snapshot_hash", snapshotHash)
+      .maybeSingle();
+
+    if (cached?.step) {
+      return new Response(JSON.stringify({ step: cached.step, cached: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Daily generation cap — replay the latest stored step rather than burning
+    // another AI call when a user's signals churn all day.
+    const { count } = await supabase
+      .from("coach_hammer_steps")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("plan_date", planDate);
+
+    if ((count ?? 0) >= DAILY_GENERATION_CAP) {
+      const { data: latest } = await supabase
+        .from("coach_hammer_steps")
+        .select("step")
+        .eq("user_id", user.id)
+        .eq("plan_date", planDate)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latest?.step) {
+        return new Response(
+          JSON.stringify({ step: latest.step, cached: true, capped: true }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const prompt = buildPrompt(snapshot);
+
+
 
     const aiResp = await chatCompletion({
       model: "google/gemini-2.5-flash",
@@ -218,8 +311,18 @@ serve(async (req) => {
       ctaRoute,
     };
 
-    return new Response(JSON.stringify({ step }), {
+    // Persist so refreshes replay this instead of re-prompting the model.
+    const { error: cacheError } = await supabase
+      .from("coach_hammer_steps")
+      .upsert(
+        { user_id: user.id, plan_date: planDate, snapshot_hash: snapshotHash, step },
+        { onConflict: "user_id,plan_date,snapshot_hash" },
+      );
+    if (cacheError) console.error("coach_hammer_steps cache write failed", cacheError);
+
+    return new Response(JSON.stringify({ step, cached: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+
     });
   } catch (error) {
     console.error("coach-hammer-next-step error:", error);

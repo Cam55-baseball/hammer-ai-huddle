@@ -2106,6 +2106,33 @@ export type Database = {
           },
         ]
       }
+      coach_hammer_steps: {
+        Row: {
+          created_at: string
+          id: string
+          plan_date: string
+          snapshot_hash: string
+          step: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_date: string
+          snapshot_hash: string
+          step: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_date?: string
+          snapshot_hash?: string
+          step?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_notifications: {
         Row: {
           coach_user_id: string
