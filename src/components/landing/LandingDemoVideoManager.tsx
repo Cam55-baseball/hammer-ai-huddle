@@ -143,13 +143,22 @@ export function LandingDemoVideoManager() {
         </div>
 
         {video && (
+          <DemoCoverPicker
+            video={video}
+            busy={busy}
+            onUploadPoster={uploadPoster}
+            onClearPoster={clearPoster}
+          />
+        )}
+
+        {video && (
           <div className="flex items-center justify-between pt-2 border-t">
             <p className="text-xs text-muted-foreground truncate max-w-[70%]">
               Current: {video.title ?? video.video_type}
             </p>
             <Button variant="ghost" size="sm" onClick={handleRemove} disabled={busy}>
               <Trash2 className="h-4 w-4 mr-1" />
-              Remove
+              Remove video
             </Button>
           </div>
         )}
