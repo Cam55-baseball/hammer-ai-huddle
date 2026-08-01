@@ -60,7 +60,7 @@ export function useLandingDemoVideo(includeHidden = false) {
     setLoading(true);
     let query = supabase
       .from("landing_demo_video")
-      .select("id, video_url, video_type, title, is_visible, updated_at")
+      .select("id, video_url, video_type, title, is_visible, poster_url, updated_at")
       .order("updated_at", { ascending: false })
       .limit(1);
     if (!includeHidden) query = query.eq("is_visible", true);
