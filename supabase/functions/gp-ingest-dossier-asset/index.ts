@@ -66,7 +66,7 @@ serve(async (req) => {
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const OPENAI = Deno.env.get("OPENAI_API_KEY");
     const GOOGLE = Deno.env.get("GOOGLE_AI_API_KEY");
-    if (!LOVABLE && !GOOGLE) return json({ error: "AI service not configured" }, 500);
+    if (!OPENAI && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, ANON, { global: { headers: { Authorization: auth } } });

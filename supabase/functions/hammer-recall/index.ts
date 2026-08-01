@@ -270,8 +270,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableKey = Deno.env.get("OPENAI_API_KEY");
-    if (!lovableKey) throw new Error("OPENAI_API_KEY not configured");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) throw new Error("OPENAI_API_KEY not configured");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
             .join("\n");
 
     // LLM
-    const answer = await askLLM(lovableKey, history, contextBlock);
+    const answer = await askLLM(openaiKey, history, contextBlock);
 
     // Persist user + assistant messages
     await admin.from("recall_messages").insert([
