@@ -184,7 +184,7 @@ async function aiRefine(
   athleteProfile: AthleteProfile,
   readinessScore: number,
 ): Promise<PrescriptionResult[]> {
-  if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("LOVABLE_API_KEY")) {
+  if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("OPENAI_API_KEY")) {
     return deterministicResults;
   }
 

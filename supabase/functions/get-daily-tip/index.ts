@@ -272,9 +272,9 @@ serve(async (req) => {
 
       const excludedTips = recentTips?.map(t => t.tip_text).join('\n- ') || '';
 
-      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-      if (!LOVABLE_API_KEY) {
-        console.error('LOVABLE_API_KEY not configured');
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      if (!OPENAI_API_KEY) {
+        console.error('OPENAI_API_KEY not configured');
         const { data: fallbackTip } = await serviceClient
           .from('nutrition_daily_tips')
           .select('id, category, tip_text, sport, is_ai_generated, details')

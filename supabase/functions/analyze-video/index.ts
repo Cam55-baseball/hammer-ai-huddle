@@ -1666,11 +1666,11 @@ Deno.serve(async (req) => {
     console.log(`[ANALYZE-VIDEO] Landing frame index: ${landingFrameIndex ?? 'auto-detect'}`);
     console.log(`[ANALYZE-VIDEO] frameExtractions: ${frameExtractions?.length ?? 0}`);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!LOVABLE_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!OPENAI_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Missing required environment variables");
     }
 

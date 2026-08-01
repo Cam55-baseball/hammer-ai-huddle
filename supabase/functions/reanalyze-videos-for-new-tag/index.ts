@@ -140,8 +140,8 @@ Deno.serve(async (req) => {
       .eq('status', 'pending');
     const pendingSet = new Set((pendingForTag || []).map((r: any) => r.video_id));
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not set');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set');
 
     const layerDescriptions: Record<string, string> = {
       movement_pattern: 'What the body is doing — a mechanical/biomechanical pattern (e.g. early extension, hands forward).',

@@ -1163,8 +1163,8 @@ async function generateSmartWeekPlan(
   developmentStatus: string,
   sessionCount: number,
 ): Promise<any[]> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
-  if (!LOVABLE_API_KEY) {
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? Deno.env.get("GOOGLE_AI_API_KEY");
+  if (!OPENAI_API_KEY) {
     return buildFallbackWeekPlan(weaknesses, readinessScore);
   }
 

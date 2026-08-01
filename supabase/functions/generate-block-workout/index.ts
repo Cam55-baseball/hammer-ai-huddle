@@ -28,7 +28,7 @@ interface GeneratedExercise {
   coaching_cues?: string[];
 }
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
 
 const BLOCK_DESCRIPTIONS: Record<string, string> = {
@@ -154,7 +154,7 @@ serve(async (req) => {
       sport?: string;
     };
 
-    if (!LOVABLE_API_KEY && !GOOGLE_AI_API_KEY) {
+    if (!OPENAI_API_KEY && !GOOGLE_AI_API_KEY) {
       throw new Error("No AI credentials configured");
     }
 

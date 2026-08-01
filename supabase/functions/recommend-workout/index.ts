@@ -67,7 +67,7 @@ interface RecoveryWarning {
 }
 
 const HAS_AI_CREDENTIALS = Boolean(
-  Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("LOVABLE_API_KEY"),
+  Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("OPENAI_API_KEY"),
 );
 
 function extractExercisesFromTemplate(exercisesField: any): any[] {
@@ -205,7 +205,7 @@ serve(async (req) => {
     };
 
     if (!HAS_AI_CREDENTIALS) {
-      throw new Error("No AI credentials configured (GOOGLE_AI_API_KEY or LOVABLE_API_KEY)");
+      throw new Error("No AI credentials configured (GOOGLE_AI_API_KEY or OPENAI_API_KEY)");
     }
 
     const recoveryWarning = analyzeRecoveryStatus(recoveryContext);

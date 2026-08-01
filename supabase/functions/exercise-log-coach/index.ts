@@ -1,7 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+import { chatCompletion } from "../_shared/googleAi.ts";
 
 interface Body {
   movementName?: string;
@@ -15,12 +13,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "missing LOVABLE_API_KEY" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
     const body: Body = await req.json().catch(() => ({}));
     const roundsText = (body.rounds ?? [])
       .map((r, i) => `#${i + 1} ${Object.entries(r).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join(" ")}`)
@@ -36,36 +28,30 @@ Deno.serve(async (req) => {
       .filter(Boolean)
       .join("\n");
 
-    const res = await fetch(GATEWAY, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": LOVABLE_API_KEY,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3.6-flash",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are Hammer, an elite S&C coach. Read the athlete's set and note. Reply in ONE short, warm, actionable sentence (max ~25 words). No preamble, no lists, no emojis. If they crushed it, celebrate briefly and suggest a next-step. If they struggled, normalize it and give one cue.",
-          },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.5,
-        max_tokens: 90,
-      }),
+    const res = await chatCompletion({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are Hammer, an elite S&C coach. Read the athlete's set and note. Reply in ONE short, warm, actionable sentence (max ~25 words). No preamble, no lists, no emojis. If they crushed it, celebrate briefly and suggest a next-step. If they struggled, normalize it and give one cue.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.5,
+      max_tokens: 400,
     });
 
     if (!res.ok) {
-      const t = await res.text();
-      return new Response(JSON.stringify({ error: "gateway", status: res.status, details: t }), {
-        status: res.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "ai_provider", status: res.status, details: res.errorBody ?? null }),
+        {
+          status: res.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
-    const j = await res.json();
-    const readback: string | null = j?.choices?.[0]?.message?.content?.trim() ?? null;
+    const readback: string | null = res.data?.choices?.[0]?.message?.content?.trim() ?? null;
     return new Response(JSON.stringify({ readback }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

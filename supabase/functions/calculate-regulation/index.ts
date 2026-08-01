@@ -205,11 +205,11 @@ serve(async (req) => {
     const regulationColor = regulationScore >= 72 ? "green" : regulationScore >= 50 ? "yellow" : "red";
 
     // --- Generate AI nightly report ---
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     let reportHeadline = "";
     let reportSections: Record<string, any> = {};
 
-    if (LOVABLE_API_KEY) {
+    if (OPENAI_API_KEY) {
       try {
         // Build athlete bio context from physio profile
         const bioLines: string[] = [];

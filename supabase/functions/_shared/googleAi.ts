@@ -1,12 +1,12 @@
 /**
  * googleAi.ts — Direct Google AI Studio (Generative Language) client that
  * speaks the OpenAI chat-completions request/response shape used across
- * this project, with a transparent Lovable AI Gateway fallback.
+ * this project, with a transparent OpenAI fallback.
  *
- * Why: we want Google to hold runtime AI spend for Hammers Modality so
- * Lovable credits are used only for building. This helper lets every
- * edge function migrate with a near-drop-in replacement of the raw
- * `fetch("https://ai.gateway.lovable.dev/v1/chat/completions", ...)`
+ * Why: Google holds runtime AI spend for Hammers Modality and OpenAI is the
+ * backup provider, so Lovable credits are used strictly for building. No
+ * runtime path calls the Lovable AI Gateway.
+ * `fetch("https://api.openai.com/v1/chat/completions", ...)`
  * call — same body, same returned shape.
  *
  * Usage:
@@ -24,7 +24,7 @@
  */
 
 const GOOGLE_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-const LOVABLE_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 // -----------------------------------------------------------------------------
 // Types (loose; we mirror only what the callers use)
@@ -66,7 +66,7 @@ export interface ChatCompletionRequest {
 export interface ChatCompletionResult {
   ok: boolean;
   status: number;
-  provider: "google" | "lovable" | "none";
+  provider: "google" | "openai" | "none";
   data: {
     choices: Array<{
       message: {
@@ -302,16 +302,16 @@ export async function chatCompletion(
     const google = await callGoogle(req, googleKey, timeoutMs);
     if (google.ok) return google;
     console.warn(
-      `[googleAi] Google call failed status=${google.status} — ${allowFallback ? "falling back to Lovable Gateway" : "no fallback"}`,
+      `[googleAi] Google call failed status=${google.status} — ${allowFallback ? "falling back to OpenAI" : "no fallback"}`,
       google.errorBody?.slice(0, 200),
     );
     if (!allowFallback) return google;
   } else {
-    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using Lovable Gateway");
+    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using OpenAI");
   }
 
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!lovableKey) {
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) {
     return {
       ok: false,
       status: 500,
@@ -320,7 +320,7 @@ export async function chatCompletion(
       errorBody: "no_ai_credentials",
     };
   }
-  return await callLovable(req, lovableKey, timeoutMs);
+  return await callOpenAI(req, openaiKey, timeoutMs);
 }
 
 async function callGoogle(
@@ -359,7 +359,21 @@ async function callGoogle(
   }
 }
 
-async function callLovable(
+/**
+ * Callers pass Gemini-style ids ("google/gemini-2.5-flash"). Map them to the
+ * closest OpenAI model so the fallback works without touching call sites.
+ * Ids already prefixed with "openai/" (or bare gpt-* ids) pass through.
+ */
+export function toOpenAIModel(model: string): string {
+  if (model.startsWith("openai/")) return model.slice("openai/".length);
+  if (model.startsWith("gpt-") || model.startsWith("o1") || model.startsWith("o3")) return model;
+  const stripped = model.startsWith("google/") ? model.slice("google/".length) : model;
+  // Pro / heavier reasoning workloads → gpt-4o; everything else → gpt-4o-mini.
+  if (stripped.includes("pro")) return "gpt-4o";
+  return "gpt-4o-mini";
+}
+
+async function callOpenAI(
   req: ChatCompletionRequest,
   apiKey: string,
   timeoutMs: number,
@@ -368,7 +382,7 @@ async function callLovable(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const body: Record<string, unknown> = {
-      model: req.model,
+      model: toOpenAIModel(req.model),
       messages: req.messages,
     };
     if (req.tools) body.tools = req.tools;
@@ -379,7 +393,7 @@ async function callLovable(
     if (typeof req.top_p === "number") body.top_p = req.top_p;
     if (typeof req.seed === "number") body.seed = req.seed;
 
-    const resp = await fetch(LOVABLE_URL, {
+    const resp = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -390,15 +404,15 @@ async function callLovable(
     });
     if (!resp.ok) {
       const errorBody = await resp.text().catch(() => "");
-      return { ok: false, status: resp.status, provider: "lovable", data: { choices: [] }, errorBody };
+      return { ok: false, status: resp.status, provider: "openai", data: { choices: [] }, errorBody };
     }
     const json = await resp.json();
-    return { ok: true, status: 200, provider: "lovable", data: json };
+    return { ok: true, status: 200, provider: "openai", data: json };
   } catch (err) {
     return {
       ok: false,
       status: 599,
-      provider: "lovable",
+      provider: "openai",
       data: { choices: [] },
       errorBody: err instanceof Error ? err.message : String(err),
     };
@@ -413,14 +427,14 @@ async function callLovable(
 //   ...
 //   data: [DONE]\n\n
 // Google is tried first (streamGenerateContent, SSE mode). If Google fails
-// before any bytes are emitted, we fall back to Lovable Gateway's OpenAI
-// streaming endpoint and pass its stream body through unchanged.
+// before any bytes are emitted, we fall back to OpenAI's streaming endpoint
+// and pass its stream body through unchanged.
 // -----------------------------------------------------------------------------
 
 export interface StreamChatCompletionResult {
   ok: boolean;
   status: number;
-  provider: "google" | "lovable" | "none";
+  provider: "google" | "openai" | "none";
   body: ReadableStream<Uint8Array> | null;
   errorBody?: string;
 }
@@ -437,19 +451,19 @@ export async function streamChatCompletion(
     const google = await callGoogleStream(req, googleKey, timeoutMs);
     if (google.ok) return google;
     console.warn(
-      `[googleAi] Google stream failed status=${google.status} — ${allowFallback ? "falling back to Lovable Gateway" : "no fallback"}`,
+      `[googleAi] Google stream failed status=${google.status} — ${allowFallback ? "falling back to OpenAI" : "no fallback"}`,
       google.errorBody?.slice(0, 200),
     );
     if (!allowFallback) return google;
   } else {
-    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using Lovable Gateway stream");
+    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using OpenAI stream");
   }
 
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!lovableKey) {
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) {
     return { ok: false, status: 500, provider: "none", body: null, errorBody: "no_ai_credentials" };
   }
-  return await callLovableStream(req, lovableKey, timeoutMs);
+  return await callOpenAIStream(req, openaiKey, timeoutMs);
 }
 
 async function callGoogleStream(
@@ -488,7 +502,7 @@ async function callGoogleStream(
   }
 }
 
-async function callLovableStream(
+async function callOpenAIStream(
   req: ChatCompletionRequest,
   apiKey: string,
   timeoutMs: number,
@@ -497,7 +511,7 @@ async function callLovableStream(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const body: Record<string, unknown> = {
-      model: req.model,
+      model: toOpenAIModel(req.model),
       messages: req.messages,
       stream: true,
     };
@@ -507,7 +521,7 @@ async function callLovableStream(
     if (typeof req.temperature === "number") body.temperature = req.temperature;
     if (typeof req.max_tokens === "number") body.max_tokens = req.max_tokens;
 
-    const resp = await fetch(LOVABLE_URL, {
+    const resp = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -519,9 +533,9 @@ async function callLovableStream(
     if (!resp.ok || !resp.body) {
       const errorBody = await resp.text().catch(() => "");
       clearTimeout(timer);
-      return { ok: false, status: resp.status, provider: "lovable", body: null, errorBody };
+      return { ok: false, status: resp.status, provider: "openai", body: null, errorBody };
     }
-    // Lovable already emits OpenAI-shaped SSE; pass through.
+    // OpenAI already emits OpenAI-shaped SSE; pass through.
     const passthrough = new ReadableStream<Uint8Array>({
       async start(controller2) {
         const reader = resp.body!.getReader();
@@ -537,13 +551,13 @@ async function callLovableStream(
         }
       },
     });
-    return { ok: true, status: 200, provider: "lovable", body: passthrough };
+    return { ok: true, status: 200, provider: "openai", body: passthrough };
   } catch (err) {
     clearTimeout(timer);
     return {
       ok: false,
       status: 599,
-      provider: "lovable",
+      provider: "openai",
       body: null,
       errorBody: err instanceof Error ? err.message : String(err),
     };
