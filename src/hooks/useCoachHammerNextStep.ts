@@ -53,7 +53,9 @@ function staleHoursOf(ev: AsbEventRow | null): number | null {
   return Math.round((Date.now() - t) / 3_600_000);
 }
 
-export function useCoachHammerNextStep() {
+export function useCoachHammerNextStep(options?: { enabled?: boolean }) {
+  const enabledOpt = options?.enabled ?? true;
+
   const { user } = useAuth();
   const { data: rows, isLoading: rowsLoading } = useAthleteCommandRows({
     days: 30,
