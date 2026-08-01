@@ -186,7 +186,54 @@ serve(async (req) => {
       );
     }
 
+    // ---- Cache lookup ------------------------------------------------------
+    // The dashboard mounts on every page load; without this the model would run
+    // on every refresh. Same athlete + same day + same coarse snapshot => replay.
+    const planDate = new Date().toISOString().slice(0, 10);
+    const snapshotHash = await hashSnapshot(snapshot);
+
+    const { data: cached } = await supabase
+      .from("coach_hammer_steps")
+      .select("step")
+      .eq("user_id", user.id)
+      .eq("plan_date", planDate)
+      .eq("snapshot_hash", snapshotHash)
+      .maybeSingle();
+
+    if (cached?.step) {
+      return new Response(JSON.stringify({ step: cached.step, cached: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Daily generation cap — replay the latest stored step rather than burning
+    // another AI call when a user's signals churn all day.
+    const { count } = await supabase
+      .from("coach_hammer_steps")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("plan_date", planDate);
+
+    if ((count ?? 0) >= DAILY_GENERATION_CAP) {
+      const { data: latest } = await supabase
+        .from("coach_hammer_steps")
+        .select("step")
+        .eq("user_id", user.id)
+        .eq("plan_date", planDate)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latest?.step) {
+        return new Response(
+          JSON.stringify({ step: latest.step, cached: true, capped: true }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const prompt = buildPrompt(snapshot);
+
+
 
     const aiResp = await chatCompletion({
       model: "google/gemini-2.5-flash",
