@@ -302,16 +302,16 @@ export async function chatCompletion(
     const google = await callGoogle(req, googleKey, timeoutMs);
     if (google.ok) return google;
     console.warn(
-      `[googleAi] Google call failed status=${google.status} — ${allowFallback ? "falling back to Lovable Gateway" : "no fallback"}`,
+      `[googleAi] Google call failed status=${google.status} — ${allowFallback ? "falling back to OpenAI" : "no fallback"}`,
       google.errorBody?.slice(0, 200),
     );
     if (!allowFallback) return google;
   } else {
-    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using Lovable Gateway");
+    console.warn("[googleAi] GOOGLE_AI_API_KEY missing — using OpenAI");
   }
 
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!lovableKey) {
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!openaiKey) {
     return {
       ok: false,
       status: 500,
@@ -320,7 +320,7 @@ export async function chatCompletion(
       errorBody: "no_ai_credentials",
     };
   }
-  return await callLovable(req, lovableKey, timeoutMs);
+  return await callOpenAI(req, openaiKey, timeoutMs);
 }
 
 async function callGoogle(
