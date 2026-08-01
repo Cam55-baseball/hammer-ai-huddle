@@ -6747,6 +6747,7 @@ export type Database = {
           created_at: string
           id: string
           is_visible: boolean
+          poster_url: string | null
           title: string | null
           updated_at: string
           updated_by: string | null
@@ -6757,6 +6758,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_visible?: boolean
+          poster_url?: string | null
           title?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -6767,6 +6769,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_visible?: boolean
+          poster_url?: string | null
           title?: string | null
           updated_at?: string
           updated_by?: string | null

@@ -1,0 +1,1 @@
+ALTER TABLE public.landing_demo_video ADD COLUMN IF NOT EXISTS poster_url text;

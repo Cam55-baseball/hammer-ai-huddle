@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { validateVideoFile } from "@/data/videoLimits";
 import { Loader2, Upload, Trash2, Link as LinkIcon, Eye, EyeOff } from "lucide-react";
+import { DemoCoverPicker } from "@/components/landing/DemoCoverPicker";
 
 /**
  * Owner-only panel for uploading/replacing/hiding/removing the landing demo video.
@@ -16,8 +17,17 @@ import { Loader2, Upload, Trash2, Link as LinkIcon, Eye, EyeOff } from "lucide-r
  */
 export function LandingDemoVideoManager() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
-  const { video, loading, saving, save, setVisibility, remove, uploadFile } =
-    useLandingDemoVideo(true);
+  const {
+    video,
+    loading,
+    saving,
+    save,
+    setVisibility,
+    remove,
+    uploadFile,
+    uploadPoster,
+    clearPoster,
+  } = useLandingDemoVideo(true);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState("");
@@ -133,13 +143,22 @@ export function LandingDemoVideoManager() {
         </div>
 
         {video && (
+          <DemoCoverPicker
+            video={video}
+            busy={busy}
+            onUploadPoster={uploadPoster}
+            onClearPoster={clearPoster}
+          />
+        )}
+
+        {video && (
           <div className="flex items-center justify-between pt-2 border-t">
             <p className="text-xs text-muted-foreground truncate max-w-[70%]">
               Current: {video.title ?? video.video_type}
             </p>
             <Button variant="ghost" size="sm" onClick={handleRemove} disabled={busy}>
               <Trash2 className="h-4 w-4 mr-1" />
-              Remove
+              Remove video
             </Button>
           </div>
         )}

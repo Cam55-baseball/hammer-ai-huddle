@@ -7,9 +7,11 @@ interface VideoPlayerProps {
   videoUrl: string | null;
   videoType: string;
   title: string;
+  /** Cover image shown before playback so the player isn't a black rectangle. */
+  posterUrl?: string | null;
 }
 
-export function VideoPlayer({ videoUrl, videoType, title }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlayerProps) {
   const info = useMemo(() => getEmbedInfo(videoUrl), [videoUrl]);
 
   if (!videoUrl) {
@@ -70,9 +72,11 @@ export function VideoPlayer({ videoUrl, videoType, title }: VideoPlayerProps) {
       <div className="aspect-video rounded-lg overflow-hidden bg-black">
         <video
           src={videoUrl}
+          poster={posterUrl ?? undefined}
           controls
-          className="w-full h-full"
-          preload="metadata"
+          className="w-full h-full object-contain"
+          // With a cover set we don't need to pull frames just to fill the box.
+          preload={posterUrl ? "none" : "metadata"}
         >
           Your browser does not support the video tag.
         </video>

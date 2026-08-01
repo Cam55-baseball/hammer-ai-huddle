@@ -23,6 +23,7 @@ export function LandingDemoVideo() {
         <VideoPlayer
           videoUrl={video.video_url}
           videoType={video.video_type}
+          posterUrl={video.poster_url}
           title={video.title ?? "Hammers Modality demo"}
         />
       </div>
