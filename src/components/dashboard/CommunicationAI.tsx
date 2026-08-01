@@ -100,11 +100,15 @@ export function CommunicationAI({ className }: Props) {
     limit: 500,
   });
   const { unackedCount } = useEscalationFeed({ withinHours: 72 });
-  const { step: aiStep, isLoading: aiLoading, error } =
-    useCoachHammerNextStep();
   const [open, setOpen] = useState(false);
+  // Only request the coached step once the athlete actually expands the card —
+  // a collapsed card must never trigger an AI call.
+  const [everOpened, setEverOpened] = useState(false);
+  const { step: aiStep, isLoading: aiLoading, error } =
+    useCoachHammerNextStep({ enabled: everOpened });
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [intakeOpen, setIntakeOpen] = useState(false);
+
   const lifestyleStale = useMemo(() => {
     const l = readHpiLifestyle();
     if (!l) return true;
