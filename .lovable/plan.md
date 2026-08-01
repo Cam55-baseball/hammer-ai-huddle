@@ -1,40 +1,40 @@
-## Audit findings
+## Goal
 
-I read the edge function, the hook, both call sites, and queried the cache table.
+The landing page demo video currently renders as a black box until someone hits play — `VideoPlayer` renders a bare `<video>` with no poster, and the `landing_demo_video` table has no cover-image field. Give the owner two ways to set a cover image, and show it before playback.
 
-**1. The server-side hash is mostly stable, but not fully.**
-`hashSnapshot` sorts keys and coarsens `hour` (4 bands) and `staleHours` (4 bands) before hashing — good. However these fields still enter the hash raw and change during a normal day:
-- `mpi.score` (a numeric adjusted score)
-- `recentActivity.sessionsLast7Days` / `checkInsLast7Days`
-- `escalationCount`
-- readiness/fatigue/soreness/sleep/stress scores (expected — but every new check-in legitimately regenerates)
+## What the owner gets
 
-Each change produces a new hash → a new AI generation, up to the 6/day cap.
+In the owner-only "Manage landing demo video" panel, a new **Cover image** section appears once a video exists:
 
-**2. The "only run when the card is expanded" gate is bypassed.**
-`CommunicationAI.tsx:108` correctly passes `{ enabled: everOpened }`. But there is a **second, ungated call site**:
+1. **Pick a frame from the video** — a scrubber under a preview of the uploaded video. The owner drags to the moment they want and taps "Use this frame". The frame is captured and saved as the cover.
+2. **Upload a cover image** — a "Choose photo" button that opens the phone's camera roll / gallery (or the file picker on desktop).
+3. **Current cover thumbnail** with a "Remove cover" option.
 
-```
-HammerDailyPlan.tsx:1132 → useHammerChat → useHammerNextStep:115 → useCoachHammerNextStep()   // no enabled option
-```
+Frame-picking is only offered for videos uploaded to our storage (browsers can't read frames out of a YouTube/Vimeo embed). For link-based videos, only the photo upload is offered — and YouTube/Vimeo already show their own thumbnail, so those aren't black anyway.
 
-`HammerDailyPlan` mounts on the Today plan, so the hook runs on every load regardless of whether the collapsible was expanded. This is the main reason AI is still being called.
+## What visitors get
 
-**3. The client React Query key is built from the RAW snapshot, not the coarsened one.**
-`hashKey` in `useCoachHammerNextStep.ts` stringifies the full snapshot including raw `hour` and raw `staleHours`. So the key changes at least every hour → new cache entry → new edge invocation on every hour tick, even when the server hash is unchanged. Those are wasted function calls (DB reads, not always AI), plus any band crossing does become a real AI call.
+The demo video on the welcome page shows the cover image immediately, with a play control over it, instead of a black rectangle. If no cover has been set, behavior is unchanged.
 
-**4. The cache table is empty.**
-`select ... from coach_hammer_steps` returns zero rows across all users/dates, and the function's recent logs show only boot/shutdown — no successful invocation. So the cache has never demonstrably written. Whether this is because the write is failing or simply because no request has completed since deployment is **not yet confirmed** — verifying it is step 1 below.
+## Technical details
 
-## Plan
+**Database** — one migration adding to `public.landing_demo_video`:
+- `poster_url text` (nullable) — stores a storage path in the existing private `landing-demo` bucket, mirroring how `video_url` is stored for uploads. Existing RLS policies and grants already cover the column; no policy changes needed.
 
-1. **Confirm the cache write path.** Invoke the function with a test snapshot, then re-query `coach_hammer_steps` for the row and check the function logs for `coach_hammer_steps cache write failed`. Fix grants/insert if it errors. Do not change anything else until this is proven working.
-2. **Close the ungated call site.** Give `useHammerNextStep` an `enabled` option, default `false` for AI, and have `useHammerChat`/`HammerDailyPlan` rely on the deterministic heuristic step unless the user actually opens Coach Hammer. Only `CommunicationAI` (expanded) opts into the AI path.
-3. **Make the client key match the server hash.** Extract the `coarsen` + `stableStringify` logic into a shared module used by both the hook and the edge function, so the React Query key is the coarse hash + day. Identical coarse state on a later page load then never re-invokes the function at all.
-4. **Coarsen the remaining volatile fields server-side**: round `mpi.score` to the nearest whole number, bucket `sessionsLast7Days`/`checkInsLast7Days` into small bands (0 / 1-2 / 3-5 / 6+), and clamp `escalationCount` to 0 / 1 / 2+.
-5. **Verify.** Load the dashboard twice, confirm exactly one row in `coach_hammer_steps` for the day and that the second response returns `cached: true`.
+**Storage** — reuse the existing private `landing-demo` bucket, with poster objects keyed `poster-<timestamp>.jpg`. Posters are signed on read alongside the video in `resolvePlayableUrl`.
 
-### Technical notes
-- Files: `supabase/functions/coach-hammer-next-step/index.ts`, `src/hooks/useCoachHammerNextStep.ts`, `src/hooks/useHammerNextStep.ts`, `src/hooks/useHammerChat.ts`, plus a new shared snapshot-hash module.
-- The 6/day generation cap stays as a backstop.
-- No schema change needed; the unique index on `(user_id, plan_date, snapshot_hash)` is already correct.
+**`src/hooks/useLandingDemoVideo.ts`**
+- Select `poster_url`; resolve it to a signed URL in `resolvePlayableUrl` (7-day expiry, same as the video).
+- New `uploadPoster(file | blob)` → uploads to the bucket, updates the row's `poster_url`, deletes the previous poster object best-effort.
+- New `clearPoster()`; `remove()` also deletes the poster object.
+- `save()` and `uploadFile()` preserve/reset `poster_url` appropriately (replacing the video clears a stale frame-grab cover).
+
+**Frame capture** — new `src/lib/landing/captureVideoFrame.ts`: draws the current `<video>` frame to a canvas at native resolution and returns a JPEG `Blob` via `canvas.toBlob` (quality ~0.85). Because the source is a signed same-origin-proxied URL, the canvas is not tainted; if `toBlob` ever throws a security error, the UI falls back to a clear "use the photo upload instead" message rather than failing silently.
+
+**`src/components/landing/LandingDemoVideoManager.tsx`** — new cover section: a muted `<video>` preview with a range slider bound to `currentTime`, a "Use this frame" button, a hidden `<input type="file" accept="image/*">` for the gallery/camera path (validated for type and size before upload), the current cover thumbnail, and remove. Toasts on success/failure, all controls disabled while busy.
+
+**`src/components/video-library/VideoPlayer.tsx`** — add an optional `posterUrl?: string | null` prop passed to the `<video poster>` attribute in the upload branch. Purely additive; every other call site is unaffected.
+
+**`src/components/landing/LandingDemoVideo.tsx`** — pass `video.poster_url` through to the player.
+
+No AI calls and no edge functions are involved — the frame grab happens in the browser.
