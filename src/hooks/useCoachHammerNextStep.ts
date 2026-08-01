@@ -128,17 +128,21 @@ export function useCoachHammerNextStep(options?: { enabled?: boolean }) {
       },
     };
   }, [rows, unackedCount, dayType, mpi]);
+  // Key on the snapshot itself (per day) — no time bucket. The edge function
+  // caches per athlete/day/snapshot, so repeats are DB reads, not AI calls.
   const hashKey = useMemo(() => {
     if (!snapshot) return null;
-    const halfHour = Math.floor(Date.now() / (30 * 60 * 1000));
-    return JSON.stringify({ ...snapshot, halfHour });
+    const day = new Date().toISOString().slice(0, 10);
+    return JSON.stringify({ ...snapshot, day });
   }, [snapshot]);
 
   const query = useQuery({
     queryKey: ["coach-hammer-next-step", user?.id, hashKey],
-    enabled: !!user && !!snapshot,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    enabled: enabledOpt && !!user && !!snapshot,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 4 * 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 1,
     queryFn: async (): Promise<CoachHammerStep> => {
       const { data, error } = await supabase.functions.invoke(
@@ -153,7 +157,8 @@ export function useCoachHammerNextStep(options?: { enabled?: boolean }) {
 
   return {
     step: query.data ?? null,
-    isLoading: rowsLoading || query.isLoading,
+    isLoading: enabledOpt ? rowsLoading || query.isLoading : false,
     error: query.error as Error | null,
   };
 }
+
