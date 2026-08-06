@@ -1,40 +1,23 @@
-## Goal
+# Fix Players Club showing no videos
 
-The landing page demo video currently renders as a black box until someone hits play — `VideoPlayer` renders a bare `<video>` with no poster, and the `landing_demo_video` table has no cover-image field. Give the owner two ways to set a cover image, and show it before playback.
+## What's wrong
 
-## What the owner gets
+Players Club loads everything through one backend function. That function still asks for an old `games` table that no longer exists (games were moved to the Game Hub's own table). The database rejects the request, the function throws, and it returns an error instead of the athlete's saved videos — so the page shows "No sessions found" plus the "Edge Function returned a non-2xx status code" toast.
 
-In the owner-only "Manage landing demo video" panel, a new **Cover image** section appears once a video exists:
+Confirmed from the function logs:
+`Could not find the table 'public.games' in the schema cache — Perhaps you meant 'public.gp_games'`
 
-1. **Pick a frame from the video** — a scrubber under a preview of the uploaded video. The owner drags to the moment they want and taps "Use this frame". The frame is captured and saved as the cover.
-2. **Upload a cover image** — a "Choose photo" button that opens the phone's camera roll / gallery (or the file picker on desktop).
-3. **Current cover thumbnail** with a "Remove cover" option.
+The saved videos themselves are fine; they are simply never delivered because the games step fails first.
 
-Frame-picking is only offered for videos uploaded to our storage (browsers can't read frames out of a YouTube/Vimeo embed). For link-based videos, only the photo upload is offered — and YouTube/Vimeo already show their own thumbnail, so those aren't black anyway.
+## The fix
 
-## What visitors get
+1. Point the legacy games lookup at the current games table (`gp_games`) and request only the fields that table actually has (opponent, game type, date, venue, status, sport, summary). The old columns `team_name`, `league_level`, `total_innings`, `lineup`, `game_mode`, `is_practice_game`, `legacy_in_players_club` no longer exist and are dropped.
+2. Make the practices and games lookups non-fatal: if either one errors, log it and return an empty list for that section instead of failing the whole request. Videos are the primary content and must always come back.
+3. Keep the videos lookup as the only hard failure path.
+4. Adjust the Players Club card mapping so a game item reads from the current field names (`opponent_team` instead of `opponent_name`, etc.) and still renders correctly.
 
-The demo video on the welcome page shows the cover image immediately, with a play control over it, instead of a black rectangle. If no cover has been set, behavior is unchanged.
+## Technical notes
 
-## Technical details
-
-**Database** — one migration adding to `public.landing_demo_video`:
-- `poster_url text` (nullable) — stores a storage path in the existing private `landing-demo` bucket, mirroring how `video_url` is stored for uploads. Existing RLS policies and grants already cover the column; no policy changes needed.
-
-**Storage** — reuse the existing private `landing-demo` bucket, with poster objects keyed `poster-<timestamp>.jpg`. Posters are signed on read alongside the video in `resolvePlayableUrl`.
-
-**`src/hooks/useLandingDemoVideo.ts`**
-- Select `poster_url`; resolve it to a signed URL in `resolvePlayableUrl` (7-day expiry, same as the video).
-- New `uploadPoster(file | blob)` → uploads to the bucket, updates the row's `poster_url`, deletes the previous poster object best-effort.
-- New `clearPoster()`; `remove()` also deletes the poster object.
-- `save()` and `uploadFile()` preserve/reset `poster_url` appropriately (replacing the video clears a stale frame-grab cover).
-
-**Frame capture** — new `src/lib/landing/captureVideoFrame.ts`: draws the current `<video>` frame to a canvas at native resolution and returns a JPEG `Blob` via `canvas.toBlob` (quality ~0.85). Because the source is a signed same-origin-proxied URL, the canvas is not tainted; if `toBlob` ever throws a security error, the UI falls back to a clear "use the photo upload instead" message rather than failing silently.
-
-**`src/components/landing/LandingDemoVideoManager.tsx`** — new cover section: a muted `<video>` preview with a range slider bound to `currentTime`, a "Use this frame" button, a hidden `<input type="file" accept="image/*">` for the gallery/camera path (validated for type and size before upload), the current cover thumbnail, and remove. Toasts on success/failure, all controls disabled while busy.
-
-**`src/components/video-library/VideoPlayer.tsx`** — add an optional `posterUrl?: string | null` prop passed to the `<video poster>` attribute in the upload branch. Purely additive; every other call site is unaffected.
-
-**`src/components/landing/LandingDemoVideo.tsx`** — pass `video.poster_url` through to the player.
-
-No AI calls and no edge functions are involved — the frame grab happens in the browser.
+- File: `supabase/functions/get-player-library/index.ts` — replace `.from('games')` with `.from('gp_games')`, update the select list, remove the `legacy_in_players_club` filter for games, and wrap practices/games in soft-fail handling.
+- Client side: check the Players Club list/grid components for `opponent_name` / `team_name` usage and map to the current columns.
+- Verify after deploy by calling the function and confirming a 200 with the videos array populated.
