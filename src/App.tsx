@@ -151,6 +151,8 @@ const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const GameIq = lazyWithRetry(() => import("./pages/GameIq"));
 const GameIqSituation = lazyWithRetry(() => import("./pages/GameIqSituation"));
 const GameIqReview = lazyWithRetry(() => import("./pages/GameIqReview"));
+const GameIqLock = lazyWithRetry(() => import("./components/iq/GameIqLock").then((m) => ({ default: m.GameIqLock })));
+
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
 const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
@@ -387,9 +389,10 @@ const App = () => {
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
               <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
               <Route path="/baserunning-iq" element={<BaserunningIQ />} />
-              <Route path="/iq" element={<GameIq />} />
-              <Route path="/iq/review" element={<GameIqReview />} />
-              <Route path="/iq/:slug" element={<GameIqSituation />} />
+              <Route path="/iq" element={<GameIqLock><GameIq /></GameIqLock>} />
+              <Route path="/iq/review" element={<GameIqLock><GameIqReview /></GameIqLock>} />
+              <Route path="/iq/:slug" element={<GameIqLock><GameIqSituation /></GameIqLock>} />
+
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/admin/engine-health" element={<EngineHealthDashboard />} />
