@@ -304,6 +304,7 @@ export function WkPrescriptionCard({
               </Collapsible>
             );
           })()}
+          <WkProgressionNote progression={progressionPayload} />
           {why.cue && (
             <div className="rounded border border-primary/20 p-2">
               <div className="font-medium mb-0.5">Cue</div>
