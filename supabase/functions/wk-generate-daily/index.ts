@@ -1220,7 +1220,6 @@ const handler = async (req: Request): Promise<Response> => {
     const isTwoWayCtx = Boolean((athleteContext as any)?.two_way || (athleteContext as any)?.is_two_way);
     const isStarterCtx = Boolean((athleteContext as any)?.pitcher_role === "starter");
     const isRelieverCtx = Boolean((athleteContext as any)?.pitcher_role === "reliever");
-    const isRecoveryDayCtx = (trainingContext as any)?.day_type === "recovery";
 
     const conditioningCertification = certifyConditioning({
       prescriptions: finalRxs as any,
