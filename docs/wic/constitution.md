@@ -139,3 +139,26 @@ write to `wk_prescriptions`.
 Changes to the WIC require an explicit **Phase XX amendment** commit,
 updated doctrine here, matching updates in every file listed under
 **Sources of authority**, and a bump to `WIC_VERSION`.
+
+---
+
+## Amendment — Elite Speed & Bat-Speed Progression
+
+**Session shape floors.** Speed and bat-speed are sessions, not single drills.
+Full training day: 4–6 movements. Deload / beginner: 3–4. Game or recovery
+day: 2–3. Falling below the floor is recorded as a warning on the plan.
+
+**Bat-speed stage sequence.** Every bat-speed session walks the canonical
+order `Prime → Potentiate → Contrast → Intent → Transfer`
+(`_shared/wic/engines/batSpeed.ts`). Game day receives the short primer
+instead of nothing.
+
+**Progression wave.** `_shared/wic/progression/progressionState.ts` derives a
+4-week block from a fixed global anchor — `accumulate · intensify · peak ·
+deload` — plus per-movement re-exposure windows and personal bests read from
+`wk_session_logs`. It is pure and performs no I/O, so plans stay replayable.
+
+**Lineage on the card.** Speed and bat-speed prescriptions carry
+`why_payload.progression` (`builds_on`, `target`, `next_step`, `baseline`) and
+`why_payload.session_title`. Progression is interpretive only: it never
+fabricates a performance number and never authors organism truth.
