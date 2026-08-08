@@ -26,7 +26,19 @@ import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
 // WIC engine modules — canonical slug pools per engine.
 import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
 import { selectSpeedPicks } from "../_shared/wic/engines/speed.ts";
-import { BAT_SPEED_PREFERRED } from "../_shared/wic/engines/batSpeed.ts";
+import {
+  BAT_SPEED_PREFERRED,
+  BAT_SPEED_STAGE_LABEL,
+  selectBatSpeedPicks,
+} from "../_shared/wic/engines/batSpeed.ts";
+// Elite progression — block/week wave + personal-best lineage (pure, replay-safe).
+import {
+  buildProgressionState,
+  buildProgressionPayload,
+  blockLabel,
+  scaleSets,
+  type ProgressionState,
+} from "../_shared/wic/progression/progressionState.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
