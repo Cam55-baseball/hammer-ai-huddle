@@ -17,6 +17,11 @@ import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
+import {
+  WkProgressionBadge,
+  WkProgressionNote,
+  type ProgressionPayloadShape,
+} from "@/components/hammer/WkProgressionNote";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -136,6 +141,7 @@ export function WkPrescriptionCard({
   };
 
   const why = rx.why_payload;
+  const progressionPayload = ((why as any)?.progression ?? null) as ProgressionPayloadShape | null;
   const storedPhase = why?.phase ?? rx.phase ?? null;
   // Only surface the "older season" language when the plan is settled. While
   // Hammer is regenerating, show a softer "Updating..." note so athletes
@@ -247,6 +253,10 @@ export function WkPrescriptionCard({
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
+          <WkProgressionBadge
+            progression={progressionPayload}
+            stageLabel={(why as any)?.bat_speed_stage_label ?? null}
+          />
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
               {SLOT_LABEL[rx.slot]}
@@ -294,6 +304,7 @@ export function WkPrescriptionCard({
               </Collapsible>
             );
           })()}
+          <WkProgressionNote progression={progressionPayload} />
           {why.cue && (
             <div className="rounded border border-primary/20 p-2">
               <div className="font-medium mb-0.5">Cue</div>

@@ -23,6 +23,7 @@ import { getCard } from "@/lib/wic/cardRegistry";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
+import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 
 export function WkSpeedCard() {
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
@@ -76,6 +77,12 @@ export function WkSpeedCard() {
               </p>
             ) : (
               items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
+            )}
+            {items.length > 0 && (
+              <WkSessionShapeLine
+                title={(items[0]?.why_payload as any)?.session_title ?? null}
+                shape={(items[0]?.why_payload as any)?.session_shape ?? null}
+              />
             )}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="speed" modalityLabel="Speed" items={items} />}

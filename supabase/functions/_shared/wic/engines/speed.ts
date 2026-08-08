@@ -13,7 +13,32 @@
 // enforces validation. This module is pure data — no I/O, no side effects.
 
 import { resolveSpeedTemplate, type SpeedTemplate, type SpeedTemplateResolutionInput } from "../speed/templates.ts";
-import type { SpeedCategory } from "../speed/movementCategories.ts";
+import { ALL_SPEED_CATEGORIES, type SpeedCategory } from "../speed/movementCategories.ts";
+import { isInReExposureWindow, type ProgressionState } from "../progression/progressionState.ts";
+
+/**
+ * Session shape floor — an elite speed session is a sequence, never a single
+ * sprint. These minimums are what turn the card from "one vague drill" into a
+ * coherent block the athlete can execute and measure.
+ */
+export interface SpeedShapeFloor {
+  readonly min: number;
+  readonly max: number;
+}
+
+export function speedShapeFloor(args: {
+  isGameDay: boolean;
+  isRecoveryDay: boolean;
+  isDeloadWeek: boolean;
+  trainingAgeClass?: string;
+}): SpeedShapeFloor {
+  if (args.isGameDay) return { min: 2, max: 3 };
+  if (args.isRecoveryDay) return { min: 2, max: 3 };
+  const cls = (args.trainingAgeClass ?? "").toLowerCase();
+  if (cls.includes("begin") || cls.includes("youth")) return { min: 3, max: 4 };
+  if (args.isDeloadWeek) return { min: 3, max: 4 };
+  return { min: 4, max: 6 };
+}
 
 /** Elite slugs surfaced first when multiple movements fit a category. */
 export const SPEED_PREFERRED: readonly string[] = [
@@ -110,6 +135,10 @@ export interface SelectSpeedInput {
   dayOfYearSeed: number;
   cnsBudget: number; // absolute CNS units available for the speed block
   trainingAgeClass?: string;
+  /** Read-only progression state — biases away from resting movements. */
+  progression?: ProgressionState;
+  isGameDay?: boolean;
+  isRecoveryDay?: boolean;
 }
 
 export interface SpeedPick {
@@ -122,6 +151,7 @@ export interface SpeedPick {
 export interface SpeedSelectionResult {
   template: SpeedTemplate;
   picks: SpeedPick[];
+  shape: SpeedShapeFloor;
   cnsUsed: number;
   papCost: number;
   warnings: string[];
@@ -140,6 +170,7 @@ function pickForCategory(
   used: Set<string>,
   usedFamilies: Set<string>,
   seed: number,
+  progression?: ProgressionState,
 ): SpeedCatalogRow | null {
   const inCat = pool.filter(
     (m) => (m.speed_category ?? "") === category && !used.has(m.slug),
@@ -155,7 +186,15 @@ function pickForCategory(
     inCat.filter((m) => !prefIndex.has(m.slug)),
     seed,
   );
-  const ordered = [...preferred, ...nonPreferred];
+  let ordered = [...preferred, ...nonPreferred];
+
+  // Movements still inside their re-exposure window go to the back of the
+  // line — never removed, so a stage is never left empty.
+  if (progression) {
+    const fresh = ordered.filter((m) => !isInReExposureWindow(progression, m.slug, m.speed_category));
+    const resting = ordered.filter((m) => isInReExposureWindow(progression, m.slug, m.speed_category));
+    ordered = [...fresh, ...resting];
+  }
 
   // Avoid stacking two picks from the same substitution family.
   const familyFree = ordered.find((m) => {
@@ -185,15 +224,23 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
   let papCost = 0;
   const cnsBudget = Math.max(1, input.cnsBudget);
 
+  const shape = speedShapeFloor({
+    isGameDay: input.isGameDay ?? false,
+    isRecoveryDay: input.isRecoveryDay ?? false,
+    isDeloadWeek: input.progression?.isDeloadWeek ?? false,
+    trainingAgeClass: input.trainingAgeClass,
+  });
+
   const tryAdd = (category: SpeedCategory, required: boolean, reason: string): boolean => {
     if (usedCats.has(category)) return false; // single-slot categories
+    if (picks.length >= shape.max) return false;
     const seed = input.dayOfYearSeed + category.length;
-    let pick = pickForCategory(category, pool, used, usedFamilies, seed);
+    let pick = pickForCategory(category, pool, used, usedFamilies, seed, input.progression);
     if (!pick) {
       const fbs = CATEGORY_FALLBACKS[category] ?? [];
       for (const fb of fbs) {
         if (usedCats.has(fb)) continue;
-        pick = pickForCategory(fb, pool, used, usedFamilies, seed);
+        pick = pickForCategory(fb, pool, used, usedFamilies, seed, input.progression);
         if (pick) {
           warnings.push(`speed_category_fallback:${category}->${fb}`);
           break;
@@ -229,7 +276,28 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
     tryAdd(cat, false, `Complement to ${template.displayName}.`);
   }
 
-  // 3) Guarantee at least one movement — sport-scoped fallback.
+  // 3) Session shape floor — an elite speed day is a sequence, not one drill.
+  //    Backfill from the remaining legal categories (template order first,
+  //    then canonical order) until the floor is met.
+  if (picks.length < shape.min) {
+    const backfillOrder: SpeedCategory[] = [
+      ...template.optionalCategories,
+      ...ALL_SPEED_CATEGORIES.filter(
+        (c) =>
+          !template.requiredCategories.includes(c) &&
+          !template.optionalCategories.includes(c) &&
+          // Never sneak a high-CNS quality in as filler.
+          c !== "overspeed" &&
+          c !== "pap",
+      ),
+    ];
+    for (const cat of backfillOrder) {
+      if (picks.length >= shape.min) break;
+      tryAdd(cat, true, `Session shape — ${template.displayName} needs a complete sequence, not a single drill.`);
+    }
+  }
+
+  // 4) Guarantee at least one movement — sport-scoped fallback.
   if (picks.length === 0) {
     const sportPref = input.sport === "baseball" ? "repeat_90ft_bb" : "repeat_43ft_sb";
     const fallback = pool.find((m) => m.slug === sportPref) ?? pool.find((m) => m.slug === "accel_10_30y") ?? pool[0];
@@ -244,5 +312,9 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
     }
   }
 
-  return { template, picks, cnsUsed, papCost, warnings };
+  if (picks.length < shape.min) {
+    warnings.push(`speed_below_floor:${picks.length}/${shape.min}`);
+  }
+
+  return { template, picks, shape, cnsUsed, papCost, warnings };
 }
