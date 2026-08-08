@@ -834,41 +834,81 @@ const handler = async (req: Request): Promise<Response> => {
       ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason);
     }
 
+    // -------- Elite progression state (28-day history → block/week wave) ----
+    // Loaded once, used by both explosive engines. Pure read: progression is
+    // interpretive only and never authors organism truth.
+    const historyStart = new Date(planDate + "T00:00:00");
+    historyStart.setDate(historyStart.getDate() - 28);
+    const historyStartStr = historyStart.toISOString().slice(0, 10);
+    const [{ data: historyRxRows }, { data: historyLogRows }] = await Promise.all([
+      admin.from("wk_prescriptions")
+        .select("plan_date, slot, movement_slug, sets, reps, distance_feet, total_reps, duration_seconds")
+        .eq("user_id", user.id)
+        .gte("plan_date", historyStartStr)
+        .lt("plan_date", planDate)
+        .in("slot", ["speed", "bat_speed"]),
+      admin.from("wk_session_logs")
+        .select("plan_date, movement_slug, sets_completed, total_reps_completed, distance_feet_completed, duration_seconds_completed, load_used, rpe, bar_feel, metrics")
+        .eq("user_id", user.id)
+        .gte("plan_date", historyStartStr)
+        .lte("plan_date", planDate),
+    ]);
+    const progression: ProgressionState = buildProgressionState({
+      planDate,
+      prescriptions: (historyRxRows ?? []) as any,
+      logs: (historyLogRows ?? []) as any,
+    });
+    const dayOfYearSeed = Math.floor(
+      (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
+    );
+    const isRecoveryDayCtx = (trainingContext as any)?.day_type === "recovery";
+
     // -------- Bat-speed engine (its own card, always pre-lift) --------
-    if (!isGameDay) {
-      const batSpeedTemplate = resolveBatSpeedTemplate({
-        seasonPhase: trainingContext.season_phase,
-        dayType: trainingContext.day_type,
-        trainingAge: (trainingAgeContext as any)?.classification,
-        primaryAdaptation: adaptationDecision.primary,
+    // Game day now receives the constitutional short primer instead of nothing.
+    {
+      const batSpeedSelection = selectBatSpeedPicks({
+        catalog: lib as any,
+        template: {
+          seasonPhase: trainingContext.season_phase,
+          dayType: trainingContext.day_type,
+          trainingAge: (trainingAgeContext as any)?.classification,
+          primaryAdaptation: adaptationDecision.primary,
+          isGameDay,
+          isRecoveryDay: isRecoveryDayCtx,
+          isReturnToPlay: false,
+        },
+        eligible: (m: any) => eligible(m as MovementRow),
+        dayOfYearSeed,
+        cnsBudget: isGameDay ? 2 : Math.max(2, Math.round(cnsCap * 0.5)),
+        progression,
         isGameDay,
-        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
-        isReturnToPlay: false,
+        isRecoveryDay: isRecoveryDayCtx,
+        trainingAgeClass: (trainingAgeContext as any)?.classification,
       });
-      const batSpeedPool = lib.filter((m) => m.category === "bat_speed" && eligible(m));
-      const usedBatSpeedSlugs = new Set<string>();
-      const pickBatSpeedByCategory = (category: string) => {
-        const sameCategory = batSpeedPool.filter(
-          (m) => ((m as any).bat_speed_category ?? null) === category && !usedBatSpeedSlugs.has(m.slug),
-        );
-        return sameCategory.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? sameCategory[0] ?? null;
-      };
-      const batSpeedPicks = batSpeedTemplate.requiredCategories
-        .map((category) => ({ category, movement: pickBatSpeedByCategory(category) }))
-        .filter((pick): pick is { category: string; movement: MovementRow } => !!pick.movement);
-      if (batSpeedPicks.length === 0) {
-        const fallback = batSpeedPool.find((m) => BAT_SPEED_PREFERRED.includes(m.slug)) ?? batSpeedPool[0];
-        if (fallback) batSpeedPicks.push({ category: String((fallback as any).bat_speed_category ?? "bat_speed"), movement: fallback });
-      }
-      for (const pick of batSpeedPicks) {
-        usedBatSpeedSlugs.add(pick.movement.slug);
+      const bsSessionName = batSpeedSelection.template.displayName;
+      for (const pick of batSpeedSelection.picks) {
+        const m = pick.movement as unknown as MovementRow;
+        const payload = buildProgressionPayload({
+          state: progression,
+          slug: m.slug,
+          metricKey: pick.stage === "intent" ? "bat_speed_mph" : null,
+          sessionName: bsSessionName,
+        });
         push(
           "bat_speed",
           "bat_speed",
-          pick.movement,
-          {},
-          `${batSpeedTemplate.displayName} — ${pick.category.replace(/_/g, " ")} transfer. Do BEFORE lifts while CNS is fresh.`,
-          { bat_speed_template_id: batSpeedTemplate.id, bat_speed_required_category: pick.category },
+          m,
+          { sets: progression.isDeloadWeek ? scaleSets(m.default_sets, progression) : undefined },
+          `${BAT_SPEED_STAGE_LABEL[pick.stage]} — ${pick.reason}${isGameDay ? "" : " Do BEFORE lifts while CNS is fresh."}`,
+          {
+            bat_speed_template_id: batSpeedSelection.template.id,
+            bat_speed_required_category: pick.category,
+            bat_speed_stage: pick.stage,
+            bat_speed_stage_label: BAT_SPEED_STAGE_LABEL[pick.stage],
+            session_shape: { min: batSpeedSelection.shape.min, max: batSpeedSelection.shape.max, actual: batSpeedSelection.picks.length },
+            session_title: blockLabel(progression, bsSessionName),
+            progression: payload,
+          },
         );
       }
     }
