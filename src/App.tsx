@@ -151,6 +151,8 @@ const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const GameIq = lazyWithRetry(() => import("./pages/GameIq"));
 const GameIqSituation = lazyWithRetry(() => import("./pages/GameIqSituation"));
 const GameIqReview = lazyWithRetry(() => import("./pages/GameIqReview"));
+const GameIqLock = lazyWithRetry(() => import("./components/iq/GameIqLock").then((m) => ({ default: m.GameIqLock })));
+
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
 const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
