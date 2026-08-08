@@ -27,7 +27,6 @@ import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
 import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
 import { selectSpeedPicks } from "../_shared/wic/engines/speed.ts";
 import {
-  BAT_SPEED_PREFERRED,
   BAT_SPEED_STAGE_LABEL,
   selectBatSpeedPicks,
 } from "../_shared/wic/engines/batSpeed.ts";
@@ -45,7 +44,6 @@ import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessio
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
-import { resolveBatSpeedTemplate } from "../_shared/wic/batSpeed/templates.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
