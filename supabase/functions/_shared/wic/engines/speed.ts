@@ -13,7 +13,32 @@
 // enforces validation. This module is pure data — no I/O, no side effects.
 
 import { resolveSpeedTemplate, type SpeedTemplate, type SpeedTemplateResolutionInput } from "../speed/templates.ts";
-import type { SpeedCategory } from "../speed/movementCategories.ts";
+import { ALL_SPEED_CATEGORIES, type SpeedCategory } from "../speed/movementCategories.ts";
+import { isInReExposureWindow, type ProgressionState } from "../progression/progressionState.ts";
+
+/**
+ * Session shape floor — an elite speed session is a sequence, never a single
+ * sprint. These minimums are what turn the card from "one vague drill" into a
+ * coherent block the athlete can execute and measure.
+ */
+export interface SpeedShapeFloor {
+  readonly min: number;
+  readonly max: number;
+}
+
+export function speedShapeFloor(args: {
+  isGameDay: boolean;
+  isRecoveryDay: boolean;
+  isDeloadWeek: boolean;
+  trainingAgeClass?: string;
+}): SpeedShapeFloor {
+  if (args.isGameDay) return { min: 2, max: 3 };
+  if (args.isRecoveryDay) return { min: 2, max: 3 };
+  const cls = (args.trainingAgeClass ?? "").toLowerCase();
+  if (cls.includes("begin") || cls.includes("youth")) return { min: 3, max: 4 };
+  if (args.isDeloadWeek) return { min: 3, max: 4 };
+  return { min: 4, max: 6 };
+}
 
 /** Elite slugs surfaced first when multiple movements fit a category. */
 export const SPEED_PREFERRED: readonly string[] = [
