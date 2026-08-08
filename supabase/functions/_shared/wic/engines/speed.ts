@@ -151,6 +151,7 @@ export interface SpeedPick {
 export interface SpeedSelectionResult {
   template: SpeedTemplate;
   picks: SpeedPick[];
+  shape: SpeedShapeFloor;
   cnsUsed: number;
   papCost: number;
   warnings: string[];
@@ -169,6 +170,7 @@ function pickForCategory(
   used: Set<string>,
   usedFamilies: Set<string>,
   seed: number,
+  progression?: ProgressionState,
 ): SpeedCatalogRow | null {
   const inCat = pool.filter(
     (m) => (m.speed_category ?? "") === category && !used.has(m.slug),
@@ -184,7 +186,15 @@ function pickForCategory(
     inCat.filter((m) => !prefIndex.has(m.slug)),
     seed,
   );
-  const ordered = [...preferred, ...nonPreferred];
+  let ordered = [...preferred, ...nonPreferred];
+
+  // Movements still inside their re-exposure window go to the back of the
+  // line — never removed, so a stage is never left empty.
+  if (progression) {
+    const fresh = ordered.filter((m) => !isInReExposureWindow(progression, m.slug, m.speed_category));
+    const resting = ordered.filter((m) => isInReExposureWindow(progression, m.slug, m.speed_category));
+    ordered = [...fresh, ...resting];
+  }
 
   // Avoid stacking two picks from the same substitution family.
   const familyFree = ordered.find((m) => {
