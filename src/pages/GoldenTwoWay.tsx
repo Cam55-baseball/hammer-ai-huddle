@@ -82,8 +82,8 @@ const tiles = [
   {
     key: "game-iq",
     icon: Brain,
-    label: "Game IQ 101",
-    description: "Pitcher PFP, defensive cutoffs, offensive situations — full Three B's mastery.",
+    label: "Game IQ 101 (Coming soon)",
+    description: "Coming soon — this module is under construction.",
     getRoute: (sport: string) => `/iq?sport=${sport}`,
   },
 ] as const;
