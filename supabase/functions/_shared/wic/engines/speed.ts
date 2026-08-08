@@ -135,6 +135,10 @@ export interface SelectSpeedInput {
   dayOfYearSeed: number;
   cnsBudget: number; // absolute CNS units available for the speed block
   trainingAgeClass?: string;
+  /** Read-only progression state — biases away from resting movements. */
+  progression?: ProgressionState;
+  isGameDay?: boolean;
+  isRecoveryDay?: boolean;
 }
 
 export interface SpeedPick {
