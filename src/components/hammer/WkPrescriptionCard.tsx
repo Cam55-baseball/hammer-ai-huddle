@@ -247,6 +247,10 @@ export function WkPrescriptionCard({
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
+          <WkProgressionBadge
+            progression={progressionPayload}
+            stageLabel={(why as any)?.bat_speed_stage_label ?? null}
+          />
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
               {SLOT_LABEL[rx.slot]}
