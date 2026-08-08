@@ -224,15 +224,23 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
   let papCost = 0;
   const cnsBudget = Math.max(1, input.cnsBudget);
 
+  const shape = speedShapeFloor({
+    isGameDay: input.isGameDay ?? false,
+    isRecoveryDay: input.isRecoveryDay ?? false,
+    isDeloadWeek: input.progression?.isDeloadWeek ?? false,
+    trainingAgeClass: input.trainingAgeClass,
+  });
+
   const tryAdd = (category: SpeedCategory, required: boolean, reason: string): boolean => {
     if (usedCats.has(category)) return false; // single-slot categories
+    if (picks.length >= shape.max) return false;
     const seed = input.dayOfYearSeed + category.length;
-    let pick = pickForCategory(category, pool, used, usedFamilies, seed);
+    let pick = pickForCategory(category, pool, used, usedFamilies, seed, input.progression);
     if (!pick) {
       const fbs = CATEGORY_FALLBACKS[category] ?? [];
       for (const fb of fbs) {
         if (usedCats.has(fb)) continue;
-        pick = pickForCategory(fb, pool, used, usedFamilies, seed);
+        pick = pickForCategory(fb, pool, used, usedFamilies, seed, input.progression);
         if (pick) {
           warnings.push(`speed_category_fallback:${category}->${fb}`);
           break;
@@ -268,7 +276,28 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
     tryAdd(cat, false, `Complement to ${template.displayName}.`);
   }
 
-  // 3) Guarantee at least one movement — sport-scoped fallback.
+  // 3) Session shape floor — an elite speed day is a sequence, not one drill.
+  //    Backfill from the remaining legal categories (template order first,
+  //    then canonical order) until the floor is met.
+  if (picks.length < shape.min) {
+    const backfillOrder: SpeedCategory[] = [
+      ...template.optionalCategories,
+      ...ALL_SPEED_CATEGORIES.filter(
+        (c) =>
+          !template.requiredCategories.includes(c) &&
+          !template.optionalCategories.includes(c) &&
+          // Never sneak a high-CNS quality in as filler.
+          c !== "overspeed" &&
+          c !== "pap",
+      ),
+    ];
+    for (const cat of backfillOrder) {
+      if (picks.length >= shape.min) break;
+      tryAdd(cat, true, `Session shape — ${template.displayName} needs a complete sequence, not a single drill.`);
+    }
+  }
+
+  // 4) Guarantee at least one movement — sport-scoped fallback.
   if (picks.length === 0) {
     const sportPref = input.sport === "baseball" ? "repeat_90ft_bb" : "repeat_43ft_sb";
     const fallback = pool.find((m) => m.slug === sportPref) ?? pool.find((m) => m.slug === "accel_10_30y") ?? pool[0];
@@ -283,5 +312,9 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
     }
   }
 
-  return { template, picks, cnsUsed, papCost, warnings };
+  if (picks.length < shape.min) {
+    warnings.push(`speed_below_floor:${picks.length}/${shape.min}`);
+  }
+
+  return { template, picks, shape, cnsUsed, papCost, warnings };
 }
