@@ -22,6 +22,7 @@ import { getCard } from "@/lib/wic/cardRegistry";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
+import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 
 interface Props {
   /** For switch hitters, render this card twice — once per side. */
@@ -84,6 +85,12 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
               <p className="text-xs text-muted-foreground py-2">No rotational velocity work today (cadence rest).</p>
             ) : (
               items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} side={side} />)
+            )}
+            {items.length > 0 && (
+              <WkSessionShapeLine
+                title={(items[0]?.why_payload as any)?.session_title ?? null}
+                shape={(items[0]?.why_payload as any)?.session_shape ?? null}
+              />
             )}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && (
