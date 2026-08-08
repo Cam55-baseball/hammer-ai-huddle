@@ -927,9 +927,6 @@ const handler = async (req: Request): Promise<Response> => {
       : 9999;
     // Game-day still gets a short primer via the Phase 9 game_day_primer template.
     if (isGameDay || hoursSinceSpeed >= block.speed_cadence_hours - 6) {
-      const dayOfYearSeed = Math.floor(
-        (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
-      );
       const speedSelection = selectSpeedPicks({
         catalog: lib as any,
         template: {
@@ -939,7 +936,7 @@ const handler = async (req: Request): Promise<Response> => {
           primaryAdaptation: adaptationDecision.primary,
           isGameDay,
           isPracticeDay,
-          isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+          isRecoveryDay: isRecoveryDayCtx,
           isReturnToPlay: false,
         },
         eligible: (m: any) => eligible(m as MovementRow),
@@ -947,16 +944,38 @@ const handler = async (req: Request): Promise<Response> => {
         dayOfYearSeed,
         cnsBudget: Math.max(2, Math.round(cnsCap * 0.6)),
         trainingAgeClass: (trainingAgeContext as any)?.classification,
+        progression,
+        isGameDay,
+        isRecoveryDay: isRecoveryDayCtx,
       });
+      const spSessionName = speedSelection.template.displayName;
       for (const pick of speedSelection.picks) {
         const m = pick.movement as unknown as MovementRow;
+        const metricKey =
+          pick.category === "top_speed" || pick.category === "overspeed"
+            ? "sprint_time_s"
+            : pick.category === "acceleration"
+            ? "sprint_distance_ft"
+            : null;
+        const payload = buildProgressionPayload({
+          state: progression,
+          slug: m.slug,
+          metricKey,
+          sessionName: spSessionName,
+        });
         push(
           "speed",
           "speed",
           m,
-          {},
-          `${speedSelection.template.displayName} — ${pick.category.replace(/_/g, " ")}. ${pick.reason}`,
-          { speed_template_id: speedSelection.template.id, speed_required_category: pick.category },
+          { sets: progression.isDeloadWeek ? scaleSets(m.default_sets, progression) : undefined },
+          `${spSessionName} — ${pick.category.replace(/_/g, " ")}. ${pick.reason}`,
+          {
+            speed_template_id: speedSelection.template.id,
+            speed_required_category: pick.category,
+            session_shape: { min: speedSelection.shape.min, max: speedSelection.shape.max, actual: speedSelection.picks.length },
+            session_title: blockLabel(progression, spSessionName),
+            progression: payload,
+          },
         );
       }
     }
