@@ -906,6 +906,7 @@ const handler = async (req: Request): Promise<Response> => {
             session_shape: { min: batSpeedSelection.shape.min, max: batSpeedSelection.shape.max, actual: batSpeedSelection.picks.length },
             session_title: blockLabel(progression, bsSessionName),
             progression: payload,
+            re_exposure_violation: isInReExposureWindow(progression, m.slug, pick.category),
           },
         );
       }
@@ -973,6 +974,7 @@ const handler = async (req: Request): Promise<Response> => {
             session_shape: { min: speedSelection.shape.min, max: speedSelection.shape.max, actual: speedSelection.picks.length },
             session_title: blockLabel(progression, spSessionName),
             progression: payload,
+            re_exposure_violation: isInReExposureWindow(progression, m.slug, pick.category),
           },
         );
       }
@@ -1035,6 +1037,7 @@ const handler = async (req: Request): Promise<Response> => {
         sets: r.sets,
         reps: r.reps,
         why_v2: (r as any).why_v2,
+        why_payload: (r as any).why_payload,
       })),
     });
     const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
