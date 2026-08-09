@@ -83,6 +83,8 @@ export interface ProgressionState {
   readonly completionRate: number | null;
   /** True when we have no usable history — cards say "baseline session". */
   readonly isBaseline: boolean;
+  /** The plan date this state was derived for (ISO yyyy-mm-dd). */
+  readonly planDate: string;
 }
 
 const BLOCK_PHASES: readonly BlockWeekPhase[] = ["accumulate", "intensify", "peak", "deload"];
