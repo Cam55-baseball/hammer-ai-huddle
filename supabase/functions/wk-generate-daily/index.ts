@@ -36,6 +36,7 @@ import {
   buildProgressionPayload,
   blockLabel,
   scaleSets,
+  isInReExposureWindow,
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
