@@ -23,6 +23,8 @@ export interface ValidatorInput {
     sets: number | null;
     reps: number | null;
     why_v2?: unknown;
+    /** Generator metadata (session_shape, progression, …) — optional. */
+    why_payload?: unknown;
   }>;
 }
 
@@ -143,6 +145,36 @@ export function validate(input: ValidatorInput): ValidatorReport {
           message: `Slot "${s}" (owner: ${owner}) leaked into card "${cardType}".`,
         });
       }
+    }
+  }
+
+  // Elite progression amendment — session shape floors + re-exposure windows.
+  // Both are WARN-level per the constitution amendment: a thin session is
+  // recorded on the plan, it never blocks publication.
+  const shapeSlots = new Map<string, { min: number; actual: number }>();
+  for (const rx of input.prescriptions) {
+    const payload = (rx.why_payload ?? null) as Record<string, unknown> | null;
+    if (!payload) continue;
+    const shape = payload["session_shape"] as { min?: number; actual?: number } | undefined;
+    if (shape && typeof shape.min === "number" && typeof shape.actual === "number") {
+      shapeSlots.set(rx.slot, { min: shape.min, actual: shape.actual });
+    }
+    if (payload["re_exposure_violation"] === true) {
+      issues.push({
+        code: "re_exposure_window_violation",
+        severity: "warn",
+        message: `${rx.movement_name} repeats inside its re-exposure window without a progression flag.`,
+        slug: rx.movement_slug,
+      });
+    }
+  }
+  for (const [slot, shape] of shapeSlots) {
+    if (shape.actual < shape.min) {
+      issues.push({
+        code: "session_shape_below_floor",
+        severity: "warn",
+        message: `${slot} published ${shape.actual} movement(s); the session floor is ${shape.min}.`,
+      });
     }
   }
 

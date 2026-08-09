@@ -83,6 +83,8 @@ export interface ProgressionState {
   readonly completionRate: number | null;
   /** True when we have no usable history — cards say "baseline session". */
   readonly isBaseline: boolean;
+  /** The plan date this state was derived for (ISO yyyy-mm-dd). */
+  readonly planDate: string;
 }
 
 const BLOCK_PHASES: readonly BlockWeekPhase[] = ["accumulate", "intensify", "peak", "deload"];
@@ -208,6 +210,7 @@ export function buildProgressionState(input: BuildProgressionInput): Progression
     avgRpe,
     completionRate,
     isBaseline: prescriptions.length === 0 && logs.length === 0,
+    planDate,
   };
 }
 
@@ -305,8 +308,11 @@ export function buildProgressionPayload(args: {
 }
 
 function daysAgoLabel(iso: string, state: ProgressionState): string {
-  void state;
-  return iso;
+  const days = daysBetween(iso, state.planDate);
+  if (!Number.isFinite(days) || days < 0) return "recently";
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
 }
 
 /** Scale a prescribed set count by the week's volume factor, clamped sanely. */
