@@ -308,8 +308,11 @@ export function buildProgressionPayload(args: {
 }
 
 function daysAgoLabel(iso: string, state: ProgressionState): string {
-  void state;
-  return iso;
+  const days = daysBetween(iso, state.planDate);
+  if (!Number.isFinite(days) || days < 0) return "recently";
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
 }
 
 /** Scale a prescribed set count by the week's volume factor, clamped sanely. */
