@@ -210,6 +210,7 @@ export function buildProgressionState(input: BuildProgressionInput): Progression
     avgRpe,
     completionRate,
     isBaseline: prescriptions.length === 0 && logs.length === 0,
+    planDate,
   };
 }
 
