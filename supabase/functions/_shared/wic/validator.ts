@@ -23,6 +23,8 @@ export interface ValidatorInput {
     sets: number | null;
     reps: number | null;
     why_v2?: unknown;
+    /** Generator metadata (session_shape, progression, …) — optional. */
+    why_payload?: unknown;
   }>;
 }
 
