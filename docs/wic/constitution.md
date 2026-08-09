@@ -158,6 +158,12 @@ instead of nothing.
 deload` — plus per-movement re-exposure windows and personal bests read from
 `wk_session_logs`. It is pure and performs no I/O, so plans stay replayable.
 
+**Guards.** The validator records `session_shape_below_floor` and
+`re_exposure_window_violation` as warnings on `validator_report.issues`.
+`scripts/audits/speed-batspeed-progression-audit.ts` replays 60 consecutive days
+for four athlete archetypes and hard-fails on floor breaches, broken stage
+order, missing block phases, non-determinism, or fabricated targets.
+
 **Lineage on the card.** Speed and bat-speed prescriptions carry
 `why_payload.progression` (`builds_on`, `target`, `next_step`, `baseline`) and
 `why_payload.session_title`. Progression is interpretive only: it never
