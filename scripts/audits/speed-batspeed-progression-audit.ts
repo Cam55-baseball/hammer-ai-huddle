@@ -242,10 +242,16 @@ for (const arch of ARCHETYPES) {
       // Re-exposure: a repeat inside the window is only acceptable when the
       // whole category pool was already used today.
       if (isInReExposureWindow(progression, p.movement.slug, p.category)) {
-        const poolSize = batCatalog.filter((m) => m.bat_speed_category === p.category).length;
+        const freshAlternatives = batCatalog.filter(
+          (m) =>
+            m.bat_speed_category === p.category &&
+            m.slug !== p.movement.slug &&
+            !bsSlugs.has(m.slug) &&
+            !isInReExposureWindow(progression, m.slug, p.category),
+        );
         check(
-          poolSize <= 1,
-          `${arch.name} ${planDate}: ${p.movement.slug} repeated inside its re-exposure window with ${poolSize} alternatives`,
+          freshAlternatives.length === 0,
+          `${arch.name} ${planDate}: ${p.movement.slug} repeated inside its re-exposure window while ${freshAlternatives.length} fresh alternative(s) existed`,
         );
       }
     }
