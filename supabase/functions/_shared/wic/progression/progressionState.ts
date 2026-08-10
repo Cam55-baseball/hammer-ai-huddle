@@ -378,6 +378,36 @@ export function buildProgressionState(input: BuildProgressionInput): Progression
     ? Math.min(1, loggedSlugDates.size / prescriptions.length)
     : null;
 
+  // ---- per-domain history ---------------------------------------------
+  // Every card gets its own lineage: when it last ran, how often, and how
+  // reliably the athlete actually completed it.
+  const domainDays = new Map<TrainingDomain, Set<string>>();
+  const domainLoggedDays = new Map<TrainingDomain, Set<string>>();
+  for (const rx of prescriptions) {
+    if (!rx.plan_date) continue;
+    const domain = domainForSlotRole(rx.slot, (rx as { sequence_role?: string }).sequence_role);
+    if (!domainDays.has(domain)) domainDays.set(domain, new Set());
+    domainDays.get(domain)!.add(rx.plan_date);
+    if (loggedSlugDates.has(`${rx.plan_date}::${rx.movement_slug}`)) {
+      if (!domainLoggedDays.has(domain)) domainLoggedDays.set(domain, new Set());
+      domainLoggedDays.get(domain)!.add(rx.plan_date);
+    }
+  }
+  const domains = new Map<TrainingDomain, DomainProgress>();
+  for (const [domain, days] of domainDays) {
+    const sorted = [...days].sort();
+    const last = sorted[sorted.length - 1] ?? null;
+    const logged = domainLoggedDays.get(domain)?.size ?? 0;
+    domains.set(domain, {
+      domain,
+      lastSessionDate: last,
+      daysSinceLastSession: last ? daysBetween(last, planDate) : null,
+      sessionsInWindow: days.size,
+      loggedSessions: logged,
+      completionRate: days.size ? Math.min(1, logged / days.size) : null,
+    });
+  }
+
   return {
     blockIndex,
     weekInBlock: weekSlot + 1,
@@ -387,12 +417,15 @@ export function buildProgressionState(input: BuildProgressionInput): Progression
     isDeloadWeek: blockPhase === "deload",
     exposures,
     bests,
+    domains,
+    career: resolveCareerHorizon(input.ageYears, input.trainingAgeYears),
     avgRpe,
     completionRate,
     isBaseline: prescriptions.length === 0 && logs.length === 0,
     planDate,
   };
 }
+
 
 /**
  * Days a movement must rest before it may be re-prescribed, unless it is the
