@@ -7,7 +7,7 @@
  * beat. When no history exists it says so plainly rather than inventing one.
  */
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, History, Target, ArrowRight } from "lucide-react";
+import { TrendingUp, History, Target, ArrowRight, Compass } from "lucide-react";
 
 export interface ProgressionPayloadShape {
   block_index?: number;
@@ -18,7 +18,13 @@ export interface ProgressionPayloadShape {
   target?: string | null;
   next_step?: string | null;
   baseline?: boolean;
+  domain?: string;
+  domain_history?: string | null;
+  career_stage?: string;
+  career_label?: string;
+  career_focus?: string;
 }
+
 
 const PHASE_COPY: Record<string, string> = {
   accumulate: "Build the base",
