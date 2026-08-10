@@ -855,7 +855,7 @@ const handler = async (req: Request): Promise<Response> => {
       planDate,
       prescriptions: (historyRxRows ?? []) as any,
       logs: (historyLogRows ?? []) as any,
-      ageYears: profileCtx.ageYears ?? null,
+      ageYears: Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null,
       trainingAgeYears: trainingAgeYears ?? null,
     });
 
