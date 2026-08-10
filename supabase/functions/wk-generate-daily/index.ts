@@ -1063,6 +1063,21 @@ const handler = async (req: Request): Promise<Response> => {
         };
         wp.day_orchestration = dayOrchestration;
 
+        // Deload week is a real reduction, not a label. Strength-family and
+        // conditioning volume drops one working set; never below two, and
+        // never on total-dose rows (innings, distance, timed work).
+        if (
+          progression.isDeloadWeek &&
+          (domain === "lift" || domain === "supplemental" || domain === "conditioning") &&
+          typeof rx.sets === "number" && rx.sets >= 3 &&
+          rx.total_reps == null && rx.duration_seconds == null && rx.distance_feet == null
+        ) {
+          const before = rx.sets;
+          rx.sets = Math.max(2, rx.sets - 1);
+          wp.deload_applied = { from: before, to: rx.sets, reason: "Week 4 deload — volume down, quality held." };
+        }
+
+
         if (!wp.session_shape) {
           wp.session_shape = {
             // Floors only bind on a full training day; game / recovery days
