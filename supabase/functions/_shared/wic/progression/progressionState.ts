@@ -463,7 +463,15 @@ export interface ProgressionPayload {
   readonly target: string | null;
   readonly next_step: string;
   readonly baseline: boolean;
+  /** Which card/domain this lineage belongs to. */
+  readonly domain?: TrainingDomain;
+  /** Domain-level cadence line, e.g. "Strength ran 6x in the last 4 weeks". */
+  readonly domain_history?: string | null;
+  readonly career_stage?: CareerStage;
+  readonly career_label?: string;
+  readonly career_focus?: string;
 }
+
 
 const PHASE_LABEL: Record<BlockWeekPhase, string> = {
   accumulate: "Week 1 · build the base",
