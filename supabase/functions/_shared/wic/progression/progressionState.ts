@@ -494,8 +494,9 @@ export function buildProgressionPayload(args: {
   slug: string;
   metricKey?: string | null;
   sessionName: string;
+  domain?: TrainingDomain;
 }): ProgressionPayload {
-  const { state, slug, metricKey, sessionName } = args;
+  const { state, slug, metricKey, domain } = args;
   const exposure = state.exposures.get(slug);
   const best = metricKey ? state.bests.get(metricKey) : undefined;
 
@@ -515,6 +516,17 @@ export function buildProgressionPayload(args: {
     ? "Next week deloads volume ~40% and re-tests this quality."
     : "Next week adds work on the same quality so the progression is measurable.";
 
+  const dp = domain ? state.domains.get(domain) : undefined;
+  const domainHistory = dp
+    ? `${domainSessionName(dp.domain)} ran ${dp.sessionsInWindow}x in the last 4 weeks` +
+      (dp.daysSinceLastSession != null
+        ? `, last ${dp.daysSinceLastSession === 0 ? "today" : dp.daysSinceLastSession === 1 ? "yesterday" : `${dp.daysSinceLastSession} days ago`}`
+        : "") +
+      (dp.completionRate != null ? ` · ${Math.round(dp.completionRate * 100)}% completed.` : ".")
+    : domain
+    ? `${domainSessionName(domain)} has no history in the last 4 weeks — today sets the reference.`
+    : null;
+
   return {
     block_index: state.blockIndex,
     week_in_block: state.weekInBlock,
@@ -526,6 +538,11 @@ export function buildProgressionPayload(args: {
     target,
     next_step: nextStep,
     baseline: state.isBaseline || !best,
+    domain,
+    domain_history: domainHistory,
+    career_stage: state.career.stage,
+    career_label: state.career.label,
+    career_focus: state.career.focus,
   };
 }
 
@@ -536,6 +553,7 @@ function daysAgoLabel(iso: string, state: ProgressionState): string {
   if (days === 1) return "yesterday";
   return `${days} days ago`;
 }
+
 
 /** Scale a prescribed set count by the week's volume factor, clamped sanely. */
 export function scaleSets(base: number | null | undefined, state: ProgressionState): number | null {
