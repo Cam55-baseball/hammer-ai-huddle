@@ -61,6 +61,126 @@ export interface MetricBest {
   readonly unit: string;
 }
 
+/**
+ * Every card on Hammers Today resolves to exactly one training domain. The
+ * domain is what carries progression: its own exposure history, its own
+ * session floor, its own tracked metric, its own place in the wave.
+ */
+export type TrainingDomain =
+  | "movement_prep"
+  | "warmup"
+  | "speed"
+  | "bat_speed"
+  | "lift"
+  | "supplemental"
+  | "conditioning"
+  | "cross_sport"
+  | "recovery"
+  | "mobility"
+  | "arm_care"
+  | "throwing"
+  | "other";
+
+/** Minimum / target movement count for a full training day, per domain. */
+export const DOMAIN_SHAPE_FLOOR: Record<TrainingDomain, { min: number; max: number }> = {
+  movement_prep: { min: 2, max: 5 },
+  warmup: { min: 3, max: 7 },
+  speed: { min: 3, max: 6 },
+  bat_speed: { min: 4, max: 6 },
+  lift: { min: 5, max: 9 },
+  supplemental: { min: 1, max: 4 },
+  conditioning: { min: 1, max: 3 },
+  cross_sport: { min: 1, max: 2 },
+  recovery: { min: 1, max: 4 },
+  mobility: { min: 1, max: 4 },
+  arm_care: { min: 1, max: 4 },
+  throwing: { min: 2, max: 5 },
+  other: { min: 1, max: 6 },
+};
+
+/** The metric each domain progresses against, when the athlete logs one. */
+export const DOMAIN_METRIC_KEY: Record<TrainingDomain, string | null> = {
+  movement_prep: null,
+  warmup: null,
+  speed: "sprint_time_s",
+  bat_speed: "bat_speed_mph",
+  lift: "load_lb",
+  supplemental: "load_lb",
+  conditioning: null,
+  cross_sport: null,
+  recovery: null,
+  mobility: null,
+  arm_care: "throw_velo_mph",
+  throwing: "throw_velo_mph",
+  other: null,
+};
+
+const DOMAIN_SESSION_NAME: Record<TrainingDomain, string> = {
+  movement_prep: "Movement Prep",
+  warmup: "Warm-up",
+  speed: "Running Speed",
+  bat_speed: "Bat Speed",
+  lift: "Strength",
+  supplemental: "Supplemental Strength",
+  conditioning: "Conditioning",
+  cross_sport: "Cross-Sport",
+  recovery: "Recovery",
+  mobility: "Mobility",
+  arm_care: "Arm Care",
+  throwing: "Throwing",
+  other: "Training",
+};
+
+export function domainSessionName(domain: TrainingDomain): string {
+  return DOMAIN_SESSION_NAME[domain] ?? "Training";
+}
+
+/** Canonical slot/role → domain resolution. Single source of truth. */
+export function domainForSlotRole(slot: string, role?: string | null): TrainingDomain {
+  const s = (slot ?? "").toLowerCase();
+  const r = (role ?? "").toLowerCase();
+  if (r === "arm_care") return "arm_care";
+  switch (s) {
+    case "movement_prep": return "movement_prep";
+    case "warmup": return "warmup";
+    case "speed": return "speed";
+    case "bat_speed": return "bat_speed";
+    case "lift": return "lift";
+    case "supplemental": return "supplemental";
+    case "conditioning": return "conditioning";
+    case "cross_sport": return "cross_sport";
+    case "recovery": return "recovery";
+    case "mobility": return "mobility";
+    case "arm_care": return "arm_care";
+    case "throwing":
+    case "pitching": return "throwing";
+    default: return "other";
+  }
+}
+
+/** Where the athlete sits on the multi-year arc — today always serves this. */
+export type CareerStage = "foundation" | "development" | "expression" | "peak" | "sustain" | "longevity";
+
+export interface CareerHorizon {
+  readonly stage: CareerStage;
+  readonly label: string;
+  /** One plain-English line: what this stage is buying the athlete. */
+  readonly focus: string;
+}
+
+export interface DomainProgress {
+  readonly domain: TrainingDomain;
+  /** Most recent plan_date this domain was trained, or null. */
+  readonly lastSessionDate: string | null;
+  readonly daysSinceLastSession: number | null;
+  /** Prescribed sessions (distinct days) inside the history window. */
+  readonly sessionsInWindow: number;
+  /** Distinct days inside the window where at least one item was logged. */
+  readonly loggedSessions: number;
+  /** loggedSessions / sessionsInWindow, or null with no history. */
+  readonly completionRate: number | null;
+}
+
 export interface ProgressionState {
   /** 0-based development block since the global anchor. */
   readonly blockIndex: number;
@@ -77,6 +197,10 @@ export interface ProgressionState {
   readonly exposures: ReadonlyMap<string, MovementExposure>;
   /** metric key → athlete's own best/last. */
   readonly bests: ReadonlyMap<string, MetricBest>;
+  /** domain → its own history slice. */
+  readonly domains: ReadonlyMap<TrainingDomain, DomainProgress>;
+  /** Multi-year arc this block sits inside. */
+  readonly career: CareerHorizon;
   /** Average RPE across the window, or null when nothing was logged. */
   readonly avgRpe: number | null;
   /** Share of prescribed items that were actually logged (0..1), null if none. */
@@ -86,6 +210,7 @@ export interface ProgressionState {
   /** The plan date this state was derived for (ISO yyyy-mm-dd). */
   readonly planDate: string;
 }
+
 
 const BLOCK_PHASES: readonly BlockWeekPhase[] = ["accumulate", "intensify", "peak", "deload"];
 
