@@ -32,6 +32,7 @@ import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { toast } from "sonner";
+import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
 import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
@@ -178,6 +179,12 @@ export function WkLiftsCard() {
             )}
 
             {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}
+            {items.length > 0 && (
+              <WkSessionShapeLine
+                title={(items[0]?.why_payload as any)?.session_title ?? null}
+                shape={(items[0]?.why_payload as any)?.session_shape ?? null}
+              />
+            )}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
             {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}

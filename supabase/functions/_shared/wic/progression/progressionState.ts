@@ -17,6 +17,7 @@ export type BlockWeekPhase = "accumulate" | "intensify" | "peak" | "deload";
 export interface HistoryPrescriptionRow {
   plan_date: string;
   slot: string;
+  sequence_role?: string | null;
   movement_slug: string;
   sets?: number | null;
   reps?: number | null;
@@ -61,6 +62,126 @@ export interface MetricBest {
   readonly unit: string;
 }
 
+/**
+ * Every card on Hammers Today resolves to exactly one training domain. The
+ * domain is what carries progression: its own exposure history, its own
+ * session floor, its own tracked metric, its own place in the wave.
+ */
+export type TrainingDomain =
+  | "movement_prep"
+  | "warmup"
+  | "speed"
+  | "bat_speed"
+  | "lift"
+  | "supplemental"
+  | "conditioning"
+  | "cross_sport"
+  | "recovery"
+  | "mobility"
+  | "arm_care"
+  | "throwing"
+  | "other";
+
+/** Minimum / target movement count for a full training day, per domain. */
+export const DOMAIN_SHAPE_FLOOR: Record<TrainingDomain, { min: number; max: number }> = {
+  movement_prep: { min: 2, max: 5 },
+  warmup: { min: 3, max: 7 },
+  speed: { min: 3, max: 6 },
+  bat_speed: { min: 4, max: 6 },
+  lift: { min: 5, max: 9 },
+  supplemental: { min: 1, max: 4 },
+  conditioning: { min: 1, max: 3 },
+  cross_sport: { min: 1, max: 2 },
+  recovery: { min: 1, max: 4 },
+  mobility: { min: 1, max: 4 },
+  arm_care: { min: 1, max: 4 },
+  throwing: { min: 2, max: 5 },
+  other: { min: 1, max: 6 },
+};
+
+/** The metric each domain progresses against, when the athlete logs one. */
+export const DOMAIN_METRIC_KEY: Record<TrainingDomain, string | null> = {
+  movement_prep: null,
+  warmup: null,
+  speed: "sprint_time_s",
+  bat_speed: "bat_speed_mph",
+  lift: "load_lb",
+  supplemental: "load_lb",
+  conditioning: null,
+  cross_sport: null,
+  recovery: null,
+  mobility: null,
+  arm_care: "throw_velo_mph",
+  throwing: "throw_velo_mph",
+  other: null,
+};
+
+const DOMAIN_SESSION_NAME: Record<TrainingDomain, string> = {
+  movement_prep: "Movement Prep",
+  warmup: "Warm-up",
+  speed: "Running Speed",
+  bat_speed: "Bat Speed",
+  lift: "Strength",
+  supplemental: "Supplemental Strength",
+  conditioning: "Conditioning",
+  cross_sport: "Cross-Sport",
+  recovery: "Recovery",
+  mobility: "Mobility",
+  arm_care: "Arm Care",
+  throwing: "Throwing",
+  other: "Training",
+};
+
+export function domainSessionName(domain: TrainingDomain): string {
+  return DOMAIN_SESSION_NAME[domain] ?? "Training";
+}
+
+/** Canonical slot/role → domain resolution. Single source of truth. */
+export function domainForSlotRole(slot: string, role?: string | null): TrainingDomain {
+  const s = (slot ?? "").toLowerCase();
+  const r = (role ?? "").toLowerCase();
+  if (r === "arm_care") return "arm_care";
+  switch (s) {
+    case "movement_prep": return "movement_prep";
+    case "warmup": return "warmup";
+    case "speed": return "speed";
+    case "bat_speed": return "bat_speed";
+    case "lift": return "lift";
+    case "supplemental": return "supplemental";
+    case "conditioning": return "conditioning";
+    case "cross_sport": return "cross_sport";
+    case "recovery": return "recovery";
+    case "mobility": return "mobility";
+    case "arm_care": return "arm_care";
+    case "throwing":
+    case "pitching": return "throwing";
+    default: return "other";
+  }
+}
+
+/** Where the athlete sits on the multi-year arc — today always serves this. */
+export type CareerStage = "foundation" | "development" | "expression" | "peak" | "sustain" | "longevity";
+
+export interface CareerHorizon {
+  readonly stage: CareerStage;
+  readonly label: string;
+  /** One plain-English line: what this stage is buying the athlete. */
+  readonly focus: string;
+}
+
+export interface DomainProgress {
+  readonly domain: TrainingDomain;
+  /** Most recent plan_date this domain was trained, or null. */
+  readonly lastSessionDate: string | null;
+  readonly daysSinceLastSession: number | null;
+  /** Prescribed sessions (distinct days) inside the history window. */
+  readonly sessionsInWindow: number;
+  /** Distinct days inside the window where at least one item was logged. */
+  readonly loggedSessions: number;
+  /** loggedSessions / sessionsInWindow, or null with no history. */
+  readonly completionRate: number | null;
+}
+
 export interface ProgressionState {
   /** 0-based development block since the global anchor. */
   readonly blockIndex: number;
@@ -77,6 +198,10 @@ export interface ProgressionState {
   readonly exposures: ReadonlyMap<string, MovementExposure>;
   /** metric key → athlete's own best/last. */
   readonly bests: ReadonlyMap<string, MetricBest>;
+  /** domain → its own history slice. */
+  readonly domains: ReadonlyMap<TrainingDomain, DomainProgress>;
+  /** Multi-year arc this block sits inside. */
+  readonly career: CareerHorizon;
   /** Average RPE across the window, or null when nothing was logged. */
   readonly avgRpe: number | null;
   /** Share of prescribed items that were actually logged (0..1), null if none. */
@@ -86,6 +211,7 @@ export interface ProgressionState {
   /** The plan date this state was derived for (ISO yyyy-mm-dd). */
   readonly planDate: string;
 }
+
 
 const BLOCK_PHASES: readonly BlockWeekPhase[] = ["accumulate", "intensify", "peak", "deload"];
 
@@ -140,7 +266,62 @@ export interface BuildProgressionInput {
   readonly planDate: string;
   readonly prescriptions: readonly HistoryPrescriptionRow[];
   readonly logs: readonly HistorySessionLogRow[];
+  /** Chronological age, when known — drives the career horizon only. */
+  readonly ageYears?: number | null;
+  /** Years of structured training, when known. */
+  readonly trainingAgeYears?: number | null;
 }
+
+/** Multi-year arc. Interpretive only — never a ceiling on what is prescribed. */
+export function resolveCareerHorizon(
+  ageYears?: number | null,
+  trainingAgeYears?: number | null,
+): CareerHorizon {
+  const age = Number.isFinite(Number(ageYears)) ? Number(ageYears) : null;
+  const ta = Number.isFinite(Number(trainingAgeYears)) ? Number(trainingAgeYears) : null;
+
+  if ((age != null && age < 13) || (age == null && (ta ?? 0) < 1)) {
+    return {
+      stage: "foundation",
+      label: "Foundation years",
+      focus: "Own every position and pattern first — skill volume beats load right now.",
+    };
+  }
+  if (age != null && age < 16) {
+    return {
+      stage: "development",
+      label: "Development years",
+      focus: "Build the engine: repeatable strength, clean speed mechanics, daily skill touches.",
+    };
+  }
+  if (age != null && age < 19) {
+    return {
+      stage: "expression",
+      label: "Expression years",
+      focus: "Turn strength into game speed and bat speed — this is where recruiters see the output.",
+    };
+  }
+  if (age != null && age < 27) {
+    return {
+      stage: "peak",
+      label: "Peak output years",
+      focus: "Highest ceiling window — push output hard and let recovery protect the ceiling.",
+    };
+  }
+  if (age != null && age < 33) {
+    return {
+      stage: "sustain",
+      label: "Sustain years",
+      focus: "Hold peak output with sharper recovery and lower junk volume.",
+    };
+  }
+  return {
+    stage: "longevity",
+    label: "Longevity years",
+    focus: "Protect the qualities that keep you on the field: tissue health, speed, and arm care.",
+  };
+}
+
 
 export function buildProgressionState(input: BuildProgressionInput): ProgressionState {
   const { planDate, prescriptions, logs } = input;
@@ -198,6 +379,36 @@ export function buildProgressionState(input: BuildProgressionInput): Progression
     ? Math.min(1, loggedSlugDates.size / prescriptions.length)
     : null;
 
+  // ---- per-domain history ---------------------------------------------
+  // Every card gets its own lineage: when it last ran, how often, and how
+  // reliably the athlete actually completed it.
+  const domainDays = new Map<TrainingDomain, Set<string>>();
+  const domainLoggedDays = new Map<TrainingDomain, Set<string>>();
+  for (const rx of prescriptions) {
+    if (!rx.plan_date) continue;
+    const domain = domainForSlotRole(rx.slot, (rx as { sequence_role?: string }).sequence_role);
+    if (!domainDays.has(domain)) domainDays.set(domain, new Set());
+    domainDays.get(domain)!.add(rx.plan_date);
+    if (loggedSlugDates.has(`${rx.plan_date}::${rx.movement_slug}`)) {
+      if (!domainLoggedDays.has(domain)) domainLoggedDays.set(domain, new Set());
+      domainLoggedDays.get(domain)!.add(rx.plan_date);
+    }
+  }
+  const domains = new Map<TrainingDomain, DomainProgress>();
+  for (const [domain, days] of domainDays) {
+    const sorted = [...days].sort();
+    const last = sorted[sorted.length - 1] ?? null;
+    const logged = domainLoggedDays.get(domain)?.size ?? 0;
+    domains.set(domain, {
+      domain,
+      lastSessionDate: last,
+      daysSinceLastSession: last ? daysBetween(last, planDate) : null,
+      sessionsInWindow: days.size,
+      loggedSessions: logged,
+      completionRate: days.size ? Math.min(1, logged / days.size) : null,
+    });
+  }
+
   return {
     blockIndex,
     weekInBlock: weekSlot + 1,
@@ -207,12 +418,15 @@ export function buildProgressionState(input: BuildProgressionInput): Progression
     isDeloadWeek: blockPhase === "deload",
     exposures,
     bests,
+    domains,
+    career: resolveCareerHorizon(input.ageYears, input.trainingAgeYears),
     avgRpe,
     completionRate,
     isBaseline: prescriptions.length === 0 && logs.length === 0,
     planDate,
   };
 }
+
 
 /**
  * Days a movement must rest before it may be re-prescribed, unless it is the
@@ -249,7 +463,15 @@ export interface ProgressionPayload {
   readonly target: string | null;
   readonly next_step: string;
   readonly baseline: boolean;
+  /** Which card/domain this lineage belongs to. */
+  readonly domain?: TrainingDomain;
+  /** Domain-level cadence line, e.g. "Strength ran 6x in the last 4 weeks". */
+  readonly domain_history?: string | null;
+  readonly career_stage?: CareerStage;
+  readonly career_label?: string;
+  readonly career_focus?: string;
 }
+
 
 const PHASE_LABEL: Record<BlockWeekPhase, string> = {
   accumulate: "Week 1 · build the base",
@@ -272,8 +494,9 @@ export function buildProgressionPayload(args: {
   slug: string;
   metricKey?: string | null;
   sessionName: string;
+  domain?: TrainingDomain;
 }): ProgressionPayload {
-  const { state, slug, metricKey, sessionName } = args;
+  const { state, slug, metricKey, domain } = args;
   const exposure = state.exposures.get(slug);
   const best = metricKey ? state.bests.get(metricKey) : undefined;
 
@@ -293,6 +516,17 @@ export function buildProgressionPayload(args: {
     ? "Next week deloads volume ~40% and re-tests this quality."
     : "Next week adds work on the same quality so the progression is measurable.";
 
+  const dp = domain ? state.domains.get(domain) : undefined;
+  const domainHistory = dp
+    ? `${domainSessionName(dp.domain)} ran ${dp.sessionsInWindow}x in the last 4 weeks` +
+      (dp.daysSinceLastSession != null
+        ? `, last ${dp.daysSinceLastSession === 0 ? "today" : dp.daysSinceLastSession === 1 ? "yesterday" : `${dp.daysSinceLastSession} days ago`}`
+        : "") +
+      (dp.completionRate != null ? ` · ${Math.round(dp.completionRate * 100)}% completed.` : ".")
+    : domain
+    ? `${domainSessionName(domain)} has no history in the last 4 weeks — today sets the reference.`
+    : null;
+
   return {
     block_index: state.blockIndex,
     week_in_block: state.weekInBlock,
@@ -304,6 +538,11 @@ export function buildProgressionPayload(args: {
     target,
     next_step: nextStep,
     baseline: state.isBaseline || !best,
+    domain,
+    domain_history: domainHistory,
+    career_stage: state.career.stage,
+    career_label: state.career.label,
+    career_focus: state.career.focus,
   };
 }
 
@@ -314,6 +553,7 @@ function daysAgoLabel(iso: string, state: ProgressionState): string {
   if (days === 1) return "yesterday";
   return `${days} days ago`;
 }
+
 
 /** Scale a prescribed set count by the week's volume factor, clamped sanely. */
 export function scaleSets(base: number | null | undefined, state: ProgressionState): number | null {

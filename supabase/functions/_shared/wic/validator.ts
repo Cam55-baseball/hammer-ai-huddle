@@ -152,9 +152,14 @@ export function validate(input: ValidatorInput): ValidatorReport {
   // Both are WARN-level per the constitution amendment: a thin session is
   // recorded on the plan, it never blocks publication.
   const shapeSlots = new Map<string, { min: number; actual: number }>();
+  let missingLineage = 0;
   for (const rx of input.prescriptions) {
     const payload = (rx.why_payload ?? null) as Record<string, unknown> | null;
-    if (!payload) continue;
+    if (!payload) {
+      missingLineage++;
+      continue;
+    }
+    if (!payload["progression"] || !payload["training_domain"]) missingLineage++;
     const shape = payload["session_shape"] as { min?: number; actual?: number } | undefined;
     if (shape && typeof shape.min === "number" && typeof shape.actual === "number") {
       shapeSlots.set(rx.slot, { min: shape.min, actual: shape.actual });
@@ -168,6 +173,14 @@ export function validate(input: ValidatorInput): ValidatorReport {
       });
     }
   }
+  if (missingLineage > 0) {
+    issues.push({
+      code: "progression_lineage_missing",
+      severity: "warn",
+      message: `${missingLineage} prescription(s) published without progression lineage (domain + block/week payload).`,
+    });
+  }
+
   for (const [slot, shape] of shapeSlots) {
     if (shape.actual < shape.min) {
       issues.push({

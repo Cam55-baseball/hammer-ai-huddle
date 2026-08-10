@@ -7,7 +7,7 @@
  * beat. When no history exists it says so plainly rather than inventing one.
  */
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, History, Target, ArrowRight } from "lucide-react";
+import { TrendingUp, History, Target, ArrowRight, Compass } from "lucide-react";
 
 export interface ProgressionPayloadShape {
   block_index?: number;
@@ -18,7 +18,13 @@ export interface ProgressionPayloadShape {
   target?: string | null;
   next_step?: string | null;
   baseline?: boolean;
+  domain?: string;
+  domain_history?: string | null;
+  career_stage?: string;
+  career_label?: string;
+  career_focus?: string;
 }
+
 
 const PHASE_COPY: Record<string, string> = {
   accumulate: "Build the base",
@@ -58,14 +64,20 @@ export function WkProgressionNote({
   progression?: ProgressionPayloadShape | null;
 }) {
   if (!progression) return null;
-  const { builds_on, target, next_step, baseline } = progression;
-  if (!builds_on && !target && !next_step) return null;
+  const { builds_on, target, next_step, baseline, domain_history, career_label, career_focus } = progression;
+  if (!builds_on && !target && !next_step && !domain_history) return null;
 
   return (
     <div className="rounded border border-emerald-500/25 bg-emerald-500/5 p-2 space-y-1">
       <div className="font-medium flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
         <TrendingUp className="h-3 w-3" /> Your progression
       </div>
+      {domain_history && (
+        <div className="flex items-start gap-1.5 text-muted-foreground">
+          <History className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>{domain_history}</span>
+        </div>
+      )}
       {builds_on && (
         <div className="flex items-start gap-1.5 text-muted-foreground">
           <History className="h-3 w-3 mt-0.5 shrink-0" />
@@ -89,9 +101,19 @@ export function WkProgressionNote({
           <span>{next_step}</span>
         </div>
       )}
+      {(career_label || career_focus) && (
+        <div className="flex items-start gap-1.5 text-muted-foreground border-t border-emerald-500/20 pt-1">
+          <Compass className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>
+            {career_label ? <span className="font-medium text-foreground/80">{career_label}: </span> : null}
+            {career_focus}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
+
 
 /** Session-level header line, e.g. "Block 3 · Week 2 · add work — Maximum Bat Speed". */
 export function WkSessionShapeLine({

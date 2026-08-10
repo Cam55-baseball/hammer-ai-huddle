@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
+import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 import { CardMeta } from "@/components/hammer/cards/CardMeta";
 import { CardActions } from "@/components/hammer/cards/CardActions";
 import { getCard } from "@/lib/wic/cardRegistry";
@@ -71,6 +72,12 @@ export function WkConditioningCard() {
               <Skeleton className="h-14 w-full rounded" />
             ) : (
               items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} generating={generating} />)
+            )}
+            {items.length > 0 && (
+              <WkSessionShapeLine
+                title={(items[0]?.why_payload as any)?.session_title ?? null}
+                shape={(items[0]?.why_payload as any)?.session_shape ?? null}
+              />
             )}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="conditioning" modalityLabel="Conditioning" items={items} />}

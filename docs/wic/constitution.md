@@ -168,3 +168,37 @@ order, missing block phases, non-determinism, or fabricated targets.
 `why_payload.progression` (`builds_on`, `target`, `next_step`, `baseline`) and
 `why_payload.session_title`. Progression is interpretive only: it never
 fabricates a performance number and never authors organism truth.
+
+## Amendment — Universal Progression (every card)
+
+**Domain law.** Every prescription resolves to exactly one training domain via
+`domainForSlotRole(slot, sequence_role)` — movement prep, warm-up, speed, bat
+speed, lift, supplemental, conditioning, cross-sport, recovery, mobility, arm
+care, throwing. The domain is the unit that carries progression.
+
+**Shared history.** `wk-generate-daily` loads one 28-day window of
+`wk_prescriptions` + `wk_session_logs` (all slots) and builds a single
+`ProgressionState`. Per-domain lineage (last session, cadence, completion
+rate), personal bests, and the block wave are derived from it. Pure and
+replay-safe.
+
+**Universal stamping.** Before ordering, every row receives
+`why_payload.training_domain`, `.session_shape` (domain floor vs actual),
+`.session_title`, `.progression` (block/week, builds-on, domain history,
+target, next step), `.career_horizon`, and `.day_orchestration` (the shared
+CNS budget every card drew from). Engines that computed a richer payload keep
+theirs — the pass never overwrites.
+
+**Career horizon.** `resolveCareerHorizon(age, trainingAge)` places today
+inside foundation → development → expression → peak → sustain → longevity.
+Interpretive only; it never caps what may be prescribed.
+
+**Deload is real.** On week 4, lift / supplemental / conditioning rows with 3+
+sets drop one working set (floor of 2, never on total-dose rows) and record
+`why_payload.deload_applied`.
+
+**Guards.** The validator adds `progression_lineage_missing` (warn) alongside
+`session_shape_below_floor` and `re_exposure_window_violation`.
+`scripts/audits/universal-progression-audit.ts` replays 60 days × 4 archetypes
+across every domain and hard-fails on missing floors, missing lineage,
+fabricated targets, absent block phases, or non-determinism.
