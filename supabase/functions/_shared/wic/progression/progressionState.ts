@@ -265,7 +265,62 @@ export interface BuildProgressionInput {
   readonly planDate: string;
   readonly prescriptions: readonly HistoryPrescriptionRow[];
   readonly logs: readonly HistorySessionLogRow[];
+  /** Chronological age, when known — drives the career horizon only. */
+  readonly ageYears?: number | null;
+  /** Years of structured training, when known. */
+  readonly trainingAgeYears?: number | null;
 }
+
+/** Multi-year arc. Interpretive only — never a ceiling on what is prescribed. */
+export function resolveCareerHorizon(
+  ageYears?: number | null,
+  trainingAgeYears?: number | null,
+): CareerHorizon {
+  const age = Number.isFinite(Number(ageYears)) ? Number(ageYears) : null;
+  const ta = Number.isFinite(Number(trainingAgeYears)) ? Number(trainingAgeYears) : null;
+
+  if ((age != null && age < 13) || (age == null && (ta ?? 0) < 1)) {
+    return {
+      stage: "foundation",
+      label: "Foundation years",
+      focus: "Own every position and pattern first — skill volume beats load right now.",
+    };
+  }
+  if (age != null && age < 16) {
+    return {
+      stage: "development",
+      label: "Development years",
+      focus: "Build the engine: repeatable strength, clean speed mechanics, daily skill touches.",
+    };
+  }
+  if (age != null && age < 19) {
+    return {
+      stage: "expression",
+      label: "Expression years",
+      focus: "Turn strength into game speed and bat speed — this is where recruiters see the output.",
+    };
+  }
+  if (age != null && age < 27) {
+    return {
+      stage: "peak",
+      label: "Peak output years",
+      focus: "Highest ceiling window — push output hard and let recovery protect the ceiling.",
+    };
+  }
+  if (age != null && age < 33) {
+    return {
+      stage: "sustain",
+      label: "Sustain years",
+      focus: "Hold peak output with sharper recovery and lower junk volume.",
+    };
+  }
+  return {
+    stage: "longevity",
+    label: "Longevity years",
+    focus: "Protect the qualities that keep you on the field: tissue health, speed, and arm care.",
+  };
+}
+
 
 export function buildProgressionState(input: BuildProgressionInput): ProgressionState {
   const { planDate, prescriptions, logs } = input;
