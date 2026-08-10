@@ -834,18 +834,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // -------- Elite progression state (28-day history → block/week wave) ----
-    // Loaded once, used by both explosive engines. Pure read: progression is
-    // interpretive only and never authors organism truth.
+    // Loaded once and shared by EVERY engine and card. Pure read: progression
+    // is interpretive only and never authors organism truth.
     const historyStart = new Date(planDate + "T00:00:00");
     historyStart.setDate(historyStart.getDate() - 28);
     const historyStartStr = historyStart.toISOString().slice(0, 10);
     const [{ data: historyRxRows }, { data: historyLogRows }] = await Promise.all([
       admin.from("wk_prescriptions")
-        .select("plan_date, slot, movement_slug, sets, reps, distance_feet, total_reps, duration_seconds")
+        .select("plan_date, slot, sequence_role, movement_slug, sets, reps, distance_feet, total_reps, duration_seconds")
         .eq("user_id", user.id)
         .gte("plan_date", historyStartStr)
-        .lt("plan_date", planDate)
-        .in("slot", ["speed", "bat_speed"]),
+        .lt("plan_date", planDate),
       admin.from("wk_session_logs")
         .select("plan_date, movement_slug, sets_completed, total_reps_completed, distance_feet_completed, duration_seconds_completed, load_used, rpe, bar_feel, metrics")
         .eq("user_id", user.id)
@@ -856,7 +855,10 @@ const handler = async (req: Request): Promise<Response> => {
       planDate,
       prescriptions: (historyRxRows ?? []) as any,
       logs: (historyLogRows ?? []) as any,
+      ageYears: profileCtx.ageYears ?? null,
+      trainingAgeYears: trainingAgeYears ?? null,
     });
+
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
     );
