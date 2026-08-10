@@ -17,6 +17,7 @@ export type BlockWeekPhase = "accumulate" | "intensify" | "peak" | "deload";
 export interface HistoryPrescriptionRow {
   plan_date: string;
   slot: string;
+  sequence_role?: string | null;
   movement_slug: string;
   sets?: number | null;
   reps?: number | null;
