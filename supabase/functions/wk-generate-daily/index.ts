@@ -1021,11 +1021,88 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // -------- Universal progression pass — EVERY card, not just the explosive
+    // engines. Each prescription is stamped with the domain it belongs to, that
+    // domain's own history lineage, the session shape floor it was measured
+    // against, the day-level orchestration budget it shared, and the career
+    // horizon this block serves. Engines that already computed a richer
+    // payload (speed / bat speed) keep theirs — this pass never overwrites.
+    {
+      const bySlot = new Map<string, number>();
+      for (const rx of rxs) bySlot.set(rx.slot, (bySlot.get(rx.slot) ?? 0) + 1);
+
+      const fullTrainingDay = !isGameDay && (trainingContext as any)?.day_type !== "recovery";
+      const dayOrchestration = {
+        cns_cap: cnsCap,
+        cns_used: cnsUsed,
+        cns_headroom: Math.max(0, cnsCap - cnsUsed),
+        // One shared budget across every card — a heavy lift day is why the
+        // sprint card is shorter, and the athlete can see that here.
+        cards_on_plan: [...bySlot.keys()],
+        items_by_card: Object.fromEntries(bySlot),
+        day_type: (trainingContext as any)?.day_type ?? null,
+        volume_factor: progression.volumeFactor,
+        intent_factor: progression.intentFactor,
+      };
+
+      for (const rx of rxs as any[]) {
+        const wp = (rx.why_payload ?? {}) as Record<string, unknown>;
+        const domain = domainForSlotRole(rx.slot, rx.sequence_role);
+        const floor = DOMAIN_SHAPE_FLOOR[domain];
+        const sessionName = domainSessionName(domain);
+
+        wp.training_domain = domain;
+        wp.career_horizon = {
+          stage: progression.career.stage,
+          label: progression.career.label,
+          focus: progression.career.focus,
+        };
+        wp.day_orchestration = dayOrchestration;
+
+        if (!wp.session_shape) {
+          wp.session_shape = {
+            // Floors only bind on a full training day; game / recovery days
+            // are deliberately short and must never be flagged as thin.
+            min: fullTrainingDay ? floor.min : 1,
+            max: floor.max,
+            actual: bySlot.get(rx.slot) ?? 0,
+          };
+        }
+        if (!wp.session_title) wp.session_title = blockLabel(progression, sessionName);
+        if (!wp.progression) {
+          wp.progression = buildProgressionPayload({
+            state: progression,
+            slug: rx.movement_slug,
+            metricKey: DOMAIN_METRIC_KEY[domain],
+            sessionName,
+            domain,
+          });
+        } else if (typeof wp.progression === "object" && wp.progression) {
+          const p = wp.progression as Record<string, unknown>;
+          if (p.domain == null) p.domain = domain;
+          if (p.career_stage == null) {
+            p.career_stage = progression.career.stage;
+            p.career_label = progression.career.label;
+            p.career_focus = progression.career.focus;
+          }
+        }
+        if (wp.re_exposure_violation == null) {
+          wp.re_exposure_violation = isInReExposureWindow(
+            progression,
+            rx.movement_slug,
+            (wp.category as string) ?? (wp.pattern as string) ?? null,
+          );
+        }
+        rx.why_payload = wp;
+      }
+    }
+
     // Phase 2 Fix 5 — deterministic canonical ordering. This is the ONLY
     // place sequence_order is assigned. Cards render by this key; no
     // component-level ordering is allowed.
     const orderedRxs = assignSequenceOrder(dedupePrescriptions(rxs));
     const finalRxs = orderedRxs;
+
 
     // -------- WIC Validation Engine — no publication without a passing report --------
     const validatorReport = wicValidate({
