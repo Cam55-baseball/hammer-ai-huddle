@@ -106,7 +106,12 @@ export function useSaveExerciseLog() {
           rounds: p.rounds,
           template_id: p.template_id ?? null,
           field_schema: p.field_schema ?? null,
+          // Canonical top-level metrics (bat_speed_mph, sprint_time_s,
+          // throw_velo_mph, …) so the progression engine can read a personal
+          // best without knowing anything about template field naming.
+          ...canonicalMetricMap(p.template_id ?? null, p.rounds),
         },
+
       };
 
       // Upsert-style: delete the previous log for this prescription, then insert.
