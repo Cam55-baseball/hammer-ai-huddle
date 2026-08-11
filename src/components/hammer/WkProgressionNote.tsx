@@ -23,6 +23,10 @@ export interface ProgressionPayloadShape {
   career_stage?: string;
   career_label?: string;
   career_focus?: string;
+  test_day?: boolean;
+  test_metric?: string | null;
+  test_metric_label?: string | null;
+  measurement_gap?: string | null;
 }
 
 
