@@ -713,6 +713,19 @@ function WarmupCrossoverAddons() {
 }
 
 
+/** Legacy plan-block modality → WIC progression domain. */
+const BLOCK_DOMAIN: Record<string, string | undefined> = {
+  warmup: "warmup",
+  movement_prep: "movement_prep",
+  mobility: "mobility",
+  recovery: "recovery",
+  throwing: "throwing",
+  pitching: "throwing",
+  arm_care: "arm_care",
+  hitting: "bat_speed",
+  defense: "other",
+};
+
 function BlockCard({
   block,
   onNavigate,
