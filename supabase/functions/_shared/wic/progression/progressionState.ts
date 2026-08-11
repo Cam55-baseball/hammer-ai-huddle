@@ -9,6 +9,12 @@
 // organism truth, never overrides safety / recovery / medical layers, and
 // never fabricates a performance number that was not logged.
 
+import {
+  deriveCanonicalMetrics,
+  LOWER_IS_BETTER,
+  type LoggedRound,
+} from "./metricNormalizer.ts";
+
 /** Fixed global anchor (a Monday) so block/week math never drifts. */
 const WAVE_ANCHOR_ISO = "2024-01-01";
 
