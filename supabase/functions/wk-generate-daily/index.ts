@@ -41,6 +41,8 @@ import {
   domainSessionName,
   DOMAIN_SHAPE_FLOOR,
   DOMAIN_METRIC_KEY,
+  isTestDue,
+  metricLabel,
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
