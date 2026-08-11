@@ -1049,11 +1049,27 @@ const handler = async (req: Request): Promise<Response> => {
         intent_factor: progression.intentFactor,
       };
 
+      // Scheduled re-testing — measurement is planned, never incidental.
+      // At most ONE item per measurable domain per day is nominated as the
+      // block's re-test, chosen deterministically (first item in canonical
+      // order for that domain) so the same plan replays identically.
+      const testItemByDomain = new Map<string, string>();
+      if (fullTrainingDay) {
+        for (const rx of rxs as any[]) {
+          const d = domainForSlotRole(rx.slot, rx.sequence_role);
+          if (testItemByDomain.has(d)) continue;
+          if (!isTestDue(progression, d)) continue;
+          testItemByDomain.set(d, rx.movement_slug);
+        }
+      }
+
       for (const rx of rxs as any[]) {
         const wp = (rx.why_payload ?? {}) as Record<string, unknown>;
         const domain = domainForSlotRole(rx.slot, rx.sequence_role);
         const floor = DOMAIN_SHAPE_FLOOR[domain];
         const sessionName = domainSessionName(domain);
+        const isTestItem = testItemByDomain.get(domain) === rx.movement_slug;
+
 
         wp.training_domain = domain;
         wp.career_horizon = {
