@@ -959,6 +959,13 @@ function BlockCard({
         </div>
 
         <CollapsibleContent className="mt-3 space-y-3">
+          {blockProgression && (
+            <div className="space-y-2 text-xs">
+              <WkProgressionBadge progression={blockProgression} />
+              <WkProgressionNote progression={blockProgression} />
+            </div>
+          )}
+
           {block.drills.length > 0 && (
             <div className="space-y-1.5">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
