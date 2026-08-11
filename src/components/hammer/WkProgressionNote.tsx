@@ -58,6 +58,11 @@ export function WkProgressionBadge({
           {progression.block_phase ? ` · ${PHASE_COPY[progression.block_phase] ?? progression.block_phase}` : ""}
         </Badge>
       )}
+      {progression?.test_day && (
+        <Badge className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40">
+          Test day{progression.test_metric_label ? ` · ${progression.test_metric_label}` : ""}
+        </Badge>
+      )}
     </div>
   );
 }
@@ -68,14 +73,40 @@ export function WkProgressionNote({
   progression?: ProgressionPayloadShape | null;
 }) {
   if (!progression) return null;
-  const { builds_on, target, next_step, baseline, domain_history, career_label, career_focus } = progression;
-  if (!builds_on && !target && !next_step && !domain_history) return null;
+  const {
+    builds_on,
+    target,
+    next_step,
+    baseline,
+    domain_history,
+    career_label,
+    career_focus,
+    test_day,
+    test_metric_label,
+    measurement_gap,
+  } = progression;
+  if (!builds_on && !target && !next_step && !domain_history && !measurement_gap) return null;
 
   return (
     <div className="rounded border border-emerald-500/25 bg-emerald-500/5 p-2 space-y-1">
       <div className="font-medium flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
         <TrendingUp className="h-3 w-3" /> Your progression
       </div>
+      {test_day && (
+        <div className="flex items-start gap-1.5 text-amber-700 dark:text-amber-300">
+          <Gauge className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>
+            Re-test today — log your {test_metric_label ?? "result"}. This number closes the block.
+          </span>
+        </div>
+      )}
+      {measurement_gap && (
+        <div className="flex items-start gap-1.5 text-muted-foreground">
+          <Gauge className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>{measurement_gap}</span>
+        </div>
+      )}
+
       {domain_history && (
         <div className="flex items-start gap-1.5 text-muted-foreground">
           <History className="h-3 w-3 mt-0.5 shrink-0" />
