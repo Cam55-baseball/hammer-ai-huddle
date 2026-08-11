@@ -590,7 +590,18 @@ export function buildProgressionPayload(args: {
     ? `Beat ${best.best}${best.unit} ${best.label} (set ${daysAgoLabel(best.bestDate, state)}).`
     : null;
 
-  const nextStep = state.isDeloadWeek
+  const effectiveMetric = metricKey ?? (domain ? DOMAIN_METRIC_KEY[domain] ?? null : null);
+  const sinceMeasured = daysSinceLastMeasurement(state, effectiveMetric);
+  const measurementGap =
+    effectiveMetric && sinceMeasured == null && domain && MEASURABLE_DOMAINS.includes(domain)
+      ? `No ${metricLabel(effectiveMetric)} on record yet — log one and every future session progresses from it.`
+      : effectiveMetric && sinceMeasured != null && sinceMeasured >= 21
+      ? `Last ${metricLabel(effectiveMetric)} was ${sinceMeasured} days ago — time for a fresh number.`
+      : null;
+
+  const nextStep = testDay
+    ? "Re-test day: this number closes the block and sets the floor for the next one."
+    : state.isDeloadWeek
     ? "Next week starts a fresh block — volume climbs again from the number you set this week."
     : state.blockPhase === "peak"
     ? "Next week deloads volume ~40% and re-tests this quality."
@@ -623,8 +634,13 @@ export function buildProgressionPayload(args: {
     career_stage: state.career.stage,
     career_label: state.career.label,
     career_focus: state.career.focus,
+    test_day: testDay === true,
+    test_metric: testDay ? effectiveMetric : null,
+    test_metric_label: testDay ? metricLabel(effectiveMetric) : null,
+    measurement_gap: measurementGap,
   };
 }
+
 
 function daysAgoLabel(iso: string, state: ProgressionState): string {
   const days = daysBetween(iso, state.planDate);
