@@ -74,6 +74,11 @@ import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
+import {
+  WkProgressionNote,
+  WkProgressionBadge,
+  type ProgressionPayloadShape,
+} from "@/components/hammer/WkProgressionNote";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
