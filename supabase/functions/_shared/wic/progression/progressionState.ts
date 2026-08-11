@@ -487,7 +487,67 @@ export interface ProgressionPayload {
   readonly career_stage?: CareerStage;
   readonly career_label?: string;
   readonly career_focus?: string;
+  /** True when this item is the block's scheduled re-test for its domain. */
+  readonly test_day?: boolean;
+  /** Canonical metric to capture on a test day. */
+  readonly test_metric?: string | null;
+  readonly test_metric_label?: string | null;
+  /** Plain line when a measurable domain has gone a block with no number. */
+  readonly measurement_gap?: string | null;
 }
+
+/** Domains that carry a measurable number and therefore a re-test cadence. */
+export const MEASURABLE_DOMAINS: readonly TrainingDomain[] = [
+  "speed",
+  "bat_speed",
+  "lift",
+  "throwing",
+];
+
+const METRIC_LABEL: Record<string, string> = {
+  sprint_time_s: "sprint time",
+  bat_speed_mph: "bat speed",
+  load_lb: "top load",
+  throw_velo_mph: "throwing velo",
+  exit_velo_mph: "exit velo",
+  jump_height_in: "jump height",
+};
+
+export function metricLabel(metricKey: string | null | undefined): string | null {
+  if (!metricKey) return null;
+  return METRIC_LABEL[metricKey] ?? metricKey.replace(/_/g, " ");
+}
+
+/**
+ * Days since the athlete last produced a number for this metric, or null when
+ * they never have. Drives both the re-test prompt and the honest
+ * "no measured number since …" line.
+ */
+export function daysSinceLastMeasurement(
+  state: ProgressionState,
+  metricKey: string | null | undefined,
+): number | null {
+  if (!metricKey) return null;
+  const best = state.bests.get(metricKey);
+  if (!best) return null;
+  return daysBetween(best.lastDate, state.planDate);
+}
+
+/**
+ * Is this domain due for a re-test? Deload week is the constitutional re-test
+ * window; a measurable domain with no number inside the whole history window
+ * is due regardless of week, because the next block would otherwise progress
+ * from nothing.
+ */
+export function isTestDue(state: ProgressionState, domain: TrainingDomain): boolean {
+  if (!MEASURABLE_DOMAINS.includes(domain)) return false;
+  const metricKey = DOMAIN_METRIC_KEY[domain];
+  if (!metricKey) return false;
+  const since = daysSinceLastMeasurement(state, metricKey);
+  if (since == null) return true;
+  return state.isDeloadWeek && since >= 7;
+}
+
 
 
 const PHASE_LABEL: Record<BlockWeekPhase, string> = {
