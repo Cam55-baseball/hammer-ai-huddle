@@ -1104,6 +1104,11 @@ const handler = async (req: Request): Promise<Response> => {
           };
         }
         if (!wp.session_title) wp.session_title = blockLabel(progression, sessionName);
+        wp.test_day = isTestItem;
+        if (isTestItem) {
+          wp.test_metric = DOMAIN_METRIC_KEY[domain] ?? null;
+          wp.test_metric_label = metricLabel(DOMAIN_METRIC_KEY[domain]);
+        }
         if (!wp.progression) {
           wp.progression = buildProgressionPayload({
             state: progression,
@@ -1111,16 +1116,23 @@ const handler = async (req: Request): Promise<Response> => {
             metricKey: DOMAIN_METRIC_KEY[domain],
             sessionName,
             domain,
+            testDay: isTestItem,
           });
         } else if (typeof wp.progression === "object" && wp.progression) {
           const p = wp.progression as Record<string, unknown>;
           if (p.domain == null) p.domain = domain;
+          if (p.test_day == null) {
+            p.test_day = isTestItem;
+            p.test_metric = isTestItem ? DOMAIN_METRIC_KEY[domain] ?? null : null;
+            p.test_metric_label = isTestItem ? metricLabel(DOMAIN_METRIC_KEY[domain]) : null;
+          }
           if (p.career_stage == null) {
             p.career_stage = progression.career.stage;
             p.career_label = progression.career.label;
             p.career_focus = progression.career.focus;
           }
         }
+
         if (wp.re_exposure_violation == null) {
           wp.re_exposure_violation = isInReExposureWindow(
             progression,
