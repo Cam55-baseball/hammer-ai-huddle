@@ -7,7 +7,7 @@
  * beat. When no history exists it says so plainly rather than inventing one.
  */
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, History, Target, ArrowRight, Compass } from "lucide-react";
+import { TrendingUp, History, Target, ArrowRight, Compass, Gauge } from "lucide-react";
 
 export interface ProgressionPayloadShape {
   block_index?: number;
