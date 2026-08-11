@@ -572,8 +572,11 @@ export function buildProgressionPayload(args: {
   metricKey?: string | null;
   sessionName: string;
   domain?: TrainingDomain;
+  /** Generator marks exactly one item per domain as the block's re-test. */
+  testDay?: boolean;
 }): ProgressionPayload {
-  const { state, slug, metricKey, domain } = args;
+  const { state, slug, metricKey, domain, testDay } = args;
+
   const exposure = state.exposures.get(slug);
   const best = metricKey ? state.bests.get(metricKey) : undefined;
 
