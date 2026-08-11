@@ -41,6 +41,8 @@ import {
   domainSessionName,
   DOMAIN_SHAPE_FLOOR,
   DOMAIN_METRIC_KEY,
+  isTestDue,
+  metricLabel,
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
@@ -1049,11 +1051,27 @@ const handler = async (req: Request): Promise<Response> => {
         intent_factor: progression.intentFactor,
       };
 
+      // Scheduled re-testing — measurement is planned, never incidental.
+      // At most ONE item per measurable domain per day is nominated as the
+      // block's re-test, chosen deterministically (first item in canonical
+      // order for that domain) so the same plan replays identically.
+      const testItemByDomain = new Map<string, string>();
+      if (fullTrainingDay) {
+        for (const rx of rxs as any[]) {
+          const d = domainForSlotRole(rx.slot, rx.sequence_role);
+          if (testItemByDomain.has(d)) continue;
+          if (!isTestDue(progression, d)) continue;
+          testItemByDomain.set(d, rx.movement_slug);
+        }
+      }
+
       for (const rx of rxs as any[]) {
         const wp = (rx.why_payload ?? {}) as Record<string, unknown>;
         const domain = domainForSlotRole(rx.slot, rx.sequence_role);
         const floor = DOMAIN_SHAPE_FLOOR[domain];
         const sessionName = domainSessionName(domain);
+        const isTestItem = testItemByDomain.get(domain) === rx.movement_slug;
+
 
         wp.training_domain = domain;
         wp.career_horizon = {
@@ -1088,6 +1106,11 @@ const handler = async (req: Request): Promise<Response> => {
           };
         }
         if (!wp.session_title) wp.session_title = blockLabel(progression, sessionName);
+        wp.test_day = isTestItem;
+        if (isTestItem) {
+          wp.test_metric = DOMAIN_METRIC_KEY[domain] ?? null;
+          wp.test_metric_label = metricLabel(DOMAIN_METRIC_KEY[domain]);
+        }
         if (!wp.progression) {
           wp.progression = buildProgressionPayload({
             state: progression,
@@ -1095,16 +1118,23 @@ const handler = async (req: Request): Promise<Response> => {
             metricKey: DOMAIN_METRIC_KEY[domain],
             sessionName,
             domain,
+            testDay: isTestItem,
           });
         } else if (typeof wp.progression === "object" && wp.progression) {
           const p = wp.progression as Record<string, unknown>;
           if (p.domain == null) p.domain = domain;
+          if (p.test_day == null) {
+            p.test_day = isTestItem;
+            p.test_metric = isTestItem ? DOMAIN_METRIC_KEY[domain] ?? null : null;
+            p.test_metric_label = isTestItem ? metricLabel(DOMAIN_METRIC_KEY[domain]) : null;
+          }
           if (p.career_stage == null) {
             p.career_stage = progression.career.stage;
             p.career_label = progression.career.label;
             p.career_focus = progression.career.focus;
           }
         }
+
         if (wp.re_exposure_violation == null) {
           wp.re_exposure_violation = isInReExposureWindow(
             progression,

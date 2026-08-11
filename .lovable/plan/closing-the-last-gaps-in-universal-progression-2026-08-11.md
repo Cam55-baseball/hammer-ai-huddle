@@ -1,3 +1,5 @@
+&nbsp;
+
 # Closing the Last Gaps in Universal Progression
 
 The progression spine is live and stamping every prescription, but three verified gaps stop it from being truly E2E. Each one below was confirmed by reading the code, not assumed.
@@ -11,6 +13,7 @@ The logging path never writes them. `useSaveExerciseLog` stores `metrics: { roun
 Result: the only bests that ever populate are `load_lb` and `sprint_distance_ft`, which come from real columns. Bat speed, sprint time and throwing velo — the three headline numbers — are silently dead, so "beat your best" targets never appear on the cards that matter most.
 
 Fix:
+
 - Add a shared metric-normalizer that derives canonical top-level metrics from the logged rounds at save time (best round, direction-aware: fastest sprint, highest velo/bat speed), and writes them alongside `rounds` in `metrics`.
 - Make the reader tolerant too: `metricsFromLog` also scans `metrics.rounds[]` so historical logs already in the database start producing bests immediately, with no backfill required.
 - Map every log template field to its canonical key once (`time` → `sprint_time_s` only for sprint/agility templates, `peak_velo` → `throw_velo_mph`, `bat_speed` → `bat_speed_mph`, `exit_velo` → `exit_velo_mph`, `height` → `jump_height_in`), so a new template can't quietly drop a metric.
@@ -20,6 +23,7 @@ Fix:
 Cards sourced from `wk_prescriptions` (speed, bat speed, lifts, conditioning, cross-sport, pitching) carry domain, block wave, career horizon and day orchestration. Warm-up, recovery, mobility, defense, nutrition and mental still render through the legacy `BlockCard` path from `dailyPlan.ts`, which never sees the progression state — so those cards show no lineage, no cadence, no career line.
 
 Fix:
+
 - Expose the day's progression state to the client through the existing snapshot, and have `BlockCard` render the same `WkProgressionNote` / `WkSessionShapeLine` for its domain (`domainForSlotRole` already resolves warmup, recovery, mobility, arm care).
 - Give each block domain a cadence line derived from real history ("Mobility ran 5x in the last 4 weeks") instead of leaving the card silent.
 - No block-generation logic changes — this is lineage display parity, so the day reads as one program.
@@ -29,9 +33,10 @@ Fix:
 Bests only update when an athlete happens to log a number. Nothing schedules a re-test, so a block can complete with no measurement and the next block has nothing to progress from.
 
 Fix:
+
 - Deload week (week 4) marks one re-test movement per measurable domain — speed, bat speed, lift, throwing — flagged in `why_payload` as `test_day: true` with the metric to capture.
 - The card shows a clear "Test day — log this number" state, and the log sheet opens pre-focused on the metric field.
-- When a block ends with no logged test for a domain, the next block's card says so plainly ("no measured number since <date>") instead of showing a fabricated target.
+- When a block ends with no logged test for a domain, the next block's card says so plainly ("no measured number since &nbsp;") instead of showing a fabricated target.
 
 ## Also tightened
 

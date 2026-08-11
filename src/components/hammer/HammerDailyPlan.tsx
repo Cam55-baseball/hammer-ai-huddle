@@ -74,6 +74,11 @@ import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
+import {
+  WkProgressionNote,
+  WkProgressionBadge,
+  type ProgressionPayloadShape,
+} from "@/components/hammer/WkProgressionNote";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
@@ -713,6 +718,19 @@ function WarmupCrossoverAddons() {
 }
 
 
+/** Legacy plan-block modality → WIC progression domain. */
+const BLOCK_DOMAIN: Record<string, string | undefined> = {
+  warmup: "warmup",
+  movement_prep: "movement_prep",
+  mobility: "mobility",
+  recovery: "recovery",
+  throwing: "throwing",
+  pitching: "throwing",
+  arm_care: "arm_care",
+  hitting: "bat_speed",
+  defense: "other",
+};
+
 function BlockCard({
   block,
   onNavigate,
@@ -742,6 +760,39 @@ function BlockCard({
     | undefined) ?? "baseball";
   const { createTemplate } = useCustomActivities(sport);
 
+  // Legacy blocks (warm-up, mobility, recovery, throwing, skill work) read the
+  // same progression lineage the WIC cards render, so every card on the plan
+  // carries block/week, domain history and the career line — no dual track.
+  const blockProgression = useMemo<ProgressionPayloadShape | null>(() => {
+    const rxs = (wkSnap.data ?? []) as Array<{ why_payload?: Record<string, unknown> | null }>;
+    if (rxs.length === 0) return null;
+    const domain = BLOCK_DOMAIN[block.modality];
+    const match =
+      (domain &&
+        rxs.find((r) => (r.why_payload as any)?.training_domain === domain)) ||
+      null;
+    const source = (match?.why_payload as any)?.progression as ProgressionPayloadShape | undefined;
+    if (source) return source;
+    // No prescription for this domain today — still show the wave + career line
+    // from the day's shared state rather than leaving the card lineage-blind.
+    const anchor = (rxs[0]?.why_payload as any)?.progression as ProgressionPayloadShape | undefined;
+    if (!anchor) return null;
+    return {
+      block_index: anchor.block_index,
+      week_in_block: anchor.week_in_block,
+      block_phase: anchor.block_phase,
+      is_deload_week: anchor.is_deload_week,
+      career_stage: anchor.career_stage,
+      career_label: anchor.career_label,
+      career_focus: anchor.career_focus,
+      domain,
+      domain_history: null,
+      builds_on: null,
+      target: null,
+      next_step: null,
+    };
+  }, [wkSnap.data, block.modality]);
+
   const focusGaps = useMemo(
     () =>
       block.missingContextKeys
@@ -749,6 +800,7 @@ function BlockCard({
         .filter((g): g is (typeof HAMMER_KNOWLEDGE_GAPS)[number] => !!g),
     [block.missingContextKeys],
   );
+
 
   async function handleAddToGamePlan() {
     if (!block.gamePlanTemplate || adding) return;
@@ -907,6 +959,13 @@ function BlockCard({
         </div>
 
         <CollapsibleContent className="mt-3 space-y-3">
+          {blockProgression && (
+            <div className="space-y-2 text-xs">
+              <WkProgressionBadge progression={blockProgression} />
+              <WkProgressionNote progression={blockProgression} />
+            </div>
+          )}
+
           {block.drills.length > 0 && (
             <div className="space-y-1.5">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -9,6 +9,12 @@
 // organism truth, never overrides safety / recovery / medical layers, and
 // never fabricates a performance number that was not logged.
 
+import {
+  deriveCanonicalMetrics,
+  LOWER_IS_BETTER,
+  type LoggedRound,
+} from "./metricNormalizer.ts";
+
 /** Fixed global anchor (a Monday) so block/week math never drifts. */
 const WAVE_ANCHOR_ISO = "2024-01-01";
 
@@ -228,39 +234,50 @@ function daysBetween(fromIso: string, toIso: string): number {
   return Math.floor((b - a) / 86400000);
 }
 
-/** Metric extraction from a session log row — only what was really recorded. */
+/**
+ * Metric extraction from a session log row — only what was really recorded.
+ *
+ * Three sources, in precedence order:
+ *   1. canonical top-level keys written by the normalizer at save time,
+ *   2. the raw `rounds[]` the athlete typed (covers every log written before
+ *      the normalizer existed — no backfill required),
+ *   3. real columns (`load_used`, `distance_feet_completed`).
+ */
 function metricsFromLog(log: HistorySessionLogRow): Array<{ key: string; label: string; value: number; unit: string }> {
   const out: Array<{ key: string; label: string; value: number; unit: string }> = [];
+  const seen = new Set<string>();
   const m = (log.metrics ?? {}) as Record<string, unknown>;
   const num = (v: unknown): number | null => {
     const n = typeof v === "string" ? Number(v) : typeof v === "number" ? v : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
   };
+  const add = (key: string, label: string, value: number | null, unit: string) => {
+    if (value == null || seen.has(key)) return;
+    seen.add(key);
+    out.push({ key, label, value, unit });
+  };
 
-  const batSpeed =
-    num(m["bat_speed_mph"]) ?? num(m["peak_bat_speed"]) ?? num(m["bat_speed"]);
-  if (batSpeed) out.push({ key: "bat_speed_mph", label: "peak bat speed", value: batSpeed, unit: "mph" });
+  // 1 — canonical keys.
+  add("bat_speed_mph", "peak bat speed", num(m["bat_speed_mph"]) ?? num(m["peak_bat_speed"]), "mph");
+  add("exit_velo_mph", "exit velo", num(m["exit_velo_mph"]) ?? num(m["exit_velocity"]), "mph");
+  add("sprint_time_s", "sprint time", num(m["sprint_time_s"]) ?? num(m["time_seconds"]), "s");
+  add("throw_velo_mph", "throwing velo", num(m["throw_velo_mph"]) ?? num(m["velo_mph"]), "mph");
+  add("jump_height_in", "jump height", num(m["jump_height_in"]), "in");
 
-  const exitVelo = num(m["exit_velo_mph"]) ?? num(m["exit_velocity"]);
-  if (exitVelo) out.push({ key: "exit_velo_mph", label: "exit velo", value: exitVelo, unit: "mph" });
+  // 2 — derive from the rounds the athlete actually typed.
+  const rounds = Array.isArray(m["rounds"]) ? (m["rounds"] as LoggedRound[]) : null;
+  const templateId = typeof m["template_id"] === "string" ? (m["template_id"] as string) : null;
+  for (const metric of deriveCanonicalMetrics(templateId, rounds)) {
+    add(metric.key, metric.label, metric.value, metric.unit);
+  }
 
-  const sprintTime = num(m["sprint_time_s"]) ?? num(m["time_seconds"]);
-  if (sprintTime) out.push({ key: "sprint_time_s", label: "sprint time", value: sprintTime, unit: "s" });
-
-  const throwVelo = num(m["throw_velo_mph"]) ?? num(m["velo_mph"]);
-  if (throwVelo) out.push({ key: "throw_velo_mph", label: "throwing velo", value: throwVelo, unit: "mph" });
-
-  const distance = num(log.distance_feet_completed);
-  if (distance) out.push({ key: "sprint_distance_ft", label: "sprint distance", value: distance, unit: "ft" });
-
-  const load = num(log.load_used);
-  if (load) out.push({ key: "load_lb", label: "load", value: load, unit: "lb" });
+  // 3 — real columns.
+  add("sprint_distance_ft", "sprint distance", num(log.distance_feet_completed), "ft");
+  add("load_lb", "load", num(log.load_used), "lb");
 
   return out;
 }
 
-/** Lower-is-better metrics get inverted comparison for "best". */
-const LOWER_IS_BETTER = new Set(["sprint_time_s"]);
 
 export interface BuildProgressionInput {
   readonly planDate: string;
@@ -470,7 +487,67 @@ export interface ProgressionPayload {
   readonly career_stage?: CareerStage;
   readonly career_label?: string;
   readonly career_focus?: string;
+  /** True when this item is the block's scheduled re-test for its domain. */
+  readonly test_day?: boolean;
+  /** Canonical metric to capture on a test day. */
+  readonly test_metric?: string | null;
+  readonly test_metric_label?: string | null;
+  /** Plain line when a measurable domain has gone a block with no number. */
+  readonly measurement_gap?: string | null;
 }
+
+/** Domains that carry a measurable number and therefore a re-test cadence. */
+export const MEASURABLE_DOMAINS: readonly TrainingDomain[] = [
+  "speed",
+  "bat_speed",
+  "lift",
+  "throwing",
+];
+
+const METRIC_LABEL: Record<string, string> = {
+  sprint_time_s: "sprint time",
+  bat_speed_mph: "bat speed",
+  load_lb: "top load",
+  throw_velo_mph: "throwing velo",
+  exit_velo_mph: "exit velo",
+  jump_height_in: "jump height",
+};
+
+export function metricLabel(metricKey: string | null | undefined): string | null {
+  if (!metricKey) return null;
+  return METRIC_LABEL[metricKey] ?? metricKey.replace(/_/g, " ");
+}
+
+/**
+ * Days since the athlete last produced a number for this metric, or null when
+ * they never have. Drives both the re-test prompt and the honest
+ * "no measured number since …" line.
+ */
+export function daysSinceLastMeasurement(
+  state: ProgressionState,
+  metricKey: string | null | undefined,
+): number | null {
+  if (!metricKey) return null;
+  const best = state.bests.get(metricKey);
+  if (!best) return null;
+  return daysBetween(best.lastDate, state.planDate);
+}
+
+/**
+ * Is this domain due for a re-test? Deload week is the constitutional re-test
+ * window; a measurable domain with no number inside the whole history window
+ * is due regardless of week, because the next block would otherwise progress
+ * from nothing.
+ */
+export function isTestDue(state: ProgressionState, domain: TrainingDomain): boolean {
+  if (!MEASURABLE_DOMAINS.includes(domain)) return false;
+  const metricKey = DOMAIN_METRIC_KEY[domain];
+  if (!metricKey) return false;
+  const since = daysSinceLastMeasurement(state, metricKey);
+  if (since == null) return true;
+  return state.isDeloadWeek && since >= 7;
+}
+
 
 
 const PHASE_LABEL: Record<BlockWeekPhase, string> = {
@@ -495,8 +572,11 @@ export function buildProgressionPayload(args: {
   metricKey?: string | null;
   sessionName: string;
   domain?: TrainingDomain;
+  /** Generator marks exactly one item per domain as the block's re-test. */
+  testDay?: boolean;
 }): ProgressionPayload {
-  const { state, slug, metricKey, domain } = args;
+  const { state, slug, metricKey, domain, testDay } = args;
+
   const exposure = state.exposures.get(slug);
   const best = metricKey ? state.bests.get(metricKey) : undefined;
 
@@ -510,7 +590,18 @@ export function buildProgressionPayload(args: {
     ? `Beat ${best.best}${best.unit} ${best.label} (set ${daysAgoLabel(best.bestDate, state)}).`
     : null;
 
-  const nextStep = state.isDeloadWeek
+  const effectiveMetric = metricKey ?? (domain ? DOMAIN_METRIC_KEY[domain] ?? null : null);
+  const sinceMeasured = daysSinceLastMeasurement(state, effectiveMetric);
+  const measurementGap =
+    effectiveMetric && sinceMeasured == null && domain && MEASURABLE_DOMAINS.includes(domain)
+      ? `No ${metricLabel(effectiveMetric)} on record yet — log one and every future session progresses from it.`
+      : effectiveMetric && sinceMeasured != null && sinceMeasured >= 21
+      ? `Last ${metricLabel(effectiveMetric)} was ${sinceMeasured} days ago — time for a fresh number.`
+      : null;
+
+  const nextStep = testDay
+    ? "Re-test day: this number closes the block and sets the floor for the next one."
+    : state.isDeloadWeek
     ? "Next week starts a fresh block — volume climbs again from the number you set this week."
     : state.blockPhase === "peak"
     ? "Next week deloads volume ~40% and re-tests this quality."
@@ -543,8 +634,13 @@ export function buildProgressionPayload(args: {
     career_stage: state.career.stage,
     career_label: state.career.label,
     career_focus: state.career.focus,
+    test_day: testDay === true,
+    test_metric: testDay ? effectiveMetric : null,
+    test_metric_label: testDay ? metricLabel(effectiveMetric) : null,
+    measurement_gap: measurementGap,
   };
 }
+
 
 function daysAgoLabel(iso: string, state: ProgressionState): string {
   const days = daysBetween(iso, state.planDate);
