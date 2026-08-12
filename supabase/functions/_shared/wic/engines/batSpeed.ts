@@ -63,6 +63,8 @@ import {
   isInReExposureWindow,
   type ProgressionState,
 } from "../progression/progressionState.ts";
+import { ENGINE_ALLOWED_DOMAINS, owningDomain } from "../domainGate.ts";
+
 
 /** The five constitutional stages of an elite rotational session. */
 export type BatSpeedStage = "prime" | "potentiate" | "contrast" | "intent" | "transfer";
