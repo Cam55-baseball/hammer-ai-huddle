@@ -20,7 +20,7 @@ import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
-import { checkAthleteScope } from "../_shared/wic/domainGate.ts";
+import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
 import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
@@ -500,6 +500,9 @@ const handler = async (req: Request): Promise<Response> => {
       // to every candidate, so a mis-scoped row cannot reach any card even if
       // the catalog query is later loosened.
       if (!checkAthleteScope(m as any, { sport, positions: athletePositions }).allowed) return false;
+      // Catalog integrity — a row whose text or tags contradict its owning
+      // domain is never prescribable, no matter which engine asks for it.
+      if (auditMovementIntegrity(m as any).length > 0) return false;
       return true;
     };
     const swap = (m: MovementRow) => {
