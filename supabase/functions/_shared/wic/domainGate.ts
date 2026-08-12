@@ -80,7 +80,7 @@ export interface GateableMovement {
   [key: string]: unknown;
 }
 
-export function owningDomain(m: GateableMovement): OwningDomain {
+export function owningDomain(m: { category?: string | null }): OwningDomain {
   const cat = (m.category ?? "").trim();
   return CATEGORY_TO_DOMAIN[cat] ?? "unknown";
 }
