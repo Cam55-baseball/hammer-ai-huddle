@@ -258,7 +258,10 @@ export const DOMAIN_FORBIDDEN_KEYWORDS: Partial<Record<OwningDomain, readonly st
 /** Contribution tags and the domains permitted to carry them. */
 export const CONTRIBUTION_TAG_DOMAINS: Record<string, readonly OwningDomain[]> = {
   bat_speed_category: ["bat_speed", "trunk"],
-  speed_category: ["speed", "lift", "trunk"],
+  // Conditioning and mobility rows legitimately declare a speed contribution;
+  // the speed engine's own allow-list still keeps them out of the speed pool,
+  // so the tag stays descriptive rather than admissive.
+  speed_category: ["speed", "lift", "trunk", "conditioning", "warmup"],
   arm_care_category: ["arm_care", "throwing", "warmup"],
   cross_sport_category: ["cross_sport"],
 };
