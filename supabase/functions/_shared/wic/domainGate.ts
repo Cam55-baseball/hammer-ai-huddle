@@ -180,6 +180,20 @@ export function checkDomainGate(
     };
   }
 
+  return checkAthleteScope(m, ctx);
+}
+
+/**
+ * Sport / subscription / discipline specialization, independent of which
+ * engine is asking. The generator applies this to every candidate movement so
+ * a mis-scoped row cannot survive even if the catalog query is loosened.
+ */
+export function checkAthleteScope(
+  m: GateableMovement,
+  ctx: Omit<DomainGateContext, "engine"> & { engine?: string },
+): DomainGateResult {
+  const domain = owningDomain(m);
+
   // Sport specialization — a hard gate, not a query hint.
   const scope = (m.sport_scope ?? "both").trim().toLowerCase();
   const sport = (ctx.sport ?? "").trim().toLowerCase();
