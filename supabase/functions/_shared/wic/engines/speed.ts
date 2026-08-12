@@ -15,6 +15,7 @@
 import { resolveSpeedTemplate, type SpeedTemplate, type SpeedTemplateResolutionInput } from "../speed/templates.ts";
 import { ALL_SPEED_CATEGORIES, type SpeedCategory } from "../speed/movementCategories.ts";
 import { isInReExposureWindow, type ProgressionState } from "../progression/progressionState.ts";
+import { ENGINE_ALLOWED_DOMAINS, owningDomain } from "../domainGate.ts";
 
 /**
  * Session shape floor — an elite speed session is a sequence, never a single
@@ -208,13 +209,15 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
   const template = resolveSpeedTemplate(input.template);
   const warnings: string[] = [];
 
-  // Build eligible pool (must have a speed_category OR be in speed_lab
-  // category; must pass the caller's eligibility function).
-  const pool = input.catalog.filter(
-    (m) =>
-      (m.speed_category != null || m.category === "speed_lab") &&
-      input.eligible(m),
-  );
+  // Build eligible pool. Domain gate first: only an ALLOWED owning domain may
+  // contribute to a speed session, so a `speed_category` tag on a conditioning
+  // or mobility row can describe transfer without smuggling the movement into
+  // the Speed card. Then the caller's eligibility function.
+  const pool = input.catalog.filter((m) => {
+    if (!ENGINE_ALLOWED_DOMAINS.speed.includes(owningDomain(m))) return false;
+    if (m.speed_category == null && m.category !== "speed_lab") return false;
+    return input.eligible(m);
+  });
 
   const used = new Set<string>();
   const usedFamilies = new Set<string>();
