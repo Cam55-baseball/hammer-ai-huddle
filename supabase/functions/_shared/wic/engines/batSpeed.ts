@@ -63,6 +63,8 @@ import {
   isInReExposureWindow,
   type ProgressionState,
 } from "../progression/progressionState.ts";
+import { ENGINE_ALLOWED_DOMAINS, owningDomain } from "../domainGate.ts";
+
 
 /** The five constitutional stages of an elite rotational session. */
 export type BatSpeedStage = "prime" | "potentiate" | "contrast" | "intent" | "transfer";
@@ -208,9 +210,16 @@ export function selectBatSpeedPicks(input: SelectBatSpeedInput): BatSpeedSelecti
     trainingAgeClass: input.trainingAgeClass,
   });
 
-  const pool = input.catalog.filter(
-    (m) => (m.category === "bat_speed" || m.bat_speed_category != null) && input.eligible(m),
-  );
+  // Domain gate (constitutional): a movement joins the bat-speed pool only if
+  // an ALLOWED owning domain declares it. The old `category === "bat_speed" ||
+  // bat_speed_category != null` OR-clause let throwing/arm-care drills in
+  // through the tag side-door; `ENGINE_ALLOWED_DOMAINS.bat_speed` now decides.
+  const pool = input.catalog.filter((m) => {
+    if (!ENGINE_ALLOWED_DOMAINS.bat_speed.includes(owningDomain(m))) return false;
+    if (m.category !== "bat_speed" && m.bat_speed_category == null) return false;
+    return input.eligible(m);
+  });
+
 
   const used = new Set<string>();
   const usedFamilies = new Set<string>();

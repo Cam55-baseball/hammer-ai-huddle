@@ -20,6 +20,7 @@ import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
+import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
 import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
@@ -282,6 +283,18 @@ const handler = async (req: Request): Promise<Response> => {
     const p: any = profile ?? {};
     const sport = (p.sport ?? "baseball") as "baseball" | "softball";
     const position = p.primary_position ?? p.position ?? null;
+    // Every position label the athlete holds, for the domain scope gate.
+    const athletePositions: string[] = Array.from(
+      new Set(
+        [
+          position,
+          ...(Array.isArray((p as any).positions) ? (p as any).positions : []),
+          ...(Array.isArray((p as any).secondary_positions) ? (p as any).secondary_positions : []),
+        ]
+          .filter((v) => typeof v === "string" && v.trim() !== "")
+          .map((v) => String(v).trim().toLowerCase()),
+      ),
+    );
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
@@ -483,6 +496,13 @@ const handler = async (req: Request): Promise<Response> => {
       if (decision?.primary && m.primary_adaptation) {
         if (!adaptationsCompatible(decision.primary, m.primary_adaptation)) return false;
       }
+      // Constitutional scope gate — sport / discipline specialization applied
+      // to every candidate, so a mis-scoped row cannot reach any card even if
+      // the catalog query is later loosened.
+      if (!checkAthleteScope(m as any, { sport, positions: athletePositions }).allowed) return false;
+      // Catalog integrity — a row whose text or tags contradict its owning
+      // domain is never prescribable, no matter which engine asks for it.
+      if (auditMovementIntegrity(m as any).length > 0) return false;
       return true;
     };
     const swap = (m: MovementRow) => {
