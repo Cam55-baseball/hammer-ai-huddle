@@ -1,78 +1,69 @@
-# Cloud Cost Audit — What's Actually Draining Credits
+# Categorical Integrity: No Drill Ever Appears in the Wrong Card
 
-## The headline: it is not AI
+## What I found
 
-Your migration to Google/OpenAI worked. AI Gateway usage over the last 7 days is **zero requests**. Nothing in the app calls Lovable AI anymore.
+You are right, and it is a data error — not an interpretation problem.
 
-Credits used this billing period (Jul 19 – Aug 19), 952 total:
+One movement in the catalog is a **pitching drill filed as a bat-speed drill**:
 
-| Item | Credits |
-|---|---|
-| Build mode messages | 704.36 |
-| Plan mode messages | 190.70 |
-| **Cloud compute (database)** | **40.34** |
-| Cloud functions / egress / storage / realtime | 5.37 |
-| AI Gateway (all models, all pre-migration) | 11.46 |
+| slug | name | category | arm_care_category | why_prescribed |
+|---|---|---|---|---|
+| `plyo_ball_pitching` | Plyo-Ball Pitching Variants | **bat_speed** | throwing_day | "Arm care + velocity work. Eccentric arm capacity." |
 
-Chat messages are the bulk. The part that drains **without anyone building** is Cloud: ~0.93 credits/day compute plus ~0.11/day functions, egress and storage. Your plan's free Cloud allowance is 40/month and compute alone has now used 40.34 — so Cloud has crossed into paid credits. This cannot be moved to Google or OpenAI; it is your database and file storage, not AI.
+Its own description says arm care and throwing velocity. It was seeded into `category = 'bat_speed'`, so the bat-speed engine treats it as rotational-power work and can prescribe it inside a Bat Speed card. Its equipment list is also wrong (`med_ball, bat` — it needs plyo balls). The correct home is the throwing/arm-care pool, where the same family already lives properly as `dl_plyo_pivot_pickoff` and `dl_plyo_reverse_throw` under `category = 'driveline'`.
 
-## What is keeping Cloud awake
+Note one row that is **not** a mistake and should stay: `bs_plyo_ball_wall_rebounds` — a 1–2 lb plyo ball rebounded off a wall *from a hitting posture*. That is a genuine low-load rotational hitting drill (Driveline hitting methodology), not a throwing drill. Its name is what makes it read wrong on the card, so it gets renamed and re-cued rather than moved.
 
-The backend runs 53 active scheduled jobs. Compute bills while the database is awake, and these jobs never let it sleep. In the last 24 hours:
+## Why the gate let it through
+
+`supabase/functions/_shared/wic/engines/batSpeed.ts` builds its candidate pool with:
 
 ```text
-check-render-status-every-minute        1440 runs/day
-check-render-status-every-2min           720 runs/day   <-- duplicate of the above
-retry-follower-reports-every-5-min       288 runs/day
-engine-auto-recovery-10min               144 runs/day
-engine-heartbeat-15min                    96 runs/day
-hammer-state-15min                        96 runs/day
-hie-refresh-15min                         96 runs/day
-6 hourly jobs                            144 runs/day
--------------------------------------------------------
-                                      ~3,000 function invocations/day
+category === "bat_speed"  OR  bat_speed_category != null
 ```
 
-Two findings stand out:
+That is an **OR**, so any row carrying a `bat_speed_category` tag joins the bat-speed pool regardless of what discipline it actually belongs to. Two trunk movements (`heavy_russian_twist`, `trap_bar_trunk_twist`) enter the same way — those are defensible as rotational strength, but the door they walk through is the same door the pitching drill used.
 
-1. **`check-render-status` is scheduled twice** — one job every minute and a second job every 2 minutes, both calling the same function. That is 2,160 invocations a day, and the logs show every single one returning "Found 0 processing jobs". It is doing nothing except paying to stay awake.
-2. **The 5/10/15-minute engine jobs** (auto-recovery, heartbeat, hammer-state, HIE refresh) run around the clock regardless of whether any athlete is active. Together they guarantee the database never idles.
+There is also no gate on **discipline**. Sport is filtered at query time (`sport_scope = both OR = athlete's sport`) but nearly every row is `both`, and nothing checks that a pitcher-only drill stays out of a position player's card, or that a hitting-module subscriber never sees throwing-module content.
 
-Storage is the other slow drip: 8.6 GB total, of which the `videos` bucket is 7.5 GB across 1,080 objects, plus a 626 MB `landing-demo` bucket holding only 5 files. Storage and egress bill continuously.
+## The fix
 
-Database health is otherwise fine: memory 58%, disk 29%, connections 14/60. No resize needed.
+### 1. Move the mislabelled drill
+Reassign `plyo_ball_pitching` to the throwing/arm-care domain, clear its `bat_speed_category`, correct its equipment to plyo balls, and rewrite its cue so it reads as a throwing-velocity drill. It leaves the bat-speed pool permanently.
 
-## Proposed changes
+### 2. Rename and re-cue the legitimate one
+`bs_plyo_ball_wall_rebounds` becomes clearly a hitting drill by name and by cue — the posture, the intent, and the fact that the light ball is a rotational implement, not a throwing implement. Its "why prescribed" states plainly that this is rotational elastic work for the swing, not arm work.
 
-### 1. Kill the duplicate render-status job
-Remove `check-render-status-every-2min` entirely. It is a redundant copy. Immediate: -720 invocations/day.
+### 3. Close the OR loophole — a hard domain gate
+Introduce a single shared module, `supabase/functions/_shared/wic/domainGate.ts`, that owns the one rule for every engine:
 
-### 2. Slow the render-status poller
-It only matters when a video render is in flight. Change the remaining job from every minute to every 5 minutes, and have the function early-exit before touching the database when there is no pending work. Renders still get picked up; the polling stops being the app's heartbeat. Saves a further ~1,150 invocations/day.
+- Each movement declares exactly **one owning domain** (`bat_speed`, `speed`, `lift`, `conditioning`, `throwing`, `arm_care`, `recovery`, `warmup`, `cross_sport`).
+- Secondary tags like `bat_speed_category` become **contribution tags**, admissible only when the owning domain is on that engine's explicit allow-list. The bat-speed engine will accept `bat_speed` and `trunk` — never `arm_care` or `throwing`.
+- Every engine (bat speed, speed, strength, conditioning, cross-sport, arm care) routes its pool through this gate instead of writing its own filter.
 
-### 3. Right-size the engine schedules
-- `retry-follower-reports` every 5 min → every 30 min (it is a retry path, not a live surface).
-- `engine-auto-recovery` every 10 min → every 30 min.
-- `hammer-state`, `hie-refresh`, `engine-heartbeat` from 15 min → 30 min.
+### 4. Sport and subscription specialization on every card
+Extend the same gate to reject a movement when:
+- its `sport_scope` conflicts with the athlete's sport (already partly done — this makes it a hard gate rather than a query hint), and
+- its owning domain is outside the athlete's active module subscription, and
+- it is discipline-restricted (pitcher-only, catcher-only) and the athlete does not hold that role.
 
-These change refresh latency for background analytics only; nothing user-facing waits on them.
+This means a softball athlete never receives a baseball-only implement, and a hitting-only subscriber never sees a throwing prescription.
 
-### 4. Trim the landing-demo bucket
-626 MB for 5 files means old demo uploads are still stored. Delete superseded versions and keep only the live demo video and its poster.
+### 5. Make a repeat impossible — a build-time guard
+Add `scripts/check-domain-integrity.ts`, run in preflight alongside the existing WIC guards. It fails the build when:
+- a movement carries a contribution tag for a domain that does not allow its owning domain,
+- a movement's name, cue or `why_prescribed` contains discipline keywords that contradict its owning domain (a `bat_speed` row mentioning bullpen, mound, pitching, long toss, pulldown, arm care — the exact signature that caught this one),
+- a row has no owning domain, or equipment that contradicts its domain.
 
-### 5. Review video retention
-7.5 GB of athlete video is the single largest storage item and it only grows. Decide a retention rule (for example, keep analysed clips, expire raw uploads older than N months) before this doubles.
+Running it now would have failed on `plyo_ball_pitching`, which is the point.
 
-### 6. Add a credit alert
-Set a workspace usage alert so you are notified before Cloud usage crosses the free allowance again, instead of finding out from the balance.
-
-## Expected result
-
-Cutting roughly 2,000 of ~3,000 daily invocations and lengthening the wake cadence should let the database idle far more of the day. Compute is the ~0.93/day line item; a meaningful share of that becomes recoverable. Function and egress lines drop proportionally with the invocation count.
+### 6. Verify against the full catalog
+Sweep all 24 categories with the new rules and report every violation found, so this audit covers the whole library rather than the one card you spotted.
 
 ## Technical notes
 
-- Cron schedules are managed through the Cloud Jobs UI (More > Cloud > Jobs), not raw SQL — I will direct the changes there rather than mutating `cron.job` directly.
-- The early-exit guard in `check-render-status` is a code change in `supabase/functions/check-render-status/index.ts`: return before any query when no render jobs are pending.
-- Storage cleanup targets the `landing-demo` bucket via the storage API; the live `landing_demo_video` row and its `poster_url` stay intact.
-- No schema changes, no RLS changes, no changes to any AI provider wiring.
+- Data corrections ship as a migration against `wk_movement_catalog` (category, `bat_speed_category`, `arm_care_category`, equipment, name, cue, `why_prescribed`). No schema change is required; the owning-domain concept maps onto the existing `category` column, with `movement_category` reserved as-is.
+- `domainGate.ts` is pure data-in/data-out so plans stay deterministically replayable; it authors no truth and only narrows candidate pools.
+- Engine call sites to update: `engines/batSpeed.ts` (line ~212), `engines/speed.ts`, `engines/strength.ts`, `engines/conditioning.ts`, `engines/crossSport.ts`, `armCare/picker.ts`.
+- The generator already loads the catalog with a sport filter in `wk-generate-daily/index.ts` (line 360); the gate becomes the authoritative second pass so a mis-scoped row cannot survive even if the query is loosened later.
+- Existing plans already generated are unaffected historically; the next daily generation picks up the corrected pool.
