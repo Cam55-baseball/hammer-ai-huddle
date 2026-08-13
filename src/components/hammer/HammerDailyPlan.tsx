@@ -439,6 +439,19 @@ function HammerDailyPlanBody() {
                 duplicated hitting / bat-speed / throwing cards below. */}
 
 
+            {!wkRx.needsGeneration && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-[11px]"
+                disabled={wkRx.generating}
+                onClick={wkRx.retry}
+                title="Rebuild today's plan from your current roadmap position"
+              >
+                <RefreshCw className={`mr-1 h-3.5 w-3.5 ${wkRx.generating ? "animate-spin" : ""}`} />
+                Rebuild
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
