@@ -315,39 +315,44 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     }
   }, [user?.id, planDate, qc, invokeOnce]);
 
-  // On-demand generation doctrine: the plan is NEVER built automatically.
-  // The athlete presses "Generate today's plan". The roadmap is unaffected —
-  // block/week/deload are derived from a fixed calendar anchor plus real
-  // history, not from a per-generation counter.
-  //
-  // We only expose *whether* generation is needed (no rows) or the existing
-  // plan has drifted (generator version / season phase / game-day changed);
-  // the UI decides what to offer.
-  const needsGeneration = useMemo(
-    () => !query.isLoading && (query.data?.length ?? 0) === 0,
-    [query.isLoading, query.data],
-  );
-
-  const staleReason = useMemo<null | "version" | "phase" | "game_day">(() => {
-    const rows = query.data ?? [];
-    const first = rows[0];
-    if (!first) return null;
-    if (first.why_payload?.generator_version !== WK_GENERATOR_VERSION) return "version";
-    if (!season.isLoading) {
-      const expectedPhase = canonicalPhase.phase;
-      const drifted = rows.some((rx) => {
+  // Auto-generate exactly once per mount if empty.
+  useEffect(() => {
+    const first = query.data?.[0];
+    const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
+    const isGameDayForPlan = gameDayQuery.data ?? false;
+    const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== isGameDayForPlan;
+    const expectedPhase = canonicalPhase.phase;
+    const stalePhase =
+      !!first &&
+      !season.isLoading &&
+      (query.data ?? []).some((rx) => {
         const storedPhase = rx.why_payload?.phase ?? rx.phase ?? null;
         return !!storedPhase && storedPhase !== expectedPhase;
       });
-      if (drifted) return "phase";
+    const refreshKey = !query.data
+      ? null
+      : query.data.length === 0
+        ? "empty"
+        : staleVersion
+          ? `version:${first?.why_payload?.generator_version ?? "missing"}`
+          : staleGameDay
+            ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
+            : stalePhase
+              ? `phase:${first?.why_payload?.phase ?? first?.phase ?? "missing"}->${expectedPhase}`
+              : null;
+    if (
+      !query.isLoading &&
+      !gameDayQuery.isLoading &&
+      !season.isLoading &&
+      refreshKey &&
+      !generating &&
+      !failed &&
+      autoTriedKey.current !== refreshKey
+    ) {
+      autoTriedKey.current = refreshKey;
+      generate();
     }
-    if (!gameDayQuery.isLoading && typeof first.why_payload?.game_day === "boolean") {
-      if (first.why_payload.game_day !== (gameDayQuery.data ?? false)) return "game_day";
-    }
-    return null;
-  }, [query.data, season.isLoading, canonicalPhase.phase, gameDayQuery.isLoading, gameDayQuery.data]);
-
-  const isStale = staleReason !== null;
+  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, season.isLoading, generate, generating, failed]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
@@ -538,9 +543,6 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     failed,
     failureReason,
     retry,
-    needsGeneration,
-    isStale,
-    staleReason,
     effectiveCnsTotal,
     overrideMovement,
     snapshotIdentity,
