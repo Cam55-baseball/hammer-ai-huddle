@@ -50,6 +50,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   HeartPulse,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
@@ -79,6 +80,7 @@ import {
   WkProgressionBadge,
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
+import { WkGeneratePanel, WkStaleBanner } from "@/components/hammer/WkGeneratePanel";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
@@ -438,6 +440,19 @@ function HammerDailyPlanBody() {
                 duplicated hitting / bat-speed / throwing cards below. */}
 
 
+            {!wkRx.needsGeneration && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-[11px]"
+                disabled={wkRx.generating}
+                onClick={wkRx.retry}
+                title="Rebuild today's plan from your current roadmap position"
+              >
+                <RefreshCw className={`mr-1 h-3.5 w-3.5 ${wkRx.generating ? "animate-spin" : ""}`} />
+                Rebuild
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -478,6 +493,21 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        {/* 0. On-demand generation — the plan is only built when asked for. */}
+        {wkRx.needsGeneration && (
+          <WkGeneratePanel
+            planDate={wkRx.snapshotIdentity.plan_date}
+            generating={wkRx.generating}
+            onGenerate={wkRx.retry}
+          />
+        )}
+        {!wkRx.needsGeneration && wkRx.isStale && wkRx.staleReason && (
+          <WkStaleBanner
+            reason={wkRx.staleReason}
+            generating={wkRx.generating}
+            onRefresh={wkRx.retry}
+          />
+        )}
         {/* 1. Schedule & What Changed — dropdown, starts closed */}
         <ScheduleDropdownWrapper />
         {/* 2. Today's Wisdom */}
