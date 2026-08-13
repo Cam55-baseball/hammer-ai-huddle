@@ -79,6 +79,7 @@ import {
   WkProgressionBadge,
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
+import { WkGeneratePanel, WkStaleBanner } from "@/components/hammer/WkGeneratePanel";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
