@@ -478,6 +478,21 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        {/* 0. On-demand generation — the plan is only built when asked for. */}
+        {wkRx.needsGeneration && (
+          <WkGeneratePanel
+            planDate={wkRx.snapshotIdentity.plan_date}
+            generating={wkRx.generating}
+            onGenerate={wkRx.retry}
+          />
+        )}
+        {!wkRx.needsGeneration && wkRx.isStale && wkRx.staleReason && (
+          <WkStaleBanner
+            reason={wkRx.staleReason}
+            generating={wkRx.generating}
+            onRefresh={wkRx.retry}
+          />
+        )}
         {/* 1. Schedule & What Changed — dropdown, starts closed */}
         <ScheduleDropdownWrapper />
         {/* 2. Today's Wisdom */}
