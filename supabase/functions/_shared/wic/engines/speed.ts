@@ -16,6 +16,8 @@ import { resolveSpeedTemplate, type SpeedTemplate, type SpeedTemplateResolutionI
 import { ALL_SPEED_CATEGORIES, type SpeedCategory } from "../speed/movementCategories.ts";
 import { isInReExposureWindow, type ProgressionState } from "../progression/progressionState.ts";
 import { ENGINE_ALLOWED_DOMAINS, owningDomain } from "../domainGate.ts";
+import { isLegalBeforeRunning } from "../season.ts";
+
 
 /**
  * Session shape floor — an elite speed session is a sequence, never a single
@@ -86,12 +88,16 @@ export const SPEED_PREFERRED: readonly string[] = [
   "sp_mirror_5510",
   "lateral_first_step",
   "slap_runner_crossover",
-  // Mobility / prep
+  // Mobility / prep — sprint ramp only. Elastic + CNS priming, never deep
+  // loaded knee flexion. (`sp_atg_split_squat` was removed here: it is a
+  // strength-block knee-resilience movement, not a running warm-up.)
   "frc_cars_full_body",
   "ninety_ninety_transition",
-  "sp_atg_split_squat",
+  "sp_pogo_double",
+  "sp_wall_drive_iso",
   "sp_copenhagen_plank",
 ];
+
 
 // Categories the seeded catalog does not yet contain — fall back to these
 // present categories so certification still passes.
@@ -216,8 +222,15 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
   const pool = input.catalog.filter((m) => {
     if (!ENGINE_ALLOWED_DOMAINS.speed.includes(owningDomain(m))) return false;
     if (m.speed_category == null && m.category !== "speed_lab") return false;
+    // Safety gate: deep loaded knee flexion (ATG family) may never appear in a
+    // running/sprint session — it blunts tendon stiffness and pre-fatigues the
+    // quad and patellar tendon right before max-velocity work.
+    if (!isLegalBeforeRunning(m as { slug: string; substitution_family?: string | null; family?: string | null })) {
+      return false;
+    }
     return input.eligible(m);
   });
+
 
   const used = new Set<string>();
   const usedFamilies = new Set<string>();

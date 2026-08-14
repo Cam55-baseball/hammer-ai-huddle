@@ -18,6 +18,8 @@
 //   - StrongFirst / DNS / FMS carries and anti-rotation
 
 import type { WkPhase } from "../../wkPhaseQuarter.ts";
+import { isDeepKneeFlexion } from "../season.ts";
+
 
 export type StrengthRole =
   | "arm_care"
@@ -126,7 +128,9 @@ export function compoundSlugsFor(phase: WkPhase, dayOfWeek: number = 0): string[
 // KOT-forward for durability; single-leg RDL forward for sprint transfer.
 export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[] {
   const inSeason = [
-    "lift_atg_split_squat",
+    // In-season ATG work is the ROM-limited maintenance slug only. The full-ROM
+    // development version (`lift_atg_split_squat`, 3x8) is off-season only.
+    "kot_atg_split_squat",
     "lift_sl_rdl",
     "lift_staggered_rdl",
     "lift_poliquin_stepup",
@@ -134,6 +138,7 @@ export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[
     "lateral_db_step_up",
     "sl_deadlift_fat_grips",
   ];
+
   const offSeason = [
     "lift_atg_split_squat",
     "lift_sl_rdl",
@@ -282,6 +287,20 @@ export function carrySlugs(isInSeason: boolean, dayOfWeek: number = 0): string[]
 export function unilateralDose(isInSeason: boolean): StrengthDose {
   return { sets: isInSeason ? 1 : 2, reps: 3 };
 }
+
+/**
+ * Slug-aware unilateral dose. Deep-flexion ATG work in-season is durability
+ * maintenance, not development: 2 x 5 per side, ROM-limited, never near-failure.
+ * Catalog defaults (3 x 8) are explicitly overridden here so a full development
+ * dose can never leak into an in-season day.
+ */
+export function unilateralDoseFor(slug: string, isInSeason: boolean): StrengthDose {
+  if (isInSeason && isDeepKneeFlexion({ slug })) {
+    return { sets: 2, reps: 5 };
+  }
+  return unilateralDose(isInSeason);
+}
+
 
 export function upperDose(isInSeason: boolean): StrengthDose {
   return { sets: isInSeason ? 1 : 2, reps: 3 };
