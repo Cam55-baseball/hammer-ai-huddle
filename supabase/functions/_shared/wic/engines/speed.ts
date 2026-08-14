@@ -216,8 +216,15 @@ export function selectSpeedPicks(input: SelectSpeedInput): SpeedSelectionResult 
   const pool = input.catalog.filter((m) => {
     if (!ENGINE_ALLOWED_DOMAINS.speed.includes(owningDomain(m))) return false;
     if (m.speed_category == null && m.category !== "speed_lab") return false;
+    // Safety gate: deep loaded knee flexion (ATG family) may never appear in a
+    // running/sprint session — it blunts tendon stiffness and pre-fatigues the
+    // quad and patellar tendon right before max-velocity work.
+    if (!isLegalBeforeRunning(m as { slug: string; substitution_family?: string | null; family?: string | null })) {
+      return false;
+    }
     return input.eligible(m);
   });
+
 
   const used = new Set<string>();
   const usedFamilies = new Set<string>();
