@@ -126,7 +126,9 @@ export function compoundSlugsFor(phase: WkPhase, dayOfWeek: number = 0): string[
 // KOT-forward for durability; single-leg RDL forward for sprint transfer.
 export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[] {
   const inSeason = [
-    "lift_atg_split_squat",
+    // In-season ATG work is the ROM-limited maintenance slug only. The full-ROM
+    // development version (`lift_atg_split_squat`, 3x8) is off-season only.
+    "kot_atg_split_squat",
     "lift_sl_rdl",
     "lift_staggered_rdl",
     "lift_poliquin_stepup",
@@ -134,6 +136,7 @@ export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[
     "lateral_db_step_up",
     "sl_deadlift_fat_grips",
   ];
+
   const offSeason = [
     "lift_atg_split_squat",
     "lift_sl_rdl",
