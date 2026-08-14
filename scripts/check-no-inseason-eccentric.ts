@@ -33,13 +33,20 @@ const { data: violations, error } = await supabase
       "trap_bar_dl_double_ecc",
       "weighted_pullup_double_ecc",
       "atg_split_squat",
+      // Family siblings — same exercise under different slugs. Only the
+      // ROM-limited maintenance slug `kot_atg_split_squat` is in-season legal.
+      "lift_atg_split_squat",
+      "lift_atg_lunge",
+      "sp_atg_split_squat",
       "sissy_squat",
+      "slide_lunge",
       "plyo_depth_jump",
       "reverse_nordic",
       "nordic_curl",
       "copenhagen_adduction_ecc",
     ],
   );
+
 
 if (error) {
   console.error("[drift-guard] query failed", error);
