@@ -286,6 +286,20 @@ export function unilateralDose(isInSeason: boolean): StrengthDose {
   return { sets: isInSeason ? 1 : 2, reps: 3 };
 }
 
+/**
+ * Slug-aware unilateral dose. Deep-flexion ATG work in-season is durability
+ * maintenance, not development: 2 x 5 per side, ROM-limited, never near-failure.
+ * Catalog defaults (3 x 8) are explicitly overridden here so a full development
+ * dose can never leak into an in-season day.
+ */
+export function unilateralDoseFor(slug: string, isInSeason: boolean): StrengthDose {
+  if (isInSeason && isDeepKneeFlexion({ slug })) {
+    return { sets: 2, reps: 5 };
+  }
+  return unilateralDose(isInSeason);
+}
+
+
 export function upperDose(isInSeason: boolean): StrengthDose {
   return { sets: isInSeason ? 1 : 2, reps: 3 };
 }
