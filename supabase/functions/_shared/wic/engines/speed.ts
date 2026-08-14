@@ -88,12 +88,16 @@ export const SPEED_PREFERRED: readonly string[] = [
   "sp_mirror_5510",
   "lateral_first_step",
   "slap_runner_crossover",
-  // Mobility / prep
+  // Mobility / prep — sprint ramp only. Elastic + CNS priming, never deep
+  // loaded knee flexion. (`sp_atg_split_squat` was removed here: it is a
+  // strength-block knee-resilience movement, not a running warm-up.)
   "frc_cars_full_body",
   "ninety_ninety_transition",
-  "sp_atg_split_squat",
+  "sp_pogo_double",
+  "sp_wall_drive_iso",
   "sp_copenhagen_plank",
 ];
+
 
 // Categories the seeded catalog does not yet contain — fall back to these
 // present categories so certification still passes.
