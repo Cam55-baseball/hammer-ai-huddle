@@ -1,4 +1,4 @@
-// Owner-triggered: analyzes a video's ai_description + title with Lovable AI
+// Owner-triggered: analyzes a video's ai_description + title with Gemini (via OpenAI-compatible gateway)
 // and inserts proposals into video_tag_suggestions for owner review.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { chatCompletion } from '../_shared/googleAi.ts';
