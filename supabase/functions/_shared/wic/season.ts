@@ -171,6 +171,8 @@ export function isMovementSeasonLegal(
     is_eccentric_dominant?: boolean | null;
     phase_allow?: string[] | null;
     season_eligibility?: string[] | null;
+    substitution_family?: string | null;
+    family?: string | null;
   },
 ): { legal: boolean; reason: string | null } {
   if (!ctx.isOffseason && OS_ONLY_ECCENTRIC_SLUGS.has(m.slug)) {
@@ -179,6 +181,16 @@ export function isMovementSeasonLegal(
   if (ctx.isInSeason && IN_SEASON_BLOCKED_SLUGS.has(m.slug)) {
     return { legal: false, reason: "in_season_blocked" };
   }
+  // Family-level in-season gate — a deep-flexion movement is blocked in-season
+  // unless it is the one designated ROM-limited maintenance slug for its family.
+  if (
+    ctx.isInSeason &&
+    isDeepKneeFlexion(m) &&
+    !IN_SEASON_MAINTENANCE_SLUGS.has(m.slug)
+  ) {
+    return { legal: false, reason: "deep_knee_flexion_family_in_season_blocked" };
+  }
+
   if (m.is_eccentric_dominant && !ctx.isOffseason) {
     return { legal: false, reason: "eccentric_dominant_off_only" };
   }
