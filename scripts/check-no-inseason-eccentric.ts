@@ -60,3 +60,33 @@ if (violations && violations.length > 0) {
   process.exit(1);
 }
 console.log("[drift-guard] ✅ no in-season eccentric violations");
+
+// ─── Guard 2: deep-ROM knee flexion may never sit in a warm-up / prep slot ───
+const ATG_FAMILY_SLUGS = [
+  "atg_split_squat",
+  "lift_atg_split_squat",
+  "kot_atg_split_squat",
+  "sp_atg_split_squat",
+  "lift_atg_lunge",
+  "sissy_squat",
+  "lift_kot_sissy_squat",
+];
+
+const { data: warmupViolations, error: warmupErr } = await supabase
+  .from("wk_prescriptions")
+  .select("user_id, plan_date, movement_slug, slot")
+  .in("slot", ["warmup", "speed"])
+  .in("movement_slug", ATG_FAMILY_SLUGS);
+
+if (warmupErr) {
+  console.error("[drift-guard] warmup query failed", warmupErr);
+  process.exit(2);
+}
+if (warmupViolations && warmupViolations.length > 0) {
+  console.error(
+    `[drift-guard] ❌ ${warmupViolations.length} deep-knee-flexion movements in warm-up / speed slots`,
+    warmupViolations.slice(0, 10),
+  );
+  process.exit(1);
+}
+console.log("[drift-guard] ✅ no deep-knee-flexion movements in warm-up / speed slots");
