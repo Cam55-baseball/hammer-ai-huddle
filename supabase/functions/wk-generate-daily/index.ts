@@ -826,9 +826,13 @@ const handler = async (req: Request): Promise<Response> => {
       // 4) Unilateral lower — rotate across the week to build all planes
       const uniLower = pickFirst(StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek));
       if (uniLower) {
-        const d = StrengthEngine.unilateralDose(isInSeason);
-        push("lift", "unilateral_lower", uniLower, { sets: d.sets, reps: d.reps }, "Single-leg dominance — closes L/R imbalances the compound hides.");
+        const d = StrengthEngine.unilateralDoseFor(uniLower, isInSeason);
+        const uniWhy = isInSeason && /atg|sissy|patrick_step/.test(uniLower)
+          ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
+          : "Single-leg dominance — closes L/R imbalances the compound hides.";
+        push("lift", "unilateral_lower", uniLower, { sets: d.sets, reps: d.reps }, uniWhy);
       }
+
 
       // 5) Upper push — unilateral / integrated
       const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
