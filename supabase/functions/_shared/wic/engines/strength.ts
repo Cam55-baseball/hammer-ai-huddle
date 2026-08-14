@@ -18,6 +18,8 @@
 //   - StrongFirst / DNS / FMS carries and anti-rotation
 
 import type { WkPhase } from "../../wkPhaseQuarter.ts";
+import { isDeepKneeFlexion } from "../season.ts";
+
 
 export type StrengthRole =
   | "arm_care"
