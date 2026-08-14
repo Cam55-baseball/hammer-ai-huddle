@@ -34,6 +34,110 @@ export const IN_SEASON_BLOCKED_SLUGS: ReadonlySet<string> = new Set([
   "slide_lunge",
 ]);
 
+/**
+ * Deep-ROM loaded knee-flexion families.
+ *
+ * These are strength / ROM developers, never warm-up material, and never legal
+ * before running in the same session. Gating happens at the FAMILY level so a
+ * renamed or duplicated slug can never smuggle the same exercise past a safety
+ * gate (the exact failure mode that put `lift_atg_split_squat` at 3x8 into an
+ * in-season running day).
+ */
+export const DEEP_KNEE_FLEXION_FAMILIES: ReadonlySet<string> = new Set([
+  "atg_split_squat",
+  "sissy_squat",
+  "knee_resilience",
+]);
+
+/**
+ * Slugs inside a deep-knee-flexion family that ARE legal in-season, because
+ * they are dosed as reduced-range, low-volume durability maintenance rather
+ * than a development block. Exactly one per family.
+ */
+export const IN_SEASON_MAINTENANCE_SLUGS: ReadonlySet<string> = new Set([
+  "kot_atg_split_squat",
+]);
+
+/** Slug/family prefixes that identify a deep-flexion movement by name. */
+const DEEP_FLEXION_SLUG_HINTS = ["atg_", "_atg_", "sissy", "slide_lunge", "patrick_step"];
+
+export function resolveMovementFamily(m: {
+  slug: string;
+  substitution_family?: string | null;
+  family?: string | null;
+}): string {
+  return (m.substitution_family ?? m.family ?? m.slug) || m.slug;
+}
+
+/** True when the movement loads deep knee flexion (ATG-style). */
+export function isDeepKneeFlexion(m: {
+  slug: string;
+  substitution_family?: string | null;
+  family?: string | null;
+}): boolean {
+  const fam = resolveMovementFamily(m);
+  if (DEEP_KNEE_FLEXION_FAMILIES.has(fam)) return true;
+  const slug = (m.slug ?? "").toLowerCase();
+  return DEEP_FLEXION_SLUG_HINTS.some((h) => slug.includes(h));
+}
+
+/**
+ * Warm-up legality. A warm-up may only ramp tissue and CNS — it may never
+ * contain a strength / deep-flexion / high-CNS developer. Anything outside this
+ * allowlist is rejected before it can reach a warm-up or pre-run prep block.
+ */
+export const WARMUP_LEGAL_CATEGORIES: ReadonlySet<string> = new Set([
+  "warmup",
+  "mobility",
+  "activation",
+  "functional_patterning",
+  "ido_portal",
+  "cressey_sp",
+  "frc",
+  "recovery",
+  "cross_sport",
+]);
+
+export function isWarmupLegal(m: {
+  slug: string;
+  category?: string | null;
+  movement_category?: string | null;
+  cns_cost?: number | null;
+  is_eccentric_dominant?: boolean | null;
+  substitution_family?: string | null;
+  family?: string | null;
+}): { legal: boolean; reason: string | null } {
+  if (isDeepKneeFlexion(m)) {
+    return { legal: false, reason: "deep_knee_flexion_never_warmup" };
+  }
+  if (m.is_eccentric_dominant) {
+    return { legal: false, reason: "eccentric_dominant_never_warmup" };
+  }
+  const cat = (m.movement_category ?? m.category ?? "").toLowerCase();
+  const slug = (m.slug ?? "").toLowerCase();
+  if (!WARMUP_LEGAL_CATEGORIES.has(cat) && !slug.startsWith("frc_")) {
+    return { legal: false, reason: `category_not_warmup_legal:${cat || "unknown"}` };
+  }
+  if ((m.cns_cost ?? 0) > 2) {
+    return { legal: false, reason: "cns_cost_too_high_for_warmup" };
+  }
+  return { legal: true, reason: null };
+}
+
+/**
+ * Same-day ordering rule: deep loaded knee flexion may never be sequenced
+ * before running / sprint work. It blunts tendon stiffness and pre-fatigues the
+ * quad and patellar tendon exactly when they are needed most.
+ */
+export function isLegalBeforeRunning(m: {
+  slug: string;
+  substitution_family?: string | null;
+  family?: string | null;
+}): boolean {
+  return !isDeepKneeFlexion(m);
+}
+
+
 export interface SeasonContext {
   phase: SeasonPhase;
   isOffseason: boolean;
