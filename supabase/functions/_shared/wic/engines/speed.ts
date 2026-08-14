@@ -16,6 +16,8 @@ import { resolveSpeedTemplate, type SpeedTemplate, type SpeedTemplateResolutionI
 import { ALL_SPEED_CATEGORIES, type SpeedCategory } from "../speed/movementCategories.ts";
 import { isInReExposureWindow, type ProgressionState } from "../progression/progressionState.ts";
 import { ENGINE_ALLOWED_DOMAINS, owningDomain } from "../domainGate.ts";
+import { isLegalBeforeRunning } from "../season.ts";
+
 
 /**
  * Session shape floor — an elite speed session is a sequence, never a single
