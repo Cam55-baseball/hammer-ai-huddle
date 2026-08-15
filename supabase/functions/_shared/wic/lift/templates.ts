@@ -3,6 +3,7 @@
 // Templates are deterministic. There is no lower-body-only default.
 
 import type { MovementCategory } from "./movementCategories.ts";
+import { DOSE_MATRIX, normalizeDoctrinePhase } from "../dosage/doctrine.ts";
 
 export type LiftTemplateId =
   | "full_body_strength"
@@ -22,10 +23,6 @@ export interface LiftTemplate {
   optionalCategories: readonly MovementCategory[];
   /** Canonical ordering priority — first category gets earliest sequence. */
   categoryOrder: readonly MovementCategory[];
-  /** Dose envelope for compound movements (sets range). */
-  compoundSets: [number, number];
-  /** Rep envelope for compound movements. */
-  compoundReps: [number, number];
   /** Share of daily CNS budget the lift block may consume (0..1). */
   cnsShare: number;
   /** Primary adaptation this template serves. */
@@ -65,8 +62,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: CORE_FULL_BODY,
     optionalCategories: ["posterior_chain", "single_leg", "carry", "arm_care"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [3, 5],
-    compoundReps: [3, 6],
     cnsShare: 0.55,
     adaptation: "strength",
   },
@@ -76,8 +71,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: CORE_FULL_BODY,
     optionalCategories: ["jump_landing", "posterior_chain", "single_leg", "arm_care"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [3, 5],
-    compoundReps: [2, 4],
     cnsShare: 0.6,
     adaptation: "power",
   },
@@ -87,8 +80,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: CORE_FULL_BODY,
     optionalCategories: ["posterior_chain", "single_leg", "carry", "jump_landing", "arm_care"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [4, 6],
-    compoundReps: [1, 3],
     cnsShare: 0.65,
     adaptation: "force",
   },
@@ -98,8 +89,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: CORE_FULL_BODY,
     optionalCategories: ["jump_landing", "single_leg", "posterior_chain", "arm_care"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [3, 4],
-    compoundReps: [3, 5],
     cnsShare: 0.5,
     adaptation: "elastic",
   },
@@ -109,8 +98,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: CORE_FULL_BODY,
     optionalCategories: ["single_leg", "arm_care", "mobility"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [2, 3],
-    compoundReps: [3, 6],
     cnsShare: 0.35,
     adaptation: "maintenance",
   },
@@ -120,8 +107,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: ["core", "mobility"],
     optionalCategories: ["arm_care", "hip", "shoulder", "foot_ankle"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [1, 2],
-    compoundReps: [8, 12],
     cnsShare: 0.2,
     adaptation: "recovery",
   },
@@ -132,8 +117,6 @@ export const LIFT_TEMPLATES: Record<LiftTemplateId, LiftTemplate> = {
     requiredCategories: ["core", "hip", "shoulder"],
     optionalCategories: ["mobility", "single_leg", "arm_care", "foot_ankle"],
     categoryOrder: CANONICAL_ORDER,
-    compoundSets: [1, 2],
-    compoundReps: [6, 10],
     cnsShare: 0.15,
     adaptation: "rtp",
   },
@@ -170,4 +153,13 @@ export function resolveLiftTemplate(input: TemplateResolutionInput): LiftTemplat
 
   // Default off-season training day → strength.
   return LIFT_TEMPLATES.full_body_strength;
+}
+
+/**
+ * Dose envelopes are NOT owned by templates. The Zero-Drift Dosage Doctrine is
+ * the single authority; this helper simply reads it so no second (drifting)
+ * copy of the numbers can exist in this file.
+ */
+export function compoundEnvelopeFor(seasonPhase: string) {
+  return DOSE_MATRIX[normalizeDoctrinePhase(seasonPhase)].main_compound;
 }
