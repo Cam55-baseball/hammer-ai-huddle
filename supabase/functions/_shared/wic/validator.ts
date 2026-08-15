@@ -81,6 +81,20 @@ export function validate(input: ValidatorInput): ValidatorReport {
       seenSetsReps.add(key);
     }
 
+    // Zero-Drift Dosage Doctrine — no row may exceed its envelope ceiling.
+    // Deloads and safety caps pull below the floor; nothing goes above.
+    if (rx.slot === "lift" && rx.sets != null && rx.reps != null) {
+      const category = (rx.why_payload as any)?.dose_doctrine?.category ?? null;
+      if (!isWithinEnvelope(input.phase, rx.sequence_role, category, rx.sets, rx.reps)) {
+        issues.push({
+          code: "dose_outside_envelope",
+          severity: "fatal",
+          message: `${rx.movement_name}: ${rx.sets}×${rx.reps} is outside the ${input.phase} dosage envelope for ${rx.sequence_role}.`,
+          slug: rx.movement_slug,
+        });
+      }
+    }
+
     // Game-day suppression enforcement.
     if (input.isGameDay && !GAME_DAY_ALLOWED_SLOTS.has(rx.slot)) {
       issues.push({
