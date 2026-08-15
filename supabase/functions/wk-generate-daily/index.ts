@@ -36,7 +36,6 @@ import {
   buildProgressionState,
   buildProgressionPayload,
   blockLabel,
-  scaleSets,
   isInReExposureWindow,
   domainForSlotRole,
   domainSessionName,
