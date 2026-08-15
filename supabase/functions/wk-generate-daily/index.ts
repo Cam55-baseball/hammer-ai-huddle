@@ -1159,19 +1159,44 @@ const handler = async (req: Request): Promise<Response> => {
         };
         wp.day_orchestration = dayOrchestration;
 
-        // Deload week is a real reduction, not a label. Strength-family and
-        // conditioning volume drops one working set; never below two, and
-        // never on total-dose rows (innings, distance, timed work).
-        if (
-          progression.isDeloadWeek &&
-          (domain === "lift" || domain === "supplemental" || domain === "conditioning") &&
-          typeof rx.sets === "number" && rx.sets >= 3 &&
-          rx.total_reps == null && rx.duration_seconds == null && rx.distance_feet == null
-        ) {
-          const before = rx.sets;
-          rx.sets = Math.max(2, rx.sets - 1);
-          wp.deload_applied = { from: before, to: rx.sets, reason: "Week 4 deload — volume down, quality held." };
+        // Week-in-block wave. The doctrine dose was resolved before the
+        // 28-day history was read, so it is re-resolved here with the real
+        // block week. This replaces the old ad-hoc "sets - 1" deload patch:
+        // the wave (and week-4 deload) is now part of the same envelope math,
+        // so a deload can never drop a row below its envelope floor.
+        const dd = wp.dose_doctrine as any;
+        if (dd && typeof rx.sets === "number" && typeof rx.reps === "number") {
+          const rewaved = resolveDose({
+            phase: phaseRes.phase,
+            role: dd.role ?? rx.sequence_role,
+            category: dd.category,
+            trainingAgeYears,
+            weekInBlock: progression.weekInBlock,
+            isDeloadWeek: progression.isDeloadWeek,
+            cnsClamped: !!rx.cns_clamped,
+            capSets: dd.cap_sets ?? null,
+            capReps: dd.cap_reps ?? null,
+          });
+          const before = { sets: rx.sets, reps: rx.reps };
+          rx.sets = rewaved.sets;
+          rx.reps = rewaved.reps;
+          dd.notes = rewaved.notes;
+          dd.week_in_block = progression.weekInBlock;
+          if (before.sets !== rx.sets || before.reps !== rx.reps) {
+            dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}` };
+          }
+          if (progression.isDeloadWeek) {
+            wp.deload_applied = {
+              from: before.sets,
+              to: rx.sets,
+              reason: "Week 4 deload — envelope floor, quality held.",
+            };
+          }
+          if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps)) {
+            dd.envelope_violation = true;
+          }
         }
+
 
 
         if (!wp.session_shape) {
