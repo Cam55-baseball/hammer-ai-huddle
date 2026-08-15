@@ -879,13 +879,12 @@ const handler = async (req: Request): Promise<Response> => {
       if (uniLower) {
         // Safety ceiling only: deep-flexion (ATG family) in-season stays a
         // ROM-limited durability dose. Everything else is doctrine-dosed.
-        const isDeepFlexion = /atg|sissy|patrick_step/.test(uniLower.slug);
-        const d = StrengthEngine.unilateralDoseFor(uniLower.slug, isInSeason);
-        const uniWhy = isInSeason && isDeepFlexion
+        const safetyCap = StrengthEngine.unilateralDoseFor(uniLower.slug, isInSeason);
+        const uniWhy = safetyCap
 
           ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
           : "Single-leg dominance — closes L/R imbalances the compound hides.";
-        push("lift", "unilateral_lower", uniLower, (isDeepFlexion ? { dose_cap: { sets: d.sets, reps: d.reps } } : {}) as any, uniWhy);
+        push("lift", "unilateral_lower", uniLower, (safetyCap ? { dose_cap: safetyCap } : {}) as any, uniWhy);
       }
 
 
