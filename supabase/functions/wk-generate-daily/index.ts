@@ -860,12 +860,12 @@ const handler = async (req: Request): Promise<Response> => {
         const armCareRow = armCarePicked && eligible(armCarePicked as unknown as MovementRow)
           ? (armCarePicked as unknown as MovementRow)
           : pickFirst(StrengthEngine.ARM_CARE_SLUGS);
-        if (armCareRow) push("lift", "arm_care", armCareRow, { sets: armCareRow.default_sets ?? 1, reps: armCareRow.default_reps ?? 1 }, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
+        if (armCareRow) push("lift", "arm_care", armCareRow, {}, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
       }
 
       // 2) Trunk primer — every session
       const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
-      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, { sets: 1, reps: isInSeason ? 6 : 10 }, "Loaded rotation primer — wakes obliques + preps swing plane.");
+      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, "Loaded rotation primer — wakes obliques + preps swing plane.");
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
@@ -874,7 +874,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (compound) {
         const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
         const reps = isInSeason ? 3 : clamp(3, block.compound_min_reps, block.compound_max_reps);
-        push("lift", "compound_lower", compound, { sets, reps }, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
+        push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
       }
 
       // 4) Unilateral lower — rotate across the week to build all planes
@@ -885,7 +885,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
           : "Single-leg dominance — closes L/R imbalances the compound hides.";
-        push("lift", "unilateral_lower", uniLower, { sets: d.sets, reps: d.reps }, uniWhy);
+        push("lift", "unilateral_lower", uniLower, { dose_cap: { sets: d.sets, reps: d.reps } } as any, uniWhy);
       }
 
 
@@ -893,26 +893,26 @@ const handler = async (req: Request): Promise<Response> => {
       const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
       if (upperPush) {
         const d = StrengthEngine.upperDose(isInSeason);
-        push("lift", "upper_push", upperPush, { sets: d.sets, reps: d.reps }, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
+        push("lift", "upper_push", upperPush, {}, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
       }
 
       // 6) Upper pull — unilateral / weighted
       const upperPull = pickFirst(StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek));
       if (upperPull) {
         const d = StrengthEngine.upperDose(isInSeason);
-        push("lift", "upper_pull", upperPull, { sets: d.sets, reps: d.reps }, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
+        push("lift", "upper_pull", upperPull, {}, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
       }
 
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
         const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason, dayOfWeek));
-        if (carry) push("lift", "carry_antirotation", carry, { sets: isInSeason ? 1 : undefined, reps: isInSeason ? 6 : undefined }, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
+        if (carry) push("lift", "carry_antirotation", carry, {}, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
       }
 
       // 8) Trunk finisher — offseason only (in-season stays fresh)
       if (isOffseason) {
         const finisher = pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
-        if (finisher) push("lift", "trunk_finisher", finisher, { sets: 1, reps: 10 }, "Loaded trunk finisher — locks the rotational strength from above.");
+        if (finisher) push("lift", "trunk_finisher", finisher, {}, "Loaded trunk finisher — locks the rotational strength from above.");
       }
 
       ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason);
@@ -984,7 +984,7 @@ const handler = async (req: Request): Promise<Response> => {
           "bat_speed",
           "bat_speed",
           m,
-          { sets: progression.isDeloadWeek ? scaleSets(m.default_sets, progression) : undefined },
+          {},
           `${BAT_SPEED_STAGE_LABEL[pick.stage]} — ${pick.reason}${isGameDay ? "" : " Do BEFORE lifts while CNS is fresh."}`,
           {
             bat_speed_template_id: batSpeedSelection.template.id,
@@ -1054,7 +1054,7 @@ const handler = async (req: Request): Promise<Response> => {
           "speed",
           "speed",
           m,
-          { sets: progression.isDeloadWeek ? scaleSets(m.default_sets, progression) : undefined },
+          {},
           `${spSessionName} — ${pick.category.replace(/_/g, " ")}. ${pick.reason}`,
           {
             speed_template_id: speedSelection.template.id,
@@ -2274,7 +2274,7 @@ function ensureFullBodyLift(
 
   if (!hasLiftRole("trunk_primer")) {
     const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl", "lift_deadbug_band_press", "lift_mcgill_big3"]);
-    if (m) push("lift", "trunk_primer", m, { sets: 1, reps: isInSeason ? 6 : 10 }, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
+    if (m) push("lift", "trunk_primer", m, {}, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
   }
 
   if (!hasLiftCategory("core")) {
@@ -2285,7 +2285,7 @@ function ensureFullBodyLift(
       "lift_side_plank_leg_lift",
       "paloff_press",
     ], "core");
-    if (m) push("lift", hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer", m, { sets: 1, reps: isInSeason ? 6 : 10 }, "Full-body guardrail: core category is mandatory for a complete lift session.");
+    if (m) push("lift", hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer", m, {}, "Full-body guardrail: core category is mandatory for a complete lift session.");
   }
 
   // WIC certifier requires movement_category=rotation to be present in every
@@ -2304,7 +2304,7 @@ function ensureFullBodyLift(
         "lift",
         "rotation",
         m,
-        { sets: 1, reps: isInSeason ? 6 : 8 },
+        {},
         "Full-body guardrail: rotation category is mandatory in every WIC lift template.",
       );
   }
@@ -2313,26 +2313,26 @@ function ensureFullBodyLift(
     const m = pickFirstCategory(isInSeason
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
-    if (m) push("lift", "compound_lower", m, { sets: isInSeason ? 2 : 3, reps: 3 }, "Full-body guardrail: one legal lower-body compound anchors the session.");
+    if (m) push("lift", "compound_lower", m, {}, "Full-body guardrail: one legal lower-body compound anchors the session.");
   }
 
   if (!hasLiftRole("unilateral_lower")) {
     const m = pickFirst(isInSeason ? ["lateral_db_step_up", "sl_deadlift_fat_grips"] : ["lateral_db_step_up", "kot_lunge", "sl_deadlift_fat_grips"]);
-    if (m) push("lift", "unilateral_lower", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
+    if (m) push("lift", "unilateral_lower", m, {}, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
   }
 
   if (!hasLiftCategory("compound_upper_push")) {
     const m = pickFirstCategory(isInSeason
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
-    if (m) push("lift", "upper_push", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
+    if (m) push("lift", "upper_push", m, {}, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
   }
 
   if (!hasLiftCategory("compound_upper_pull")) {
     const m = pickFirstCategory(isInSeason
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
-    if (m) push("lift", "upper_pull", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
+    if (m) push("lift", "upper_pull", m, {}, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
   }
 }
 
