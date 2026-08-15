@@ -665,7 +665,10 @@ const handler = async (req: Request): Promise<Response> => {
         why_today: adaptationDecision.reason,
         why_athlete: `${adaptationDecision.reason_athlete} (${trainingAgeYears || 0}-yr training age${isProProspect ? ", pro prospect" : ""}).`,
         why_exercise: why || s.movement.why_prescribed || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
-        why_volume: `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
+        why_volume: resolvedDose
+          ? describeDose(resolvedDose)
+          : `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
+
         why_order: orderStr,
         why_recovery: recoveryStr,
         adaptation: adaptationDecision.primary,
