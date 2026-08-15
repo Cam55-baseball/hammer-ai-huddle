@@ -105,6 +105,14 @@ import {
   resolveTrainingAge,
   type TrainingAgeContext,
 } from "../_shared/wic/trainingAge.ts";
+import {
+  DOSAGE_DOCTRINE_VERSION,
+  resolveDose,
+  describeDose,
+  isRepDosed as doctrineIsRepDosed,
+  isWithinEnvelope,
+} from "../_shared/wic/dosage/doctrine.ts";
+
 
 interface MovementRow {
   slug: string;
