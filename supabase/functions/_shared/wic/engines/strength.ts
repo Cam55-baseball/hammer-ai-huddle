@@ -283,28 +283,25 @@ export function carrySlugs(isInSeason: boolean, dayOfWeek: number = 0): string[]
   return [pool[leadIdx], ...pool];
 }
 
-// ─── Dose helpers ────────────────────────────────────────────────────────────
-export function unilateralDose(isInSeason: boolean): StrengthDose {
-  return { sets: isInSeason ? 1 : 2, reps: 3 };
-}
+// ─── Safety caps ─────────────────────────────────────────────────────────────
+// This engine no longer prescribes volume. The Zero-Drift Dosage Doctrine owns
+// every set and rep number; the only thing that survives here is a hard SAFETY
+// CEILING for deep-flexion work in-season, which the doctrine applies last as
+// `capSets` / `capReps`. It can pull a dose down, never push one up.
+export const IN_SEASON_DEEP_FLEXION_CAP: StrengthDose = { sets: 2, reps: 5 };
 
 /**
- * Slug-aware unilateral dose. Deep-flexion ATG work in-season is durability
- * maintenance, not development: 2 x 5 per side, ROM-limited, never near-failure.
- * Catalog defaults (3 x 8) are explicitly overridden here so a full development
- * dose can never leak into an in-season day.
+ * Returns a safety cap for a unilateral slug, or `null` when the doctrine
+ * envelope is free to govern the dose on its own.
+ *
+ * Deep-flexion ATG work in-season is durability maintenance, not development:
+ * ROM-limited, low volume, never near failure.
  */
-export function unilateralDoseFor(slug: string, isInSeason: boolean): StrengthDose {
-  if (isInSeason && isDeepKneeFlexion({ slug })) {
-    return { sets: 2, reps: 5 };
-  }
-  return unilateralDose(isInSeason);
+export function unilateralDoseFor(slug: string, isInSeason: boolean): StrengthDose | null {
+  if (isInSeason && isDeepKneeFlexion({ slug })) return IN_SEASON_DEEP_FLEXION_CAP;
+  return null;
 }
 
-
-export function upperDose(isInSeason: boolean): StrengthDose {
-  return { sets: isInSeason ? 1 : 2, reps: 3 };
-}
 
 // ─── Westside ME/DE wave helper (exported for wk-generate-daily) ─────────────
 // Returns the wave day for early-offseason: "me" | "de" | "power".

@@ -36,7 +36,6 @@ import {
   buildProgressionState,
   buildProgressionPayload,
   blockLabel,
-  scaleSets,
   isInReExposureWindow,
   domainForSlotRole,
   domainSessionName,
@@ -105,6 +104,14 @@ import {
   resolveTrainingAge,
   type TrainingAgeContext,
 } from "../_shared/wic/trainingAge.ts";
+import {
+  DOSAGE_DOCTRINE_VERSION,
+  resolveDose,
+  describeDose,
+  isRepDosed as doctrineIsRepDosed,
+  isWithinEnvelope,
+} from "../_shared/wic/dosage/doctrine.ts";
+
 
 interface MovementRow {
   slug: string;
@@ -633,15 +640,42 @@ const handler = async (req: Request): Promise<Response> => {
 
       // WIC — required constitutional payload
       const wicEngine = engineForSlotRole(slot, role);
-      const finalSets = clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase;
-      const setsRepsStr = finalSets != null && repsBase != null ? `${finalSets}×${repsBase}` : "prescribed dose";
+      // ---- Zero-Drift Dosage Doctrine -------------------------------------
+      // `doctrine.resolveDose` is the ONLY authority for a set/rep number.
+      // Catalog defaults and call-site hints are never trusted for rep-dosed
+      // movements; they survive only as the safety ceiling (`capSets/capReps`)
+      // and as the dose for total-dose units (seconds / feet / innings).
+      const repDosed = !isTotalDose && doctrineIsRepDosed(dosageUnitRaw);
+      const doseCap = (overrides as any).dose_cap as { sets?: number; reps?: number } | undefined;
+      const resolvedDose = repDosed
+        ? resolveDose({
+            phase: phaseRes.phase,
+            role,
+            category: s.movement.movement_category ?? s.movement.category,
+            dosageUnit: dosageUnitRaw,
+            trainingAgeYears,
+            weekInBlock: null, // re-resolved with the real block week in the post-pass
+            cnsClamped: clamped,
+            capSets: doseCap?.sets ?? null,
+            capReps: doseCap?.reps ?? null,
+          })
+        : null;
+      const finalSets = resolvedDose
+        ? resolvedDose.sets
+        : (clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase);
+      const finalReps = resolvedDose ? resolvedDose.reps : repsBase;
+      const setsRepsStr = finalSets != null && finalReps != null ? `${finalSets}×${finalReps}` : "prescribed dose";
+
       const orderStr = `Sequence #${seq + 1} — ${role.replace(/_/g, " ")} keeps the constitutional day order intact.`;
       const recoveryStr = `${s.movement.cns_cost} CNS units; expect ~${Math.max(24, s.movement.cns_cost * 12)}h before repeating this pattern.`;
       const why_v2: WhyV2 = buildWhy({
         why_today: adaptationDecision.reason,
         why_athlete: `${adaptationDecision.reason_athlete} (${trainingAgeYears || 0}-yr training age${isProProspect ? ", pro prospect" : ""}).`,
         why_exercise: why || s.movement.why_prescribed || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
-        why_volume: `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
+        why_volume: resolvedDose
+          ? describeDose(resolvedDose)
+          : `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
+
         why_order: orderStr,
         why_recovery: recoveryStr,
         adaptation: adaptationDecision.primary,
@@ -657,9 +691,11 @@ const handler = async (req: Request): Promise<Response> => {
       // movement row, then classify by category so mobility/warmup/FRC always
       // land on a duration and lifts land on rep counts.
       const noDose =
+
         (finalSets === 1 || finalSets == null) &&
-        (repsBase === 1 || repsBase == null) &&
+        (finalReps === 1 || finalReps == null) &&
         !durationSeconds && !distanceFeet && !totalReps;
+
       if (noDose) {
         const cat = (s.movement.movement_category ?? s.movement.category ?? "").toLowerCase();
         const isTimeBased = cat.includes("mobility") || cat.includes("warmup") ||
@@ -677,7 +713,7 @@ const handler = async (req: Request): Promise<Response> => {
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
         sets: finalSets,
-        reps: repsBase,
+        reps: finalReps,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
         duration_seconds: durationSeconds,
@@ -700,7 +736,24 @@ const handler = async (req: Request): Promise<Response> => {
           source_philosophy: s.movement.source_philosophy,
           why: why || s.movement.why_prescribed,
           cue: s.movement.cue,
-          rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
+          rep_rule: resolvedDose
+            ? `${resolvedDose.envelope.sets[0]}-${resolvedDose.envelope.sets[1]} sets × ${resolvedDose.envelope.reps[0]}-${resolvedDose.envelope.reps[1]} reps — ${resolvedDose.phase} ${resolvedDose.group} envelope (${DOSAGE_DOCTRINE_VERSION}).`
+            : `Total-dose movement — measured in ${dosageUnit}, not sets × reps.`,
+          dose_doctrine: resolvedDose
+            ? {
+                version: DOSAGE_DOCTRINE_VERSION,
+                group: resolvedDose.group,
+                phase: resolvedDose.phase,
+                band: resolvedDose.band,
+                envelope: resolvedDose.envelope,
+                notes: resolvedDose.notes,
+                cap_sets: (overrides as any).dose_cap?.sets ?? null,
+                cap_reps: (overrides as any).dose_cap?.reps ?? null,
+                role,
+                category: s.movement.movement_category ?? s.movement.category ?? null,
+              }
+            : null,
+
           reductions,
           override: overrideMeta,
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
@@ -806,59 +859,57 @@ const handler = async (req: Request): Promise<Response> => {
         const armCareRow = armCarePicked && eligible(armCarePicked as unknown as MovementRow)
           ? (armCarePicked as unknown as MovementRow)
           : pickFirst(StrengthEngine.ARM_CARE_SLUGS);
-        if (armCareRow) push("lift", "arm_care", armCareRow, { sets: armCareRow.default_sets ?? 1, reps: armCareRow.default_reps ?? 1 }, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
+        if (armCareRow) push("lift", "arm_care", armCareRow, {}, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
       }
 
       // 2) Trunk primer — every session
       const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
-      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, { sets: 1, reps: isInSeason ? 6 : 10 }, "Loaded rotation primer — wakes obliques + preps swing plane.");
+      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, "Loaded rotation primer — wakes obliques + preps swing plane.");
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
       const compound = pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
         lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "compound_lower");
       if (compound) {
-        const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
-        const reps = isInSeason ? 3 : clamp(3, block.compound_min_reps, block.compound_max_reps);
-        push("lift", "compound_lower", compound, { sets, reps }, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
+        push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
       }
 
       // 4) Unilateral lower — rotate across the week to build all planes
       const uniLower = pickFirst(StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek));
       if (uniLower) {
-        const d = StrengthEngine.unilateralDoseFor(uniLower.slug, isInSeason);
-        const uniWhy = isInSeason && /atg|sissy|patrick_step/.test(uniLower.slug)
+        // Safety ceiling only: deep-flexion (ATG family) in-season stays a
+        // ROM-limited durability dose. Everything else is doctrine-dosed.
+        const safetyCap = StrengthEngine.unilateralDoseFor(uniLower.slug, isInSeason);
+        const uniWhy = safetyCap
 
           ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
           : "Single-leg dominance — closes L/R imbalances the compound hides.";
-        push("lift", "unilateral_lower", uniLower, { sets: d.sets, reps: d.reps }, uniWhy);
+        push("lift", "unilateral_lower", uniLower, (safetyCap ? { dose_cap: safetyCap } : {}) as any, uniWhy);
       }
 
 
       // 5) Upper push — unilateral / integrated
       const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
       if (upperPush) {
-        const d = StrengthEngine.upperDose(isInSeason);
-        push("lift", "upper_push", upperPush, { sets: d.sets, reps: d.reps }, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
+        push("lift", "upper_push", upperPush, {}, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
       }
 
       // 6) Upper pull — unilateral / weighted
       const upperPull = pickFirst(StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek));
       if (upperPull) {
-        const d = StrengthEngine.upperDose(isInSeason);
-        push("lift", "upper_pull", upperPull, { sets: d.sets, reps: d.reps }, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
+        push("lift", "upper_pull", upperPull, {}, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
       }
 
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
         const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason, dayOfWeek));
-        if (carry) push("lift", "carry_antirotation", carry, { sets: isInSeason ? 1 : undefined, reps: isInSeason ? 6 : undefined }, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
+        if (carry) push("lift", "carry_antirotation", carry, {}, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
       }
 
       // 8) Trunk finisher — offseason only (in-season stays fresh)
       if (isOffseason) {
         const finisher = pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
-        if (finisher) push("lift", "trunk_finisher", finisher, { sets: 1, reps: 10 }, "Loaded trunk finisher — locks the rotational strength from above.");
+        if (finisher) push("lift", "trunk_finisher", finisher, {}, "Loaded trunk finisher — locks the rotational strength from above.");
       }
 
       ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason);
@@ -930,7 +981,7 @@ const handler = async (req: Request): Promise<Response> => {
           "bat_speed",
           "bat_speed",
           m,
-          { sets: progression.isDeloadWeek ? scaleSets(m.default_sets, progression) : undefined },
+          {},
           `${BAT_SPEED_STAGE_LABEL[pick.stage]} — ${pick.reason}${isGameDay ? "" : " Do BEFORE lifts while CNS is fresh."}`,
           {
             bat_speed_template_id: batSpeedSelection.template.id,
@@ -1000,7 +1051,7 @@ const handler = async (req: Request): Promise<Response> => {
           "speed",
           "speed",
           m,
-          { sets: progression.isDeloadWeek ? scaleSets(m.default_sets, progression) : undefined },
+          {},
           `${spSessionName} — ${pick.category.replace(/_/g, " ")}. ${pick.reason}`,
           {
             speed_template_id: speedSelection.template.id,
@@ -1106,19 +1157,44 @@ const handler = async (req: Request): Promise<Response> => {
         };
         wp.day_orchestration = dayOrchestration;
 
-        // Deload week is a real reduction, not a label. Strength-family and
-        // conditioning volume drops one working set; never below two, and
-        // never on total-dose rows (innings, distance, timed work).
-        if (
-          progression.isDeloadWeek &&
-          (domain === "lift" || domain === "supplemental" || domain === "conditioning") &&
-          typeof rx.sets === "number" && rx.sets >= 3 &&
-          rx.total_reps == null && rx.duration_seconds == null && rx.distance_feet == null
-        ) {
-          const before = rx.sets;
-          rx.sets = Math.max(2, rx.sets - 1);
-          wp.deload_applied = { from: before, to: rx.sets, reason: "Week 4 deload — volume down, quality held." };
+        // Week-in-block wave. The doctrine dose was resolved before the
+        // 28-day history was read, so it is re-resolved here with the real
+        // block week. This replaces the old ad-hoc "sets - 1" deload patch:
+        // the wave (and week-4 deload) is now part of the same envelope math,
+        // so a deload can never drop a row below its envelope floor.
+        const dd = wp.dose_doctrine as any;
+        if (dd && typeof rx.sets === "number" && typeof rx.reps === "number") {
+          const rewaved = resolveDose({
+            phase: phaseRes.phase,
+            role: dd.role ?? rx.sequence_role,
+            category: dd.category,
+            trainingAgeYears,
+            weekInBlock: progression.weekInBlock,
+            isDeloadWeek: progression.isDeloadWeek,
+            cnsClamped: !!rx.cns_clamped,
+            capSets: dd.cap_sets ?? null,
+            capReps: dd.cap_reps ?? null,
+          });
+          const before = { sets: rx.sets, reps: rx.reps };
+          rx.sets = rewaved.sets;
+          rx.reps = rewaved.reps;
+          dd.notes = rewaved.notes;
+          dd.week_in_block = progression.weekInBlock;
+          if (before.sets !== rx.sets || before.reps !== rx.reps) {
+            dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}` };
+          }
+          if (progression.isDeloadWeek) {
+            wp.deload_applied = {
+              from: before.sets,
+              to: rx.sets,
+              reason: "Week 4 deload — envelope floor, quality held.",
+            };
+          }
+          if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps)) {
+            dd.envelope_violation = true;
+          }
         }
+
 
 
         if (!wp.session_shape) {
@@ -2220,7 +2296,7 @@ function ensureFullBodyLift(
 
   if (!hasLiftRole("trunk_primer")) {
     const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl", "lift_deadbug_band_press", "lift_mcgill_big3"]);
-    if (m) push("lift", "trunk_primer", m, { sets: 1, reps: isInSeason ? 6 : 10 }, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
+    if (m) push("lift", "trunk_primer", m, {}, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
   }
 
   if (!hasLiftCategory("core")) {
@@ -2231,7 +2307,7 @@ function ensureFullBodyLift(
       "lift_side_plank_leg_lift",
       "paloff_press",
     ], "core");
-    if (m) push("lift", hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer", m, { sets: 1, reps: isInSeason ? 6 : 10 }, "Full-body guardrail: core category is mandatory for a complete lift session.");
+    if (m) push("lift", hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer", m, {}, "Full-body guardrail: core category is mandatory for a complete lift session.");
   }
 
   // WIC certifier requires movement_category=rotation to be present in every
@@ -2250,7 +2326,7 @@ function ensureFullBodyLift(
         "lift",
         "rotation",
         m,
-        { sets: 1, reps: isInSeason ? 6 : 8 },
+        {},
         "Full-body guardrail: rotation category is mandatory in every WIC lift template.",
       );
   }
@@ -2259,26 +2335,26 @@ function ensureFullBodyLift(
     const m = pickFirstCategory(isInSeason
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
-    if (m) push("lift", "compound_lower", m, { sets: isInSeason ? 2 : 3, reps: 3 }, "Full-body guardrail: one legal lower-body compound anchors the session.");
+    if (m) push("lift", "compound_lower", m, {}, "Full-body guardrail: one legal lower-body compound anchors the session.");
   }
 
   if (!hasLiftRole("unilateral_lower")) {
     const m = pickFirst(isInSeason ? ["lateral_db_step_up", "sl_deadlift_fat_grips"] : ["lateral_db_step_up", "kot_lunge", "sl_deadlift_fat_grips"]);
-    if (m) push("lift", "unilateral_lower", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
+    if (m) push("lift", "unilateral_lower", m, {}, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
   }
 
   if (!hasLiftCategory("compound_upper_push")) {
     const m = pickFirstCategory(isInSeason
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
-    if (m) push("lift", "upper_push", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
+    if (m) push("lift", "upper_push", m, {}, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
   }
 
   if (!hasLiftCategory("compound_upper_pull")) {
     const m = pickFirstCategory(isInSeason
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
-    if (m) push("lift", "upper_pull", m, { sets: isInSeason ? 1 : 2, reps: 3 }, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
+    if (m) push("lift", "upper_pull", m, {}, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
   }
 }
 
