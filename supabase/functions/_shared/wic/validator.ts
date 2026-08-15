@@ -3,6 +3,8 @@
 
 import type { WicEngine } from "./constitution.ts";
 import { CARD_REGISTRY, displayOrderForSlot, slotToCardType } from "./cardRegistry.ts";
+import { isWithinEnvelope } from "./dosage/doctrine.ts";
+
 
 export interface ValidationIssue {
   code: string;
