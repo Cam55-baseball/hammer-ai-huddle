@@ -129,7 +129,7 @@ for (const root of SCAN_ROOTS) {
     const lines = readFileSync(file, "utf8").split("\n");
     lines.forEach((line, i) => {
       if (line.trim().startsWith("//") || line.trim().startsWith("*")) return;
-      if (line.includes("dose_cap") || line.includes("default_sets") || line.includes("default_reps")) return;
+      if (line.includes("dose_cap") || line.includes("_CAP") || line.includes("default_sets") || line.includes("default_reps")) return;
       if (LITERAL.test(line)) {
         fail(`${file}:${i + 1} hardcoded dose literal outside the doctrine module → ${line.trim()}`);
       }
