@@ -633,8 +633,32 @@ const handler = async (req: Request): Promise<Response> => {
 
       // WIC — required constitutional payload
       const wicEngine = engineForSlotRole(slot, role);
-      const finalSets = clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase;
-      const setsRepsStr = finalSets != null && repsBase != null ? `${finalSets}×${repsBase}` : "prescribed dose";
+      // ---- Zero-Drift Dosage Doctrine -------------------------------------
+      // `doctrine.resolveDose` is the ONLY authority for a set/rep number.
+      // Catalog defaults and call-site hints are never trusted for rep-dosed
+      // movements; they survive only as the safety ceiling (`capSets/capReps`)
+      // and as the dose for total-dose units (seconds / feet / innings).
+      const repDosed = !isTotalDose && doctrineIsRepDosed(dosageUnitRaw);
+      const doseCap = (overrides as any).dose_cap as { sets?: number; reps?: number } | undefined;
+      const resolvedDose = repDosed
+        ? resolveDose({
+            phase: phaseRes.phase,
+            role,
+            category: s.movement.movement_category ?? s.movement.category,
+            dosageUnit: dosageUnitRaw,
+            trainingAgeYears,
+            weekInBlock: null, // re-resolved with the real block week in the post-pass
+            cnsClamped: clamped,
+            capSets: doseCap?.sets ?? null,
+            capReps: doseCap?.reps ?? null,
+          })
+        : null;
+      const finalSets = resolvedDose
+        ? resolvedDose.sets
+        : (clamped && typeof setsBase === "number" ? Math.max(1, setsBase - 1) : setsBase);
+      const finalReps = resolvedDose ? resolvedDose.reps : repsBase;
+      const setsRepsStr = finalSets != null && finalReps != null ? `${finalSets}×${finalReps}` : "prescribed dose";
+
       const orderStr = `Sequence #${seq + 1} — ${role.replace(/_/g, " ")} keeps the constitutional day order intact.`;
       const recoveryStr = `${s.movement.cns_cost} CNS units; expect ~${Math.max(24, s.movement.cns_cost * 12)}h before repeating this pattern.`;
       const why_v2: WhyV2 = buildWhy({
