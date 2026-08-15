@@ -684,9 +684,11 @@ const handler = async (req: Request): Promise<Response> => {
       // movement row, then classify by category so mobility/warmup/FRC always
       // land on a duration and lifts land on rep counts.
       const noDose =
+      const noDose =
         (finalSets === 1 || finalSets == null) &&
-        (repsBase === 1 || repsBase == null) &&
+        (finalReps === 1 || finalReps == null) &&
         !durationSeconds && !distanceFeet && !totalReps;
+
       if (noDose) {
         const cat = (s.movement.movement_category ?? s.movement.category ?? "").toLowerCase();
         const isTimeBased = cat.includes("mobility") || cat.includes("warmup") ||
