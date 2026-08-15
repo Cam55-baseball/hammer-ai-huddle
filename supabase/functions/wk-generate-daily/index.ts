@@ -872,34 +872,33 @@ const handler = async (req: Request): Promise<Response> => {
       const compound = pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
         lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "compound_lower");
       if (compound) {
-        const sets = isInSeason ? 2 : clamp(2, block.compound_min_sets, block.compound_max_sets);
-        const reps = isInSeason ? 3 : clamp(3, block.compound_min_reps, block.compound_max_reps);
         push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
       }
 
       // 4) Unilateral lower — rotate across the week to build all planes
       const uniLower = pickFirst(StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek));
       if (uniLower) {
+        // Safety ceiling only: deep-flexion (ATG family) in-season stays a
+        // ROM-limited durability dose. Everything else is doctrine-dosed.
+        const isDeepFlexion = /atg|sissy|patrick_step/.test(uniLower.slug);
         const d = StrengthEngine.unilateralDoseFor(uniLower.slug, isInSeason);
-        const uniWhy = isInSeason && /atg|sissy|patrick_step/.test(uniLower.slug)
+        const uniWhy = isInSeason && isDeepFlexion
 
           ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
           : "Single-leg dominance — closes L/R imbalances the compound hides.";
-        push("lift", "unilateral_lower", uniLower, { dose_cap: { sets: d.sets, reps: d.reps } } as any, uniWhy);
+        push("lift", "unilateral_lower", uniLower, (isDeepFlexion ? { dose_cap: { sets: d.sets, reps: d.reps } } : {}) as any, uniWhy);
       }
 
 
       // 5) Upper push — unilateral / integrated
       const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
       if (upperPush) {
-        const d = StrengthEngine.upperDose(isInSeason);
         push("lift", "upper_push", upperPush, {}, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
       }
 
       // 6) Upper pull — unilateral / weighted
       const upperPull = pickFirst(StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek));
       if (upperPull) {
-        const d = StrengthEngine.upperDose(isInSeason);
         push("lift", "upper_pull", upperPull, {}, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
       }
 
