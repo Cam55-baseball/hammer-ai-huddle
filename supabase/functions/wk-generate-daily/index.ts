@@ -729,7 +729,24 @@ const handler = async (req: Request): Promise<Response> => {
           source_philosophy: s.movement.source_philosophy,
           why: why || s.movement.why_prescribed,
           cue: s.movement.cue,
-          rep_rule: `${block.compound_min_sets}-${block.compound_max_sets} sets × ${block.compound_min_reps}-${block.compound_max_reps} reps (phase doctrine).`,
+          rep_rule: resolvedDose
+            ? `${resolvedDose.envelope.sets[0]}-${resolvedDose.envelope.sets[1]} sets × ${resolvedDose.envelope.reps[0]}-${resolvedDose.envelope.reps[1]} reps — ${resolvedDose.phase} ${resolvedDose.group} envelope (${DOSAGE_DOCTRINE_VERSION}).`
+            : `Total-dose movement — measured in ${dosageUnit}, not sets × reps.`,
+          dose_doctrine: resolvedDose
+            ? {
+                version: DOSAGE_DOCTRINE_VERSION,
+                group: resolvedDose.group,
+                phase: resolvedDose.phase,
+                band: resolvedDose.band,
+                envelope: resolvedDose.envelope,
+                notes: resolvedDose.notes,
+                cap_sets: (overrides as any).dose_cap?.sets ?? null,
+                cap_reps: (overrides as any).dose_cap?.reps ?? null,
+                role,
+                category: s.movement.movement_category ?? s.movement.category ?? null,
+              }
+            : null,
+
           reductions,
           override: overrideMeta,
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
