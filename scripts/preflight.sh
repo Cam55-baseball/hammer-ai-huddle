@@ -13,6 +13,8 @@ bash "$ROOT/scripts/check-no-legacy-games.sh"
 bunx tsx "$ROOT/scripts/check-skill-frequency-ceiling.ts"
 # Movement-catalog domain integrity — no drill filed under the wrong card.
 bunx tsx "$ROOT/scripts/check-domain-integrity.ts"
+# Adaptation-label drift guard — no catalog label may go silently ineligible.
+bunx tsx "$ROOT/scripts/check-adaptation-labels.ts"
 # Zero-Drift Dosage Doctrine — one dosing authority, envelopes never exceeded.
 bunx tsx "$ROOT/scripts/audits/dosage-doctrine-audit.ts"
 bash "$ROOT/scripts/check-eternity-guards.sh"
