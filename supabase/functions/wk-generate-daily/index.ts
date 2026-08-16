@@ -429,21 +429,49 @@ const handler = async (req: Request): Promise<Response> => {
     });
     const decision = adaptationDecision;
     // WIC adaptation compatibility (mirrors public.wic_adaptations_compatible SQL helper).
-    const adaptationsCompatible = (day: string | null | undefined, mov: string | null | undefined): boolean => {
+    // Catalog rows carry legacy / shorthand adaptation labels ("strength",
+    // "rotational_force", "arm_care", …) that were never values in the
+    // canonical map. Left unmapped they made ~40% of the catalog permanently
+    // ineligible — which is how `full_body_strength` could demand
+    // compound_upper_pull while every pull row was silently filtered out.
+    // Canonicalize first, then fail OPEN on anything still unrecognized: a
+    // labeling gap must never be able to starve a mandatory template slot.
+    const ADAPTATION_ALIASES: Record<string, string> = {
+      strength: "max_strength",
+      rotational_strength: "max_strength",
+      rotational_force: "power_transfer",
+      rotational_power: "power_transfer",
+      elastic_rotation: "power_transfer",
+      pelvic_separation: "power_transfer",
+      pelvic_speed: "speed_development",
+      speed: "speed_development",
+      bat_speed: "bat_speed_development",
+    };
+    const canonAdaptation = (v: string | null | undefined): string | null =>
+      v ? (ADAPTATION_ALIASES[v] ?? v) : null;
+    const adaptationsCompatible = (dayRaw: string | null | undefined, movRaw: string | null | undefined): boolean => {
+      const day = canonAdaptation(dayRaw);
+      const mov = canonAdaptation(movRaw);
       if (!day || !mov) return true;
       if (day === mov) return true;
+      // Support-class work is never the primary stimulus — blocking it on
+      // adaptation grounds only strands mandatory slots.
+      if (mov === "arm_care" || mov === "recovery_only" || mov === "movement_literacy") return true;
       const map: Record<string, string[]> = {
         recovery_only: ["in_season_maintenance", "movement_literacy"],
         game_readiness: ["speed_development", "bat_speed_development", "movement_literacy", "in_season_maintenance"],
         muscle_capacity: ["max_strength", "muscle_capacity", "in_season_maintenance", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
         max_strength: ["max_strength", "muscle_capacity", "strength_to_power", "speed_development", "bat_speed_development", "movement_literacy"],
-        strength_to_power: ["strength_to_power", "max_strength", "power_transfer", "speed_development", "bat_speed_development", "movement_literacy"],
-        power_transfer: ["power_transfer", "strength_to_power", "speed_development", "bat_speed_development", "in_season_maintenance", "movement_literacy"],
+        strength_to_power: ["strength_to_power", "max_strength", "muscle_capacity", "power_transfer", "speed_development", "bat_speed_development", "movement_literacy"],
+        power_transfer: ["power_transfer", "strength_to_power", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "in_season_maintenance", "movement_literacy"],
         in_season_maintenance: ["in_season_maintenance", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "power_transfer", "movement_literacy"],
         movement_literacy: ["movement_literacy", "muscle_capacity", "in_season_maintenance"],
       };
-      return (map[day] ?? []).includes(mov);
+      // Unknown day label → fail open rather than emptying the catalog.
+      if (!map[day]) return true;
+      return map[day].includes(mov);
     };
+
     const engineForSlotRole = (slot: Slot, role: SequenceRole): WicEngine => {
       if (slot === "speed") return "sprint";
       if (slot === "bat_speed") return "bat_speed";
@@ -484,7 +512,10 @@ const handler = async (req: Request): Promise<Response> => {
     const seasonCtx = seasonContextFromPhase(phaseRes.phase);
 
     // -------- Movement filters --------
-    const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
+    const eligibleWith = (
+      m: MovementRow | undefined | null,
+      opts?: { ignoreAdaptation?: boolean },
+    ): m is MovementRow => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
       if (m.wic_metadata_complete === false) return false;
@@ -499,8 +530,10 @@ const handler = async (req: Request): Promise<Response> => {
       if (usedNamesThisSession.has(normalizeName(m.name))) return false;
       // 72h non-repeat for compound lifts.
       if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return false;
-      // WIC Stage 3 — day-adaptation compatibility.
-      if (decision?.primary && m.primary_adaptation) {
+      // WIC Stage 3 — day-adaptation compatibility. This is the ONLY gate the
+      // template-completion fallback is allowed to relax: safety, season,
+      // injury, training age and scope gates always apply.
+      if (!opts?.ignoreAdaptation && decision?.primary && m.primary_adaptation) {
         if (!adaptationsCompatible(decision.primary, m.primary_adaptation)) return false;
       }
       // Constitutional scope gate — sport / discipline specialization applied
@@ -512,6 +545,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (auditMovementIntegrity(m as any).length > 0) return false;
       return true;
     };
+    const eligible = (m: MovementRow | undefined | null): m is MovementRow => eligibleWith(m);
     const swap = (m: MovementRow) => {
       if (!m.contraindications?.some((c) => injurySlugs.has(c))) return { movement: m, substitutedFrom: null as string | null, reason: null as string | null };
       if (m.regression_slug) {
@@ -527,6 +561,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
       return undefined;
     };
+    // Last-resort picker for template-mandatory categories: relaxes ONLY the
+    // day-adaptation gate. Never relaxes season legality, injury
+    // contraindications, training age, scope or catalog integrity.
+    const pickFirstRelaxed = (slugs: string[]): MovementRow | undefined => {
+      for (const s of slugs) {
+        const m = lib.find((x) => x.slug === s);
+        if (eligibleWith(m, { ignoreAdaptation: true })) return m;
+      }
+      return undefined;
+    };
+
     const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {
       for (const s of slugs) {
         const m = lib.find((x) => x.slug === s);
@@ -912,7 +957,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (finisher) push("lift", "trunk_finisher", finisher, {}, "Loaded trunk finisher — locks the rotational strength from above.");
       }
 
-      ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason);
+      ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason, pickFirstRelaxed);
     }
 
     // -------- Elite progression state (28-day history → block/week wave) ----
@@ -2275,6 +2320,7 @@ function ensureFullBodyLift(
     meta?: Record<string, unknown>,
   ) => boolean,
   isInSeason: boolean,
+  pickFirstRelaxed?: (slugs: string[]) => MovementRow | undefined,
 ) {
   const catalogBySlug = new Map(catalog.map((m) => [m.slug, m] as const));
   const categoryForRx = (rx: Prescription) => coerceCanonicalCategory(catalogBySlug.get(rx.movement_slug) as any);
@@ -2287,6 +2333,35 @@ function ensureFullBodyLift(
     }
     return undefined;
   };
+  // Template-mandatory categories may never be left empty. Ladder:
+  //   1. preferred pool, fully gated
+  //   2. preferred pool with ONLY the day-adaptation gate relaxed
+  //   3. any catalog row of that category, day-adaptation gate relaxed
+  // Safety, season legality, injury, training age and scope always apply.
+  const relaxed = pickFirstRelaxed ?? (() => undefined);
+  const pickMandatoryCategory = (
+    slugs: string[],
+    category: string,
+  ): { movement: MovementRow; relaxed: boolean } | undefined => {
+    const strict = pickFirstCategory(slugs, category);
+    if (strict) return { movement: strict, relaxed: false };
+    for (const slug of slugs) {
+      const c = relaxed([slug]);
+      if (c && coerceCanonicalCategory(c as any) === category) return { movement: c, relaxed: true };
+    }
+    const wholeCatalog = catalog
+      .filter((m) => coerceCanonicalCategory(m as any) === category)
+      .map((m) => m.slug);
+    for (const slug of wholeCatalog) {
+      const c = relaxed([slug]);
+      if (c) return { movement: c, relaxed: true };
+    }
+    return undefined;
+  };
+  const mandatoryWhy = (base: string, wasRelaxed: boolean) =>
+    wasRelaxed
+      ? `${base} Selected outside today's primary adaptation because the template requires this category and no same-adaptation option was available — kept at maintenance intent.`
+      : base;
 
   if (!hasLiftRole("arm_care")) {
     const m = pickFirstCategory(["crossover_symmetry_full", "jband_full_chart", "lift_er_at_90", "lift_band_pullapart"], "arm_care") ??
@@ -2300,42 +2375,53 @@ function ensureFullBodyLift(
   }
 
   if (!hasLiftCategory("core")) {
-    const m = pickFirstCategory([
+    const hit = pickMandatoryCategory([
       "lift_deadbug_band_press",
       "lift_mcgill_big3",
       "lift_ab_wheel_rollout",
       "lift_side_plank_leg_lift",
       "paloff_press",
     ], "core");
-    if (m) push("lift", hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer", m, {}, "Full-body guardrail: core category is mandatory for a complete lift session.");
+    if (hit) {
+      push(
+        "lift",
+        hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer",
+        hit.movement,
+        {},
+        mandatoryWhy("Full-body guardrail: core category is mandatory for a complete lift session.", hit.relaxed),
+      );
+    }
   }
 
   // WIC certifier requires movement_category=rotation to be present in every
   // full-body lift template. Use the same canonical category coercion as the
   // certifier instead of a fragile hardcoded slug test.
   if (!hasLiftCategory("rotation")) {
-    const m = pickFirstCategory([
+    const hit = pickMandatoryCategory([
       "trap_bar_trunk_twist",
       "band_resisted_swings",
       "cable_chops",
       "heavy_russian_twist",
       "med_ball_shot_put",
     ], "rotation");
-    if (m)
+    if (hit) {
       push(
         "lift",
         "rotation",
-        m,
+        hit.movement,
         {},
-        "Full-body guardrail: rotation category is mandatory in every WIC lift template.",
+        mandatoryWhy("Full-body guardrail: rotation category is mandatory in every WIC lift template.", hit.relaxed),
       );
+    }
   }
 
   if (!hasLiftCategory("compound_lower")) {
-    const m = pickFirstCategory(isInSeason
+    const hit = pickMandatoryCategory(isInSeason
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
-    if (m) push("lift", "compound_lower", m, {}, "Full-body guardrail: one legal lower-body compound anchors the session.");
+    if (hit) {
+      push("lift", "compound_lower", hit.movement, {}, mandatoryWhy("Full-body guardrail: one legal lower-body compound anchors the session.", hit.relaxed));
+    }
   }
 
   if (!hasLiftRole("unilateral_lower")) {
@@ -2344,18 +2430,23 @@ function ensureFullBodyLift(
   }
 
   if (!hasLiftCategory("compound_upper_push")) {
-    const m = pickFirstCategory(isInSeason
+    const hit = pickMandatoryCategory(isInSeason
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
-    if (m) push("lift", "upper_push", m, {}, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
+    if (hit) {
+      push("lift", "upper_push", hit.movement, {}, mandatoryWhy("Full-body guardrail: upper push is required so the day is not lower-body-only.", hit.relaxed));
+    }
   }
 
   if (!hasLiftCategory("compound_upper_pull")) {
-    const m = pickFirstCategory(isInSeason
+    const hit = pickMandatoryCategory(isInSeason
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
-    if (m) push("lift", "upper_pull", m, {}, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
+    if (hit) {
+      push("lift", "upper_pull", hit.movement, {}, mandatoryWhy("Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.", hit.relaxed));
+    }
   }
 }
+
 
 Deno.serve(handler);
