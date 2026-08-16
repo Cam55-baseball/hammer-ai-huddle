@@ -429,21 +429,49 @@ const handler = async (req: Request): Promise<Response> => {
     });
     const decision = adaptationDecision;
     // WIC adaptation compatibility (mirrors public.wic_adaptations_compatible SQL helper).
-    const adaptationsCompatible = (day: string | null | undefined, mov: string | null | undefined): boolean => {
+    // Catalog rows carry legacy / shorthand adaptation labels ("strength",
+    // "rotational_force", "arm_care", …) that were never values in the
+    // canonical map. Left unmapped they made ~40% of the catalog permanently
+    // ineligible — which is how `full_body_strength` could demand
+    // compound_upper_pull while every pull row was silently filtered out.
+    // Canonicalize first, then fail OPEN on anything still unrecognized: a
+    // labeling gap must never be able to starve a mandatory template slot.
+    const ADAPTATION_ALIASES: Record<string, string> = {
+      strength: "max_strength",
+      rotational_strength: "max_strength",
+      rotational_force: "power_transfer",
+      rotational_power: "power_transfer",
+      elastic_rotation: "power_transfer",
+      pelvic_separation: "power_transfer",
+      pelvic_speed: "speed_development",
+      speed: "speed_development",
+      bat_speed: "bat_speed_development",
+    };
+    const canonAdaptation = (v: string | null | undefined): string | null =>
+      v ? (ADAPTATION_ALIASES[v] ?? v) : null;
+    const adaptationsCompatible = (dayRaw: string | null | undefined, movRaw: string | null | undefined): boolean => {
+      const day = canonAdaptation(dayRaw);
+      const mov = canonAdaptation(movRaw);
       if (!day || !mov) return true;
       if (day === mov) return true;
+      // Support-class work is never the primary stimulus — blocking it on
+      // adaptation grounds only strands mandatory slots.
+      if (mov === "arm_care" || mov === "recovery_only" || mov === "movement_literacy") return true;
       const map: Record<string, string[]> = {
         recovery_only: ["in_season_maintenance", "movement_literacy"],
         game_readiness: ["speed_development", "bat_speed_development", "movement_literacy", "in_season_maintenance"],
         muscle_capacity: ["max_strength", "muscle_capacity", "in_season_maintenance", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
         max_strength: ["max_strength", "muscle_capacity", "strength_to_power", "speed_development", "bat_speed_development", "movement_literacy"],
-        strength_to_power: ["strength_to_power", "max_strength", "power_transfer", "speed_development", "bat_speed_development", "movement_literacy"],
-        power_transfer: ["power_transfer", "strength_to_power", "speed_development", "bat_speed_development", "in_season_maintenance", "movement_literacy"],
+        strength_to_power: ["strength_to_power", "max_strength", "muscle_capacity", "power_transfer", "speed_development", "bat_speed_development", "movement_literacy"],
+        power_transfer: ["power_transfer", "strength_to_power", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "in_season_maintenance", "movement_literacy"],
         in_season_maintenance: ["in_season_maintenance", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "power_transfer", "movement_literacy"],
         movement_literacy: ["movement_literacy", "muscle_capacity", "in_season_maintenance"],
       };
-      return (map[day] ?? []).includes(mov);
+      // Unknown day label → fail open rather than emptying the catalog.
+      if (!map[day]) return true;
+      return map[day].includes(mov);
     };
+
     const engineForSlotRole = (slot: Slot, role: SequenceRole): WicEngine => {
       if (slot === "speed") return "sprint";
       if (slot === "bat_speed") return "bat_speed";
