@@ -512,7 +512,10 @@ const handler = async (req: Request): Promise<Response> => {
     const seasonCtx = seasonContextFromPhase(phaseRes.phase);
 
     // -------- Movement filters --------
-    const eligible = (m: MovementRow | undefined | null): m is MovementRow => {
+    const eligibleWith = (
+      m: MovementRow | undefined | null,
+      opts?: { ignoreAdaptation?: boolean },
+    ): m is MovementRow => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
       if (m.wic_metadata_complete === false) return false;
@@ -527,8 +530,10 @@ const handler = async (req: Request): Promise<Response> => {
       if (usedNamesThisSession.has(normalizeName(m.name))) return false;
       // 72h non-repeat for compound lifts.
       if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return false;
-      // WIC Stage 3 — day-adaptation compatibility.
-      if (decision?.primary && m.primary_adaptation) {
+      // WIC Stage 3 — day-adaptation compatibility. This is the ONLY gate the
+      // template-completion fallback is allowed to relax: safety, season,
+      // injury, training age and scope gates always apply.
+      if (!opts?.ignoreAdaptation && decision?.primary && m.primary_adaptation) {
         if (!adaptationsCompatible(decision.primary, m.primary_adaptation)) return false;
       }
       // Constitutional scope gate — sport / discipline specialization applied
@@ -540,6 +545,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (auditMovementIntegrity(m as any).length > 0) return false;
       return true;
     };
+    const eligible = (m: MovementRow | undefined | null): m is MovementRow => eligibleWith(m);
     const swap = (m: MovementRow) => {
       if (!m.contraindications?.some((c) => injurySlugs.has(c))) return { movement: m, substitutedFrom: null as string | null, reason: null as string | null };
       if (m.regression_slug) {
@@ -555,6 +561,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
       return undefined;
     };
+    // Last-resort picker for template-mandatory categories: relaxes ONLY the
+    // day-adaptation gate. Never relaxes season legality, injury
+    // contraindications, training age, scope or catalog integrity.
+    const pickFirstRelaxed = (slugs: string[]): MovementRow | undefined => {
+      for (const s of slugs) {
+        const m = lib.find((x) => x.slug === s);
+        if (eligibleWith(m, { ignoreAdaptation: true })) return m;
+      }
+      return undefined;
+    };
+
     const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {
       for (const s of slugs) {
         const m = lib.find((x) => x.slug === s);
