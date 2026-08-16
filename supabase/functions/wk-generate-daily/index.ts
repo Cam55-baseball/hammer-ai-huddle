@@ -2320,6 +2320,7 @@ function ensureFullBodyLift(
     meta?: Record<string, unknown>,
   ) => boolean,
   isInSeason: boolean,
+  pickFirstRelaxed?: (slugs: string[]) => MovementRow | undefined,
 ) {
   const catalogBySlug = new Map(catalog.map((m) => [m.slug, m] as const));
   const categoryForRx = (rx: Prescription) => coerceCanonicalCategory(catalogBySlug.get(rx.movement_slug) as any);
@@ -2332,6 +2333,35 @@ function ensureFullBodyLift(
     }
     return undefined;
   };
+  // Template-mandatory categories may never be left empty. Ladder:
+  //   1. preferred pool, fully gated
+  //   2. preferred pool with ONLY the day-adaptation gate relaxed
+  //   3. any catalog row of that category, day-adaptation gate relaxed
+  // Safety, season legality, injury, training age and scope always apply.
+  const relaxed = pickFirstRelaxed ?? (() => undefined);
+  const pickMandatoryCategory = (
+    slugs: string[],
+    category: string,
+  ): { movement: MovementRow; relaxed: boolean } | undefined => {
+    const strict = pickFirstCategory(slugs, category);
+    if (strict) return { movement: strict, relaxed: false };
+    for (const slug of slugs) {
+      const c = relaxed([slug]);
+      if (c && coerceCanonicalCategory(c as any) === category) return { movement: c, relaxed: true };
+    }
+    const wholeCatalog = catalog
+      .filter((m) => coerceCanonicalCategory(m as any) === category)
+      .map((m) => m.slug);
+    for (const slug of wholeCatalog) {
+      const c = relaxed([slug]);
+      if (c) return { movement: c, relaxed: true };
+    }
+    return undefined;
+  };
+  const mandatoryWhy = (base: string, wasRelaxed: boolean) =>
+    wasRelaxed
+      ? `${base} Selected outside today's primary adaptation because the template requires this category and no same-adaptation option was available — kept at maintenance intent.`
+      : base;
 
   if (!hasLiftRole("arm_care")) {
     const m = pickFirstCategory(["crossover_symmetry_full", "jband_full_chart", "lift_er_at_90", "lift_band_pullapart"], "arm_care") ??
@@ -2345,42 +2375,53 @@ function ensureFullBodyLift(
   }
 
   if (!hasLiftCategory("core")) {
-    const m = pickFirstCategory([
+    const hit = pickMandatoryCategory([
       "lift_deadbug_band_press",
       "lift_mcgill_big3",
       "lift_ab_wheel_rollout",
       "lift_side_plank_leg_lift",
       "paloff_press",
     ], "core");
-    if (m) push("lift", hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer", m, {}, "Full-body guardrail: core category is mandatory for a complete lift session.");
+    if (hit) {
+      push(
+        "lift",
+        hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer",
+        hit.movement,
+        {},
+        mandatoryWhy("Full-body guardrail: core category is mandatory for a complete lift session.", hit.relaxed),
+      );
+    }
   }
 
   // WIC certifier requires movement_category=rotation to be present in every
   // full-body lift template. Use the same canonical category coercion as the
   // certifier instead of a fragile hardcoded slug test.
   if (!hasLiftCategory("rotation")) {
-    const m = pickFirstCategory([
+    const hit = pickMandatoryCategory([
       "trap_bar_trunk_twist",
       "band_resisted_swings",
       "cable_chops",
       "heavy_russian_twist",
       "med_ball_shot_put",
     ], "rotation");
-    if (m)
+    if (hit) {
       push(
         "lift",
         "rotation",
-        m,
+        hit.movement,
         {},
-        "Full-body guardrail: rotation category is mandatory in every WIC lift template.",
+        mandatoryWhy("Full-body guardrail: rotation category is mandatory in every WIC lift template.", hit.relaxed),
       );
+    }
   }
 
   if (!hasLiftCategory("compound_lower")) {
-    const m = pickFirstCategory(isInSeason
+    const hit = pickMandatoryCategory(isInSeason
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
-    if (m) push("lift", "compound_lower", m, {}, "Full-body guardrail: one legal lower-body compound anchors the session.");
+    if (hit) {
+      push("lift", "compound_lower", hit.movement, {}, mandatoryWhy("Full-body guardrail: one legal lower-body compound anchors the session.", hit.relaxed));
+    }
   }
 
   if (!hasLiftRole("unilateral_lower")) {
@@ -2389,18 +2430,23 @@ function ensureFullBodyLift(
   }
 
   if (!hasLiftCategory("compound_upper_push")) {
-    const m = pickFirstCategory(isInSeason
+    const hit = pickMandatoryCategory(isInSeason
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
-    if (m) push("lift", "upper_push", m, {}, "Full-body guardrail: upper push is required so the day is not lower-body-only.");
+    if (hit) {
+      push("lift", "upper_push", hit.movement, {}, mandatoryWhy("Full-body guardrail: upper push is required so the day is not lower-body-only.", hit.relaxed));
+    }
   }
 
   if (!hasLiftCategory("compound_upper_pull")) {
-    const m = pickFirstCategory(isInSeason
+    const hit = pickMandatoryCategory(isInSeason
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
-    if (m) push("lift", "upper_pull", m, {}, "Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.");
+    if (hit) {
+      push("lift", "upper_pull", hit.movement, {}, mandatoryWhy("Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.", hit.relaxed));
+    }
   }
 }
+
 
 Deno.serve(handler);
