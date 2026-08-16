@@ -957,7 +957,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (finisher) push("lift", "trunk_finisher", finisher, {}, "Loaded trunk finisher — locks the rotational strength from above.");
       }
 
-      ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason);
+      ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason, pickFirstRelaxed);
     }
 
     // -------- Elite progression state (28-day history → block/week wave) ----
