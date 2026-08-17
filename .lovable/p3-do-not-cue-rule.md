@@ -1,3 +1,7 @@
+
+> **RETIRED 2026 — superseded by `.lovable/p3-power-step-rule.md`.** P3 is now a
+> VOLUNTARY, coached power step. Nothing in this file is enforced any longer.
+> Preserved for history only.
 # P3 Do-Not-Cue Rule (enforceable)
 
 **Status:** Additive enforcement layer over the hitting doctrine. Referenced
