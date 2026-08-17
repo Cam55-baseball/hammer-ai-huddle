@@ -13,15 +13,11 @@ export interface HittingPhase {
   failureSymptoms: string[];
   summary: string;
   /**
-   * v2 (Arakawa) additive metadata. The athlete-felt order is
-   * P1 → P2 → P4 → (P3 emerges). Camera/coach order remains P1→P2→P3→P4.
-   * See `.lovable/hitting-philosophy-v2-arakawa-integration.md`.
+   * Order through the swing. Camera/coach order and athlete-felt order are the
+   * same: P1 → P2 → P3 → P4. P3 is the voluntary power step.
+   * See `.lovable/p3-power-step-rule.md`.
    */
   feltOrder?: 1 | 2 | 3 | 4;
-  /** When true, no conscious athlete-facing cue may target this phase. */
-  doNotCue?: boolean;
-  /** When true, this phase emerges from upstream organization. */
-  involuntary?: boolean;
 }
 
 export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
