@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RoadmapStep } from '@/lib/hittingCausalChains';
-import { HITTING_FELT_ORDER, HITTING_PHASES, type HittingPhaseId } from '@/lib/hittingPhases';
+import { type HittingPhaseId } from '@/lib/hittingPhases';
 
 interface Props {
   roadmap: RoadmapStep[];
