@@ -121,10 +121,10 @@ const tiles: ReportCardTileSpec[] = [
     phase: "P3 Stride / Landing",
     explainer: {
       whatWhy:
-        "'Heel plant' is the moment the FULL foot is down — not just the heel — landed sideways with chest and shoulders square to the plate, core max-tensioned. P3 is INVOLUNTARY: the landing is the body's solution to a clean P1 hip load + P2 hand load + P4 back-elbow drive. You don't think about the stride — when the upstream sequence is organized, the foot plants sideways on its own. If the scap stays loaded pre-stride, the landing naturally stays sideways as long as the shoulders don't begin to open. Turning shoulders WITH hips at landing creates a longer, more miss-prone swing.",
+        "'Heel plant' is the moment the FULL foot is down — not just the heel — landed sideways with chest and shoulders square to the plate, core max-tensioned. P3 is a VOLUNTARY power step: after the P1 hip load and P2 hand load, you stride at the pitcher's release point and get the front foot all the way down before he lets the ball go, so you're planted and ready to strike. Turning shoulders WITH hips at landing creates a longer, more miss-prone swing — land sideways with the shoulders still closed.",
       howToImprove:
-        "Re-cue UPSTREAM, not the stride itself: (1) audit P1 hip-load completeness (bigger back-hip load = more swing power), (2) hold P2 scap/hand depth pre-stride, (3) reinforce P4 elbow-first intent. Constraint drills: heel-plant pause holds with the scap loaded; sideways-landing photo audit; outside-third front toss (the constraint forces the involuntary sideways landing). Mirror landings checking shoulders are still closed. Slow-mo side-view review.",
-      encouragement: "Organize the hip, hands, and elbow — the foot lands itself.",
+        "Train the step directly: (1) dry power-step reps — hip loads, hands load, then step and land full-foot sideways with the weight still back; (2) step-and-freeze landing audits (photo/mirror, shoulders still closed); (3) timing reps against a live arm counting 'start' on the pitcher's move and 'down' at release; (4) outside-third front toss to punish early opening. If the step is chronically late, start the P1/P2 load sooner so the stride has room. Slow-mo side-view review.",
+      encouragement: "Get the foot down early and sideways — then you're free to strike.",
     },
     compute: (a) => {
       const m = readScore100(a, "heel_plant_score_100", "heel_plant_score_10");
@@ -142,7 +142,7 @@ const tiles: ReportCardTileSpec[] = [
     explainer: {
       whatWhy:
         "Foot-down-at-release is the perfect target because it sets direction while preserving the longest possible look at the ball. This is now graded, not pass/fail: exact release earns the highest score, slightly late is still acceptable, and clearly late fails because the hitter lost look-time. Foot down before release is not punished like late timing; if the hitter gets down early and then drifts forward, that drift belongs to P1 Hip Load Stability or landing quality — not this timing score.",
-      howToImprove: "Live BP with a count cue: 'release' = foot down. If you're consistently late, START P1 EARLIER — begin the back-hip load and the P2 hand load sooner so the upstream sequence has time to complete; the involuntary landing will arrive on time. Never coach the stride directly. Do not create forward drift just to be on time — stability is scored separately.",
+      howToImprove: "Live BP with a count cue: 'release' = foot down. Stride at the pitcher's release point as he starts toward it, and beat the ball with your foot. If you're consistently late, START P1 EARLIER — begin the back-hip load and the P2 hand load sooner so the power step has room to finish on time. Do not create forward drift just to be on time — stability is scored separately.",
       encouragement: "Foot down at release is perfect. A hair late is okay. Clearly late is the miss.",
     },
     compute: (a) => {
