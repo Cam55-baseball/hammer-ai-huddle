@@ -2,7 +2,7 @@
 // MIRROR of src/lib/hittingPhases.ts — keep both files in sync.
 // See mem://features/hitting-analysis/elite-hitting-mechanics-formula
 // v2 Arakawa overlay: `.lovable/hitting-philosophy-v2-arakawa-integration.md`
-// P3 do-not-cue rule: `.lovable/p3-do-not-cue-rule.md`
+// P3 voluntary power-step rule (supersedes the old do-not-cue rule): `.lovable/p3-power-step-rule.md`
 
 export type HittingPhaseId = 'P1' | 'P2' | 'P3' | 'P4';
 
