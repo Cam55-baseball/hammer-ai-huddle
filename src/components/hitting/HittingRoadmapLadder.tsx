@@ -28,17 +28,15 @@ export function HittingRoadmapLadder({ roadmap, className }: Props) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Your 4-Step Roadmap</CardTitle>
         <p className="text-xs text-muted-foreground">Feel &rarr; Isolate &rarr; Constrain &rarr; Transfer</p>
-        {/* v2 Arakawa felt-order legend. Camera sees P1→P2→P3→P4; hitter feels P1→P2→P4→P3-emerges. */}
+        {/* v3 order legend. Camera and hitter share the same order: P1→P2→P3→P4. */}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-          <Badge variant="outline" className="text-[10px]">Seen: {renderOrder(SEEN_ORDER)}</Badge>
-          <Badge
-            variant="outline"
-            className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300"
-            title="Hitter's felt order. P3 (stride / heel plant) is involuntary — it emerges from organized P1+P2+P4. Do not consciously cue P3."
+          <Badge variant="outline" className="text-[10px]">Order: {renderOrder(SEEN_ORDER)}</Badge>
+          <span
+            className="text-[10px] italic"
+            title="P3 is the voluntary power step — stride at the pitcher's release point and get the front foot down before he lets it go."
           >
-            Felt: {renderOrder(HITTING_FELT_ORDER)}
-          </Badge>
-          <span className="text-[10px] italic">*involuntary — do not cue</span>
+            P3 = power step, coached and timed to release
+          </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
