@@ -1,32 +1,32 @@
 /**
- * P3 Do-Not-Cue lint — enforces `.lovable/p3-do-not-cue-rule.md`.
+ * P3 Power Step lint — enforces `.lovable/p3-power-step-rule.md`.
  *
- * P3 (stride / heel plant) is involuntary under the v2 Arakawa overlay
- * (`.lovable/hitting-philosophy-v2-arakawa-integration.md`). Athlete-facing
- * cue surfaces may not instruct the hitter to consciously stride or to
- * project / push / drive the back hip through the ball or release point.
+ * v3 doctrine: P3 (stride / power step) is VOLUNTARY. It is coached, cued and
+ * timed to the pitcher's release point. Direct stride instruction is CORRECT
+ * and no longer banned.
  *
- * Allowed locations: the rule doc itself, the master doctrine doc, prior
- * historical doctrine docs (preserved verbatim under additive law).
+ * This lint now guards the reverse direction: it fails the build if retired
+ * "P3 is involuntary / do-not-cue" language creeps back into athlete-facing
+ * or engine surfaces.
  */
 import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 
 const ROOTS = ["src", "supabase/functions"];
 
-/** Banned athlete-facing phrases. Matched case-insensitive, whole substring. */
+/** Banned retired-doctrine phrases. Matched case-insensitive. */
 const BANNED: RegExp[] = [
-  /\bstride to the pitcher\b/i,
-  /\bstep to the pitcher\b/i,
-  /\bpush\s+(the\s+)?back\s+hip\b/i,
-  /\bproject\s+(the\s+)?back\s+hip\b/i,
-  /\bdrive\s+(the\s+)?back\s+hip\s+(to|through)\b/i,
-  /\bconsciously\s+stride\b/i,
-  /\bthink about (your )?stride\b/i,
+  /\bdo[-\s]?not[-\s]?cue\b/i,
+  /\bP3 is involuntary\b/i,
+  /\binvoluntary (stride|landing|step)\b/i,
+  /\bnever coach the stride\b/i,
+  /\bdon'?t cue the stride\b/i,
+  /\bthe body will plant\b/i,
 ];
 
-/** Files exempted (rule + doctrine + prior preserved doctrine). */
+/** Files exempted (the rule itself + historical doctrine preserved verbatim). */
 const EXEMPT = [
+  ".lovable/p3-power-step-rule.md",
   ".lovable/p3-do-not-cue-rule.md",
   ".lovable/hitting-philosophy-v2-arakawa-integration.md",
   ".lovable/back-elbow-methodology.md",
@@ -41,7 +41,10 @@ function listFiles(): string[] {
   const out: string[] = [];
   for (const root of ROOTS) {
     try {
-      const raw = execSync(`grep -rln -E 'back hip|stride' ${root} || true`, { encoding: "utf8" });
+      const raw = execSync(
+        `grep -rlni -E 'involuntary|do-not-cue|do not cue' ${root} || true`,
+        { encoding: "utf8" },
+      );
       for (const line of raw.split("\n").map((s) => s.trim()).filter(Boolean)) out.push(line);
     } catch {
       /* root missing */
@@ -57,8 +60,6 @@ for (const file of listFiles()) {
   const lines = text.split("\n");
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
-    // Skip lines that look like coach_note keys (coach-voice diagnostic is exempt).
-    if (/coach_note\s*:/.test(l) || /coachNote\s*:/.test(l)) continue;
     for (const re of BANNED) {
       if (re.test(l)) {
         offenders.push({ file, line: i + 1, text: l.trim(), rule: re.source });
@@ -68,10 +69,11 @@ for (const file of listFiles()) {
 }
 
 if (offenders.length > 0) {
-  console.error("P3 Do-Not-Cue violation — see .lovable/p3-do-not-cue-rule.md");
+  console.error("Retired P3 do-not-cue doctrine detected — see .lovable/p3-power-step-rule.md");
+  console.error("P3 is a VOLUNTARY power step. Coach it, cue it, time it to release.");
   for (const o of offenders) {
     console.error(`  ${o.file}:${o.line}  [${o.rule}]  ${o.text}`);
   }
   process.exit(1);
 }
-console.log("ok: no banned P3 cue phrases found in athlete-facing surfaces.");
+console.log("ok: no retired involuntary-P3 language found.");
