@@ -19,9 +19,7 @@ const STEP_COLORS: Record<RoadmapStep['key'], string> = {
 const SEEN_ORDER: readonly HittingPhaseId[] = ['P1', 'P2', 'P3', 'P4'] as const;
 
 function renderOrder(order: readonly HittingPhaseId[]): string {
-  return order
-    .map((p) => (HITTING_PHASES[p].involuntary ? `${p}*` : p))
-    .join(' → ');
+  return order.join(' → ');
 }
 
 export function HittingRoadmapLadder({ roadmap, className }: Props) {
