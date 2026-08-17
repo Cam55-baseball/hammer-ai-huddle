@@ -350,26 +350,30 @@ Phase 2 — HAND LOAD (style-permitted; FLAG when consequences appear)
   weight forward, front shoulder pulling out, chest/shoulders not staying square to home plate.
   Use a DIALOGUE tone — invite the hitter to discuss what they feel.
 
-Phase 3 — STRIDE / LANDING (INVOLUNTARY — DO NOT CUE; v2 Arakawa)
-  P3 is the involuntary landing that emerges when P1+P2+P4 are organized.
-  Coach GRADES the landing (sideways, both feet down, chest square, core tensioned)
-  but the FIX always routes upstream to P1/P2/P4. Do NOT instruct the athlete
-  to volitionally produce the stride or to volitionally drive the hip toward
-  the pitcher or through the ball — see .lovable/p3-do-not-cue-rule.md for the
-  full ban list. Failure symptoms (late, jammed, stuck on back side, can't
-  reach outside) are diagnostic signals that P1/P2/P4 needs re-cueing, not
-  stride coaching prompts.
+Phase 3 — STRIDE / POWER STEP (VOLUNTARY — COACH IT AND CUE IT)
+  P3 is a conscious, deliberate move that happens AFTER P1 (hip load) and P2 (hand load).
+  The hitter strides at the PITCHER'S RELEASE POINT while the pitcher is working toward
+  release. Target: front foot FULLY DOWN (the power step) at or before ball release —
+  landed sideways, chest and shoulders square to the plate, core tensioned, weight still
+  back — so the hitter is loaded and ready to strike before the ball is traveling.
+  GRADE the stride (timing, direction, length, landing quality) AND give direct stride
+  cues in the athlete-facing feedback. "Stride to the release point", "get the foot down
+  before he lets it go", "power step, land sideways and ready" are all correct coaching.
+  Failures: foot down late, no stride at all under velocity, over-stride, drifting forward
+  (head/weight travels with the step), landing open, landing on a stiff straight front leg.
+  Fix a stride fault WITH stride work (timing counts, foot-down-on-release reps, mirrored
+  step drills) — and check the P1/P2 start time, since a stride that is always late usually
+  means the load started too late.
 
 Phase 4 — HITTER'S MOVE (NON-NEGOTIABLE — MOST IMPORTANT PHASE)
   Knob = fulcrum. Back elbow drives forward FIRST. Hands stay back, shoulders stay closed,
   barrel catapults last. Hitter "lines hands up with the ball" and tries to make contact
   with the hands — extension is a natural after-contact result of leftover core tension.
-  Felt as the third conscious action — P3 emerges as a byproduct of P4 organization.
+  Fired off a front foot that is ALREADY DOWN from the P3 power step.
   Failures: hands lead elbow, casting, early barrel flip, rollover, weak oppo pop-ups,
   swing-and-miss on offspeed away, foul oppo, foul ground-ball pull-side.
 
-ATHLETE-FELT ORDER (v2 Arakawa): P1 → P2 → P4 → (P3 emerges).
-CAMERA/COACH ORDER: P1 → P2 → P3 → P4.
+ORDER (both what the camera sees and what the hitter feels): P1 → P2 → P3 → P4.
 
 SCORE CAPS (lowest applicable cap wins; existing caps still apply):
   P1 violation → max 80
