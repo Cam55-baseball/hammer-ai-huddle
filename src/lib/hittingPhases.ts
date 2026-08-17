@@ -63,7 +63,7 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
   },
   P3: {
     id: 'P3',
-    name: 'Stride / Landing',
+    name: 'Stride / Power Step',
     nonNegotiable: false,
     scoreCap: 75,
     styleVariants: ['short_step', 'no_stride', 'high_pickup', 'toe_tap_only', 'slap_running_start'],
@@ -79,12 +79,9 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'elbow_jammed_behind_hands',
     ],
     summary:
-      'Involuntary stride / heel plant. Emerges from organized P1+P2+P4 — never coached as a conscious action. Camera sees it third; hitter never feels it directly. Coach grades the landing, but the fix lives upstream in P1/P2/P4.',
-    // v2 Arakawa: P3 is the involuntary, do-not-cue phase. See
-    // `.lovable/p3-do-not-cue-rule.md`. CI lint enforces banned cue strings.
-    feltOrder: 4,
-    doNotCue: true,
-    involuntary: true,
+      "VOLUNTARY power step. After the P1 hip load and the P2 hand load, the hitter strides at the pitcher's release point while the pitcher is working toward release — the goal is front foot fully down (sideways, chest square to the plate, core tensioned) BEFORE the ball is released, so the hitter is loaded and ready to strike. Coach it, cue it, time it. Landing late, drifting, or over-striding are graded stride faults with stride fixes.",
+    // v3: P3 is a conscious, coached move. See `.lovable/p3-power-step-rule.md`.
+    feltOrder: 3,
   },
   P4: {
     id: 'P4',
@@ -104,18 +101,19 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
       'shoulders_open_before_elbow_extends',
     ],
     summary:
-      'Knob = fulcrum. Only ONE thing goes forward first — back elbow (or front of the bicep) — with hands staying back. That turns the barrel behind the ball (square to fair), keeps the swing on plane, and lets you catch velocity at low effort. Hitter feels this third; P3 emerges from it.',
-    feltOrder: 3,
+      'Knob = fulcrum. Only ONE thing goes forward first — back elbow (or front of the bicep) — with hands staying back. That turns the barrel behind the ball (square to fair), keeps the swing on plane, and lets you catch velocity at low effort. Fired off a front foot that is already down from the P3 power step.',
+    feltOrder: 4,
   },
 };
 
 /**
- * Athlete-felt order through the swing. Camera/coach order remains P1→P2→P3→P4
- * (see HITTING_PHASES `.id`), but the hitter's conscious sequence is:
- *   P1 (hip load) → P2 (hand load) → P4 (hitter's move) → P3 emerges involuntarily.
- * See `.lovable/hitting-philosophy-v2-arakawa-integration.md`.
+ * Order through the swing. Camera/coach order and athlete-felt order are the
+ * same: P1 (hip load) → P2 (hand load) → P3 (voluntary stride / power step,
+ * timed to the pitcher's release point) → P4 (hitter's move).
+ * See `.lovable/p3-power-step-rule.md`.
  */
-export const HITTING_FELT_ORDER: readonly HittingPhaseId[] = ['P1', 'P2', 'P4', 'P3'] as const;
+export const HITTING_FELT_ORDER: readonly HittingPhaseId[] = ['P1', 'P2', 'P3', 'P4'] as const;
+
 
 export const TWO_PLUS_PHASE_VIOLATION_CAP = 65;
 
