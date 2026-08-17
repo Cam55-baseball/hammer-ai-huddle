@@ -142,7 +142,7 @@ const tiles: ReportCardTileSpec[] = [
     explainer: {
       whatWhy:
         "Foot-down-at-release is the perfect target because it sets direction while preserving the longest possible look at the ball. This is now graded, not pass/fail: exact release earns the highest score, slightly late is still acceptable, and clearly late fails because the hitter lost look-time. Foot down before release is not punished like late timing; if the hitter gets down early and then drifts forward, that drift belongs to P1 Hip Load Stability or landing quality — not this timing score.",
-      howToImprove: "Live BP with a count cue: 'release' = foot down. If you're consistently late, START P1 EARLIER — begin the back-hip load and the P2 hand load sooner so the upstream sequence has time to complete; the involuntary landing will arrive on time. Never coach the stride directly. Do not create forward drift just to be on time — stability is scored separately.",
+      howToImprove: "Live BP with a count cue: 'release' = foot down. Stride at the pitcher's release point as he starts toward it, and beat the ball with your foot. If you're consistently late, START P1 EARLIER — begin the back-hip load and the P2 hand load sooner so the power step has room to finish on time. Do not create forward drift just to be on time — stability is scored separately.",
       encouragement: "Foot down at release is perfect. A hair late is okay. Clearly late is the miss.",
     },
     compute: (a) => {
