@@ -1,7 +1,7 @@
 export interface CompetitionLevel {
   key: string;
   label: string;
-  category: 'youth' | 'collegiate' | 'summer' | 'professional';
+  category: 'unaffiliated' | 'youth' | 'collegiate' | 'summer' | 'professional';
   competition_weight_multiplier: number;
   league_difficulty_index: number;
   pre_collegiate: boolean;
@@ -12,6 +12,10 @@ export interface CompetitionLevel {
 // Playing tiers ONLY — no age groups, no events. Age groups live in
 // `src/data/softball/ageGroups.ts`; events live in `src/data/competitionEvents.ts`.
 export const softballCompetitionLevels: CompetitionLevel[] = [
+  // Unaffiliated — athlete is between teams. Weighting resolves from
+  // `lastLevel` when the athlete provides one; neutral otherwise.
+  { key: 'free_agent', label: 'Free agent / between teams', category: 'unaffiliated', competition_weight_multiplier: 1.00, league_difficulty_index: 0.50, pre_collegiate: false },
+
   // Youth / Amateur (Pre-Collegiate)
   { key: 'rec', label: 'Recreational', category: 'youth', competition_weight_multiplier: 0.50, league_difficulty_index: 0.35, pre_collegiate: true, ageGroupEligible: true },
   { key: 'little_league', label: 'Little League', category: 'youth', competition_weight_multiplier: 0.55, league_difficulty_index: 0.38, pre_collegiate: true, ageGroupEligible: true },
