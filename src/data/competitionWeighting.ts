@@ -58,7 +58,17 @@ export function getCompetitionWeight(
 
   const levels = inputs.sport === 'baseball' ? baseballCompetitionLevels : softballCompetitionLevels;
   const ageGroups = inputs.sport === 'baseball' ? baseballAgeGroups : softballAgeGroups;
-  const level = levels.find(l => l.key === inputs.levelKey);
+
+  // Free agent: resolve from the last level played (with the unaffiliated
+  // reduction), or stay neutral when the athlete left it unknown.
+  const isFreeAgent = inputs.levelKey === FREE_AGENT_LEVEL_KEY;
+  const effectiveKey = isFreeAgent && inputs.lastLevelKey ? inputs.lastLevelKey : inputs.levelKey;
+  const freeAgentFactor =
+    isFreeAgent && inputs.lastLevelKey
+      ? 1 - contractStatusRules.freeAgentReduction / 100
+      : 1.0;
+
+  const level = levels.find(l => l.key === effectiveKey);
 
   if (!level) {
     return { competition_weight_multiplier: 1.0, age_play_up_bonus: 0, league_difficulty_index: 0.50 };
