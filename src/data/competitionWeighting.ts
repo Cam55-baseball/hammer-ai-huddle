@@ -93,7 +93,8 @@ export function getCompetitionWeight(
       : 1.0;
 
   return {
-    competition_weight_multiplier: level.competition_weight_multiplier * ageGroupFactor * travelStateModifier,
+    competition_weight_multiplier:
+      level.competition_weight_multiplier * ageGroupFactor * travelStateModifier * freeAgentFactor,
     age_play_up_bonus: ageBonus,
     league_difficulty_index: level.league_difficulty_index,
     travel_state_modifier: travelStateModifier,
