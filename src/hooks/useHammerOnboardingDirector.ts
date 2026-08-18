@@ -313,6 +313,7 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
           // Composite competition selection — fan out to individual columns.
           const c = v as {
             level?: string;
+            lastLevel?: string;
             ageGroup?: string;
             homeState?: string;
             playState?: string;
@@ -320,6 +321,9 @@ export function useHammerOnboardingDirector(): HammerOnboardingDirector {
           };
           if (typeof c.level === "string" && c.level) {
             await persistContextAnswer(user.id, "competition_level", c.level, "hammer_onboarding");
+          }
+          if (typeof c.lastLevel === "string" && c.lastLevel) {
+            await persistContextAnswer(user.id, "competition_last_level", c.lastLevel, "hammer_onboarding");
           }
           if (typeof c.ageGroup === "string" && c.ageGroup) {
             await persistContextAnswer(user.id, "competition_age_group", c.ageGroup, "hammer_onboarding");

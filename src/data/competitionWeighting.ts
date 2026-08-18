@@ -5,6 +5,7 @@ import { softballAgeGroups } from './softball/ageGroups';
 import { baseballSummerLeagues } from './baseball/summerLeagues';
 import { softballSummerLeagues } from './softball/summerLeagues';
 import { ENGINE_CONTRACT } from './ENGINE_CONTRACT';
+import { contractStatusRules } from './contractStatusRules';
 
 export interface CompetitionWeightResult {
   competition_weight_multiplier: number;
@@ -17,12 +18,21 @@ export interface CompetitionWeightResult {
 export interface CompetitionWeightInputs {
   sport: 'baseball' | 'softball';
   levelKey: string;
+  /**
+   * Last level played — only consulted when `levelKey === 'free_agent'`.
+   * Optional: an unaffiliated athlete who doesn't supply one stays neutral
+   * rather than having a level invented for them.
+   */
+  lastLevelKey?: string;
   ageGroupKey?: string;
   athleteAge?: number;
   leagueAge?: number;
   homeState?: string;
   playState?: string;
 }
+
+/** Key of the unaffiliated / between-teams tier (shared across both sports). */
+export const FREE_AGENT_LEVEL_KEY = 'free_agent';
 
 /**
  * Get competition weight for a given sport and level.
@@ -49,7 +59,17 @@ export function getCompetitionWeight(
 
   const levels = inputs.sport === 'baseball' ? baseballCompetitionLevels : softballCompetitionLevels;
   const ageGroups = inputs.sport === 'baseball' ? baseballAgeGroups : softballAgeGroups;
-  const level = levels.find(l => l.key === inputs.levelKey);
+
+  // Free agent: resolve from the last level played (with the unaffiliated
+  // reduction), or stay neutral when the athlete left it unknown.
+  const isFreeAgent = inputs.levelKey === FREE_AGENT_LEVEL_KEY;
+  const effectiveKey = isFreeAgent && inputs.lastLevelKey ? inputs.lastLevelKey : inputs.levelKey;
+  const freeAgentFactor =
+    isFreeAgent && inputs.lastLevelKey
+      ? 1 - contractStatusRules.freeAgentReduction / 100
+      : 1.0;
+
+  const level = levels.find(l => l.key === effectiveKey);
 
   if (!level) {
     return { competition_weight_multiplier: 1.0, age_play_up_bonus: 0, league_difficulty_index: 0.50 };
@@ -74,7 +94,8 @@ export function getCompetitionWeight(
       : 1.0;
 
   return {
-    competition_weight_multiplier: level.competition_weight_multiplier * ageGroupFactor * travelStateModifier,
+    competition_weight_multiplier:
+      level.competition_weight_multiplier * ageGroupFactor * travelStateModifier * freeAgentFactor,
     age_play_up_bonus: ageBonus,
     league_difficulty_index: level.league_difficulty_index,
     travel_state_modifier: travelStateModifier,
@@ -111,10 +132,17 @@ export function findKnownSummerLeague(sport: 'baseball' | 'softball', leagueName
  */
 export function getCompetitionLevelsByCategory(sport: 'baseball' | 'softball') {
   const levels = sport === 'baseball' ? baseballCompetitionLevels : softballCompetitionLevels;
-  const categories = ['youth', 'collegiate', 'summer', 'professional'] as const;
+  const categories = ['unaffiliated', 'youth', 'collegiate', 'summer', 'professional'] as const;
+  const labels: Record<(typeof categories)[number], string> = {
+    unaffiliated: 'Between Teams',
+    youth: 'Youth / Amateur',
+    collegiate: 'Collegiate',
+    summer: sport === 'baseball' ? 'College Summer Ball' : 'Summer Ball',
+    professional: 'Professional',
+  };
   return categories.map(cat => ({
     category: cat,
-    label: cat === 'youth' ? 'Youth / Amateur' : cat === 'collegiate' ? 'Collegiate' : cat === 'summer' ? 'College Summer Ball' : 'Professional',
+    label: labels[cat],
     levels: levels.filter(l => l.category === cat),
   }));
 }

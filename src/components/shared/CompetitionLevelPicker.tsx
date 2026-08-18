@@ -11,6 +11,7 @@
  */
 import { useMemo, useState } from 'react';
 import {
+  FREE_AGENT_LEVEL_KEY,
   getAgeGroupsForSport,
   getCompetitionLevelsByCategory,
 } from '@/data/competitionWeighting';
@@ -31,6 +32,8 @@ type Sport = 'baseball' | 'softball';
 
 export interface CompetitionSelection {
   level: string;
+  /** Only used when `level === 'free_agent'`. Optional — may stay unknown. */
+  lastLevel?: string;
   ageGroup?: string;
   homeState?: string;
   playState?: string;
@@ -59,12 +62,22 @@ export function CompetitionLevelPicker({ sport, value, onChange, mode = 'full', 
   const events = useMemo(() => getEventsForSport(sport), [sport]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+  const isFreeAgent = levelKey === FREE_AGENT_LEVEL_KEY;
+  const allLevels = useMemo(() => categories.flatMap((c) => c.levels), [categories]);
+
+  // Age group / states follow the *last level played* for a free agent, so a
+  // between-teams travel-ball athlete still gets age-group + state capture.
+  const effectiveLevelKey = isFreeAgent ? selection.lastLevel ?? '' : levelKey;
   const currentLevel = useMemo(
-    () => categories.flatMap((c) => c.levels).find((l) => l.key === levelKey),
-    [categories, levelKey],
+    () => allLevels.find((l) => l.key === effectiveLevelKey),
+    [allLevels, effectiveLevelKey],
   );
   const showAgeGroup = composite && !!currentLevel?.ageGroupEligible;
   const showStates = composite && !!currentLevel?.pre_collegiate;
+  const lastLevelOptions = useMemo(
+    () => allLevels.filter((l) => l.key !== FREE_AGENT_LEVEL_KEY),
+    [allLevels],
+  );
 
   const emit = (patch: Partial<CompetitionSelection>) => {
     if (!composite) {
@@ -96,7 +109,13 @@ export function CompetitionLevelPicker({ sport, value, onChange, mode = 'full', 
                 <button
                   key={l.key}
                   type="button"
-                  onClick={() => emit({ level: l.key, ageGroup: undefined })}
+                  onClick={() =>
+                    emit({
+                      level: l.key,
+                      ageGroup: undefined,
+                      lastLevel: l.key === FREE_AGENT_LEVEL_KEY ? selection.lastLevel : undefined,
+                    })
+                  }
                   className={cn(
                     'rounded-md border px-2 py-1 text-xs font-medium transition-all',
                     levelKey === l.key
@@ -122,6 +141,42 @@ export function CompetitionLevelPicker({ sport, value, onChange, mode = 'full', 
           </div>
         );
       })}
+
+      {/* Last level played — free agents only, composite mode, always optional */}
+      {composite && isFreeAgent && (
+        <div>
+          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Last level you played (optional)
+          </Label>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {lastLevelOptions.map((l) => (
+              <button
+                key={l.key}
+                type="button"
+                onClick={() =>
+                  emit({
+                    lastLevel: selection.lastLevel === l.key ? undefined : l.key,
+                    ageGroup: undefined,
+                  })
+                }
+                className={cn(
+                  'rounded-md border px-2 py-1 text-xs font-medium transition-all',
+                  selection.lastLevel === l.key
+                    ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                    : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground',
+                )}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Leave this blank if you'd rather not say — nothing gets assumed for you.
+          </p>
+        </div>
+      )}
+
+
 
       {/* Age group sub-picker (composite only, eligible tiers only) */}
       {showAgeGroup && (

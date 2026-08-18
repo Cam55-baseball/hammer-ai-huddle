@@ -778,6 +778,7 @@ export type Database = {
           competition_age_group: string | null
           competition_events: Json | null
           competition_home_state: string | null
+          competition_last_level: string | null
           competition_level: string | null
           competition_play_state: string | null
           confidence: Json
@@ -824,6 +825,7 @@ export type Database = {
           competition_age_group?: string | null
           competition_events?: Json | null
           competition_home_state?: string | null
+          competition_last_level?: string | null
           competition_level?: string | null
           competition_play_state?: string | null
           confidence?: Json
@@ -870,6 +872,7 @@ export type Database = {
           competition_age_group?: string | null
           competition_events?: Json | null
           competition_home_state?: string | null
+          competition_last_level?: string | null
           competition_level?: string | null
           competition_play_state?: string | null
           confidence?: Json
