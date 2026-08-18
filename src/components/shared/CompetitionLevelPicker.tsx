@@ -11,6 +11,7 @@
  */
 import { useMemo, useState } from 'react';
 import {
+  FREE_AGENT_LEVEL_KEY,
   getAgeGroupsForSport,
   getCompetitionLevelsByCategory,
 } from '@/data/competitionWeighting';
@@ -31,6 +32,8 @@ type Sport = 'baseball' | 'softball';
 
 export interface CompetitionSelection {
   level: string;
+  /** Only used when `level === 'free_agent'`. Optional — may stay unknown. */
+  lastLevel?: string;
   ageGroup?: string;
   homeState?: string;
   playState?: string;
