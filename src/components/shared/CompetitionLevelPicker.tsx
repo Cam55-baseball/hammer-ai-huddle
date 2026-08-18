@@ -142,6 +142,42 @@ export function CompetitionLevelPicker({ sport, value, onChange, mode = 'full', 
         );
       })}
 
+      {/* Last level played — free agents only, composite mode, always optional */}
+      {composite && isFreeAgent && (
+        <div>
+          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Last level you played (optional)
+          </Label>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {lastLevelOptions.map((l) => (
+              <button
+                key={l.key}
+                type="button"
+                onClick={() =>
+                  emit({
+                    lastLevel: selection.lastLevel === l.key ? undefined : l.key,
+                    ageGroup: undefined,
+                  })
+                }
+                className={cn(
+                  'rounded-md border px-2 py-1 text-xs font-medium transition-all',
+                  selection.lastLevel === l.key
+                    ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                    : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground',
+                )}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Leave this blank if you'd rather not say — nothing gets assumed for you.
+          </p>
+        </div>
+      )}
+
+
+
       {/* Age group sub-picker (composite only, eligible tiers only) */}
       {showAgeGroup && (
         <div>
