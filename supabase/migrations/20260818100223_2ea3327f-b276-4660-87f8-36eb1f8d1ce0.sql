@@ -1,0 +1,1 @@
+ALTER TABLE public.athlete_context ADD COLUMN IF NOT EXISTS competition_last_level text;
