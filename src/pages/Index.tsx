@@ -99,10 +99,13 @@ const Index = () => {
                     </div>
                     <div className="space-y-3 text-red-900">
                       <p className="text-lg font-semibold">
-                        Advanced metric measuring and enhanced Professional Scout/Collegiate recruiting connections are under construction!
+                        Advanced metric measuring are under construction!
                       </p>
                       <p className="text-base">
-                        We're working hard to bring you powerful new analytics and direct connections to scouts and recruiters. Your training data is being captured now for seamless integration when these features launch!
+                        We're working hard to bring you powerful new analytics. Your training data is being captured now for seamless integration when these features launch!
+                      </p>
+                      <p className="text-base font-semibold">
+                        Professional Scout/Collegiate recruiting connections are in full effect for both Softball & Baseball
                       </p>
                     </div>
                     <div className="flex items-center gap-2 pt-2">
