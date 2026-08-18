@@ -109,7 +109,13 @@ export function CompetitionLevelPicker({ sport, value, onChange, mode = 'full', 
                 <button
                   key={l.key}
                   type="button"
-                  onClick={() => emit({ level: l.key, ageGroup: undefined })}
+                  onClick={() =>
+                    emit({
+                      level: l.key,
+                      ageGroup: undefined,
+                      lastLevel: l.key === FREE_AGENT_LEVEL_KEY ? selection.lastLevel : undefined,
+                    })
+                  }
                   className={cn(
                     'rounded-md border px-2 py-1 text-xs font-medium transition-all',
                     levelKey === l.key
