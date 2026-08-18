@@ -132,10 +132,17 @@ export function findKnownSummerLeague(sport: 'baseball' | 'softball', leagueName
  */
 export function getCompetitionLevelsByCategory(sport: 'baseball' | 'softball') {
   const levels = sport === 'baseball' ? baseballCompetitionLevels : softballCompetitionLevels;
-  const categories = ['youth', 'collegiate', 'summer', 'professional'] as const;
+  const categories = ['unaffiliated', 'youth', 'collegiate', 'summer', 'professional'] as const;
+  const labels: Record<(typeof categories)[number], string> = {
+    unaffiliated: 'Between Teams',
+    youth: 'Youth / Amateur',
+    collegiate: 'Collegiate',
+    summer: sport === 'baseball' ? 'College Summer Ball' : 'Summer Ball',
+    professional: 'Professional',
+  };
   return categories.map(cat => ({
     category: cat,
-    label: cat === 'youth' ? 'Youth / Amateur' : cat === 'collegiate' ? 'Collegiate' : cat === 'summer' ? 'College Summer Ball' : 'Professional',
+    label: labels[cat],
     levels: levels.filter(l => l.category === cat),
   }));
 }
