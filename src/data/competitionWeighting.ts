@@ -5,6 +5,7 @@ import { softballAgeGroups } from './softball/ageGroups';
 import { baseballSummerLeagues } from './baseball/summerLeagues';
 import { softballSummerLeagues } from './softball/summerLeagues';
 import { ENGINE_CONTRACT } from './ENGINE_CONTRACT';
+import { contractStatusRules } from './contractStatusRules';
 
 export interface CompetitionWeightResult {
   competition_weight_multiplier: number;
