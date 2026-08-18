@@ -17,12 +17,21 @@ export interface CompetitionWeightResult {
 export interface CompetitionWeightInputs {
   sport: 'baseball' | 'softball';
   levelKey: string;
+  /**
+   * Last level played — only consulted when `levelKey === 'free_agent'`.
+   * Optional: an unaffiliated athlete who doesn't supply one stays neutral
+   * rather than having a level invented for them.
+   */
+  lastLevelKey?: string;
   ageGroupKey?: string;
   athleteAge?: number;
   leagueAge?: number;
   homeState?: string;
   playState?: string;
 }
+
+/** Key of the unaffiliated / between-teams tier (shared across both sports). */
+export const FREE_AGENT_LEVEL_KEY = 'free_agent';
 
 /**
  * Get competition weight for a given sport and level.
