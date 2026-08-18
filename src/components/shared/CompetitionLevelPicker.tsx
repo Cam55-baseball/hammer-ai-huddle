@@ -62,12 +62,22 @@ export function CompetitionLevelPicker({ sport, value, onChange, mode = 'full', 
   const events = useMemo(() => getEventsForSport(sport), [sport]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+  const isFreeAgent = levelKey === FREE_AGENT_LEVEL_KEY;
+  const allLevels = useMemo(() => categories.flatMap((c) => c.levels), [categories]);
+
+  // Age group / states follow the *last level played* for a free agent, so a
+  // between-teams travel-ball athlete still gets age-group + state capture.
+  const effectiveLevelKey = isFreeAgent ? selection.lastLevel ?? '' : levelKey;
   const currentLevel = useMemo(
-    () => categories.flatMap((c) => c.levels).find((l) => l.key === levelKey),
-    [categories, levelKey],
+    () => allLevels.find((l) => l.key === effectiveLevelKey),
+    [allLevels, effectiveLevelKey],
   );
   const showAgeGroup = composite && !!currentLevel?.ageGroupEligible;
   const showStates = composite && !!currentLevel?.pre_collegiate;
+  const lastLevelOptions = useMemo(
+    () => allLevels.filter((l) => l.key !== FREE_AGENT_LEVEL_KEY),
+    [allLevels],
+  );
 
   const emit = (patch: Partial<CompetitionSelection>) => {
     if (!composite) {
