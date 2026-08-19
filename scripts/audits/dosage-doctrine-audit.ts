@@ -17,10 +17,12 @@ import {
   DOSE_MATRIX,
   resolveDose,
   isWithinEnvelope,
+  isRepDosed,
   type DoctrinePhase,
   type DoseGroup,
   type TrainingAgeBand,
 } from "../../supabase/functions/_shared/wic/dosage/doctrine.ts";
+
 
 const PHASES: DoctrinePhase[] = ["os_q1", "os_q2", "os_q3", "os_q4", "in_season", "post_season"];
 const GROUPS: DoseGroup[] = [
@@ -137,9 +139,29 @@ for (const root of SCAN_ROOTS) {
   }
 }
 
+// 7 — unit awareness: a total-dose movement must never be judged by set×rep math.
+{
+  const totalDoseRows = [
+    { unit: "seconds", sets: 2, reps: 45 },
+    { unit: "feet", sets: 3, reps: 30 },
+    { unit: "innings", sets: 1, reps: 9 },
+    { unit: "runs", sets: 1, reps: 6 },
+    { unit: "each", sets: 2, reps: 20 },
+  ];
+  for (const row of totalDoseRows) {
+    if (isRepDosed(row.unit)) {
+      fail(`unit "${row.unit}" is treated as rep-dosed — envelope math would reject ${row.sets}×${row.reps}.`);
+    }
+  }
+  if (!isRepDosed("reps") || !isRepDosed(null)) {
+    fail("rep-dosed units must remain envelope-governed.");
+  }
+}
+
 if (failures.length) {
   console.error(`\nDosage doctrine audit FAILED (${failures.length} issue${failures.length === 1 ? "" : "s"}):\n`);
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
-console.log("Dosage doctrine audit passed — every quarter distinguishable, every dose inside its envelope, zero literal drift.");
+console.log("Dosage doctrine audit passed — every quarter distinguishable, every dose inside its envelope, zero literal drift, units respected.");
+

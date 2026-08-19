@@ -812,6 +812,22 @@ const handler = async (req: Request): Promise<Response> => {
       let distanceFeet = distanceDose;
       let totalReps = totalDose;
       let dosageUnit = dosageUnitRaw;
+      // Unit routing — a total-dose movement must never carry its dose in the
+      // `reps` column. Catalog rows historically stored "45 seconds" as
+      // `default_reps: 45`, which made a 45-second couch stretch look like a
+      // 45-rep compound lift and tripped the dosage-envelope validator.
+      let emittedReps = finalReps;
+      if (!repDosed && typeof emittedReps === "number") {
+        const u = String(dosageUnit ?? "").toLowerCase();
+        if (u === "seconds" || u === "sec" || u === "second") {
+          if (durationSeconds == null) durationSeconds = emittedReps;
+        } else if (u === "feet" || u === "ft" || u === "yards" || u === "yds") {
+          if (distanceFeet == null) distanceFeet = emittedReps;
+        } else if (totalReps == null) {
+          totalReps = emittedReps;
+        }
+        emittedReps = null;
+      }
       // Dosage safety net — never emit a "1 sets × 1 reps" row with no other
       // dose. If the catalog defaults are missing, backfill from the raw
       // movement row, then classify by category so mobility/warmup/FRC always
@@ -819,8 +835,9 @@ const handler = async (req: Request): Promise<Response> => {
       const noDose =
 
         (finalSets === 1 || finalSets == null) &&
-        (finalReps === 1 || finalReps == null) &&
+        (emittedReps === 1 || emittedReps == null) &&
         !durationSeconds && !distanceFeet && !totalReps;
+
 
       if (noDose) {
         const cat = (s.movement.movement_category ?? s.movement.category ?? "").toLowerCase();
@@ -839,7 +856,7 @@ const handler = async (req: Request): Promise<Response> => {
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
         sets: finalSets,
-        reps: finalReps,
+        reps: emittedReps,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
         duration_seconds: durationSeconds,
@@ -1397,6 +1414,11 @@ const handler = async (req: Request): Promise<Response> => {
         movement_name: r.movement_name,
         sets: r.sets,
         reps: r.reps,
+        dosage_unit: (r as any).dosage_unit ?? null,
+        duration_seconds: (r as any).duration_seconds ?? null,
+        distance_feet: (r as any).distance_feet ?? null,
+        total_reps: (r as any).total_reps ?? null,
+
         why_v2: (r as any).why_v2,
         why_payload: (r as any).why_payload,
       })),
@@ -2165,6 +2187,21 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
       }
+      // Blast-radius control — a fatal raised by one movement is attributed to
+      // the engine that produced it, so a lift-side problem never tells the
+      // Bat Speed card that a couch stretch failed.
+      const engineBySlug = new Map<string, string>();
+      for (const r of finalRxs) {
+        const eng = (r as any).engine;
+        if (eng && r.movement_slug) engineBySlug.set(r.movement_slug, String(eng));
+      }
+      for (const issue of validatorReport.issues as any[]) {
+        if (issue?.severity !== "fatal" || !issue?.slug) continue;
+        const eng = engineBySlug.get(issue.slug);
+        if (!eng) continue;
+        (engineFailures[eng] ??= []).push(issue.message ?? issue.code ?? "fatal");
+      }
+
       const missingContextFields: string[] = Array.isArray((athleteContext as any)?.missing_fields)
         ? (athleteContext as any).missing_fields
         : [];
