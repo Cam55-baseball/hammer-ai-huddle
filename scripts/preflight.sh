@@ -17,6 +17,9 @@ bunx tsx "$ROOT/scripts/check-domain-integrity.ts"
 bunx tsx "$ROOT/scripts/check-adaptation-labels.ts"
 # Zero-Drift Dosage Doctrine — one dosing authority, envelopes never exceeded.
 bunx tsx "$ROOT/scripts/audits/dosage-doctrine-audit.ts"
+# Dose-unit integrity — seconds/feet/innings never stored in default_reps.
+bunx tsx "$ROOT/scripts/check-dosage-units.ts"
+
 # Goal emphasis + weekly balance — goals actually steer, week stays balanced.
 bunx tsx "$ROOT/scripts/audits/goal-balance-audit.ts"
 bash "$ROOT/scripts/check-eternity-guards.sh"
