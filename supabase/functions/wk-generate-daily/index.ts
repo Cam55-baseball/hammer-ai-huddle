@@ -1401,6 +1401,16 @@ const handler = async (req: Request): Promise<Response> => {
         why_payload: (r as any).why_payload,
       })),
     });
+    // Weekly Balance Ledger findings ride along as warnings — never fatal.
+    // They steer tomorrow's discretionary slots; they never block a plan.
+    for (const w of weeklyBalanceWarnings) {
+      validatorReport.issues.push({
+        code: w.code,
+        severity: "warn",
+        message: w.message,
+      } as any);
+    }
+
     const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
     if (!allWhysComplete) {
       validatorReport.issues.push({
