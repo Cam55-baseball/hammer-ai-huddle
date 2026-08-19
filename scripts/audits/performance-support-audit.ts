@@ -48,6 +48,42 @@ for (const row of data ?? []) {
   }
 }
 
+// Adaptation-coverage guard — every day adaptation on which conditioning is
+// legal must admit at least one conditioning catalog row. This is the exact
+// regression that emptied the Conditioning card for the whole in-season phase.
+const CONDITIONING_LEGAL_ADAPTATIONS = [
+  "muscle_capacity",
+  "max_strength",
+  "strength_to_power",
+  "power_transfer",
+  "in_season_maintenance",
+  "game_readiness",
+] as const;
+const ADAPTATION_COMPAT: Record<string, string[]> = {
+  recovery_only: ["in_season_maintenance", "movement_literacy"],
+  game_readiness: ["speed_development", "bat_speed_development", "movement_literacy", "in_season_maintenance", "conditioning_repeat_explosive"],
+  muscle_capacity: ["max_strength", "muscle_capacity", "in_season_maintenance", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
+  max_strength: ["max_strength", "muscle_capacity", "strength_to_power", "speed_development", "bat_speed_development", "movement_literacy"],
+  strength_to_power: ["strength_to_power", "max_strength", "muscle_capacity", "power_transfer", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
+  power_transfer: ["power_transfer", "strength_to_power", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "in_season_maintenance", "conditioning_repeat_explosive", "movement_literacy"],
+  in_season_maintenance: ["in_season_maintenance", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "power_transfer", "conditioning_repeat_explosive", "movement_literacy"],
+  movement_literacy: ["movement_literacy", "muscle_capacity", "in_season_maintenance"],
+};
+const conditioningRows = (data ?? []).filter(
+  (r: any) => String(r.category ?? "").toLowerCase() === "conditioning",
+);
+for (const day of CONDITIONING_LEGAL_ADAPTATIONS) {
+  const allowed = ADAPTATION_COMPAT[day] ?? [];
+  const admits = conditioningRows.some((r: any) => {
+    const mov = r.primary_adaptation;
+    return !mov || mov === day || allowed.includes(mov);
+  });
+  if (!admits) {
+    console.error(`FATAL adaptation "${day}": no conditioning movement passes the adaptation gate`);
+    fatal++;
+  }
+}
+
 // Matrix header for reviewer.
 const matrix = {
   season_phases: ["offseason_early","offseason_mid","offseason_late","preseason","in_season_early","in_season_mid","in_season_late","postseason","transition","deload","recovery","return_to_play"],
