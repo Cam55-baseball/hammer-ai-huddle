@@ -24,7 +24,13 @@ export interface ValidatorInput {
     movement_name: string;
     sets: number | null;
     reps: number | null;
+    /** Dose unit — "reps" (or null) means the envelope math applies. */
+    dosage_unit?: string | null;
+    duration_seconds?: number | null;
+    distance_feet?: number | null;
+    total_reps?: number | null;
     why_v2?: unknown;
+
     /** Generator metadata (session_shape, progression, …) — optional. */
     why_payload?: unknown;
   }>;
