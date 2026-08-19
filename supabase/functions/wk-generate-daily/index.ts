@@ -856,7 +856,7 @@ const handler = async (req: Request): Promise<Response> => {
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
         sets: finalSets,
-        reps: finalReps,
+        reps: emittedReps,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
         duration_seconds: durationSeconds,
