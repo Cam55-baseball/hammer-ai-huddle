@@ -2187,6 +2187,21 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
       }
+      // Blast-radius control — a fatal raised by one movement is attributed to
+      // the engine that produced it, so a lift-side problem never tells the
+      // Bat Speed card that a couch stretch failed.
+      const engineBySlug = new Map<string, string>();
+      for (const r of finalRxs) {
+        const eng = (r as any).engine;
+        if (eng && r.movement_slug) engineBySlug.set(r.movement_slug, String(eng));
+      }
+      for (const issue of validatorReport.issues as any[]) {
+        if (issue?.severity !== "fatal" || !issue?.slug) continue;
+        const eng = engineBySlug.get(issue.slug);
+        if (!eng) continue;
+        (engineFailures[eng] ??= []).push(issue.message ?? issue.code ?? "fatal");
+      }
+
       const missingContextFields: string[] = Array.isArray((athleteContext as any)?.missing_fields)
         ? (athleteContext as any).missing_fields
         : [];
