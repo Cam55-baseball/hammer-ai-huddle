@@ -83,7 +83,11 @@ export function buildWeeklyLedger(
     shortfalls: Object.freeze(shortfalls),
     slugs,
     pushPullRatio: pull > 0 ? Math.round((push / pull) * 100) / 100 : null,
-    upperLowerRatio: lower > 0 ? Math.round((upper / lower) * 100) / 100 : null,
+    // Zero lower-body work with upper work present is the worst imbalance
+    // there is — it must never read as "no data".
+    upperLowerRatio: lower > 0
+      ? Math.round((upper / lower) * 100) / 100
+      : (upper > 0 ? Infinity : null),
   }) as WeeklyLedger;
 }
 
@@ -136,7 +140,7 @@ export function evaluateWeeklyBalance(
     if (ledger.upperLowerRatio > UPPER_LOWER_BAND.max || ledger.upperLowerRatio < UPPER_LOWER_BAND.min) {
       out.push({
         code: "weekly_upper_lower_imbalance",
-        message: `Weekly upper:lower is ${ledger.upperLowerRatio} — outside the ${UPPER_LOWER_BAND.min}–${UPPER_LOWER_BAND.max} band.`,
+        message: `Weekly upper:lower is ${Number.isFinite(ledger.upperLowerRatio) ? ledger.upperLowerRatio : "all upper, no lower"} — outside the ${UPPER_LOWER_BAND.min}–${UPPER_LOWER_BAND.max} band.`,
         detail: { ratio: ledger.upperLowerRatio, band: UPPER_LOWER_BAND },
       });
     }
