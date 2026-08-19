@@ -1414,6 +1414,11 @@ const handler = async (req: Request): Promise<Response> => {
         movement_name: r.movement_name,
         sets: r.sets,
         reps: r.reps,
+        dosage_unit: (r as any).dosage_unit ?? null,
+        duration_seconds: (r as any).duration_seconds ?? null,
+        distance_feet: (r as any).distance_feet ?? null,
+        total_reps: (r as any).total_reps ?? null,
+
         why_v2: (r as any).why_v2,
         why_payload: (r as any).why_payload,
       })),
