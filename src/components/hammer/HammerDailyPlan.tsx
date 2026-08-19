@@ -81,6 +81,8 @@ import {
 } from "@/components/hammer/WkProgressionNote";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
+import { ScheduledPriorityStrip } from "@/components/hammer/ScheduledPriorityStrip";
+
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
