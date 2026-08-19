@@ -989,19 +989,21 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // 2) Trunk primer — every session
-      const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
-      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, "Loaded rotation primer — wakes obliques + preps swing plane.");
+      const trunkPrimer = pickBest(StrengthEngine.TRUNK_PRIMER_SLUGS) ?? pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
+      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
-      const compound = pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
+      const compound = pickBestByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
+        pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
         lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "compound_lower");
       if (compound) {
-        push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
+        push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.${goalWhy(compound)}`);
       }
 
       // 4) Unilateral lower — rotate across the week to build all planes
-      const uniLower = pickFirst(StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek));
+      const uniLowerPool = StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek);
+      const uniLower = pickBest(uniLowerPool) ?? pickFirst(uniLowerPool);
       if (uniLower) {
         // Safety ceiling only: deep-flexion (ATG family) in-season stays a
         // ROM-limited durability dose. Everything else is doctrine-dosed.
@@ -1009,33 +1011,36 @@ const handler = async (req: Request): Promise<Response> => {
         const uniWhy = safetyCap
 
           ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
-          : "Single-leg dominance — closes L/R imbalances the compound hides.";
+          : `Single-leg dominance — closes L/R imbalances the compound hides.${goalWhy(uniLower)}`;
         push("lift", "unilateral_lower", uniLower, (safetyCap ? { dose_cap: safetyCap } : {}) as any, uniWhy);
       }
 
 
       // 5) Upper push — unilateral / integrated
-      const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
+      const upperPushPool = StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek);
+      const upperPush = pickBest(upperPushPool) ?? pickFirst(upperPushPool);
       if (upperPush) {
-        push("lift", "upper_push", upperPush, {}, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
+        push("lift", "upper_push", upperPush, {}, `Upper push — enough strength signal to maintain full-body balance without chasing soreness.${goalWhy(upperPush)}`);
       }
 
       // 6) Upper pull — unilateral / weighted
-      const upperPull = pickFirst(StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek));
+      const upperPullPool = StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek);
+      const upperPull = pickBest(upperPullPool) ?? pickFirst(upperPullPool);
       if (upperPull) {
-        push("lift", "upper_pull", upperPull, {}, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
+        push("lift", "upper_pull", upperPull, {}, `Upper pull — decel chain, posture, and shoulder balance stay in the plan.${goalWhy(upperPull)}`);
       }
 
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
-        const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason, dayOfWeek));
-        if (carry) push("lift", "carry_antirotation", carry, {}, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
+        const carryPool = StrengthEngine.carrySlugs(isInSeason, dayOfWeek);
+        const carry = pickBest(carryPool) ?? pickFirst(carryPool);
+        if (carry) push("lift", "carry_antirotation", carry, {}, `Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.${goalWhy(carry)}`);
       }
 
       // 8) Trunk finisher — offseason only (in-season stays fresh)
       if (isOffseason) {
-        const finisher = pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
-        if (finisher) push("lift", "trunk_finisher", finisher, {}, "Loaded trunk finisher — locks the rotational strength from above.");
+        const finisher = pickBest(StrengthEngine.TRUNK_FINISHER_SLUGS) ?? pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
+        if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 
       ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason, pickFirstRelaxed);
