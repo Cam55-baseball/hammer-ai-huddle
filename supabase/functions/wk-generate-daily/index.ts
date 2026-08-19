@@ -48,6 +48,14 @@ import {
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
+// Goal Emphasis Authority + Weekly Balance Ledger — bounded, interpretive only.
+import { resolveGoalEmphasis, emphasisFor } from "../_shared/wic/goals/emphasis.ts";
+import {
+  buildWeeklyLedger,
+  shortfallBonus,
+  varietyPenalty,
+  evaluateWeeklyBalance,
+} from "../_shared/wic/balance/weeklyLedger.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
@@ -481,16 +489,21 @@ const handler = async (req: Request): Promise<Response> => {
       return "strength";
     };
 
-    // -------- Load 72h lift history + active overrides (drift guards) --------
+    // -------- Load 7d lift history + active overrides (drift guards) --------
+    // 7 days feeds the Weekly Balance Ledger; the 72h slice inside it still
+    // drives the compound non-repeat guard.
     const threeDaysAgo = new Date(planDate + "T00:00:00");
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     const threeDaysAgoStr = threeDaysAgo.toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(planDate + "T00:00:00");
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
         .select("movement_slug, plan_date, slot")
         .eq("user_id", user.id)
         .eq("slot", "lift")
-        .gte("plan_date", threeDaysAgoStr)
+        .gte("plan_date", sevenDaysAgoStr)
         .lt("plan_date", planDate),
       admin.from("wk_movement_overrides")
         .select("movement_slug, expires_at, reason, actor_role")
@@ -498,7 +511,11 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("ack_date", planDate)
         .gt("expires_at", new Date().toISOString()),
     ]);
-    const recentCompoundSlugs = new Set((recentLifts ?? []).map((r: any) => r.movement_slug as string));
+    const recentCompoundSlugs = new Set(
+      (recentLifts ?? [])
+        .filter((r: any) => String(r.plan_date) >= threeDaysAgoStr)
+        .map((r: any) => r.movement_slug as string),
+    );
     const overrideSlugs = new Set((activeOverrides ?? []).map((r: any) => r.movement_slug as string));
     const usedThisSession = new Set<string>();
     const usedNamesThisSession = new Set<string>();
