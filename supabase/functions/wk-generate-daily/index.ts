@@ -589,6 +589,70 @@ const handler = async (req: Request): Promise<Response> => {
       return undefined;
     };
 
+    // ---- Goal Emphasis Authority + Weekly Balance Ledger -------------------
+    // Emphasis biases WHICH legal movement fills a discretionary slot. It can
+    // never author a dose, relax a gate, or delete a required category.
+    const goalEmphasis = resolveGoalEmphasis({ bodyGoals: bodyGoals ?? [], profile: p });
+    const weeklyLedger = buildWeeklyLedger(
+      (recentLifts ?? []).map((r: any) => ({
+        plan_date: String(r.plan_date),
+        movement_slug: String(r.movement_slug),
+        category: coerceCanonicalCategory(
+          (lib.find((x) => x.slug === r.movement_slug) ?? { slug: r.movement_slug }) as any,
+        ),
+      })),
+    );
+    const isThrowerForBalance = athletePositions.some((x) => /pitch|catch/.test(x)) ||
+      goalEmphasis.ranked.includes("throwing");
+    const weeklyBalanceWarnings = evaluateWeeklyBalance(weeklyLedger, {
+      isThrower: isThrowerForBalance,
+    });
+
+    /**
+     * Best-fit picker for discretionary slots. Scores only among movements
+     * that already passed every legality gate, so the constitutional order is
+     * untouched — this decides which of the LEGAL options is the best fit.
+     * Deterministic: ties fall back to pool order, so a replay reproduces the
+     * identical session.
+     */
+    const scoreCandidate = (m: MovementRow, poolIndex: number) => {
+      const cat = coerceCanonicalCategory(m as any);
+      const score =
+        emphasisFor(goalEmphasis, m as any) +
+        shortfallBonus(weeklyLedger, cat) -
+        varietyPenalty(weeklyLedger, m.slug) -
+        poolIndex * 0.001; // stable pool-order tie-break
+      return Math.round(score * 1e6) / 1e6;
+    };
+    const pickBest = (slugs: string[]): MovementRow | undefined => {
+      let best: MovementRow | undefined;
+      let bestScore = -Infinity;
+      slugs.forEach((slug, i) => {
+        const m = lib.find((x) => x.slug === slug);
+        if (!eligible(m)) return;
+        const sc = scoreCandidate(m, i);
+        if (sc > bestScore) { bestScore = sc; best = m; }
+      });
+      return best;
+    };
+    const pickBestByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined =>
+      pickBest(slugs.filter((slug) => {
+        const m = lib.find((x) => x.slug === slug);
+        return !!m && coerceCanonicalCategory(m as any) === category;
+      }));
+
+    /** One athlete-legible line tying a pick to their own stated goals. */
+    const goalWhy = (m: MovementRow): string => {
+      const cat = coerceCanonicalCategory(m as any);
+      const short = (weeklyLedger.shortfalls as Record<string, number>)[cat] ?? 0;
+      const parts: string[] = [];
+      if (!goalEmphasis.isBaselineOnly && goalEmphasis.ranked.length) {
+        parts.push(`you ranked ${goalEmphasis.ranked[0]} first`);
+      }
+      if (short > 0) parts.push(`your week is short on ${cat.replace(/_/g, " ")}`);
+      return parts.length ? ` Chosen because ${parts.join(" and ")}.` : "";
+    };
+
     const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {
       for (const s of slugs) {
         const m = lib.find((x) => x.slug === s);
