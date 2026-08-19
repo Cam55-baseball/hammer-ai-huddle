@@ -465,14 +465,19 @@ const handler = async (req: Request): Promise<Response> => {
       // Support-class work is never the primary stimulus — blocking it on
       // adaptation grounds only strands mandatory slots.
       if (mov === "arm_care" || mov === "recovery_only" || mov === "movement_literacy") return true;
+      // `conditioning_repeat_explosive` is legal wherever the conditioning
+      // engine itself is legal. Omitting it from in-season / game-readiness /
+      // power days silently emptied the conditioning pool for the whole
+      // season. It stays out of `recovery_only`, where conditioning is
+      // deliberately suppressed by the adaptation selector.
       const map: Record<string, string[]> = {
         recovery_only: ["in_season_maintenance", "movement_literacy"],
-        game_readiness: ["speed_development", "bat_speed_development", "movement_literacy", "in_season_maintenance"],
+        game_readiness: ["speed_development", "bat_speed_development", "movement_literacy", "in_season_maintenance", "conditioning_repeat_explosive"],
         muscle_capacity: ["max_strength", "muscle_capacity", "in_season_maintenance", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
         max_strength: ["max_strength", "muscle_capacity", "strength_to_power", "speed_development", "bat_speed_development", "movement_literacy"],
-        strength_to_power: ["strength_to_power", "max_strength", "muscle_capacity", "power_transfer", "speed_development", "bat_speed_development", "movement_literacy"],
-        power_transfer: ["power_transfer", "strength_to_power", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "in_season_maintenance", "movement_literacy"],
-        in_season_maintenance: ["in_season_maintenance", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "power_transfer", "movement_literacy"],
+        strength_to_power: ["strength_to_power", "max_strength", "muscle_capacity", "power_transfer", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
+        power_transfer: ["power_transfer", "strength_to_power", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "in_season_maintenance", "conditioning_repeat_explosive", "movement_literacy"],
+        in_season_maintenance: ["in_season_maintenance", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "power_transfer", "conditioning_repeat_explosive", "movement_literacy"],
         movement_literacy: ["movement_literacy", "muscle_capacity", "in_season_maintenance"],
       };
       // Unknown day label → fail open rather than emptying the catalog.
