@@ -812,6 +812,22 @@ const handler = async (req: Request): Promise<Response> => {
       let distanceFeet = distanceDose;
       let totalReps = totalDose;
       let dosageUnit = dosageUnitRaw;
+      // Unit routing — a total-dose movement must never carry its dose in the
+      // `reps` column. Catalog rows historically stored "45 seconds" as
+      // `default_reps: 45`, which made a 45-second couch stretch look like a
+      // 45-rep compound lift and tripped the dosage-envelope validator.
+      let emittedReps = finalReps;
+      if (!repDosed && typeof emittedReps === "number") {
+        const u = String(dosageUnit ?? "").toLowerCase();
+        if (u === "seconds" || u === "sec" || u === "second") {
+          if (durationSeconds == null) durationSeconds = emittedReps;
+        } else if (u === "feet" || u === "ft" || u === "yards" || u === "yds") {
+          if (distanceFeet == null) distanceFeet = emittedReps;
+        } else if (totalReps == null) {
+          totalReps = emittedReps;
+        }
+        emittedReps = null;
+      }
       // Dosage safety net — never emit a "1 sets × 1 reps" row with no other
       // dose. If the catalog defaults are missing, backfill from the raw
       // movement row, then classify by category so mobility/warmup/FRC always
@@ -819,8 +835,9 @@ const handler = async (req: Request): Promise<Response> => {
       const noDose =
 
         (finalSets === 1 || finalSets == null) &&
-        (finalReps === 1 || finalReps == null) &&
+        (emittedReps === 1 || emittedReps == null) &&
         !durationSeconds && !distanceFeet && !totalReps;
+
 
       if (noDose) {
         const cat = (s.movement.movement_category ?? s.movement.category ?? "").toLowerCase();
