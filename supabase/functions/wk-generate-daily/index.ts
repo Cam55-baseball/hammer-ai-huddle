@@ -1442,6 +1442,16 @@ const handler = async (req: Request): Promise<Response> => {
         message: w.message,
       } as any);
     }
+    if (conditioningEmptyPool) {
+      validatorReport.issues.push({
+        code: "conditioning_empty_pool",
+        severity: "warn",
+        message:
+          "Conditioning was legal today but no catalog movement passed the eligibility gates — the card will not render.",
+      } as any);
+    }
+
+
 
     const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
     if (!allWhysComplete) {
