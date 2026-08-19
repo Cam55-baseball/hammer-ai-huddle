@@ -152,6 +152,7 @@ export default function Vault() {
   const wellnessGoalsRef = useRef<HTMLDivElement>(null);
   const savedItemsRef = useRef<HTMLDivElement>(null);
   const sixWeekCheckinRef = useRef<HTMLDivElement>(null);
+  const recapGenerationRef = useRef<HTMLDivElement>(null);
   
   // Stable ref map for centralized scroll utility
   const sectionRefs = useMemo(() => ({
@@ -163,6 +164,7 @@ export default function Vault() {
     'wellness-goals': wellnessGoalsRef,
     'saved-items': savedItemsRef,
     'six-week-checkin': sixWeekCheckinRef,
+    'recap-generation': recapGenerationRef,
   }), []);
   
   // Detect module access for grader display (tier-aware)
