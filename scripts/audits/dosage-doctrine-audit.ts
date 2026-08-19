@@ -17,10 +17,12 @@ import {
   DOSE_MATRIX,
   resolveDose,
   isWithinEnvelope,
+  isRepDosed,
   type DoctrinePhase,
   type DoseGroup,
   type TrainingAgeBand,
 } from "../../supabase/functions/_shared/wic/dosage/doctrine.ts";
+
 
 const PHASES: DoctrinePhase[] = ["os_q1", "os_q2", "os_q3", "os_q4", "in_season", "post_season"];
 const GROUPS: DoseGroup[] = [
