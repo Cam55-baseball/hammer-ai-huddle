@@ -616,10 +616,10 @@ const handler = async (req: Request): Promise<Response> => {
      * identical session.
      */
     const scoreCandidate = (m: MovementRow, poolIndex: number) => {
-      const cat = coerceCanonicalCategory(m as any);
+      const cat = coerceCanonicalCategory(m as any) ?? "";
       const score =
         emphasisFor(goalEmphasis, m as any) +
-        shortfallBonus(weeklyLedger, cat) -
+        (cat ? shortfallBonus(weeklyLedger, cat) : 0) -
         varietyPenalty(weeklyLedger, m.slug) -
         poolIndex * 0.001; // stable pool-order tie-break
       return Math.round(score * 1e6) / 1e6;
@@ -643,8 +643,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     /** One athlete-legible line tying a pick to their own stated goals. */
     const goalWhy = (m: MovementRow): string => {
-      const cat = coerceCanonicalCategory(m as any);
-      const short = (weeklyLedger.shortfalls as Record<string, number>)[cat] ?? 0;
+      const cat = coerceCanonicalCategory(m as any) ?? "";
+      const short = cat ? ((weeklyLedger.shortfalls as Record<string, number>)[cat] ?? 0) : 0;
       const parts: string[] = [];
       if (!goalEmphasis.isBaselineOnly && goalEmphasis.ranked.length) {
         parts.push(`you ranked ${goalEmphasis.ranked[0]} first`);
