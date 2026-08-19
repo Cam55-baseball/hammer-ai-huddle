@@ -478,8 +478,13 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
+        {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
+        <ErrorBoundary>
+          <ScheduledPriorityStrip />
+        </ErrorBoundary>
         {/* 1. Schedule & What Changed — dropdown, starts closed */}
         <ScheduleDropdownWrapper />
+
         {/* 2. Today's Wisdom */}
         <TodaysWisdomCard />
         {/* 3. Human Performance Intelligence — dropdown, glows until opened */}
