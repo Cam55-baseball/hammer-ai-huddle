@@ -20,7 +20,7 @@ const admin = createClient(url, key);
 const { data, error } = await admin
   .from("wk_movement_catalog")
   .select(
-    "slug,name,category,conditioning_category,cross_sport_category,recovery_category,arm_care_category,energy_system,recovery_class,throwing_phase,movement_transfer,sport_transfer,travel_friendly,indoor_legal,outdoor_legal,season_legality,training_age_legality",
+    "slug,name,category,primary_adaptation,conditioning_category,cross_sport_category,recovery_category,arm_care_category,energy_system,recovery_class,throwing_phase,movement_transfer,sport_transfer,travel_friendly,indoor_legal,outdoor_legal,season_legality,training_age_legality",
   );
 if (error) { console.error(error); Deno.exit(2); }
 
