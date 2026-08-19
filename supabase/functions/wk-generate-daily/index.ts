@@ -1224,11 +1224,16 @@ const handler = async (req: Request): Promise<Response> => {
     const conditioningSuppressed =
       Array.isArray(adaptationDecision.suppressed) &&
       adaptationDecision.suppressed.includes("conditioning");
+    // A legal training day that resolves zero conditioning movements is a
+    // defect, not an outcome — surface it in diagnostics instead of quietly
+    // emitting `cond.off_day`.
+    let conditioningEmptyPool = false;
     if (!isGameDay && !isPostSeason && !conditioningSuppressed) {
       const conditioning: MovementRow[] = [
         lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
         conditioningForPosition(lib, position, eligible),
       ].filter(Boolean) as MovementRow[];
+      conditioningEmptyPool = conditioning.length === 0;
       for (const m of conditioning) {
         push("conditioning", "conditioning", m, {}, "Conditioning belongs next to practice — inning-restart + position-specific.");
       }
