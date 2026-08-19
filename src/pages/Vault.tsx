@@ -152,6 +152,7 @@ export default function Vault() {
   const wellnessGoalsRef = useRef<HTMLDivElement>(null);
   const savedItemsRef = useRef<HTMLDivElement>(null);
   const sixWeekCheckinRef = useRef<HTMLDivElement>(null);
+  const recapGenerationRef = useRef<HTMLDivElement>(null);
   
   // Stable ref map for centralized scroll utility
   const sectionRefs = useMemo(() => ({
@@ -163,6 +164,7 @@ export default function Vault() {
     'wellness-goals': wellnessGoalsRef,
     'saved-items': savedItemsRef,
     'six-week-checkin': sixWeekCheckinRef,
+    'recap-generation': recapGenerationRef,
   }), []);
   
   // Detect module access for grader display (tier-aware)
@@ -441,20 +443,22 @@ export default function Vault() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Streak & Quizzes */}
             <div className="space-y-6">
-              <VaultStreakRecapCard 
-                streak={streak} 
-                recaps={recaps}
-                canGenerateRecap={canGenRecap}
-                daysUntilNextRecap={daysUntilRecap}
-                recapProgress={recapProgress}
-                onGenerateRecap={handleGenerateRecap}
-                onSaveRecap={saveRecapToLibrary}
-                onDeleteRecap={deleteRecap}
-                isLoading={loading}
-                hasMissedRecap={hasMissedRecap}
-                missedCycleEnd={missedCycleEnd}
-                waitingForProgressReports={waitingForProgressReports}
-              />
+              <div ref={recapGenerationRef}>
+                <VaultStreakRecapCard 
+                  streak={streak} 
+                  recaps={recaps}
+                  canGenerateRecap={canGenRecap}
+                  daysUntilNextRecap={daysUntilRecap}
+                  recapProgress={recapProgress}
+                  onGenerateRecap={handleGenerateRecap}
+                  onSaveRecap={saveRecapToLibrary}
+                  onDeleteRecap={deleteRecap}
+                  isLoading={loading}
+                  hasMissedRecap={hasMissedRecap}
+                  missedCycleEnd={missedCycleEnd}
+                  waitingForProgressReports={waitingForProgressReports}
+                />
+              </div>
 
               {/* Weekly Trend Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

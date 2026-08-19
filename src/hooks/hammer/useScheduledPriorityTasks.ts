@@ -46,9 +46,17 @@ export function useScheduledPriorityTasks() {
   const { modules } = useSubscription();
   const recap = useRecapCountdown();
 
-  const hasPitching = modules.includes("pitching");
-  const hasHitting = modules.includes("hitting");
-  const hasThrowing = modules.includes("throwing");
+  // Subscription modules are stored as `<sport>_<module>` keys (e.g. "baseball_hitting"),
+  // with tier bundles granting several at once — match the same way the Vault does.
+  const hasPitching = modules.some(
+    (m) => m.includes("pitching") || m.includes("pitcher") || m.includes("golden2way"),
+  );
+  const hasHitting = modules.some(
+    (m) => m.includes("hitting") || m.includes("5tool") || m.includes("golden2way"),
+  );
+  const hasThrowing = modules.some(
+    (m) => m.includes("throwing") || m.includes("5tool") || m.includes("golden2way"),
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["hammer-scheduled-priority", user?.id],
