@@ -89,9 +89,16 @@ export function validate(input: ValidatorInput): ValidatorReport {
       seenSetsReps.add(key);
     }
 
-    // Zero-Drift Dosage Doctrine — no row may exceed its envelope ceiling.
-    // Deloads and safety caps pull below the floor; nothing goes above.
-    if (rx.slot === "lift" && rx.sets != null && rx.reps != null) {
+    // Zero-Drift Dosage Doctrine — no rep-dosed row may exceed its envelope
+    // ceiling. Deloads and safety caps pull below the floor; nothing goes above.
+    // Total-dose rows (seconds / feet / innings / runs / each) are measured in
+    // their own unit and are never subjected to set×rep envelope math.
+    const totalDosed =
+      !isRepDosed(rx.dosage_unit) ||
+      rx.duration_seconds != null ||
+      rx.distance_feet != null ||
+      rx.total_reps != null;
+    if (rx.slot === "lift" && !totalDosed && rx.sets != null && rx.reps != null) {
       const category = (rx.why_payload as any)?.dose_doctrine?.category ?? null;
       if (!isWithinEnvelope(input.phase, rx.sequence_role, category, rx.sets, rx.reps)) {
         issues.push({
@@ -102,6 +109,7 @@ export function validate(input: ValidatorInput): ValidatorReport {
         });
       }
     }
+
 
     // Game-day suppression enforcement.
     if (input.isGameDay && !GAME_DAY_ALLOWED_SLOTS.has(rx.slot)) {
