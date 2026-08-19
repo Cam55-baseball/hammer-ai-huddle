@@ -71,6 +71,9 @@ export function resolvePersonalizationContext(input: {
     "training_age.years":            { source: "profiles",             status: "consumed", layer: "training_age" },
     // Goals
     "goals.list":                    { source: "athlete_body_goals",   status: status(ac.goals.length > 0), layer: "goals" },
+    // Consumed by the Goal Emphasis Authority (_shared/wic/goals/emphasis.ts):
+    // ranked goals bias which legal movement fills a discretionary slot.
+    "goals.emphasis":                { source: "wic_goal_emphasis",    status: "consumed", layer: "goals" },
     // Position
     "position.primary":              { source: "profiles",             status: status(!!ac.identity.primary_position), layer: "position" },
     "position.secondary":            { source: "profiles",             status: status(!!ac.identity.secondary_position), layer: "position" },

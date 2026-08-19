@@ -48,6 +48,14 @@ import {
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
+// Goal Emphasis Authority + Weekly Balance Ledger — bounded, interpretive only.
+import { resolveGoalEmphasis, emphasisFor } from "../_shared/wic/goals/emphasis.ts";
+import {
+  buildWeeklyLedger,
+  shortfallBonus,
+  varietyPenalty,
+  evaluateWeeklyBalance,
+} from "../_shared/wic/balance/weeklyLedger.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
@@ -481,16 +489,21 @@ const handler = async (req: Request): Promise<Response> => {
       return "strength";
     };
 
-    // -------- Load 72h lift history + active overrides (drift guards) --------
+    // -------- Load 7d lift history + active overrides (drift guards) --------
+    // 7 days feeds the Weekly Balance Ledger; the 72h slice inside it still
+    // drives the compound non-repeat guard.
     const threeDaysAgo = new Date(planDate + "T00:00:00");
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     const threeDaysAgoStr = threeDaysAgo.toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(planDate + "T00:00:00");
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
         .select("movement_slug, plan_date, slot")
         .eq("user_id", user.id)
         .eq("slot", "lift")
-        .gte("plan_date", threeDaysAgoStr)
+        .gte("plan_date", sevenDaysAgoStr)
         .lt("plan_date", planDate),
       admin.from("wk_movement_overrides")
         .select("movement_slug, expires_at, reason, actor_role")
@@ -498,7 +511,11 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("ack_date", planDate)
         .gt("expires_at", new Date().toISOString()),
     ]);
-    const recentCompoundSlugs = new Set((recentLifts ?? []).map((r: any) => r.movement_slug as string));
+    const recentCompoundSlugs = new Set(
+      (recentLifts ?? [])
+        .filter((r: any) => String(r.plan_date) >= threeDaysAgoStr)
+        .map((r: any) => r.movement_slug as string),
+    );
     const overrideSlugs = new Set((activeOverrides ?? []).map((r: any) => r.movement_slug as string));
     const usedThisSession = new Set<string>();
     const usedNamesThisSession = new Set<string>();
@@ -570,6 +587,70 @@ const handler = async (req: Request): Promise<Response> => {
         if (eligibleWith(m, { ignoreAdaptation: true })) return m;
       }
       return undefined;
+    };
+
+    // ---- Goal Emphasis Authority + Weekly Balance Ledger -------------------
+    // Emphasis biases WHICH legal movement fills a discretionary slot. It can
+    // never author a dose, relax a gate, or delete a required category.
+    const goalEmphasis = resolveGoalEmphasis({ bodyGoals: bodyGoals ?? [], profile: p });
+    const weeklyLedger = buildWeeklyLedger(
+      (recentLifts ?? []).map((r: any) => ({
+        plan_date: String(r.plan_date),
+        movement_slug: String(r.movement_slug),
+        category: coerceCanonicalCategory(
+          (lib.find((x) => x.slug === r.movement_slug) ?? { slug: r.movement_slug }) as any,
+        ),
+      })),
+    );
+    const isThrowerForBalance = athletePositions.some((x) => /pitch|catch/.test(x)) ||
+      goalEmphasis.ranked.includes("throwing");
+    const weeklyBalanceWarnings = evaluateWeeklyBalance(weeklyLedger, {
+      isThrower: isThrowerForBalance,
+    });
+
+    /**
+     * Best-fit picker for discretionary slots. Scores only among movements
+     * that already passed every legality gate, so the constitutional order is
+     * untouched — this decides which of the LEGAL options is the best fit.
+     * Deterministic: ties fall back to pool order, so a replay reproduces the
+     * identical session.
+     */
+    const scoreCandidate = (m: MovementRow, poolIndex: number) => {
+      const cat = coerceCanonicalCategory(m as any);
+      const score =
+        emphasisFor(goalEmphasis, m as any) +
+        shortfallBonus(weeklyLedger, cat) -
+        varietyPenalty(weeklyLedger, m.slug) -
+        poolIndex * 0.001; // stable pool-order tie-break
+      return Math.round(score * 1e6) / 1e6;
+    };
+    const pickBest = (slugs: string[]): MovementRow | undefined => {
+      let best: MovementRow | undefined;
+      let bestScore = -Infinity;
+      slugs.forEach((slug, i) => {
+        const m = lib.find((x) => x.slug === slug);
+        if (!eligible(m)) return;
+        const sc = scoreCandidate(m, i);
+        if (sc > bestScore) { bestScore = sc; best = m; }
+      });
+      return best;
+    };
+    const pickBestByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined =>
+      pickBest(slugs.filter((slug) => {
+        const m = lib.find((x) => x.slug === slug);
+        return !!m && coerceCanonicalCategory(m as any) === category;
+      }));
+
+    /** One athlete-legible line tying a pick to their own stated goals. */
+    const goalWhy = (m: MovementRow): string => {
+      const cat = coerceCanonicalCategory(m as any);
+      const short = (weeklyLedger.shortfalls as Record<string, number>)[cat] ?? 0;
+      const parts: string[] = [];
+      if (!goalEmphasis.isBaselineOnly && goalEmphasis.ranked.length) {
+        parts.push(`you ranked ${goalEmphasis.ranked[0]} first`);
+      }
+      if (short > 0) parts.push(`your week is short on ${cat.replace(/_/g, " ")}`);
+      return parts.length ? ` Chosen because ${parts.join(" and ")}.` : "";
     };
 
     const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {
@@ -908,19 +989,21 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // 2) Trunk primer — every session
-      const trunkPrimer = pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
-      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, "Loaded rotation primer — wakes obliques + preps swing plane.");
+      const trunkPrimer = pickBest(StrengthEngine.TRUNK_PRIMER_SLUGS) ?? pickFirst(StrengthEngine.TRUNK_PRIMER_SLUGS);
+      if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
-      const compound = pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
+      const compound = pickBestByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
+        pickFirstByCanonicalCategory(compoundSlugsByPhase, "compound_lower") ??
         lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "compound_lower");
       if (compound) {
-        push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.`);
+        push("lift", "compound_lower", compound, {}, `${block.display_name}: ${block.compound_style.replace("_", " ")} lower-body primer — strong enough to maintain output without stealing sport freshness.${goalWhy(compound)}`);
       }
 
       // 4) Unilateral lower — rotate across the week to build all planes
-      const uniLower = pickFirst(StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek));
+      const uniLowerPool = StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek);
+      const uniLower = pickBest(uniLowerPool) ?? pickFirst(uniLowerPool);
       if (uniLower) {
         // Safety ceiling only: deep-flexion (ATG family) in-season stays a
         // ROM-limited durability dose. Everything else is doctrine-dosed.
@@ -928,33 +1011,36 @@ const handler = async (req: Request): Promise<Response> => {
         const uniWhy = safetyCap
 
           ? "Single-leg durability maintenance — ROM-limited and low volume on purpose. In-season this protects the knee and hip; it is not a development block, so stop short of your deepest range and never near failure."
-          : "Single-leg dominance — closes L/R imbalances the compound hides.";
+          : `Single-leg dominance — closes L/R imbalances the compound hides.${goalWhy(uniLower)}`;
         push("lift", "unilateral_lower", uniLower, (safetyCap ? { dose_cap: safetyCap } : {}) as any, uniWhy);
       }
 
 
       // 5) Upper push — unilateral / integrated
-      const upperPush = pickFirst(StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek));
+      const upperPushPool = StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek);
+      const upperPush = pickBest(upperPushPool) ?? pickFirst(upperPushPool);
       if (upperPush) {
-        push("lift", "upper_push", upperPush, {}, "Upper push — enough strength signal to maintain full-body balance without chasing soreness.");
+        push("lift", "upper_push", upperPush, {}, `Upper push — enough strength signal to maintain full-body balance without chasing soreness.${goalWhy(upperPush)}`);
       }
 
       // 6) Upper pull — unilateral / weighted
-      const upperPull = pickFirst(StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek));
+      const upperPullPool = StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek);
+      const upperPull = pickBest(upperPullPool) ?? pickFirst(upperPullPool);
       if (upperPull) {
-        push("lift", "upper_pull", upperPull, {}, "Upper pull — decel chain, posture, and shoulder balance stay in the plan.");
+        push("lift", "upper_pull", upperPull, {}, `Upper pull — decel chain, posture, and shoulder balance stay in the plan.${goalWhy(upperPull)}`);
       }
 
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
-        const carry = pickFirst(StrengthEngine.carrySlugs(isInSeason, dayOfWeek));
-        if (carry) push("lift", "carry_antirotation", carry, {}, "Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.");
+        const carryPool = StrengthEngine.carrySlugs(isInSeason, dayOfWeek);
+        const carry = pickBest(carryPool) ?? pickFirst(carryPool);
+        if (carry) push("lift", "carry_antirotation", carry, {}, `Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.${goalWhy(carry)}`);
       }
 
       // 8) Trunk finisher — offseason only (in-season stays fresh)
       if (isOffseason) {
-        const finisher = pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
-        if (finisher) push("lift", "trunk_finisher", finisher, {}, "Loaded trunk finisher — locks the rotational strength from above.");
+        const finisher = pickBest(StrengthEngine.TRUNK_FINISHER_SLUGS) ?? pickFirst(StrengthEngine.TRUNK_FINISHER_SLUGS);
+        if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 
       ensureFullBodyLift(rxs, lib, pickFirst, push, isInSeason, pickFirstRelaxed);
@@ -1315,6 +1401,16 @@ const handler = async (req: Request): Promise<Response> => {
         why_payload: (r as any).why_payload,
       })),
     });
+    // Weekly Balance Ledger findings ride along as warnings — never fatal.
+    // They steer tomorrow's discretionary slots; they never block a plan.
+    for (const w of weeklyBalanceWarnings) {
+      validatorReport.issues.push({
+        code: w.code,
+        severity: "warn",
+        message: w.message,
+      } as any);
+    }
+
     const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
     if (!allWhysComplete) {
       validatorReport.issues.push({
