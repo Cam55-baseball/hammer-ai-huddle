@@ -20,7 +20,7 @@ const admin = createClient(url, key);
 const { data, error } = await admin
   .from("wk_movement_catalog")
   .select(
-    "slug,name,category,conditioning_category,cross_sport_category,recovery_category,arm_care_category,energy_system,recovery_class,throwing_phase,movement_transfer,sport_transfer,travel_friendly,indoor_legal,outdoor_legal,season_legality,training_age_legality",
+    "slug,name,category,primary_adaptation,conditioning_category,cross_sport_category,recovery_category,arm_care_category,energy_system,recovery_class,throwing_phase,movement_transfer,sport_transfer,travel_friendly,indoor_legal,outdoor_legal,season_legality,training_age_legality",
   );
 if (error) { console.error(error); Deno.exit(2); }
 
@@ -45,6 +45,42 @@ for (const row of data ?? []) {
     ac++;
     if (!(row as any).arm_care_category) { console.error(`FATAL ${row.slug}: missing arm_care_category`); fatal++; }
     if (!(row as any).throwing_phase) { console.warn(`WARN ${row.slug}: missing throwing_phase`); warn++; }
+  }
+}
+
+// Adaptation-coverage guard — every day adaptation on which conditioning is
+// legal must admit at least one conditioning catalog row. This is the exact
+// regression that emptied the Conditioning card for the whole in-season phase.
+const CONDITIONING_LEGAL_ADAPTATIONS = [
+  "muscle_capacity",
+  "max_strength",
+  "strength_to_power",
+  "power_transfer",
+  "in_season_maintenance",
+  "game_readiness",
+] as const;
+const ADAPTATION_COMPAT: Record<string, string[]> = {
+  recovery_only: ["in_season_maintenance", "movement_literacy"],
+  game_readiness: ["speed_development", "bat_speed_development", "movement_literacy", "in_season_maintenance", "conditioning_repeat_explosive"],
+  muscle_capacity: ["max_strength", "muscle_capacity", "in_season_maintenance", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
+  max_strength: ["max_strength", "muscle_capacity", "strength_to_power", "speed_development", "bat_speed_development", "movement_literacy"],
+  strength_to_power: ["strength_to_power", "max_strength", "muscle_capacity", "power_transfer", "speed_development", "bat_speed_development", "conditioning_repeat_explosive", "movement_literacy"],
+  power_transfer: ["power_transfer", "strength_to_power", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "in_season_maintenance", "conditioning_repeat_explosive", "movement_literacy"],
+  in_season_maintenance: ["in_season_maintenance", "max_strength", "muscle_capacity", "speed_development", "bat_speed_development", "power_transfer", "conditioning_repeat_explosive", "movement_literacy"],
+  movement_literacy: ["movement_literacy", "muscle_capacity", "in_season_maintenance"],
+};
+const conditioningRows = (data ?? []).filter(
+  (r: any) => String(r.category ?? "").toLowerCase() === "conditioning",
+);
+for (const day of CONDITIONING_LEGAL_ADAPTATIONS) {
+  const allowed = ADAPTATION_COMPAT[day] ?? [];
+  const admits = conditioningRows.some((r: any) => {
+    const mov = r.primary_adaptation;
+    return !mov || mov === day || allowed.includes(mov);
+  });
+  if (!admits) {
+    console.error(`FATAL adaptation "${day}": no conditioning movement passes the adaptation gate`);
+    fatal++;
   }
 }
 
