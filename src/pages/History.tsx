@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
+import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
 import {
   usePracticeHistory,
   useGameHistory,
