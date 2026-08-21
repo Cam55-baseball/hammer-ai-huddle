@@ -61,23 +61,33 @@ Deno.serve(async (req) => {
 
     const { data: video, error: vErr } = await admin
       .from('library_videos')
-      .select('id, title, description, ai_description, skill_domains, formula_phases, formula_notes')
+      .select('id, title, description, ai_description, skill_domains, sport, formula_phases, formula_notes')
       .eq('id', videoId)
       .single();
     if (vErr || !video) throw vErr || new Error('Video not found');
 
+    // Sport scope: a single-sport video may only be tagged with that sport's
+    // tags plus shared ('both') tags. Never let softball get overhand cues.
+    const videoSports = ((video as any).sport || []) as string[];
+    const sportScope = videoSports.length === 1
+      ? (videoSports[0] === 'softball' ? 'softball' : videoSports[0] === 'baseball' ? 'baseball' : null)
+      : null;
+
     // Pull taxonomy (controlled vocab)
     const { data: taxonomy } = await admin
       .from('video_tag_taxonomy')
-      .select('layer, key, label, skill_domain')
+      .select('layer, key, label, skill_domain, sport')
       .eq('active', true);
 
     const vocab: Record<string, string[]> = {
       movement_pattern: [], result: [], context: [], correction: [],
     };
     (taxonomy || []).forEach((t: any) => {
+      const tagSport = t.sport ?? 'both';
+      if (sportScope && tagSport !== 'both' && tagSport !== sportScope) return;
       if (vocab[t.layer]) vocab[t.layer].push(t.key);
     });
+
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set');
