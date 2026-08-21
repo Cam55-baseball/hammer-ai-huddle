@@ -351,7 +351,6 @@ export default function PlayersClub() {
         {/* Quick links to where practices and games now live */}
         {isOwnLibrary && (
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-            <span>Looking for something specific?</span>
             <span>Practices, games, reports and recaps live in</span>
             <Link to="/history" className="text-primary hover:underline">History →</Link>
             <Link to="/games" className="text-primary hover:underline">Game Hub →</Link>
