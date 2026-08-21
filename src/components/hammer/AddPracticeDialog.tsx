@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { noteProtectedEditing } from "@/lib/protectedEditing";
+import { noteProtectedEditing } from "@/lib/auth/protectedEditing";
 import { Loader2, CalendarPlus } from "lucide-react";
 
 const KINDS: Array<{ value: string; label: string; hint: string; intensity: "light" | "standard" | "heavy" }> = [
