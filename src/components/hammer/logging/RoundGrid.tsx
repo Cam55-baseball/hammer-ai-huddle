@@ -155,6 +155,12 @@ export function RoundGrid({
         <Button type="button" variant="ghost" size="sm" onClick={removeRound} disabled={rounds.length <= minRounds} className="h-7 gap-1 text-xs">
           <Minus className="h-3 w-3" /> Remove
         </Button>
+        {hasSide && (
+          <Button type="button" variant="ghost" size="sm" onClick={mirrorSides} className="h-7 gap-1 text-xs">
+            <FlipHorizontal className="h-3 w-3" /> Mirror
+          </Button>
+        )}
+
         <div className="text-[10px] text-muted-foreground ml-auto">{rounds.length} round{rounds.length === 1 ? "" : "s"}</div>
       </div>
     </div>
