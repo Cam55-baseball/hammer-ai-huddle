@@ -384,7 +384,10 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                     >
                       <option value="game">Game</option>
                       <option value="tournament_day">Tournament day</option>
-                      <option value="practice">Practice</option>
+                      <option value="team_practice">Team practice</option>
+                      <option value="trainer_session">Trainer / lesson</option>
+                      <option value="solo_practice">Personal practice</option>
+                      <option value="showcase">Showcase / camp</option>
                       <option value="travel">Travel</option>
                       <option value="other">Other</option>
                     </select>
