@@ -179,8 +179,9 @@ export function VideoLibraryManager() {
   const openQuickFix = (video: LibraryVideo, intent: QuickFixIntent, focus?: string) => {
     setEditFocus(intent === 'complete_missing' ? focus : intent === 'auto_suggest' ? 'ai_description' : undefined);
     setEditAutoSuggest(intent === 'auto_suggest');
-    // Smart Defaults already auto-applies in VideoFastEditor when fields are empty,
-    // so we just open the editor — no extra wiring required.
+    setEditSmartDefaults(intent === 'smart_defaults');
+    setEditWalkMissing(intent === 'complete_missing');
+    setFastMode(true);
     setEditTarget(video);
   };
 
@@ -374,6 +375,7 @@ export function VideoLibraryManager() {
                       </div>
                       <QuickFixActions
                         readiness={r}
+                        videoClass={(video as any).video_class === 'foundation' ? 'foundation' : 'application'}
                         onAction={(intent, focus) => openQuickFix(video, intent, focus)}
                       />
                     </div>
@@ -460,8 +462,10 @@ export function VideoLibraryManager() {
                 video={editTarget}
                 onSuccess={handleEditSuccess}
                 onCancel={handleEditClose}
-                initialFocus={editFocus}
+                initialFocus={editFocus as any}
                 autoOpenSuggestions={editAutoSuggest}
+                applySmartDefaults={editSmartDefaults}
+                walkMissing={editWalkMissing}
               />
             ) : (
               <VideoEditForm

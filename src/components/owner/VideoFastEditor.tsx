@@ -19,7 +19,7 @@ import {
   type FoundationMeta,
 } from "@/lib/foundationVideos";
 import { ConfidenceBadge } from "./ConfidenceBadge";
-import { HammerDescriptionComposer, composeHammerDescription } from "./HammerDescriptionComposer";
+import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { FoundationTagEditor } from "./FoundationTagEditor";
 import { toast } from "@/hooks/use-toast";
 
@@ -280,11 +280,7 @@ export function VideoFastEditor({
       // Too short to analyse — draft a baseline description from the video's own
       // fields so the button never silently no-ops.
       if (desc.trim().length < SUGGEST_MIN_CHARS) {
-        desc = composeHammerDescription({
-          audience: 'All Levels',
-          bestFor: 'Skill Build',
-          focus: 'Sequencing',
-        });
+        desc = `Best for All Levels athletes working on a Skill Build. Focus: Sequencing. ${video.title}`.trim();
         setAiDescription(desc);
         toast({
           title: 'Drafted a description first',
