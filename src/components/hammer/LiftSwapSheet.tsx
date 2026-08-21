@@ -56,7 +56,7 @@ export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
         </SheetHeader>
 
         <div className="mt-3 space-y-4 pb-6">
-          {options.isLoading ? (
+          {isLoading ? (
             <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading legal swaps…
             </div>
