@@ -101,9 +101,17 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
     const w = p.load_used ? `${p.load_used} lb` : null;
     const s = p.sets_completed ? `${p.sets_completed} sets` : null;
     const r = p.reps_completed?.length ? `${p.reps_completed.join("·")} reps` : null;
-    const parts = [w, s, r, p.rpe ? `RPE ${p.rpe}` : null].filter(Boolean);
+    // Carry last session's limb balance forward — the athlete sees the gap
+    // before the first round, not after. Only a stored delta is shown; a
+    // session without enough per-side rounds stays silent rather than guess.
+    const prevDelta = (p?.metrics?.per_side?.deltas ?? [])[0];
+    const bal = prevDelta
+      ? `${prevDelta.weaker === "L" ? "left" : "right"} ${prevDelta.diffPct}% behind`
+      : null;
+    const parts = [w, s, r, p.rpe ? `RPE ${p.rpe}` : null, bal].filter(Boolean);
     return parts.length ? `Last: ${parts.join(" • ")}` : null;
   }, [previous]);
+
 
   const roundsToPayload = () =>
     rounds.map((r) => {
