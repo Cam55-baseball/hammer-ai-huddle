@@ -77,6 +77,7 @@ export function VideoFastEditor({
   const { updateStructuredFields, syncTagAssignments, regenerateAISuggestions, uploading } = useVideoLibraryAdmin();
 
   const defaults = useMemo(() => getSmartDefaults(), []);
+  const fDefaults = useMemo(() => getFoundationSmartDefaults(), []);
 
   const [videoClass, setVideoClass] = useState<'application' | 'foundation'>(
     (video as any).video_class === 'foundation' ? 'foundation' : 'application'
