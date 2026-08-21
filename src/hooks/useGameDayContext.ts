@@ -40,6 +40,12 @@ export interface GameDayContext {
   freshnessMode: boolean;
   /** When true, recent density is high — recovery ceiling active. */
   highDensity: boolean;
+  /** Practice load on the books today (team / trainer / solo / showcase). */
+  isPracticeToday: boolean;
+  isHeavyPracticeToday: boolean;
+  /** Short labels for today's practices, e.g. ["Team practice", "Hitting lesson"]. */
+  practiceLabelsToday: string[];
+  practicesNext7d: number;
 }
 
 function isoDate(d: Date): string {
@@ -131,6 +137,12 @@ export function useGameDayContext(): GameDayContext {
       phase === "post_season" ||
       sched.unknown === false; // window query succeeded
 
+    const practicesToday = sched.practicesToday ?? [];
+    const isPracticeToday = practicesToday.length > 0;
+    const isHeavyPracticeToday = !!sched.heavyPracticeToday;
+    const practiceLabelsToday = practicesToday.map((p) => p.label);
+    const practicesNext7d = sched.totalPractices;
+
     const freshnessMode = isGameToday || isGameTomorrow;
     const highDensity = consecutiveGameDays >= 5 || gamesLast7d >= 5;
 
@@ -140,6 +152,10 @@ export function useGameDayContext(): GameDayContext {
       summaryLine = "Game today — freshness mode. Strength/speed ceiling lowered.";
     } else if (isGameTomorrow) {
       summaryLine = "Game tomorrow — short, sharp today, recovery prioritized.";
+    } else if (isHeavyPracticeToday) {
+      summaryLine = `${practiceLabelsToday[0] ?? "Team practice"} today — lift trimmed so it doesn't stack on practice volume.`;
+    } else if (isPracticeToday) {
+      summaryLine = `${practiceLabelsToday[0] ?? "Practice"} today — skill work dialed back to avoid doubling up.`;
     } else if (highDensity) {
       summaryLine = `Dense stretch (${consecutiveGameDays}-day run, ${gamesLast7d} games in 7d) — recovery ceiling active.`;
     } else if (phase === "in_season" && gamesNext7d === 0) {
@@ -168,6 +184,10 @@ export function useGameDayContext(): GameDayContext {
       summaryLine,
       freshnessMode,
       highDensity,
+      isPracticeToday,
+      isHeavyPracticeToday,
+      practiceLabelsToday,
+      practicesNext7d,
     };
   }, [season, sched, recentGames.data, recentGames.isLoading]);
 }
