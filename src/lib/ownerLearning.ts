@@ -17,9 +17,20 @@ interface Choice {
   ts: number;
 }
 
+/** Foundation videos have their own field set — learned separately. */
+interface FoundationChoice {
+  domain?: string;
+  scope?: string;
+  audiences: string[];
+  triggers: string[];
+  ts: number;
+}
+
 interface Store {
   choices: Choice[];
+  foundationChoices?: FoundationChoice[];
 }
+
 
 function read(): Store {
   if (typeof window === 'undefined') return { choices: [] };
