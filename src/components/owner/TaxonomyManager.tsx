@@ -107,6 +107,8 @@ export function TaxonomyManager() {
       layer, skill_domain: domain,
       key: key.trim().toLowerCase().replace(/\s+/g, '_'),
       label: label.trim(),
+      sport,
+      position_scope: positionScope.length ? positionScope : null,
     }).select('id').single();
 
     if (error) {
@@ -115,6 +117,7 @@ export function TaxonomyManager() {
       return;
     }
     setKey(''); setLabel('');
+
     qc.invalidateQueries({ queryKey: ['taxonomy-admin'] });
     qc.invalidateQueries({ queryKey: ['video-taxonomy'] });
     toast({ title: 'Tag added', description: 'Hammer is reviewing your library for this tag…' });
