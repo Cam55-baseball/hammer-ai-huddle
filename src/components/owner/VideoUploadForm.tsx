@@ -199,7 +199,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
         )}
       </div>
 
-      <StructuredTagEditor value={structured} onChange={setStructured} />
+      <StructuredTagEditor value={structured} onChange={setStructured} sports={selectedSport} />
 
       <Button
         onClick={handleSubmit}
