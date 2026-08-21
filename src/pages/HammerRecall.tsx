@@ -107,6 +107,8 @@ export default function HammerRecall() {
           role: r.role === "assistant" ? "assistant" : "user",
           text: first?.text ?? "",
           sources: first?.sources,
+          coverage: first?.coverage,
+
         };
       });
       setMessages(ui);
