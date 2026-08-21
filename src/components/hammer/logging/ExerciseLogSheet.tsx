@@ -200,7 +200,45 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
         <div className="mt-4 space-y-4">
           {template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
 
-          <RoundGrid fields={template.fields} rounds={rounds} onChange={setRounds} />
+          {unilateral && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] leading-snug">
+              <span className="font-medium">One side at a time.</span> Every round is
+              tagged L or R so Hammer can track each limb on its own. Log side one,
+              then tap <span className="font-medium">Mirror</span> to copy it across.
+            </div>
+          )}
+
+          <RoundGrid
+            fields={template.fields}
+            rounds={rounds}
+            onChange={setRounds}
+            highlightMissingSide={hasSide}
+          />
+
+          {sideSummary && (sideSummary.L || sideSummary.R) && (
+            <div className="rounded-lg border bg-muted/30 p-2.5 text-[11px]">
+              <div className="flex items-center gap-3">
+                <span className="text-muted-foreground uppercase tracking-wide text-[10px]">This session</span>
+                <span>L · {sideSummary.L?.rounds ?? 0} round{(sideSummary.L?.rounds ?? 0) === 1 ? "" : "s"}</span>
+                <span>R · {sideSummary.R?.rounds ?? 0} round{(sideSummary.R?.rounds ?? 0) === 1 ? "" : "s"}</span>
+              </div>
+              {sideSummary.deltas.length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {sideSummary.deltas.map((d) => (
+                    <li key={d.key}>
+                      {d.label}: L {d.left}{d.unit} · R {d.right}{d.unit}
+                      {d.diffPct > 0 && (
+                        <span className="text-muted-foreground">
+                          {" "}— {d.weaker} side {d.diffPct}% behind
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
 
           {template.meta.rpe && (
             <div>
