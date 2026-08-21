@@ -39,6 +39,8 @@ import { BaserunLogger } from "./BaserunLogger";
 import { SubLogger } from "./SubLogger";
 import { PitchLogger } from "./PitchLogger";
 import { GameDocumentIngest } from "./GameDocumentIngest";
+import { DataIngestPanel } from "./DataIngestPanel";
+
 import { GameTotalsHeader } from "./GameTotalsHeader";
 import { GameDayMode } from "./GameDayMode";
 import { ActivePlanCard } from "./ActivePlanCard";
