@@ -362,6 +362,8 @@ const App = () => {
               <Route path="/weather" element={<Weather />} />
               <Route path="/subscribers" element={<Subscribers />} />
               <Route path="/players-club" element={<PlayersClub />} />
+              <Route path="/history" element={<History />} />
+
               <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/nutrition-hub" element={<NutritionHub />} />
               <Route path="/mind-fuel" element={<MindFuel />} />
