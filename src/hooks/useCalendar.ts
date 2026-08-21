@@ -724,7 +724,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               icon: PRACTICE_MODULE_ICONS[session.session_module] || Target,
               completed: session.status === 'completed' && session.scheduled_date === dateKey,
               link: `/practice?module=${session.session_module}&type=${session.session_type}&scheduled=${session.id}`,
-              editable: false,
+              editable: true,
               deletable: true,
               sport: session.sport,
             };
