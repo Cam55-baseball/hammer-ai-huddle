@@ -37,10 +37,10 @@ export async function fireGameVideoMoment(gameId: string, sport?: TagSport | nul
     const ownPitches = (pitches || []).filter((p: any) => p.perspective === 'self' || p.perspective === 'pitching');
 
     const candidates: Array<{ domain: SkillDomain; score: number; tags: string[]; label: string }> = [
-      { domain: 'hitting', score: hittingTags.length, tags: hittingTags, label: 'Your at-bats' },
-      { domain: 'fielding', score: defenseTags.length, tags: defenseTags, label: 'Your defense' },
-      { domain: 'base_running', score: runFails, tags: [], label: 'Your base running' },
-      { domain: 'pitching', score: ownPitches.length ? 1 : 0, tags: [], label: 'Your outing' },
+      { domain: 'hitting' as SkillDomain, score: hittingTags.length, tags: hittingTags, label: 'Your at-bats' },
+      { domain: 'fielding' as SkillDomain, score: defenseTags.length, tags: defenseTags, label: 'Your defense' },
+      { domain: 'base_running' as SkillDomain, score: runFails, tags: [], label: 'Your base running' },
+      { domain: 'pitching' as SkillDomain, score: ownPitches.length ? 1 : 0, tags: [], label: 'Your outing' },
     ].sort((a, b) => b.score - a.score);
 
     const top = candidates[0];
