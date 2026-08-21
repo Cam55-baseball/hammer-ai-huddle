@@ -6,7 +6,7 @@
  * gp_documents). Phases 2–7 layer richer drawers, AI ingest, dossiers,
  * report builder, and Hammer/Roadmap integration on top of this shell.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
@@ -344,7 +344,7 @@ function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
         .insert({
           user_id: user!.id,
           game_date: today,
-          sport: "baseball",
+          sport: athleteSport === "softball" ? "softball" : "baseball",
           status: "in_progress",
         })
         .select("id")
