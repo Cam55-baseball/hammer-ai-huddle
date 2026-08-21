@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     const formulaPhases = ((video as any).formula_phases || []) as string[];
     const formulaNotes = (video as any).formula_notes || '';
 
-    const userPrompt = `Title: ${video.title}\nDescription: ${video.description || ''}\nCoach's Notes to Hammer (primary intent): ${video.ai_description || ''}\nFormula Linkage Phases: ${formulaPhases.join(', ') || 'none'}\nFormula Linkage Notes: ${formulaNotes}\nSkill domains: ${(video.skill_domains || []).join(', ') || 'unknown'}\n\nVocabulary by layer:\nmovement_pattern: ${vocab.movement_pattern.join(', ')}\nresult: ${vocab.result.join(', ')}\ncontext: ${vocab.context.join(', ')}\ncorrection: ${vocab.correction.join(', ')}\n\nReturn proposed tags with confidence 0-1 and short reasoning per tag. Treat the coach's notes as the source of truth; the formula phases tell you which teaching checkpoints this video targets.`;
+    const userPrompt = `Title: ${video.title}\nDescription: ${video.description || ''}\nCoach's Notes to Hammer (primary intent): ${video.ai_description || ''}\nFormula Linkage Phases: ${formulaPhases.join(', ') || 'none'}\nFormula Linkage Notes: ${formulaNotes}\nSport: ${videoSports.join(", ") || "both"}\nSkill domains: ${(video.skill_domains || []).join(', ') || 'unknown'}\n\nVocabulary by layer:\nmovement_pattern: ${vocab.movement_pattern.join(', ')}\nresult: ${vocab.result.join(', ')}\ncontext: ${vocab.context.join(', ')}\ncorrection: ${vocab.correction.join(', ')}\n\nReturn proposed tags with confidence 0-1 and short reasoning per tag. Treat the coach's notes as the source of truth; the formula phases tell you which teaching checkpoints this video targets.`;
 
     const aiResult = await chatCompletion({
       model: 'google/gemini-2.5-flash',
