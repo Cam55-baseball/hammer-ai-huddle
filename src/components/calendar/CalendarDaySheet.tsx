@@ -39,6 +39,8 @@ import { CustomActivityBuilderDialog } from '@/components/custom-activities/Cust
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { DayStatusSelector } from './DayStatusSelector';
 import { DaySessionsList } from './DaySessionsList';
+import { DayRecordsList } from './DayRecordsList';
+
 import { RestDayScheduler } from './RestDayScheduler';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
