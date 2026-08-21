@@ -12,7 +12,7 @@ import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
 import { computeMissingFields, type MissingFieldKey } from "@/lib/videoReadiness";
 import { computeVideoConfidence, computeFoundationConfidence } from "@/lib/videoConfidence";
-import { getSmartDefaults } from "@/lib/ownerLearning";
+import { getSmartDefaults, getFoundationSmartDefaults, recordFoundationChoice } from "@/lib/ownerLearning";
 import {
   EMPTY_FOUNDATION_META,
   parseFoundationMeta,
