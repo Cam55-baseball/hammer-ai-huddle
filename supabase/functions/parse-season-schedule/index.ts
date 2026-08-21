@@ -19,7 +19,13 @@ const SYSTEM_PROMPT = `You convert free-form athlete/team schedules (typed text 
 Rules:
 - Output JSON only, via the provided tool. Never prose.
 - Expand multi-day ranges (e.g. "April 1-4 Final Bash Tournament") into ONE row per calendar day with kind "tournament_day".
-- Single-day games are kind "game". Practices "practice". Travel days "travel". Anything else "other".
+- Single-day games are kind "game". Travel days "travel". Anything else "other".
+- Practices must be classified precisely:
+  - "team_practice" — official team/club/school practice, scrimmage, batting practice with the team.
+  - "trainer_session" — private lesson, hitting/pitching lesson, personal trainer, academy session, 1-on-1.
+  - "solo_practice" — self-directed work: cage time, long toss, tee work, throwing on own, individual workout.
+  - "showcase" — showcase, camp, combine, tryout, prospect event.
+  If a practice cannot be classified, use "team_practice".
 - Dates must be YYYY-MM-DD. If the year is missing, infer using TODAY: prefer the soonest future occurrence; never invent past years.
 - Leave unknowns null. Do NOT hallucinate opponents, venues, or times.
 - confidence: "high" when date+title are unambiguous, "medium" when a field is inferred, "low" when ambiguous.
@@ -42,7 +48,17 @@ const TOOL_SCHEMA = {
             properties: {
               kind: {
                 type: "string",
-                enum: ["game", "tournament_day", "practice", "travel", "other"],
+                enum: [
+                  "game",
+                  "tournament_day",
+                  "team_practice",
+                  "trainer_session",
+                  "solo_practice",
+                  "showcase",
+                  "practice",
+                  "travel",
+                  "other",
+                ],
               },
               start_date: { type: "string", description: "YYYY-MM-DD" },
               end_date: { type: "string", description: "YYYY-MM-DD (== start_date for single day)" },

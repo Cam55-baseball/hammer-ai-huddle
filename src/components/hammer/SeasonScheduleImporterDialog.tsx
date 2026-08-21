@@ -193,7 +193,9 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
         toast.warning("Hammer couldn't find any events. Try cleaner text or a sharper photo.");
         return;
       }
-      setEvents(parsed);
+      // Legacy generic "practice" rows normalize to team practice so the
+      // taxonomy selector always has a matching option.
+      setEvents(parsed.map((e) => (e.kind === "practice" ? { ...e, kind: "team_practice" as const } : e)));
       setKeepRow(parsed.map(() => true));
       void logPasteImportPhase({ phase: "analyze-success", detail: { count: parsed.length } });
       toast.success(`Found ${parsed.length} event${parsed.length === 1 ? "" : "s"}. Review and confirm below.`);
@@ -384,7 +386,10 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                     >
                       <option value="game">Game</option>
                       <option value="tournament_day">Tournament day</option>
-                      <option value="practice">Practice</option>
+                      <option value="team_practice">Team practice</option>
+                      <option value="trainer_session">Trainer / lesson</option>
+                      <option value="solo_practice">Personal practice</option>
+                      <option value="showcase">Showcase / camp</option>
                       <option value="travel">Travel</option>
                       <option value="other">Other</option>
                     </select>

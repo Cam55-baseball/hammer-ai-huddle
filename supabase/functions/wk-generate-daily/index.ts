@@ -283,11 +283,13 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("game_date", planDate)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
         .limit(1),
+      // Practices: exact-date rows plus recurring weekly rows (filtered below).
       admin.from("scheduled_practice_sessions")
-        .select("id")
+        .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, title, start_time, status")
         .eq("user_id", user.id)
-        .eq("session_date", planDate)
-        .limit(1),
+        .neq("status", "cancelled")
+        .or(`scheduled_date.eq.${planDate},recurring_active.is.true`)
+        .limit(50),
       admin.from("athlete_side_preferences").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
@@ -314,7 +316,37 @@ const handler = async (req: Request): Promise<Response> => {
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
     const isGameDay = (gamesToday ?? []).length > 0;
-    const isPracticeDay = (practicesToday ?? []).length > 0;
+
+    // -------- Practice resolution (exact-date + recurring weekly) --------
+    const planDow = new Date(`${planDate}T12:00:00Z`).getUTCDay();
+    const practiceRows: any[] = (practicesToday ?? []).filter((r: any) => {
+      if (r.scheduled_date === planDate) return true;
+      return !!r.recurring_active
+        && Array.isArray(r.recurring_days)
+        && r.recurring_days.includes(planDow)
+        && (!r.scheduled_date || r.scheduled_date <= planDate);
+    });
+    // travel / other markers are not training practices — they drive recovery, not load.
+    const trainingPractices = practiceRows.filter(
+      (r: any) => !["travel", "other"].includes(String(r.practice_kind ?? "team")),
+    );
+    const isPracticeDay = trainingPractices.length > 0;
+    const isTravelDay = practiceRows.some((r: any) => String(r.practice_kind) === "travel");
+    // Highest-load practice on the day drives modulation.
+    const practiceKinds = trainingPractices.map((r: any) => String(r.practice_kind ?? "team"));
+    const practiceIntensity: "light" | "standard" | "heavy" =
+      trainingPractices.some((r: any) => r.intensity === "heavy")
+        ? "heavy"
+        : trainingPractices.some((r: any) => r.intensity === "standard")
+          ? "standard"
+          : trainingPractices.length > 0
+            ? "light"
+            : "standard";
+    // Team practice and showcases are inherently high-volume regardless of tag.
+    const isHeavyPracticeDay = isPracticeDay
+      && (practiceIntensity === "heavy"
+        || practiceKinds.includes("team")
+        || practiceKinds.includes("showcase"));
 
     // -------- Resolve phase quarter --------
     // Season data lives on athlete_mpi_settings (season_status + phase date
@@ -343,8 +375,8 @@ const handler = async (req: Request): Promise<Response> => {
       legacyPhase: phaseRes.phase,
       isGameDay,
       isPracticeDay,
-      isTournamentDay: false,
-      isTravelDay: false,
+      isTournamentDay: (gamesToday ?? []).some((g: any) => g.game_type === "tournament"),
+      isTravelDay,
       isRecoveryDay: false,
       isOffDay: false,
       isDeloadDay: false,
@@ -371,7 +403,7 @@ const handler = async (req: Request): Promise<Response> => {
       dailyLog,
       injuries: injuries ?? [],
       gamesToday: gamesToday ?? [],
-      practicesToday: practicesToday ?? [],
+      practicesToday: practiceRows,
       trainingAgeCtx: trainingAgeContext,
       sideOverride,
     });
@@ -420,6 +452,32 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
     }
+
+
+    // Practice-day modulation. Team practice / showcase days carry hidden
+    // volume the athlete never logs, so the lift day gets trimmed. Solo and
+    // light trainer work only trims overlap, not the whole session.
+    if (isHeavyPracticeDay && !isGameDay) {
+      cnsCap = Math.max(1, cnsCap - 1);
+      reductions.push({
+        reason: "practice_load",
+        detail: `${practiceKinds.includes("showcase") ? "Showcase" : "Team practice"} on the books today — CNS cap pulled back so the lift doesn't stack on top of practice volume.`,
+      });
+    } else if (isPracticeDay && !isGameDay && practiceIntensity !== "light") {
+      reductions.push({
+        reason: "practice_load",
+        detail: "Practice scheduled today — skill volume trimmed to avoid duplicating what practice already covers.",
+      });
+    }
+    if (isTravelDay && !isGameDay) {
+      cnsCap = Math.max(1, cnsCap - 1);
+      reductions.push({
+        reason: "travel",
+        detail: "Travel day — session shifts toward mobility and low-cost work.",
+      });
+    }
+
+
 
     // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
     const adaptationDecision: AdaptationDecision = selectAdaptation({
@@ -1519,7 +1577,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Independent certifiers. Each resolves its own template from the same
     // constitutional context, stamps governance metadata onto the matching
     // rows, and blocks publication on fatal issues.
-    const isPracticeDayCtx = (trainingContext as any)?.day_type === "practice";
+    const isPracticeDayCtx = String((trainingContext as any)?.day_type ?? "").startsWith("practice");
     const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
     const availableEquipmentCtx = (athleteContext as any)?.environment?.equipment ?? undefined;
 
@@ -2404,6 +2462,10 @@ const handler = async (req: Request): Promise<Response> => {
       generator_version: WIC_VERSION,
       game_day: isGameDay,
       practice_day: isPracticeDay,
+      practice_kinds: practiceKinds,
+      practice_intensity: practiceIntensity,
+      heavy_practice_day: isHeavyPracticeDay,
+      travel_day: isTravelDay,
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,

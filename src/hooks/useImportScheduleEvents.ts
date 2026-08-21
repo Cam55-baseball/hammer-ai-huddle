@@ -15,7 +15,28 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-export type ParsedKind = "game" | "tournament_day" | "practice" | "travel" | "other";
+export type ParsedKind =
+  | "game"
+  | "tournament_day"
+  | "practice"
+  | "team_practice"
+  | "trainer_session"
+  | "solo_practice"
+  | "showcase"
+  | "travel"
+  | "other";
+
+/** Maps a parsed kind onto the canonical practice taxonomy. */
+export function toPracticeKind(kind: ParsedKind): string {
+  switch (kind) {
+    case "trainer_session": return "trainer";
+    case "solo_practice": return "solo";
+    case "showcase": return "showcase";
+    case "travel": return "travel";
+    case "other": return "other";
+    default: return "team";
+  }
+}
 
 export interface ParsedScheduleEvent {
   kind: ParsedKind;
@@ -133,9 +154,8 @@ export function useImportScheduleEvents() {
             continue;
           }
           dupSessions.add(key);
-          const module_ =
-            ev.kind === "practice" ? "practice" :
-            ev.kind === "travel" ? "note" : "note";
+          const practiceKind = toPracticeKind(ev.kind);
+          const module_ = practiceKind === "travel" || practiceKind === "other" ? "note" : "practice";
           sessionRows.push({
             user_id: uid,
             created_by: uid,
@@ -149,7 +169,9 @@ export function useImportScheduleEvents() {
             ].filter(Boolean).join("\n"),
             scheduled_date: day,
             start_time: ev.time_local ?? null,
-            sport: "baseball",
+            sport: defaultSport,
+            practice_kind: practiceKind,
+            intensity: practiceKind === "team" || practiceKind === "showcase" ? "heavy" : "standard",
             status: "scheduled",
           });
         }
