@@ -19,6 +19,7 @@ import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SideContextProvider } from "@/contexts/SideContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
+import { VideoMomentHost } from "@/components/video-suggestions/VideoMomentHost";
 import { QuickEditProfileProvider } from "./components/profile/QuickEditProfile";
 import { RequireCapability } from "./lib/auth/governance/requireRole";
 // Preloaded lazy imports — triggers fetch at boot, not on navigation
@@ -240,6 +241,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <PWAUpdatePrompt />
+          <VideoMomentHost />
           <BrowserRouter>
             <QuickEditProfileProvider>
             <Suspense fallback={<PageLoadingSkeleton />}>
