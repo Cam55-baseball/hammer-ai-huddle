@@ -395,7 +395,17 @@ export function matchesUnilateralSlug(slug: string | null | undefined): boolean 
  */
 export function isUnilateralRx(rx: WkRx, catalogUnilateral: ReadonlySet<string> | null): boolean {
   const slug = (rx.movement_slug ?? "").toLowerCase();
+  // 1 — the generator's stamp, taken straight from the catalog at plan time.
+  const stamped = (rx.why_payload as Record<string, unknown> | null)?.laterality;
+  if (stamped === "unilateral") return true;
+  // A swap can replace the movement after the stamp was written, so a
+  // "bilateral" stamp is only trusted when the slug still matches the plan.
+  const swapped = (rx.why_payload as Record<string, any> | null)?.athlete_substitution;
+  const stampStillValid = !swapped || swapped.to_slug === rx.movement_slug ? false : true;
+  // 2 — live catalog flag (also covers swapped-in movements).
   if (catalogUnilateral?.has(slug)) return true;
+  if (stamped === "bilateral" && catalogUnilateral && !stampStillValid) return false;
+  // 3 — slug fallback for rows generated before the stamp existed.
   return matchesUnilateralSlug(slug);
 }
 
