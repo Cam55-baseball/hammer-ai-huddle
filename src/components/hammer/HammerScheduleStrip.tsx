@@ -10,13 +10,14 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, CalendarPlus, ListChecks, MessageSquarePlus, Settings2 } from "lucide-react";
+import { CalendarClock, CalendarPlus, Dumbbell, ListChecks, MessageSquarePlus, Settings2 } from "lucide-react";
 import { useGameDayContext } from "@/hooks/useGameDayContext";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { TellHammerDialog } from "@/components/hammer/TellHammerDialog";
 import { SeasonScheduleImporterDialog } from "@/components/hammer/SeasonScheduleImporterDialog";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { ManageEventsDialog } from "@/components/hammer/ManageEventsDialog";
+import { AddPracticeDialog } from "@/components/hammer/AddPracticeDialog";
 
 const PHASE_TONE: Record<string, string> = {
   preseason: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
@@ -32,6 +33,7 @@ export function HammerScheduleStrip() {
   const [importerOpen, setImporterOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
+  const [practiceOpen, setPracticeOpen] = useState(false);
 
   if (ctx.loading) return null;
 
@@ -88,6 +90,15 @@ export function HammerScheduleStrip() {
               size="sm"
               variant="outline"
               className="h-7 text-[11px] gap-1"
+              onClick={() => setPracticeOpen(true)}
+            >
+              <Dumbbell className="h-3 w-3" />
+              Add practice
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] gap-1"
               onClick={() => setSeasonDatesOpen(true)}
             >
               <Settings2 className="h-3 w-3" />
@@ -118,6 +129,7 @@ export function HammerScheduleStrip() {
       <SeasonScheduleImporterDialog open={importerOpen} onOpenChange={setImporterOpen} />
       <SeasonDatesDialog open={seasonDatesOpen} onOpenChange={setSeasonDatesOpen} />
       <ManageEventsDialog open={manageOpen} onOpenChange={setManageOpen} />
+      <AddPracticeDialog open={practiceOpen} onOpenChange={setPracticeOpen} />
     </>
   );
 }
