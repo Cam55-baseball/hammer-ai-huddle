@@ -842,8 +842,10 @@ export function CalendarDaySheet({
                   <>
                     <Separator />
                     <DaySessionsList date={format(date, 'yyyy-MM-dd')} />
+                    <DayRecordsList date={format(date, 'yyyy-MM-dd')} />
                   </>
                 )}
+
 
                 {/* Skipped Section - shown when not in reorder mode */}
                 {!isReorderMode && skippedEvents.length > 0 && (
