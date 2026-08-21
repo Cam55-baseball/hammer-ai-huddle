@@ -385,8 +385,16 @@ export const pickTemplate = resolveTemplate;
 const UNILATERAL_SLUG_RE =
   /(single_?leg|single_?arm|sl_|_sl_|_sl$|1_?arm|1_?leg|one_?arm|one_?leg|\bsa_|split_squat|split_stance|lunge|step_?up|stepup|bulgarian|rfess|rfe_|pistol|shrimp|cossack|suitcase|waiter|pallof|paloff|chop|copenhagen|side_plank|skater|half_kneel|hk_|staggered|bird_dog|dead_?bug|turkish|get_?up|cars$|_cars)/;
 
+/**
+ * Axial / whole-body work that the pattern above would otherwise catch.
+ * Spine and full-body CARs are one articular rotation, not a left and a right.
+ */
+const AXIAL_SLUG_RE = /(full_?body|spine|spinal|neck|cervical|thoracic|lumbar|sacral|global)/;
+
 export function matchesUnilateralSlug(slug: string | null | undefined): boolean {
-  return UNILATERAL_SLUG_RE.test((slug ?? "").toLowerCase());
+  const s = (slug ?? "").toLowerCase();
+  if (AXIAL_SLUG_RE.test(s)) return false;
+  return UNILATERAL_SLUG_RE.test(s);
 }
 
 /**
