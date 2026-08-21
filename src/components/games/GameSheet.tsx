@@ -239,9 +239,11 @@ function GameSheetTabs({
       <TabsContent value="subs" className="pt-4">
         <SubLogger gameId={gameId} />
       </TabsContent>
-      <TabsContent value="import" className="pt-4">
+      <TabsContent value="import" className="pt-4 space-y-4">
+        <DataIngestPanel gameId={gameId} sport={g.sport} />
         <GameDocumentIngest gameId={gameId} sport={g.sport} />
       </TabsContent>
+
       <TabsContent value="notes" className="pt-4 space-y-3">
         <Label>Philosophy — pre-game</Label>
         <Textarea
