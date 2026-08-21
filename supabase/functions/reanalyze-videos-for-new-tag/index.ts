@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     // Load the new tag
     const { data: newTag, error: tagErr } = await admin
       .from('video_tag_taxonomy')
-      .select('id, layer, key, label, skill_domain, description')
+      .select('id, layer, key, label, skill_domain, description, sport, position_scope')
       .eq('id', tagId)
       .single();
     if (tagErr || !newTag) {
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     // Full active vocabulary for context
     const { data: taxonomy } = await admin
       .from('video_tag_taxonomy')
-      .select('id, layer, key, label, skill_domain')
+      .select('id, layer, key, label, skill_domain, sport')
       .eq('active', true);
 
     const vocabByLayer: Record<string, { key: string; label: string }[]> = {
