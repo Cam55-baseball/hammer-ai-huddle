@@ -60,18 +60,21 @@ export function TaxonomyManager() {
 
 
   const { data: tags = [] } = useQuery({
-    queryKey: ['taxonomy-admin', layer, domain],
+    queryKey: ['taxonomy-admin', layer, domain, sport],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      let q = (supabase as any)
         .from('video_tag_taxonomy')
         .select('*')
         .eq('layer', layer)
-        .eq('skill_domain', domain)
-        .order('label');
+        .eq('skill_domain', domain);
+      // 'both' = show everything; a specific sport shows its own tags + shared tags.
+      if (sport !== 'both') q = q.in('sport', [sport, 'both']);
+      const { data, error } = await q.order('label');
       if (error) throw error;
       return data || [];
     },
   });
+
 
   const triggerHammerReanalysis = async (tagId: string) => {
     try {
