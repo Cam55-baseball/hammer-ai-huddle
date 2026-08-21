@@ -165,6 +165,8 @@ export default function History() {
         </div>
 
         <div className="space-y-3">
+          <StandardsBoard />
+
           <HistorySection
             title="Practice sessions"
             icon={<Dumbbell className="h-4 w-4 text-primary" />}
