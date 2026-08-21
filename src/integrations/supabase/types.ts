@@ -15072,6 +15072,57 @@ export type Database = {
           },
         ]
       }
+      wk_standard_awards: {
+        Row: {
+          bodyweight_lbs: number | null
+          created_at: string
+          evidence: Json
+          family: string
+          id: string
+          movement_slug: string | null
+          plan_date: string | null
+          standard_id: string
+          target_value: number | null
+          tier: string
+          unit: string | null
+          user_id: string
+          value_achieved: number | null
+          verification: string
+        }
+        Insert: {
+          bodyweight_lbs?: number | null
+          created_at?: string
+          evidence?: Json
+          family: string
+          id?: string
+          movement_slug?: string | null
+          plan_date?: string | null
+          standard_id: string
+          target_value?: number | null
+          tier: string
+          unit?: string | null
+          user_id: string
+          value_achieved?: number | null
+          verification?: string
+        }
+        Update: {
+          bodyweight_lbs?: number | null
+          created_at?: string
+          evidence?: Json
+          family?: string
+          id?: string
+          movement_slug?: string | null
+          plan_date?: string | null
+          standard_id?: string
+          target_value?: number | null
+          tier?: string
+          unit?: string | null
+          user_id?: string
+          value_achieved?: number | null
+          verification?: string
+        }
+        Relationships: []
+      }
       workout_blocks: {
         Row: {
           block_type: string
