@@ -385,6 +385,8 @@ const App = () => {
               <Route path="/games" element={<Games />} />
               <Route path="/games/dossiers" element={<Dossiers />} />
               <Route path="/games/reports" element={<GameReports />} />
+              <Route path="/games/:gameId/report" element={<GameReportView />} />
+              <Route path="/r/:token" element={<SharedReport />} />
               <Route path="/admin/periodization" element={<AdminPeriodization />} />
               <Route path="/game-scoring" element={<Navigate to="/games" replace />} />
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
