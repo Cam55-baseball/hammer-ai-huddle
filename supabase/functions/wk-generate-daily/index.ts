@@ -450,8 +450,32 @@ const handler = async (req: Request): Promise<Response> => {
           reason: "learning_loop",
           detail: `Recent recovery ack (${recentAck.reduction_reason ?? "mixed"}) — holding CNS cap conservative for one more day.`,
         });
-      }
     }
+
+    // Practice-day modulation. Team practice / showcase days carry hidden
+    // volume the athlete never logs, so the lift day gets trimmed. Solo and
+    // light trainer work only trims overlap, not the whole session.
+    if (isHeavyPracticeDay && !isGameDay) {
+      cnsCap = Math.max(1, cnsCap - 1);
+      reductions.push({
+        reason: "practice_load",
+        detail: `${practiceKinds.includes("showcase") ? "Showcase" : "Team practice"} on the books today — CNS cap pulled back so the lift doesn't stack on top of practice volume.`,
+      });
+    } else if (isPracticeDay && !isGameDay && practiceIntensity !== "light") {
+      reductions.push({
+        reason: "practice_load",
+        detail: "Practice scheduled today — skill volume trimmed to avoid duplicating what practice already covers.",
+      });
+    }
+    if (isTravelDay && !isGameDay) {
+      cnsCap = Math.max(1, cnsCap - 1);
+      reductions.push({
+        reason: "travel",
+        detail: "Travel day — session shifts toward mobility and low-cost work.",
+      });
+    }
+
+
 
     // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
     const adaptationDecision: AdaptationDecision = selectAdaptation({
