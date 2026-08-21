@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { resolvePositionGroups } from '@/lib/hammer/positions/positionGroups';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+
 import {
   recommendVideos,
   type SuggestionMode,
@@ -32,11 +35,19 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { sport: themeSport } = useSportTheme();
+  const { profile } = useUserProfile();
   const sport: TagSport = (params.sport ?? (themeSport as TagSport)) ?? 'both';
-  const positions = params.positions ?? null;
+  // Default the position gate to the athlete's own positions so every caller is
+  // scoped (a catcher never receives outfield-only cues) without opting in.
+  const positions = useMemo(() => {
+    if (params.positions !== undefined) return params.positions;
+    const groups = resolvePositionGroups(profile?.position);
+    return groups.length ? groups : null;
+  }, [params.positions, profile?.position]);
   const scope = { sport, positions };
   const { data: taxonomy = [] } = useVideoTaxonomy(params.skillDomain, scope);
   const { data: rules = [] } = useVideoTagRules(params.skillDomain, scope);
+
 
 
   // Cross-tab invalidation on rep/session save

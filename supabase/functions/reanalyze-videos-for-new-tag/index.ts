@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     // Load the new tag
     const { data: newTag, error: tagErr } = await admin
       .from('video_tag_taxonomy')
-      .select('id, layer, key, label, skill_domain, description')
+      .select('id, layer, key, label, skill_domain, description, sport, position_scope')
       .eq('id', tagId)
       .single();
     if (tagErr || !newTag) {
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     // Full active vocabulary for context
     const { data: taxonomy } = await admin
       .from('video_tag_taxonomy')
-      .select('id, layer, key, label, skill_domain')
+      .select('id, layer, key, label, skill_domain, sport')
       .eq('active', true);
 
     const vocabByLayer: Record<string, { key: string; label: string }[]> = {
@@ -95,17 +95,24 @@ Deno.serve(async (req) => {
     // Candidate videos: same skill domain, not blocked, with usable description
     const { data: videos } = await admin
       .from('library_videos')
-      .select('id, title, description, ai_description, skill_domains, distribution_tier')
+      .select('id, title, description, ai_description, skill_domains, sport, distribution_tier')
       .contains('skill_domains', [newTag.skill_domain])
       .neq('distribution_tier', 'blocked')
       .order('created_at', { ascending: false })
       .limit(MAX_VIDEOS_PER_RUN);
 
-    const candidates = (videos || []).filter((v: any) =>
-      (v.ai_description && v.ai_description.trim().length > 0) ||
-      (v.description && v.description.trim().length > 0) ||
-      (v.title && v.title.trim().length > 0)
-    );
+    // A sport-scoped tag may only be backfilled onto videos of that sport
+    // (or sport-agnostic videos). Softball never inherits overhand tags.
+    const newTagSport = (newTag as any).sport ?? 'both';
+
+    const candidates = (videos || []).filter((v: any) => {
+      const vSports: string[] = v.sport || [];
+      if (newTagSport !== 'both' && vSports.length > 0 && !vSports.includes(newTagSport)) return false;
+      return (v.ai_description && v.ai_description.trim().length > 0) ||
+        (v.description && v.description.trim().length > 0) ||
+        (v.title && v.title.trim().length > 0);
+    });
+
 
     if (candidates.length === 0) {
       return new Response(JSON.stringify({ ok: true, analyzed: 0, proposals_inserted: 0 }), {
