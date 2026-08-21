@@ -37,13 +37,16 @@ export async function buildNowBlock(db: Db, userId: string, now: Date): Promise<
     safe(
       () =>
         db
-          .from("profiles")
-          .select("sport,primary_position,position,competition_level,throwing_hand,batting_side,season_phase")
-          .eq("id", userId)
+          .from("athlete_context")
+          .select(
+            "sport_primary,position_primary,position_secondary,competition_level,competition_age_group,season_phase,throws_hand,bats_hand,goal_summary,category_goals,injury_history",
+          )
+          .eq("user_id", userId)
           .maybeSingle()
           .then((r: any) => r.data),
       null as any,
     ),
+
     safe(
       () =>
         db
