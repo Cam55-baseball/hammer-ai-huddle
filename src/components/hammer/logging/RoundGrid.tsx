@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, FlipHorizontal } from "lucide-react";
 import type { RoundField } from "./logTemplates";
 
 export type Round = Record<string, string>;
@@ -11,12 +11,23 @@ interface Props {
   onChange: (rounds: Round[]) => void;
   minRounds?: number;
   maxRounds?: number;
+  /** Flag rounds missing a side (unilateral movements). */
+  highlightMissingSide?: boolean;
 }
 
 const QUALITY_SCALE = [1, 2, 3, 4, 5] as const;
 const SIDES = ["L", "R"] as const;
 
-export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds = 20 }: Props) {
+export function RoundGrid({
+  rounds,
+  fields,
+  onChange,
+  minRounds = 1,
+  maxRounds = 24,
+  highlightMissingSide = false,
+}: Props) {
+  const hasSide = fields.some((f) => f.kind === "side");
+
   const setCell = (idx: number, key: string, value: string) => {
     const next = rounds.map((r, i) => (i === idx ? { ...r, [key]: value } : r));
     onChange(next);
@@ -25,13 +36,27 @@ export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds =
   const addRound = () => {
     if (rounds.length >= maxRounds) return;
     const last = rounds[rounds.length - 1] ?? {};
-    onChange([...rounds, { ...last }]);
+    const next = { ...last };
+    if (hasSide) next.side = last.side === "L" ? "R" : "L";
+    onChange([...rounds, next]);
   };
 
   const removeRound = () => {
     if (rounds.length <= minRounds) return;
     onChange(rounds.slice(0, -1));
   };
+
+  /** Copy every logged round to the opposite side — one tap for side two. */
+  const mirrorSides = () => {
+    const sided = rounds.filter((r) => r.side === "L" || r.side === "R");
+    if (!sided.length) return;
+    const from = sided[0].side;
+    const source = sided.filter((r) => r.side === from);
+    const target = from === "L" ? "R" : "L";
+    const mirrored = source.map((r) => ({ ...r, side: target }));
+    onChange([...rounds.filter((r) => r.side === from), ...mirrored].slice(0, maxRounds));
+  };
+
 
   return (
     <div className="space-y-2">
