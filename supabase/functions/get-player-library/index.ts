@@ -97,41 +97,8 @@ Deno.serve(async (req) => {
       throw videoError;
     }
 
-    // --- Practice sessions query (legacy only; soft-fail so videos always return) ---
-    const { data: practiceData, error: practiceError } = await supabase
-      .from('performance_sessions')
-      .select('id, user_id, sport, session_type, session_date, module, drill_blocks, notes, composite_indexes, coach_grade, created_at, season_context, legacy_in_players_club')
-      .eq('user_id', targetUserId)
-      .eq('legacy_in_players_club', true)
-      .is('deleted_at', null)
-      .order('session_date', { ascending: false });
-
-    if (practiceError) {
-      console.error('[get-player-library] Practice error (non-fatal):', practiceError);
-    }
-
-    // --- Completed games query (gp_games is the canonical games table; soft-fail) ---
-    const { data: gameData, error: gameError } = await supabase
-      .from('gp_games')
-      .select('id, user_id, sport, opponent_team, game_type, game_date, venue, game_summary, status, home_away, my_score, opp_score, created_at')
-      .eq('user_id', targetUserId)
-      .eq('status', 'completed')
-      .order('game_date', { ascending: false });
-
-    if (gameError) {
-      console.error('[get-player-library] Game error (non-fatal):', gameError);
-    }
-
     // Tag sources
     let videoResults = (videoData || []).map(v => ({ ...v, source: 'video' }));
-    const practiceResults = (practiceData || []).map(p => ({ ...p, source: 'practice' }));
-    const gameResults = (gameData || []).map((g: Record<string, unknown>) => ({
-      ...g,
-      // Back-compat aliases for existing Players Club card mapping.
-      opponent_name: g.opponent_team,
-      team_name: null,
-      source: 'game',
-    }));
     // For scouts viewing other players, filter out private video data
     if (isScout && !isOwner && playerId && playerId !== user.id) {
       videoResults = videoResults.map(session => {
@@ -144,9 +111,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const responseData = { videos: videoResults, practices: practiceResults, games: gameResults };
+    // Players Club is video-only. Practices, games, reports and recaps live in
+    // History (/history) and on the Calendar day view.
+    const responseData = { videos: videoResults, practices: [], games: [] };
 
-    console.log('[get-player-library] Success:', { videos: videoResults.length, practices: practiceResults.length, games: gameResults.length });
+    console.log('[get-player-library] Success:', { videos: videoResults.length });
 
     return new Response(
       JSON.stringify(responseData),
