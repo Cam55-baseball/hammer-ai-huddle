@@ -80,7 +80,11 @@ export function WkPrescriptionCard({
 }) {
   const [open, setOpen] = useState(false);
   const [swapOpen, setSwapOpen] = useState(false);
-  const swapAvailable = allowSwap && ladderSlugs(readLadder(rx)).length > 0;
+  // Availability is resolved against the certified ladder (or, for rows that
+  // predate substitution families, the identical catalog-derived ladder).
+  const swapLadder = useSwapLadder(allowSwap ? rx : null, allowSwap);
+  const swapAvailable = allowSwap && swapLadder.hasOptions;
+
   const { user } = useAuth();
   const qc = useQueryClient();
   const tasks = useHammerDailyTasks(rx.plan_date);
