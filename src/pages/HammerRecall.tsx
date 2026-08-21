@@ -12,16 +12,21 @@ import { toast } from "sonner";
 
 type Source = {
   source: string;
+  key?: string;
   id: string;
   date: string;
   text: string;
+  href?: string;
 };
+
+type Coverage = { label: string; count: number };
 
 type UIMessage = {
   id: string;
   role: "user" | "assistant";
   text: string;
   sources?: Source[];
+  coverage?: Coverage[];
 };
 
 type Thread = {
@@ -31,11 +36,14 @@ type Thread = {
 };
 
 const QUICK_STARTS = [
-  "What did I write when I was hitting well?",
-  "Between 6/10/26 and 6/18/26 — how was I feeling?",
-  "What have my sleep and CNS looked like the last 14 days?",
+  "What's on my plan right now, and what have I already finished today?",
+  "How did my last game go, and what did I write about it?",
+  "What have my day logs and CNS looked like the last 14 days?",
+  "What did I write the last time I was hitting well?",
+  "What video work have I logged lately?",
   "I feel off today. Help me reset.",
 ];
+
 
 export default function HammerRecall() {
   const { user } = useAuthContext();
