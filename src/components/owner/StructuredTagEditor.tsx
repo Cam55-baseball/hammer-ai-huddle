@@ -38,13 +38,30 @@ export interface StructuredTagState {
 interface Props {
   value: StructuredTagState;
   onChange: (next: StructuredTagState) => void;
+  /** Sports the video was filmed for, e.g. ['baseball'] — hides the other sport's tags. */
+  sports?: string[];
 }
 
-export function StructuredTagEditor({ value, onChange }: Props) {
+export function StructuredTagEditor({ value, onChange, sports }: Props) {
   const primaryDomain = value.skillDomains[0];
-  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
+  const [positionFocus, setPositionFocus] = useState<PositionGroup[]>([]);
+
+  // Sport scope: a single-sport video only sees that sport's tags + shared tags.
+  const sportScope: TagSport = useMemo(() => {
+    const s = (sports ?? []).filter(Boolean);
+    if (s.length !== 1) return 'both';
+    return s[0] === 'softball' ? 'softball' : s[0] === 'baseball' ? 'baseball' : 'both';
+  }, [sports]);
+
+  const showPositionFocus = !!primaryDomain && POSITION_SCOPED_DOMAINS.includes(primaryDomain);
+
+  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain, {
+    sport: sportScope,
+    positions: showPositionFocus && positionFocus.length ? positionFocus : null,
+  });
 
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
+
 
   const toggleDomain = (d: SkillDomain) => {
     const next = value.skillDomains.includes(d)
