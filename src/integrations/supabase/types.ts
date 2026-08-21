@@ -9706,11 +9706,14 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
+          duration_minutes: number | null
           end_time: string | null
           id: string
+          intensity: string
           opponent_level: string | null
           opponent_name: string | null
           organization_id: string | null
+          practice_kind: string
           recurring_active: boolean | null
           recurring_days: number[] | null
           requires_approval: boolean | null
@@ -9732,11 +9735,14 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description?: string | null
+          duration_minutes?: number | null
           end_time?: string | null
           id?: string
+          intensity?: string
           opponent_level?: string | null
           opponent_name?: string | null
           organization_id?: string | null
+          practice_kind?: string
           recurring_active?: boolean | null
           recurring_days?: number[] | null
           requires_approval?: boolean | null
@@ -9758,11 +9764,14 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string | null
+          duration_minutes?: number | null
           end_time?: string | null
           id?: string
+          intensity?: string
           opponent_level?: string | null
           opponent_name?: string | null
           organization_id?: string | null
+          practice_kind?: string
           recurring_active?: boolean | null
           recurring_days?: number[] | null
           requires_approval?: boolean | null
