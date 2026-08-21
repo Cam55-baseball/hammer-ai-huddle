@@ -400,7 +400,18 @@ export function VideoFastEditor({
       if (!isFoundation) {
         const okAssign = await syncTagAssignments(video.id, assignments);
         if (!okAssign) return;
+      } else {
+        // Foundation learning feeds the foundation Smart Defaults button.
+        try {
+          recordFoundationChoice({
+            domain: foundationMeta.domain,
+            scope: foundationMeta.scope,
+            audiences: foundationMeta.audience_levels ?? [],
+            triggers: foundationMeta.refresher_triggers ?? [],
+          });
+        } catch { /* learning is non-critical */ }
       }
+
       toast({ title: 'Saved', description: `Confidence ${conf.score} · ${conf.tier}` });
       onSuccess();
     } finally {
