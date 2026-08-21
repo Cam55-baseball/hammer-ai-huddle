@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { resolvePositionGroups } from '@/lib/hammer/positions/positionGroups';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+
 import {
   recommendVideos,
   type SuggestionMode,
