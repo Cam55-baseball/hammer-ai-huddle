@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useSportTheme } from "@/contexts/SportThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -418,8 +419,12 @@ function NewGameDialog({
   onSubmit: (v: { date: string; sport: string; opponent: string }) => void;
   pending: boolean;
 }) {
+  const { sport: athleteSport } = useSportTheme();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [sport, setSport] = useState("baseball");
+  const [sport, setSport] = useState(athleteSport === "softball" ? "softball" : "baseball");
+  useEffect(() => {
+    if (open) setSport(athleteSport === "softball" ? "softball" : "baseball");
+  }, [open, athleteSport]);
   const [opponent, setOpponent] = useState("");
 
   return (
