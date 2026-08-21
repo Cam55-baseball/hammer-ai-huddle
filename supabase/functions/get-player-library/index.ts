@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     const isScout = !!scoutRole;
 
-    const targetUserId = playerId || user.id;
+    // (video-only library; targetUserId retained implicitly by the video query below)
 
     // --- Video sessions query ---
     let videoQuery = supabase
