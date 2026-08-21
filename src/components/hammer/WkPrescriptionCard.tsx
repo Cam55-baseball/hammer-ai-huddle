@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ShieldCheck, CheckCircle2, Info } from "lucide-react";
+import { ChevronDown, ShieldCheck, CheckCircle2, Info, Repeat2 } from "lucide-react";
+import { LiftSwapSheet, LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
+import { readLadder, ladderSlugs } from "@/hooks/useLiftSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -67,14 +69,18 @@ export function WkPrescriptionCard({
   phaseKey,
   generating,
   side = null,
+  allowSwap = false,
 }: {
   rx: WkRx;
   phaseDisplay?: string | null;
   phaseKey?: string | null;
   generating?: boolean;
   side?: "L" | "R" | null;
+  allowSwap?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const swapAvailable = allowSwap && ladderSlugs(readLadder(rx)).length > 0;
   const { user } = useAuth();
   const qc = useQueryClient();
   const tasks = useHammerDailyTasks(rx.plan_date);
@@ -261,7 +267,7 @@ export function WkPrescriptionCard({
             <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
               {SLOT_LABEL[rx.slot]}
             </Badge>
-            {rx.substituted_from_slug && (
+            {rx.substituted_from_slug && !allowSwap && (
               <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/50 text-rose-700 dark:text-rose-300">
                 <ShieldCheck className="h-3 w-3" /> Injury-swap
               </Badge>
@@ -274,8 +280,24 @@ export function WkPrescriptionCard({
           </div>
           <div className="flex items-start justify-between gap-2">
             <div className="text-xs text-muted-foreground break-words flex-1 min-w-0">{dosage}</div>
-            <LogButton rx={rx} dosageText={dosage} compact />
+            <div className="flex items-center gap-1 shrink-0">
+              {swapAvailable && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] gap-1"
+                  onClick={() => setSwapOpen(true)}
+                >
+                  <Repeat2 className="h-3 w-3" /> Swap
+                </Button>
+              )}
+              <LogButton rx={rx} dosageText={dosage} compact />
+            </div>
           </div>
+          {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
+          {swapAvailable && (
+            <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
+          )}
 
           {(() => {
             const hasWhy = athleteWhy || todayLine;
