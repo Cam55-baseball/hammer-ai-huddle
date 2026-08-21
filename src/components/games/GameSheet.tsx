@@ -234,7 +234,7 @@ function GameSheetTabs({
         <DefenseLogger gameId={gameId} />
       </TabsContent>
       <TabsContent value="baserun" className="pt-4">
-        <BaserunLogger gameId={gameId} sport={sport} />
+        <BaserunLogger gameId={gameId} sport={g.sport} />
       </TabsContent>
       <TabsContent value="subs" className="pt-4">
         <SubLogger gameId={gameId} />
