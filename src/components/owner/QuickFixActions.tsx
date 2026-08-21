@@ -1,42 +1,50 @@
 import { Wand2, ListChecks, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { VideoReadiness } from "@/hooks/useVideoReadiness";
+import { MISSING_LABEL } from "@/hooks/useVideoReadiness";
 
 export type QuickFixIntent = 'smart_defaults' | 'auto_suggest' | 'complete_missing';
 
 interface Props {
   readiness?: VideoReadiness;
+  /** 'foundation' videos skip per-rep taxonomy — their quick-fix set differs. */
+  videoClass?: 'application' | 'foundation';
   onAction: (intent: QuickFixIntent, focusField?: string) => void;
 }
 
 /**
- * Phase 6 — "Fix in One Click" actions.
- * Every button OPENS the Fast Editor. Nothing auto-saves. Owner Authority intact.
+ * "Fix in One Click" actions.
+ * Every button OPENS the Fast Editor with a concrete, visible effect.
+ * Nothing auto-saves — Owner Authority intact.
  */
-export function QuickFixActions({ readiness, onAction }: Props) {
+export function QuickFixActions({ readiness, videoClass = 'application', onAction }: Props) {
   if (!readiness || readiness.is_ready) return null;
 
-  // First missing field becomes the focus target for "Complete Missing".
-  const firstMissing = readiness.missing_fields[0];
+  const missing = readiness.missing_fields ?? [];
+  const firstMissing = missing[0];
+  const isFoundation = videoClass === 'foundation';
+  const missingLabels = missing.map(k => MISSING_LABEL[k] ?? k).join(', ');
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-amber-500/20">
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-7 text-[10px] gap-1"
-        onClick={(e) => { e.stopPropagation(); onAction('smart_defaults'); }}
-        title="Pre-fill format/domain with your most-used choices (you still review and save)"
-      >
-        <Sparkles className="h-3 w-3" />
-        Smart Defaults
-      </Button>
+    <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-amber-500/20">
+      {!isFoundation && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-[10px] gap-1"
+          onClick={(e) => { e.stopPropagation(); onAction('smart_defaults'); }}
+          title="Pre-fill format/skill with your most-used choices (you still review and save)"
+        >
+          <Sparkles className="h-3 w-3" />
+          Smart Defaults
+        </Button>
+      )}
       <Button
         size="sm"
         variant="outline"
         className="h-7 text-[10px] gap-1"
         onClick={(e) => { e.stopPropagation(); onAction('auto_suggest'); }}
-        title="Run Hammer suggestions on description and review (nothing applied without click)"
+        title="Draft the description if needed, run Hammer, then review each suggestion inline"
       >
         <Wand2 className="h-3 w-3" />
         Auto-Suggest + Review
@@ -46,10 +54,10 @@ export function QuickFixActions({ readiness, onAction }: Props) {
         variant="outline"
         className="h-7 text-[10px] gap-1"
         onClick={(e) => { e.stopPropagation(); onAction('complete_missing', firstMissing); }}
-        title={`Open editor focused on the first missing field${firstMissing ? `: ${firstMissing}` : ''}`}
+        title={`Walk the missing fields one at a time${missingLabels ? `: ${missingLabels}` : ''}`}
       >
         <ListChecks className="h-3 w-3" />
-        Complete Missing
+        Complete Missing ({missing.length})
       </Button>
     </div>
   );
