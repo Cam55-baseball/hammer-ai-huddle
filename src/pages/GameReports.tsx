@@ -28,6 +28,9 @@ import { StrikeZoneGrid, type Zone } from "@/components/games/StrikeZoneGrid";
 import {
   Accordion, AccordionItem, AccordionTrigger, AccordionContent,
 } from "@/components/ui/accordion";
+import { SavedReportsPanel } from "@/components/games/reports/SavedReportsPanel";
+import { ScoutingReportPanel } from "@/components/games/reports/ScoutingReportPanel";
+
 
 type Side = "all" | "L" | "R" | "S";
 type ReportCategory =
