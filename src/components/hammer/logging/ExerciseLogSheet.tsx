@@ -51,6 +51,16 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   const { data: previous } = usePreviousMovementLog(rx.movement_slug, rx.id);
   const save = useSaveExerciseLog();
 
+  // Weight-room standards this movement can contribute to. Display + award
+  // detection only — never an input to the prescribed dose.
+  const { progress: allProgress, measures, index: bestIndex } = useStandards();
+  const recordAward = useRecordAward();
+  const standardRows = useMemo(() => {
+    const defs = standardsForSlug(rx.movement_slug);
+    if (!defs.length) return [];
+    return allProgress.filter((p) => defs.some((d) => d.id === p.standard.id));
+  }, [allProgress, rx.movement_slug]);
+
   // Unilateral work is prescribed "per side" — so the sheet seeds twice the
   // rounds, pre-tagged L/R/L/R, and the athlete only fills the numbers.
   const prescribedSets = rx.sets && rx.sets > 0 ? rx.sets : template.defaultRounds;
