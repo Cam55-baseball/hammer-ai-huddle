@@ -1,16 +1,20 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useVideoTaxonomy, groupTaxonomyByLayer } from '@/hooks/useVideoTaxonomy';
-import type { SkillDomain, TagLayer } from '@/lib/videoRecommendationEngine';
+import type { SkillDomain, TagLayer, TagSport } from '@/lib/videoRecommendationEngine';
+import { POSITION_GROUPS, POSITION_GROUP_LABELS, type PositionGroup } from '@/lib/hammer/positions/positionGroups';
 import { LAYER_GUIDANCE } from './TaxonomyManager';
 import { HammerDescriptionComposer } from './HammerDescriptionComposer';
 import { FormulaLinkageEditor, type FormulaLinkageValue, emptyFormulaLinkage } from './FormulaLinkageEditor';
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
 const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
+/** Domains where position scoping materially changes the coaching cue. */
+const POSITION_SCOPED_DOMAINS: SkillDomain[] = ['fielding', 'throwing', 'pitching'];
+
 
 const LAYER_LABELS: Record<TagLayer, string> = {
   movement_pattern: 'Movement Patterns',
@@ -34,13 +38,30 @@ export interface StructuredTagState {
 interface Props {
   value: StructuredTagState;
   onChange: (next: StructuredTagState) => void;
+  /** Sports the video was filmed for, e.g. ['baseball'] — hides the other sport's tags. */
+  sports?: string[];
 }
 
-export function StructuredTagEditor({ value, onChange }: Props) {
+export function StructuredTagEditor({ value, onChange, sports }: Props) {
   const primaryDomain = value.skillDomains[0];
-  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
+  const [positionFocus, setPositionFocus] = useState<PositionGroup[]>([]);
+
+  // Sport scope: a single-sport video only sees that sport's tags + shared tags.
+  const sportScope: TagSport = useMemo(() => {
+    const s = (sports ?? []).filter(Boolean);
+    if (s.length !== 1) return 'both';
+    return s[0] === 'softball' ? 'softball' : s[0] === 'baseball' ? 'baseball' : 'both';
+  }, [sports]);
+
+  const showPositionFocus = !!primaryDomain && POSITION_SCOPED_DOMAINS.includes(primaryDomain);
+
+  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain, {
+    sport: sportScope,
+    positions: showPositionFocus && positionFocus.length ? positionFocus : null,
+  });
 
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
+
 
   const toggleDomain = (d: SkillDomain) => {
     const next = value.skillDomains.includes(d)
@@ -138,6 +159,41 @@ export function StructuredTagEditor({ value, onChange }: Props) {
       {/* Layers 3-6: Taxonomy tags with explicit 1 / 3 / 5 weights */}
       {primaryDomain ? (
         <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="outline" className="text-[10px] capitalize">
+              {sportScope === 'both' ? 'Both sports' : sportScope}
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">
+              {sportScope === 'softball'
+                ? 'Showing windmill / softball-specific tags + shared tags.'
+                : sportScope === 'baseball'
+                  ? 'Showing overhand / baseball-specific tags + shared tags.'
+                  : 'Showing shared tags for both sports. Pick one sport for specialized tags.'}
+            </span>
+          </div>
+
+          {showPositionFocus && (
+            <div className="space-y-1">
+              <Label className="text-xs">Position focus (filters tags)</Label>
+              <div className="flex flex-wrap gap-1">
+                {POSITION_GROUPS.map(pg => (
+                  <Badge
+                    key={pg}
+                    variant={positionFocus.includes(pg) ? 'default' : 'outline'}
+                    className="cursor-pointer text-[10px]"
+                    onClick={() =>
+                      setPositionFocus(prev =>
+                        prev.includes(pg) ? prev.filter(x => x !== pg) : [...prev, pg],
+                      )
+                    }
+                  >
+                    {POSITION_GROUP_LABELS[pg]}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className="text-[10px] text-muted-foreground -mb-1">
             Tap a tag to add it. Choose <span className="font-semibold">1</span> normal, <span className="font-semibold">3</span> strong, <span className="font-semibold">5</span> max priority.
           </p>
@@ -145,6 +201,7 @@ export function StructuredTagEditor({ value, onChange }: Props) {
             <div key={layer} className="space-y-1.5">
               <Label className="text-xs">{LAYER_LABELS[layer]}{layer === 'movement_pattern' ? ' *' : ''}</Label>
               <p className="text-[10px] text-muted-foreground -mt-1">{LAYER_GUIDANCE[layer].short}</p>
+
               <div className="flex flex-wrap gap-1.5">
                 {grouped[layer].map(tag => {
                   const w = value.tagAssignments[tag.id];

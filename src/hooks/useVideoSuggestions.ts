@@ -3,10 +3,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSportTheme } from '@/contexts/SportThemeContext';
 import {
   recommendVideos,
   type SuggestionMode,
   type SkillDomain,
+  type TagSport,
   type VideoWithTags,
   type RecommendResult,
 } from '@/lib/videoRecommendationEngine';
@@ -20,13 +22,22 @@ interface UseSuggestionsParams {
   resultTags: string[];
   contextTags: string[];
   enabled?: boolean;
+  /** Overrides the active sport theme. Softball athletes never see baseball-only assets. */
+  sport?: TagSport | null;
+  /** Position groups from `resolvePositionGroups()`. Gates position-scoped tags/rules. */
+  positions?: string[] | null;
 }
 
 export function useVideoSuggestions(params: UseSuggestionsParams) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { data: taxonomy = [] } = useVideoTaxonomy(params.skillDomain);
-  const { data: rules = [] } = useVideoTagRules(params.skillDomain);
+  const { sport: themeSport } = useSportTheme();
+  const sport: TagSport = (params.sport ?? (themeSport as TagSport)) ?? 'both';
+  const positions = params.positions ?? null;
+  const scope = { sport, positions };
+  const { data: taxonomy = [] } = useVideoTaxonomy(params.skillDomain, scope);
+  const { data: rules = [] } = useVideoTagRules(params.skillDomain, scope);
+
 
   // Cross-tab invalidation on rep/session save
   useEffect(() => {
@@ -42,7 +53,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
   }, [qc]);
 
   return useQuery({
-    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, user?.id],
+    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, sport, (positions ?? []).join(','), user?.id],
     enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length > 0),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
@@ -59,7 +70,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
 
       // Extra columns + assignments fetched separately to avoid TS strictness on new cols
       const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }] = await Promise.all([
-        (supabase as any).from('library_videos').select('id, video_format, skill_domains, ai_description, confidence_score, distribution_tier').in('id', ids),
+        (supabase as any).from('library_videos').select('id, video_format, skill_domains, sport, ai_description, confidence_score, distribution_tier').in('id', ids),
         (supabase as any).from('video_tag_assignments').select('video_id, tag_id, weight').in('video_id', ids),
         (supabase as any).from('video_performance_metrics').select('video_id, post_view_improvement_sum, post_view_improvement_n').in('video_id', ids),
         user ? (supabase as any).from('video_user_outcomes').select('video_id, post_score_delta').eq('user_id', user.id).in('video_id', ids) : Promise.resolve({ data: [] }),
@@ -86,6 +97,8 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
           created_at: v.created_at,
           video_format: m.video_format,
           skill_domains: m.skill_domains,
+          sport: m.sport,
+
           ai_description: m.ai_description,
           confidence_score: m.confidence_score,
           distribution_tier: normalizeTier(m.distribution_tier),
@@ -118,7 +131,10 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         rules,
         userOutcomes,
         globalMetrics,
+        sport,
+        positions,
       });
+
     },
   });
 }

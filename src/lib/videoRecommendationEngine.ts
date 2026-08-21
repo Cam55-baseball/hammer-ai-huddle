@@ -13,6 +13,12 @@ import { normalizeTier, TIER_BOOST } from './videoTier';
 export type SuggestionMode = 'session' | 'long_term';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
 export type TagLayer = 'movement_pattern' | 'result' | 'context' | 'correction';
+/** Sport scope of a tag / rule. 'both' = sport-agnostic. */
+export type TagSport = 'baseball' | 'softball' | 'both';
+/** Position groups a tag / rule applies to. null / empty = all positions. */
+export type PositionScope =
+  | 'pitcher' | 'catcher' | 'first_base' | 'middle_infield'
+  | 'third_base' | 'corner_outfield' | 'center_field';
 
 export interface TaxonomyTag {
   id: string;
@@ -20,7 +26,26 @@ export interface TaxonomyTag {
   key: string;
   label: string;
   skill_domain: SkillDomain;
+  /** Sport specialization — baseball (overhand) vs softball (windmill) vs both. */
+  sport?: TagSport | null;
+  /** Position groups this tag is legal for. null / [] = every position. */
+  position_scope?: string[] | null;
 }
+
+/** True when a sport-scoped row is legal for the athlete/video sport. */
+export function sportMatches(rowSport: TagSport | null | undefined, target?: TagSport | null): boolean {
+  if (!target || target === 'both') return true;
+  const s = rowSport ?? 'both';
+  return s === 'both' || s === target;
+}
+
+/** True when a position-scoped row is legal for the athlete/video positions. */
+export function positionMatches(scope: string[] | null | undefined, positions?: string[] | null): boolean {
+  if (!scope || scope.length === 0) return true;
+  if (!positions || positions.length === 0) return true;
+  return scope.some(s => positions.includes(s));
+}
+
 
 export interface VideoTagAssignment {
   tag_id: string;
@@ -37,6 +62,8 @@ export interface VideoWithTags {
   video_url: string;
   video_format?: string | null;
   skill_domains?: SkillDomain[] | null;
+  /** Sports this video was filmed for, e.g. ['baseball'] or ['baseball','softball']. */
+  sport?: string[] | null;
   ai_description?: string | null;
   created_at?: string | null;
   assignments: VideoTagAssignment[]; // assigned taxonomy tags
@@ -58,6 +85,8 @@ export interface VideoTagRule {
   correction_key: string;
   strength: number;
   active: boolean;
+  sport?: TagSport | null;
+  position_scope?: string[] | null;
 }
 
 export interface RecommendInput {
@@ -73,7 +102,12 @@ export interface RecommendInput {
   globalMetrics?: Map<string, { improvementScore: number }>;
   /** Active teaching-phase ids (e.g. ['p1_hip_load','p4_hitters_move']). Soft boost only. */
   activePhases?: string[];
+  /** HARD GATE — athlete sport. Softball athletes never receive baseball-only tags/videos. */
+  sport?: TagSport | null;
+  /** HARD GATE for rules/tags scoped to position groups (catcher, middle_infield, …). */
+  positions?: string[] | null;
 }
+
 
 export interface RecommendResult {
   video: VideoWithTags;
@@ -96,15 +130,19 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics,
-    activePhases,
+    activePhases, sport, positions,
   } = input;
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
 
-  // Build key→tagId lookup scoped to this skill domain
+  // Build key→tagId lookup scoped to this skill domain + sport + position group.
   const keyToTagId = new Map<string, string>();
   const tagIdToTag = new Map<string, TaxonomyTag>();
   for (const t of taxonomy) {
-    if (t.skill_domain === skillDomain) {
+    if (
+      t.skill_domain === skillDomain &&
+      sportMatches(t.sport, sport) &&
+      positionMatches(t.position_scope, positions)
+    ) {
       keyToTagId.set(`${t.layer}:${t.key}`, t.id);
     }
     tagIdToTag.set(t.id, t);
@@ -114,6 +152,10 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const triggeredCorrections = new Map<string, { strength: number; reason: string }>();
   for (const r of rules) {
     if (!r.active || r.skill_domain !== skillDomain) continue;
+    // HARD GATE — a windmill rule may never fire for a baseball athlete (and vice versa),
+    // and a catcher-scoped rule may never fire for an outfielder.
+    if (!sportMatches(r.sport, sport)) continue;
+    if (!positionMatches(r.position_scope, positions)) continue;
     if (!movementPatterns.includes(r.movement_key)) continue;
     if (r.result_key && !resultTags.includes(r.result_key)) continue;
     if (r.context_key && !contextTags.includes(r.context_key)) continue;
@@ -123,6 +165,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       triggeredCorrections.set(r.correction_key, { strength: r.strength, reason });
     }
   }
+
 
   const movementTagIds = new Set(movementPatterns.map(k => keyToTagId.get(`movement_pattern:${k}`)).filter(Boolean) as string[]);
   const resultTagIds = new Set(resultTags.map(k => keyToTagId.get(`result:${k}`)).filter(Boolean) as string[]);
@@ -145,6 +188,10 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
 
     // Domain gate: skip videos not in this skill domain (if domains set)
     if (v.skill_domains && v.skill_domains.length && !v.skill_domains.includes(skillDomain)) continue;
+
+    // Sport gate: a softball athlete never receives a baseball-only video.
+    if (sport && sport !== 'both' && v.sport && v.sport.length && !v.sport.includes(sport)) continue;
+
 
     const tierBoost = TIER_BOOST[tier];
 

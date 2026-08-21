@@ -13,7 +13,11 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import type { TagLayer, SkillDomain } from '@/lib/videoRecommendationEngine';
+import type { TagLayer, SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
+import { POSITION_GROUPS, POSITION_GROUP_LABELS, type PositionGroup } from '@/lib/hammer/positions/positionGroups';
+
+const SPORTS: TagSport[] = ['both', 'baseball', 'softball'];
+
 
 const LAYERS: TagLayer[] = ['movement_pattern', 'result', 'context', 'correction'];
 const DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
@@ -45,6 +49,8 @@ export function TaxonomyManager() {
   const qc = useQueryClient();
   const [layer, setLayer] = useState<TagLayer>('movement_pattern');
   const [domain, setDomain] = useState<SkillDomain>('hitting');
+  const [sport, setSport] = useState<TagSport>('both');
+  const [positionScope, setPositionScope] = useState<PositionGroup[]>([]);
   const [key, setKey] = useState('');
   const [label, setLabel] = useState('');
   const [adding, setAdding] = useState(false);
@@ -52,19 +58,23 @@ export function TaxonomyManager() {
   const [usageCount, setUsageCount] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+
   const { data: tags = [] } = useQuery({
-    queryKey: ['taxonomy-admin', layer, domain],
+    queryKey: ['taxonomy-admin', layer, domain, sport],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      let q = (supabase as any)
         .from('video_tag_taxonomy')
         .select('*')
         .eq('layer', layer)
-        .eq('skill_domain', domain)
-        .order('label');
+        .eq('skill_domain', domain);
+      // 'both' = show everything; a specific sport shows its own tags + shared tags.
+      if (sport !== 'both') q = q.in('sport', [sport, 'both']);
+      const { data, error } = await q.order('label');
       if (error) throw error;
       return data || [];
     },
   });
+
 
   const triggerHammerReanalysis = async (tagId: string) => {
     try {
@@ -97,6 +107,8 @@ export function TaxonomyManager() {
       layer, skill_domain: domain,
       key: key.trim().toLowerCase().replace(/\s+/g, '_'),
       label: label.trim(),
+      sport,
+      position_scope: positionScope.length ? positionScope : null,
     }).select('id').single();
 
     if (error) {
@@ -105,6 +117,7 @@ export function TaxonomyManager() {
       return;
     }
     setKey(''); setLabel('');
+
     qc.invalidateQueries({ queryKey: ['taxonomy-admin'] });
     qc.invalidateQueries({ queryKey: ['video-taxonomy'] });
     toast({ title: 'Tag added', description: 'Hammer is reviewing your library for this tag…' });
@@ -193,7 +206,41 @@ export function TaxonomyManager() {
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Sport</Label>
+          <Select value={sport} onValueChange={v => setSport(v as TagSport)}>
+            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SPORTS.map(s => (
+                <SelectItem key={s} value={s} className="capitalize text-xs">
+                  {s === 'both' ? 'Both sports' : s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">Position scope (new tags — leave empty for all positions)</Label>
+        <div className="flex flex-wrap gap-1">
+          {POSITION_GROUPS.map(pg => (
+            <Badge
+              key={pg}
+              variant={positionScope.includes(pg) ? 'default' : 'outline'}
+              className="cursor-pointer text-[10px]"
+              onClick={() =>
+                setPositionScope(prev =>
+                  prev.includes(pg) ? prev.filter(x => x !== pg) : [...prev, pg],
+                )
+              }
+            >
+              {POSITION_GROUP_LABELS[pg]}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
 
       {/* Layer guidance card — prevents misplacement */}
       <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-1">
@@ -226,7 +273,16 @@ export function TaxonomyManager() {
             <div className="min-w-0 flex-1">
               <span className="font-medium">{t.label}</span>
               <span className="text-muted-foreground ml-2">({t.key})</span>
+              {t.sport && t.sport !== 'both' && (
+                <Badge variant="secondary" className="ml-2 text-[9px] capitalize">{t.sport}</Badge>
+              )}
+              {Array.isArray(t.position_scope) && t.position_scope.length > 0 && (
+                <Badge variant="outline" className="ml-1 text-[9px]">
+                  {t.position_scope.map((p: string) => POSITION_GROUP_LABELS[p as PositionGroup] ?? p).join(', ')}
+                </Badge>
+              )}
               {!t.active && <Badge variant="outline" className="ml-2 text-[9px]">inactive</Badge>}
+
             </div>
             <Button
               variant="ghost"

@@ -372,7 +372,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
               onDescriptionChange={text => setStructured({ ...structured, aiDescription: text })}
             />
           ) : (
-            <StructuredTagEditor value={structured} onChange={setStructured} />
+            <StructuredTagEditor value={structured} onChange={setStructured} sports={sportArray} />
           )}
           {!step3Valid && !isFoundation && (
             <ul className="text-xs space-y-0.5 list-disc pl-4 text-amber-600 dark:text-amber-400">
