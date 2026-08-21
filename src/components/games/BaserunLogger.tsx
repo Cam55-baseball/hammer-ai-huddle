@@ -23,10 +23,12 @@ import { RepCard, RepKeyboardHints } from "./RepCard";
 import { NumberField } from "@/components/games/NumberField";
 
 
-const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
-const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
+import { pitchTypes } from "@/lib/games/sportRules";
 
-export function BaserunLogger({ gameId }: { gameId: string }) {
+const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
+
+export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: string }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const { user } = useAuth();
   const qc = useQueryClient();
   const [show, setShow] = useState(false);
@@ -106,7 +108,7 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
         </Button>
       </div>
 
-      {show && <RunForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
+      {show && <RunForm sport={sport} onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
       {(list.data ?? []).length === 0 && !show && (
         <Card className="p-5 text-center bg-muted/20 border-dashed">
@@ -158,9 +160,10 @@ export function BaserunLogger({ gameId }: { gameId: string }) {
 
 }
 
-function RunForm({ onSave, onCancel }: {
-  onSave: (r: Record<string, any>) => void; onCancel: () => void;
+function RunForm({ sport, onSave, onCancel }: {
+  sport?: string; onSave: (r: Record<string, any>) => void; onCancel: () => void;
 }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
     inning: 1, event_type: "steal", base_from: 1, base_to: 2,
     success: true, lead_steps: "", pitcher_arm_side: "R",
@@ -216,7 +219,7 @@ function RunForm({ onSave, onCancel }: {
         <F label="Pitch type">
           <Select value={f.pitch_type_ran_on} onValueChange={(v) => set("pitch_type_ran_on", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>{PITCH_TYPES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent>
+            <SelectContent>{PITCH_TYPES.map((p) => (<SelectItem key={p.value} value={p.value}>{p.full}</SelectItem>))}</SelectContent>
           </Select>
         </F>
         <F label="My run (sec)">

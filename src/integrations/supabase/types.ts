@@ -4984,6 +4984,71 @@ export type Database = {
           },
         ]
       }
+      gp_ingest_jobs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          file_name: string | null
+          file_path: string | null
+          game_id: string | null
+          id: string
+          parse_status: string
+          parsed: Json | null
+          raw_sample: string | null
+          review_status: string
+          rows_committed: number
+          rows_detected: number
+          source: string
+          sport: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          game_id?: string | null
+          id?: string
+          parse_status?: string
+          parsed?: Json | null
+          raw_sample?: string | null
+          review_status?: string
+          rows_committed?: number
+          rows_detected?: number
+          source: string
+          sport?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          game_id?: string | null
+          id?: string
+          parse_status?: string
+          parsed?: Json | null
+          raw_sample?: string | null
+          review_status?: string
+          rows_committed?: number
+          rows_detected?: number
+          source?: string
+          sport?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_ingest_jobs_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gp_opponent_hitters: {
         Row: {
           archetype: string | null
@@ -5350,6 +5415,72 @@ export type Database = {
             columns: ["pitcher_dossier_id"]
             isOneToOne: false
             referencedRelation: "gp_pitcher_dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_reports: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          id: string
+          org_id: string | null
+          report_kind: string
+          share_expires_at: string | null
+          share_revoked: boolean
+          share_token: string | null
+          snapshot: Json
+          sport: string | null
+          subtitle: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          org_id?: string | null
+          report_kind: string
+          share_expires_at?: string | null
+          share_revoked?: boolean
+          share_token?: string | null
+          snapshot: Json
+          sport?: string | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          org_id?: string | null
+          report_kind?: string
+          share_expires_at?: string | null
+          share_revoked?: boolean
+          share_token?: string | null
+          snapshot?: Json
+          sport?: string | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_reports_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_reports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

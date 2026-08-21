@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
+import { pitchTypes } from "@/lib/games/sportRules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,6 @@ const RESULTS = [
   "FO", "GO", "LO", "PO", "FC", "SAC", "SF", "E", "ROE",
 ];
 const CONTACT = ["barrel", "solid", "flare", "topped", "weak", "popup", "whiff", "foul"];
-const PITCH_TYPES = ["FB", "2-seam", "CT", "SL", "CB", "CH", "SP", "KN", "rise", "drop", "screw"];
 const DIRECTIONS = ["LF", "LCF", "CF", "RCF", "RF", "3B", "SS", "2B", "1B", "P", "C"];
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH"];
 
@@ -216,6 +216,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 
       {showNew && (
         <AtBatForm
+          sport={sport}
           onCancel={() => setShowNew(false)}
           onSave={(row) => add.mutate(row)}
           submitting={add.isPending}
@@ -302,18 +303,21 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 }
 
 function AtBatForm({
+  sport,
   onSave,
   onCancel,
   submitting,
   pitcherOptions = [],
   defaultPitcherId = null,
 }: {
+  sport: string;
   onSave: (row: Record<string, any>) => void;
   onCancel: () => void;
   submitting?: boolean;
   pitcherOptions?: any[];
   defaultPitcherId?: string | null;
 }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
     inning: 1,
     batting_side: "R",
@@ -467,7 +471,7 @@ function AtBatForm({
           <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
-              {PITCH_TYPES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+              {PITCH_TYPES.map((p) => (<SelectItem key={p.value} value={p.value}>{p.full}</SelectItem>))}
             </SelectContent>
           </Select>
         </Field>

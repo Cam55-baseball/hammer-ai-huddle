@@ -6,7 +6,7 @@
  * gp_documents). Phases 2–7 layer richer drawers, AI ingest, dossiers,
  * report builder, and Hammer/Roadmap integration on top of this shell.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useSportTheme } from "@/contexts/SportThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -284,7 +285,19 @@ export default function Games() {
                     : ""}
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/games/${g.id}/report`);
+                  }}
+                >
+                  Report
+                </Button>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
           </Card>
         ))}
@@ -317,6 +330,8 @@ export default function Games() {
  */
 function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
   const { user } = useAuth();
+  const { sport: athleteSport } = useSportTheme();
+
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
   const todayGame = useQuery({
@@ -343,7 +358,7 @@ function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
         .insert({
           user_id: user!.id,
           game_date: today,
-          sport: "baseball",
+          sport: athleteSport === "softball" ? "softball" : "baseball",
           status: "in_progress",
         })
         .select("id")
@@ -418,8 +433,12 @@ function NewGameDialog({
   onSubmit: (v: { date: string; sport: string; opponent: string }) => void;
   pending: boolean;
 }) {
+  const { sport: athleteSport } = useSportTheme();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [sport, setSport] = useState("baseball");
+  const [sport, setSport] = useState(athleteSport === "softball" ? "softball" : "baseball");
+  useEffect(() => {
+    if (open) setSport(athleteSport === "softball" ? "softball" : "baseball");
+  }, [open, athleteSport]);
   const [opponent, setOpponent] = useState("");
 
   return (

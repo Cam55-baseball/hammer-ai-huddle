@@ -21,9 +21,8 @@ import { StrikeZonePlanner } from "./StrikeZonePlanner";
 import { PregamePlanPanel } from "./PregamePlanPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { NumberField } from "@/components/games/NumberField";
+import { armSlots, pitchTypes } from "@/lib/games/sportRules";
 
-const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_quarter","side_arm","submarine","windmill"];
-const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
 
 export function PitcherDossierDrawer({
   open, onOpenChange, sport, dossier,
@@ -84,7 +83,7 @@ export function PitcherDossierDrawer({
               <Select value={f.arm_slot ?? ""} onValueChange={(v) => set("arm_slot", v)}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
-                  {ARM_SLOTS.map((s) => (<SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>))}
+                  {armSlots(f.sport ?? sport).map((s) => (<SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>))}
                 </SelectContent>
               </Select>
             </Field>
@@ -103,7 +102,7 @@ export function PitcherDossierDrawer({
                   <Select value={p.pitch} onValueChange={(v) => setPitch(i, { pitch: v })}>
                     <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {PITCH_TYPES.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
+                      {pitchTypes(f.sport ?? sport).map((t) => (<SelectItem key={t.value} value={t.value}>{t.full}</SelectItem>))}
                     </SelectContent>
                   </Select>
                   <NumberField min={0} max={100} placeholder="usage %"

@@ -145,6 +145,8 @@ const Games = lazyWithRetry(() => import("./pages/Games"));
 const Dossiers = lazyWithRetry(() => import("./pages/Dossiers"));
 const AdminPeriodization = lazyWithRetry(() => import("./pages/AdminPeriodization"));
 const GameReports = lazyWithRetry(() => import("./pages/GameReports"));
+const GameReportView = lazyWithRetry(() => import("./pages/GameReportView"));
+const SharedReport = lazyWithRetry(() => import("./pages/SharedReport"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
@@ -385,6 +387,8 @@ const App = () => {
               <Route path="/games" element={<Games />} />
               <Route path="/games/dossiers" element={<Dossiers />} />
               <Route path="/games/reports" element={<GameReports />} />
+              <Route path="/games/:gameId/report" element={<GameReportView />} />
+              <Route path="/r/:token" element={<SharedReport />} />
               <Route path="/admin/periodization" element={<AdminPeriodization />} />
               <Route path="/game-scoring" element={<Navigate to="/games" replace />} />
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
