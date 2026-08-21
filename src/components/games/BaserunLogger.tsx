@@ -23,10 +23,12 @@ import { RepCard, RepKeyboardHints } from "./RepCard";
 import { NumberField } from "@/components/games/NumberField";
 
 
-const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
-const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
+import { pitchTypes } from "@/lib/games/sportRules";
 
-export function BaserunLogger({ gameId }: { gameId: string }) {
+const EVENT_TYPES = ["steal","dirtball_read","pickoff","advance","caught","tag_up"];
+
+export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: string }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const { user } = useAuth();
   const qc = useQueryClient();
   const [show, setShow] = useState(false);
@@ -216,7 +218,7 @@ function RunForm({ onSave, onCancel }: {
         <F label="Pitch type">
           <Select value={f.pitch_type_ran_on} onValueChange={(v) => set("pitch_type_ran_on", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>{PITCH_TYPES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent>
+            <SelectContent>{PITCH_TYPES.map((p) => (<SelectItem key={p.value} value={p.value}>{p.full}</SelectItem>))}</SelectContent>
           </Select>
         </F>
         <F label="My run (sec)">

@@ -42,7 +42,6 @@ const RESULTS = [
   "FO", "GO", "LO", "PO", "FC", "SAC", "SF", "E", "ROE",
 ];
 const CONTACT = ["barrel", "solid", "flare", "topped", "weak", "popup", "whiff", "foul"];
-const PITCH_TYPES = ["FB", "2-seam", "CT", "SL", "CB", "CH", "SP", "KN", "rise", "drop", "screw"];
 const DIRECTIONS = ["LF", "LCF", "CF", "RCF", "RF", "3B", "SS", "2B", "1B", "P", "C"];
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH"];
 
@@ -60,6 +59,7 @@ const SHORTCUTS: Record<string, string> = {
 };
 
 export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showNew, setShowNew] = useState(false);
@@ -467,7 +467,7 @@ function AtBatForm({
           <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
-              {PITCH_TYPES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+              {PITCH_TYPES.map((p) => (<SelectItem key={p.value} value={p.value}>{p.full}</SelectItem>))}
             </SelectContent>
           </Select>
         </Field>

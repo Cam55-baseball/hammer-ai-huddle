@@ -23,15 +23,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { NumberField } from "@/components/games/NumberField";
 
+import { pitchTypes, armSlots } from "@/lib/games/sportRules";
+
 const CONTACTS = ["weak","medium","hard","barrel","mishit"];
 const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
 
 
-const PITCH_TYPES = ["FB","2-seam","CT","SL","CB","CH","SP","KN","rise","drop","screw"];
 const RESULTS = ["ball","called_strike","swinging_strike","foul","in_play","hbp","bunt_foul","bunt_in_play"];
-const ARM_SLOTS = ["over_top","high_three_quarter","three_quarter","low_three_quarter","side_arm","submarine","windmill"];
 
 export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }) {
+  const PITCH_TYPES = pitchTypes(sport);
+  const ARM_SLOTS = armSlots(sport);
   const { list, add, del } = useGamePitches(gameId);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"pitcher" | "hitter">("hitter");
@@ -195,7 +197,7 @@ function PitchForm({
             <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
               <SelectContent>
-                {PITCH_TYPES.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
+                {PITCH_TYPES.map((t) => (<SelectItem key={t.value} value={t.value}>{t.full}</SelectItem>))}
               </SelectContent>
             </Select>
           </F>
@@ -225,7 +227,7 @@ function PitchForm({
             <Select value={f.pitcher_arm_slot} onValueChange={(v) => set("pitcher_arm_slot", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
               <SelectContent>
-                {ARM_SLOTS.map((a) => (<SelectItem key={a} value={a}>{a.replace(/_/g, " ")}</SelectItem>))}
+                {ARM_SLOTS.map((a) => (<SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>))}
               </SelectContent>
             </Select>
           </F>
