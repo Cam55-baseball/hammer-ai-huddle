@@ -97,6 +97,8 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
           created_at: v.created_at,
           video_format: m.video_format,
           skill_domains: m.skill_domains,
+          sport: m.sport,
+
           ai_description: m.ai_description,
           confidence_score: m.confidence_score,
           distribution_tier: normalizeTier(m.distribution_tier),
