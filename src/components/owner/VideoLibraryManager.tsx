@@ -159,6 +159,7 @@ export function VideoLibraryManager() {
   };
 
   const handleEditSuccess = () => {
+    clearEditIntents();
     setEditTarget(null);
     refetch();
     qc.invalidateQueries({ queryKey: ['library-videos-readiness'] });
