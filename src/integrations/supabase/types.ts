@@ -13498,8 +13498,10 @@ export type Database = {
           id: string
           movement_key: string
           notes: string | null
+          position_scope: string[] | null
           result_key: string | null
           skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          sport: string
           strength: number
           updated_at: string
         }
@@ -13512,8 +13514,10 @@ export type Database = {
           id?: string
           movement_key: string
           notes?: string | null
+          position_scope?: string[] | null
           result_key?: string | null
           skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          sport?: string
           strength?: number
           updated_at?: string
         }
@@ -13526,8 +13530,10 @@ export type Database = {
           id?: string
           movement_key?: string
           notes?: string | null
+          position_scope?: string[] | null
           result_key?: string | null
           skill_domain?: Database["public"]["Enums"]["skill_domain_enum"]
+          sport?: string
           strength?: number
           updated_at?: string
         }
@@ -13607,7 +13613,9 @@ export type Database = {
           key: string
           label: string
           layer: Database["public"]["Enums"]["video_tag_layer_enum"]
+          position_scope: string[] | null
           skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          sport: string
           updated_at: string
         }
         Insert: {
@@ -13619,7 +13627,9 @@ export type Database = {
           key: string
           label: string
           layer: Database["public"]["Enums"]["video_tag_layer_enum"]
+          position_scope?: string[] | null
           skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          sport?: string
           updated_at?: string
         }
         Update: {
@@ -13631,7 +13641,9 @@ export type Database = {
           key?: string
           label?: string
           layer?: Database["public"]["Enums"]["video_tag_layer_enum"]
+          position_scope?: string[] | null
           skill_domain?: Database["public"]["Enums"]["skill_domain_enum"]
+          sport?: string
           updated_at?: string
         }
         Relationships: []
