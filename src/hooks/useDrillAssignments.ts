@@ -14,6 +14,9 @@ export interface DrillAssignment {
   completed_at: string | null;
   drill_name?: string;
   drill_description?: string;
+  drill_module?: string | null;
+  drill_sport?: string | null;
+  drill_skill_target?: string | null;
   coach_name?: string;
 }
 
@@ -38,7 +41,7 @@ export function usePlayerAssignments() {
       const drillIds = [...new Set(data.map(a => a.drill_id))];
       const { data: drills } = await supabase
         .from('drills')
-        .select('id, name, description')
+        .select('id, name, description, module, sport, skill_target')
         .in('id', drillIds);
       const drillMap = new Map((drills || []).map(d => [d.id, d]));
 
@@ -54,6 +57,9 @@ export function usePlayerAssignments() {
         ...a,
         drill_name: drillMap.get(a.drill_id)?.name ?? 'Unknown Drill',
         drill_description: drillMap.get(a.drill_id)?.description ?? null,
+        drill_module: (drillMap.get(a.drill_id) as any)?.module ?? null,
+        drill_sport: (drillMap.get(a.drill_id) as any)?.sport ?? null,
+        drill_skill_target: (drillMap.get(a.drill_id) as any)?.skill_target ?? null,
         coach_name: coachMap.get(a.coach_id) ?? 'Coach',
       }));
     },
