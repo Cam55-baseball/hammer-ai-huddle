@@ -21,6 +21,7 @@ import { StrikeZonePlanner } from "./StrikeZonePlanner";
 import { PregamePlanPanel } from "./PregamePlanPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { NumberField } from "@/components/games/NumberField";
+import { armSlots, pitchTypes } from "@/lib/games/sportRules";
 
 
 export function PitcherDossierDrawer({
