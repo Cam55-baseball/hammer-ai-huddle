@@ -316,7 +316,37 @@ const handler = async (req: Request): Promise<Response> => {
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
     const isGameDay = (gamesToday ?? []).length > 0;
-    const isPracticeDay = (practicesToday ?? []).length > 0;
+
+    // -------- Practice resolution (exact-date + recurring weekly) --------
+    const planDow = new Date(`${planDate}T12:00:00Z`).getUTCDay();
+    const practiceRows: any[] = (practicesToday ?? []).filter((r: any) => {
+      if (r.scheduled_date === planDate) return true;
+      return !!r.recurring_active
+        && Array.isArray(r.recurring_days)
+        && r.recurring_days.includes(planDow)
+        && (!r.scheduled_date || r.scheduled_date <= planDate);
+    });
+    // travel / other markers are not training practices — they drive recovery, not load.
+    const trainingPractices = practiceRows.filter(
+      (r: any) => !["travel", "other"].includes(String(r.practice_kind ?? "team")),
+    );
+    const isPracticeDay = trainingPractices.length > 0;
+    const isTravelDay = practiceRows.some((r: any) => String(r.practice_kind) === "travel");
+    // Highest-load practice on the day drives modulation.
+    const practiceKinds = trainingPractices.map((r: any) => String(r.practice_kind ?? "team"));
+    const practiceIntensity: "light" | "standard" | "heavy" =
+      trainingPractices.some((r: any) => r.intensity === "heavy")
+        ? "heavy"
+        : trainingPractices.some((r: any) => r.intensity === "standard")
+          ? "standard"
+          : trainingPractices.length > 0
+            ? "light"
+            : "standard";
+    // Team practice and showcases are inherently high-volume regardless of tag.
+    const isHeavyPracticeDay = isPracticeDay
+      && (practiceIntensity === "heavy"
+        || practiceKinds.includes("team")
+        || practiceKinds.includes("showcase"));
 
     // -------- Resolve phase quarter --------
     // Season data lives on athlete_mpi_settings (season_status + phase date
