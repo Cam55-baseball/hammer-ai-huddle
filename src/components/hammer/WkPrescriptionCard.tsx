@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ShieldCheck, CheckCircle2, Info, Repeat2 } from "lucide-react";
+import { ChevronDown, ShieldCheck, CheckCircle2, Info, Repeat2, Loader2 } from "lucide-react";
 import { LiftSwapSheet, LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
 import { useSwapLadder } from "@/hooks/useLiftSubstitution";
 import { supabase } from "@/integrations/supabase/client";
