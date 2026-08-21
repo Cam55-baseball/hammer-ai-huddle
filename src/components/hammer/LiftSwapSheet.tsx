@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { matchesUnilateralSlug } from "@/components/hammer/logging/logTemplates";
 import { Loader2, Repeat2 } from "lucide-react";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
