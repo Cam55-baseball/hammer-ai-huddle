@@ -403,7 +403,7 @@ const handler = async (req: Request): Promise<Response> => {
       dailyLog,
       injuries: injuries ?? [],
       gamesToday: gamesToday ?? [],
-      practicesToday: practicesToday ?? [],
+      practicesToday: practiceRows,
       trainingAgeCtx: trainingAgeContext,
       sideOverride,
     });
@@ -1575,7 +1575,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Independent certifiers. Each resolves its own template from the same
     // constitutional context, stamps governance metadata onto the matching
     // rows, and blocks publication on fatal issues.
-    const isPracticeDayCtx = (trainingContext as any)?.day_type === "practice";
+    const isPracticeDayCtx = String((trainingContext as any)?.day_type ?? "").startsWith("practice");
     const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
     const availableEquipmentCtx = (athleteContext as any)?.environment?.equipment ?? undefined;
 
@@ -2460,6 +2460,10 @@ const handler = async (req: Request): Promise<Response> => {
       generator_version: WIC_VERSION,
       game_day: isGameDay,
       practice_day: isPracticeDay,
+      practice_kinds: practiceKinds,
+      practice_intensity: practiceIntensity,
+      heavy_practice_day: isHeavyPracticeDay,
+      travel_day: isTravelDay,
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,
