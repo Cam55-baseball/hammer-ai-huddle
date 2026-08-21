@@ -285,7 +285,19 @@ export default function Games() {
                     : ""}
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/games/${g.id}/report`);
+                  }}
+                >
+                  Report
+                </Button>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
           </Card>
         ))}
