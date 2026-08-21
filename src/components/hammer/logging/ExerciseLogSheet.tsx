@@ -260,6 +260,10 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
             </div>
           )}
 
+          {standardRows.length > 0 && (
+            <StandardTargetLine rows={standardRows} bodyweightLbs={measures?.bodyweightLbs ?? null} />
+          )}
+
           <RoundGrid
             fields={template.fields}
             rounds={rounds}
