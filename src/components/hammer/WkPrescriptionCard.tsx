@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ShieldCheck, CheckCircle2, Info, Repeat2 } from "lucide-react";
 import { LiftSwapSheet, LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
-import { readLadder, ladderSlugs } from "@/hooks/useLiftSubstitution";
+import { useSwapLadder } from "@/hooks/useLiftSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
