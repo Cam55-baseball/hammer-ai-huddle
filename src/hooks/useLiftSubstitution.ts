@@ -78,43 +78,107 @@ export function governanceCategory(rx: WkRx): string | null {
   return typeof cat === "string" ? cat : null;
 }
 
-/**
- * Load catalog rows for every slug in the ladder (plus the original, so Undo
- * can restore an exact dose). Options are filtered to the SAME movement
- * category as the prescribed lift — the categorical integrity gate applies to
- * swaps exactly as it applies to generation, so a trunk movement can never be
- * swapped for a throwing movement just because they share a family.
- */
-export function useSwapOptions(rx: WkRx | null, enabled: boolean) {
-  const ladder = rx ? readLadder(rx) : {};
-  const slugs = rx ? [...ladderSlugs(ladder), rx.substituted_from_slug ?? ""].filter(Boolean) : [];
-  const category = rx ? governanceCategory(rx) : null;
+/** Catalog fields needed to re-derive a ladder with the backend's own rules. */
+interface FamilyRow extends SwapCandidate {
+  substitution_family: string | null;
+  season_legality: Record<string, boolean> | null;
+  training_age_legality: Record<string, boolean> | null;
+}
 
-  return useQuery({
-    queryKey: ["wk-swap-options", rx?.id, slugs.join(",")],
-    enabled: enabled && slugs.length > 0,
+const CATALOG_COLS =
+  "slug, name, movement_category, substitution_family, season_legality, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue";
+
+/**
+ * Mirror of `_shared/wic/lift/substitutions.ts::resolveSubstitutionLadder`.
+ * Used ONLY when a prescription row predates the catalog carrying a
+ * substitution family (its stored ladder is empty). Same family, same
+ * category, same season/training-age legality rules — so a fallback swap can
+ * never land somewhere the certified resolver would have refused.
+ */
+function deriveLadder(self: FamilyRow, members: FamilyRow[], phase: string | null): Ladder {
+  const legal = (c: FamilyRow) => (phase && c.season_legality ? c.season_legality[phase] !== false : true);
+  const usable = members.filter((c) => c.slug !== self.slug && legal(c));
+  const lowEquip = (c: FamilyRow) => {
+    const req = (c.equipment_requirements ?? []).map((s) => String(s).toLowerCase());
+    return req.length === 0 || req.every((r) => ["bodyweight", "band", "kb", "db"].includes(r));
+  };
+  const baseSets = self.default_sets ?? 3;
+  return {
+    equipment_unavailable: usable.map((c) => c.slug),
+    facility_unavailable: usable.filter(lowEquip).map((c) => c.slug),
+    injury_restriction: usable.map((c) => c.slug),
+    time_restriction: usable.filter((c) => (c.default_sets ?? 3) <= baseSets).map((c) => c.slug),
+    coach_override: usable.map((c) => c.slug),
+  };
+}
+
+/**
+ * Resolve the effective ladder + catalog rows for a lift row.
+ *
+ * Preference order:
+ *   1. The generator-certified ladder stored on the prescription.
+ *   2. A catalog-derived ladder using the identical resolver rules, for rows
+ *      generated before the catalog carried substitution families.
+ *
+ * Options are always filtered to the SAME movement category as the prescribed
+ * lift — the categorical integrity gate applies to swaps exactly as it applies
+ * to generation.
+ */
+export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
+  const stored = rx ? readLadder(rx) : {};
+  const storedSlugs = ladderSlugs(stored);
+  const category = rx ? governanceCategory(rx) : null;
+  const needsFallback = storedSlugs.length === 0;
+
+  const query = useQuery({
+    queryKey: needsFallback
+      ? ["wk-swap-family", category, rx?.movement_slug, rx?.phase]
+      : ["wk-swap-options", rx?.id, storedSlugs.join(",")],
+    enabled: enabled && !!rx && (storedSlugs.length > 0 || !!category),
     staleTime: 5 * 60_000,
-    queryFn: async (): Promise<Record<string, SwapCandidate>> => {
-      const { data, error } = await supabase
-        .from("wk_movement_catalog" as any)
-        .select(
-          "slug, name, movement_category, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue",
-        )
-        .in("slug", slugs);
+    queryFn: async (): Promise<{ ladder: Ladder; options: Record<string, SwapCandidate> }> => {
+      const wanted = [...storedSlugs, rx?.substituted_from_slug ?? "", rx?.movement_slug ?? ""].filter(Boolean);
+      let q = supabase.from("wk_movement_catalog" as any).select(CATALOG_COLS);
+      q = needsFallback ? q.eq("movement_category", category) : q.in("slug", wanted);
+      const { data, error } = await q;
       if (error) throw error;
-      const map: Record<string, SwapCandidate> = {};
-      for (const row of (data ?? []) as unknown as SwapCandidate[]) {
-        // Category gate — the original slug is always allowed back (Undo).
-        const isOriginal = row.slug === rx?.substituted_from_slug;
-        if (!isOriginal && category && row.movement_category && row.movement_category !== category) {
-          continue;
-        }
-        map[row.slug] = row;
+      const rows = (data ?? []) as unknown as FamilyRow[];
+
+      let ladder: Ladder = stored;
+      let allowed = rows;
+      if (needsFallback) {
+        const self = rows.find((r) => r.slug === rx?.movement_slug);
+        if (!self) return { ladder: {}, options: {} };
+        const family = self.substitution_family;
+        allowed = rows.filter((r) => (family ? r.substitution_family === family : true));
+        ladder = deriveLadder(self, allowed, rx?.phase ?? null);
       }
-      return map;
+
+      const options: Record<string, SwapCandidate> = {};
+      for (const row of allowed) {
+        const isOriginal = row.slug === rx?.substituted_from_slug;
+        if (!isOriginal && category && row.movement_category && row.movement_category !== category) continue;
+        options[row.slug] = row;
+      }
+      return { ladder, options };
     },
   });
+
+  const ladder = query.data?.ladder ?? (needsFallback ? {} : stored);
+  const options = query.data?.options ?? {};
+  const hasOptions = SWAP_REASON_ORDER.some((r) =>
+    (ladder[r] ?? []).some((s) => options[s] && s !== rx?.movement_slug),
+  );
+
+  return { ladder, options, hasOptions, isLoading: query.isLoading, isFetched: query.isFetched };
 }
+
+/** Back-compat accessor used by the Undo chip: catalog rows only. */
+export function useSwapOptions(rx: WkRx | null, enabled: boolean) {
+  const { options, isLoading } = useSwapLadder(rx, enabled);
+  return { data: options, isLoading };
+}
+
 
 interface ApplyArgs {
   rx: WkRx;
