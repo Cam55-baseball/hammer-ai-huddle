@@ -5,7 +5,6 @@
  * stored on the prescription row, filtered to the same movement category.
  * Choosing one rewrites that row in place (see `useLiftSubstitution`).
  */
-import { useMemo } from "react";
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -14,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Repeat2 } from "lucide-react";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
-  readLadder,
+  useSwapLadder,
   useSwapOptions,
   useLiftSubstitution,
   projectedDose,
@@ -32,16 +31,19 @@ interface Props {
 }
 
 export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
-  const ladder = useMemo(() => readLadder(rx), [rx]);
-  const options = useSwapOptions(rx, open);
+  const { ladder, options, isLoading } = useSwapLadder(rx, open);
   const { apply } = useLiftSubstitution(rx.plan_date);
 
+  const seen = new Set<string>();
   const groups = SWAP_REASON_ORDER.map((reason) => {
-    const slugs = (ladder[reason] ?? []).filter(
-      (s) => options.data?.[s] && s !== rx.movement_slug,
-    );
-    return { reason, candidates: slugs.map((s) => options.data![s]) };
+    const slugs = (ladder[reason] ?? []).filter((s) => {
+      if (!options[s] || s === rx.movement_slug || seen.has(s)) return false;
+      seen.add(s);
+      return true;
+    });
+    return { reason, candidates: slugs.map((s) => options[s]) };
   }).filter((g) => g.candidates.length > 0);
+
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
