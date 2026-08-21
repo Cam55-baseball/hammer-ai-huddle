@@ -62,6 +62,8 @@ export interface VideoWithTags {
   video_url: string;
   video_format?: string | null;
   skill_domains?: SkillDomain[] | null;
+  /** Sports this video was filmed for, e.g. ['baseball'] or ['baseball','softball']. */
+  sport?: string[] | null;
   ai_description?: string | null;
   created_at?: string | null;
   assignments: VideoTagAssignment[]; // assigned taxonomy tags
@@ -83,6 +85,8 @@ export interface VideoTagRule {
   correction_key: string;
   strength: number;
   active: boolean;
+  sport?: TagSport | null;
+  position_scope?: string[] | null;
 }
 
 export interface RecommendInput {
@@ -98,7 +102,12 @@ export interface RecommendInput {
   globalMetrics?: Map<string, { improvementScore: number }>;
   /** Active teaching-phase ids (e.g. ['p1_hip_load','p4_hitters_move']). Soft boost only. */
   activePhases?: string[];
+  /** HARD GATE — athlete sport. Softball athletes never receive baseball-only tags/videos. */
+  sport?: TagSport | null;
+  /** HARD GATE for rules/tags scoped to position groups (catcher, middle_infield, …). */
+  positions?: string[] | null;
 }
+
 
 export interface RecommendResult {
   video: VideoWithTags;
