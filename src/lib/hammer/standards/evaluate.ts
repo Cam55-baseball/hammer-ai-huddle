@@ -297,3 +297,22 @@ export function newlyEarned(before: StandardProgress[], after: StandardProgress[
   }
   return out;
 }
+
+/** Merge two best-indexes (e.g. history plus the set being saved right now). */
+export function mergeIndexes(a: BestIndex, b: BestIndex): BestIndex {
+  const bySlug: Record<string, SlugBest> = {};
+  for (const src of [a, b]) {
+    for (const [slug, v] of Object.entries(src.bySlug)) {
+      const t = (bySlug[slug] ??= emptyBest());
+      t.loadPairs = t.loadPairs.concat(v.loadPairs);
+      t.maxReps = Math.max(t.maxReps, v.maxReps);
+      t.maxDistance = Math.max(t.maxDistance, v.maxDistance);
+      t.maxSeconds = Math.max(t.maxSeconds, v.maxSeconds);
+    }
+  }
+  const canonical: Record<string, number> = { ...a.canonical };
+  for (const [k, v] of Object.entries(b.canonical)) {
+    canonical[k] = Math.max(canonical[k] ?? 0, v);
+  }
+  return { bySlug, canonical };
+}
