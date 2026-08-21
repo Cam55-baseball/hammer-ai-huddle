@@ -106,14 +106,20 @@ export function RoundGrid({
               );
             }
             if (f.kind === "side") {
+              const missing = highlightMissingSide && value !== "L" && value !== "R";
               return (
-                <div key={f.key} className="flex gap-1">
+                <div
+                  key={f.key}
+                  className={`flex gap-1 rounded-md ${missing ? "ring-1 ring-destructive/60" : ""}`}
+                  aria-label="Side"
+                >
                   {SIDES.map((s) => {
                     const active = value === s;
                     return (
                       <button
                         key={s}
                         type="button"
+                        aria-pressed={active}
                         onClick={() => setCell(idx, f.key, active ? "" : s)}
                         className={`h-9 flex-1 rounded-md border text-xs font-medium transition-colors ${
                           active ? "border-primary bg-primary text-primary-foreground" : "bg-muted/30 hover:bg-accent"
@@ -126,6 +132,7 @@ export function RoundGrid({
                 </div>
               );
             }
+
             return (
               <Input
                 key={f.key}
