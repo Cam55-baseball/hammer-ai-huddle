@@ -28,6 +28,9 @@ import { StrikeZoneGrid, type Zone } from "@/components/games/StrikeZoneGrid";
 import {
   Accordion, AccordionItem, AccordionTrigger, AccordionContent,
 } from "@/components/ui/accordion";
+import { SavedReportsPanel } from "@/components/games/reports/SavedReportsPanel";
+import { ScoutingReportPanel } from "@/components/games/reports/ScoutingReportPanel";
+
 
 type Side = "all" | "L" | "R" | "S";
 type ReportCategory =
@@ -246,9 +249,22 @@ export default function GameReports() {
       </div>
 
       <Accordion type="multiple" defaultValue={["heat", "hitting", "usage", "defense", "baserun"]}>
+        <AccordionItem value="saved">
+          <AccordionTrigger>Saved &amp; shared reports</AccordionTrigger>
+          <AccordionContent>
+            <SavedReportsPanel />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="scouting">
+          <AccordionTrigger>Opponent scouting report</AccordionTrigger>
+          <AccordionContent>
+            <ScoutingReportPanel />
+          </AccordionContent>
+        </AccordionItem>
         {(category === "all" || category === "hitting") && (
           <AccordionItem value="heat">
             <AccordionTrigger>Pitch heat map ({heat.total} pitches seen)</AccordionTrigger>
+
             <AccordionContent>
               <div className="flex flex-col sm:flex-row gap-4 items-start">
                 <StrikeZoneGrid heat={heat.heatMap} heatLabels={heat.labels} readOnly size={240} />

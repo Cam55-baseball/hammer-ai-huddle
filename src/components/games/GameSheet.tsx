@@ -39,6 +39,8 @@ import { BaserunLogger } from "./BaserunLogger";
 import { SubLogger } from "./SubLogger";
 import { PitchLogger } from "./PitchLogger";
 import { GameDocumentIngest } from "./GameDocumentIngest";
+import { DataIngestPanel } from "./DataIngestPanel";
+
 import { GameTotalsHeader } from "./GameTotalsHeader";
 import { GameDayMode } from "./GameDayMode";
 import { ActivePlanCard } from "./ActivePlanCard";
@@ -239,9 +241,11 @@ function GameSheetTabs({
       <TabsContent value="subs" className="pt-4">
         <SubLogger gameId={gameId} />
       </TabsContent>
-      <TabsContent value="import" className="pt-4">
+      <TabsContent value="import" className="pt-4 space-y-4">
+        <DataIngestPanel gameId={gameId} sport={g.sport} />
         <GameDocumentIngest gameId={gameId} sport={g.sport} />
       </TabsContent>
+
       <TabsContent value="notes" className="pt-4 space-y-3">
         <Label>Philosophy — pre-game</Label>
         <Textarea
