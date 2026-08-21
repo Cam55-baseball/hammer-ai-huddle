@@ -111,7 +111,11 @@ export function useSaveExerciseLog() {
           // throw_velo_mph, …) so the progression engine can read a personal
           // best without knowing anything about template field naming.
           ...canonicalMetricMap(p.template_id ?? null, p.rounds),
+          // Per-limb decomposition for unilateral work. Null when no round
+          // carried a side — never imputed.
+          per_side: deriveSideMetrics(p.template_id ?? null, p.rounds),
         },
+
 
       };
 
