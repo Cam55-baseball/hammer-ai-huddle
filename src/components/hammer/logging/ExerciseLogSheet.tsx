@@ -19,7 +19,7 @@ import {
 } from "@/hooks/useExerciseLog";
 import { useStandards, useRecordAward } from "@/hooks/useStandards";
 import { standardsForSlug } from "@/lib/hammer/standards/evaluate";
-import { buildBestIndex, evaluateStandard, newlyEarned } from "@/lib/hammer/standards/evaluate";
+import { buildBestIndex, evaluateStandard, newlyEarned, mergeIndexes } from "@/lib/hammer/standards/evaluate";
 import { TIER_LABEL } from "@/lib/hammer/standards/catalog";
 import { StandardTargetLine } from "@/components/hammer/standards/StandardTargetLine";
 import { toast } from "sonner";
