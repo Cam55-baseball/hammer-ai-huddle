@@ -148,9 +148,16 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   };
 
   const handleSave = async () => {
+    if (missingSideCount > 0) {
+      toast.error(
+        `Tag left or right on ${missingSideCount} round${missingSideCount === 1 ? "" : "s"} — side tracking keeps your L/R comparison honest.`,
+      );
+      return;
+    }
     try {
       await save.mutateAsync({
         prescription_id: rx.id,
+
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
         rounds: roundsToPayload(),
