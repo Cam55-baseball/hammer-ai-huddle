@@ -598,5 +598,9 @@ All colors MUST be HSL.
   .rc-print-card * { transform: none !important; animation: none !important; box-shadow: none !important; }
   .rc-print-card .rc-foil { display: none !important; }
   [data-share-export-exclude="true"] { display: none !important; }
+  /* Game Hub reports: clean, paginated PDF output */
+  @page { margin: 14mm; }
+  nav, header[data-app-header], footer[data-app-footer] { display: none !important; }
+  .break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
 }
 
