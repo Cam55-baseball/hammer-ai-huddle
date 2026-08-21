@@ -170,6 +170,7 @@ export function useLiftSubstitution(planDate: string) {
       why.athlete_substitution = {
         from_slug: rx.movement_slug,
         from_name: rx.movement_name,
+        from_sets: rx.sets,
         to_slug: candidate.slug,
         reason,
         reason_label: SWAP_REASON_LABEL[reason],
@@ -206,7 +207,10 @@ export function useLiftSubstitution(planDate: string) {
         .update({
           movement_slug: original.slug,
           movement_name: original.name,
-          sets: original.default_sets ?? rx.sets,
+          sets:
+            ((rx.why_payload as Record<string, any> | null)?.athlete_substitution?.from_sets as number | undefined) ??
+            original.default_sets ??
+            rx.sets,
           substituted_from_slug: null,
           substitution_reason: null,
           why_payload: why,
