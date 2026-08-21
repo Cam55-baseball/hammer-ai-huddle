@@ -130,15 +130,19 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics,
-    activePhases,
+    activePhases, sport, positions,
   } = input;
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
 
-  // Build key→tagId lookup scoped to this skill domain
+  // Build key→tagId lookup scoped to this skill domain + sport + position group.
   const keyToTagId = new Map<string, string>();
   const tagIdToTag = new Map<string, TaxonomyTag>();
   for (const t of taxonomy) {
-    if (t.skill_domain === skillDomain) {
+    if (
+      t.skill_domain === skillDomain &&
+      sportMatches(t.sport, sport) &&
+      positionMatches(t.position_scope, positions)
+    ) {
       keyToTagId.set(`${t.layer}:${t.key}`, t.id);
     }
     tagIdToTag.set(t.id, t);
@@ -148,6 +152,10 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const triggeredCorrections = new Map<string, { strength: number; reason: string }>();
   for (const r of rules) {
     if (!r.active || r.skill_domain !== skillDomain) continue;
+    // HARD GATE — a windmill rule may never fire for a baseball athlete (and vice versa),
+    // and a catcher-scoped rule may never fire for an outfielder.
+    if (!sportMatches(r.sport, sport)) continue;
+    if (!positionMatches(r.position_scope, positions)) continue;
     if (!movementPatterns.includes(r.movement_key)) continue;
     if (r.result_key && !resultTags.includes(r.result_key)) continue;
     if (r.context_key && !contextTags.includes(r.context_key)) continue;
@@ -157,6 +165,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       triggeredCorrections.set(r.correction_key, { strength: r.strength, reason });
     }
   }
+
 
   const movementTagIds = new Set(movementPatterns.map(k => keyToTagId.get(`movement_pattern:${k}`)).filter(Boolean) as string[]);
   const resultTagIds = new Set(resultTags.map(k => keyToTagId.get(`result:${k}`)).filter(Boolean) as string[]);
