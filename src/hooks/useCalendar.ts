@@ -283,11 +283,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .gte('event_date', startStr)
           .lte('event_date', endStr) as any),
 
-        // Scheduled practice sessions
+        // Scheduled practice sessions (own rows only; one-off rows scoped to
+        // the visible range, recurring rows always pulled so they can expand).
         (supabase
           .from('scheduled_practice_sessions' as any)
           .select('*')
-          .neq('status', 'cancelled') as any),
+          .eq('user_id', user.id)
+          .neq('status', 'cancelled')
+          .or(`and(scheduled_date.gte.${startStr},scheduled_date.lte.${endStr}),recurring_active.is.true`) as any),
 
         // Game Plan daily skips (syncs skip state from Game Plan → Calendar)
         supabase
