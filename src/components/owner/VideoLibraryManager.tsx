@@ -93,6 +93,8 @@ export function VideoLibraryManager() {
   const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
   const [editFocus, setEditFocus] = useState<string | undefined>(undefined);
   const [editAutoSuggest, setEditAutoSuggest] = useState(false);
+  const [editSmartDefaults, setEditSmartDefaults] = useState(false);
+  const [editWalkMissing, setEditWalkMissing] = useState(false);
   const [videoFilter, setVideoFilter] = useState<VideoFilter>('all');
   const [activeTab, setActiveTab] = useState<string>('videos');
   const [backfillOpen, setBackfillOpen] = useState(false);
