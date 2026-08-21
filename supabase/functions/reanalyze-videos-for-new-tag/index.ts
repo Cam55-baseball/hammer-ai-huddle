@@ -95,17 +95,24 @@ Deno.serve(async (req) => {
     // Candidate videos: same skill domain, not blocked, with usable description
     const { data: videos } = await admin
       .from('library_videos')
-      .select('id, title, description, ai_description, skill_domains, distribution_tier')
+      .select('id, title, description, ai_description, skill_domains, sport, distribution_tier')
       .contains('skill_domains', [newTag.skill_domain])
       .neq('distribution_tier', 'blocked')
       .order('created_at', { ascending: false })
       .limit(MAX_VIDEOS_PER_RUN);
 
-    const candidates = (videos || []).filter((v: any) =>
-      (v.ai_description && v.ai_description.trim().length > 0) ||
-      (v.description && v.description.trim().length > 0) ||
-      (v.title && v.title.trim().length > 0)
-    );
+    // A sport-scoped tag may only be backfilled onto videos of that sport
+    // (or sport-agnostic videos). Softball never inherits overhand tags.
+    const newTagSport = (newTag as any).sport ?? 'both';
+
+    const candidates = (videos || []).filter((v: any) => {
+      const vSports: string[] = v.sport || [];
+      if (newTagSport !== 'both' && vSports.length > 0 && !vSports.includes(newTagSport)) return false;
+      return (v.ai_description && v.ai_description.trim().length > 0) ||
+        (v.description && v.description.trim().length > 0) ||
+        (v.title && v.title.trim().length > 0);
+    });
+
 
     if (candidates.length === 0) {
       return new Response(JSON.stringify({ ok: true, analyzed: 0, proposals_inserted: 0 }), {
