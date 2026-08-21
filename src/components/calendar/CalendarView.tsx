@@ -74,6 +74,8 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [daySheetOpen, setDaySheetOpen] = useState(false);
+  const [jumpDate, setJumpDate] = useState('');
+
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
   const [importerOpen, setImporterOpen] = useState(false);
