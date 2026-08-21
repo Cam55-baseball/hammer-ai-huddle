@@ -149,12 +149,33 @@ function SwapRow({
 export function LiftSwapUndoChip({ rx }: { rx: WkRx }) {
   const options = useSwapOptions(rx, true);
   const { undo } = useLiftSubstitution(rx.plan_date);
-  const original = rx.substituted_from_slug ? options.data?.[rx.substituted_from_slug] : null;
-  const fromName =
-    (rx.why_payload as Record<string, any> | null)?.athlete_substitution?.from_name ??
-    original?.name ??
-    rx.substituted_from_slug;
+  const swapMeta = (rx.why_payload as Record<string, any> | null)?.athlete_substitution ?? null;
+  const catalogOriginal = rx.substituted_from_slug ? options.data?.[rx.substituted_from_slug] : null;
+
   if (!rx.substituted_from_slug) return null;
+
+  // Undo must never disappear because the catalog row didn't come back in the
+  // ladder query — the swap receipt on the row carries everything Undo needs.
+  const original: SwapCandidate | null =
+    catalogOriginal ??
+    (swapMeta?.from_slug
+      ? {
+          slug: String(swapMeta.from_slug),
+          name: String(swapMeta.from_name ?? swapMeta.from_slug),
+          movement_category: null,
+          default_sets: typeof swapMeta.from_sets === "number" ? swapMeta.from_sets : null,
+          default_reps: null,
+          default_duration_seconds: null,
+          default_distance_feet: null,
+          default_total_reps: null,
+          dosage_unit: null,
+          equipment_requirements: null,
+          cue: null,
+        }
+      : null);
+
+  const fromName = swapMeta?.from_name ?? catalogOriginal?.name ?? rx.substituted_from_slug;
+
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
       <Badge variant="outline" className="text-[10px] gap-1">
