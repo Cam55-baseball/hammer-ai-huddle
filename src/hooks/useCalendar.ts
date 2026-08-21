@@ -289,7 +289,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .from('scheduled_practice_sessions' as any)
           .select('*')
           .eq('user_id', user.id)
-          .neq('status', 'cancelled')
+          .not('status', 'in', '(canceled,cancelled,rescheduled)')
           .or(`and(scheduled_date.gte.${startStr},scheduled_date.lte.${endStr}),recurring_active.is.true`) as any),
 
         // Game Plan daily skips (syncs skip state from Game Plan → Calendar)

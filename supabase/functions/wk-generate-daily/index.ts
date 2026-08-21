@@ -287,7 +287,7 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("scheduled_practice_sessions")
         .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, title, start_time, status")
         .eq("user_id", user.id)
-        .neq("status", "cancelled")
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
         .or(`scheduled_date.eq.${planDate},recurring_active.is.true`)
         .limit(50),
       admin.from("athlete_side_preferences").select("*").eq("user_id", user.id).maybeSingle(),
