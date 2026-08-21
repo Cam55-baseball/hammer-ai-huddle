@@ -60,3 +60,19 @@ export function domainToModule(domain: SkillDomain): 'hitting' | 'pitching' | 't
 export function domainToFoundationDomain(domain: SkillDomain) {
   return domain as 'hitting' | 'pitching' | 'throwing' | 'fielding' | 'base_running';
 }
+
+/**
+ * Map an app "module"/category string (drills, plan cards, practice modules)
+ * onto the skill domain that owns it. Returns null when nothing sane maps.
+ */
+export function moduleToSkillDomain(mod?: string | null): SkillDomain | null {
+  if (!mod) return null;
+  const m = String(mod).toLowerCase();
+  if (m.includes('bat') || m.includes('hit') || m.includes('swing')) return 'hitting';
+  if (m.includes('pitch')) return 'pitching';
+  if (m.includes('throw') || m.includes('arm')) return 'throwing';
+  if (m.includes('field') || m.includes('defen') || m.includes('catch')) return 'fielding';
+  if (m.includes('baserun') || m.includes('base_run') || m.includes('speed') || m.includes('run'))
+    return 'base_running';
+  return null;
+}

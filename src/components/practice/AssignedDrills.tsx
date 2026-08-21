@@ -4,6 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, ClipboardList, User } from 'lucide-react';
 import { usePlayerAssignments, useCompleteAssignment } from '@/hooks/useDrillAssignments';
 import { toast } from 'sonner';
+import { emitVideoMoment } from '@/lib/videoMoments/bus';
+import { moduleToSkillDomain } from '@/lib/videoMoments/registry';
+import type { TagSport } from '@/lib/videoRecommendationEngine';
 
 export function AssignedDrills() {
   const { data: assignments, isLoading } = usePlayerAssignments();
@@ -13,8 +16,23 @@ export function AssignedDrills() {
   const completed = assignments?.filter(a => a.completed) ?? [];
 
   const handleComplete = (id: string) => {
+    const assignment = assignments?.find(a => a.id === id);
     completeMutation.mutate(id, {
-      onSuccess: () => toast.success('Drill marked as completed!'),
+      onSuccess: () => {
+        toast.success('Drill marked as completed!');
+        const domain =
+          moduleToSkillDomain(assignment?.drill_module) ??
+          moduleToSkillDomain(assignment?.drill_skill_target);
+        if (domain) {
+          emitVideoMoment({
+            kind: 'drill_complete',
+            skillDomain: domain,
+            sport: (assignment?.drill_sport as TagSport) ?? null,
+            label: assignment?.drill_name ?? 'That drill',
+            sourceId: id,
+          });
+        }
+      },
       onError: () => toast.error('Failed to update'),
     });
   };
