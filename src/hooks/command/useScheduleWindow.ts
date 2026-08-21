@@ -23,15 +23,31 @@ export type ScheduleKind =
   | "tournament"
   | "practice"
   | "team_practice"
+  | "trainer_session"
+  | "solo_practice"
   | "camp"
   | "travel"
   | "other";
+
+/** Canonical practice taxonomy stored on `scheduled_practice_sessions`. */
+export type PracticeKind = "team" | "trainer" | "solo" | "showcase" | "travel" | "other";
+
+/** Practice load carried by a slot — drives plan modulation downstream. */
+export type PracticeIntensity = "light" | "standard" | "heavy";
 
 export interface ScheduleSlot {
   kind: ScheduleKind;
   date: string; // YYYY-MM-DD
   daysUntil: number; // 0 = today, 1 = tomorrow, …
   label: string;
+  /** Canonical taxonomy for practice-derived slots (null for games). */
+  practiceKind?: PracticeKind | null;
+  /** Athlete-declared load for practice-derived slots. */
+  intensity?: PracticeIntensity | null;
+  durationMinutes?: number | null;
+  /** True when this slot came from a weekly recurring practice rule. */
+  recurring?: boolean;
+  startTime?: string | null;
 }
 
 export interface TournamentWindow {
@@ -59,6 +75,10 @@ export interface ScheduleWindow {
   /** Total slots in the window. */
   totalGames: number;
   totalPractices: number;
+  /** True when a team practice or showcase lands today. */
+  heavyPracticeToday: boolean;
+  /** All practice-derived slots landing today. */
+  practicesToday: ScheduleSlot[];
 }
 
 
@@ -116,12 +136,15 @@ export function useScheduleWindow(): ScheduleWindow {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("scheduled_practice_sessions")
-        .select("id, scheduled_date, title, status, session_type, session_module")
+        .select(
+          "id, scheduled_date, title, status, session_type, session_module, practice_kind, intensity, duration_minutes, start_time, recurring_active, recurring_days",
+        )
         .eq("user_id", uid!)
-        .gte("scheduled_date", start)
-        .lte("scheduled_date", end)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
-        .order("scheduled_date", { ascending: true });
+        // Exact-date rows inside the window, plus recurring rules (expanded below).
+        .or(`and(scheduled_date.gte.${start},scheduled_date.lte.${end}),recurring_active.is.true`)
+        .order("scheduled_date", { ascending: true })
+        .limit(200);
       return (data ?? []) as Array<{
         id: string;
         scheduled_date: string;
@@ -129,6 +152,12 @@ export function useScheduleWindow(): ScheduleWindow {
         status: string | null;
         session_type: string | null;
         session_module: string | null;
+        practice_kind: string | null;
+        intensity: string | null;
+        duration_minutes: number | null;
+        start_time: string | null;
+        recurring_active: boolean | null;
+        recurring_days: number[] | null;
       }>;
     },
   });
@@ -147,6 +176,8 @@ export function useScheduleWindow(): ScheduleWindow {
       tournamentWindow: null,
       totalGames: 0,
       totalPractices: 0,
+      heavyPracticeToday: false,
+      practicesToday: [],
     };
   }
 
@@ -160,33 +191,92 @@ export function useScheduleWindow(): ScheduleWindow {
       label: g.opponent_name ? `vs ${g.opponent_name}` : isTournament ? "Tournament" : "Game",
     });
   }
-  for (const p of practices.data ?? []) {
+  // Window dates (today … today+7d) used to expand recurring practice rules.
+  const windowDates: string[] = [];
+  for (let i = 0; i <= 7; i++) {
+    windowDates.push(isoDate(new Date(today.getTime() + i * 24 * 3600 * 1000)));
+  }
+
+  const normalizeKind = (p: {
+    practice_kind: string | null;
+    session_type: string | null;
+    title: string | null;
+  }): PracticeKind => {
+    const raw = (p.practice_kind ?? "").toLowerCase();
+    if (["team", "trainer", "solo", "showcase", "travel", "other"].includes(raw)) {
+      return raw as PracticeKind;
+    }
+    // Legacy rows predate the taxonomy — infer from type/title, never invent.
     const t = (p.session_type ?? "").toLowerCase();
     const titleLc = (p.title ?? "").toLowerCase();
-    const isCamp =
-      t === "camp" || t === "showcase" || t === "clinic" ||
-      /\b(camp|showcase|clinic)\b/.test(titleLc);
-    const isTravel = t === "travel" || /\btravel\b/.test(titleLc);
-    const isTeamPractice =
-      t === "team_practice" || t === "team-practice" ||
-      /\bteam practice\b/.test(titleLc);
-    const kind: ScheduleKind = isCamp
-      ? "camp"
-      : isTravel
-        ? "travel"
-        : isTeamPractice
-          ? "team_practice"
-          : t === "practice"
-            ? "practice"
-            : t === "other"
-              ? "other"
-              : "practice";
-    slots.push({
-      kind,
-      date: p.scheduled_date,
-      daysUntil: daysBetween(p.scheduled_date, today),
-      label: p.title || (kind === "camp" ? "Camp" : kind === "travel" ? "Travel" : "Practice"),
-    });
+    if (t === "camp" || t === "showcase" || t === "clinic" || /\b(camp|showcase|clinic|combine|tryout)\b/.test(titleLc)) return "showcase";
+    if (t === "travel" || /\btravel\b/.test(titleLc)) return "travel";
+    if (t === "trainer" || t === "trainer_session" || /\b(lesson|trainer|academy|private)\b/.test(titleLc)) return "trainer";
+    if (t === "solo" || t === "solo_practice" || /\b(cage|solo|on my own|long toss)\b/.test(titleLc)) return "solo";
+    return "team";
+  };
+
+  const SLOT_KIND: Record<PracticeKind, ScheduleKind> = {
+    team: "team_practice",
+    trainer: "trainer_session",
+    solo: "solo_practice",
+    showcase: "camp",
+    travel: "travel",
+    other: "other",
+  };
+  const DEFAULT_INTENSITY: Record<PracticeKind, PracticeIntensity> = {
+    team: "heavy",
+    showcase: "heavy",
+    trainer: "standard",
+    solo: "light",
+    travel: "light",
+    other: "light",
+  };
+  const FALLBACK_LABEL: Record<PracticeKind, string> = {
+    team: "Team practice",
+    trainer: "Trainer session",
+    solo: "Personal practice",
+    showcase: "Showcase",
+    travel: "Travel",
+    other: "Scheduled event",
+  };
+
+  for (const p of practices.data ?? []) {
+    const practiceKind = normalizeKind(p);
+    const kind = SLOT_KIND[practiceKind];
+    const intensity = (["light", "standard", "heavy"] as const).includes(
+      (p.intensity ?? "") as PracticeIntensity,
+    )
+      ? (p.intensity as PracticeIntensity)
+      : DEFAULT_INTENSITY[practiceKind];
+    const label = p.title || FALLBACK_LABEL[practiceKind];
+
+    // Dates this rule occupies inside the window: the exact date and/or each
+    // matching weekday for an active recurring rule.
+    const dates = new Set<string>();
+    if (p.scheduled_date >= start && p.scheduled_date <= end) dates.add(p.scheduled_date);
+    if (p.recurring_active && Array.isArray(p.recurring_days) && p.recurring_days.length) {
+      for (const d of windowDates) {
+        const dow = new Date(`${d}T12:00:00Z`).getUTCDay();
+        if (p.recurring_days.includes(dow) && (!p.scheduled_date || p.scheduled_date <= d)) {
+          dates.add(d);
+        }
+      }
+    }
+
+    for (const date of dates) {
+      slots.push({
+        kind,
+        date,
+        daysUntil: daysBetween(date, today),
+        label,
+        practiceKind,
+        intensity,
+        durationMinutes: p.duration_minutes ?? null,
+        startTime: p.start_time ?? null,
+        recurring: !!p.recurring_active && date !== p.scheduled_date,
+      });
+    }
   }
 
   const todaySlots = slots.filter((s) => s.daysUntil === 0);
@@ -252,9 +342,12 @@ export function useScheduleWindow(): ScheduleWindow {
   }
 
   const totalGames = slots.filter((s) => s.kind === "game" || s.kind === "tournament").length;
-  const totalPractices = slots.filter(
-    (s) => s.kind === "practice" || s.kind === "team_practice",
-  ).length;
+  const practiceSlots = slots.filter((s) => !!s.practiceKind && s.practiceKind !== "travel" && s.practiceKind !== "other");
+  const totalPractices = practiceSlots.length;
+  const practicesToday = practiceSlots.filter((s) => s.daysUntil === 0);
+  const heavyPracticeToday = practicesToday.some(
+    (s) => s.intensity === "heavy" || s.practiceKind === "team" || s.practiceKind === "showcase",
+  );
 
   return {
     loading,
@@ -267,6 +360,8 @@ export function useScheduleWindow(): ScheduleWindow {
     tournamentWindow,
     totalGames,
     totalPractices,
+    heavyPracticeToday,
+    practicesToday,
   };
 }
 
