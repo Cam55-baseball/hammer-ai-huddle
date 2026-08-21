@@ -320,6 +320,32 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             </Button>
           </div>
 
+          {/* Jump to a date — opens that day's full record list */}
+          <div className="mb-4 flex items-center gap-2">
+            <input
+              type="date"
+              value={jumpDate}
+              onChange={(e) => setJumpDate(e.target.value)}
+              aria-label={t('calendar.jumpToDate', 'Jump to a date')}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!jumpDate}
+              onClick={() => {
+                if (!jumpDate) return;
+                const [y, m, d] = jumpDate.split('-').map(Number);
+                const target = new Date(y, m - 1, d);
+                setCurrentMonth(target);
+                handleDayClick(target);
+              }}
+            >
+              {t('calendar.viewDay', 'View day')}
+            </Button>
+          </div>
+
+
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1">
             {/* Week day headers */}
