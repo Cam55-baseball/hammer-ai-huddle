@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
+import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
 import {
   usePracticeHistory,
   useGameHistory,
@@ -165,6 +166,8 @@ export default function History() {
         </div>
 
         <div className="space-y-3">
+          <StandardsBoard />
+
           <HistorySection
             title="Practice sessions"
             icon={<Dumbbell className="h-4 w-4 text-primary" />}
