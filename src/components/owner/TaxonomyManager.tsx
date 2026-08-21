@@ -13,7 +13,11 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import type { TagLayer, SkillDomain } from '@/lib/videoRecommendationEngine';
+import type { TagLayer, SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
+import { POSITION_GROUPS, POSITION_GROUP_LABELS, type PositionGroup } from '@/lib/hammer/positions/positionGroups';
+
+const SPORTS: TagSport[] = ['both', 'baseball', 'softball'];
+
 
 const LAYERS: TagLayer[] = ['movement_pattern', 'result', 'context', 'correction'];
 const DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
