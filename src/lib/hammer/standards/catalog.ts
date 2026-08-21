@@ -34,13 +34,22 @@ export const TIER_BLURB: Record<StandardTier, string> = {
   world_class: "The mark almost nobody holds. This is the ceiling we chase.",
 };
 
-export type TrainingAgeClass = "beginner" | "developing" | "advanced" | "elite";
+/** Mirrors the canonical classes in src/lib/wic/trainingAge.ts. */
+export type TrainingAgeClass =
+  | "beginner"
+  | "developing"
+  | "intermediate"
+  | "advanced"
+  | "elite"
+  | "professional";
 
 const TA_RANK: Record<TrainingAgeClass, number> = {
   beginner: 0,
   developing: 1,
-  advanced: 2,
-  elite: 3,
+  intermediate: 2,
+  advanced: 3,
+  elite: 4,
+  professional: 5,
 };
 
 export function trainingAgeMeets(actual: string | null, required: TrainingAgeClass): boolean {
