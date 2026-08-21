@@ -72,6 +72,15 @@ function pickRecorderMime(): string {
 export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
   const { user } = useOptionalAuth();
   const resolvedModule: ClipModule = moduleProp ?? "hitting";
+  const fireDelayCamMoment = useCallback(() => {
+    emitVideoMoment({
+      kind: "delaycam_saved",
+      skillDomain: resolvedModule,
+      sport: (resolvedSport as any) ?? null,
+      label: "Your clip",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedModule]);
   const resolvedSport: ClipSport =
     sportProp ??
     ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
