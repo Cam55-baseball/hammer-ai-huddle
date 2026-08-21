@@ -318,6 +318,8 @@ export default function Games() {
  */
 function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
   const { user } = useAuth();
+  const { sport: athleteSport } = useSportTheme();
+
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
   const todayGame = useQuery({
