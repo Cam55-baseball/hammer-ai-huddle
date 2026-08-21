@@ -13,6 +13,12 @@ import { normalizeTier, TIER_BOOST } from './videoTier';
 export type SuggestionMode = 'session' | 'long_term';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
 export type TagLayer = 'movement_pattern' | 'result' | 'context' | 'correction';
+/** Sport scope of a tag / rule. 'both' = sport-agnostic. */
+export type TagSport = 'baseball' | 'softball' | 'both';
+/** Position groups a tag / rule applies to. null / empty = all positions. */
+export type PositionScope =
+  | 'pitcher' | 'catcher' | 'first_base' | 'middle_infield'
+  | 'third_base' | 'corner_outfield' | 'center_field';
 
 export interface TaxonomyTag {
   id: string;
@@ -20,7 +26,26 @@ export interface TaxonomyTag {
   key: string;
   label: string;
   skill_domain: SkillDomain;
+  /** Sport specialization — baseball (overhand) vs softball (windmill) vs both. */
+  sport?: TagSport | null;
+  /** Position groups this tag is legal for. null / [] = every position. */
+  position_scope?: string[] | null;
 }
+
+/** True when a sport-scoped row is legal for the athlete/video sport. */
+export function sportMatches(rowSport: TagSport | null | undefined, target?: TagSport | null): boolean {
+  if (!target || target === 'both') return true;
+  const s = rowSport ?? 'both';
+  return s === 'both' || s === target;
+}
+
+/** True when a position-scoped row is legal for the athlete/video positions. */
+export function positionMatches(scope: string[] | null | undefined, positions?: string[] | null): boolean {
+  if (!scope || scope.length === 0) return true;
+  if (!positions || positions.length === 0) return true;
+  return scope.some(s => positions.includes(s));
+}
+
 
 export interface VideoTagAssignment {
   tag_id: string;
