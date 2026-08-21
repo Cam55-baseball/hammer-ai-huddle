@@ -10,11 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, Dumbbell, Tag, Trophy } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
-import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
@@ -54,68 +52,6 @@ interface LibrarySession {
   source: 'video';
 }
 
-interface PracticeSession {
-  id: string;
-  user_id: string;
-  sport: string;
-  session_type: string;
-  session_date: string;
-  module: string;
-  drill_blocks: any;
-  notes: string | null;
-  composite_indexes: any;
-  coach_grade: number | null;
-  created_at: string;
-  session_context: any;
-  source: 'practice';
-}
-
-interface GameSession {
-  id: string;
-  user_id: string;
-  sport: string;
-  team_name: string;
-  opponent_name: string;
-  game_type: string;
-  league_level: string;
-  game_date: string;
-  venue: string | null;
-  total_innings: number;
-  lineup: any;
-  game_summary: any;
-  game_mode: string | null;
-  is_practice_game: boolean | null;
-  status: string;
-  created_at: string;
-  source: 'game';
-  session_date?: string;
-}
-
-type ClubItem = LibrarySession | PracticeSession | GameSession;
-
-function isPractice(item: ClubItem): item is PracticeSession {
-  return item.source === 'practice';
-}
-
-function isGame(item: ClubItem): item is GameSession {
-  return item.source === 'game';
-}
-
-function extractRepTags(drillBlocks: any): string[] {
-  if (!Array.isArray(drillBlocks)) return [];
-  const tags = new Set<string>();
-  for (const block of drillBlocks) {
-    if (Array.isArray(block?.outcome_tags)) {
-      block.outcome_tags.forEach((t: string) => tags.add(t));
-    }
-  }
-  return Array.from(tags);
-}
-
-function getDrillCount(drillBlocks: any): number {
-  return Array.isArray(drillBlocks) ? drillBlocks.length : 0;
-}
-
 export default function PlayersClub() {
   const { t } = useTranslation();
   const { session, user } = useAuth();
@@ -124,17 +60,12 @@ export default function PlayersClub() {
   const viewingPlayerId = searchParams.get('playerId');
 
   const [videos, setVideos] = useState<LibrarySession[]>([]);
-  const [practices, setPractices] = useState<PracticeSession[]>([]);
-  const [games, setGames] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'video' | 'practice' | 'game'>('all');
   const [sportFilter, setSportFilter] = useState<string>('all');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<LibrarySession | null>(null);
-  const [selectedPractice, setSelectedPractice] = useState<PracticeSession | null>(null);
-  const [selectedGame, setSelectedGame] = useState<GameSession | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>('');
@@ -172,13 +103,11 @@ export default function PlayersClub() {
       if (error) throw error;
 
       // Handle both old (array) and new (object with videos/practices) response formats
+      // Players Club is video-only; everything else lives in History (/history).
       if (Array.isArray(data)) {
         setVideos(data.map((d: any) => ({ ...d, source: 'video' as const })));
-        setPractices([]);
       } else {
         setVideos(data?.videos || []);
-        setPractices(data?.practices || []);
-        setGames((data?.games || []).map((g: any) => ({ ...g, session_date: g.game_date })));
       }
     } catch (error: any) {
       console.error('Error fetching library:', error);
@@ -251,24 +180,17 @@ export default function PlayersClub() {
     }
   };
 
-  const allItems: ClubItem[] = useMemo(() => {
-    let items: ClubItem[] = [];
-    if (sourceFilter === 'all' || sourceFilter === 'video') items = [...items, ...videos];
-    if (sourceFilter === 'all' || sourceFilter === 'practice') items = [...items, ...practices];
-    if (sourceFilter === 'all' || sourceFilter === 'game') items = [...items, ...games];
-    
-    return items
-      .filter(item => {
+  const allItems: LibrarySession[] = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return videos
+      .filter((item) => {
         const matchesSport = sportFilter === 'all' || item.sport === sportFilter;
-        const matchesModule = moduleFilter === 'all' || ('module' in item && item.module === moduleFilter);
-        const matchesSearch = !searchQuery || 
-          (!isPractice(item) && !isGame(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase()))) ||
-          (isGame(item) && (item.team_name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.opponent_name?.toLowerCase().includes(searchQuery.toLowerCase())));
+        const matchesModule = moduleFilter === 'all' || item.module === moduleFilter;
+        const matchesSearch = !q || (item.library_title ?? '').toLowerCase().includes(q);
         return matchesSport && matchesModule && matchesSearch;
       })
       .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime());
-  }, [videos, practices, games, sourceFilter, sportFilter, moduleFilter, searchQuery]);
+  }, [videos, sportFilter, moduleFilter, searchQuery]);
 
   const getAnnotationCount = (session: LibrarySession) => {
     if (!session.annotation_count || !Array.isArray(session.annotation_count)) return 0;
@@ -276,94 +198,6 @@ export default function PlayersClub() {
   };
 
   const isOwnLibrary = !viewingPlayerId || viewingPlayerId === user?.id;
-
-  const renderPracticeCard = (ps: PracticeSession) => {
-    const drillCount = getDrillCount(ps.drill_blocks);
-    const tags = extractRepTags(ps.drill_blocks);
-
-    return (
-      <Card key={ps.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedPractice(ps)}>
-        <CardContent className="p-4 space-y-3">
-          {/* Header */}
-          <div className="flex items-center gap-2">
-            <Dumbbell className="h-5 w-5 text-primary shrink-0" />
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold line-clamp-1 capitalize">
-                {ps.session_type?.replace(/_/g, ' ') || ps.module}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {new Date(ps.session_date).toLocaleDateString()}
-              </p>
-            </div>
-            <Badge variant="outline" className="text-[10px] uppercase tracking-wide" title="Practices now live in Practice History. This card is a legacy entry.">Legacy</Badge>
-          </div>
-
-          {/* Badges */}
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="capitalize">{ps.sport}</Badge>
-            <Badge variant="outline" className="capitalize">{ps.module}</Badge>
-            {drillCount > 0 && (
-              <Badge variant="secondary">{drillCount} drill{drillCount !== 1 ? 's' : ''}</Badge>
-            )}
-            {ps.coach_grade != null && (
-              <Badge variant="secondary">Grade: {ps.coach_grade}</Badge>
-            )}
-          </div>
-
-          {/* Rep Tags */}
-          {tags.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap">
-              <Tag className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
-              {tags.map(tag => (
-                <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 capitalize">
-                  {tag.replace(/_/g, ' ')}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {/* Notes */}
-          {ps.notes && (
-            <p className="text-xs text-muted-foreground line-clamp-2">{ps.notes}</p>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderGameCard = (game: GameSession) => {
-    const summary = game.game_summary as any;
-    return (
-      <Card key={game.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedGame(game)}>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-primary shrink-0" />
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold line-clamp-1">
-                {game.team_name} vs {game.opponent_name}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {new Date(game.game_date).toLocaleDateString()}
-              </p>
-            </div>
-            <Badge variant="outline" className="text-[10px] uppercase tracking-wide" title="Games now live in the Game Hub. This card is a legacy entry.">Legacy</Badge>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="capitalize">{game.sport}</Badge>
-            <Badge variant="outline" className="capitalize">{game.game_type.replace(/_/g, ' ')}</Badge>
-            <Badge variant="secondary">{game.league_level}</Badge>
-            {summary?.team_runs !== undefined && (
-              <Badge variant="secondary">{summary.team_runs} - {summary.opponent_runs ?? '?'}</Badge>
-            )}
-          </div>
-          {game.venue && (
-            <p className="text-xs text-muted-foreground">{game.venue}</p>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
 
   const renderVideoCard = (session: LibrarySession) => {
     return (
@@ -514,26 +348,12 @@ export default function PlayersClub() {
           </div>
         </div>
 
-        {/* Source Filter Tabs (practice/game tabs only show when legacy items exist) */}
-        <Tabs value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="video">Videos</TabsTrigger>
-            {practices.length > 0 && (
-              <TabsTrigger value="practice">Practice (Legacy)</TabsTrigger>
-            )}
-            {games.length > 0 && (
-              <TabsTrigger value="game">Games (Legacy)</TabsTrigger>
-            )}
-          </TabsList>
-        </Tabs>
-
         {/* Quick links to where practices and games now live */}
         {isOwnLibrary && (
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-            <span>Looking for something specific?</span>
-            <Link to="/practice" className="text-primary hover:underline">Practice History →</Link>
-            <Link to="/games" className="text-primary hover:underline">Games →</Link>
+            <span>Practices, games, reports and recaps live in</span>
+            <Link to="/history" className="text-primary hover:underline">History →</Link>
+            <Link to="/games" className="text-primary hover:underline">Game Hub →</Link>
           </div>
         )}
 
@@ -595,7 +415,7 @@ export default function PlayersClub() {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {allItems.map((item) => (
               <VideoCardLazy key={item.id}>
-                {isPractice(item) ? renderPracticeCard(item) : isGame(item) ? renderGameCard(item) : (
+                {(
                   viewMode === 'list' ? (
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-row">
                       <CardContent className="p-0 flex flex-row w-full">
@@ -652,15 +472,6 @@ export default function PlayersClub() {
             ))}
           </div>
         )}
-
-        {/* Practice Session Detail Dialog */}
-        <PracticeSessionDetailDialog
-          session={selectedPractice}
-          open={!!selectedPractice}
-          onClose={() => setSelectedPractice(null)}
-        />
-
-        {/* Game detail moved to /games */}
 
         {/* Session Detail Dialog */}
         {selectedSession && (

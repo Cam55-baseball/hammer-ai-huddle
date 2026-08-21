@@ -74,6 +74,8 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [daySheetOpen, setDaySheetOpen] = useState(false);
+  const [jumpDate, setJumpDate] = useState('');
+
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
   const [importerOpen, setImporterOpen] = useState(false);
@@ -319,6 +321,32 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Jump to a date — opens that day's full record list */}
+          <div className="mb-4 flex items-center gap-2">
+            <input
+              type="date"
+              value={jumpDate}
+              onChange={(e) => setJumpDate(e.target.value)}
+              aria-label={t('calendar.jumpToDate', 'Jump to a date')}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!jumpDate}
+              onClick={() => {
+                if (!jumpDate) return;
+                const [y, m, d] = jumpDate.split('-').map(Number);
+                const target = new Date(y, m - 1, d);
+                setCurrentMonth(target);
+                handleDayClick(target);
+              }}
+            >
+              {t('calendar.viewDay', 'View day')}
+            </Button>
+          </div>
+
 
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1">
