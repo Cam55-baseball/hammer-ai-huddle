@@ -47,6 +47,7 @@ import { usePitcherDossiers, useOpponentHitters } from "@/hooks/useGameDossiers"
 import { PitcherDossierDrawer } from "./PitcherDossierDrawer";
 import { HitterDossierDrawer } from "./HitterDossierDrawer";
 import { NumberField } from "@/components/games/NumberField";
+import { fireGameVideoMoment } from "@/lib/videoMoments/gameMoment";
 
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
@@ -161,7 +162,12 @@ export function GameSheet({
             <GameSheetTabs
               gameId={gameId}
               g={g}
-              onPatch={(p) => update.mutate(p)}
+              onPatch={(p) => {
+                update.mutate(p);
+                if (p.status === "final") {
+                  fireGameVideoMoment(gameId, (g?.sport as any) ?? null);
+                }
+              }}
             />
           </div>
           </>
