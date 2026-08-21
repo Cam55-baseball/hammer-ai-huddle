@@ -450,7 +450,9 @@ const handler = async (req: Request): Promise<Response> => {
           reason: "learning_loop",
           detail: `Recent recovery ack (${recentAck.reduction_reason ?? "mixed"}) — holding CNS cap conservative for one more day.`,
         });
+      }
     }
+
 
     // Practice-day modulation. Team practice / showcase days carry hidden
     // volume the athlete never logs, so the lift day gets trimmed. Solo and
