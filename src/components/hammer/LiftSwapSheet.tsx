@@ -107,6 +107,7 @@ function SwapRow({
 }) {
   const dose = describeDose(projectedDose(rx, candidate, reason));
   const equipment = (candidate.equipment_requirements ?? []).filter(Boolean);
+  const perSide = matchesUnilateralSlug(candidate.slug);
   return (
     <button
       type="button"
@@ -118,12 +119,18 @@ function SwapRow({
         <span className="text-sm font-medium break-words">{candidate.name}</span>
         <Repeat2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </div>
-      <div className="mt-0.5 text-[11px] text-muted-foreground">{dose}</div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground">
+        {dose}
+        {perSide ? " · per side" : ""}
+      </div>
       <div className="mt-1 flex flex-wrap gap-1">
         {candidate.movement_category && (
           <Badge variant="outline" className="text-[10px]">
             Same slot: {candidate.movement_category.replace(/_/g, " ")}
           </Badge>
+        )}
+        {perSide && (
+          <Badge variant="outline" className="text-[10px]">Logs left / right</Badge>
         )}
         {equipment.length > 0 && (
           <Badge variant="outline" className="text-[10px]">Needs: {equipment.join(", ")}</Badge>
@@ -135,6 +142,7 @@ function SwapRow({
     </button>
   );
 }
+
 
 /** Compact "Swapped from X · Undo" chip shown on a substituted row. */
 export function LiftSwapUndoChip({ rx }: { rx: WkRx }) {
