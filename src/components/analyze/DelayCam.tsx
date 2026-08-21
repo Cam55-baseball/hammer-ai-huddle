@@ -379,6 +379,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           });
           if (fnError) throw fnError;
           toast.success("Saved to Players Club — analysis complete.", { id: toastId });
+          fireDelayCamMoment();
         } catch (analyzeErr: any) {
           console.error("[DelayCam] analyze failed", analyzeErr);
           toast.error(
@@ -390,6 +391,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         }
       } else {
         toast.success("Saved to Players Club.", { id: toastId });
+        fireDelayCamMoment();
       }
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);

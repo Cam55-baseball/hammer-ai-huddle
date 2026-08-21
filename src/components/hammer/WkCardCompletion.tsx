@@ -155,6 +155,20 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
 
       if (status === "done") {
         toast.success(`${modalityLabel} — done. ${encouragement}`);
+        const domain = MODALITY_DOMAIN[modality];
+        if (domain) {
+          emitVideoMoment({
+            kind: "plan_card_complete",
+            skillDomain: domain,
+            movementPatterns: items
+              .map((r) => r.movement_slug)
+              .filter((x): x is string => !!x)
+              .slice(0, 6),
+            side: side === "L" ? "left" : side === "R" ? "right" : null,
+            label: modalityLabel,
+            sourceId: `${modality}:${planDate}`,
+          });
+        }
       } else {
         toast(`${modalityLabel} skipped — Hammer will adjust the rest of today.`);
       }
