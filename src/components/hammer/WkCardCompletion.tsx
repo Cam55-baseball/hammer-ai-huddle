@@ -21,6 +21,20 @@ import {
 } from "@/lib/hammer/prescription/dailyEngagement";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks, type TaskSeed } from "@/hooks/useHammerDailyTasks";
+import { emitVideoMoment } from "@/lib/videoMoments/bus";
+import type { SkillDomain } from "@/lib/videoRecommendationEngine";
+
+const MODALITY_DOMAIN: Partial<Record<EngagementKey, SkillDomain>> = {
+  hitting: "hitting",
+  bat_speed: "hitting",
+  pitching: "pitching",
+  throwing: "throwing",
+  fielding: "fielding",
+  defense: "fielding",
+  speed: "base_running",
+  conditioning: "base_running",
+  lifts: "hitting",
+};
 
 interface Props {
   readonly modality: EngagementKey;
