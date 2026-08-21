@@ -91,6 +91,36 @@ export function getSmartDefaults(): SmartDefaults {
   };
 }
 
+export function recordFoundationChoice(choice: Omit<FoundationChoice, 'ts'>): void {
+  const store = read();
+  const list = store.foundationChoices ?? [];
+  list.unshift({ ...choice, ts: Date.now() });
+  store.foundationChoices = list.slice(0, MAX_SAVES);
+  write(store);
+}
+
+export interface FoundationSmartDefaults {
+  topDomain: string | null;
+  topScope: string | null;
+  topAudiences: string[];
+  topTriggers: string[];
+  sampleSize: number;
+}
+
+/** Most-used foundation field values across the owner's recent saves. */
+export function getFoundationSmartDefaults(): FoundationSmartDefaults {
+  const list = read().foundationChoices ?? [];
+  return {
+    topDomain: rank(list.map(c => c.domain).filter(Boolean) as string[])[0] ?? null,
+    topScope: rank(list.map(c => c.scope).filter(Boolean) as string[])[0] ?? null,
+    topAudiences: rank(list.flatMap(c => c.audiences ?? [])).slice(0, 3),
+    topTriggers: rank(list.flatMap(c => c.triggers ?? [])).slice(0, 3),
+    sampleSize: list.length,
+  };
+}
+
+
+
 export function resetLearning(): void {
   if (typeof window === 'undefined') return;
   try {
