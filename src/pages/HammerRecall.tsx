@@ -140,7 +140,12 @@ export default function HammerRecall() {
       setInput("");
       try {
         const { data, error } = await supabase.functions.invoke("hammer-recall", {
-          body: { threadId, message: trimmed },
+          body: {
+            threadId,
+            message: trimmed,
+            // Lets the server anchor "today"/"yesterday" to the athlete's local day.
+            tzOffsetMinutes: new Date().getTimezoneOffset(),
+          },
         });
         if (error) throw error;
         const newThreadId: string | undefined = data?.threadId;
@@ -151,8 +156,10 @@ export default function HammerRecall() {
             role: "assistant",
             text: data?.answer ?? "",
             sources: data?.sources ?? [],
+            coverage: data?.coverage ?? [],
           },
         ]);
+
         loadThreads();
         if (newThreadId && newThreadId !== threadId) {
           nav(`/hammer/recall/${newThreadId}`, { replace: true });
