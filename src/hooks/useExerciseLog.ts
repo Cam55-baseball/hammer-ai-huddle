@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { canonicalMetricMap } from "@/lib/hammer/logging/metricNormalizer";
+import { canonicalMetricMap, deriveSideMetrics } from "@/lib/hammer/logging/metricNormalizer";
 
 export interface ExerciseLogPayload {
   prescription_id: string;
