@@ -3,10 +3,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSportTheme } from '@/contexts/SportThemeContext';
 import {
   recommendVideos,
   type SuggestionMode,
   type SkillDomain,
+  type TagSport,
   type VideoWithTags,
   type RecommendResult,
 } from '@/lib/videoRecommendationEngine';
@@ -20,13 +22,22 @@ interface UseSuggestionsParams {
   resultTags: string[];
   contextTags: string[];
   enabled?: boolean;
+  /** Overrides the active sport theme. Softball athletes never see baseball-only assets. */
+  sport?: TagSport | null;
+  /** Position groups from `resolvePositionGroups()`. Gates position-scoped tags/rules. */
+  positions?: string[] | null;
 }
 
 export function useVideoSuggestions(params: UseSuggestionsParams) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { data: taxonomy = [] } = useVideoTaxonomy(params.skillDomain);
-  const { data: rules = [] } = useVideoTagRules(params.skillDomain);
+  const { sport: themeSport } = useSportTheme();
+  const sport: TagSport = (params.sport ?? (themeSport as TagSport)) ?? 'both';
+  const positions = params.positions ?? null;
+  const scope = { sport, positions };
+  const { data: taxonomy = [] } = useVideoTaxonomy(params.skillDomain, scope);
+  const { data: rules = [] } = useVideoTagRules(params.skillDomain, scope);
+
 
   // Cross-tab invalidation on rep/session save
   useEffect(() => {
