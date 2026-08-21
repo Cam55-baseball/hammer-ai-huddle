@@ -374,3 +374,59 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
 
 /** Back-compat alias. */
 export const pickTemplate = resolveTemplate;
+
+// ------------------------------ Laterality ------------------------------
+
+/**
+ * Fallback laterality detection. The authoritative source is the movement
+ * catalog's `unilateral` flag (see `useUnilateralMovements`); this regex only
+ * covers rows whose flag has not been set yet.
+ */
+const UNILATERAL_SLUG_RE =
+  /(single_?leg|single_?arm|sl_|_sl_|_sl$|1_?arm|1_?leg|one_?arm|one_?leg|\bsa_|split_squat|split_stance|lunge|step_?up|stepup|bulgarian|rfess|rfe_|pistol|shrimp|cossack|suitcase|waiter|pallof|paloff|chop|copenhagen|side_plank|skater|half_kneel|hk_|staggered|bird_dog|dead_?bug|turkish|get_?up|cars$|_cars)/;
+
+export function matchesUnilateralSlug(slug: string | null | undefined): boolean {
+  return UNILATERAL_SLUG_RE.test((slug ?? "").toLowerCase());
+}
+
+/**
+ * Is this prescription performed one limb at a time?
+ * `catalogUnilateral` is the catalog flag set (null while loading).
+ */
+export function isUnilateralRx(rx: WkRx, catalogUnilateral: ReadonlySet<string> | null): boolean {
+  const slug = (rx.movement_slug ?? "").toLowerCase();
+  if (catalogUnilateral?.has(slug)) return true;
+  return matchesUnilateralSlug(slug);
+}
+
+export const SIDE_FIELD: RoundField = { key: "side", label: "Side", kind: "side" };
+
+/** Prepend the L/R selector to any template. No-op when it already has one. */
+export function withSideField(template: LogTemplate): LogTemplate {
+  if (template.fields.some((f) => f.kind === "side")) return template;
+  return {
+    ...template,
+    id: `${template.id}__side`,
+    intro: template.intro ? `${template.intro} Log each side separately.` : "Log each side separately.",
+    fields: [SIDE_FIELD, ...template.fields],
+    defaultRounds: Math.max(2, template.defaultRounds * 2),
+  };
+}
+
+/** Does this template capture a side? */
+export function templateHasSide(template: LogTemplate): boolean {
+  return template.fields.some((f) => f.kind === "side");
+}
+
+/**
+ * Single entry point used by the log sheet: resolve the movement template and
+ * decorate it with a side selector when the movement is unilateral.
+ */
+export function resolveTemplateForRx(
+  rx: WkRx,
+  catalogUnilateral: ReadonlySet<string> | null,
+): { template: LogTemplate; unilateral: boolean } {
+  const base = resolveTemplate(rx);
+  const unilateral = isUnilateralRx(rx, catalogUnilateral);
+  return { template: unilateral ? withSideField(base) : base, unilateral };
+}

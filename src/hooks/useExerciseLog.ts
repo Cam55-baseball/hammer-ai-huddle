@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { canonicalMetricMap } from "@/lib/hammer/logging/metricNormalizer";
+import { canonicalMetricMap, deriveSideMetrics } from "@/lib/hammer/logging/metricNormalizer";
 
 export interface ExerciseLogPayload {
   prescription_id: string;
@@ -111,7 +111,11 @@ export function useSaveExerciseLog() {
           // throw_velo_mph, …) so the progression engine can read a personal
           // best without knowing anything about template field naming.
           ...canonicalMetricMap(p.template_id ?? null, p.rounds),
+          // Per-limb decomposition for unilateral work. Null when no round
+          // carried a side — never imputed.
+          per_side: deriveSideMetrics(p.template_id ?? null, p.rounds),
         },
+
 
       };
 

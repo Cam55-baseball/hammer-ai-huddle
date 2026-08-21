@@ -100,3 +100,111 @@ export function canonicalMetricMap(
   for (const m of deriveCanonicalMetrics(templateId, rounds)) map[m.key] = m.value;
   return map;
 }
+
+// ---------------------------------------------------------------------------
+// Per-side (left / right) metrics
+//
+// Unilateral movements log one round per side. The combined bests above stay
+// exactly as they were; these helpers add a side-decomposed view so progression
+// and imbalance reads can see L vs R without re-parsing rounds.
+// ---------------------------------------------------------------------------
+
+export type SideKey = "L" | "R";
+
+/** Deltas are only reported when BOTH sides carry at least this many rounds. */
+export const MIN_ROUNDS_PER_SIDE_FOR_DELTA = 2;
+
+export interface SideMetrics {
+  readonly rounds: number;
+  readonly metrics: Record<string, number>;
+}
+
+export interface SideDelta {
+  readonly key: string;
+  readonly label: string;
+  readonly unit: string;
+  readonly left: number;
+  readonly right: number;
+  /** Absolute difference as a percentage of the stronger/faster side. */
+  readonly diffPct: number;
+  readonly weaker: SideKey;
+}
+
+export interface SideMetricSummary {
+  readonly L: SideMetrics | null;
+  readonly R: SideMetrics | null;
+  readonly unsided: number;
+  readonly deltas: SideDelta[];
+}
+
+function normalizeSide(v: unknown): SideKey | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim().toUpperCase();
+  if (s === "L" || s === "LEFT") return "L";
+  if (s === "R" || s === "RIGHT") return "R";
+  return null;
+}
+
+/**
+ * Split logged rounds by their `side` field and derive canonical metrics per
+ * side. Returns `null` when no round carries a side — never imputes a side.
+ */
+export function deriveSideMetrics(
+  templateId: string | null | undefined,
+  rounds: readonly LoggedRound[] | null | undefined,
+  minRoundsPerSide: number = MIN_ROUNDS_PER_SIDE_FOR_DELTA,
+): SideMetricSummary | null {
+  if (!rounds || rounds.length === 0) return null;
+
+  const buckets: Record<SideKey, LoggedRound[]> = { L: [], R: [] };
+  let unsided = 0;
+  for (const round of rounds) {
+    if (!round || typeof round !== "object") continue;
+    const side = normalizeSide((round as Record<string, unknown>).side);
+    if (side) buckets[side].push(round);
+    else unsided += 1;
+  }
+  if (buckets.L.length === 0 && buckets.R.length === 0) return null;
+
+  const build = (side: SideKey): SideMetrics | null => {
+    if (buckets[side].length === 0) return null;
+    return {
+      rounds: buckets[side].length,
+      metrics: canonicalMetricMap(templateId, buckets[side]),
+    };
+  };
+
+  const L = build("L");
+  const R = build("R");
+
+  const deltas: SideDelta[] = [];
+  if (
+    L && R &&
+    L.rounds >= minRoundsPerSide &&
+    R.rounds >= minRoundsPerSide
+  ) {
+    for (const spec of SPECS) {
+      const l = L.metrics[spec.key];
+      const r = R.metrics[spec.key];
+      if (typeof l !== "number" || typeof r !== "number" || l <= 0 || r <= 0) continue;
+      const lowerBetter = LOWER_IS_BETTER.has(spec.key);
+      const better = lowerBetter ? Math.min(l, r) : Math.max(l, r);
+      const worse = lowerBetter ? Math.max(l, r) : Math.min(l, r);
+      const reference = lowerBetter ? worse : better;
+      if (reference <= 0) continue;
+      const diffPct = Math.round((Math.abs(l - r) / reference) * 1000) / 10;
+      const weaker: SideKey = (lowerBetter ? (l > r) : (l < r)) ? "L" : "R";
+      deltas.push({
+        key: spec.key,
+        label: spec.label,
+        unit: spec.unit,
+        left: l,
+        right: r,
+        diffPct,
+        weaker,
+      });
+    }
+  }
+
+  return { L, R, unsided, deltas };
+}

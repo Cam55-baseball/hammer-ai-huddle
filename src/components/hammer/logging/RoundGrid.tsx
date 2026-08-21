@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, FlipHorizontal } from "lucide-react";
 import type { RoundField } from "./logTemplates";
 
 export type Round = Record<string, string>;
@@ -11,12 +11,23 @@ interface Props {
   onChange: (rounds: Round[]) => void;
   minRounds?: number;
   maxRounds?: number;
+  /** Flag rounds missing a side (unilateral movements). */
+  highlightMissingSide?: boolean;
 }
 
 const QUALITY_SCALE = [1, 2, 3, 4, 5] as const;
 const SIDES = ["L", "R"] as const;
 
-export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds = 20 }: Props) {
+export function RoundGrid({
+  rounds,
+  fields,
+  onChange,
+  minRounds = 1,
+  maxRounds = 24,
+  highlightMissingSide = false,
+}: Props) {
+  const hasSide = fields.some((f) => f.kind === "side");
+
   const setCell = (idx: number, key: string, value: string) => {
     const next = rounds.map((r, i) => (i === idx ? { ...r, [key]: value } : r));
     onChange(next);
@@ -25,13 +36,27 @@ export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds =
   const addRound = () => {
     if (rounds.length >= maxRounds) return;
     const last = rounds[rounds.length - 1] ?? {};
-    onChange([...rounds, { ...last }]);
+    const next = { ...last };
+    if (hasSide) next.side = last.side === "L" ? "R" : "L";
+    onChange([...rounds, next]);
   };
 
   const removeRound = () => {
     if (rounds.length <= minRounds) return;
     onChange(rounds.slice(0, -1));
   };
+
+  /** Copy every logged round to the opposite side — one tap for side two. */
+  const mirrorSides = () => {
+    const sided = rounds.filter((r) => r.side === "L" || r.side === "R");
+    if (!sided.length) return;
+    const from = sided[0].side;
+    const source = sided.filter((r) => r.side === from);
+    const target = from === "L" ? "R" : "L";
+    const mirrored = source.map((r) => ({ ...r, side: target }));
+    onChange([...rounds.filter((r) => r.side === from), ...mirrored].slice(0, maxRounds));
+  };
+
 
   return (
     <div className="space-y-2">
@@ -81,14 +106,20 @@ export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds =
               );
             }
             if (f.kind === "side") {
+              const missing = highlightMissingSide && value !== "L" && value !== "R";
               return (
-                <div key={f.key} className="flex gap-1">
+                <div
+                  key={f.key}
+                  className={`flex gap-1 rounded-md ${missing ? "ring-1 ring-destructive/60" : ""}`}
+                  aria-label="Side"
+                >
                   {SIDES.map((s) => {
                     const active = value === s;
                     return (
                       <button
                         key={s}
                         type="button"
+                        aria-pressed={active}
                         onClick={() => setCell(idx, f.key, active ? "" : s)}
                         className={`h-9 flex-1 rounded-md border text-xs font-medium transition-colors ${
                           active ? "border-primary bg-primary text-primary-foreground" : "bg-muted/30 hover:bg-accent"
@@ -101,6 +132,7 @@ export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds =
                 </div>
               );
             }
+
             return (
               <Input
                 key={f.key}
@@ -123,6 +155,12 @@ export function RoundGrid({ fields, rounds, onChange, minRounds = 1, maxRounds =
         <Button type="button" variant="ghost" size="sm" onClick={removeRound} disabled={rounds.length <= minRounds} className="h-7 gap-1 text-xs">
           <Minus className="h-3 w-3" /> Remove
         </Button>
+        {hasSide && (
+          <Button type="button" variant="ghost" size="sm" onClick={mirrorSides} className="h-7 gap-1 text-xs">
+            <FlipHorizontal className="h-3 w-3" /> Mirror
+          </Button>
+        )}
+
         <div className="text-[10px] text-muted-foreground ml-auto">{rounds.length} round{rounds.length === 1 ? "" : "s"}</div>
       </div>
     </div>

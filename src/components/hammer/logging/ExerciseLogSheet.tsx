@@ -6,9 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
-import { resolveTemplate } from "./logTemplates";
+import { resolveTemplateForRx, templateHasSide } from "./logTemplates";
 import { RoundGrid, type Round } from "./RoundGrid";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { useUnilateralMovements } from "@/hooks/useUnilateralMovements";
+import { deriveSideMetrics } from "@/lib/hammer/logging/metricNormalizer";
 import {
   fetchAiReadback,
   useLatestExerciseLog,
@@ -34,12 +36,20 @@ function toNum(v: string): number | null {
 }
 
 export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) {
-  const template = useMemo(() => resolveTemplate(rx), [rx]);
+  const { slugs: unilateralSlugs } = useUnilateralMovements();
+  const { template, unilateral } = useMemo(
+    () => resolveTemplateForRx(rx, unilateralSlugs),
+    [rx, unilateralSlugs],
+  );
+  const hasSide = templateHasSide(template);
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const { data: previous } = usePreviousMovementLog(rx.movement_slug, rx.id);
   const save = useSaveExerciseLog();
 
-  const initialRoundsCount = rx.sets && rx.sets > 0 ? rx.sets : template.defaultRounds;
+  // Unilateral work is prescribed "per side" — so the sheet seeds twice the
+  // rounds, pre-tagged L/R/L/R, and the athlete only fills the numbers.
+  const prescribedSets = rx.sets && rx.sets > 0 ? rx.sets : template.defaultRounds;
+  const initialRoundsCount = hasSide ? prescribedSets * 2 : prescribedSets;
 
   const [rounds, setRounds] = useState<Round[]>([]);
   const [rpe, setRpe] = useState<number>(6);
@@ -56,26 +66,34 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
     if (prevRounds && Array.isArray(prevRounds) && prevRounds.length) {
       // Coerce to string map for inputs.
       setRounds(
-        prevRounds.map((r) => {
+        prevRounds.map((r, i) => {
           const out: Round = {};
           for (const [k, v] of Object.entries(r)) out[k] = v == null ? "" : String(v);
+          // Older logs predate side capture — seed the alternation rather than
+          // leaving the selector blank, but never invent a value we then hide.
+          if (hasSide && out.side !== "L" && out.side !== "R") out.side = i % 2 === 0 ? "L" : "R";
           return out;
         }),
       );
     } else {
       const seed: Round = {};
       for (const f of template.fields) {
+        if (f.kind === "side") continue;
         const v = f.prefillFromRx?.(rx);
         seed[f.key] = v == null ? "" : String(v);
       }
-      setRounds(Array.from({ length: initialRoundsCount }, () => ({ ...seed })));
+      setRounds(
+        Array.from({ length: initialRoundsCount }, (_, i) =>
+          hasSide ? { ...seed, side: i % 2 === 0 ? "L" : "R" } : { ...seed },
+        ),
+      );
     }
     setRpe((latest as any)?.rpe ?? 6);
     setBarFeel((latest as any)?.bar_feel ?? null);
     setNotes((latest as any)?.notes ?? "");
     setReadback((latest as any)?.ai_readback ?? null);
     setSavedAt(null);
-  }, [open, latest, previous, rx, template, initialRoundsCount]);
+  }, [open, latest, previous, rx, template, initialRoundsCount, hasSide]);
 
   const prevSummary = useMemo(() => {
     const p: any = previous;
@@ -98,6 +116,23 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
       return out;
     });
 
+  /** A round only counts as filled when it carries at least one number. */
+  const filledRounds = () =>
+    rounds.filter((r) =>
+      template.fields.some((f) => f.kind !== "side" && toNum(r[f.key] ?? "") != null),
+    );
+
+  const missingSideCount = hasSide
+    ? filledRounds().filter((r) => r.side !== "L" && r.side !== "R").length
+    : 0;
+
+  const sideSummary = useMemo(() => {
+    if (!hasSide) return null;
+    return deriveSideMetrics(template.id, roundsToPayload());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSide, rounds, template]);
+
+
   const handleAsk = async () => {
     setAsking(true);
     const rb = await fetchAiReadback({
@@ -113,9 +148,16 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   };
 
   const handleSave = async () => {
+    if (missingSideCount > 0) {
+      toast.error(
+        `Tag left or right on ${missingSideCount} round${missingSideCount === 1 ? "" : "s"} — side tracking keeps your L/R comparison honest.`,
+      );
+      return;
+    }
     try {
       await save.mutateAsync({
         prescription_id: rx.id,
+
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
         rounds: roundsToPayload(),
@@ -158,7 +200,45 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
         <div className="mt-4 space-y-4">
           {template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
 
-          <RoundGrid fields={template.fields} rounds={rounds} onChange={setRounds} />
+          {unilateral && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] leading-snug">
+              <span className="font-medium">One side at a time.</span> Every round is
+              tagged L or R so Hammer can track each limb on its own. Log side one,
+              then tap <span className="font-medium">Mirror</span> to copy it across.
+            </div>
+          )}
+
+          <RoundGrid
+            fields={template.fields}
+            rounds={rounds}
+            onChange={setRounds}
+            highlightMissingSide={hasSide}
+          />
+
+          {sideSummary && (sideSummary.L || sideSummary.R) && (
+            <div className="rounded-lg border bg-muted/30 p-2.5 text-[11px]">
+              <div className="flex items-center gap-3">
+                <span className="text-muted-foreground uppercase tracking-wide text-[10px]">This session</span>
+                <span>L · {sideSummary.L?.rounds ?? 0} round{(sideSummary.L?.rounds ?? 0) === 1 ? "" : "s"}</span>
+                <span>R · {sideSummary.R?.rounds ?? 0} round{(sideSummary.R?.rounds ?? 0) === 1 ? "" : "s"}</span>
+              </div>
+              {sideSummary.deltas.length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {sideSummary.deltas.map((d) => (
+                    <li key={d.key}>
+                      {d.label}: L {d.left}{d.unit} · R {d.right}{d.unit}
+                      {d.diffPct > 0 && (
+                        <span className="text-muted-foreground">
+                          {" "}— {d.weaker} side {d.diffPct}% behind
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
 
           {template.meta.rpe && (
             <div>
