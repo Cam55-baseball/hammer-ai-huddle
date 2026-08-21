@@ -171,6 +171,7 @@ export function useDayRecords(date: string | null) {
           .from('videos')
           .select('id, library_title, module, sport, session_date')
           .eq('user_id', userId!)
+          .eq('saved_to_library', true)
           .eq('session_date', date!),
       ]);
 
@@ -184,7 +185,7 @@ export function useDayRecords(date: string | null) {
           kind: 'game',
           title: g.opponent_team ? `vs ${g.opponent_team}` : 'Game',
           detail: score,
-          href: `/games/${g.id}`,
+          href: `/games/${g.id}/report`,
         });
       }
       for (const r of reports.data ?? []) {

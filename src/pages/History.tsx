@@ -70,16 +70,19 @@ export default function History() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  // Sections open independently; once a section has been opened its query stays
+  // enabled so counts and filters keep working after it is collapsed again.
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [selectedPractice, setSelectedPractice] = useState<any>(null);
 
-  const practices = usePracticeHistory(userId, openKey === 'practices');
-  const games = useGameHistory(userId, openKey === 'games');
-  const reports = useReportHistory(userId, openKey === 'reports');
-  const recaps = useRecapHistory(userId, openKey === 'recaps');
+  const practices = usePracticeHistory(userId, !!touched.practices);
+  const games = useGameHistory(userId, !!touched.games);
+  const reports = useReportHistory(userId, !!touched.reports);
+  const recaps = useRecapHistory(userId, !!touched.recaps);
 
   const q = query.trim().toLowerCase();
 
@@ -119,7 +122,10 @@ export default function History() {
     [recaps.data, from, to],
   );
 
-  const toggle = (key: string) => (open: boolean) => setOpenKey(open ? key : null);
+  const toggle = (key: string) => (next: boolean) => {
+    setOpen((prev) => ({ ...prev, [key]: next }));
+    if (next) setTouched((prev) => ({ ...prev, [key]: true }));
+  };
 
   return (
     <DashboardLayout>
@@ -162,8 +168,8 @@ export default function History() {
           <HistorySection
             title="Practice sessions"
             icon={<Dumbbell className="h-4 w-4 text-primary" />}
-            count={openKey === 'practices' ? practiceRows.length : undefined}
-            open={openKey === 'practices'}
+            count={touched.practices ? practiceRows.length : undefined}
+            open={!!open.practices}
             onOpenChange={toggle('practices')}
           >
             {practices.isLoading ? (
@@ -200,8 +206,8 @@ export default function History() {
           <HistorySection
             title="Games"
             icon={<Trophy className="h-4 w-4 text-primary" />}
-            count={openKey === 'games' ? gameRows.length : undefined}
-            open={openKey === 'games'}
+            count={touched.games ? gameRows.length : undefined}
+            open={!!open.games}
             onOpenChange={toggle('games')}
           >
             {games.isLoading ? (
@@ -233,8 +239,8 @@ export default function History() {
           <HistorySection
             title="Game reports"
             icon={<FileText className="h-4 w-4 text-primary" />}
-            count={openKey === 'reports' ? reportRows.length : undefined}
-            open={openKey === 'reports'}
+            count={touched.reports ? reportRows.length : undefined}
+            open={!!open.reports}
             onOpenChange={toggle('reports')}
           >
             {reports.isLoading ? (
@@ -265,8 +271,8 @@ export default function History() {
           <HistorySection
             title="Recaps & progress reports"
             icon={<LineChart className="h-4 w-4 text-primary" />}
-            count={openKey === 'recaps' ? recapRows.length : undefined}
-            open={openKey === 'recaps'}
+            count={touched.recaps ? recapRows.length : undefined}
+            open={!!open.recaps}
             onOpenChange={toggle('recaps')}
           >
             {recaps.isLoading ? (
