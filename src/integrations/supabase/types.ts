@@ -15056,6 +15056,7 @@ export type Database = {
           is_ready: boolean | null
           missing_fields: string[] | null
           owner_id: string | null
+          video_class: string | null
           video_id: string | null
         }
         Relationships: []
