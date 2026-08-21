@@ -285,14 +285,27 @@ export function WkPrescriptionCard({
           <div className="flex items-start justify-between gap-2">
             <div className="text-xs text-muted-foreground break-words flex-1 min-w-0">{dosage}</div>
             <div className="flex items-center gap-1 shrink-0">
-              {swapAvailable && (
+              {allowSwap && (
                 <Button
                   variant="outline"
                   size="sm"
                   className="h-7 px-2 text-[11px] gap-1"
+                  disabled={!swapAvailable}
+                  title={
+                    swapLadder.isLoading
+                      ? "Checking legal swaps…"
+                      : swapAvailable
+                        ? "Swap this movement for a certified alternate"
+                        : "No legal swap exists for this movement today"
+                  }
                   onClick={() => setSwapOpen(true)}
                 >
-                  <Repeat2 className="h-3 w-3" /> Swap
+                  {swapLadder.isLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Repeat2 className="h-3 w-3" />
+                  )}
+                  {swapLadder.isLoading ? "Swaps…" : swapAvailable ? "Swap" : "No swaps"}
                 </Button>
               )}
               <LogButton rx={rx} dosageText={dosage} compact />
