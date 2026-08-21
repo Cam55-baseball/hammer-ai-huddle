@@ -115,6 +115,8 @@ const Rankings = lazyWithRetry(() => import("./pages/Rankings"));
 const Weather = lazyWithRetry(() => import("./pages/Weather"));
 const Subscribers = lazyWithRetry(() => import("./pages/Subscribers"));
 const PlayersClub = lazyWithRetry(() => import("./pages/PlayersClub"));
+const History = lazyWithRetry(() => import("./pages/History"));
+
 const Nutrition = lazyWithRetry(() => import("./pages/Nutrition"));
 const NutritionHub = lazyWithRetry(() => import("./pages/NutritionHub"));
 const BounceBackBay = lazyWithRetry(() => import("./pages/BounceBackBay"));
