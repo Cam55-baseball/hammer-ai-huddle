@@ -273,7 +273,16 @@ export function TaxonomyManager() {
             <div className="min-w-0 flex-1">
               <span className="font-medium">{t.label}</span>
               <span className="text-muted-foreground ml-2">({t.key})</span>
+              {t.sport && t.sport !== 'both' && (
+                <Badge variant="secondary" className="ml-2 text-[9px] capitalize">{t.sport}</Badge>
+              )}
+              {Array.isArray(t.position_scope) && t.position_scope.length > 0 && (
+                <Badge variant="outline" className="ml-1 text-[9px]">
+                  {t.position_scope.map((p: string) => POSITION_GROUP_LABELS[p as PositionGroup] ?? p).join(', ')}
+                </Badge>
+              )}
               {!t.active && <Badge variant="outline" className="ml-2 text-[9px]">inactive</Badge>}
+
             </div>
             <Button
               variant="ghost"
