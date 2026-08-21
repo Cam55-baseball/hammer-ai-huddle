@@ -12,16 +12,21 @@ import { toast } from "sonner";
 
 type Source = {
   source: string;
+  key?: string;
   id: string;
   date: string;
   text: string;
+  href?: string;
 };
+
+type Coverage = { label: string; count: number };
 
 type UIMessage = {
   id: string;
   role: "user" | "assistant";
   text: string;
   sources?: Source[];
+  coverage?: Coverage[];
 };
 
 type Thread = {
@@ -31,11 +36,14 @@ type Thread = {
 };
 
 const QUICK_STARTS = [
-  "What did I write when I was hitting well?",
-  "Between 6/10/26 and 6/18/26 — how was I feeling?",
-  "What have my sleep and CNS looked like the last 14 days?",
+  "What's on my plan right now, and what have I already finished today?",
+  "How did my last game go, and what did I write about it?",
+  "What have my day logs and CNS looked like the last 14 days?",
+  "What did I write the last time I was hitting well?",
+  "What video work have I logged lately?",
   "I feel off today. Help me reset.",
 ];
+
 
 export default function HammerRecall() {
   const { user } = useAuthContext();
@@ -99,6 +107,8 @@ export default function HammerRecall() {
           role: r.role === "assistant" ? "assistant" : "user",
           text: first?.text ?? "",
           sources: first?.sources,
+          coverage: first?.coverage,
+
         };
       });
       setMessages(ui);
@@ -130,7 +140,12 @@ export default function HammerRecall() {
       setInput("");
       try {
         const { data, error } = await supabase.functions.invoke("hammer-recall", {
-          body: { threadId, message: trimmed },
+          body: {
+            threadId,
+            message: trimmed,
+            // Lets the server anchor "today"/"yesterday" to the athlete's local day.
+            tzOffsetMinutes: new Date().getTimezoneOffset(),
+          },
         });
         if (error) throw error;
         const newThreadId: string | undefined = data?.threadId;
@@ -141,8 +156,10 @@ export default function HammerRecall() {
             role: "assistant",
             text: data?.answer ?? "",
             sources: data?.sources ?? [],
+            coverage: data?.coverage ?? [],
           },
         ]);
+
         loadThreads();
         if (newThreadId && newThreadId !== threadId) {
           nav(`/hammer/recall/${newThreadId}`, { replace: true });
@@ -302,6 +319,7 @@ export default function HammerRecall() {
 }
 
 function MessageBubble({ msg }: { msg: UIMessage }) {
+  const nav = useNavigate();
   if (msg.role === "user") {
     return (
       <div className="flex justify-end">
@@ -311,28 +329,52 @@ function MessageBubble({ msg }: { msg: UIMessage }) {
       </div>
     );
   }
+  const coverage = msg.coverage ?? [];
   return (
     <div className="space-y-2">
       <div className="prose prose-sm dark:prose-invert max-w-none">
         <div className="whitespace-pre-wrap text-sm">{msg.text || "…"}</div>
       </div>
+      {coverage.length > 0 && (
+        <p className="text-[10px] text-muted-foreground">
+          Searched: {coverage.map((c) => `${c.label} (${c.count})`).join(" · ")}
+        </p>
+      )}
       {msg.sources && msg.sources.length > 0 && (
         <details className="rounded-md border bg-muted/30 px-2 py-1 text-xs">
           <summary className="cursor-pointer select-none text-muted-foreground">
             Sources ({msg.sources.length})
           </summary>
           <ul className="mt-2 space-y-1.5">
-            {msg.sources.map((s, i) => (
-              <li key={`${s.source}-${s.id}-${i}`} className="flex gap-2">
-                <Badge variant="outline" className="shrink-0 text-[10px]">
-                  {s.source} · {s.date}
-                </Badge>
-                <span className="text-muted-foreground line-clamp-2">{s.text}</span>
-              </li>
-            ))}
+            {msg.sources.map((s, i) => {
+              const inner = (
+                <>
+                  <Badge variant="outline" className="shrink-0 text-[10px]">
+                    {s.source} · {s.date}
+                  </Badge>
+                  <span className="text-muted-foreground line-clamp-2">{s.text}</span>
+                </>
+              );
+              return (
+                <li key={`${s.source}-${s.id}-${i}`}>
+                  {s.href ? (
+                    <button
+                      type="button"
+                      onClick={() => nav(s.href!)}
+                      className="flex w-full gap-2 rounded px-1 py-0.5 text-left hover:bg-muted"
+                    >
+                      {inner}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2 px-1 py-0.5">{inner}</div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </details>
       )}
     </div>
   );
 }
+
