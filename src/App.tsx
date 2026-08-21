@@ -145,6 +145,8 @@ const Games = lazyWithRetry(() => import("./pages/Games"));
 const Dossiers = lazyWithRetry(() => import("./pages/Dossiers"));
 const AdminPeriodization = lazyWithRetry(() => import("./pages/AdminPeriodization"));
 const GameReports = lazyWithRetry(() => import("./pages/GameReports"));
+const GameReportView = lazyWithRetry(() => import("./pages/GameReportView"));
+const SharedReport = lazyWithRetry(() => import("./pages/SharedReport"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
