@@ -193,6 +193,35 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
       });
       setSavedAt(new Date().toISOString());
       toast.success("Saved to your log");
+
+      // Did this set clear a standard? Compare the athlete's history against
+      // history-plus-this-set. Self-logged, additive, never dose-changing.
+      if (measures && standardRows.length) {
+        try {
+          const fresh = buildBestIndex([
+            { movement_slug: rx.movement_slug, plan_date: rx.plan_date, rounds: roundsToPayload() as any },
+          ]);
+          const merged = bestIndex ? mergeIndexes(bestIndex, fresh) : fresh;
+          const before = standardRows;
+          const after = standardRows.map((p) => evaluateStandard(p.standard, merged, measures));
+          for (const win of newlyEarned(before, after)) {
+            toast.success(`${TIER_LABEL[win.tier]} standard unlocked — ${win.def.name}`, {
+              description: `${win.value} ${win.def.unit}. ${win.def.why}`,
+              duration: 8000,
+            });
+            recordAward.mutate({
+              def: win.def,
+              tier: win.tier,
+              value: win.value,
+              bodyweightLbs: measures.bodyweightLbs,
+              movementSlug: rx.movement_slug,
+              planDate: rx.plan_date,
+            });
+          }
+        } catch {
+          /* standards are a bonus surface — never block a save */
+        }
+      }
       // Fire-and-forget read-back if the athlete didn't ask.
       if (!readback && notes.trim()) {
         fetchAiReadback({
