@@ -1,16 +1,20 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useVideoTaxonomy, groupTaxonomyByLayer } from '@/hooks/useVideoTaxonomy';
-import type { SkillDomain, TagLayer } from '@/lib/videoRecommendationEngine';
+import type { SkillDomain, TagLayer, TagSport } from '@/lib/videoRecommendationEngine';
+import { POSITION_GROUPS, POSITION_GROUP_LABELS, type PositionGroup } from '@/lib/hammer/positions/positionGroups';
 import { LAYER_GUIDANCE } from './TaxonomyManager';
 import { HammerDescriptionComposer } from './HammerDescriptionComposer';
 import { FormulaLinkageEditor, type FormulaLinkageValue, emptyFormulaLinkage } from './FormulaLinkageEditor';
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
 const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
+/** Domains where position scoping materially changes the coaching cue. */
+const POSITION_SCOPED_DOMAINS: SkillDomain[] = ['fielding', 'throwing', 'pitching'];
+
 
 const LAYER_LABELS: Record<TagLayer, string> = {
   movement_pattern: 'Movement Patterns',
