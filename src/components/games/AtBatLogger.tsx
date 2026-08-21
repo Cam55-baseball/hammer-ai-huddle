@@ -216,6 +216,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 
       {showNew && (
         <AtBatForm
+          sport={sport}
           onCancel={() => setShowNew(false)}
           onSave={(row) => add.mutate(row)}
           submitting={add.isPending}
@@ -302,18 +303,21 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 }
 
 function AtBatForm({
+  sport,
   onSave,
   onCancel,
   submitting,
   pitcherOptions = [],
   defaultPitcherId = null,
 }: {
+  sport: string;
   onSave: (row: Record<string, any>) => void;
   onCancel: () => void;
   submitting?: boolean;
   pitcherOptions?: any[];
   defaultPitcherId?: string | null;
 }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
     inning: 1,
     batting_side: "R",

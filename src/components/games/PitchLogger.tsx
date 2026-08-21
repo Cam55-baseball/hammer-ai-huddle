@@ -81,6 +81,7 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
 
           {show && (
             <PitchForm
+              sport={sport}
               perspective={tab}
               onCancel={() => setShow(false)}
               onSave={(row) => { add.mutate(row); setShow(false); }}
@@ -130,12 +131,15 @@ function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete:
 
 
 function PitchForm({
-  perspective, onSave, onCancel,
+  sport, perspective, onSave, onCancel,
 }: {
+  sport: string;
   perspective: "pitcher" | "hitter";
   onSave: (row: any) => void;
   onCancel: () => void;
 }) {
+  const PITCH_TYPES = pitchTypes(sport);
+  const ARM_SLOTS = armSlots(sport);
   const [zoneVal, setZoneVal] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
   const [intentZone, setIntentZone] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
   const [showIntent, setShowIntent] = useState(false);

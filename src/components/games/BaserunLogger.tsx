@@ -108,7 +108,7 @@ export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: strin
         </Button>
       </div>
 
-      {show && <RunForm onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
+      {show && <RunForm sport={sport} onCancel={() => setShow(false)} onSave={(r) => add.mutate(r)} />}
 
       {(list.data ?? []).length === 0 && !show && (
         <Card className="p-5 text-center bg-muted/20 border-dashed">
@@ -160,9 +160,10 @@ export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: strin
 
 }
 
-function RunForm({ onSave, onCancel }: {
-  onSave: (r: Record<string, any>) => void; onCancel: () => void;
+function RunForm({ sport, onSave, onCancel }: {
+  sport?: string; onSave: (r: Record<string, any>) => void; onCancel: () => void;
 }) {
+  const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
     inning: 1, event_type: "steal", base_from: 1, base_to: 2,
     success: true, lead_steps: "", pitcher_arm_side: "R",
