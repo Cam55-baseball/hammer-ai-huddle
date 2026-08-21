@@ -24,6 +24,7 @@ import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
 import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
+import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 
@@ -72,6 +73,15 @@ function pickRecorderMime(): string {
 export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
   const { user } = useOptionalAuth();
   const resolvedModule: ClipModule = moduleProp ?? "hitting";
+  const fireDelayCamMoment = useCallback(() => {
+    emitVideoMoment({
+      kind: "delaycam_saved",
+      skillDomain: resolvedModule,
+      sport: (resolvedSport as any) ?? null,
+      label: "Your clip",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedModule]);
   const resolvedSport: ClipSport =
     sportProp ??
     ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
@@ -379,6 +389,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           });
           if (fnError) throw fnError;
           toast.success("Saved to Players Club — analysis complete.", { id: toastId });
+          fireDelayCamMoment();
         } catch (analyzeErr: any) {
           console.error("[DelayCam] analyze failed", analyzeErr);
           toast.error(
@@ -390,6 +401,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         }
       } else {
         toast.success("Saved to Players Club.", { id: toastId });
+        fireDelayCamMoment();
       }
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);

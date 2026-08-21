@@ -21,6 +21,18 @@ import {
 } from "@/lib/hammer/prescription/dailyEngagement";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks, type TaskSeed } from "@/hooks/useHammerDailyTasks";
+import { emitVideoMoment } from "@/lib/videoMoments/bus";
+import type { SkillDomain } from "@/lib/videoRecommendationEngine";
+
+const MODALITY_DOMAIN: Partial<Record<EngagementKey, SkillDomain>> = {
+  hitting: "hitting",
+  bat_speed: "hitting",
+  throwing: "throwing",
+  defense: "fielding",
+  baserunning: "base_running",
+  speed: "base_running",
+  conditioning: "base_running",
+};
 
 interface Props {
   readonly modality: EngagementKey;
@@ -141,6 +153,20 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
 
       if (status === "done") {
         toast.success(`${modalityLabel} — done. ${encouragement}`);
+        const domain = MODALITY_DOMAIN[modality];
+        if (domain) {
+          emitVideoMoment({
+            kind: "plan_card_complete",
+            skillDomain: domain,
+            movementPatterns: items
+              .map((r) => r.movement_slug)
+              .filter((x): x is string => !!x)
+              .slice(0, 6),
+            side: side === "L" ? "left" : side === "R" ? "right" : null,
+            label: modalityLabel,
+            sourceId: `${modality}:${planDate}`,
+          });
+        }
       } else {
         toast(`${modalityLabel} skipped — Hammer will adjust the rest of today.`);
       }

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { AlertTriangle } from 'lucide-react';
-import { VideoSuggestionsPanel } from '@/components/video-suggestions/VideoSuggestionsPanel';
+import { VideoMoment } from '@/components/video-suggestions/VideoMoment';
 import { mapHIEAreaToMovement } from '@/lib/analysisToTaxonomy';
 import { HittingDoctrineBlock } from '@/components/hitting/HittingDoctrineBlock';
 
@@ -52,13 +52,14 @@ export function WeaknessClusterCard() {
           const movements = snapshot.weakness_clusters
             .map(c => mapHIEAreaToMovement((c as any).area || c.issue))
             .filter((x): x is string => !!x);
-          if (!movements.length) return null;
           return (
-            <VideoSuggestionsPanel
-              skillDomain="hitting"
-              mode="long_term"
-              movementPatterns={movements}
-              title="Watch related videos"
+            <VideoMoment
+              event={{
+                kind: 'weakness_detected',
+                skillDomain: 'hitting',
+                movementPatterns: movements,
+                label: 'Your weakness profile',
+              }}
             />
           );
         })()}

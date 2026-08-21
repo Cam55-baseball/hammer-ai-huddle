@@ -41,7 +41,8 @@ import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
-import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
+import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
+import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { DelayCam } from "@/components/analyze/DelayCam";
 
 export default function AnalyzeVideo() {
@@ -878,6 +879,7 @@ export default function AnalyzeVideo() {
 
       setAnalysis(analysisData);
       setAnalysisError(null);
+      fireAnalysisVideoMoment(analysisData);
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
     } catch (error: any) {
@@ -889,6 +891,30 @@ export default function AnalyzeVideo() {
       setUploading(false);
       setExtractingFrames(false);
     }
+  };
+
+  /** Pop the post-analysis video moment with whatever the analysis surfaced. */
+  const fireAnalysisVideoMoment = (data: any) => {
+    const skillDomain = moduleToSkillDomain(module || "");
+    if (!skillDomain) return;
+    const movements = new Set<string>();
+    const areas: string[] = [
+      ...((data?.scorecard?.regressions || []).map((r: any) => r?.area)),
+      ...((data?.scorecard?.neutral || []).map((r: any) => r?.area)),
+    ].filter(Boolean);
+    for (const a of areas) {
+      const k = mapHIEAreaToMovement(String(a));
+      if (k) movements.add(k);
+    }
+    emitVideoMoment({
+      kind: "analysis_complete",
+      skillDomain,
+      movementPatterns: Array.from(movements),
+      sport: (sport === "softball" ? "softball" : "baseball"),
+      side: requiresSideConfirmation ? (activeSide as any) : null,
+      label: "Video analysis",
+      sourceId: currentVideoId,
+    });
   };
 
   const handleRetryAnalysis = async () => {
@@ -984,6 +1010,7 @@ export default function AnalyzeVideo() {
 
       setAnalysis(analysisData);
       setAnalysisError(null);
+      fireAnalysisVideoMoment(analysisData);
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);

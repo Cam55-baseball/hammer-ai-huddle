@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Sparkles } from 'lucide-react';
 import { aggregateSessionToTaxonomy } from '@/lib/analysisToTaxonomy';
-import { VideoSuggestionsPanel } from '@/components/video-suggestions/VideoSuggestionsPanel';
+import { VideoMoment } from '@/components/video-suggestions/VideoMoment';
 
 interface Props {
   sessionId: string;
@@ -58,7 +58,7 @@ export function PostSessionVideoSuggestions({ sessionId }: Props) {
 
   const agg = aggregateSessionToTaxonomy(session);
 
-  if (!agg.skillDomain || (agg.movementPatterns.length + agg.resultTags.length === 0)) {
+  if (!agg.skillDomain) {
     return (
       <Card className="border-dashed" ref={wrapRef as any}>
         <CardHeader className="pb-2">
@@ -75,13 +75,18 @@ export function PostSessionVideoSuggestions({ sessionId }: Props) {
 
   return (
     <div ref={wrapRef} className="scroll-mt-24">
-      <VideoSuggestionsPanel
-        skillDomain={agg.skillDomain}
-        mode="session"
-        movementPatterns={agg.movementPatterns}
-        resultTags={agg.resultTags}
-        contextTags={agg.contextTags}
-        title="Hammer Picks for You"
+      <VideoMoment
+        showEmptyState
+        event={{
+          kind: 'session_saved',
+          skillDomain: agg.skillDomain,
+          movementPatterns: agg.movementPatterns,
+          resultTags: agg.resultTags,
+          contextTags: agg.contextTags,
+          side: (session as any)?.batting_side_used || (session as any)?.throwing_hand_used || null,
+          label: 'This session',
+          sourceId: sessionId,
+        }}
       />
     </div>
   );

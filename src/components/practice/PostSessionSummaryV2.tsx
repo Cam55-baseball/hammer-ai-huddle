@@ -12,7 +12,7 @@ import { CoachingReportDisplay } from '@/components/practice/CoachingReportDispl
 import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle, Loader2, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { VideoSuggestionsPanel } from '@/components/video-suggestions/VideoSuggestionsPanel';
+import { VideoMoment } from '@/components/video-suggestions/VideoMoment';
 import { moduleToSkillDomain, mapOutcomeToResult } from '@/lib/analysisToTaxonomy';
 
 interface PostSessionSummaryV2Props {
@@ -170,13 +170,17 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
             }
           });
         });
-        if (movements.length === 0 && results.length === 0) return null;
         return (
-          <VideoSuggestionsPanel
-            skillDomain={skillDomain}
-            mode="session"
-            movementPatterns={movements}
-            resultTags={Array.from(new Set(results))}
+          <VideoMoment
+            showEmptyState
+            event={{
+              kind: 'session_saved',
+              skillDomain,
+              movementPatterns: movements,
+              resultTags: Array.from(new Set(results)),
+              label: 'This session',
+              sourceId: sessionId,
+            }}
           />
         );
       })()}
