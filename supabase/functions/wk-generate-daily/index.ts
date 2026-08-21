@@ -2247,7 +2247,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Persist — Phase 2 Fix 2 & Fix 8 — atomic RPC with full metadata --------
     // Explicit column mapping (no spread) so every WIC column is populated on every row.
+    // -------- Laterality stamp --------
+    // The catalog is the single authority on whether a movement is performed
+    // one limb at a time. Stamping it here means the client never re-guesses
+    // laterality from a slug when deciding to ask for L/R on the log sheet.
+    const unilateralSlugs = new Set(
+      lib.filter((m: any) => m?.unilateral === true).map((m: any) => String(m.slug)),
+    );
+    for (const r of finalRxs as any[]) {
+      const wp = (r.why_payload ?? {}) as Record<string, unknown>;
+      wp.laterality = unilateralSlugs.has(r.movement_slug) ? "unilateral" : "bilateral";
+      r.why_payload = wp;
+    }
+
     const rows = finalRxs.map((r) => ({
+
       slot: r.slot,
       sequence_order: r.sequence_order,
       sequence_role: r.sequence_role ?? null,
