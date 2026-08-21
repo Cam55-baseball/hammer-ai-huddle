@@ -172,9 +172,22 @@ export function VideoLibraryManager() {
       setConfirmCloseEdit(true);
       return;
     }
+    clearEditIntents();
     setEditTarget(null);
+  };
+
+  /** Quick-fix intents must never leak into the next editor open. */
+  const clearEditIntents = () => {
     setEditFocus(undefined);
     setEditAutoSuggest(false);
+    setEditSmartDefaults(false);
+    setEditWalkMissing(false);
+  };
+
+  /** Plain Edit — no quick-fix intent. */
+  const openPlainEdit = (video: LibraryVideo) => {
+    clearEditIntents();
+    setEditTarget(video);
   };
 
   // Quick-fix entry. Always opens the editor — owner still must save (Owner Authority).
@@ -186,6 +199,7 @@ export function VideoLibraryManager() {
     setFastMode(true);
     setEditTarget(video);
   };
+
 
   // Coaching nudge "Fix now" CTA — must produce a visible, observable result.
   const filterThrottled = () => {
