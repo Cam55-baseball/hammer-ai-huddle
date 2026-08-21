@@ -45,12 +45,15 @@ export function TaxonomyManager() {
   const qc = useQueryClient();
   const [layer, setLayer] = useState<TagLayer>('movement_pattern');
   const [domain, setDomain] = useState<SkillDomain>('hitting');
+  const [sport, setSport] = useState<TagSport>('both');
+  const [positionScope, setPositionScope] = useState<PositionGroup[]>([]);
   const [key, setKey] = useState('');
   const [label, setLabel] = useState('');
   const [adding, setAdding] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string; key: string } | null>(null);
   const [usageCount, setUsageCount] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+
 
   const { data: tags = [] } = useQuery({
     queryKey: ['taxonomy-admin', layer, domain],
