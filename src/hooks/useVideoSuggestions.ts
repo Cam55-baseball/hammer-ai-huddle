@@ -53,7 +53,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
   }, [qc]);
 
   return useQuery({
-    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, user?.id],
+    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, sport, (positions ?? []).join(','), user?.id],
     enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length > 0),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
