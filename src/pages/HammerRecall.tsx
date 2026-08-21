@@ -319,6 +319,7 @@ export default function HammerRecall() {
 }
 
 function MessageBubble({ msg }: { msg: UIMessage }) {
+  const nav = useNavigate();
   if (msg.role === "user") {
     return (
       <div className="flex justify-end">
@@ -328,28 +329,52 @@ function MessageBubble({ msg }: { msg: UIMessage }) {
       </div>
     );
   }
+  const coverage = msg.coverage ?? [];
   return (
     <div className="space-y-2">
       <div className="prose prose-sm dark:prose-invert max-w-none">
         <div className="whitespace-pre-wrap text-sm">{msg.text || "…"}</div>
       </div>
+      {coverage.length > 0 && (
+        <p className="text-[10px] text-muted-foreground">
+          Searched: {coverage.map((c) => `${c.label} (${c.count})`).join(" · ")}
+        </p>
+      )}
       {msg.sources && msg.sources.length > 0 && (
         <details className="rounded-md border bg-muted/30 px-2 py-1 text-xs">
           <summary className="cursor-pointer select-none text-muted-foreground">
             Sources ({msg.sources.length})
           </summary>
           <ul className="mt-2 space-y-1.5">
-            {msg.sources.map((s, i) => (
-              <li key={`${s.source}-${s.id}-${i}`} className="flex gap-2">
-                <Badge variant="outline" className="shrink-0 text-[10px]">
-                  {s.source} · {s.date}
-                </Badge>
-                <span className="text-muted-foreground line-clamp-2">{s.text}</span>
-              </li>
-            ))}
+            {msg.sources.map((s, i) => {
+              const inner = (
+                <>
+                  <Badge variant="outline" className="shrink-0 text-[10px]">
+                    {s.source} · {s.date}
+                  </Badge>
+                  <span className="text-muted-foreground line-clamp-2">{s.text}</span>
+                </>
+              );
+              return (
+                <li key={`${s.source}-${s.id}-${i}`}>
+                  {s.href ? (
+                    <button
+                      type="button"
+                      onClick={() => nav(s.href!)}
+                      className="flex w-full gap-2 rounded px-1 py-0.5 text-left hover:bg-muted"
+                    >
+                      {inner}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2 px-1 py-0.5">{inner}</div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </details>
       )}
     </div>
   );
 }
+
