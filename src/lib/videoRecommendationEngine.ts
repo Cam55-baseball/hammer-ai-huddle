@@ -189,6 +189,10 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     // Domain gate: skip videos not in this skill domain (if domains set)
     if (v.skill_domains && v.skill_domains.length && !v.skill_domains.includes(skillDomain)) continue;
 
+    // Sport gate: a softball athlete never receives a baseball-only video.
+    if (sport && sport !== 'both' && v.sport && v.sport.length && !v.sport.includes(sport)) continue;
+
+
     const tierBoost = TIER_BOOST[tier];
 
     let score = 0;
