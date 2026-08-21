@@ -131,13 +131,34 @@ export async function buildNowBlock(db: Db, userId: string, now: Date): Promise<
 
   if (profile) {
     lines.push(
-      `Athlete: ${[profile.sport, profile.primary_position ?? profile.position, profile.competition_level]
+      `Athlete: ${[
+        profile.sport_primary,
+        [profile.position_primary, profile.position_secondary].filter(Boolean).join("/"),
+        [profile.competition_level, profile.competition_age_group].filter(Boolean).join(" "),
+      ]
         .filter(Boolean)
-        .join(" · ")}${profile.throwing_hand ? ` · throws ${profile.throwing_hand}` : ""}${
-        profile.batting_side ? ` · bats ${profile.batting_side}` : ""
+        .join(" · ")}${profile.throws_hand ? ` · throws ${profile.throws_hand}` : ""}${
+        profile.bats_hand ? ` · bats ${profile.bats_hand}` : ""
       }${profile.season_phase ? ` · phase ${profile.season_phase}` : ""}`,
     );
+    if (profile.goal_summary) {
+      lines.push(`Stated goal: ${String(profile.goal_summary).slice(0, 220)}`);
+    }
+    if (profile.injury_history) {
+      let hist = "";
+      try {
+        hist = typeof profile.injury_history === "string"
+          ? profile.injury_history
+          : JSON.stringify(profile.injury_history);
+      } catch {
+        hist = "";
+      }
+      if (hist && hist !== "{}" && hist !== "[]") {
+        lines.push(`Injury history on file: ${hist.slice(0, 200)}`);
+      }
+    }
   }
+
 
   if (foundation?.current_state) {
     lines.push(
