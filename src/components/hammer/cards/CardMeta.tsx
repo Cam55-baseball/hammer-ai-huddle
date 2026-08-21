@@ -24,7 +24,6 @@ export function CardMeta({ entry, generationId }: Props) {
       <span>{entry.responsibility}</span>
       {entry.estimatedDurationMin != null && <span>· ~{entry.estimatedDurationMin} min</span>}
       {entry.intensity && <span>· {entry.intensity}</span>}
-      {entry.substitutionAvailable && <span>· subs available</span>}
     </div>
   );
 }

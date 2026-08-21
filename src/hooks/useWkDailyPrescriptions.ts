@@ -83,6 +83,24 @@ export interface WkRx {
     intensity_class?: string;
     source_philosophy?: string;
     override?: { reason: string | null; actor_role: string; expires_at: string } | null;
+    lift_governance?: {
+      template_id?: string;
+      template_name?: string;
+      movement_category?: string;
+      substitution_family?: string | null;
+      substitution_ladder?: Record<string, string[]>;
+      substitution_ladder_score?: number;
+      governance_version?: string;
+    } | null;
+    athlete_substitution?: {
+      from_slug: string;
+      from_name: string;
+      from_sets: number | null;
+      to_slug: string;
+      reason: string;
+      reason_label: string;
+      at: string;
+    } | null;
     training_context?: TrainingContext | null;
     athlete_context?: AthleteContext | null;
     personalization_context?: PersonalizationContext | null;
