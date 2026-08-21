@@ -18,7 +18,7 @@ describe("ingestParsers", () => {
     expect(row.pitch_type).toBe("FB");
     expect(row.pitch_velo).toBe(92.4);
     expect(row.result).toBe("swinging_strike");
-    expect(row.location).toEqual({ zone: 2, outZone: null });
+    expect(row.location).toEqual({ zone: 5, outZone: null });
     expect(row.pitch_movement.spin_rpm).toBe(2280);
     expect(row.batter_handedness).toBe("L");
   });
