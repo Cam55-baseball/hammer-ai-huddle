@@ -12,7 +12,7 @@ import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
 import { computeMissingFields, type MissingFieldKey } from "@/lib/videoReadiness";
 import { computeVideoConfidence, computeFoundationConfidence } from "@/lib/videoConfidence";
-import { getSmartDefaults } from "@/lib/ownerLearning";
+import { getSmartDefaults, getFoundationSmartDefaults, recordFoundationChoice } from "@/lib/ownerLearning";
 import {
   EMPTY_FOUNDATION_META,
   parseFoundationMeta,
@@ -77,6 +77,7 @@ export function VideoFastEditor({
   const { updateStructuredFields, syncTagAssignments, regenerateAISuggestions, uploading } = useVideoLibraryAdmin();
 
   const defaults = useMemo(() => getSmartDefaults(), []);
+  const fDefaults = useMemo(() => getFoundationSmartDefaults(), []);
 
   const [videoClass, setVideoClass] = useState<'application' | 'foundation'>(
     (video as any).video_class === 'foundation' ? 'foundation' : 'application'
@@ -157,12 +158,53 @@ export function VideoFastEditor({
   useEffect(() => { void loadAssignments(); }, [loadAssignments]);
 
   // Smart Defaults — apply immediately to EMPTY fields and say what changed.
+  // Foundation videos have their own field set, so they get their own defaults.
   const smartDefaultsRanRef = useRef(false);
   useEffect(() => {
-    if (!applySmartDefaults || smartDefaultsRanRef.current || isFoundation) return;
+    if (!applySmartDefaults || smartDefaultsRanRef.current) return;
     smartDefaultsRanRef.current = true;
     const applied: string[] = [];
     const marks: Record<string, boolean> = {};
+
+    if (isFoundation) {
+      const next: Partial<FoundationMeta> = {};
+      const hasDomain = Boolean((video as any).foundation_meta?.domain);
+      const hasScope = Boolean((video as any).foundation_meta?.scope);
+      if (!hasDomain && fDefaults.topDomain) {
+        next.domain = fDefaults.topDomain as FoundationMeta['domain'];
+        applied.push(`topic: ${fDefaults.topDomain.replace(/_/g, ' ')}`);
+        marks.foundation_domain = true;
+      }
+      if (!hasScope && fDefaults.topScope) {
+        next.scope = fDefaults.topScope as FoundationMeta['scope'];
+        applied.push(`scope: ${fDefaults.topScope.replace(/_/g, ' ')}`);
+        marks.foundation_scope = true;
+      }
+      if (foundationMeta.audience_levels.length === 0 && fDefaults.topAudiences.length > 0) {
+        next.audience_levels = fDefaults.topAudiences as FoundationMeta['audience_levels'];
+        applied.push(`audience: ${fDefaults.topAudiences.join(', ').replace(/_/g, ' ')}`);
+        marks.foundation_audience = true;
+      }
+      if (foundationMeta.refresher_triggers.length === 0 && fDefaults.topTriggers.length > 0) {
+        next.refresher_triggers = fDefaults.topTriggers as FoundationMeta['refresher_triggers'];
+        applied.push(`triggers: ${fDefaults.topTriggers.length}`);
+        marks.foundation_triggers = true;
+      }
+      if (Object.keys(next).length > 0) setFoundationMeta(p => ({ ...p, ...next }));
+      setPrefilled(marks);
+      toast(
+        applied.length > 0
+          ? { title: 'Smart Defaults applied', description: `${applied.join(' · ')} — review, then save.` }
+          : {
+              title: 'Nothing to pre-fill',
+              description: fDefaults.sampleSize === 0
+                ? 'Save a few foundation videos first — Hammer learns your most-used choices.'
+                : 'These fields already have values. Finish the remaining ones below.',
+            }
+      );
+      return;
+    }
+
     if (!videoFormat && defaults.topFormat) {
       setVideoFormat(defaults.topFormat);
       applied.push(`format: ${defaults.topFormat.replace(/_/g, ' ')}`);
@@ -187,6 +229,7 @@ export function VideoFastEditor({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applySmartDefaults]);
+
 
   const conf = isFoundation
     ? computeFoundationConfidence({ foundationMeta, aiDescription })
@@ -357,7 +400,18 @@ export function VideoFastEditor({
       if (!isFoundation) {
         const okAssign = await syncTagAssignments(video.id, assignments);
         if (!okAssign) return;
+      } else {
+        // Foundation learning feeds the foundation Smart Defaults button.
+        try {
+          recordFoundationChoice({
+            domain: foundationMeta.domain,
+            scope: foundationMeta.scope,
+            audiences: foundationMeta.audience_levels ?? [],
+            triggers: foundationMeta.refresher_triggers ?? [],
+          });
+        } catch { /* learning is non-critical */ }
       }
+
       toast({ title: 'Saved', description: `Confidence ${conf.score} · ${conf.tier}` });
       onSuccess();
     } finally {
