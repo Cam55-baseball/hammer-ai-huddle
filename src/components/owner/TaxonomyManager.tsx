@@ -206,7 +206,41 @@ export function TaxonomyManager() {
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Sport</Label>
+          <Select value={sport} onValueChange={v => setSport(v as TagSport)}>
+            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SPORTS.map(s => (
+                <SelectItem key={s} value={s} className="capitalize text-xs">
+                  {s === 'both' ? 'Both sports' : s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">Position scope (new tags — leave empty for all positions)</Label>
+        <div className="flex flex-wrap gap-1">
+          {POSITION_GROUPS.map(pg => (
+            <Badge
+              key={pg}
+              variant={positionScope.includes(pg) ? 'default' : 'outline'}
+              className="cursor-pointer text-[10px]"
+              onClick={() =>
+                setPositionScope(prev =>
+                  prev.includes(pg) ? prev.filter(x => x !== pg) : [...prev, pg],
+                )
+              }
+            >
+              {POSITION_GROUP_LABELS[pg]}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
 
       {/* Layer guidance card — prevents misplacement */}
       <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-1">
