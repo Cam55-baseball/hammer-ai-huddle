@@ -131,7 +131,10 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         rules,
         userOutcomes,
         globalMetrics,
+        sport,
+        positions,
       });
+
     },
   });
 }
