@@ -159,6 +159,41 @@ export function StructuredTagEditor({ value, onChange, sports }: Props) {
       {/* Layers 3-6: Taxonomy tags with explicit 1 / 3 / 5 weights */}
       {primaryDomain ? (
         <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="outline" className="text-[10px] capitalize">
+              {sportScope === 'both' ? 'Both sports' : sportScope}
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">
+              {sportScope === 'softball'
+                ? 'Showing windmill / softball-specific tags + shared tags.'
+                : sportScope === 'baseball'
+                  ? 'Showing overhand / baseball-specific tags + shared tags.'
+                  : 'Showing shared tags for both sports. Pick one sport for specialized tags.'}
+            </span>
+          </div>
+
+          {showPositionFocus && (
+            <div className="space-y-1">
+              <Label className="text-xs">Position focus (filters tags)</Label>
+              <div className="flex flex-wrap gap-1">
+                {POSITION_GROUPS.map(pg => (
+                  <Badge
+                    key={pg}
+                    variant={positionFocus.includes(pg) ? 'default' : 'outline'}
+                    className="cursor-pointer text-[10px]"
+                    onClick={() =>
+                      setPositionFocus(prev =>
+                        prev.includes(pg) ? prev.filter(x => x !== pg) : [...prev, pg],
+                      )
+                    }
+                  >
+                    {POSITION_GROUP_LABELS[pg]}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className="text-[10px] text-muted-foreground -mb-1">
             Tap a tag to add it. Choose <span className="font-semibold">1</span> normal, <span className="font-semibold">3</span> strong, <span className="font-semibold">5</span> max priority.
           </p>
@@ -166,6 +201,7 @@ export function StructuredTagEditor({ value, onChange, sports }: Props) {
             <div key={layer} className="space-y-1.5">
               <Label className="text-xs">{LAYER_LABELS[layer]}{layer === 'movement_pattern' ? ' *' : ''}</Label>
               <p className="text-[10px] text-muted-foreground -mt-1">{LAYER_GUIDANCE[layer].short}</p>
+
               <div className="flex flex-wrap gap-1.5">
                 {grouped[layer].map(tag => {
                   const w = value.tagAssignments[tag.id];
