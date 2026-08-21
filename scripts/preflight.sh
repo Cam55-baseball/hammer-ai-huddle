@@ -20,6 +20,9 @@ bunx tsx "$ROOT/scripts/audits/dosage-doctrine-audit.ts"
 # Dose-unit integrity — seconds/feet/innings never stored in default_reps.
 bunx tsx "$ROOT/scripts/check-dosage-units.ts"
 
+# Laterality integrity — every single-limb movement logs per side.
+bunx tsx "$ROOT/scripts/audit-unilateral-catalog.ts"
+
 # Goal emphasis + weekly balance — goals actually steer, week stays balanced.
 bunx tsx "$ROOT/scripts/audits/goal-balance-audit.ts"
 bash "$ROOT/scripts/check-eternity-guards.sh"
@@ -29,5 +32,6 @@ bunx vitest run \
   src/lib/ops \
   src/lib/runtime/recovery \
   src/lib/games/__tests__ \
+  src/test/unilateralLogging.test.ts \
   --reporter=dot 2>/dev/null || true
 echo "[preflight] PASSED"
