@@ -411,7 +411,7 @@ export function VideoLibraryManager() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => setEditTarget(video)}
+                        onClick={() => openPlainEdit(video)}
                         title="Edit"
                       >
                         <Pencil className="h-4 w-4" />
@@ -507,7 +507,7 @@ export function VideoLibraryManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setConfirmCloseEdit(false); setEditTarget(null); }}>
+            <AlertDialogAction onClick={() => { setConfirmCloseEdit(false); clearEditIntents(); setEditTarget(null); }}>
               Leave anyway
             </AlertDialogAction>
           </AlertDialogFooter>
