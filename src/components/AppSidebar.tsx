@@ -281,6 +281,9 @@ export function AppSidebar() {
     // Players Club always visible
     items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
 
+    // History — practices, games, reports and recaps (everything without video)
+    items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });
+
     // Royal Timing - visible to any subscribed user
     if (showAll || modules.length > 0) {
       items.push({ key: 'royal-timing', title: 'Royal Timing', url: '/royal-timing', icon: Crown });
