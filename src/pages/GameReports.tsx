@@ -246,9 +246,22 @@ export default function GameReports() {
       </div>
 
       <Accordion type="multiple" defaultValue={["heat", "hitting", "usage", "defense", "baserun"]}>
+        <AccordionItem value="saved">
+          <AccordionTrigger>Saved &amp; shared reports</AccordionTrigger>
+          <AccordionContent>
+            <SavedReportsPanel />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="scouting">
+          <AccordionTrigger>Opponent scouting report</AccordionTrigger>
+          <AccordionContent>
+            <ScoutingReportPanel />
+          </AccordionContent>
+        </AccordionItem>
         {(category === "all" || category === "hitting") && (
           <AccordionItem value="heat">
             <AccordionTrigger>Pitch heat map ({heat.total} pitches seen)</AccordionTrigger>
+
             <AccordionContent>
               <div className="flex flex-col sm:flex-row gap-4 items-start">
                 <StrikeZoneGrid heat={heat.heatMap} heatLabels={heat.labels} readOnly size={240} />
