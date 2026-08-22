@@ -236,44 +236,228 @@ export function doseFor(drill: WarmupDrill, lifecycle: LifecycleClass): string {
   return drill.baseDose;
 }
 
+// ─── Equipment law ──────────────────────────────────────────────────────────
+//
+// A drill is never prescribed for gear the athlete does not have. Gear-bound
+// drills declare an equipment-free sibling (`fallbackSlug`); when the sibling
+// is also impossible the role is skipped rather than half-shipped.
+//
+// Requirements for pre-existing library rows live here so the catalog rows
+// above stay readable. New rows may declare `equipment` inline.
+const EQUIPMENT_OVERRIDES: Record<string, { equipment: string[]; fallbackSlug?: string }> = {
+  wu_foam_roll_tspine: { equipment: ["foam_roller"], fallbackSlug: "wu_tspine_open_book" },
+  wu_lacrosse_ball_pec: { equipment: ["massage_ball", "wall"], fallbackSlug: "wu_serratus_wall_slide" },
+  wu_lacrosse_ball_glute: { equipment: ["massage_ball"], fallbackSlug: "wu_frog_rock" },
+  wu_calf_softball_pin: { equipment: ["massage_ball"], fallbackSlug: "wu_barefoot_towel_scrunch" },
+  wu_medball_rot_toss_wall: { equipment: ["med_ball", "wall"], fallbackSlug: "wu_thoracic_windmill" },
+  wu_miniband_lat_walk: { equipment: ["mini_band"], fallbackSlug: "wu_glute_bridge_walkout" },
+  wu_miniband_monster_walk: { equipment: ["mini_band"], fallbackSlug: "wu_singleleg_glute_bridge" },
+  wu_deadbug_band_press: { equipment: ["bands"], fallbackSlug: "wu_bird_dog_slow" },
+  wu_pallof_press_iso: { equipment: ["bands"], fallbackSlug: "wu_split_stance_iso_hold" },
+  wu_copenhagen_short_lever: { equipment: ["bench"], fallbackSlug: "wu_sl_rdl_reach" },
+  wu_wickets_low: { equipment: ["hurdles"], fallbackSlug: "wu_a_skip" },
+  wu_reaction_ball_wall: { equipment: ["tennis_ball", "wall"], fallbackSlug: "wu_line_hops_lateral" },
+  wu_couch_stretch_active: { equipment: ["bench"], fallbackSlug: "wu_wall_hip_flexor_slide" },
+  wu_tennis_ball_reaction_toss: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_self_rally: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_one_hand_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_cross_body_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_clap_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_rhythm_ball_tap: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_reaction_drop_catch: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_juggle: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_cross_body_catch: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_toss_and_move: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_one_hand_snatch: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_balloon_keep_up: { equipment: ["balloon"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_balloon_hand_switch: { equipment: ["balloon"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_balloon_partner_volley: { equipment: ["balloon", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_beanbag_toss_and_catch: { equipment: ["beanbag"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_beanbag_balance_walk: { equipment: ["beanbag"], fallbackSlug: "wu_crossover_run" },
+  wu_beanbag_foot_flip: { equipment: ["beanbag"], fallbackSlug: "wu_crossover_run" },
+  wu_mini_frisbee_toss: { equipment: ["frisbee"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_mini_frisbee_roll_catch: { equipment: ["frisbee"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_shuttle_tap_up: { equipment: ["shuttle"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_coin_finger_roll: { equipment: ["coin"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_mirror_me_ball_toss: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_partner_alternating_catch: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_light_bat_shadow_tap: { equipment: ["bat"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_dry_swing_progressive: { equipment: ["bat"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_jband_full: { equipment: ["jband"], fallbackSlug: "wu_prone_tyw" },
+  wu_crossover_symmetry_full: { equipment: ["bands"], fallbackSlug: "wu_prone_tyw" },
+  wu_er_at_90: { equipment: ["bands"], fallbackSlug: "wu_prone_tyw" },
+  wu_face_pull_band: { equipment: ["bands"], fallbackSlug: "wu_scap_pushup" },
+  wu_forearm_pump: { equipment: ["bands"], fallbackSlug: "wu_scap_pushup" },
+  wu_barefoot_towel_scrunch: { equipment: ["towel"] },
+  wu_med_ball_scoop_toss: { equipment: ["med_ball"], fallbackSlug: "wu_sl_broad_hop_stick" },
+  wu_med_ball_shot_put: { equipment: ["med_ball", "wall"], fallbackSlug: "wu_dry_swing_burst" },
+  wu_altitude_drop: { equipment: ["box"], fallbackSlug: "wu_sl_curb_drop_stick" },
+};
+
+/** Always assumed present — a floor, a wall, and room to move. */
+const BASELINE_EQUIPMENT = ["wall", "open_space", "floor", "towel"];
+
+/** Venue tokens that imply a full kit. */
+const VENUE_EXPANSIONS: Record<string, string[]> = {
+  full_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "hurdles", "jband", "bat"],
+  commercial_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "jband"],
+  gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench"],
+  home_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "bench"],
+  team_facility: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "hurdles", "jband", "bat", "tennis_ball", "partner"],
+  field: ["bat", "tennis_ball", "partner", "ladder"],
+  field_only: ["bat", "tennis_ball", "partner"],
+  bands: ["bands", "mini_band", "jband"],
+  hotel: [],
+  travel: [],
+  bodyweight: [],
+};
+
+const EQUIPMENT_SYNONYMS: Record<string, string> = {
+  agility_ladder: "ladder",
+  speed_ladder: "ladder",
+  mini_hurdles: "hurdles",
+  hurdle: "hurdles",
+  resistance_bands: "bands",
+  band: "bands",
+  jbands: "jband",
+  j_band: "jband",
+  j_bands: "jband",
+  crossover_symmetry: "bands",
+  medicine_ball: "med_ball",
+  medball: "med_ball",
+  plyo_box: "box",
+  jump_box: "box",
+  step: "box",
+  lacrosse_ball: "massage_ball",
+  massage_gun: "massage_ball",
+  roller: "foam_roller",
+  bats: "bat",
+  tennis_balls: "tennis_ball",
+  training_partner: "partner",
+  catch_partner: "partner",
+};
+
+function normalizeEquipmentToken(raw: string): string {
+  const t = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return EQUIPMENT_SYNONYMS[t] ?? t;
+}
+
+/**
+ * Expand the athlete's declared equipment + venue into the token set the
+ * library gates against. Missingness is honest — an unknown athlete gets the
+ * baseline (floor, wall, space) and therefore the equipment-free variants.
+ */
+export function expandEquipment(
+  declared: ReadonlyArray<string> | null | undefined,
+  venue?: string | null,
+): Set<string> {
+  const out = new Set<string>(BASELINE_EQUIPMENT);
+  for (const raw of declared ?? []) {
+    const token = normalizeEquipmentToken(String(raw));
+    out.add(token);
+    for (const extra of VENUE_EXPANSIONS[token] ?? []) out.add(extra);
+  }
+  if (venue) {
+    const v = normalizeEquipmentToken(venue);
+    out.add(v);
+    for (const extra of VENUE_EXPANSIONS[v] ?? []) out.add(extra);
+  }
+  return out;
+}
+
+/** What a drill needs — inline declaration first, override table second. */
+export function equipmentFor(drill: WarmupDrill): readonly string[] {
+  return drill.equipment ?? EQUIPMENT_OVERRIDES[drill.slug]?.equipment ?? [];
+}
+
+function fallbackFor(drill: WarmupDrill): string | null {
+  return drill.fallbackSlug ?? EQUIPMENT_OVERRIDES[drill.slug]?.fallbackSlug ?? null;
+}
+
+function bySlug(slug: string): WarmupDrill | null {
+  return WARMUP_LIBRARY.find((d) => d.slug === slug) ?? null;
+}
+
+function hasEquipment(drill: WarmupDrill, available: Set<string>): boolean {
+  return equipmentFor(drill).every((need) => available.has(need));
+}
+
+/** Athlete-facing "You need:" line. Empty when nothing beyond a floor. */
+export function equipmentNoteFor(drill: WarmupDrill): string | undefined {
+  const needs = equipmentFor(drill).filter((e) => !BASELINE_EQUIPMENT.includes(e));
+  if (needs.length === 0) return undefined;
+  const labels: Record<string, string> = {
+    ladder: "agility ladder",
+    hurdles: "mini hurdles",
+    box: "box or step",
+    bands: "resistance band",
+    mini_band: "mini band",
+    med_ball: "medicine ball",
+    massage_ball: "lacrosse or massage ball",
+    foam_roller: "foam roller",
+    jband: "J-Band",
+    tennis_ball: "tennis ball",
+    beanbag: "beanbag",
+    scarf: "juggling scarf",
+    balloon: "balloon",
+    frisbee: "mini frisbee",
+    shuttle: "badminton shuttle",
+    coin: "coin",
+    bat: "bat",
+    bench: "bench or chair",
+    partner: "a partner",
+  };
+  return needs.map((n) => labels[n] ?? n.replace(/_/g, " ")).join(", ");
+}
+
 // ─── Templates ──────────────────────────────────────────────────────────────
+//
+// Twitch law: baseball and softball are burst sports. Every training day that
+// can afford it gets ladder-style quick feet plus single-leg twitch, and the
+// single-leg share of the twitch layer is enforced at build time.
 const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
   game_day: [
     "breathwork", "tissue_prep", "cars", "fascial_rotation",
-    "activation", "weightless_coordination", "neural_priming", "arm_care", "movement_bridge",
+    "activation", "weightless_coordination", "ladder_quickness", "neural_priming", "arm_care", "movement_bridge",
   ],
   in_season_practice: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
-    "activation", "weightless_coordination", "neural_priming", "fast_twitch", "movement_bridge", "arm_care",
+    "activation", "weightless_coordination", "ladder_quickness", "neural_priming",
+    "single_leg_twitch", "movement_bridge", "arm_care",
   ],
   in_season_default: [
     "breathwork", "cars", "fascial_rotation", "activation",
-    "weightless_coordination", "neural_priming", "arm_care",
+    "weightless_coordination", "ladder_quickness", "neural_priming", "single_leg_twitch", "arm_care",
   ],
   speed_day: [
     "tissue_prep", "cars", "mobility_joint", "activation",
-    "weightless_coordination", "neural_priming", "fast_twitch", "fast_twitch", "movement_bridge",
+    "weightless_coordination", "neural_priming", "ladder_quickness",
+    "single_leg_twitch", "single_leg_twitch", "ground_force", "fast_twitch", "movement_bridge",
   ],
   lift_day: [
     "breathwork", "tissue_prep", "cars", "mobility_joint",
-    "activation", "weightless_coordination", "stability", "neural_priming", "fast_twitch",
+    "activation", "weightless_coordination", "stability", "neural_priming",
+    "ladder_quickness", "single_leg_twitch", "fast_twitch",
   ],
   // Throwing days: arm care is OWNED BY THE THROWING BLOCK (EASS band prep + cooldown).
   // The warmup does NOT include arm_care on throwing days — that keeps arm care to exactly
   // one exposure per day. See ArmCareBudgetContext.
+  // Legs stay fresh for the arm: ladder quickness only, no ground-force bursts.
   throwing_day: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
-    "activation", "weightless_coordination", "movement_bridge",
+    "activation", "weightless_coordination", "ladder_quickness", "movement_bridge",
   ],
   hitting_day: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
-    "activation", "weightless_coordination", "fast_twitch", "movement_bridge",
+    "activation", "weightless_coordination", "ladder_quickness",
+    "single_leg_twitch", "fast_twitch", "movement_bridge",
   ],
   offseason_extended: [
     "breathwork", "tissue_prep", "tissue_prep", "cars", "cars",
     "fascial_rotation", "mobility_joint", "mobility_joint", "activation", "stability",
     "weightless_coordination", "weightless_coordination", "neural_priming",
-    "fast_twitch", "fast_twitch", "movement_bridge", "arm_care",
+    "ladder_quickness", "ladder_quickness", "single_leg_twitch", "single_leg_twitch",
+    "ground_force", "fast_twitch", "movement_bridge", "arm_care",
   ],
   recovery_day: [
     "breathwork", "tissue_prep", "cars", "mobility_joint", "activation",
@@ -284,9 +468,22 @@ const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
   ],
   default: [
     "tissue_prep", "cars", "fascial_rotation", "mobility_joint",
-    "activation", "weightless_coordination", "neural_priming", "fast_twitch",
+    "activation", "weightless_coordination", "neural_priming",
+    "ladder_quickness", "single_leg_twitch", "fast_twitch",
   ],
 };
+
+/** Roles that make up the twitch layer, governed by the single-leg majority. */
+export const TWITCH_ROLES: ReadonlyArray<WarmupRole> = [
+  "ladder_quickness",
+  "single_leg_twitch",
+  "ground_force",
+  "fast_twitch",
+];
+
+/** Minimum share of the twitch layer that must be single-leg. */
+export const SINGLE_LEG_MIN_SHARE = 0.6;
+
 
 /**
  * Youth and beginner lifecycles get extra weightless coordination exposure
