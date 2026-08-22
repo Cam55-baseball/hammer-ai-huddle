@@ -504,17 +504,60 @@ function templateFor(context: WarmupContext, lifecycle: LifecycleClass): WarmupR
   return out;
 }
 
-function pickForRole(role: WarmupRole, lifecycle: LifecycleClass, gameDay: boolean, seed: number): WarmupDrill | null {
-  const rank: Record<LifecycleClass, number> = { youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
-  const pool = WARMUP_LIBRARY.filter((d) => {
-    if (d.role !== role) return false;
-    if (rank[lifecycle] < rank[d.minLifecycle]) return false;
-    if (gameDay && !d.gameDayLegal) return false;
-    return true;
-  });
+const LIFECYCLE_RANK: Record<LifecycleClass, number> = {
+  youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4,
+};
+
+interface PickFilters {
+  readonly lifecycle: LifecycleClass;
+  readonly gameDay: boolean;
+  readonly available: Set<string>;
+  readonly injuryRegions: ReadonlyArray<string>;
+  /** When set, only drills on this axis are eligible. */
+  readonly axis?: WarmupAxis;
+}
+
+function isEligible(d: WarmupDrill, f: PickFilters): boolean {
+  if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d.minLifecycle]) return false;
+  if (f.gameDay && !d.gameDayLegal) return false;
+  if (f.axis && (d.axis ?? "bilateral") !== f.axis) return false;
+  if (d.regions && f.injuryRegions.length > 0) {
+    if (d.regions.some((r) => f.injuryRegions.includes(r))) return false;
+  }
+  return true;
+}
+
+/**
+ * Resolve a drill against the athlete's actual equipment. Gear-bound drills
+ * fall back to their equipment-free sibling; if that is also ineligible the
+ * caller must pick something else — nothing is ever prescribed blind.
+ */
+function resolveEquipmentSafe(d: WarmupDrill, f: PickFilters): WarmupDrill | null {
+  if (hasEquipment(d, f.available)) return d;
+  const fb = fallbackFor(d);
+  if (!fb) return null;
+  const sib = bySlug(fb);
+  if (!sib) return null;
+  if (!isEligible(sib, { ...f, axis: undefined })) return null;
+  return hasEquipment(sib, f.available) ? sib : null;
+}
+
+function poolForRole(role: WarmupRole, f: PickFilters): WarmupDrill[] {
+  return WARMUP_LIBRARY.filter((d) => d.role === role && isEligible(d, f));
+}
+
+function pickForRole(role: WarmupRole, f: PickFilters, seed: number, seen: Set<string>): WarmupDrill | null {
+  const pool = poolForRole(role, f);
   if (pool.length === 0) return null;
-  const idx = Math.abs(seed) % pool.length;
-  return pool[idx];
+  const start = Math.abs(seed) % pool.length;
+  // Deterministic scan from the seeded index — first equipment-legal,
+  // not-yet-used candidate wins.
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[(start + i) % pool.length];
+    const resolved = resolveEquipmentSafe(candidate, f);
+    if (resolved && !seen.has(resolved.slug)) return resolved;
+  }
+  return null;
 }
 
 export interface BuildWarmupInput {
@@ -524,6 +567,14 @@ export interface BuildWarmupInput {
   readonly daySeed?: number;
   /** When true, strip any arm_care role picks. Used when the throwing block already owns arm care. */
   readonly suppressArmCare?: boolean;
+  /** Athlete's declared equipment tokens (effective scope already resolved). */
+  readonly equipment?: ReadonlyArray<string> | null;
+  /** Canonical venue token — expands into an implied kit. */
+  readonly venue?: string | null;
+  /** Reported injury regions — twitch drills loading those regions are vetoed. */
+  readonly injuryRegions?: ReadonlyArray<string>;
+  /** True on low-readiness days: the twitch layer is dropped entirely. */
+  readonly suppressTwitch?: boolean;
 }
 
 export interface BuiltWarmupDrill {
@@ -536,46 +587,95 @@ export interface BuiltWarmupDrill {
   readonly stopIf?: string;
   readonly source: string;
   readonly guide?: MovementGuide;
+  /** Athlete-facing "You need:" line, when the drill needs gear. */
+  readonly equipmentNote?: string;
+  readonly axis?: WarmupAxis;
 }
 
 export interface BuiltWarmup {
   readonly context: WarmupContext;
   readonly drills: ReadonlyArray<BuiltWarmupDrill>;
   readonly estMinutes: number;
+  /** Share of the twitch layer performed single-leg (0..1, null when none). */
+  readonly singleLegShare: number | null;
+}
+
+function toBuilt(d: WarmupDrill, lifecycle: LifecycleClass): BuiltWarmupDrill {
+  return {
+    slug: d.slug,
+    name: d.name,
+    role: d.role,
+    setup: d.setup,
+    dosage: doseFor(d, lifecycle),
+    cue: d.cue,
+    stopIf: d.stopIf,
+    source: d.source,
+    guide: guideFor(d.slug) ?? guideFor(d.name) ?? undefined,
+    equipmentNote: equipmentNoteFor(d),
+    axis: d.axis,
+  };
 }
 
 export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
-  const roles = templateFor(input.context, input.lifecycle).filter(
-    (r) => !(input.suppressArmCare && r === "arm_care"),
-  );
+  const filtersBase: PickFilters = {
+    lifecycle: input.lifecycle,
+    gameDay: input.gameDay,
+    available: expandEquipment(input.equipment, input.venue),
+    injuryRegions: (input.injuryRegions ?? []).map((r) => r.toLowerCase()),
+  };
+  const roles = templateFor(input.context, input.lifecycle).filter((r) => {
+    if (input.suppressArmCare && r === "arm_care") return false;
+    if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
+    return true;
+  });
   const seedBase = input.daySeed ?? 0;
   const seen = new Set<string>();
   const drills: BuiltWarmupDrill[] = [];
   roles.forEach((role, i) => {
     const seed = seedBase + i * 7 + role.length * 3;
-    let pick = pickForRole(role, input.lifecycle, input.gameDay, seed);
-    let attempt = 1;
-    while (pick && seen.has(pick.slug) && attempt < 6) {
-      pick = pickForRole(role, input.lifecycle, input.gameDay, seed + attempt * 11);
-      attempt++;
-    }
-    if (!pick || seen.has(pick.slug)) return;
+    const pick = pickForRole(role, filtersBase, seed, seen);
+    if (!pick) return;
     seen.add(pick.slug);
-    drills.push({
-      slug: pick.slug,
-      name: pick.name,
-      role: pick.role,
-      setup: pick.setup,
-      dosage: doseFor(pick, input.lifecycle),
-      cue: pick.cue,
-      stopIf: pick.stopIf,
-      source: pick.source,
-      guide: guideFor(pick.slug) ?? guideFor(pick.name) ?? undefined,
-    });
+    drills.push(toBuilt(pick, input.lifecycle));
   });
+
+  // ── Single-leg majority law ───────────────────────────────────────────────
+  // Twitch and ground force transfer through one leg at a time. At least
+  // SINGLE_LEG_MIN_SHARE of the twitch layer must be single-leg; bilateral
+  // picks are deterministically swapped out from the back until it holds.
+  const twitchIdx = drills
+    .map((d, i) => ({ d, i }))
+    .filter(({ d }) => TWITCH_ROLES.includes(d.role));
+  if (twitchIdx.length > 0) {
+    const needed = Math.ceil(twitchIdx.length * SINGLE_LEG_MIN_SHARE);
+    let single = twitchIdx.filter(({ d }) => d.axis === "single_leg").length;
+    const bilateral = twitchIdx
+      .filter(({ d }) => d.axis !== "single_leg")
+      .reverse();
+    for (const { d, i } of bilateral) {
+      if (single >= needed) break;
+      const slFilters: PickFilters = { ...filtersBase, axis: "single_leg" };
+      const replacement =
+        pickForRole(d.role, slFilters, seedBase + i * 13 + 5, seen) ??
+        pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen);
+      if (!replacement) continue;
+      seen.delete(d.slug);
+      seen.add(replacement.slug);
+      drills[i] = toBuilt(replacement, input.lifecycle);
+      single++;
+    }
+  }
+
+  const twitchFinal = drills.filter((d) => TWITCH_ROLES.includes(d.role));
+  const singleLegShare =
+    twitchFinal.length === 0
+      ? null
+      : twitchFinal.filter((d) => d.axis === "single_leg").length / twitchFinal.length;
+
   const est = Math.max(8, Math.round((drills.length * 90) / 60));
-  return { context: input.context, drills, estMinutes: est };
+  return { context: input.context, drills, estMinutes: est, singleLegShare };
 }
+
 
 // ─── Context resolver ───────────────────────────────────────────────────────
 export interface ResolveContextInput {
