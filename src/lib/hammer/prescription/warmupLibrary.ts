@@ -633,6 +633,8 @@ export interface BuiltWarmup {
   readonly estMinutes: number;
   /** Share of the twitch layer performed single-leg (0..1, null when none). */
   readonly singleLegShare: number | null;
+  /** Every substitution, skip and veto — replay-visible, never silent. */
+  readonly diagnostics: ReadonlyArray<WarmupDiagnostic>;
 }
 
 function toBuilt(d: WarmupDrill, lifecycle: LifecycleClass): BuiltWarmupDrill {
@@ -652,24 +654,46 @@ function toBuilt(d: WarmupDrill, lifecycle: LifecycleClass): BuiltWarmupDrill {
 }
 
 export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
+  const diagnostics: WarmupDiagnostic[] = [];
+  const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
   const filtersBase: PickFilters = {
     lifecycle: input.lifecycle,
     gameDay: input.gameDay,
     available: expandEquipment(input.equipment, input.venue),
-    injuryRegions: (input.injuryRegions ?? []).map((r) => r.toLowerCase()),
+    injuryRegions,
   };
-  const roles = templateFor(input.context, input.lifecycle).filter((r) => {
+  if (injuryRegions.length > 0) {
+    diagnostics.push({
+      code: "injury_veto",
+      detail: `Drills loading ${injuryRegions.join(", ")} were withheld — reported injury region.`,
+    });
+  }
+  const fullTemplate = templateFor(input.context, input.lifecycle);
+  const roles = fullTemplate.filter((r) => {
     if (input.suppressArmCare && r === "arm_care") return false;
     if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
     return true;
   });
+  if (input.suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
+    diagnostics.push({
+      code: "twitch_suppressed",
+      detail: "Fast-twitch layer withheld today — recovery, travel or low readiness. Prep only, no CNS spend.",
+    });
+  }
   const seedBase = input.daySeed ?? 0;
   const seen = new Set<string>();
   const drills: BuiltWarmupDrill[] = [];
   roles.forEach((role, i) => {
     const seed = seedBase + i * 7 + role.length * 3;
-    const pick = pickForRole(role, filtersBase, seed, seen);
-    if (!pick) return;
+    const pick = pickForRole(role, filtersBase, seed, seen, diagnostics);
+    if (!pick) {
+      diagnostics.push({
+        code: "equipment_role_skipped",
+        role,
+        detail: `No ${role.replace(/_/g, " ")} drill is legal with today's equipment, age and injury state — the role was skipped rather than half-shipped.`,
+      });
+      return;
+    }
     seen.add(pick.slug);
     drills.push(toBuilt(pick, input.lifecycle));
   });
@@ -691,12 +715,19 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
       if (single >= needed) break;
       const slFilters: PickFilters = { ...filtersBase, axis: "single_leg" };
       const replacement =
-        pickForRole(d.role, slFilters, seedBase + i * 13 + 5, seen) ??
-        pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen);
+        pickForRole(d.role, slFilters, seedBase + i * 13 + 5, seen, diagnostics) ??
+        pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen, diagnostics);
       if (!replacement) continue;
       seen.delete(d.slug);
       seen.add(replacement.slug);
       drills[i] = toBuilt(replacement, input.lifecycle);
+      diagnostics.push({
+        code: "single_leg_swap",
+        role: replacement.role,
+        from: d.slug,
+        to: replacement.slug,
+        detail: `Single-leg majority law — ${d.name} swapped for ${replacement.name} so most of the twitch work runs through one leg.`,
+      });
       single++;
     }
   }
@@ -706,8 +737,15 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
     twitchFinal.length === 0
       ? null
       : twitchFinal.filter((d) => d.axis === "single_leg").length / twitchFinal.length;
+  if (singleLegShare !== null && singleLegShare < SINGLE_LEG_MIN_SHARE) {
+    diagnostics.push({
+      code: "single_leg_short",
+      detail: `Single-leg share is ${Math.round(singleLegShare * 100)}% — no legal single-leg replacement was available today.`,
+    });
+  }
 
   const est = Math.max(8, Math.round((drills.length * 90) / 60));
+
   return { context: input.context, drills, estMinutes: est, singleLegShare };
 }
 
