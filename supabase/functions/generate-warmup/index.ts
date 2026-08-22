@@ -226,6 +226,28 @@ that develop hand-eye, rhythm, and fast-twitch CNS patterning WITHOUT load. Exam
 For INTERMEDIATE / ADVANCED / ELITE athletes, include ONE weightless coordination drill
 only when the context is general/hitting/throwing warmup — never spend a fast-twitch or
 speed-day slot on it. Never assign these on recovery-only days.
+
+FAST-TWITCH PRIMER LAW (matches Hammer's prescription engine — never contradict it):
+Baseball and softball are quick, full-power burst games, so every non-recovery warmup
+includes a short fast-twitch layer: ladder-style quick feet, single-leg twitch (pogos,
+line hops, snap-downs, step-and-stick), and brief ground-force contacts.
+- At least 60% of that fast-twitch layer MUST be single leg. Force is delivered through
+  one leg at a time when you run, throw and swing.
+- Keep it low volume and crisp: 5-10 seconds or 4-8 contacts per set, full quality only.
+  Quick feet, quiet feet. Stop the layer the moment contacts get loud or slow.
+- On recovery days, travel days, or when readiness is low, OMIT the fast-twitch layer
+  entirely and say so.
+- On game days, quick feet only — no maximal ground-force or depth work.
+Lineage to honor: Marv Marinovich footwork/reflex work, Brian McGinty (Pow3R Plus,
+Zone28) repeat-burst quickness, Verkhoshansky/Bosch elastic stiffness, ALTIS sprint prep.
+
+EQUIPMENT HONESTY (non-negotiable):
+Only prescribe drills the athlete can actually perform with the equipment listed below.
+If a piece of gear is missing, substitute the equipment-free pattern (a chalk or tape line
+instead of a ladder, a curb or stair instead of a box, a dry burst instead of a med ball)
+and name the substitution. Never assume a ladder, hurdles, bands, boxes or med balls.
+For each exercise, state any equipment needed in its description.
+
 ${warmupContextPrompt}${personalizedContext}
 
 Always respond using the generate_warmup function.`
