@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
+import { MethodBadge, MethodPanel } from "@/components/hammer/MethodPanel";
+import { readTrainingMethod } from "@/lib/wic/methods";
 import {
   WkProgressionBadge,
   WkProgressionNote,
@@ -151,6 +153,7 @@ export function WkPrescriptionCard({
   };
 
   const why = rx.why_payload;
+  const trainingMethod = readTrainingMethod(why);
   const progressionPayload = ((why as any)?.progression ?? null) as ProgressionPayloadShape | null;
   const storedPhase = why?.phase ?? rx.phase ?? null;
   // Only surface the "older season" language when the plan is settled. While
@@ -276,12 +279,14 @@ export function WkPrescriptionCard({
                 <ShieldCheck className="h-3 w-3" /> Injury-swap
               </Badge>
             )}
+            {trainingMethod && <MethodBadge method={trainingMethod} />}
             {rx.why_payload?.override && (
               <Badge variant="outline" className="text-[10px] gap-1 border-violet-500/50 text-violet-700 dark:text-violet-300">
                 Override — 1 session
               </Badge>
             )}
           </div>
+          {trainingMethod && <MethodPanel method={trainingMethod} />}
           <div className="flex items-start justify-between gap-2">
             <div className="text-xs text-muted-foreground break-words flex-1 min-w-0">{dosage}</div>
             <div className="flex items-center gap-1 shrink-0">
