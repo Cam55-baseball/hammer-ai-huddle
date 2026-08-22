@@ -48,6 +48,7 @@ export interface AnthropometricsBlock {
   height_in: number | null;
   weight_lb: number | null;
   body_composition: number | null;
+  /** Measured limb/segment lengths in inches, e.g. `foot_length_in`, `wingspan_in`. */
   limb_proportions: Record<string, number> | null;
   dominant_side: Side;
 }

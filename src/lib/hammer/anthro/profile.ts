@@ -22,10 +22,12 @@ export interface AnthropometricsRaw {
   readonly tibia_in?: number | string | null;
   readonly torso_in?: number | string | null;
   readonly arm_total_in?: number | string | null;
+  readonly foot_length_in?: number | string | null;
 }
 
 export type LegLeverFlag = "long_tibia" | "long_femur" | "balanced";
 export type ForearmFlag = "long_forearm" | "short_forearm" | "balanced";
+export type FootFlag = "long_foot" | "short_foot" | "balanced";
 export type TorsoFlag = "long_torso" | "short_torso" | "balanced";
 export type Archetype = "long_levers" | "compact" | "balanced" | "mixed" | "unknown";
 
@@ -34,6 +36,7 @@ export interface AnthroProfile {
   readonly lowerLegFlag: LegLeverFlag | null;
   readonly forearmFlag: ForearmFlag | null;
   readonly torsoFlag: TorsoFlag | null;
+  readonly footFlag: FootFlag | null;
   readonly archetype: Archetype;
   readonly flags: ReadonlyArray<string>;
   readonly missing: ReadonlyArray<string>;
@@ -44,6 +47,7 @@ const EMPTY: AnthroProfile = {
   lowerLegFlag: null,
   forearmFlag: null,
   torsoFlag: null,
+  footFlag: null,
   archetype: "unknown",
   flags: [],
   missing: [
@@ -54,6 +58,7 @@ const EMPTY: AnthroProfile = {
     "forearm_in",
     "arm_total_in",
     "torso_in",
+    "foot_length_in",
   ],
 };
 
@@ -74,6 +79,7 @@ export function buildAnthroProfile(raw: unknown): AnthroProfile {
   const forearm = num(a.forearm_in);
   const armTotal = num(a.arm_total_in);
   const torso = num(a.torso_in);
+  const foot = num(a.foot_length_in);
 
   const missing: string[] = [];
   if (height == null) missing.push("height_in");
@@ -83,6 +89,7 @@ export function buildAnthroProfile(raw: unknown): AnthroProfile {
   if (forearm == null) missing.push("forearm_in");
   if (armTotal == null) missing.push("arm_total_in");
   if (torso == null) missing.push("torso_in");
+  if (foot == null) missing.push("foot_length_in");
 
   const flags: string[] = [];
 
@@ -119,27 +126,40 @@ export function buildAnthroProfile(raw: unknown): AnthroProfile {
     if (torsoFlag !== "balanced") flags.push(torsoFlag);
   }
 
+  let footFlag: FootFlag | null = null;
+  if (foot != null && height != null) {
+    const ratio = foot / height;
+    if (ratio >= 0.155) footFlag = "long_foot";
+    else if (ratio <= 0.13) footFlag = "short_foot";
+    else footFlag = "balanced";
+    if (footFlag !== "balanced") flags.push(footFlag);
+  }
+
   // Coarse archetype synthesis.
   let archetype: Archetype = "unknown";
   const longBias =
     (apeIndex != null && apeIndex >= 1.04) ||
     lowerLegFlag === "long_tibia" ||
     lowerLegFlag === "long_femur" ||
-    forearmFlag === "long_forearm";
+    forearmFlag === "long_forearm" ||
+    footFlag === "long_foot";
   const compactBias =
     (apeIndex != null && apeIndex <= 0.98) ||
     forearmFlag === "short_forearm" ||
-    torsoFlag === "short_torso";
+    torsoFlag === "short_torso" ||
+    footFlag === "short_foot";
   if (longBias && compactBias) archetype = "mixed";
   else if (longBias) archetype = "long_levers";
   else if (compactBias) archetype = "compact";
-  else if (apeIndex != null || lowerLegFlag || forearmFlag || torsoFlag) archetype = "balanced";
+  else if (apeIndex != null || lowerLegFlag || forearmFlag || torsoFlag || footFlag)
+    archetype = "balanced";
 
   return {
     apeIndex,
     lowerLegFlag,
     forearmFlag,
     torsoFlag,
+    footFlag,
     archetype,
     flags,
     missing,
@@ -152,6 +172,7 @@ export function hasAnyAnthroSignal(p: AnthroProfile): boolean {
     p.apeIndex != null ||
     p.lowerLegFlag != null ||
     p.forearmFlag != null ||
-    p.torsoFlag != null
+    p.torsoFlag != null ||
+    p.footFlag != null
   );
 }
