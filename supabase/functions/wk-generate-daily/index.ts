@@ -2105,8 +2105,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Stamp the anchor row — dose stays inside the envelope, structure and
       // rationale ride along in why_payload / why_v2.
       const a = result.applied;
+      const priorCns = Number(anchorRow.cns_cost ?? 0) || 0;
       anchorRow.sets = a.sets;
       anchorRow.cns_cost = a.cns_cost;
+      // Keep the day's CNS ledger honest — a method that adds a set spends
+      // real units, and the next slot must see that spend.
+      cnsUsed = Math.max(0, cnsUsed + ((Number(a.cns_cost) || 0) - priorCns));
       const wp = (anchorRow.why_payload ?? {}) as Record<string, unknown>;
       wp.training_method_id = a.method_id;
       wp.training_method = {
