@@ -166,7 +166,10 @@ export default function History() {
         </div>
 
         <div className="space-y-3">
+          <InjuryContinuityCard userId={userId} />
+
           <StandardsBoard />
+
 
           <HistorySection
             title="Practice sessions"
