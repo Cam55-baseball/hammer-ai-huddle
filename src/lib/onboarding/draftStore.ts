@@ -82,7 +82,13 @@ function scheduleRemoteFlush(uid: string, bag: DraftBag): void {
   pendingFlush.set(uid, t);
 }
 
+/** Synchronous read of the whole local draft bag (warm cache; no network). */
+export function readDraftBagLocal(uid: string): DraftBag {
+  return readLocal(uid);
+}
+
 /** Read the most recent draft slot. Prefers remote, falls back to local. */
+
 export async function readDraftSlot<T>(uid: string, slot: DraftSlot): Promise<T | null> {
   const local = readLocal(uid);
   if (slot in local && local[slot] !== undefined) return local[slot] as T;
