@@ -95,8 +95,28 @@ export default function GameIqSituation() {
     );
   }
 
-  const { situation, actors, scenarios, conceptLabels } = q.data as any;
-  const hoveredActor = hover ? actors.find((a) => a.role === hover) : null;
+  const raw = q.data as any;
+  // Sport-respective voice: situation copy is authored baseball-default, so a
+  // softball athlete reads it translated (circle, release jump, 60 feet).
+  const situation = {
+    ...raw.situation,
+    title: iqVoice(raw.situation?.title, fieldSport),
+    summary: iqVoice(raw.situation?.summary, fieldSport),
+    debrief: iqVoiceOrNull(raw.situation?.debrief, fieldSport),
+  };
+  const actors = (raw.actors ?? []).map((a: any) => ({
+    ...a,
+    coaching_note: iqVoiceOrNull(a.coaching_note, fieldSport),
+    footwork_cue: iqVoiceOrNull(a.footwork_cue, fieldSport),
+    eyes_target: iqVoiceOrNull(a.eyes_target, fieldSport),
+    communication_call: iqVoiceOrNull(a.communication_call, fieldSport),
+    secondary_read: iqVoiceOrNull(a.secondary_read, fieldSport),
+    elite_cue: iqVoiceOrNull(a.elite_cue, fieldSport),
+    common_mistake: iqVoiceOrNull(a.common_mistake, fieldSport),
+  }));
+  const { scenarios, conceptLabels } = raw;
+  const hoveredActor = hover ? actors.find((a: any) => a.role === hover) : null;
+
   const firstScenario = scenarios[0];
   const presets = alignmentsQ.data ?? [];
   const resolved = resolveAlignment({
