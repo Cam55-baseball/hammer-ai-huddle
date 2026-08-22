@@ -16,7 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { VideoUploadWizard } from '@/components/owner/VideoUploadWizard';
 import { QuickAttachVideo } from '@/components/owner/QuickAttachVideo';
 import { Loader2, Package, ArrowLeft, X, Plus, Paperclip } from 'lucide-react';
-import { saveBuild } from '@/lib/ownerBuildStorage';
+import { createBundle } from '@/lib/bundles';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 
 export default function BundleBuilder() {
@@ -28,6 +29,8 @@ export default function BundleBuilder() {
   const { videos, tags, loading: videosLoading, refetch } = useVideoLibrary({ limit: 200 });
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
   const [price, setPrice] = useState<string>('');
   const [videoIds, setVideoIds] = useState<string[]>(initialVideoId ? [initialVideoId] : []);
   const [pickerValue, setPickerValue] = useState<string>('');
@@ -85,24 +88,32 @@ export default function BundleBuilder() {
   const priceValid = Number.isFinite(priceNum) && priceNum >= 0.5;
   const canSave = name.trim().length > 0 && videoIds.length > 0 && priceValid;
 
-  const handleSave = () => {
-    if (!canSave) return;
-    const normalized = Math.round(priceNum * 100) / 100;
-    saveBuild({
-      id: crypto.randomUUID(),
-      type: 'bundle',
-      name,
-      meta: {
+  const handleSave = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    try {
+      const bundle = await createBundle({
+        name: name.trim(),
+        description: description.trim() || null,
+        priceCents: Math.round(priceNum * 100),
         videoIds,
-        videoId: videoIds[0] ?? null, // backward-compat
-        price: normalized,
-      },
-      createdAt: Date.now(),
-    });
-    console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoIds, price: normalized });
-    toast({ title: 'Bundle saved', description: `${name} • $${normalized.toFixed(2)} • ${videoIds.length} videos` });
-    navigate('/owner');
+      });
+      toast({
+        title: 'Bundle saved as draft',
+        description: `${bundle.name} • ${videoIds.length} video${videoIds.length === 1 ? '' : 's'} — publish it to get a share link.`,
+      });
+      navigate('/owner/builds');
+    } catch (err) {
+      toast({
+        title: 'Could not save bundle',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   const titleFor = (id: string) => videos.find((v) => v.id === id)?.title ?? id;
   const availableToAdd = videos.filter((v) => !videoIds.includes(v.id));
@@ -139,6 +150,17 @@ export default function BundleBuilder() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Catcher's Pop-Time Pack"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bundle-desc">Sales description</Label>
+            <Textarea
+              id="bundle-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="What buyers get and who it's for."
+            />
+            <p className="text-xs text-muted-foreground">Shown on the public bundle page.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="bundle-price">Price (USD)</Label>
@@ -248,8 +270,15 @@ export default function BundleBuilder() {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={!canSave}>
-            Save Bundle
+          <Button onClick={handleSave} disabled={!canSave || saving}>
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              'Save Bundle'
+            )}
           </Button>
         </div>
       </div>

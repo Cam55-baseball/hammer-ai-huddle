@@ -182,6 +182,8 @@ const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
+const BundleStorefront = lazyWithRetry(() => import("./pages/BundleStorefront"));
+const BundlePlayer = lazyWithRetry(() => import("./pages/BundlePlayer"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
 const DemoTier = lazyWithRetry(() => import("./pages/demo/DemoTier"));
 const DemoCategory = lazyWithRetry(() => import("./pages/demo/DemoCategory"));
@@ -411,7 +413,8 @@ const App = () => {
               <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="/program/:id" element={<BuildAccessGate buildType="program" />} />
-              <Route path="/bundle/:id" element={<BuildAccessGate buildType="bundle" />} />
+              <Route path="/b/:slug" element={<BundleStorefront />} />
+              <Route path="/bundle/:id" element={<BundlePlayer />} />
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
               <Route path="/start-here" element={<StartHereRunner />} />
               <Route path="/relational" element={<Relational />} />

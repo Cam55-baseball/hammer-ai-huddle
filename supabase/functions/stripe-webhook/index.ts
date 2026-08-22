@@ -416,26 +416,74 @@ async function handleBuildPurchase(
   }
 
   // PHASE 13 — Grant access (idempotent on user_id + build_id).
-  // Skip if checkout was guest (no user_id in metadata); buyer-by-email
-  // reconciliation is out of scope for this phase.
-  if (userId) {
+  // Signed-in checkout carries user_id in metadata. Guest checkout resolves the
+  // buyer by the email Stripe collected; if no account exists yet the purchase
+  // row stands on its own and is claimed at signup via claim_build_purchases().
+  let resolvedUserId: string | null = userId;
+  if (!resolvedUserId) {
+    try {
+      for (let page = 1; page <= 20 && !resolvedUserId; page++) {
+        const { data: list, error: listErr } = await supabaseClient.auth.admin.listUsers({
+          page,
+          perPage: 200,
+        });
+        if (listErr || !list?.users?.length) break;
+        resolvedUserId =
+          list.users.find(
+            (u: any) => (u.email ?? "").toLowerCase() === email.toLowerCase()
+          )?.id ?? null;
+        if (list.users.length < 200) break;
+      }
+      if (resolvedUserId) {
+        await supabaseClient
+          .from("purchases")
+          .update({ buyer_user_id: resolvedUserId })
+          .eq("stripe_session_id", session.id);
+      }
+    } catch (lookupErr) {
+      logStep("Guest buyer lookup failed (non-fatal)", { error: String(lookupErr) });
+    }
+  }
+
+  if (resolvedUserId) {
     const { error: accessErr } = await supabaseClient
       .from("user_build_access")
-      .insert({ user_id: userId, build_id: buildId, build_type: buildType });
+      .insert({ user_id: resolvedUserId, build_id: buildId, build_type: buildType });
 
     if (accessErr) {
       if (accessErr.code === "23505" || accessErr.message?.includes("duplicate")) {
-        logStep("Access already granted (duplicate)", { userId, buildId });
+        logStep("Access already granted (duplicate)", { userId: resolvedUserId, buildId });
       } else {
         logStep("Access grant failed", { message: accessErr.message });
       }
     } else {
-      logStep("Build access granted", { userId, buildId, buildType });
+      logStep("Build access granted", { userId: resolvedUserId, buildId, buildType });
     }
   } else {
-    logStep("Skipping access grant — no user_id on session", { sessionId: session.id });
+    logStep("Deferred grant — no account for buyer email yet", { sessionId: session.id });
+  }
+
+  // Count the discount redemption, if one was applied at checkout.
+  const discountCode = session.metadata?.discount_code;
+  if (discountCode) {
+    try {
+      const { data: code } = await supabaseClient
+        .from("bundle_discount_codes")
+        .select("id, redeemed_count")
+        .ilike("code", discountCode)
+        .maybeSingle();
+      if (code) {
+        await supabaseClient
+          .from("bundle_discount_codes")
+          .update({ redeemed_count: (code.redeemed_count ?? 0) + 1 })
+          .eq("id", code.id);
+      }
+    } catch (codeErr) {
+      logStep("Discount redemption count failed (non-fatal)", { error: String(codeErr) });
+    }
   }
 }
+
 
 async function handlePaymentSuccess(
   event: Stripe.Event,
