@@ -527,26 +527,50 @@ function isEligible(d: WarmupDrill, f: PickFilters): boolean {
   return true;
 }
 
+/** Replay-visible record of every honest swap or skip the engine made. */
+export interface WarmupDiagnostic {
+  readonly code:
+    | "equipment_substitution"
+    | "equipment_role_skipped"
+    | "single_leg_swap"
+    | "single_leg_short"
+    | "twitch_suppressed"
+    | "injury_veto";
+  readonly role?: WarmupRole;
+  readonly from?: string;
+  readonly to?: string;
+  readonly detail: string;
+}
+
 /**
  * Resolve a drill against the athlete's actual equipment. Gear-bound drills
  * fall back to their equipment-free sibling; if that is also ineligible the
  * caller must pick something else — nothing is ever prescribed blind.
  */
-function resolveEquipmentSafe(d: WarmupDrill, f: PickFilters): WarmupDrill | null {
-  if (hasEquipment(d, f.available)) return d;
+function resolveEquipmentSafe(
+  d: WarmupDrill,
+  f: PickFilters,
+): { drill: WarmupDrill; substituted: boolean } | null {
+  if (hasEquipment(d, f.available)) return { drill: d, substituted: false };
   const fb = fallbackFor(d);
   if (!fb) return null;
   const sib = bySlug(fb);
   if (!sib) return null;
   if (!isEligible(sib, { ...f, axis: undefined })) return null;
-  return hasEquipment(sib, f.available) ? sib : null;
+  return hasEquipment(sib, f.available) ? { drill: sib, substituted: true } : null;
 }
 
 function poolForRole(role: WarmupRole, f: PickFilters): WarmupDrill[] {
   return WARMUP_LIBRARY.filter((d) => d.role === role && isEligible(d, f));
 }
 
-function pickForRole(role: WarmupRole, f: PickFilters, seed: number, seen: Set<string>): WarmupDrill | null {
+function pickForRole(
+  role: WarmupRole,
+  f: PickFilters,
+  seed: number,
+  seen: Set<string>,
+  diagnostics?: WarmupDiagnostic[],
+): WarmupDrill | null {
   const pool = poolForRole(role, f);
   if (pool.length === 0) return null;
   const start = Math.abs(seed) % pool.length;
@@ -555,10 +579,21 @@ function pickForRole(role: WarmupRole, f: PickFilters, seed: number, seen: Set<s
   for (let i = 0; i < pool.length; i++) {
     const candidate = pool[(start + i) % pool.length];
     const resolved = resolveEquipmentSafe(candidate, f);
-    if (resolved && !seen.has(resolved.slug)) return resolved;
+    if (!resolved || seen.has(resolved.drill.slug)) continue;
+    if (resolved.substituted) {
+      diagnostics?.push({
+        code: "equipment_substitution",
+        role,
+        from: candidate.slug,
+        to: resolved.drill.slug,
+        detail: `${candidate.name} needs ${equipmentFor(candidate).join(", ")} — swapped to the equipment-free ${resolved.drill.name}.`,
+      });
+    }
+    return resolved.drill;
   }
   return null;
 }
+
 
 export interface BuildWarmupInput {
   readonly context: WarmupContext;
