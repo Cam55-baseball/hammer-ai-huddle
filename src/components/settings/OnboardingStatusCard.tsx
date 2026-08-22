@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, HeartPulse } from "lucide-react";
 import { useState } from "react";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
+import { useOnboardingAnswerStatus } from "@/hooks/onboarding/useOnboardingAnswerStatus";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 
 export function OnboardingStatusCard() {
@@ -27,6 +28,7 @@ export function OnboardingStatusCard() {
     loading,
   } = useAthleteOnboardingState();
   const [injuryOpen, setInjuryOpen] = useState(false);
+  const answers = useOnboardingAnswerStatus();
 
   return (
     <Card>
@@ -46,6 +48,16 @@ export function OnboardingStatusCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {!answers.loading && (
+          <p className="text-xs">
+            <span className="font-medium text-foreground">
+              {answers.answeredCount} of {answers.totalAnswerable}
+            </span>{" "}
+            <span className="text-muted-foreground">
+              setup questions answered — open ones are outlined in the step menu.
+            </span>
+          </p>
+        )}
         {!loading && (
           <div className="flex flex-wrap gap-1.5">
             <Badge variant={hasScheduleEvent ? "default" : "outline"}>
@@ -66,7 +78,7 @@ export function OnboardingStatusCard() {
         </p>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant={hasCompletedOnboarding ? "outline" : "default"}>
-            <Link to={hasCompletedOnboarding ? "/onboarding/athlete?step=review" : "/onboarding/athlete"}>
+            <Link to={hasCompletedOnboarding ? "/onboarding/athlete?step=review" : "/onboarding/athlete?resume=1"}>
               {hasCompletedOnboarding ? "Review & edit answers" : "Finish setup"}
             </Link>
           </Button>
