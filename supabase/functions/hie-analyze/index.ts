@@ -596,7 +596,41 @@ interface DrillRotation {
 function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
   const rotations: DrillRotation[] = [];
 
+  // ── Pitching command patterns.
+  // `${pitch_type}_command` is a dynamic metric name, so it can't be a switch
+  // case. Handled first so every detected pitching weakness prescribes work
+  // instead of only scoring itself.
+  if (pattern.category === "pitching" && pattern.metric.endsWith("_command")) {
+    const pitchType = pattern.metric.replace(/_command$/, "").replace(/_/g, " ");
+    rotations.push({
+      primary: { name: `${pitchType} Command Ladder`, description: `Hit a called spot with the ${pitchType} — spot moves only after 3 straight`, module: "practice-hub", constraints: "25 pitches, glove-side then arm-side", drill_type: "command" },
+      alternatives: [
+        { name: "Two-Target Bullpen", description: "Alternate corners every pitch to force intent on each side of the plate", module: "practice-hub", constraints: "20 pitches, alternate corners", drill_type: "command" },
+        { name: "Release-Point Consistency Set", description: "Same-slot repeats at 80% intent, video or mirror check every 5", module: "practice-hub", constraints: "3 sets × 5 pitches, 80% intent", drill_type: "mechanics" },
+      ],
+    });
+    return rotations;
+  }
+
   switch (pattern.metric) {
+    // ── Pitching: zone rate + miss direction
+    case "zone_pct":
+      rotations.push({
+        primary: { name: "Strike-First Bullpen", description: "Every sequence starts 0-0 and must land strike one", module: "practice-hub", constraints: "20 sequences, strike one only", drill_type: "command" },
+        alternatives: [
+          { name: "Zone Half Split", description: "Divide the zone in halves and work one half per set", module: "practice-hub", constraints: "4 sets × 6 pitches", drill_type: "command" },
+        ],
+      });
+      break;
+    case "miss_direction":
+      rotations.push({
+        primary: { name: "Miss-Side Correction Set", description: "Aim to the opposite edge of your habitual miss until misses recenter", module: "practice-hub", constraints: "20 pitches, opposite-edge target", drill_type: "command" },
+        alternatives: [
+          { name: "Finish-Through Target Drill", description: "Hold the finish and drive through a low-away target to stabilize direction", module: "practice-hub", constraints: "15 pitches, held finish", drill_type: "mechanics" },
+        ],
+      });
+      break;
+
     case "chase_rate":
     case "block_chase_rate":
       rotations.push({
