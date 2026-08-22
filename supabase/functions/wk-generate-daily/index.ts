@@ -1065,7 +1065,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Non-throwing / recovery days still get lift-slot arm care so the arm
       // is never neglected.
       const isThrowingDayForArmCare = !!(ctxAny.throwing_day) || isPitcherRole;
-      const isRecoveryDay = !!(decision?.primary === "recovery");
+      const isRecoveryDay = decision?.primary === "recovery_only";
       const skipLiftArmCare = isThrowingDayForArmCare && !isRecoveryDay;
       if (!skipLiftArmCare) {
         const armCarePicked = pickArmCarePrimary(lib as unknown as ArmCareCatalogRow[], {
