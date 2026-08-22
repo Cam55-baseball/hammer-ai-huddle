@@ -1696,6 +1696,12 @@ export default function Profile() {
           </div>
         </Card>
 
+        {/* Onboarding resume / review — promoted to top of Settings */}
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
+          <OnboardingStatusCard />
+          {!viewingOtherProfile && <CategoryGoalsCard />}
+        </div>
+
         {/* Subscription Status Card */}
         {!viewingOtherProfile && (
           <Card className="p-6 mb-6">
