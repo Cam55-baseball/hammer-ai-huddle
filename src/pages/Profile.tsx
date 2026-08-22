@@ -22,6 +22,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
+import { OnboardingQuickAccess } from "@/components/settings/OnboardingQuickAccess";
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -632,6 +633,9 @@ export default function Profile() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Onboarding quick-access CTA — above the fold, own profile only */}
+      {!viewingOtherProfile && <OnboardingQuickAccess />}
+
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">
           {viewingOtherProfile ? t('profile.viewingPlayerProfile', { name: displayName }) : t('profile.title')}
@@ -1692,6 +1696,12 @@ export default function Profile() {
           </div>
         </Card>
 
+        {/* Onboarding resume / review — promoted to top of Settings */}
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
+          <OnboardingStatusCard />
+          {!viewingOtherProfile && <CategoryGoalsCard />}
+        </div>
+
         {/* Subscription Status Card */}
         {!viewingOtherProfile && (
           <Card className="p-6 mb-6">
@@ -1820,12 +1830,6 @@ export default function Profile() {
             <ColorCustomizationCard selectedSport={playerSport} />
           </div>
         )}
-
-        {/* Onboarding resume / review — strategic Settings anchor */}
-        <div className="mb-6 grid gap-4 md:grid-cols-2">
-          <OnboardingStatusCard />
-          {!viewingOtherProfile && <CategoryGoalsCard />}
-        </div>
 
         {/* Account Info Card */}
         <Card className="p-6">
