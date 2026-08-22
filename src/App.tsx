@@ -182,6 +182,8 @@ const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
+const BundleStorefront = lazyWithRetry(() => import("./pages/BundleStorefront"));
+const BundlePlayer = lazyWithRetry(() => import("./pages/BundlePlayer"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
 const DemoTier = lazyWithRetry(() => import("./pages/demo/DemoTier"));
 const DemoCategory = lazyWithRetry(() => import("./pages/demo/DemoCategory"));
