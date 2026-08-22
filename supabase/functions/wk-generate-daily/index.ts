@@ -2019,7 +2019,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const methodAthleteCtx = {
       trainingAgeClass: (((trainingAgeContext as any)?.classification ?? "beginner") as any),
-      ageYears: (athleteContext as any)?.ageYears ?? Number(p.age ?? p.age_years ?? 0) || null,
+      ageYears: ((athleteContext as any)?.ageYears ?? (Number(p.age ?? p.age_years ?? 0) || null)) as number | null,
       strengthFloorCleared,
       hasActiveInjury: injurySlugs.size > 0,
       equipment: ((availableEquipmentCtx as string[]) ?? []),
