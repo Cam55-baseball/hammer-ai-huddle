@@ -100,12 +100,14 @@ serve(async (req) => {
     }
     // --- End entitlement check ---
 
-    const { exercises, sport = 'baseball', personalize = false, goals, warmupContext } = await req.json() as { 
+    const { exercises, sport = 'baseball', personalize = false, goals, warmupContext, equipment, venue } = await req.json() as { 
       exercises: Exercise[]; 
       sport?: string;
       personalize?: boolean;
       goals?: PersonalizationGoals;
       warmupContext?: string;
+      equipment?: string[];
+      venue?: string | null;
     };
 
     if (!HAS_AI_CREDENTIALS) {
@@ -247,6 +249,9 @@ If a piece of gear is missing, substitute the equipment-free pattern (a chalk or
 instead of a ladder, a curb or stair instead of a box, a dry burst instead of a med ball)
 and name the substitution. Never assume a ladder, hurdles, bands, boxes or med balls.
 For each exercise, state any equipment needed in its description.
+${(equipment && equipment.length)
+  ? `Equipment the athlete actually has${venue ? ` (training at: ${venue})` : ''}: ${equipment.join(', ')}. Anything not on this list does not exist for this athlete.`
+  : 'The athlete has declared NO equipment. Assume only a ball, bat, glove, a flat surface and open ground — prescribe equipment-free variants of every drill (tape/chalk line instead of a ladder, curb or stair instead of a box, dry bursts instead of med balls).'}
 
 ${warmupContextPrompt}${personalizedContext}
 

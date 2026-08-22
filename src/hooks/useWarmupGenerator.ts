@@ -30,6 +30,9 @@ interface GenerateWarmupOptions {
   personalize?: boolean;
   goals?: AggregatedGoals;
   warmupContext?: string;
+  /** Athlete's declared equipment inventory — drills are limited to this. */
+  equipment?: string[];
+  venue?: string | null;
 }
 
 export function useWarmupGenerator() {
@@ -41,7 +44,7 @@ export function useWarmupGenerator() {
   const { isOwner } = useOwnerAccess();
 
   const generateWarmup = useCallback(async (options: GenerateWarmupOptions) => {
-    const { exercises, sport = 'baseball', personalize = false, goals, warmupContext } = options;
+    const { exercises, sport = 'baseball', personalize = false, goals, warmupContext, equipment, venue } = options;
 
     // Client-side subscription guard
     if (!isOwner && modules.length === 0) {
@@ -66,7 +69,9 @@ export function useWarmupGenerator() {
           sport,
           personalize,
           goals: personalize ? goals : undefined,
-          warmupContext
+          warmupContext,
+          equipment,
+          venue
         }
       });
 
