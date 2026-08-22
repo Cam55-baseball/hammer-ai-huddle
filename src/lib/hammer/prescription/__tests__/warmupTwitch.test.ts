@@ -135,3 +135,55 @@ describe("fast-twitch warm-up primer", () => {
     }
   });
 });
+
+describe("warm-up diagnostics (replay visibility)", () => {
+  it("records an equipment substitution instead of silently swapping", () => {
+    const built = buildWarmup({
+      context: "speed_day", lifecycle: "advanced", gameDay: false, daySeed: 7,
+      equipment: [], venue: "bodyweight",
+    });
+    const subs = built.diagnostics.filter((d) => d.code === "equipment_substitution");
+    expect(subs.length).toBeGreaterThan(0);
+    for (const s of subs) {
+      expect(s.from).toBeTruthy();
+      expect(s.to).toBeTruthy();
+      expect(s.detail.length).toBeGreaterThan(20);
+    }
+  });
+
+  it("records twitch suppression and injury vetoes", () => {
+    const sup = buildWarmup({
+      context: "speed_day", lifecycle: "elite", gameDay: false, daySeed: 3,
+      equipment: GYM, venue: "full_gym", suppressTwitch: true,
+    });
+    expect(sup.diagnostics.some((d) => d.code === "twitch_suppressed")).toBe(true);
+
+    const inj = buildWarmup({
+      context: "speed_day", lifecycle: "elite", gameDay: false, daySeed: 3,
+      equipment: GYM, venue: "full_gym", injuryRegions: ["knee"],
+    });
+    expect(inj.diagnostics.some((d) => d.code === "injury_veto")).toBe(true);
+  });
+
+  it("never silently falls short of the single-leg law", () => {
+    for (const context of CONTEXTS) {
+      for (const lifecycle of LIFECYCLES) {
+        const built = buildWarmup({
+          context, lifecycle, gameDay: context === "game_day", daySeed: 55,
+          equipment: [], venue: null, injuryRegions: ["knee", "ankle"],
+        });
+        if (built.singleLegShare !== null && built.singleLegShare < SINGLE_LEG_MIN_SHARE) {
+          expect(built.diagnostics.some((d) => d.code === "single_leg_short")).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("diagnostics are deterministic for identical inputs", () => {
+    const mk = () => buildWarmup({
+      context: "offseason_extended", lifecycle: "elite", gameDay: false, daySeed: 999,
+      equipment: [], venue: "hotel",
+    }).diagnostics.map((d) => `${d.code}:${d.from ?? ""}>${d.to ?? ""}`);
+    expect(mk()).toEqual(mk());
+  });
+});
