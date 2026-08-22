@@ -253,7 +253,23 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       });
       // Arm care is ALWAYS owned by the throwing block (EASS band prep / cooldown / arm-protected mode).
       // Strip arm_care from the warmup so arm care is never duplicated.
-      const built = buildWarmup({ context, lifecycle, gameDay: isGameDay, daySeed, suppressArmCare: true });
+      // Equipment is honest: only drills the athlete can actually run ship,
+      // and the twitch layer is vetoed outright on low-readiness/travel days.
+      const projAny = proj as unknown as {
+        equipmentList?: ReadonlyArray<string>;
+        equipmentVenue?: string | null;
+      };
+      const built = buildWarmup({
+        context,
+        lifecycle,
+        gameDay: isGameDay,
+        daySeed,
+        suppressArmCare: true,
+        equipment: projAny.equipmentList ?? (equipment ? [equipment] : []),
+        venue: projAny.equipmentVenue ?? equipment ?? null,
+        injuryRegions: injuryRegions ?? [],
+        suppressTwitch: isRecoveryDay || recoverDay || isTravelDay,
+      });
       const drills: DrillStep[] = built.drills.map((d) => ({
         name: d.name,
         slug: d.slug,
@@ -261,8 +277,10 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
         dosage: d.dosage,
         cue: d.cue,
         stopIf: d.stopIf,
+        equipmentNote: d.equipmentNote,
         guide: d.guide,
       }));
+
       // Su Wen / Neijing micro-dose: on low-readiness / recovery days, lead the
       // warm-up with a 60-second season-aware breath primer so we downshift
       // sympathetic tone before any movement load. Additive only — never
