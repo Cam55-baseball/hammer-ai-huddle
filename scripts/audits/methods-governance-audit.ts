@@ -339,3 +339,57 @@ ok(!bare.method || bare.method.stations.length === 0, "bare block gets no statio
 // ---------------------------------------------------------------------------
 console.log(`\n${failures === 0 ? "PASS" : "FAIL"} — ${checks - failures}/${checks} checks passed.`);
 if (failures > 0) Deno.exit(1);
+
+// ---------------------------------------------------------------------------
+// H. Station resolution honesty
+// ---------------------------------------------------------------------------
+import {
+  buildStationPools,
+  movementFamily,
+  resolveStations,
+  shapeFromPools,
+  type StationMovementLike,
+} from "../../supabase/functions/_shared/wic/methods/stations.ts";
+
+section("H. Station resolution");
+const POOL: StationMovementLike[] = [
+  { slug: "back_squat", name: "Back Squat", movement_category: "squat", equipment: ["barbell"], movement_velocity: "strength" },
+  { slug: "trap_bar_jump", name: "Trap Bar Jump", movement_category: "jump", equipment: ["barbell"], movement_velocity: "explosive" },
+  { slug: "jump_squat", name: "Jump Squat", movement_category: "jump", equipment: ["dumbbell"], movement_velocity: "dynamic" },
+  { slug: "hurdle_hop", name: "Hurdle Hop", movement_category: "plyo", pap_classification: "plyometric", equipment: [] },
+  { slug: "depth_jump", name: "Depth Jump", movement_category: "plyo", pap_classification: "plyometric", equipment: [] },
+  { slug: "band_assisted_jump", name: "Band Assisted Jump", movement_category: "overspeed", equipment: ["bands"] },
+  { slug: "bench_press", name: "Bench Press", movement_category: "press", equipment: ["barbell"] },
+];
+const anchor = POOL[0];
+const fam = movementFamily(anchor);
+ok(fam === "lower", "anchor family resolves", fam);
+const pools = buildStationPools(POOL, fam);
+ok(pools.plyometric.length > 0, "plyometric pool populated");
+ok(pools.loaded_explosive.length > 0, "loaded explosive pool populated");
+ok(pools.assisted.length > 0, "assisted pool populated");
+ok(!pools.plyometric.some((m) => m.slug === "bench_press"), "cross-family movement excluded");
+
+if (fc) {
+  const st = resolveStations(fc, anchor, pools, "seed-1");
+  ok(st !== null, "French contrast resolves against a rich pool");
+  if (st) {
+    ok(st.length === 4, "four stations resolved");
+    ok(new Set(st.map((s) => s.slug)).size === 4, "no movement repeats inside a round");
+    ok(st[0].slug === anchor.slug, "station 1 is the anchor itself");
+    ok(st.every((s) => POOL.some((p) => p.slug === s.slug)), "every station came from the legal pool");
+    const again = resolveStations(fc, anchor, pools, "seed-1");
+    ok(JSON.stringify(again) === JSON.stringify(st), "station resolution is deterministic");
+  }
+  const thin = buildStationPools([anchor], fam);
+  ok(resolveStations(fc, anchor, thin, "seed-1") === null, "thin pool refuses to half-fill");
+  const shape = shapeFromPools(thin, { hasAnchor: true, accessoryCount: 1 });
+  const sel = selectMethod({
+    engine: "lift", phase: "os_q3", day: CLEAN_DAY, athlete: ELITE_ATHLETE,
+    readiness: READY, block: shape, weeklyUsage: {}, seed: "s",
+  });
+  ok(!sel.method || sel.method.stations.length === 0, "thin pool never selects a station method", sel.method?.id);
+}
+
+console.log(`\n${failures === 0 ? "PASS" : "FAIL"} — ${checks - failures}/${checks} checks passed (with stations).`);
+if (failures > 0) Deno.exit(1);
