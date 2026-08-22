@@ -87,3 +87,26 @@ Warn: `method_rounds_capped`, `method_cns_headroom_exceeded`,
 `MethodPanel` renders numbered stations with the resolved movement, reps, rest
 label, the reason the method is prescribed, the single make-or-break cue, and
 the bailout — so no athlete is ever left guessing mid-session.
+
+## E2E governance audit
+
+`deno run -A scripts/audits/methods-governance-audit.ts` — 15,812 assertions across:
+
+- **A** catalog integrity (bounds, gating, rationale, station specs)
+- **B** French contrast placement law (Q3 home, illegal Q1/in-season/post-season, advanced + 16+ + strength floor)
+- **C** veto law (game/tournament/travel/recovery/rest/deload/return-to-play, CNS clamp, reductions, low readiness, injury, age/training-age/strength/equipment gates)
+- **D** determinism (50 repeats per phase × engine)
+- **E** dose containment (every method × phase × dose group × set count stays inside the envelope, reps never move, CNS headroom respected, incomplete stations drop rather than half-ship)
+- **F** rolling weekly ceilings and the prior-payload usage ledger
+- **G** forbidden-engine scope and bare-block protection
+- **H** station resolution (same family, no repeats inside a round, deterministic, refuses to half-fill)
+
+The audit must exit 0 before any change to `_shared/wic/methods/*` ships.
+
+## Station classification precedence
+
+A loaded jump ("trap bar jump", "jump squat") reads as plyometric by name but is really the
+loaded-explosive station. Precedence is **assisted > loaded-explosive > plyometric**, so station 3
+is never starved by a naming collision. Catalog coverage for all four stations is seeded across
+lower, upper push, upper pull and rotation families — if a family ever falls short, the method
+degrades to a simpler one rather than inventing work.

@@ -1065,7 +1065,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Non-throwing / recovery days still get lift-slot arm care so the arm
       // is never neglected.
       const isThrowingDayForArmCare = !!(ctxAny.throwing_day) || isPitcherRole;
-      const isRecoveryDay = !!(decision?.primary === "recovery");
+      const isRecoveryDay = decision?.primary === "recovery_only";
       const skipLiftArmCare = isThrowingDayForArmCare && !isRecoveryDay;
       if (!skipLiftArmCare) {
         const armCarePicked = pickArmCarePrimary(lib as unknown as ArmCareCatalogRow[], {
@@ -2105,8 +2105,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Stamp the anchor row — dose stays inside the envelope, structure and
       // rationale ride along in why_payload / why_v2.
       const a = result.applied;
+      const priorCns = Number(anchorRow.cns_cost ?? 0) || 0;
       anchorRow.sets = a.sets;
       anchorRow.cns_cost = a.cns_cost;
+      // Keep the day's CNS ledger honest — a method that adds a set spends
+      // real units, and the next slot must see that spend.
+      cnsUsed = Math.max(0, cnsUsed + ((Number(a.cns_cost) || 0) - priorCns));
       const wp = (anchorRow.why_payload ?? {}) as Record<string, unknown>;
       wp.training_method_id = a.method_id;
       wp.training_method = {
@@ -2279,7 +2283,9 @@ const handler = async (req: Request): Promise<Response> => {
       },
       governanceRows: lib as unknown as Array<Record<string, unknown>>,
       whyV2CompletenessScore: p1112_whyMinScore,
-      validatorFatals: p1112_aggReport.fatal ?? [],
+      validatorFatals: p1112_aggReport.issues
+        .filter((i) => i.severity === "fatal")
+        .map((i) => ({ code: i.code, message: i.message })),
       lockedExecutionOrder: ENGINE_EXECUTION_ORDER,
       determinismSeedInputs: { videoId: null, athleteId: user.id, contextHash: p1112_contextHash },
     });
