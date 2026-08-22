@@ -10,6 +10,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useAuth } from '@/hooks/useAuth';
+import { claimPurchases } from '@/lib/bundles';
 import { supabase } from '@/integrations/supabase/client';
 
 type Purchase = {
@@ -36,6 +38,7 @@ export default function Success() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { isOwner } = useOwnerAccess();
+  const { user } = useAuth();
 
   const sessionId = params.get('session_id') ?? '';
   const buildIdParam = params.get('build') ?? '';
@@ -70,6 +73,13 @@ export default function Success() {
       cancelled = true;
     };
   }, [sessionId]);
+
+  // A purchase made with this email (guest checkout included) attaches to the
+  // account as soon as the buyer is signed in.
+  useEffect(() => {
+    if (!user?.id) return;
+    claimPurchases();
+  }, [user?.id, sessionId]);
 
   const renderBody = () => {
     if (status === 'loading') {
@@ -118,9 +128,16 @@ export default function Success() {
     );
   };
 
+  const Shell = ({ children }: { children: React.ReactNode }) =>
+    user ? (
+      <DashboardLayout>{children}</DashboardLayout>
+    ) : (
+      <div className="min-h-screen bg-background">{children}</div>
+    );
+
   return (
-    <DashboardLayout>
-      <div className="max-w-xl mx-auto py-8">
+    <Shell>
+      <div className="max-w-xl mx-auto py-8 px-4">
         <Card className="p-8 text-center space-y-4">
           <div className="flex justify-center">
             <CheckCircle2 className="h-14 w-14 text-primary" />
@@ -148,8 +165,11 @@ export default function Success() {
                 Access Your Purchase
               </Button>
             )}
-            <Button variant={purchase ? 'outline' : 'default'} onClick={() => navigate('/dashboard')}>
-              Back to Dashboard
+            <Button
+              variant={purchase ? 'outline' : 'default'}
+              onClick={() => navigate(user ? '/dashboard' : '/auth')}
+            >
+              {user ? 'Back to Dashboard' : 'Sign in to unlock'}
             </Button>
             {isOwner && (
               <Button variant="outline" onClick={() => navigate('/owner/builds')}>
@@ -159,6 +179,6 @@ export default function Success() {
           </div>
         </Card>
       </div>
-    </DashboardLayout>
+    </Shell>
   );
 }
