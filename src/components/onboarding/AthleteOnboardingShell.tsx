@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+export type StepChipStatus = "answered" | "open" | "neutral";
+
 interface Props {
   stepIndex: number;
   steps: string[];
@@ -16,6 +18,15 @@ interface Props {
   onJumpToStep?: (index: number) => void;
   /** When true, stepper chips are clickable for every step (forward and back). */
   allowForwardJump?: boolean;
+  /**
+   * Optional answer-derived status per step index. When provided, chips are
+   * highlighted by what the user has actually answered rather than by position.
+   * Omit to keep the legacy positional behavior.
+   */
+  stepStatus?: Record<number, StepChipStatus>;
+  /** Optional "x of y answered" counter shown under the step row. */
+  answeredCount?: number;
+  totalAnswerable?: number;
 }
 
 export function AthleteOnboardingShell({
@@ -26,6 +37,9 @@ export function AthleteOnboardingShell({
   onBack,
   onJumpToStep,
   allowForwardJump = false,
+  stepStatus,
+  answeredCount,
+  totalAnswerable,
 }: Props) {
   const navigate = useNavigate();
   const handleExit = async () => {
@@ -40,6 +54,7 @@ export function AthleteOnboardingShell({
   };
 
   const showBack = !!onBack && stepIndex > 0;
+
 
   return (
     <div className="min-h-screen bg-background">
