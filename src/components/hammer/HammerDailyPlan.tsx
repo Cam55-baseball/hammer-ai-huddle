@@ -159,9 +159,13 @@ function DrillRow({
           <span>How?</span>
         </button>
       </div>
+      {d.equipmentNote && (
+        <div className="text-[11px] text-muted-foreground mt-1">You need: {d.equipmentNote}</div>
+      )}
       {d.setup && (
         <div className="text-[11px] text-muted-foreground mt-1">Setup: {d.setup}</div>
       )}
+
       {d.cue && (
         <div className="text-[11px] text-foreground/80 mt-0.5">Cue: {d.cue}</div>
       )}

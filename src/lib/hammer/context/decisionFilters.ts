@@ -30,6 +30,9 @@ import {
 export interface AthleteContextProjection {
   readonly equipment: string | null; // canonical: full_gym | home_gym | bodyweight | bands | hotel | …
   readonly equipmentScope: string | null; // persistent | temporary | session | inferred
+  readonly equipmentList: ReadonlyArray<string>; // full declared inventory tokens
+  readonly equipmentVenue: string | null; // commercial_gym | home_gym | field | hotel | …
+
   readonly injury: string | null;
   readonly injuryRegions: ReadonlyArray<string>; // ["shoulder","ucl",…]
   readonly liftingAgeYears: number | null;
@@ -87,6 +90,24 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
     typeof eq === "object" && eq !== null
       ? ((eq as { scope?: string }).scope ?? null)
       : null;
+  // Full declared inventory (array form) + venue — used by the warm-up engine
+  // so no drill is prescribed for gear the athlete does not have.
+  const equipmentListRaw =
+    typeof eq === "object" && eq !== null
+      ? (eq as { equipment?: unknown }).equipment
+      : null;
+  const equipmentList: string[] = Array.isArray(equipmentListRaw)
+    ? equipmentListRaw.map((e) => String(e))
+    : typeof equipmentListRaw === "string"
+      ? [equipmentListRaw]
+      : equipment
+        ? [equipment]
+        : [];
+  const equipmentVenue =
+    typeof eq === "object" && eq !== null
+      ? ((eq as { venue?: string }).venue ?? null)
+      : null;
+
 
   // RFL: spine `injury_history` is heterogeneous across producers:
   //   - useHammerOnboardingDirector → [] | [{ note, reported_at }]
@@ -145,6 +166,9 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
   return {
     equipment,
     equipmentScope,
+    equipmentList,
+    equipmentVenue,
+
     injury,
     injuryRegions,
     liftingAgeYears: (ctx.get<number>("lifting_age_years")?.value as number | null) ?? null,
