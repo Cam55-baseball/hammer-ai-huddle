@@ -2279,7 +2279,9 @@ const handler = async (req: Request): Promise<Response> => {
       },
       governanceRows: lib as unknown as Array<Record<string, unknown>>,
       whyV2CompletenessScore: p1112_whyMinScore,
-      validatorFatals: p1112_aggReport.fatal ?? [],
+      validatorFatals: p1112_aggReport.issues
+        .filter((i) => i.severity === "fatal")
+        .map((i) => ({ code: i.code, message: i.message })),
       lockedExecutionOrder: ENGINE_EXECUTION_ORDER,
       determinismSeedInputs: { videoId: null, athleteId: user.id, contextHash: p1112_contextHash },
     });
