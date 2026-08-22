@@ -30,6 +30,9 @@ import {
 export interface AthleteContextProjection {
   readonly equipment: string | null; // canonical: full_gym | home_gym | bodyweight | bands | hotel | …
   readonly equipmentScope: string | null; // persistent | temporary | session | inferred
+  readonly equipmentList: ReadonlyArray<string>; // full declared inventory tokens
+  readonly equipmentVenue: string | null; // commercial_gym | home_gym | field | hotel | …
+
   readonly injury: string | null;
   readonly injuryRegions: ReadonlyArray<string>; // ["shoulder","ucl",…]
   readonly liftingAgeYears: number | null;
