@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
@@ -395,6 +395,7 @@ export default function AthleteOnboarding() {
         hasCompletedOnboarding ||
         searchParams.get("edit") !== null ||
         searchParams.get("step") === "review" ||
+        searchParams.get("resume") === "1" ||
         editReturnTo !== null
       }
       onSaveAndExit={() => {
