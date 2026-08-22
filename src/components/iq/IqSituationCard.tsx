@@ -49,8 +49,9 @@ export function IqSituationCard({ situation, mastery, onClick }: Props) {
               </span>
             )}
           </div>
-          <h3 className="font-bold text-lg leading-tight mb-1">{situation.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">{situation.summary}</p>
+          <h3 className="font-bold text-lg leading-tight mb-1">{iqVoice(situation.title, voice)}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2">{iqVoice(situation.summary, voice)}</p>
+
           {typeof mastery === "number" && (
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
