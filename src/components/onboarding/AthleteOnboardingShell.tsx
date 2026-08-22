@@ -86,38 +86,49 @@ export function AthleteOnboardingShell({
           </Button>
         </header>
 
-        <ol className="mb-6 flex items-center gap-2 overflow-x-auto pb-1">
+        <ol className="mb-2 flex items-center gap-2 overflow-x-auto pb-1">
           {steps.map((label, i) => {
-            const done = i < stepIndex;
+            const status = stepStatus?.[i];
+            const answered = status ? status === "answered" : i < stepIndex;
+            const neutral = status === "neutral";
             const active = i === stepIndex;
-            const clickable = !!onJumpToStep && !active && (done || allowForwardJump);
+            const clickable = !!onJumpToStep && !active && (i < stepIndex || allowForwardJump);
             const chipClass = `flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-medium ${
-              done
+              answered
                 ? "border-primary bg-primary text-primary-foreground"
                 : active
-                ? "border-primary text-primary"
-                : "border-border text-muted-foreground"
+                ? "border-primary text-primary ring-2 ring-primary/30"
+                : neutral
+                ? "border-border text-muted-foreground"
+                : "border-dashed border-border text-muted-foreground"
             }`;
-            const chipInner = done ? <Check className="h-3 w-3" /> : i + 1;
+            const chipInner = answered ? <Check className="h-3 w-3" /> : i + 1;
+            const chipTitle = neutral
+              ? label
+              : `${label} — ${answered ? "answered" : "not answered yet"}`;
             return (
-              <li key={label} className="flex shrink-0 items-center gap-2">
+              <li key={label} className="flex shrink-0 items-center gap-2" title={chipTitle}>
                 {clickable ? (
                   <button
                     type="button"
                     onClick={() => onJumpToStep?.(i)}
                     className={`${chipClass} transition hover:opacity-80`}
-                    aria-label={`Return to step ${i + 1}: ${label}`}
+                    aria-label={`Go to step ${i + 1}: ${chipTitle}`}
                   >
                     {chipInner}
                   </button>
                 ) : (
-                  <span className={chipClass}>{chipInner}</span>
+                  <span className={chipClass} aria-label={chipTitle}>
+                    {chipInner}
+                  </span>
                 )}
                 {clickable ? (
                   <button
                     type="button"
                     onClick={() => onJumpToStep?.(i)}
-                    className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    className={`text-xs underline-offset-2 hover:text-foreground hover:underline ${
+                      answered ? "text-foreground" : "text-muted-foreground"
+                    }`}
                   >
                     {label}
                   </button>
@@ -135,6 +146,25 @@ export function AthleteOnboardingShell({
             );
           })}
         </ol>
+
+        {stepStatus && (
+          <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+            {typeof answeredCount === "number" && typeof totalAnswerable === "number" && (
+              <span className="font-medium text-foreground">
+                {answeredCount} of {totalAnswerable} answered
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <span className="flex h-3 w-3 items-center justify-center rounded-full border border-primary bg-primary" />
+              Answered
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-full border border-dashed border-border" />
+              Still open
+            </span>
+          </div>
+        )}
+
 
         <main className="rounded-lg border border-border bg-card p-5 shadow-sm">{children}</main>
       </div>
