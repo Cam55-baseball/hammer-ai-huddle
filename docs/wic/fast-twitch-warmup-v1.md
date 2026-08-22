@@ -65,3 +65,31 @@ same drills.
 completeness, fallback reachability, equipment honesty across every context ×
 lifecycle, ladder-without-a-ladder, single-leg majority, game-day legality,
 twitch suppression, injury vetoes, determinism, no repeats.
+
+## Replay-visible diagnostics (v1.1)
+
+`buildWarmup()` returns `diagnostics: WarmupDiagnostic[]`. Nothing the engine
+changes is silent — every swap, skip and veto is recorded and reconstructable
+from the same inputs (deterministic under an identical `daySeed`).
+
+| code | meaning |
+| --- | --- |
+| `equipment_substitution` | Gear-bound drill replaced by its equipment-free sibling (`from` → `to`). |
+| `equipment_role_skipped` | No legal drill existed for a role; the role was dropped rather than half-shipped. |
+| `single_leg_swap` | A bilateral twitch drill was swapped to satisfy the 60% single-leg law. |
+| `single_leg_short` | The 60% share could not be reached — surfaced, never hidden. |
+| `twitch_suppressed` | Fast-twitch layer withheld (recovery, travel, low readiness). |
+| `injury_veto` | Drills loading a reported injury region were withheld. |
+
+### Athlete-facing surfacing
+`dailyPlan.ts` turns diagnostics into plain language on the warm-up card:
+- `why` carries the twitch line ("Fast-twitch layer: 67% single-leg — baseball and
+  softball are one-leg, quick-burst games") or the suppression reason.
+- `roadmapReason` appends the equipment substitution sentences.
+- Each drill still carries its own `equipmentNote` ("You need: …").
+
+### AI warm-up parity
+`supabase/functions/generate-warmup` now enforces the same law in its system
+prompt (60% single-leg, low-volume crisp contacts, game-day quick-feet-only,
+recovery-day omission) and receives the athlete's `equipment` / `venue` so the
+model cannot prescribe gear the athlete does not own.
