@@ -404,6 +404,7 @@ function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
       tibia_in?: number | string;
       torso_in?: number | string;
       arm_total_in?: number | string;
+      foot_length_in?: number | string;
     };
     const set = (patch: Partial<typeof v>) => onChange({ ...v, ...patch });
     const FIELDS: Array<{ k: keyof typeof v; label: string; hint?: string }> = [
@@ -416,6 +417,7 @@ function GapInput({ gap, value, onChange, onSubmit }: GapInputProps) {
       { k: "torso_in", label: "Torso (in)", hint: "Top of hip bone to top of shoulder." },
       { k: "forearm_in", label: "Forearm (in)", hint: "Inside elbow crease to wrist crease." },
       { k: "arm_total_in", label: "Total arm (in)", hint: "Shoulder joint to wrist crease." },
+      { k: "foot_length_in", label: "Foot length (in)", hint: "Barefoot, heel to longest toe." },
     ];
     return (
       <div className="space-y-3">
