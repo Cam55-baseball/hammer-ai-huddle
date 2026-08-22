@@ -54,8 +54,12 @@ export default function BundleStorefront() {
     const result = await checkDiscount(code.trim(), bundle.id);
     setDiscount(result);
     setChecking(false);
-    if (!result.valid) {
-      toast({ title: 'Code not applied', description: result.reason, variant: 'destructive' });
+    if (!result?.valid) {
+      toast({
+        title: 'Code not applied',
+        description: (result as { reason?: string })?.reason ?? 'That code is not valid.',
+        variant: 'destructive',
+      });
     }
   };
 
