@@ -88,24 +88,32 @@ export default function BundleBuilder() {
   const priceValid = Number.isFinite(priceNum) && priceNum >= 0.5;
   const canSave = name.trim().length > 0 && videoIds.length > 0 && priceValid;
 
-  const handleSave = () => {
-    if (!canSave) return;
-    const normalized = Math.round(priceNum * 100) / 100;
-    saveBuild({
-      id: crypto.randomUUID(),
-      type: 'bundle',
-      name,
-      meta: {
+  const handleSave = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    try {
+      const bundle = await createBundle({
+        name: name.trim(),
+        description: description.trim() || null,
+        priceCents: Math.round(priceNum * 100),
         videoIds,
-        videoId: videoIds[0] ?? null, // backward-compat
-        price: normalized,
-      },
-      createdAt: Date.now(),
-    });
-    console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoIds, price: normalized });
-    toast({ title: 'Bundle saved', description: `${name} • $${normalized.toFixed(2)} • ${videoIds.length} videos` });
-    navigate('/owner');
+      });
+      toast({
+        title: 'Bundle saved as draft',
+        description: `${bundle.name} • ${videoIds.length} video${videoIds.length === 1 ? '' : 's'} — publish it to get a share link.`,
+      });
+      navigate('/owner/builds');
+    } catch (err) {
+      toast({
+        title: 'Could not save bundle',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   const titleFor = (id: string) => videos.find((v) => v.id === id)?.title ?? id;
   const availableToAdd = videos.filter((v) => !videoIds.includes(v.id));
