@@ -2536,8 +2536,6 @@ const handler = async (req: Request): Promise<Response> => {
         lift_duplicate_check_ok: liftCertification.duplicateCheckOk,
         lift_substitution_completeness: liftCertification.substitutionCompleteness,
         exercise_governance_version: liftCertification.governanceVersion,
-        // Elite Training Methods Engine diagnostics
-        training_methods: methodDiagnostics,
         // Phase 9 — Explosive Performance Engine diagnostics
         speed_template_id: speedCertification.templateId,
         speed_category_coverage: speedCertification.categoryCoverage,
@@ -2593,6 +2591,15 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
     if (rpcErr) throw rpcErr;
+
+    // Methods diagnostics ride alongside the canonical run so every applied
+    // method (and every veto) is replay-visible after the fact.
+    if (diagId) {
+      await admin
+        .from("wk_generation_diagnostics")
+        .update({ training_methods: methodDiagnostics } as any)
+        .eq("id", diagId as any);
+    }
 
     await admin.from("wk_cns_ledger").upsert({
       user_id: user.id, ledger_date: planDate,
