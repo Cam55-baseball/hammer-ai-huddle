@@ -16,7 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { VideoUploadWizard } from '@/components/owner/VideoUploadWizard';
 import { QuickAttachVideo } from '@/components/owner/QuickAttachVideo';
 import { Loader2, Package, ArrowLeft, X, Plus, Paperclip } from 'lucide-react';
-import { saveBuild } from '@/lib/ownerBuildStorage';
+import { createBundle } from '@/lib/bundles';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 
 export default function BundleBuilder() {
