@@ -15579,6 +15579,8 @@ export type Database = {
     Functions: {
       all_checked: { Args: { cb: Json }; Returns: boolean }
       archive_old_scout_applications: { Args: never; Returns: undefined }
+      assert_owns_block: { Args: { _block_id: string }; Returns: undefined }
+      assert_self: { Args: { _user_id: string }; Returns: undefined }
       attach_session_to_link: {
         Args: { p_link_code: string; p_session_id: string; p_user_id: string }
         Returns: undefined
