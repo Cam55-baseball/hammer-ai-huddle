@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
 import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
+import { InjuryContinuityCard } from '@/components/injury/InjuryContinuityCard';
+
 import {
   usePracticeHistory,
   useGameHistory,
@@ -166,7 +168,10 @@ export default function History() {
         </div>
 
         <div className="space-y-3">
+          <InjuryContinuityCard userId={userId} />
+
           <StandardsBoard />
+
 
           <HistorySection
             title="Practice sessions"
