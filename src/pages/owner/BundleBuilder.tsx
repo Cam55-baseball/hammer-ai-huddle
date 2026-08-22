@@ -152,6 +152,17 @@ export default function BundleBuilder() {
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="bundle-desc">Sales description</Label>
+            <Textarea
+              id="bundle-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="What buyers get and who it's for."
+            />
+            <p className="text-xs text-muted-foreground">Shown on the public bundle page.</p>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="bundle-price">Price (USD)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
