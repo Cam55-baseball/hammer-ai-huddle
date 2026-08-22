@@ -12,6 +12,7 @@
 //   - ship without a complete rationale.
 
 import { METHODS_VERSION, type MethodDef, type MethodStation } from "./catalog.ts";
+import type { ResolvedStation } from "./stations.ts";
 import {
   DOSE_MATRIX,
   doseGroupFor,
@@ -32,11 +33,16 @@ export interface MethodApplyInput {
   cnsCost: number;
   /** CNS units still available on the day. */
   cnsHeadroom: number;
+  /** Stations already resolved to real, legality-gated movements. */
+  resolvedStations?: readonly ResolvedStation[];
 }
 
 export interface MethodStationPlan extends MethodStation {
   /** Resolved rest label for the card. */
   restLabel: string;
+  /** Movement powering this station, when the method resolved one. */
+  slug?: string;
+  name?: string;
 }
 
 export interface AppliedMethod {
@@ -121,10 +127,16 @@ export function applyMethod(input: MethodApplyInput): MethodApplyResult {
     return { applied: null, dropCode: "method_cns_headroom_exceeded" };
   }
 
-  const stations: MethodStationPlan[] = m.stations.map((s) => ({
+  const source: readonly MethodStation[] = (input.resolvedStations && input.resolvedStations.length > 0)
+    ? input.resolvedStations
+    : m.stations;
+  const stations: MethodStationPlan[] = source.map((s) => ({
     ...s,
     restLabel: restLabel(s.restSeconds),
   }));
+  if (m.stations.length > 0 && stations.length !== m.stations.length) {
+    return { applied: null, dropCode: "method_station_incomplete" };
+  }
 
   const whyMethod = m.stations.length > 0
     ? `${m.why} Today that means ${rounds} round${rounds === 1 ? "" : "s"} of ${m.stations.length} stations, with ${restLabel(m.restBetweenRoundsSeconds)} between rounds.`
