@@ -20,6 +20,7 @@ import {
 import { useAlignmentPresets, fallbackAlignment, resolvePositions } from "@/hooks/useDefensiveAlignment";
 import type { Handedness } from "@/lib/iq/fieldModel";
 import { resolveAlignment, type RunnerBase } from "@/lib/iq/alignmentResolver";
+import { inferSituationState } from "@/lib/iq/situationState";
 
 
 
