@@ -145,6 +145,9 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
   return {
     equipment,
     equipmentScope,
+    equipmentList,
+    equipmentVenue,
+
     injury,
     injuryRegions,
     liftingAgeYears: (ctx.get<number>("lifting_age_years")?.value as number | null) ?? null,
