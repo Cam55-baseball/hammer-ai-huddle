@@ -527,26 +527,50 @@ function isEligible(d: WarmupDrill, f: PickFilters): boolean {
   return true;
 }
 
+/** Replay-visible record of every honest swap or skip the engine made. */
+export interface WarmupDiagnostic {
+  readonly code:
+    | "equipment_substitution"
+    | "equipment_role_skipped"
+    | "single_leg_swap"
+    | "single_leg_short"
+    | "twitch_suppressed"
+    | "injury_veto";
+  readonly role?: WarmupRole;
+  readonly from?: string;
+  readonly to?: string;
+  readonly detail: string;
+}
+
 /**
  * Resolve a drill against the athlete's actual equipment. Gear-bound drills
  * fall back to their equipment-free sibling; if that is also ineligible the
  * caller must pick something else — nothing is ever prescribed blind.
  */
-function resolveEquipmentSafe(d: WarmupDrill, f: PickFilters): WarmupDrill | null {
-  if (hasEquipment(d, f.available)) return d;
+function resolveEquipmentSafe(
+  d: WarmupDrill,
+  f: PickFilters,
+): { drill: WarmupDrill; substituted: boolean } | null {
+  if (hasEquipment(d, f.available)) return { drill: d, substituted: false };
   const fb = fallbackFor(d);
   if (!fb) return null;
   const sib = bySlug(fb);
   if (!sib) return null;
   if (!isEligible(sib, { ...f, axis: undefined })) return null;
-  return hasEquipment(sib, f.available) ? sib : null;
+  return hasEquipment(sib, f.available) ? { drill: sib, substituted: true } : null;
 }
 
 function poolForRole(role: WarmupRole, f: PickFilters): WarmupDrill[] {
   return WARMUP_LIBRARY.filter((d) => d.role === role && isEligible(d, f));
 }
 
-function pickForRole(role: WarmupRole, f: PickFilters, seed: number, seen: Set<string>): WarmupDrill | null {
+function pickForRole(
+  role: WarmupRole,
+  f: PickFilters,
+  seed: number,
+  seen: Set<string>,
+  diagnostics?: WarmupDiagnostic[],
+): WarmupDrill | null {
   const pool = poolForRole(role, f);
   if (pool.length === 0) return null;
   const start = Math.abs(seed) % pool.length;
@@ -555,10 +579,21 @@ function pickForRole(role: WarmupRole, f: PickFilters, seed: number, seen: Set<s
   for (let i = 0; i < pool.length; i++) {
     const candidate = pool[(start + i) % pool.length];
     const resolved = resolveEquipmentSafe(candidate, f);
-    if (resolved && !seen.has(resolved.slug)) return resolved;
+    if (!resolved || seen.has(resolved.drill.slug)) continue;
+    if (resolved.substituted) {
+      diagnostics?.push({
+        code: "equipment_substitution",
+        role,
+        from: candidate.slug,
+        to: resolved.drill.slug,
+        detail: `${candidate.name} needs ${equipmentFor(candidate).join(", ")} — swapped to the equipment-free ${resolved.drill.name}.`,
+      });
+    }
+    return resolved.drill;
   }
   return null;
 }
+
 
 export interface BuildWarmupInput {
   readonly context: WarmupContext;
@@ -598,6 +633,8 @@ export interface BuiltWarmup {
   readonly estMinutes: number;
   /** Share of the twitch layer performed single-leg (0..1, null when none). */
   readonly singleLegShare: number | null;
+  /** Every substitution, skip and veto — replay-visible, never silent. */
+  readonly diagnostics: ReadonlyArray<WarmupDiagnostic>;
 }
 
 function toBuilt(d: WarmupDrill, lifecycle: LifecycleClass): BuiltWarmupDrill {
@@ -617,24 +654,46 @@ function toBuilt(d: WarmupDrill, lifecycle: LifecycleClass): BuiltWarmupDrill {
 }
 
 export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
+  const diagnostics: WarmupDiagnostic[] = [];
+  const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
   const filtersBase: PickFilters = {
     lifecycle: input.lifecycle,
     gameDay: input.gameDay,
     available: expandEquipment(input.equipment, input.venue),
-    injuryRegions: (input.injuryRegions ?? []).map((r) => r.toLowerCase()),
+    injuryRegions,
   };
-  const roles = templateFor(input.context, input.lifecycle).filter((r) => {
+  if (injuryRegions.length > 0) {
+    diagnostics.push({
+      code: "injury_veto",
+      detail: `Drills loading ${injuryRegions.join(", ")} were withheld — reported injury region.`,
+    });
+  }
+  const fullTemplate = templateFor(input.context, input.lifecycle);
+  const roles = fullTemplate.filter((r) => {
     if (input.suppressArmCare && r === "arm_care") return false;
     if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
     return true;
   });
+  if (input.suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
+    diagnostics.push({
+      code: "twitch_suppressed",
+      detail: "Fast-twitch layer withheld today — recovery, travel or low readiness. Prep only, no CNS spend.",
+    });
+  }
   const seedBase = input.daySeed ?? 0;
   const seen = new Set<string>();
   const drills: BuiltWarmupDrill[] = [];
   roles.forEach((role, i) => {
     const seed = seedBase + i * 7 + role.length * 3;
-    const pick = pickForRole(role, filtersBase, seed, seen);
-    if (!pick) return;
+    const pick = pickForRole(role, filtersBase, seed, seen, diagnostics);
+    if (!pick) {
+      diagnostics.push({
+        code: "equipment_role_skipped",
+        role,
+        detail: `No ${role.replace(/_/g, " ")} drill is legal with today's equipment, age and injury state — the role was skipped rather than half-shipped.`,
+      });
+      return;
+    }
     seen.add(pick.slug);
     drills.push(toBuilt(pick, input.lifecycle));
   });
@@ -656,12 +715,19 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
       if (single >= needed) break;
       const slFilters: PickFilters = { ...filtersBase, axis: "single_leg" };
       const replacement =
-        pickForRole(d.role, slFilters, seedBase + i * 13 + 5, seen) ??
-        pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen);
+        pickForRole(d.role, slFilters, seedBase + i * 13 + 5, seen, diagnostics) ??
+        pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen, diagnostics);
       if (!replacement) continue;
       seen.delete(d.slug);
       seen.add(replacement.slug);
       drills[i] = toBuilt(replacement, input.lifecycle);
+      diagnostics.push({
+        code: "single_leg_swap",
+        role: replacement.role,
+        from: d.slug,
+        to: replacement.slug,
+        detail: `Single-leg majority law — ${d.name} swapped for ${replacement.name} so most of the twitch work runs through one leg.`,
+      });
       single++;
     }
   }
@@ -671,9 +737,16 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
     twitchFinal.length === 0
       ? null
       : twitchFinal.filter((d) => d.axis === "single_leg").length / twitchFinal.length;
+  if (singleLegShare !== null && singleLegShare < SINGLE_LEG_MIN_SHARE) {
+    diagnostics.push({
+      code: "single_leg_short",
+      detail: `Single-leg share is ${Math.round(singleLegShare * 100)}% — no legal single-leg replacement was available today.`,
+    });
+  }
 
   const est = Math.max(8, Math.round((drills.length * 90) / 60));
-  return { context: input.context, drills, estMinutes: est, singleLegShare };
+
+  return { context: input.context, drills, estMinutes: est, singleLegShare, diagnostics };
 }
 
 

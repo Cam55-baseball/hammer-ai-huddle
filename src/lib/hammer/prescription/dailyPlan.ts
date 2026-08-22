@@ -348,11 +348,31 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
       const dur = built.estMinutes;
       const contextKey = built.context;
       const hpi = getSeasonHPI(seasonPhase);
+      // Twitch transparency — the athlete is told exactly what the fast-twitch
+      // layer is doing today, why it is single-leg biased, and what was
+      // swapped for the gear they actually have. Never silent.
+      const twitchNote =
+        built.singleLegShare === null
+          ? built.diagnostics.some((d) => d.code === "twitch_suppressed")
+            ? "No fast-twitch work today — prep only, we're protecting the CNS."
+            : ""
+          : `Fast-twitch layer: ${Math.round(built.singleLegShare * 100)}% single-leg. Baseball and softball are one-leg, quick-burst games — quickness is built one leg at a time.`;
+      const swapNote = built.diagnostics
+        .filter((d) => d.code === "equipment_substitution")
+        .map((d) => d.detail)
+        .join(" ");
       return {
         modality,
         title: titleByContext[contextKey] ?? titleByContext.default,
-        why: `${whyByContext[contextKey] ?? whyByContext.default} ${hpi.qiDirective}`,
-        roadmapReason: `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
+        why: [whyByContext[contextKey] ?? whyByContext.default, twitchNote, hpi.qiDirective]
+          .filter(Boolean)
+          .join(" "),
+        roadmapReason: [
+          `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
+          swapNote,
+        ]
+          .filter(Boolean)
+          .join(" "),
         phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
@@ -360,12 +380,15 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
           "Move slow first, fast last — tissue before intent.",
           "Every rep is honest — no drift, no going through the motions.",
           "Fascial and fast-twitch drills earn everything downstream.",
+          "Quick feet, quiet feet — the ground gets hit hard and left fast.",
         ],
         stopRules: [
           "Sharp pain (not muscle soreness) — stop and tell Hammer where.",
           "Any pull or tightness on a fast-twitch drill — end the fast-twitch portion.",
+          "Ground contacts getting loud or slow — the twitch work is done for today.",
           "Dizziness or shortness of breath — pause, hydrate, restart slower.",
         ],
+
         durationMin: dur,
         route: "hammer:open-warmup-generator",
         ctaLabel: "Open warm-up",
