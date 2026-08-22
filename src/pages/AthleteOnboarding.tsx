@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,6 +6,7 @@ import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingS
 import { useAthleteEvents } from "@/hooks/useAthleteEvents";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useOnboardingAnswerStatus } from "@/hooks/onboarding/useOnboardingAnswerStatus";
 import { AthleteOnboardingShell } from "@/components/onboarding/AthleteOnboardingShell";
 import { HammerOnboardingPresence } from "@/components/onboarding/HammerOnboardingPresence";
 import type { OnboardingStateKind } from "@/lib/runtime/onboarding/types";
@@ -95,6 +96,27 @@ export default function AthleteOnboarding() {
   const { user, loading: authLoading, isAuthStable } = useAuth();
   const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
   const { createEvent } = useAthleteEvents();
+  const answerStatus = useOnboardingAnswerStatus();
+
+  /** Answer-derived chip status per step index (navigation-only steps are neutral). */
+  const stepStatus = useMemo(() => {
+    const m: Record<number, "answered" | "open" | "neutral"> = {
+      [STEP_WELCOME]: "neutral",
+      [STEP_CONFIRM]: "neutral",
+      [STEP_REVIEW]: "neutral",
+      [STEP_DONE]: "neutral",
+      [STEP_PROFILE]: answerStatus.byKey.profile,
+      [STEP_ANTHRO]: answerStatus.byKey.anthropometrics,
+      [STEP_GOALS]: answerStatus.byKey.goals,
+      [STEP_FUEL]: answerStatus.byKey.fuel,
+      [STEP_MENTAL]: answerStatus.byKey.mental,
+      [STEP_CONNECTIONS]: answerStatus.byKey.connections,
+      [STEP_SCHEDULE]: answerStatus.byKey.schedule,
+      [STEP_INJURY]: answerStatus.byKey.injury,
+      [STEP_NOTIFICATIONS]: answerStatus.byKey.notifications,
+    };
+    return m;
+  }, [answerStatus.byKey]);
 
   const [step, setStep] = useState(0);
   /** When set, the next save returns to STEP_REVIEW instead of advancing linearly. */
@@ -366,10 +388,14 @@ export default function AthleteOnboarding() {
       steps={STEPS}
       onBack={step > 0 ? goBack : undefined}
       onJumpToStep={(i) => setStep(i)}
+      stepStatus={answerStatus.loading ? undefined : stepStatus}
+      answeredCount={answerStatus.answeredCount}
+      totalAnswerable={answerStatus.totalAnswerable}
       allowForwardJump={
         hasCompletedOnboarding ||
         searchParams.get("edit") !== null ||
         searchParams.get("step") === "review" ||
+        searchParams.get("resume") === "1" ||
         editReturnTo !== null
       }
       onSaveAndExit={() => {

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { writeDraftSlot } from "@/lib/onboarding/draftStore";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import {
   REPORT_INJURY_REGIONS,
@@ -36,6 +37,7 @@ export function InjuryIntakeStep({ onContinue, onBack }: Props) {
     setBusy(true);
     try {
       await reportInjury({ userId: user.id, region, severity, queryClient: qc });
+      writeDraftSlot(user.id, "injury-intake", { answered_at: new Date().toISOString(), state: "reported" });
       toast.success("Logged. Your plan starts protected.");
       onContinue();
     } catch (e) {
@@ -133,7 +135,16 @@ export function InjuryIntakeStep({ onContinue, onBack }: Props) {
           </Button>
         )}
         {mode === "healthy" && (
-          <Button onClick={onContinue}>
+          <Button
+            onClick={() => {
+              if (user?.id)
+                writeDraftSlot(user.id, "injury-intake", {
+                  answered_at: new Date().toISOString(),
+                  state: "healthy",
+                });
+              onContinue();
+            }}
+          >
             Continue <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         )}
