@@ -270,8 +270,15 @@ export default function BundleBuilder() {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={!canSave}>
-            Save Bundle
+          <Button onClick={handleSave} disabled={!canSave || saving}>
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              'Save Bundle'
+            )}
           </Button>
         </div>
       </div>
