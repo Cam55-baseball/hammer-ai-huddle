@@ -77,20 +77,31 @@ export interface StationPools {
 /**
  * Bucket an already legality-gated pool by station role, keeping only movements
  * from the anchor's family so the potentiation actually transfers.
+ *
+ * Classification precedence matters: a loaded jump ("trap bar jump", "jump
+ * squat") reads as plyometric by name but is really the loaded-explosive
+ * station. Loaded wins, so station 3 is never starved by a naming collision.
  */
 export function buildStationPools(
   pool: readonly StationMovementLike[],
   family: MovementFamily,
 ): StationPools {
   const sameFamily = pool.filter((m) => movementFamily(m) === family);
-  const plyometric = sameFamily.filter(isPlyometric);
+  const loadedExplosive = sameFamily.filter(
+    (m) => isLoadedExplosive(m) && !isAssistedOrOverspeed(m),
+  );
+  const loadedSlugs = new Set(loadedExplosive.map((m) => m.slug));
+  const plyometric = sameFamily.filter(
+    (m) => isPlyometric(m) && !loadedSlugs.has(m.slug) && !isAssistedOrOverspeed(m),
+  );
   return {
     plyometric,
-    loaded_explosive: sameFamily.filter((m) => isLoadedExplosive(m) && !isPlyometric(m)),
+    loaded_explosive: loadedExplosive,
     assisted: sameFamily.filter(isAssistedOrOverspeed),
-    expression: plyometric,
+    expression: plyometric.length > 0 ? plyometric : loadedExplosive,
   };
 }
+
 
 export interface ResolvedStation extends MethodStation {
   slug: string;
