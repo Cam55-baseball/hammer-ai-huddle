@@ -20,6 +20,7 @@ import {
 import { useAlignmentPresets, fallbackAlignment, resolvePositions } from "@/hooks/useDefensiveAlignment";
 import type { Handedness } from "@/lib/iq/fieldModel";
 import { resolveAlignment, type RunnerBase } from "@/lib/iq/alignmentResolver";
+import { inferSituationState } from "@/lib/iq/situationState";
 
 
 
@@ -40,6 +41,16 @@ export default function GameIqSituation() {
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
   const rafRef = useRef<number | null>(null);
+
+  // Open the diamond in the moment the lesson is actually about — a "R1+R2,
+  // no outs" bunt situation must not start with empty bases.
+  useEffect(() => {
+    const sit = (q.data as any)?.situation;
+    if (!sit) return;
+    const implied = inferSituationState(sit.slug ?? "", sit.title ?? "");
+    setRunners(implied.runners);
+    setOuts(implied.outs);
+  }, [(q.data as any)?.situation?.slug]);
 
   useEffect(() => {
     if (!playing) return;
