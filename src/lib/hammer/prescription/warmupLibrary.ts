@@ -25,6 +25,9 @@ export type WarmupRole =
   | "activation"
   | "stability"
   | "neural_priming"
+  | "ladder_quickness"
+  | "single_leg_twitch"
+  | "ground_force"
   | "fast_twitch"
   | "weightless_coordination"
   | "movement_bridge"
@@ -45,6 +48,9 @@ export type WarmupContext =
 
 export type LifecycleClass = "youth" | "beginner" | "intermediate" | "advanced" | "elite";
 
+/** Movement axis — the twitch layer is single-leg dominant by law. */
+export type WarmupAxis = "single_leg" | "bilateral";
+
 export interface WarmupDrill {
   readonly slug: string;
   readonly name: string;
@@ -58,7 +64,16 @@ export interface WarmupDrill {
   readonly baseDose: string;
   readonly beginnerDose?: string;
   readonly eliteDose?: string;
+  /** Equipment tokens this drill requires. Omitted → nothing but a floor. */
+  readonly equipment?: readonly string[];
+  /** Equipment-free sibling used when the athlete lacks the gear above. */
+  readonly fallbackSlug?: string;
+  /** Single-leg vs bilateral. Only meaningful for twitch roles. */
+  readonly axis?: WarmupAxis;
+  /** Body regions loaded — used to veto against reported injury regions. */
+  readonly regions?: readonly string[];
 }
+
 
 // ─── Library ────────────────────────────────────────────────────────────────
 export const WARMUP_LIBRARY: WarmupDrill[] = [
