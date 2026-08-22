@@ -1861,6 +1861,163 @@ export type Database = {
           },
         ]
       }
+      bundle_discount_codes: {
+        Row: {
+          active: boolean
+          bundle_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          kind: string
+          max_redemptions: number | null
+          redeemed_count: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          bundle_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          kind: string
+          max_redemptions?: number | null
+          redeemed_count?: number
+          value: number
+        }
+        Update: {
+          active?: boolean
+          bundle_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          max_redemptions?: number | null
+          redeemed_count?: number
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_discount_codes_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bundle_grants_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          build_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          target_email: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          build_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          build_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      bundle_page_views: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          id: string
+          referrer: string | null
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string
+          id?: string
+          referrer?: string | null
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          referrer?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_page_views_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bundles: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          price_cents: number
+          published_at: string | null
+          slug: string
+          status: string
+          updated_at: string
+          video_ids: string[]
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id?: string
+          price_cents?: number
+          published_at?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+          video_ids?: string[]
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          price_cents?: number
+          published_at?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
+          video_ids?: string[]
+        }
+        Relationships: []
+      }
       calendar_day_orders: {
         Row: {
           created_at: string
@@ -15442,6 +15599,10 @@ export type Database = {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
       }
+      check_bundle_discount: {
+        Args: { p_bundle_id: string; p_code: string }
+        Returns: Json
+      }
       claim_ab_link: {
         Args: { p_code: string; p_user_id: string }
         Returns: {
@@ -15465,6 +15626,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_build_purchases: { Args: never; Returns: number }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
@@ -15561,6 +15723,18 @@ export type Database = {
         Returns: boolean
       }
       get_athlete_context_envelope: { Args: { p_user: string }; Returns: Json }
+      get_bundle_videos: {
+        Args: { p_bundle_id: string }
+        Returns: {
+          description: string
+          id: string
+          sort_order: number
+          thumbnail_url: string
+          title: string
+          video_url: string
+        }[]
+      }
+      get_public_bundle: { Args: { p_slug: string }; Returns: Json }
       has_any_checked: { Args: { cb: Json }; Returns: boolean }
       has_role: {
         Args: {
