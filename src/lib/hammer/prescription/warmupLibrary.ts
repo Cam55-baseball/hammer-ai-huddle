@@ -746,7 +746,7 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
 
   const est = Math.max(8, Math.round((drills.length * 90) / 60));
 
-  return { context: input.context, drills, estMinutes: est, singleLegShare };
+  return { context: input.context, drills, estMinutes: est, singleLegShare, diagnostics };
 }
 
 
