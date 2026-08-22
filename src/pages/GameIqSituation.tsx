@@ -21,6 +21,8 @@ import { useAlignmentPresets, fallbackAlignment, resolvePositions } from "@/hook
 import type { Handedness } from "@/lib/iq/fieldModel";
 import { resolveAlignment, type RunnerBase } from "@/lib/iq/alignmentResolver";
 import { inferSituationState } from "@/lib/iq/situationState";
+import { iqVoice, iqVoiceOrNull } from "@/lib/iq/sportVoice";
+
 
 
 
