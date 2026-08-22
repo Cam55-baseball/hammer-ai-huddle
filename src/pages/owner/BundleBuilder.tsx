@@ -29,6 +29,8 @@ export default function BundleBuilder() {
   const { videos, tags, loading: videosLoading, refetch } = useVideoLibrary({ limit: 200 });
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
   const [price, setPrice] = useState<string>('');
   const [videoIds, setVideoIds] = useState<string[]>(initialVideoId ? [initialVideoId] : []);
   const [pickerValue, setPickerValue] = useState<string>('');
