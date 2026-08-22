@@ -20,6 +20,7 @@ interface Anthro {
   weight_lb?: number | null;
   wingspan_in?: number | null;
   body_fat_pct?: number | null;
+  foot_length_in?: number | null;
 }
 
 interface Props {
@@ -38,6 +39,7 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
   const [weight, setWeight] = useState("");
   const [wingspan, setWingspan] = useState("");
   const [bodyFat, setBodyFat] = useState("");
+  const [footLength, setFootLength] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
         if (draft.weight_lb) setWeight(String(draft.weight_lb));
         if (draft.wingspan_in) setWingspan(String(draft.wingspan_in));
         if (draft.body_fat_pct) setBodyFat(String(draft.body_fat_pct));
+        if (draft.foot_length_in) setFootLength(String(draft.foot_length_in));
         return;
       }
       // 2) Server hydration from athlete_context.anthropometrics
@@ -64,6 +67,7 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
         if (a.weight_lb) setWeight(String(a.weight_lb));
         if (a.wingspan_in) setWingspan(String(a.wingspan_in));
         if (a.body_fat_pct) setBodyFat(String(a.body_fat_pct));
+        if (a.foot_length_in) setFootLength(String(a.foot_length_in));
       }
     })();
   }, [user?.id]);
@@ -75,6 +79,7 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
       weight_lb: num(weight),
       wingspan_in: num(wingspan),
       body_fat_pct: num(bodyFat),
+      foot_length_in: num(footLength),
       ...patch,
     });
   };
@@ -88,6 +93,7 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
         weight_lb: num(weight),
         wingspan_in: num(wingspan),
         body_fat_pct: num(bodyFat),
+        foot_length_in: num(footLength),
       };
       const hasAny = Object.values(payload).some((v) => v != null);
       if (hasAny) {
@@ -111,7 +117,7 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
       </div>
       <p className="text-sm text-muted-foreground">
         Optional but helpful — Hammer uses these to scale load, wingspan drills,
-        and body-comp tracking. Leave blank if you'd rather skip; nothing gets
+        foot-lever context, and body-comp tracking. Leave blank if you'd rather skip; nothing gets
         estimated for you.
       </p>
 
@@ -159,6 +165,21 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
             onChange={(e) => { setBodyFat(e.target.value); persistDraft({ body_fat_pct: num(e.target.value) }); }}
             placeholder="optional"
           />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="anthro-foot" className="text-xs">Foot length (inches)</Label>
+          <Input
+            id="anthro-foot"
+            type="number"
+            inputMode="decimal"
+            value={footLength}
+            onChange={(e) => { setFootLength(e.target.value); persistDraft({ foot_length_in: num(e.target.value) }); }}
+            placeholder="heel to longest toe"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Stand barefoot, heel against a wall, and measure to the tip of your
+            longest toe. Optional — leave blank if you don't know it.
+          </p>
         </div>
       </div>
 

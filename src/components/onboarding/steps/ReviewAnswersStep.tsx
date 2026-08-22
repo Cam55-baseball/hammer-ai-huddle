@@ -216,7 +216,7 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
     },
     {
       label: "Body measurements",
-      value: "Edit to review height, weight, wingspan",
+      value: "Edit to review height, weight, wingspan, foot length",
       editKey: "anthropometrics",
       ok: true,
     },
