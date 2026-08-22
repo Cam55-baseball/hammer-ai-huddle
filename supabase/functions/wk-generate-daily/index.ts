@@ -56,6 +56,16 @@ import {
   varietyPenalty,
   evaluateWeeklyBalance,
 } from "../_shared/wic/balance/weeklyLedger.ts";
+// Elite Training Methods Engine v1 — French contrast + the method library.
+import { selectMethod, buildWeeklyMethodUsage } from "../_shared/wic/methods/selector.ts";
+import { applyMethod, validateAppliedMethod } from "../_shared/wic/methods/apply.ts";
+import {
+  buildStationPools,
+  movementFamily,
+  resolveStations,
+  shapeFromPools,
+} from "../_shared/wic/methods/stations.ts";
+import { METHODS_VERSION } from "../_shared/wic/methods/catalog.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
@@ -563,7 +573,7 @@ const handler = async (req: Request): Promise<Response> => {
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
-        .select("movement_slug, plan_date, slot")
+        .select("movement_slug, plan_date, slot, why_payload")
         .eq("user_id", user.id)
         .eq("slot", "lift")
         .gte("plan_date", sevenDaysAgoStr)
@@ -574,6 +584,14 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("ack_date", planDate)
         .gt("expires_at", new Date().toISOString()),
     ]);
+    // Weight-room standards act as the safety floor for advanced methods:
+    // no athlete runs true French contrast before they have proven a mark.
+    const { data: standardAwards } = await admin
+      .from("wk_standard_awards")
+      .select("tier")
+      .eq("user_id", user.id)
+      .limit(20);
+    const strengthFloorCleared = (standardAwards ?? []).length > 0;
     const recentCompoundSlugs = new Set(
       (recentLifts ?? [])
         .filter((r: any) => String(r.plan_date) >= threeDaysAgoStr)
@@ -1984,6 +2002,138 @@ const handler = async (req: Request): Promise<Response> => {
       pers: personalizationContext.personalization_version, ta: trainingAgeContext.training_age_version,
     }));
     const p1112_seed = stableSeed(null, user.id, p1112_contextHash);
+    // -------- Elite Training Methods Engine v1 --------
+    // The third layer of the prescription: not WHICH movement and not HOW MUCH,
+    // but HOW the work is organized. French contrast and the method library
+    // attach to an already-certified block, inside the dosage envelope, and
+    // drop silently the moment the day, the athlete or the pool says no.
+    const methodWeeklyUsage = buildWeeklyMethodUsage((recentLifts ?? []) as any[]);
+    const methodDayCtx = {
+      dayType: (trainingContext as any)?.day_type ?? null,
+      isGameDay,
+      isTravelDay: String((trainingContext as any)?.day_type ?? "").includes("travel"),
+      isHeavyPracticeDay: isPracticeDayCtx && !isGameDay &&
+        String((trainingContext as any)?.practice_intensity ?? "").toLowerCase() === "high",
+      isRecoveryDay: String((trainingContext as any)?.day_type ?? "") === "recovery",
+      isReturnToPlay: false,
+    };
+    const methodAthleteCtx = {
+      trainingAgeClass: (((trainingAgeContext as any)?.classification ?? "beginner") as any),
+      ageYears: ((athleteContext as any)?.ageYears ?? (Number(p.age ?? p.age_years ?? 0) || null)) as number | null,
+      strengthFloorCleared,
+      hasActiveInjury: injurySlugs.size > 0,
+      equipment: ((availableEquipmentCtx as string[]) ?? []),
+    };
+    const methodReadinessCtx = {
+      reductionCount: reductions.length,
+      cnsClamped: (finalRxs as any[]).some((r) => r.cns_clamped === true),
+      cnsReadiness: Number.isFinite(cnsReadiness) ? cnsReadiness : null,
+    };
+    const methodDiagnostics: Record<string, unknown> = {
+      methods_version: METHODS_VERSION,
+      methods_applied: [] as string[],
+      methods_veto: [] as { engine: string; code: string }[],
+    };
+
+    for (const engineSlot of ["lift", "speed", "bat_speed"] as const) {
+      const slotRows = (finalRxs as any[]).filter((r) => r.slot === engineSlot);
+      if (slotRows.length === 0) continue;
+      const anchorRow = slotRows.find((r) => String(r.sequence_role ?? "").includes("compound")) ?? slotRows[0];
+      const anchorMovement = lib.find((x) => x.slug === anchorRow.movement_slug);
+      if (!anchorMovement) continue;
+
+      const legalPool = lib.filter((m) => eligible(m));
+      const pools = buildStationPools(legalPool as any, movementFamily(anchorMovement as any));
+      const shape = shapeFromPools(pools, {
+        hasAnchor: true,
+        accessoryCount: slotRows.filter((r) => !String(r.sequence_role ?? "").includes("compound")).length,
+      });
+
+      const selection = selectMethod({
+        engine: engineSlot,
+        phase: phaseRes.phase,
+        day: methodDayCtx,
+        athlete: methodAthleteCtx,
+        readiness: methodReadinessCtx,
+        block: shape,
+        weeklyUsage: methodWeeklyUsage,
+        seed: p1112_seed,
+      });
+      if (!selection.method) {
+        (methodDiagnostics.methods_veto as any[]).push({ engine: engineSlot, code: selection.vetoCode });
+        continue;
+      }
+
+      const stations = resolveStations(selection.method, anchorMovement as any, pools, p1112_seed);
+      if (stations === null) {
+        (methodDiagnostics.methods_veto as any[]).push({ engine: engineSlot, code: "method_station_unresolved" });
+        continue;
+      }
+
+      const result = applyMethod({
+        method: selection.method,
+        phase: phaseRes.phase,
+        role: anchorRow.sequence_role ?? null,
+        category: coerceCanonicalCategory(anchorMovement as any),
+        sets: Number(anchorRow.sets ?? 0) || 1,
+        reps: Number(anchorRow.reps ?? 0) || 1,
+        cnsCost: Number(anchorRow.cns_cost ?? 0),
+        cnsHeadroom: Math.max(0, cnsCap - cnsUsed),
+        resolvedStations: stations,
+      });
+      if (!result.applied) {
+        (methodDiagnostics.methods_veto as any[]).push({ engine: engineSlot, code: result.dropCode });
+        continue;
+      }
+      const issues = validateAppliedMethod(result.applied, {
+        phase: phaseRes.phase,
+        role: anchorRow.sequence_role ?? null,
+        category: coerceCanonicalCategory(anchorMovement as any),
+      });
+      if (issues.some((i) => i.severity === "fatal")) {
+        // A method never blocks publication — the plain block is already valid.
+        (methodDiagnostics.methods_veto as any[]).push({ engine: engineSlot, code: issues[0].code });
+        for (const w of issues) {
+          validatorReport.issues.push({ code: w.code, severity: "warn", message: w.detail } as any);
+        }
+        continue;
+      }
+      for (const w of issues) {
+        validatorReport.issues.push({ code: w.code, severity: "warn", message: w.detail } as any);
+      }
+
+      // Stamp the anchor row — dose stays inside the envelope, structure and
+      // rationale ride along in why_payload / why_v2.
+      const a = result.applied;
+      anchorRow.sets = a.sets;
+      anchorRow.cns_cost = a.cns_cost;
+      const wp = (anchorRow.why_payload ?? {}) as Record<string, unknown>;
+      wp.training_method_id = a.method_id;
+      wp.training_method = {
+        id: a.method_id,
+        family: a.method_family,
+        display_name: a.method_display_name,
+        shape: a.method_shape,
+        structure: a.method_structure,
+        rounds: a.rounds,
+        stations: a.stations,
+        rest_between_rounds_seconds: a.rest_between_rounds_seconds,
+        cue: a.method_cue,
+        bailout: a.method_bailout,
+        why: a.why_method,
+        clamps: a.clamps,
+        methods_version: a.methods_version,
+      };
+      anchorRow.why_payload = wp;
+      const wv = (anchorRow.why_v2 ?? {}) as Record<string, unknown>;
+      wv.why_method = a.why_method;
+      wv.why_order = `${wv.why_order ?? ""} ${a.method_display_name}: ${a.method_shape}.`.trim();
+      anchorRow.why_v2 = wv;
+      anchorRow.rationale = `${anchorRow.rationale ?? ""} ${a.why_method}`.trim();
+      (methodDiagnostics.methods_applied as string[]).push(`${engineSlot}:${a.method_id}`);
+      methodWeeklyUsage[a.method_id] = (methodWeeklyUsage[a.method_id] ?? 0) + 1;
+    }
+
     const p1112_govHash = governanceCatalogHash(lib as unknown as Array<Record<string, unknown>>);
     const p1112_determinismTrace = buildDeterminismTrace({
       seed: p1112_seed, utcPlanDate: p1112_utcDate, contextHash: p1112_contextHash,
@@ -2441,6 +2591,15 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
     if (rpcErr) throw rpcErr;
+
+    // Methods diagnostics ride alongside the canonical run so every applied
+    // method (and every veto) is replay-visible after the fact.
+    if (diagId) {
+      await admin
+        .from("wk_generation_diagnostics")
+        .update({ training_methods: methodDiagnostics } as any)
+        .eq("id", diagId as any);
+    }
 
     await admin.from("wk_cns_ledger").upsert({
       user_id: user.id, ledger_date: planDate,

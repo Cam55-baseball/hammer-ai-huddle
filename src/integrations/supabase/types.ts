@@ -14331,6 +14331,7 @@ export type Database = {
           system_state: Json | null
           system_state_hash: string | null
           training_age_version: string | null
+          training_methods: Json | null
           user_id: string
           validation_status: string
           validator_aggregate_hash: string | null
@@ -14414,6 +14415,7 @@ export type Database = {
           system_state?: Json | null
           system_state_hash?: string | null
           training_age_version?: string | null
+          training_methods?: Json | null
           user_id: string
           validation_status: string
           validator_aggregate_hash?: string | null
@@ -14497,6 +14499,7 @@ export type Database = {
           system_state?: Json | null
           system_state_hash?: string | null
           training_age_version?: string | null
+          training_methods?: Json | null
           user_id?: string
           validation_status?: string
           validator_aggregate_hash?: string | null
