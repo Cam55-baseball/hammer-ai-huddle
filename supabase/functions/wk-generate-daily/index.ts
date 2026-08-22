@@ -56,6 +56,16 @@ import {
   varietyPenalty,
   evaluateWeeklyBalance,
 } from "../_shared/wic/balance/weeklyLedger.ts";
+// Elite Training Methods Engine v1 — French contrast + the method library.
+import { selectMethod, buildWeeklyMethodUsage } from "../_shared/wic/methods/selector.ts";
+import { applyMethod, validateAppliedMethod } from "../_shared/wic/methods/apply.ts";
+import {
+  buildStationPools,
+  movementFamily,
+  resolveStations,
+  shapeFromPools,
+} from "../_shared/wic/methods/stations.ts";
+import { METHODS_VERSION } from "../_shared/wic/methods/catalog.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
@@ -563,7 +573,7 @@ const handler = async (req: Request): Promise<Response> => {
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
-        .select("movement_slug, plan_date, slot")
+        .select("movement_slug, plan_date, slot, why_payload")
         .eq("user_id", user.id)
         .eq("slot", "lift")
         .gte("plan_date", sevenDaysAgoStr)
@@ -574,6 +584,14 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("ack_date", planDate)
         .gt("expires_at", new Date().toISOString()),
     ]);
+    // Weight-room standards act as the safety floor for advanced methods:
+    // no athlete runs true French contrast before they have proven a mark.
+    const { data: standardAwards } = await admin
+      .from("wk_standard_awards")
+      .select("tier")
+      .eq("user_id", user.id)
+      .limit(20);
+    const strengthFloorCleared = (standardAwards ?? []).length > 0;
     const recentCompoundSlugs = new Set(
       (recentLifts ?? [])
         .filter((r: any) => String(r.plan_date) >= threeDaysAgoStr)
