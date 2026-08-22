@@ -106,8 +106,11 @@ export interface DrillStep {
   readonly dosage: string;
   readonly cue?: string;
   readonly stopIf?: string;
+  /** Athlete-facing "You need:" line when the drill requires equipment. */
+  readonly equipmentNote?: string;
   readonly guide?: import("./movementGuide").MovementGuide;
 }
+
 
 export interface GamePlanTemplateSeed {
   readonly title: string;
