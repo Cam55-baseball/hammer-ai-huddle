@@ -228,7 +228,11 @@ export default function AthleteOnboarding() {
     if (!user?.id || !urlRoutedRef.current) return;
     if (step === STEP_DONE) return;
     writeDraftSlot(user.id, "onboarding-step", { stepIndex: step, dayType });
-  }, [user?.id, step, dayType]);
+    // Re-derive answered/open chip status whenever the athlete moves between
+    // steps, so a freshly answered question lights up immediately.
+    queryClient.invalidateQueries({ queryKey: ["onboarding-answer-status", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["athlete-onboarding-state", user.id] });
+  }, [user?.id, step, dayType, queryClient]);
 
   /** Completed users landing on step 0 without a deep-link see the welcome-back panel. */
   const showWelcomeBack =
@@ -249,6 +253,7 @@ export default function AthleteOnboarding() {
     queryClient.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
     queryClient.invalidateQueries({ queryKey: ["athlete-context-envelope", user.id] });
     queryClient.invalidateQueries({ queryKey: ["athlete-onboarding-state", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["onboarding-answer-status", user.id] });
     queryClient.invalidateQueries({ queryKey: ["side-identity", user.id] });
     queryClient.invalidateQueries({ queryKey: ["athlete-context"] });
     queryClient.invalidateQueries({ queryKey: ["hammer-daily-plan"] });
