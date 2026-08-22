@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronRight, CheckCircle2 } from "lucide-react";
 import type { IqSituation } from "@/lib/iq/types";
 import { LENS_ACCENT, LENS_LABELS } from "@/lib/iq/types";
+import { useSportTheme } from "@/contexts/SportThemeContext";
+import { iqVoice } from "@/lib/iq/sportVoice";
 
 interface Props {
   situation: IqSituation;
@@ -11,7 +13,10 @@ interface Props {
 }
 
 export function IqSituationCard({ situation, mastery, onClick }: Props) {
+  const { sport } = useSportTheme();
+  const voice = sport === "softball" ? "softball" : "baseball";
   const accent = situation.lens_tags[0] ? LENS_ACCENT[situation.lens_tags[0]] : "hsl(var(--primary))";
+
   return (
     <Card
       onClick={onClick}
