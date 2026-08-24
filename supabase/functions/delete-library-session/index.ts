@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
+import { hasActiveRole, hasActiveSubscription, forbidden } from '../_shared/authGuards.ts';
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,22 +46,22 @@ Deno.serve(async (req) => {
       throw new Error('Session not found');
     }
 
-    const { data: ownerRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'owner')
-      .maybeSingle();
-
-    const isOwner = !!ownerRole;
+    const isPlatformOwner = await hasActiveRole(supabase, user.id, 'owner');
     const isSessionOwner = session.user_id === user.id;
 
-    if (!isSessionOwner && !isOwner) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized to delete this session' }), 
-        { status: 403, headers: corsHeaders }
-      );
+    // Own data only. Platform owner retains an administrative override.
+    if (!isSessionOwner && !isPlatformOwner) {
+      return forbidden('Unauthorized to delete this session', corsHeaders);
     }
+
+    // Paid feature: an active subscription is required (owner exempt).
+    if (!isPlatformOwner && !(await hasActiveSubscription(supabase, user.id))) {
+      return forbidden('An active subscription is required', corsHeaders);
+    }
+
+    // Every mutation below is scoped to the row's owning user.
+    const scopeUserId = session.user_id;
+
 
     if (deleteFromStorage) {
       // Hard delete: remove from storage and database
