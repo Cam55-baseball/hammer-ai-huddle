@@ -170,7 +170,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.migrate-to-tiers]
-verify_jwt = false
+verify_jwt = true
 
 [functions.unfollow-player]
 verify_jwt = true
