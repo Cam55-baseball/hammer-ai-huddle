@@ -84,6 +84,8 @@ Deno.serve(async (req) => {
       .from('videos')
       .update(updates)
       .eq('id', sessionId)
+      .eq('user_id', session.user_id)
+
       .select()
       .single();
 
