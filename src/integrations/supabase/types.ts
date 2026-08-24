@@ -9541,6 +9541,33 @@ export type Database = {
         }
         Relationships: []
       }
+      records: {
+        Row: {
+          date_set: string
+          holder_id: string | null
+          id: string
+          metric: string
+          sport: string
+          value: number
+        }
+        Insert: {
+          date_set?: string
+          holder_id?: string | null
+          id?: string
+          metric: string
+          sport: string
+          value: number
+        }
+        Update: {
+          date_set?: string
+          holder_id?: string | null
+          id?: string
+          metric?: string
+          sport?: string
+          value?: number
+        }
+        Relationships: []
+      }
       roadmap_milestones: {
         Row: {
           badge_icon: string | null
@@ -9853,6 +9880,36 @@ export type Database = {
           route?: string
           source_event_id?: string
           status?: string
+        }
+        Relationships: []
+      }
+      scale_reference: {
+        Row: {
+          avg_value: number
+          effective_date: string
+          floor_value: number | null
+          id: string
+          metric: string
+          record_value: number
+          sport: string
+        }
+        Insert: {
+          avg_value: number
+          effective_date?: string
+          floor_value?: number | null
+          id?: string
+          metric: string
+          record_value: number
+          sport: string
+        }
+        Update: {
+          avg_value?: number
+          effective_date?: string
+          floor_value?: number | null
+          id?: string
+          metric?: string
+          record_value?: number
+          sport?: string
         }
         Relationships: []
       }
@@ -12821,6 +12878,7 @@ export type Database = {
           defense_grade: number | null
           delivery_grade: number | null
           fastball_grade: number | null
+          grade_source: string | null
           grade_type: string
           graded_at: string | null
           hitting_grade: number | null
@@ -12843,6 +12901,7 @@ export type Database = {
           defense_grade?: number | null
           delivery_grade?: number | null
           fastball_grade?: number | null
+          grade_source?: string | null
           grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
@@ -12865,6 +12924,7 @@ export type Database = {
           defense_grade?: number | null
           delivery_grade?: number | null
           fastball_grade?: number | null
+          grade_source?: string | null
           grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null

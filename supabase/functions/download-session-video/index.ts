@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
+import { hasActiveRole, hasActiveSubscription, forbidden } from '../_shared/authGuards.ts';
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,28 +46,15 @@ Deno.serve(async (req) => {
     }
 
     // Check permissions
-    const { data: ownerRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'owner')
-      .maybeSingle();
-
-    const isOwner = !!ownerRole;
+    const isPlatformOwner = await hasActiveRole(supabase, user.id, 'owner');
     const isPlayer = session.user_id === user.id;
 
-    let hasAccess = isOwner || isPlayer;
+    let hasAccess = isPlatformOwner || isPlayer;
 
     if (!hasAccess) {
-      // Check if scout with accepted follow
-      const { data: scoutRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'scout')
-        .maybeSingle();
-
-      const isScout = !!scoutRole;
+      // Scout with an accepted follow may download a video the athlete
+      // explicitly shared with scouts.
+      const isScout = await hasActiveRole(supabase, user.id, 'scout');
 
       if (isScout) {
         const { data: followData } = await supabase
@@ -75,17 +64,20 @@ Deno.serve(async (req) => {
           .eq('player_id', session.user_id)
           .eq('status', 'accepted')
           .maybeSingle();
-        
+
         hasAccess = !!followData && session.shared_with_scouts;
       }
     }
 
     if (!hasAccess) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized to download this video' }), 
-        { status: 403, headers: corsHeaders }
-      );
+      return forbidden('Unauthorized to download this video', corsHeaders);
     }
+
+    // Paid feature: an active subscription is required (owner exempt).
+    if (!isPlatformOwner && !(await hasActiveSubscription(supabase, user.id))) {
+      return forbidden('An active subscription is required', corsHeaders);
+    }
+
 
     // Extract file path from URL
     const urlParts = session.video_url.split('/videos/');

@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasAnyActiveRole, forbidden } from "../_shared/authGuards.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,7 +19,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
@@ -28,19 +36,12 @@ serve(async (req) => {
       });
     }
 
-    // Verify user is owner or admin
-    const { data: ownerCheck } = await supabaseClient
-      .rpc("has_role", { _user_id: user.id, _role: "owner" });
-    
-    const { data: adminCheck } = await supabaseClient
-      .rpc("has_role", { _user_id: user.id, _role: "admin" });
-
-    if (!ownerCheck && !adminCheck) {
-      return new Response(JSON.stringify({ error: "Unauthorized - Owner or Admin access required" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Owner/admin only.
+    const isPrivileged = await hasAnyActiveRole(supabaseClient, user.id, ["owner", "admin"]);
+    if (!isPrivileged) {
+      return forbidden("Owner or admin access required", corsHeaders);
     }
+
 
     const { application_id, action, role = "scout" } = await req.json();
 

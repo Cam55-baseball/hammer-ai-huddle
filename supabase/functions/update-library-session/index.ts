@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
+import { hasActiveRole, hasActiveSubscription, forbidden } from '../_shared/authGuards.ts';
+
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
@@ -55,22 +57,19 @@ Deno.serve(async (req) => {
       throw new Error('Session not found');
     }
 
-    const { data: ownerRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'owner')
-      .maybeSingle();
-
-    const isOwner = !!ownerRole;
+    const isPlatformOwner = await hasActiveRole(supabase, user.id, 'owner');
     const isSessionOwner = session.user_id === user.id;
 
-    if (!isSessionOwner && !isOwner) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized to update this session' }), 
-        { status: 403, headers: corsHeaders }
-      );
+    // Own data only. Platform owner retains an administrative override.
+    if (!isSessionOwner && !isPlatformOwner) {
+      return forbidden('Unauthorized to update this session', corsHeaders);
     }
+
+    // Paid feature: an active subscription is required (owner exempt).
+    if (!isPlatformOwner && !(await hasActiveSubscription(supabase, user.id))) {
+      return forbidden('An active subscription is required', corsHeaders);
+    }
+
 
     const updates: any = {
       updated_at: new Date().toISOString(),
@@ -85,6 +84,8 @@ Deno.serve(async (req) => {
       .from('videos')
       .update(updates)
       .eq('id', sessionId)
+      .eq('user_id', session.user_id)
+
       .select()
       .single();
 
