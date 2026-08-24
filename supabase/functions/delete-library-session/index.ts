@@ -86,7 +86,9 @@ Deno.serve(async (req) => {
       const { error: deleteError } = await supabase
         .from('videos')
         .delete()
-        .eq('id', sessionId);
+        .eq('id', sessionId)
+        .eq('user_id', scopeUserId);
+
       
       if (deleteError) {
         console.error('[delete-library-session] Database delete error:', deleteError);
@@ -97,7 +99,9 @@ Deno.serve(async (req) => {
       const { error: updateError } = await supabase
         .from('videos')
         .update({ saved_to_library: false })
-        .eq('id', sessionId);
+        .eq('id', sessionId)
+        .eq('user_id', scopeUserId);
+
       
       if (updateError) {
         console.error('[delete-library-session] Update error:', updateError);
