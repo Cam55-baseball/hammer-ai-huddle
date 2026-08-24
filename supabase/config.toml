@@ -158,13 +158,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.approve-scout-application]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-library-session]
-verify_jwt = false
+verify_jwt = true
 
 [functions.download-session-video]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-player-library]
 verify_jwt = false
@@ -173,10 +173,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.unfollow-player]
-verify_jwt = false
+verify_jwt = true
 
 [functions.update-library-session]
-verify_jwt = false
+verify_jwt = true
 
 [functions.classify-league]
 verify_jwt = true
