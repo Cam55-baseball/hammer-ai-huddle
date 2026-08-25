@@ -12874,71 +12874,113 @@ export type Database = {
       vault_scout_grades: {
         Row: {
           breaking_ball_grade: number | null
+          breaking_ball_grade_future: number | null
           control_grade: number | null
+          control_grade_future: number | null
           defense_grade: number | null
+          defense_grade_future: number | null
           delivery_grade: number | null
+          delivery_grade_future: number | null
+          development_index: number | null
           fastball_grade: number | null
+          fastball_grade_future: number | null
           grade_source: string | null
           grade_type: string
           graded_at: string | null
           hitting_grade: number | null
+          hitting_grade_future: number | null
           id: string
           leadership_grade: number | null
+          leadership_grade_future: number | null
           long_term_goals_text: string | null
           next_prompt_date: string | null
           notes: string | null
           offspeed_grade: number | null
+          offspeed_grade_future: number | null
           power_grade: number | null
+          power_grade_future: number | null
           rise_ball_grade: number | null
+          rise_ball_grade_future: number | null
           self_efficacy_grade: number | null
+          self_efficacy_grade_future: number | null
           speed_grade: number | null
+          speed_grade_future: number | null
           throwing_grade: number | null
+          throwing_grade_future: number | null
           user_id: string
         }
         Insert: {
           breaking_ball_grade?: number | null
+          breaking_ball_grade_future?: number | null
           control_grade?: number | null
+          control_grade_future?: number | null
           defense_grade?: number | null
+          defense_grade_future?: number | null
           delivery_grade?: number | null
+          delivery_grade_future?: number | null
+          development_index?: number | null
           fastball_grade?: number | null
+          fastball_grade_future?: number | null
           grade_source?: string | null
           grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
+          hitting_grade_future?: number | null
           id?: string
           leadership_grade?: number | null
+          leadership_grade_future?: number | null
           long_term_goals_text?: string | null
           next_prompt_date?: string | null
           notes?: string | null
           offspeed_grade?: number | null
+          offspeed_grade_future?: number | null
           power_grade?: number | null
+          power_grade_future?: number | null
           rise_ball_grade?: number | null
+          rise_ball_grade_future?: number | null
           self_efficacy_grade?: number | null
+          self_efficacy_grade_future?: number | null
           speed_grade?: number | null
+          speed_grade_future?: number | null
           throwing_grade?: number | null
+          throwing_grade_future?: number | null
           user_id: string
         }
         Update: {
           breaking_ball_grade?: number | null
+          breaking_ball_grade_future?: number | null
           control_grade?: number | null
+          control_grade_future?: number | null
           defense_grade?: number | null
+          defense_grade_future?: number | null
           delivery_grade?: number | null
+          delivery_grade_future?: number | null
+          development_index?: number | null
           fastball_grade?: number | null
+          fastball_grade_future?: number | null
           grade_source?: string | null
           grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
+          hitting_grade_future?: number | null
           id?: string
           leadership_grade?: number | null
+          leadership_grade_future?: number | null
           long_term_goals_text?: string | null
           next_prompt_date?: string | null
           notes?: string | null
           offspeed_grade?: number | null
+          offspeed_grade_future?: number | null
           power_grade?: number | null
+          power_grade_future?: number | null
           rise_ball_grade?: number | null
+          rise_ball_grade_future?: number | null
           self_efficacy_grade?: number | null
+          self_efficacy_grade_future?: number | null
           speed_grade?: number | null
+          speed_grade_future?: number | null
           throwing_grade?: number | null
+          throwing_grade_future?: number | null
           user_id?: string
         }
         Relationships: []
