@@ -2559,6 +2559,91 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_calibration_frames: {
+        Row: {
+          calibration_session_id: string
+          created_at: string
+          frame_index: number
+          height: number
+          id: string
+          sha256_hex: string
+          storage_path: string
+          timestamp_seconds: number
+          width: number
+        }
+        Insert: {
+          calibration_session_id: string
+          created_at?: string
+          frame_index: number
+          height: number
+          id?: string
+          sha256_hex: string
+          storage_path: string
+          timestamp_seconds: number
+          width: number
+        }
+        Update: {
+          calibration_session_id?: string
+          created_at?: string
+          frame_index?: number
+          height?: number
+          id?: string
+          sha256_hex?: string
+          storage_path?: string
+          timestamp_seconds?: number
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_calibration_frames_calibration_session_id_fkey"
+            columns: ["calibration_session_id"]
+            isOneToOne: false
+            referencedRelation: "cv_calibration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_calibration_sessions: {
+        Row: {
+          calibration_status: string
+          created_at: string
+          failure_reason: string | null
+          id: string
+          reference_distance_ft: number
+          updated_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          calibration_status?: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          reference_distance_ft: number
+          updated_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          calibration_status?: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          reference_distance_ft?: number
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_calibration_sessions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_standard_checks: {
         Row: {
           check_date: string

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, Crosshair } from "lucide-react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -222,6 +222,7 @@ export function AppSidebar() {
         icon: Target,
         subModules: [
           { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
+          { title: 'Velocity Calibration', url: '/pitch-velocity', icon: Crosshair, description: 'Prepare single-camera pitch measurement' },
           { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: t('workoutModules.productionStudio.subtitle') || "6-week workout" },
           { title: 'Explosive Conditioning', url: "/explosive-conditioning", icon: Zap, description: "Build elite speed and explosive power" },
           ...(selectedSport === 'baseball' ? [{ title: 'Pick-Off Trainer', url: '/pickoff-trainer', icon: Target, description: 'Pick-off decision training' }] : []),
