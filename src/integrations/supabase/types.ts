@@ -15809,6 +15809,10 @@ export type Database = {
         }[]
       }
       get_public_bundle: { Args: { p_slug: string }; Returns: Json }
+      has_active_evaluator_role: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       has_any_checked: { Args: { cb: Json }; Returns: boolean }
       has_role: {
         Args: {
