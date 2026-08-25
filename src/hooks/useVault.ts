@@ -1193,6 +1193,7 @@ export function useVault() {
     const { error } = await supabase.from('vault_scout_grades').insert({
       user_id: user.id,
       ...gradeData,
+      grade_source: 'self_reported',
       next_prompt_date: nextPrompt.toISOString(),
     });
     

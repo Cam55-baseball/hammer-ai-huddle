@@ -111,7 +111,7 @@ async function bulkFetchSnapshots(
       .lte('session_date', periodEnd)
       .eq('shared_with_scouts', true)
       .order('session_date', { ascending: false }),
-    supabase.from('vault_scout_grades').select('*').in('user_id', playerIds).order('created_at', { ascending: false }),
+    supabase.from('vault_scout_grades').select('*').in('user_id', playerIds).eq('grade_source', 'coach_evaluated').order('created_at', { ascending: false }),
     supabase.from('hie_weakness_clusters').select('*').in('user_id', playerIds).order('priority_score', { ascending: false }),
     supabase.from('games').select('id, user_id, game_date, opponent_name, league_level, game_summary')
       .in('user_id', playerIds).gte('game_date', periodStart).lte('game_date', periodEnd),
