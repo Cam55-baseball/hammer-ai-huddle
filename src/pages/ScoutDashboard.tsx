@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
+import { UserPlus, Check, Clock, BookMarked, User, UserMinus, ClipboardCheck } from 'lucide-react';
 import { emitObservability } from '@/hooks/useEmitObservability';
 
 import { ProfileCardSkeleton } from '@/components/skeletons/ProfileCardSkeleton';
