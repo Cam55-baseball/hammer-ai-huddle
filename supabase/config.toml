@@ -283,3 +283,6 @@ verify_jwt = false
 
 [functions.owner-bundle-access]
 verify_jwt = false
+
+[functions.pitch-velocity-prep]
+verify_jwt = true
