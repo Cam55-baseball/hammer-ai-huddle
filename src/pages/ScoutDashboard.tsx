@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
+import { UserPlus, Check, Clock, BookMarked, User, UserMinus, ClipboardCheck } from 'lucide-react';
 import { emitObservability } from '@/hooks/useEmitObservability';
 
 import { ProfileCardSkeleton } from '@/components/skeletons/ProfileCardSkeleton';
@@ -449,6 +449,15 @@ export default function ScoutDashboard() {
                       >
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('scout.viewLibrary')}</span>
+                      </Button>
+                      <Button
+                        onClick={() => navigate(`/scout-evaluation/${player.id}`)}
+                        size="sm"
+                        variant="secondary"
+                        className="flex-shrink-0"
+                      >
+                        <ClipboardCheck className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Evaluate</span>
                       </Button>
                       {player.id !== ownerId && (
                         <Button

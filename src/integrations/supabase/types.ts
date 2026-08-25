@@ -10098,45 +10098,6 @@ export type Database = {
         }
         Relationships: []
       }
-      scout_evaluations: {
-        Row: {
-          athlete_id: string
-          created_at: string
-          evaluation_date: string
-          game_context: string | null
-          id: string
-          notes: string | null
-          overall_grade: number | null
-          scout_id: string
-          sport: string
-          tool_grades: Json
-        }
-        Insert: {
-          athlete_id: string
-          created_at?: string
-          evaluation_date: string
-          game_context?: string | null
-          id?: string
-          notes?: string | null
-          overall_grade?: number | null
-          scout_id: string
-          sport: string
-          tool_grades?: Json
-        }
-        Update: {
-          athlete_id?: string
-          created_at?: string
-          evaluation_date?: string
-          game_context?: string | null
-          id?: string
-          notes?: string | null
-          overall_grade?: number | null
-          scout_id?: string
-          sport?: string
-          tool_grades?: Json
-        }
-        Relationships: []
-      }
       scout_follows: {
         Row: {
           confirmed_at: string | null
@@ -12882,6 +12843,8 @@ export type Database = {
           delivery_grade: number | null
           delivery_grade_future: number | null
           development_index: number | null
+          evaluation_context: string | null
+          evaluator_id: string | null
           fastball_grade: number | null
           fastball_grade_future: number | null
           grade_source: string | null
@@ -12897,6 +12860,7 @@ export type Database = {
           notes: string | null
           offspeed_grade: number | null
           offspeed_grade_future: number | null
+          overall_grade: number | null
           power_grade: number | null
           power_grade_future: number | null
           rise_ball_grade: number | null
@@ -12919,6 +12883,8 @@ export type Database = {
           delivery_grade?: number | null
           delivery_grade_future?: number | null
           development_index?: number | null
+          evaluation_context?: string | null
+          evaluator_id?: string | null
           fastball_grade?: number | null
           fastball_grade_future?: number | null
           grade_source?: string | null
@@ -12934,6 +12900,7 @@ export type Database = {
           notes?: string | null
           offspeed_grade?: number | null
           offspeed_grade_future?: number | null
+          overall_grade?: number | null
           power_grade?: number | null
           power_grade_future?: number | null
           rise_ball_grade?: number | null
@@ -12956,6 +12923,8 @@ export type Database = {
           delivery_grade?: number | null
           delivery_grade_future?: number | null
           development_index?: number | null
+          evaluation_context?: string | null
+          evaluator_id?: string | null
           fastball_grade?: number | null
           fastball_grade_future?: number | null
           grade_source?: string | null
@@ -12971,6 +12940,7 @@ export type Database = {
           notes?: string | null
           offspeed_grade?: number | null
           offspeed_grade_future?: number | null
+          overall_grade?: number | null
           power_grade?: number | null
           power_grade_future?: number | null
           rise_ball_grade?: number | null
@@ -15839,6 +15809,10 @@ export type Database = {
         }[]
       }
       get_public_bundle: { Args: { p_slug: string }; Returns: Json }
+      has_active_evaluator_role: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       has_any_checked: { Args: { cb: Json }; Returns: boolean }
       has_role: {
         Args: {

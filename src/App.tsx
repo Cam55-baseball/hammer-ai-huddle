@@ -59,6 +59,7 @@ const Auth = lazyWithRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const SelectUserRole = lazyWithRetry(() => import("./pages/SelectUserRole"));
 const SelectSportScout = lazyWithRetry(() => import("./pages/SelectSportScout"));
+const ScoutEvaluation = lazyWithRetry(() => import("./pages/ScoutEvaluation"));
 const ScoutApplication = lazyWithRetry(() => import("./pages/ScoutApplication"));
 const ScoutApplicationPending = lazyWithRetry(() => import("./pages/ScoutApplicationPending"));
 const SelectSport = lazyWithRetry(() => import("./pages/SelectSport"));
@@ -357,6 +358,8 @@ const App = () => {
               <Route path="/success" element={<Success />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
+              <Route path="/scout-evaluation" element={<ScoutEvaluation />} />
+              <Route path="/scout-evaluation/:athleteId" element={<ScoutEvaluation />} />
               <Route path="/coach-dashboard" element={<CoachDashboard />} />
               <Route path="/initialize-owner" element={<InitializeOwner />} />
               <Route path="/profile" element={<Profile />} />
