@@ -9886,6 +9886,7 @@ export type Database = {
       scale_reference: {
         Row: {
           avg_value: number
+          direction: string | null
           effective_date: string
           floor_value: number | null
           id: string
@@ -9895,6 +9896,7 @@ export type Database = {
         }
         Insert: {
           avg_value: number
+          direction?: string | null
           effective_date?: string
           floor_value?: number | null
           id?: string
@@ -9904,6 +9906,7 @@ export type Database = {
         }
         Update: {
           avg_value?: number
+          direction?: string | null
           effective_date?: string
           floor_value?: number | null
           id?: string

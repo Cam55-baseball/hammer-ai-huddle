@@ -1508,123 +1508,26 @@ Use the analyze_mechanics tool to return your structured analysis.`
     });
   } catch (error) {
     console.error('Error in analyze-realtime-playback:', error);
-    
-    // Return module-specific fallback based on what we know
-    const { module = 'hitting' } = await (async () => {
-      try {
-        return await req.clone().json();
-      } catch {
-        return {};
-      }
-    })();
-    
-    const fallbackByModule: Record<string, any> = {
-      hitting: {
-        overallScore: 7.0,
-        quickSummary: 'Good athletic position at setup - keep working on that hip rotation timing!',
-        mechanicsBreakdown: [
-          { category: 'Stance & Setup', score: 7, observation: 'Balanced stance, good base width', tip: 'Keep knees slightly bent throughout' },
-          { category: 'Load & Timing', score: 7, observation: 'Hands load back well', tip: 'Feel the weight shift to back hip' },
-          { category: 'Hip Rotation', score: 6, observation: 'Hips could fire earlier', tip: 'Start hip turn before hands' },
-          { category: 'Follow-Through', score: 7, observation: 'Good extension through ball', tip: 'Finish with belt buckle to pitcher' }
-        ],
-        redFlags: [],
-        positives: [
-          'Solid athletic stance with good balance',
-          'Hands load back properly during stride',
-          'Good extension through the hitting zone'
-        ],
-        keyStrength: 'Solid athletic stance with good balance throughout the swing',
-        priorityFix: 'Work on initiating the hip rotation before the hands start forward',
-        drills: [
-          {
-            title: 'Hip Fire Drill',
-            purpose: 'Teaches proper hip-first sequencing before hands release',
-            steps: [
-              'Set up on a tee with normal stance',
-              'Load and stride as normal',
-              'Pause at stride landing',
-              'Fire hips FIRST, then let hands follow',
-              'Focus on feeling hip rotation before any arm movement'
-            ],
-            reps_sets: '3 sets of 10 reps',
-            cues: ['Hips before hands', 'Feel the rotation, don\'t force it', 'Belt buckle to pitcher']
-          }
-        ],
-        drillRecommendation: 'Hip Fire Drill: Teaches proper hip-first sequencing before hands release'
-      },
-      pitching: {
-        overallScore: 7.0,
-        quickSummary: 'Nice balance at the top - keep driving that back hip toward the plate!',
-        mechanicsBreakdown: [
-          { category: 'Balance & Posture', score: 7, observation: 'Good posture at set position', tip: 'Stay tall through leg lift' },
-          { category: 'Leg Lift', score: 7, observation: 'Controlled knee lift', tip: 'Get knee to belt height' },
-          { category: 'Hip Lead & Stride', score: 6, observation: 'Could lead more with hips', tip: 'Feel hips move before hands break' },
-          { category: 'Follow-Through', score: 7, observation: 'Good finish position', tip: 'Full trunk flexion at release' }
-        ],
-        redFlags: [],
-        positives: [
-          'Excellent balance throughout delivery',
-          'Controlled leg lift with good tempo',
-          'Strong finish position'
-        ],
-        keyStrength: 'Excellent balance and posture throughout the delivery',
-        priorityFix: 'Lead with the hip toward the plate before breaking the hands',
-        drills: [
-          {
-            title: 'Rocker Drill',
-            purpose: 'Develops proper hip-lead timing before hand break',
-            steps: [
-              'Start in stretch position',
-              'Rock back and load onto back leg',
-              'Drive hips toward plate first',
-              'Let hands break naturally after hip leads',
-              'Focus on feeling momentum toward target'
-            ],
-            reps_sets: '3 sets of 8 reps',
-            cues: ['Hip leads everything', 'Back hip drives forward', 'Hands follow, don\'t lead']
-          }
-        ],
-        drillRecommendation: 'Rocker Drill: Develops proper hip-lead timing before hand break'
-      },
-      throwing: {
-        overallScore: 7.0,
-        quickSummary: 'Good arm path and alignment - keep that elbow up through release!',
-        mechanicsBreakdown: [
-          { category: 'Footwork Alignment', score: 7, observation: 'Feet aligned to target', tip: 'Step directly at your target' },
-          { category: 'Hip Rotation', score: 7, observation: 'Good hip turn', tip: 'Let hips open before shoulders' },
-          { category: 'Arm Path', score: 6, observation: 'Elbow could be higher', tip: 'Keep elbow at shoulder height at release' },
-          { category: 'Follow-Through', score: 7, observation: 'Full arm extension', tip: 'Finish with throwing hand by opposite knee' }
-        ],
-        redFlags: [],
-        positives: [
-          'Good lower body engagement',
-          'Feet aligned toward target',
-          'Full arm extension on release'
-        ],
-        keyStrength: 'Good lower body engagement and momentum toward target',
-        priorityFix: 'Keep the throwing elbow at or above shoulder height at release',
-        drills: [
-          {
-            title: 'One-Knee Throws',
-            purpose: 'Isolates arm path and elbow position during release',
-            steps: [
-              'Kneel on throwing-side knee',
-              'Face target with shoulders square',
-              'Focus on high elbow position',
-              'Throw to partner emphasizing elbow height',
-              'Hold finish to check arm slot'
-            ],
-            reps_sets: '3 sets of 10 throws',
-            cues: ['Elbow at shoulder level', 'Lead with elbow, not hand', 'Finish arm through']
-          }
-        ],
-        drillRecommendation: 'One-Knee Throws: Isolates arm path and elbow position during release'
-      }
+
+    // Do NOT fabricate a score or feedback. Return a clear, honest "analysis unavailable"
+    // result so the client never mistakes a failure for a real analysis of the video.
+    const unavailable = {
+      analysis_unavailable: true,
+      overallScore: null,
+      quickSummary: 'Analysis unavailable, please try again.',
+      mechanicsBreakdown: [],
+      redFlags: [],
+      positives: [],
+      keyStrength: null,
+      priorityFix: null,
+      drills: [],
+      drillRecommendation: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
-    
-    return new Response(JSON.stringify(fallbackByModule[module] || fallbackByModule.hitting), {
+
+    return new Response(JSON.stringify(unavailable), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 503,
     });
   }
 });
