@@ -22,7 +22,7 @@ export interface MetricSpec {
 }
 
 export interface DisciplineContract {
-  id: "bp" | "bh" | "throwing" | "sb-pitching" | "sh";
+  id: "bp" | "bh" | "throwing" | "sp" | "sb-pitching" | "sh";
   label: string;
   metrics: MetricSpec[];
 }
