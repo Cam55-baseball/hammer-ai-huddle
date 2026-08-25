@@ -450,6 +450,15 @@ export default function ScoutDashboard() {
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('scout.viewLibrary')}</span>
                       </Button>
+                      <Button
+                        onClick={() => navigate(`/scout-evaluation/${player.id}`)}
+                        size="sm"
+                        variant="secondary"
+                        className="flex-shrink-0"
+                      >
+                        <ClipboardCheck className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Evaluate</span>
+                      </Button>
                       {player.id !== ownerId && (
                         <Button
                           onClick={() => handleUnfollowClick(player)}
