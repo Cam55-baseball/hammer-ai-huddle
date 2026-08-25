@@ -1,12 +1,13 @@
 import type { ReportCardSpec } from "./types";
 import { bpReportCard } from "./disciplines/bp";
 import { bhReportCard } from "./disciplines/bh";
+import { spReportCard } from "./disciplines/sp";
 import { throwingReportCard } from "./disciplines/throwing";
 
 /**
  * Resolve the report card spec for a given sport + module.
- * Softball pitching/hitting/throwing derive from baseball equivalents until
- * sport-specific deltas (windmill etc.) are ratified.
+ * Softball pitching uses its windmill-specific SP discipline; softball
+ * hitting derives from BH until its sport-specific deltas are ratified.
  */
 export function getReportCardSpec(
   sport: string | undefined,
@@ -16,9 +17,7 @@ export function getReportCardSpec(
   const m = (module ?? "").toLowerCase();
 
   if (m === "pitching") {
-    return s === "softball"
-      ? { ...bpReportCard, disciplineLabel: "Softball Pitching" }
-      : bpReportCard;
+    return s === "softball" ? spReportCard : bpReportCard;
   }
   if (m === "hitting") {
     return s === "softball"

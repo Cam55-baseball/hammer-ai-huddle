@@ -25,7 +25,7 @@ export interface MetricSpec {
 }
 
 export interface DisciplineContract {
-  id: "bp" | "bh" | "throwing" | "sb-pitching" | "sh";
+  id: "bp" | "bh" | "throwing" | "sp" | "sb-pitching" | "sh";
   label: string;
   metrics: MetricSpec[];
 }
@@ -399,7 +399,7 @@ export const throwingContract: DisciplineContract = {
 /** Resolve contract from runtime module/sport. */
 export function getContractFor(module: string, sport: string): DisciplineContract | null {
   if (module === "pitching" && sport === "baseball") return bpContract;
-  if (module === "pitching" && sport === "softball") return { ...bpContract, id: "sb-pitching", label: "Softball Pitching" };
+  if (module === "pitching" && sport === "softball") return spContract;
   if (module === "hitting" && sport === "baseball") return bhContract;
   if (module === "hitting" && sport === "softball") return { ...bhContract, id: "sh", label: "Softball Hitting" };
   if (module === "throwing") return throwingContract;
