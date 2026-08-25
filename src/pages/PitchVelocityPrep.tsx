@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { noteProtectedEditing } from '@/lib/auth/protectedEditing';
 import { probeVideoMetadata } from '@/lib/biomech/probeVideoMetadata';
-import { extractKeyFramesDeterministic, getVideoSha256, type ExtractedFrame } from '@/lib/frameExtraction';
+import { extractKeyFramesDeterministic, type ExtractedFrame } from '@/lib/frameExtraction';
 import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 import { cn } from '@/lib/utils';
 
@@ -162,13 +162,13 @@ export default function PitchVelocityPrep() {
         throw new Error('Could not read a reliable frame rate from this video.');
       }
 
-      const videoSha256Hex = await getVideoSha256(videoFile);
-      const sampledFrames = await extractKeyFramesDeterministic(videoFile, {
+      const extraction = await extractKeyFramesDeterministic({
+        videoFile,
         fps_true: probed.fps_true,
         duration_sec: probed.duration_sec,
-        landingTimeSec: null,
-        rotationHint: probed.rotation_hint ?? undefined,
+        landingTime: null,
       });
+      const sampledFrames = extraction.frames;
 
       if (sampledFrames.length < 3) {
         throw new Error('Not enough readable frames were found. Try a brighter, steadier clip.');
@@ -199,7 +199,7 @@ export default function PitchVelocityPrep() {
           module: 'pitching',
           side_view: 'auto',
           landing_time_seconds: null,
-          rotation_deg: probed.rotation_hint ?? 0,
+          rotation_deg: 0,
           video_type: null,
           metadata: {
             analysis_kind: 'pitch_velocity_calibration',
@@ -207,11 +207,12 @@ export default function PitchVelocityPrep() {
             storage_path: storagePath,
             original_filename: videoFile.name,
             file_size: videoFile.size,
-            video_sha256_hex: videoSha256Hex,
+            video_sha256_hex: probed.sha256_hex,
             fps_true: probed.fps_true,
             duration_sec: probed.duration_sec,
-            source_width: probed.source_width,
-            source_height: probed.source_height,
+            source_width: probed.width,
+            source_height: probed.height,
+            orientation: probed.orientation,
           },
         })
         .select('id')
@@ -227,7 +228,7 @@ export default function PitchVelocityPrep() {
           frames: sampledFrames.map((frame) => ({
             frame_index: frame.frame_index,
             timestamp_seconds: frame.timestamp_seconds,
-            data_url: frame.data_url,
+            data_url: frame.dataUrl,
             width: frame.width,
             height: frame.height,
           })),
@@ -450,7 +451,7 @@ export default function PitchVelocityPrep() {
                   <div className="grid grid-cols-2 gap-2">
                     {frames.map((frame) => (
                       <div key={frame.frame_index} className="overflow-hidden rounded-lg border bg-muted/20">
-                        <img src={frame.data_url} alt={`Sample frame ${frame.frame_index}`} className="aspect-video w-full object-cover" />
+                        <img src={frame.dataUrl} alt={`Sample frame ${frame.frame_index}`} className="aspect-video w-full object-cover" />
                         <div className="px-2 py-1 text-[10px] text-muted-foreground">
                           #{frame.frame_index} · {frame.timestamp_seconds.toFixed(3)}s
                         </div>
