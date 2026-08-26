@@ -337,6 +337,7 @@ const App = () => {
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
+              <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />
