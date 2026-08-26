@@ -131,6 +131,47 @@ export function gradeToColor(grade: number): string {
 }
 
 /**
+ * Raw CSS color matching gradeToColor — for SVG strokes, ring glows, and
+ * meter fills where a Tailwind text class can't reach. Keep in lockstep
+ * with gradeToColor above.
+ */
+export function gradeToHex(grade: number): string {
+  if (grade >= 70) return '#34d399'; // emerald-400
+  if (grade >= 60) return '#22c55e'; // green-500
+  if (grade >= 55) return '#3b82f6'; // blue-500
+  if (grade >= 50) return '#06b6d4'; // cyan-500
+  if (grade >= 45) return 'hsl(var(--foreground))';
+  if (grade >= 40) return '#f59e0b'; // amber-500
+  if (grade >= 30) return '#f97316'; // orange-500
+  return '#ef4444'; // red-500
+}
+
+/**
+ * Background wash + border classes matching gradeToColor, for hero panels
+ * and anchored score surfaces. Meaningful (tier-driven), not decorative.
+ */
+export function gradeToSurface(grade: number): string {
+  if (grade >= 70) return 'border-emerald-400/40 bg-emerald-400/5';
+  if (grade >= 60) return 'border-green-500/40 bg-green-500/5';
+  if (grade >= 55) return 'border-blue-500/40 bg-blue-500/5';
+  if (grade >= 50) return 'border-cyan-500/40 bg-cyan-500/5';
+  if (grade >= 45) return 'border-border bg-muted/30';
+  if (grade >= 40) return 'border-amber-500/40 bg-amber-500/5';
+  if (grade >= 30) return 'border-orange-500/40 bg-orange-500/5';
+  return 'border-red-500/40 bg-red-500/5';
+}
+
+/**
+ * Map a 0–100 model efficiency score onto the 20–80 scout scale so the
+ * score can speak in the same grade language used everywhere else.
+ * 100 → 80 (elite), 50 → 50 (average), 0 → 20 (poor).
+ */
+export function efficiencyToScoutGrade(score: number): number {
+  const clamped = Math.max(0, Math.min(100, score));
+  return Math.round(20 + clamped * 0.6);
+}
+
+/**
  * Batch-grade all results for a test.
  */
 export function gradeAllResults(
