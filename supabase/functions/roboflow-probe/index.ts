@@ -93,29 +93,39 @@ Deno.serve(async (req) => {
   }
   report.universe_search = universe;
 
-  // 5) Optional live inference test: POST { test_model_id, images_b64: string[] }
+  // 5) Optional live inference test: POST { test_model_ids: string[], images_b64: string[] }
   //    Sends each base64 JPEG to detect.roboflow.com hosted inference and
   //    returns raw predictions + per-image timing. 1 hosted call = 1 credit.
-  let body: { test_model_id?: string; images_b64?: string[] } = {};
+  let body: { test_model_ids?: string[]; test_model_id?: string; images_b64?: string[] } = {};
   try { body = await req.json(); } catch { /* empty body fine */ }
-  if (body.test_model_id && Array.isArray(body.images_b64) && body.images_b64.length > 0) {
+  const modelIds = body.test_model_ids ?? (body.test_model_id ? [body.test_model_id] : []);
+  if (modelIds.length > 0 && Array.isArray(body.images_b64) && body.images_b64.length > 0) {
     const tests: Array<Record<string, unknown>> = [];
-    for (const b64 of body.images_b64.slice(0, 6)) {
-      const started = Date.now();
-      const res = await fetch(
-        `https://detect.roboflow.com/${body.test_model_id}?api_key=${apiKey}&confidence=20&overlap=30`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: b64,
-        },
-      );
-      const text = await res.text();
-      let data: unknown = null;
-      try { data = JSON.parse(text); } catch { data = text.slice(0, 400); }
-      tests.push({ status: res.status, ms: Date.now() - started, data });
+    for (const modelId of modelIds.slice(0, 5)) {
+      for (const b64 of body.images_b64.slice(0, 8)) {
+        const started = Date.now();
+        const res = await fetch(
+          `https://detect.roboflow.com/${modelId}?api_key=${apiKey}&confidence=15&overlap=30`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: b64,
+          },
+        );
+        const text = await res.text();
+        let data: unknown = null;
+        try { data = JSON.parse(text); } catch { data = text.slice(0, 400); }
+        const preds = (data as { predictions?: unknown[] })?.predictions;
+        tests.push({
+          model: modelId,
+          status: res.status,
+          ms: Date.now() - started,
+          detections: Array.isArray(preds) ? preds.length : null,
+          data,
+        });
+      }
     }
-    report.inference_test = { model: body.test_model_id, results: tests };
+    report.inference_test = { results: tests };
   }
 
   return json(report);
