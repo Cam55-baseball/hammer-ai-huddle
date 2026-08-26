@@ -10,13 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Heart, Target, Camera, User, Play, Square, Sun, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Target, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
@@ -31,7 +30,7 @@ import { SideContextPicker } from "@/components/shared/SideContextPicker";
 // AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
 // TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
 // restored so users see live elapsed/countdown while the model runs.
-import { branding } from "@/branding";
+
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
@@ -39,7 +38,7 @@ import { runPoseInference } from "@/lib/biomech/pose/poseRunner";
 import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
-import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
+import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
@@ -1382,247 +1381,15 @@ export default function AnalyzeVideo() {
             )}
 
             {analysis && (
-              <Card className="p-4 sm:p-6">
-                <div className="mb-6 space-y-4">
-                  <h3 className="text-2xl font-bold">{t('videoAnalysis.analysisResults')}</h3>
-                  {/* Phase 49: AnalysisToggle + HammerReportCard branch removed. Only raw LLM detail view ships. */}
-                </div>
-
-                <div className="space-y-6">
-                  {/* Summary - Key Findings shown first for actionable feedback */}
-                  {analysis.summary && analysis.summary.length > 0 && (
-                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
-
-                      <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.keyFindings')}</h4>
-                      <ul className="space-y-2">
-                        {analysis.summary.map((point: string, index: number) => (
-                          <li 
-                            key={index}
-                            className="flex items-start gap-2"
-                          >
-                            <span className="text-primary mt-1 text-lg">•</span>
-                            <span className="text-base">{point}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Phase 51 — deterministic tempo readback, read directly
-                      from `video_metric_runs`. Shows a plain value when measured
-                      or a simple "could not be read" line when D-POSE could not
-                      anchor the pitch. Only mounted for BP (pitching). */}
-                  {persistedTempo && module === 'pitching' && (
-                    <div className="p-4 rounded-lg border border-border bg-background">
-                      <h4 className="text-lg font-semibold mb-1">Tempo</h4>
-                      {persistedTempo.value != null ? (
-                        <p className="text-2xl font-bold tabular-nums">
-                          {persistedTempo.value.toFixed(2)}<span className="text-sm font-normal text-muted-foreground"> sec</span>
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Tempo could not be read from this clip.
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Recording guidance for the deterministic Tempo tile.
-                      Presentation-only: keyed off the existing persistedTempo
-                      state, never mutates measurement logic or copy. */}
-                  {persistedTempo && module === 'pitching' && (() => {
-                    const tips = [
-                      { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side (3B side for RHP, 1B side for LHP), perpendicular to the rubber-to-plate line.' },
-                      { Icon: User, label: 'Full body in frame', body: 'Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.' },
-                      { Icon: Play, label: 'Start before the leg lift', body: "Begin recording at the set position; don't trim the front of the clip." },
-                      { Icon: Square, label: 'End after release', body: 'Keep filming through ball release and into follow-through.' },
-                      { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; phone in 1080p/60fps if available; lock exposure on the pitcher.' },
-                    ];
-                    return (
-                      <div className="p-4 rounded-lg border border-border bg-background">
-                        <Collapsible>
-                          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full text-left">
-                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
-                            How to record for reliable Tempo
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="mt-3">
-                            <div className="space-y-3">
-                              <p className="text-xs text-muted-foreground">
-                                Tempo needs to see your peak leg lift and front-foot strike. A few small framing choices make this consistent.
-                              </p>
-                              <ul className="space-y-2">
-                                {tips.map(({ Icon, label, body }) => (
-                                  <li key={label} className="flex items-start gap-2">
-                                    <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                    <span className="text-xs">
-                                      <span className="font-semibold">{label}</span>
-                                      <span className="text-muted-foreground"> — {body}</span>
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                              <p className="text-[11px] text-muted-foreground/80">
-                                If Tempo keeps failing to read with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft.
-                              </p>
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </div>
-                    );
-                  })()}
-
-                  
-                  <div>
-                    <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.detailedAnalysis')}</h4>
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {analysis.feedback}
-                    </p>
-                  </div>
-
-                  {/* Positives Section */}
-                  {analysis.positives && analysis.positives.length > 0 && (
-                    <div className="bg-green-50 dark:bg-green-950/30 border-2 border-green-500 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <svg 
-                            className="h-6 w-6 text-green-600 dark:text-green-400" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
-                            stroke="currentColor"
-                          >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={2} 
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2">
-                            {t('videoAnalysis.whatYoureDoingWell')}
-                          </h4>
-                          <ul className="space-y-2">
-                            {analysis.positives.map((positive: string, index: number) => (
-                              <li 
-                                key={index} 
-                                className="text-sm text-green-900 dark:text-green-100 flex items-start gap-2"
-                              >
-                                <span className="text-green-600 dark:text-green-400 mt-0.5">✓</span>
-                                <span>{positive}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {analysis.drills && analysis.drills.length > 0 && (
-                    <div className="pt-4 border-t">
-                      <h4 className="text-lg font-semibold mb-2">{t('videoAnalysis.recommendedDrills')}</h4>
-                      <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <Heart className="h-4 w-4" />
-                        {t('videoAnalysis.drillSaveHint')}
-                      </p>
-                      <div className="space-y-4">
-                        {analysis.drills.map((drill: any, index: number) => {
-                          const isSaved = savedDrillIds.has(drill.title);
-                          return (
-                            <Card key={index} className="p-4 bg-muted/50">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1">
-                                  <h5 className="font-semibold text-base mb-1">{drill.title}</h5>
-                                  <p className="text-sm text-muted-foreground mb-3">{drill.purpose}</p>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleSaveDrill(drill)}
-                                  disabled={isSaved}
-                                  className={isSaved ? "text-red-500" : "text-muted-foreground hover:text-red-500"}
-                                  title={isSaved ? t('vault.drills.saved', 'Saved to Vault') : t('vault.drills.save', 'Save to Vault')}
-                                >
-                                  <Heart className={`h-5 w-5 ${isSaved ? 'fill-current' : ''}`} />
-                                </Button>
-                              </div>
-                              
-                              <div className="space-y-2 mb-3">
-                                <p className="text-sm font-medium">{t('videoAnalysis.steps')}</p>
-                                <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                                  {drill.steps?.map((step: string, stepIndex: number) => (
-                                    <li key={stepIndex}>{step}</li>
-                                  ))}
-                                </ol>
-                              </div>
-
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="bg-primary/10 text-primary px-2 py-1 rounded">
-                                  {drill.reps_sets}
-                                </span>
-                                <span className="bg-secondary/50 text-secondary-foreground px-2 py-1 rounded">
-                                  {drill.equipment}
-                                </span>
-                              </div>
-
-                              {drill.cues && drill.cues.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-border/50">
-                                  <p className="text-xs font-medium mb-1">{t('videoAnalysis.coachingCues')}</p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {drill.cues.map((cue: string, cueIndex: number) => (
-                                      <span key={cueIndex} className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
-                                        {cue}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Ask the Coach - Post-Analysis AI Chat */}
-                  <AnalysisCoachChat
-                    module={module || 'hitting'}
-                    analysisContext={{
-                      // Phase 51 — no fabricated numeric biomechanical claim seeded.
-                      feedback: analysis.feedback,
-                      positives: analysis.positives,
-                      drills: analysis.drills,
-                      summary: analysis.summary,
-                    }}
-                  />
-
-                  {/* Per-rep video suggestions intentionally removed — Hammer surfaces picks post-session and long-term only. */}
-
-                  {/* Phase 49: TheScorecard removed (LLM-derived score/trend not measurement-backed). */}
-
-                  <div className="pt-4 border-t">
-                    <p className="text-xs text-muted-foreground/70 leading-relaxed">
-                      <strong>{t('videoAnalysis.disclaimer')}</strong> {branding.appName} waives all liability for any injuries that may occur from performing training techniques demonstrated or recommended through this platform. Users assume full responsibility for their safety and should consult with qualified professionals before beginning any training program.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
-
-                    <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
-                      <BookMarked className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
-                      <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
-                    </Button>
-                    <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
-                      <Home className="h-4 w-4 xs:hidden" />
-                      <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
-                      <span className="xs:hidden">{t('navigation.dashboard')}</span>
-                    </Button>
-                  </div>
-
-                </div>
-
-              </Card>
+              <AnalysisResultsPanel
+                analysis={analysis}
+                moduleKey={module || 'hitting'}
+                persistedTempo={persistedTempo}
+                savedDrillIds={savedDrillIds}
+                onSaveDrill={handleSaveDrill}
+                onSaveToLibrary={() => setSaveDialogOpen(true)}
+                onReturnToDashboard={() => navigate('/dashboard')}
+              />
             )}
           </div>
         )}

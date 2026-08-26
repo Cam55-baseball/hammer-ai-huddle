@@ -72,6 +72,7 @@ const Activate = lazyWithRetry(() => import("./pages/Activate"));
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
+const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
 const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
@@ -336,6 +337,7 @@ const App = () => {
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
+              <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />
