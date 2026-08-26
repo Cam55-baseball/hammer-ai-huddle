@@ -72,6 +72,7 @@ const Activate = lazyWithRetry(() => import("./pages/Activate"));
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
+const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
 const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
