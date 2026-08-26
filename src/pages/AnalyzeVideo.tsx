@@ -116,6 +116,9 @@ export default function AnalyzeVideo() {
   const [savedDrillIds, setSavedDrillIds] = useState<Set<string>>(new Set());
   const [landingTime, setLandingTime] = useState<number | null>(null);
   const [extractingFrames, setExtractingFrames] = useState(false);
+  // Every analysis entry (sidebar buttons, dashboard module cards) lands on a
+  // method chooser first: upload a video, or use the DelayCam live-delay flow.
+  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "delaycam">("choose");
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
@@ -325,6 +328,7 @@ export default function AnalyzeVideo() {
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
+    setCaptureMode("choose");
     toast.success(t('videoAnalysis.videoRemoved', "Video removed. Select a new video to analyze."));
   };
 
