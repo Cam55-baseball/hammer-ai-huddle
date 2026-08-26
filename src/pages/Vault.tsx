@@ -469,7 +469,9 @@ export default function Vault() {
               {/* Correlation Analysis & Wellness Goals */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <VaultCorrelationAnalysisCard />
-                <VaultWellnessGoalsCard />
+                <div ref={wellnessGoalsRef}>
+                  <VaultWellnessGoalsCard />
+                </div>
               </div>
 
               {/* Physio Adult Tracking Section */}
