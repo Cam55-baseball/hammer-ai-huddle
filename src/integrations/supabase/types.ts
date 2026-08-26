@@ -2644,6 +2644,90 @@ export type Database = {
           },
         ]
       }
+      cv_velocity_measurements: {
+        Row: {
+          calibration_session_id: string
+          confidence: number | null
+          created_at: string
+          detections: Json
+          frames_detected: number
+          frames_missed: number
+          frames_total: number
+          id: string
+          method: string
+          missingness_reason: string | null
+          model_id: string
+          pair_samples: Json | null
+          reference_distance_ft: number
+          roboflow_calls: number
+          sport: string
+          status: string
+          track_summary: Json | null
+          user_id: string
+          velocity_mph: number | null
+          video_id: string
+        }
+        Insert: {
+          calibration_session_id: string
+          confidence?: number | null
+          created_at?: string
+          detections: Json
+          frames_detected: number
+          frames_missed: number
+          frames_total: number
+          id?: string
+          method: string
+          missingness_reason?: string | null
+          model_id: string
+          pair_samples?: Json | null
+          reference_distance_ft: number
+          roboflow_calls?: number
+          sport: string
+          status: string
+          track_summary?: Json | null
+          user_id: string
+          velocity_mph?: number | null
+          video_id: string
+        }
+        Update: {
+          calibration_session_id?: string
+          confidence?: number | null
+          created_at?: string
+          detections?: Json
+          frames_detected?: number
+          frames_missed?: number
+          frames_total?: number
+          id?: string
+          method?: string
+          missingness_reason?: string | null
+          model_id?: string
+          pair_samples?: Json | null
+          reference_distance_ft?: number
+          roboflow_calls?: number
+          sport?: string
+          status?: string
+          track_summary?: Json | null
+          user_id?: string
+          velocity_mph?: number | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_velocity_measurements_calibration_session_id_fkey"
+            columns: ["calibration_session_id"]
+            isOneToOne: false
+            referencedRelation: "cv_calibration_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_velocity_measurements_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_standard_checks: {
         Row: {
           check_date: string

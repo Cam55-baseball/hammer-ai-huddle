@@ -21,7 +21,7 @@ const FrameSchema = z.object({
 const BodySchema = z.object({
   video_id: z.string().uuid(),
   reference_distance_ft: z.number().gt(0).max(500),
-  frames: z.array(FrameSchema).min(3).max(9),
+  frames: z.array(FrameSchema).min(3).max(60),
 });
 
 function json(body: unknown, status = 200): Response {

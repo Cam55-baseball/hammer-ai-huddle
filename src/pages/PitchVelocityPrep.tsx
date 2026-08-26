@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Crosshair,
   FileVideo,
+  Gauge,
   Loader2,
   Ruler,
   Upload,
@@ -29,7 +30,7 @@ import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 import { cn } from '@/lib/utils';
 
 type Sport = 'baseball' | 'softball';
-type PrepStage = 'idle' | 'extracting' | 'uploading' | 'registering' | 'storing' | 'complete';
+type PrepStage = 'idle' | 'extracting' | 'uploading' | 'registering' | 'storing' | 'measuring' | 'complete';
 
 const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 const DEFAULT_DISTANCE: Record<Sport, string> = {
@@ -43,6 +44,7 @@ const STAGE_PROGRESS: Record<PrepStage, number> = {
   uploading: 48,
   registering: 66,
   storing: 84,
+  measuring: 94,
   complete: 100,
 };
 
@@ -51,6 +53,22 @@ interface CalibrationResult {
   calibration_status: string;
   reference_distance_ft: number;
   frame_count: number;
+}
+
+interface MeasurementResult {
+  measurement_id: string;
+  status: 'measured' | 'low_confidence' | 'unavailable';
+  velocity_mph: number | null;
+  confidence: number | null;
+  missingness_reason: 'ball_not_detected' | 'insufficient_temporal_resolution' | null;
+  method: string;
+  model_id: string;
+  sport: Sport;
+  frames_total: number;
+  frames_detected: number;
+  frames_missed: number;
+  roboflow_calls: number;
+  track: { start_frame_index: number; end_frame_index: number; length: number } | null;
 }
 
 function formatBytes(bytes: number): string {
@@ -79,6 +97,7 @@ export default function PitchVelocityPrep() {
   const [frames, setFrames] = useState<ExtractedFrame[]>([]);
   const [stage, setStage] = useState<PrepStage>('idle');
   const [result, setResult] = useState<CalibrationResult | null>(null);
+  const [measurement, setMeasurement] = useState<MeasurementResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,6 +145,7 @@ export default function PitchVelocityPrep() {
     setVideoPreview(URL.createObjectURL(file));
     setFrames([]);
     setResult(null);
+    setMeasurement(null);
     setError(null);
     setStage('idle');
   };
@@ -137,6 +157,7 @@ export default function PitchVelocityPrep() {
     setVideoPreview(null);
     setFrames([]);
     setResult(null);
+    setMeasurement(null);
     setError(null);
     setStage('idle');
   };
@@ -167,6 +188,7 @@ export default function PitchVelocityPrep() {
         fps_true: probed.fps_true,
         duration_sec: probed.duration_sec,
         landingTime: null,
+        sampling: 'dense',
       });
       const sampledFrames = extraction.frames;
 
@@ -241,8 +263,8 @@ export default function PitchVelocityPrep() {
       setResult(data as CalibrationResult);
       setStage('complete');
       toast({
-        title: 'Calibration packet ready',
-        description: `${sampledFrames.length} frames are stored for the future velocity model.`,
+        title: 'Measurement packet ready',
+        description: `${sampledFrames.length} frames stored — running ball detection is the next step.`,
       });
     } catch (prepareError) {
       const message = prepareError instanceof Error ? prepareError.message : 'Calibration preparation failed.';
@@ -253,6 +275,38 @@ export default function PitchVelocityPrep() {
       if (!videoId && storagePath) {
         await supabase.storage.from('videos').remove([storagePath]);
       }
+    }
+  };
+
+  const handleMeasure = async () => {
+    if (!user || !result) return;
+    noteProtectedEditing(5 * 60_000);
+    setError(null);
+    setStage('measuring');
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('pitch-velocity-measure', {
+        body: { calibration_session_id: result.session_id },
+      });
+      if (invokeError) throw new Error(invokeError.message);
+      if (data?.error) throw new Error(String(data.error));
+      setMeasurement(data as MeasurementResult);
+      setStage('complete');
+      if ((data as MeasurementResult).status === 'measured') {
+        toast({
+          title: 'Velocity measured',
+          description: `${(data as MeasurementResult).velocity_mph} mph from ball flight tracking.`,
+        });
+      } else {
+        toast({
+          title: 'No reliable reading',
+          description: 'The ball could not be tracked well enough to report a number.',
+        });
+      }
+    } catch (measureError) {
+      const message = measureError instanceof Error ? measureError.message : 'Velocity measurement failed.';
+      setError(message);
+      setStage('complete');
+      toast({ title: 'Could not measure velocity', description: message, variant: 'destructive' });
     }
   };
 
@@ -297,7 +351,7 @@ export default function PitchVelocityPrep() {
               <div>
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Pitch Velocity Calibration</h1>
                 <p className="text-sm text-muted-foreground sm:text-base">
-                  Single-camera measurement plumbing — no velocity number yet.
+                  Single-camera velocity, measured from real ball flight.
                 </p>
               </div>
             </div>
@@ -309,10 +363,10 @@ export default function PitchVelocityPrep() {
 
         <Alert>
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Plumbing only</AlertTitle>
+          <AlertTitle>Honest readings only</AlertTitle>
           <AlertDescription>
-            This flow uploads one pitching clip, stores deterministic sample frames, and attaches the known field distance.
-            Ball detection and pitch velocity are intentionally not calculated in this first pass.
+            A velocity number appears only when the ball is tracked cleanly across flight. If detection is weak,
+            this flow says so instead of guessing — trim to one pitch, keep the camera locked, and keep the ball visible.
           </AlertDescription>
         </Alert>
 
@@ -323,7 +377,8 @@ export default function PitchVelocityPrep() {
                 <FileVideo className="h-5 w-5 text-primary" /> Source clip
               </CardTitle>
               <CardDescription>
-                Use a steady side-view pitch clip under {formatBytes(MAX_SOURCE_BYTES)}. Seven evenly spaced frames are sampled.
+                Use a steady clip of a single pitch under {formatBytes(MAX_SOURCE_BYTES)}. Frames are sampled densely
+                through the flight (about 12 per second, up to 48) so the ball can be tracked.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -472,7 +527,7 @@ export default function PitchVelocityPrep() {
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between gap-3">
                     <span className="text-muted-foreground">Status</span>
-                    <Badge variant="outline">{result.calibration_status}</Badge>
+                    <Badge variant="outline">{measurement?.status ?? result.calibration_status}</Badge>
                   </div>
                   <div className="flex justify-between gap-3">
                     <span className="text-muted-foreground">Frames stored</span>
@@ -485,6 +540,59 @@ export default function PitchVelocityPrep() {
                   <p className="pt-2 text-xs text-muted-foreground">
                     Session ID: <span className="font-mono">{result.session_id}</span>
                   </p>
+
+                  {!measurement ? (
+                    <Button className="mt-2 w-full" onClick={handleMeasure} disabled={stage === 'measuring'}>
+                      {stage === 'measuring' ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Gauge className="mr-2 h-4 w-4" />
+                      )}
+                      {stage === 'measuring' ? 'Detecting ball flight…' : 'Measure pitch velocity'}
+                    </Button>
+                  ) : measurement.status === 'measured' && measurement.velocity_mph != null ? (
+                    <div className="mt-2 space-y-3 rounded-lg border border-primary/30 bg-background/60 p-4">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold tracking-tight text-primary">
+                          {measurement.velocity_mph.toFixed(1)}
+                          <span className="ml-1 text-base font-medium text-muted-foreground">mph</span>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Camera estimate · {Math.round((measurement.confidence ?? 0) * 100)}% confidence · verify against radar
+                        </p>
+                      </div>
+                      <div className="flex justify-between gap-3 text-xs">
+                        <span className="text-muted-foreground">Ball tracked in</span>
+                        <span className="font-medium">
+                          {measurement.frames_detected} of {measurement.frames_total} frames
+                        </span>
+                      </div>
+                      {measurement.track && (
+                        <div className="flex justify-between gap-3 text-xs">
+                          <span className="text-muted-foreground">Flight track</span>
+                          <span className="font-medium">{measurement.track.length} consecutive detections</span>
+                        </div>
+                      )}
+                      <Button variant="outline" size="sm" className="w-full" onClick={handleMeasure} disabled={stage === 'measuring'}>
+                        Re-run measurement
+                      </Button>
+                    </div>
+                  ) : (
+                    <Alert variant="destructive" className="mt-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>No reliable reading</AlertTitle>
+                      <AlertDescription className="text-xs">
+                        {measurement.missingness_reason === 'insufficient_temporal_resolution'
+                          ? 'The ball was only visible for a split second — not enough tracked flight to measure honestly.'
+                          : 'The ball could not be found in enough frames to establish its flight path.'}
+                        {' '}Tracked in {measurement.frames_detected} of {measurement.frames_total} frames.
+                        Try a locked-off camera, brighter light, and a clip trimmed to one pitch.
+                      </AlertDescription>
+                      <Button variant="outline" size="sm" className="mt-3 w-full" onClick={handleMeasure} disabled={stage === 'measuring'}>
+                        Try again
+                      </Button>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             )}
