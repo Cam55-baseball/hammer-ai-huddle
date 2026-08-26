@@ -30,7 +30,7 @@ import { SideContextPicker } from "@/components/shared/SideContextPicker";
 // AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
 // TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
 // restored so users see live elapsed/countdown while the model runs.
-import { branding as _brandingRemoved } from "@/branding";
+
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
