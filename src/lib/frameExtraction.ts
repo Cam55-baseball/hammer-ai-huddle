@@ -32,6 +32,11 @@ export interface DeterministicExtractInput {
   fps_true: number;
   duration_sec: number;
   landingTime?: number | null;
+  /**
+   * 'key' (default) — 7 canonical analysis frames.
+   * 'dense' — uniform ~12fps sampling (max 48) for ball-flight measurement.
+   */
+  sampling?: "key" | "dense";
 }
 
 export interface DeterministicExtractResult {
@@ -45,9 +50,11 @@ export interface DeterministicExtractResult {
  * Encoding is PNG → SHA-256 of the raw PNG bytes.
  */
 export const extractKeyFramesDeterministic = async (
-  { videoFile, fps_true, duration_sec, landingTime }: DeterministicExtractInput,
+  { videoFile, fps_true, duration_sec, landingTime, sampling = "key" }: DeterministicExtractInput,
 ): Promise<DeterministicExtractResult> => {
-  const requested = buildFrameSelection(fps_true, duration_sec, landingTime ?? null);
+  const requested = sampling === "dense"
+    ? buildDenseFrameSelection(fps_true, duration_sec)
+    : buildFrameSelection(fps_true, duration_sec, landingTime ?? null);
   if (requested.length === 0) {
     return { requested: [], frames: [] };
   }

@@ -86,3 +86,51 @@ export function buildFrameSelection(
     timestamp_seconds: roundToSixDecimals(frame_index / fps_true),
   }));
 }
+
+/**
+ * Dense uniform sampling for measurement work (e.g. pitch velocity), where a
+ * ball in flight must appear in as many consecutive samples as possible.
+ *
+ * Targets `targetFps` samples per second of footage, but never exceeds
+ * `maxFrames` total — longer clips automatically thin out so the whole clip
+ * is always covered. Pure integer math: same probe → identical indices.
+ */
+export function selectDenseFrameIndices(
+  fps_true: number,
+  duration_sec: number,
+  targetFps = 12,
+  maxFrames = 48,
+): number[] {
+  if (!Number.isFinite(fps_true) || fps_true <= 0) return [];
+  if (!Number.isFinite(duration_sec) || duration_sec <= 0) return [];
+
+  const totalFrames = Math.max(1, Math.floor(duration_sec * fps_true));
+  const maxIndex = totalFrames - 1;
+
+  // Integer stride between sampled frames.
+  let stride = Math.max(1, Math.round(fps_true / targetFps));
+  const wouldProduce = Math.floor(maxIndex / stride) + 1;
+  if (wouldProduce > maxFrames) {
+    stride = Math.ceil(maxIndex / (maxFrames - 1));
+  }
+
+  const out: number[] = [];
+  for (let idx = 0; idx <= maxIndex; idx += stride) {
+    out.push(idx);
+  }
+  if (out[out.length - 1] !== maxIndex) out.push(maxIndex);
+  return out;
+}
+
+export function buildDenseFrameSelection(
+  fps_true: number,
+  duration_sec: number,
+  targetFps = 12,
+  maxFrames = 48,
+): FrameSelection[] {
+  const indices = selectDenseFrameIndices(fps_true, duration_sec, targetFps, maxFrames);
+  return indices.map((frame_index) => ({
+    frame_index,
+    timestamp_seconds: roundToSixDecimals(frame_index / fps_true),
+  }));
+}
