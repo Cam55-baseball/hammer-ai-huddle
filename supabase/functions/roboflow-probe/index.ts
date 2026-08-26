@@ -41,13 +41,14 @@ Deno.serve(async (req) => {
   const root = await rfGet(`https://api.roboflow.com/?api_key=${apiKey}`);
   report.workspace_root = { status: root.status, data: root.data };
 
-  const ws = (root.data as { workspace?: { url?: string; name?: string } })?.workspace;
-  const wsUrl = ws?.url;
+  const ws = (root.data as { workspace?: string | { url?: string } })?.workspace;
+  const wsUrl = typeof ws === "string" ? ws : ws?.url;
 
   // 2) Workspace projects
   const projects: Array<Record<string, unknown>> = [];
   if (wsUrl) {
     const wsDetail = await rfGet(`https://api.roboflow.com/${wsUrl}?api_key=${apiKey}`);
+    report.workspace_detail = { status: wsDetail.status, data: wsDetail.data };
     const wsProjects =
       (wsDetail.data as { workspace?: { projects?: Array<{ id: string; name: string; type: string; models?: number }> } })
         ?.workspace?.projects ?? [];
@@ -73,6 +74,24 @@ Deno.serve(async (req) => {
     }
   }
   report.projects = projects;
+
+  // 4) Universe public model search (no key needed) — candidate starting points
+  const universeQueries = ["baseball", "softball", "ball detection"];
+  const universe: Record<string, unknown> = {};
+  for (const q of universeQueries) {
+    const res = await rfGet(`https://api.roboflow.com/v1/search?query=${encodeURIComponent(q)}`);
+    const results = (res.data as { results?: Array<Record<string, unknown>> })?.results;
+    universe[q] = {
+      status: res.status,
+      results: Array.isArray(results)
+        ? results.slice(0, 8).map((r) => ({
+            id: r.id, name: r.name, type: r.type, models: r.models,
+            annotation: r.annotation, downloads: r.downloads, stars: r.stars,
+          }))
+        : res.data,
+    };
+  }
+  report.universe_search = universe;
 
   return json(report);
 });
