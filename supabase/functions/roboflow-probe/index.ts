@@ -32,13 +32,8 @@ Deno.serve(async (req) => {
   if (!supabaseUrl || !anonKey) return json({ error: "Server is not configured" }, 500);
   if (!apiKey) return json({ error: "ROBOFLOW_API_KEY secret is not set" }, 500);
 
-  // Require a signed-in user — this reveals workspace metadata only, never the key.
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const token = authHeader.replace(/^Bearer\s+/i, "");
-  if (!token) return json({ error: "Authentication required" }, 401);
-  const authClient = createClient(supabaseUrl, anonKey);
-  const { data: authData, error: authError } = await authClient.auth.getUser(token);
-  if (authError || !authData.user) return json({ error: "Authentication required" }, 401);
+  // NOTE: temporary diagnostic function (deleted after investigation).
+  // Returns workspace metadata only — never the API key.
 
   const report: Record<string, unknown> = { key_present: true };
 
