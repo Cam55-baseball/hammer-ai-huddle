@@ -285,7 +285,33 @@ const Auth = () => {
             </Alert>
           )}
 
+          {!isLogin && !isForgotPassword && ageBlocked && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{ageBlocked}</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && !isForgotPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => {
+                    setDateOfBirth(e.target.value);
+                    setAgeBlocked(null);
+                  }}
+                  max={new Date().toISOString().slice(0, 10)}
+                  required={!isLogin}
+                />
+                <p className="text-xs text-muted-foreground">
+                  We ask for your real date of birth to know whether we're allowed to create an account for you.
+                </p>
+              </div>
+            )}
+
             {!isLogin && !isForgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">{t('auth.fullName')}</Label>
