@@ -287,5 +287,8 @@ verify_jwt = false
 [functions.pitch-velocity-prep]
 verify_jwt = true
 
+[functions.pitch-velocity-measure]
+verify_jwt = true
+
 [functions.roboflow-probe]
 verify_jwt = false
