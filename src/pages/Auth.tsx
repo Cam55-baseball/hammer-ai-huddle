@@ -23,13 +23,20 @@ const signUpSchema = authSchema.extend({
   fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
 });
 
+const dobSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Please enter your date of birth" });
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
