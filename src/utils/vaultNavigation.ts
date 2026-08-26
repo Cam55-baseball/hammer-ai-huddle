@@ -30,7 +30,7 @@ interface SectionConfig {
 
 export const VAULT_SECTIONS: Record<VaultSection, SectionConfig> = {
   'performance-tests': { tab: 'today', autoOpen: true },
-  'progress-photos': { tab: 'today', autoOpen: false },
+  'progress-photos': { tab: 'today', autoOpen: true },
   'scout-grades': { tab: 'today', autoOpen: true },
   'pitching-grades': { tab: 'today', autoOpen: true },
   'nutrition': { tab: 'today', autoOpen: false },
