@@ -75,11 +75,11 @@ Deno.serve(async (req) => {
   }
   report.projects = projects;
 
-  // 4) Universe public model search (no key needed) — candidate starting points
+  // 4) Universe public model search (keyed) — candidate starting points
   const universeQueries = ["baseball", "softball", "ball detection"];
   const universe: Record<string, unknown> = {};
   for (const q of universeQueries) {
-    const res = await rfGet(`https://api.roboflow.com/v1/search?query=${encodeURIComponent(q)}`);
+    const res = await rfGet(`https://api.roboflow.com/v1/search?query=${encodeURIComponent(q)}&api_key=${apiKey}`);
     const results = (res.data as { results?: Array<Record<string, unknown>> })?.results;
     universe[q] = {
       status: res.status,
@@ -92,6 +92,31 @@ Deno.serve(async (req) => {
     };
   }
   report.universe_search = universe;
+
+  // 5) Optional live inference test: POST { test_model_id, images_b64: string[] }
+  //    Sends each base64 JPEG to detect.roboflow.com hosted inference and
+  //    returns raw predictions + per-image timing. 1 hosted call = 1 credit.
+  let body: { test_model_id?: string; images_b64?: string[] } = {};
+  try { body = await req.json(); } catch { /* empty body fine */ }
+  if (body.test_model_id && Array.isArray(body.images_b64) && body.images_b64.length > 0) {
+    const tests: Array<Record<string, unknown>> = [];
+    for (const b64 of body.images_b64.slice(0, 6)) {
+      const started = Date.now();
+      const res = await fetch(
+        `https://detect.roboflow.com/${body.test_model_id}?api_key=${apiKey}&confidence=20&overlap=30`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: b64,
+        },
+      );
+      const text = await res.text();
+      let data: unknown = null;
+      try { data = JSON.parse(text); } catch { data = text.slice(0, 400); }
+      tests.push({ status: res.status, ms: Date.now() - started, data });
+    }
+    report.inference_test = { model: body.test_model_id, results: tests };
+  }
 
   return json(report);
 });
