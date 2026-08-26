@@ -11,7 +11,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAuthStable: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<any>;
+  signUp: (email: string, password: string, fullName: string, ageMeta?: { date_of_birth: string; age_band: string }) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
@@ -141,16 +141,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    ageMeta?: { date_of_birth: string; age_band: string },
+  ) => {
     const redirectUrl = `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: fullName },
+        data: {
+          full_name: fullName,
+          ...(ageMeta
+            ? {
+                date_of_birth: ageMeta.date_of_birth,
+                age_band: ageMeta.age_band,
+                // Placeholder flag — 13–17 handling awaits legal review.
+                age_handling_pending_legal_review:
+                  ageMeta.age_band === "minor_13_17",
+              }
+            : {}),
+        },
       },
     });
+
     // RFL-001 — canonical lifecycle topic. Lifetime-deduped per (athlete_id, topic, payload),
     // so failed signup never emits and refresh / replay never double-counts.
     if (!error && data?.user?.id) {

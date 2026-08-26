@@ -23,13 +23,20 @@ const signUpSchema = authSchema.extend({
   fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
 });
 
+const dobSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Please enter your date of birth" });
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -168,8 +175,41 @@ const Auth = () => {
         }
 
       } else {
+        // Age is computed server-side. The DOB is checked BEFORE any other
+        // signup data is sent, so an under-13 attempt never transmits or
+        // stores name, email, or password anywhere.
+        const dob = dobSchema.parse(dateOfBirth);
+        setAgeBlocked(null);
+
+        const { data: ageResult, error: ageError } = await supabase.functions.invoke(
+          "signup-age-check",
+          { body: { date_of_birth: dob } },
+        );
+
+        if (ageError || !ageResult || typeof ageResult.allowed !== "boolean") {
+          // Fail closed — never create an account on an unresolved age check.
+          toast({
+            title: "Couldn't verify age",
+            description: "Please try again in a moment.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!ageResult.allowed) {
+          setAgeBlocked(
+            ageResult.message ??
+              "Signing up at this age requires a parent or guardian, and that isn't available yet. Account creation can't continue.",
+          );
+          return;
+        }
+
         const validated = signUpSchema.parse({ email, password, fullName });
-        const { error } = await signUp(validated.email, validated.password, validated.fullName);
+        const { error } = await signUp(validated.email, validated.password, validated.fullName, {
+          date_of_birth: dob,
+          age_band: ageResult.age_band,
+        });
+
 
         if (error) {
           toast({
@@ -245,7 +285,33 @@ const Auth = () => {
             </Alert>
           )}
 
+          {!isLogin && !isForgotPassword && ageBlocked && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{ageBlocked}</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && !isForgotPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => {
+                    setDateOfBirth(e.target.value);
+                    setAgeBlocked(null);
+                  }}
+                  max={new Date().toISOString().slice(0, 10)}
+                  required={!isLogin}
+                />
+                <p className="text-xs text-muted-foreground">
+                  We ask for your real date of birth to know whether we're allowed to create an account for you.
+                </p>
+              </div>
+            )}
+
             {!isLogin && !isForgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">{t('auth.fullName')}</Label>
@@ -306,7 +372,7 @@ const Auth = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || (!isLogin && !isForgotPassword && !!ageBlocked)}>
               {isLoading 
                 ? t('common.loading') 
                 : isForgotPassword 

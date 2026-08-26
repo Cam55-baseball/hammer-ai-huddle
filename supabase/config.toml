@@ -289,3 +289,6 @@ verify_jwt = true
 
 [functions.pitch-velocity-measure]
 verify_jwt = true
+
+[functions.signup-age-check]
+verify_jwt = false
