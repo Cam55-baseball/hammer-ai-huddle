@@ -15,8 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Heart, Target, Camera, User, Play, Square, Sun, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Target, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
@@ -39,7 +38,7 @@ import { runPoseInference } from "@/lib/biomech/pose/poseRunner";
 import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
-import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
+import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
