@@ -12,6 +12,7 @@
 
 import { sha256HexOfBlob } from "@/lib/biomech/fingerprint";
 import {
+  buildDenseFrameSelection,
   buildFrameSelection,
   type FrameSelection,
 } from "@/lib/biomech/frameExtractionDeterministic";
