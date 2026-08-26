@@ -175,8 +175,41 @@ const Auth = () => {
         }
 
       } else {
+        // Age is computed server-side. The DOB is checked BEFORE any other
+        // signup data is sent, so an under-13 attempt never transmits or
+        // stores name, email, or password anywhere.
+        const dob = dobSchema.parse(dateOfBirth);
+        setAgeBlocked(null);
+
+        const { data: ageResult, error: ageError } = await supabase.functions.invoke(
+          "signup-age-check",
+          { body: { date_of_birth: dob } },
+        );
+
+        if (ageError || !ageResult || typeof ageResult.allowed !== "boolean") {
+          // Fail closed — never create an account on an unresolved age check.
+          toast({
+            title: "Couldn't verify age",
+            description: "Please try again in a moment.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!ageResult.allowed) {
+          setAgeBlocked(
+            ageResult.message ??
+              "Signing up at this age requires a parent or guardian, and that isn't available yet. Account creation can't continue.",
+          );
+          return;
+        }
+
         const validated = signUpSchema.parse({ email, password, fullName });
-        const { error } = await signUp(validated.email, validated.password, validated.fullName);
+        const { error } = await signUp(validated.email, validated.password, validated.fullName, {
+          date_of_birth: dob,
+          age_band: ageResult.age_band,
+        });
+
 
         if (error) {
           toast({
