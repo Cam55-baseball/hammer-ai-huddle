@@ -1062,9 +1062,49 @@ export default function AnalyzeVideo() {
           </div>
         </div>
 
+        {/* Capture method chooser — every analysis entry lands here first. */}
+        {!videoPreview && captureMode === "choose" && (
+          <div className="grid md:grid-cols-2 gap-4">
+            <button type="button" onClick={() => setCaptureMode("upload")} className="text-left">
+              <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
+                    <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.chooseUploadTitle', 'Upload a video')}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+                    {t('videoAnalysis.chooseUploadDescription', 'Send in a recorded rep — get your score, feedback, and drills.')}
+                  </p>
+                </div>
+              </Card>
+            </button>
+            <button type="button" onClick={() => setCaptureMode("delaycam")} className="text-left">
+              <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
+                    <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.chooseDelayCamTitle', 'Use DelayCam')}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+                    {t('videoAnalysis.chooseDelayCamDescription', 'Live camera with a 1–55s delay — watch your rep right after it happens.')}
+                  </p>
+                </div>
+              </Card>
+            </button>
+          </div>
+        )}
+
         {/* Video Upload Section */}
-        {!videoPreview && (
+        {!videoPreview && captureMode === "upload" && (
           <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setCaptureMode("choose")}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              {t('videoAnalysis.chooseDifferentMethod', 'Choose a different method')}
+            </button>
             {/* Phase 49: CameraAngleHelper removed with report-card surface. */}
             <div className="grid md:grid-cols-2 gap-4">
             {/* Upload Card */}
