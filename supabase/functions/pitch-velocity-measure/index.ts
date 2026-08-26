@@ -22,8 +22,11 @@ const BodySchema = z.object({
   calibration_session_id: z.string().uuid(),
 });
 
-const DEFAULT_MODEL_ID = "baseball-detection-2/1"; // public Universe model; replace with trained workspace model when available
-const ROBOFLOW_CONFIDENCE = 25; // detector threshold (percent)
+// BaseballCV ball_tracking_v4 (YOLOv11) weights imported into our Roboflow workspace
+// as an external-upload checkpoint. Classes: glove, homeplate, baseball, rubber.
+const DEFAULT_MODEL_ID = "baseball-pitch-velocity/1";
+const ROBOFLOW_CONFIDENCE = 15; // detector threshold (percent) — BaseballCV runs lower-confidence on phone footage
+
 const ROBOFLOW_OVERLAP = 30;
 const CONCURRENCY = 3;
 
@@ -59,9 +62,13 @@ interface RoboflowResponse {
 
 function pickBallPrediction(predictions: RoboflowPrediction[]): BallDetection | null {
   if (predictions.length === 0) return null;
-  const ballLike = predictions.filter((p) => /ball/i.test(p.class ?? ""));
-  const pool = ballLike.length > 0 ? ballLike : predictions;
+  // BaseballCV emits glove / homeplate / baseball / rubber — only the ball is a flight signal.
+  const ballLike = predictions.filter((p) => /^(base|soft)?ball$/i.test((p.class ?? "").trim()));
+  const looseBall = ballLike.length > 0 ? ballLike : predictions.filter((p) => /ball/i.test(p.class ?? ""));
+  const pool = looseBall.length > 0 ? looseBall : [];
+  if (pool.length === 0) return null;
   const best = pool.reduce((a, b) => (b.confidence > a.confidence ? b : a));
+
   return {
     x: best.x,
     y: best.y,
