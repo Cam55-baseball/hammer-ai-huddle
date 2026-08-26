@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Crosshair,
   FileVideo,
+  Gauge,
   Loader2,
   Ruler,
   Upload,
@@ -29,7 +30,7 @@ import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 import { cn } from '@/lib/utils';
 
 type Sport = 'baseball' | 'softball';
-type PrepStage = 'idle' | 'extracting' | 'uploading' | 'registering' | 'storing' | 'complete';
+type PrepStage = 'idle' | 'extracting' | 'uploading' | 'registering' | 'storing' | 'measuring' | 'complete';
 
 const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 const DEFAULT_DISTANCE: Record<Sport, string> = {
@@ -43,6 +44,7 @@ const STAGE_PROGRESS: Record<PrepStage, number> = {
   uploading: 48,
   registering: 66,
   storing: 84,
+  measuring: 94,
   complete: 100,
 };
 
@@ -51,6 +53,22 @@ interface CalibrationResult {
   calibration_status: string;
   reference_distance_ft: number;
   frame_count: number;
+}
+
+interface MeasurementResult {
+  measurement_id: string;
+  status: 'measured' | 'low_confidence' | 'unavailable';
+  velocity_mph: number | null;
+  confidence: number | null;
+  missingness_reason: 'ball_not_detected' | 'insufficient_temporal_resolution' | null;
+  method: string;
+  model_id: string;
+  sport: Sport;
+  frames_total: number;
+  frames_detected: number;
+  frames_missed: number;
+  roboflow_calls: number;
+  track: { start_frame_index: number; end_frame_index: number; length: number } | null;
 }
 
 function formatBytes(bytes: number): string {
@@ -79,6 +97,7 @@ export default function PitchVelocityPrep() {
   const [frames, setFrames] = useState<ExtractedFrame[]>([]);
   const [stage, setStage] = useState<PrepStage>('idle');
   const [result, setResult] = useState<CalibrationResult | null>(null);
+  const [measurement, setMeasurement] = useState<MeasurementResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,6 +145,7 @@ export default function PitchVelocityPrep() {
     setVideoPreview(URL.createObjectURL(file));
     setFrames([]);
     setResult(null);
+    setMeasurement(null);
     setError(null);
     setStage('idle');
   };
@@ -137,6 +157,7 @@ export default function PitchVelocityPrep() {
     setVideoPreview(null);
     setFrames([]);
     setResult(null);
+    setMeasurement(null);
     setError(null);
     setStage('idle');
   };
@@ -167,6 +188,7 @@ export default function PitchVelocityPrep() {
         fps_true: probed.fps_true,
         duration_sec: probed.duration_sec,
         landingTime: null,
+        sampling: 'dense',
       });
       const sampledFrames = extraction.frames;
 
@@ -241,8 +263,8 @@ export default function PitchVelocityPrep() {
       setResult(data as CalibrationResult);
       setStage('complete');
       toast({
-        title: 'Calibration packet ready',
-        description: `${sampledFrames.length} frames are stored for the future velocity model.`,
+        title: 'Measurement packet ready',
+        description: `${sampledFrames.length} frames stored — running ball detection is the next step.`,
       });
     } catch (prepareError) {
       const message = prepareError instanceof Error ? prepareError.message : 'Calibration preparation failed.';
@@ -253,6 +275,38 @@ export default function PitchVelocityPrep() {
       if (!videoId && storagePath) {
         await supabase.storage.from('videos').remove([storagePath]);
       }
+    }
+  };
+
+  const handleMeasure = async () => {
+    if (!user || !result) return;
+    noteProtectedEditing(5 * 60_000);
+    setError(null);
+    setStage('measuring');
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('pitch-velocity-measure', {
+        body: { calibration_session_id: result.session_id },
+      });
+      if (invokeError) throw new Error(invokeError.message);
+      if (data?.error) throw new Error(String(data.error));
+      setMeasurement(data as MeasurementResult);
+      setStage('complete');
+      if ((data as MeasurementResult).status === 'measured') {
+        toast({
+          title: 'Velocity measured',
+          description: `${(data as MeasurementResult).velocity_mph} mph from ball flight tracking.`,
+        });
+      } else {
+        toast({
+          title: 'No reliable reading',
+          description: 'The ball could not be tracked well enough to report a number.',
+        });
+      }
+    } catch (measureError) {
+      const message = measureError instanceof Error ? measureError.message : 'Velocity measurement failed.';
+      setError(message);
+      setStage('complete');
+      toast({ title: 'Could not measure velocity', description: message, variant: 'destructive' });
     }
   };
 
