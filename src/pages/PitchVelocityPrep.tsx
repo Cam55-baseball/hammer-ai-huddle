@@ -27,16 +27,32 @@ import { noteProtectedEditing } from '@/lib/auth/protectedEditing';
 import { probeVideoMetadata } from '@/lib/biomech/probeVideoMetadata';
 import { extractKeyFramesDeterministic, type ExtractedFrame } from '@/lib/frameExtraction';
 import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
+import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
+import { softballLeagueDistances } from '@/data/softball/leagueDistances';
 import { cn } from '@/lib/utils';
 
 type Sport = 'baseball' | 'softball';
 type PrepStage = 'idle' | 'extracting' | 'uploading' | 'registering' | 'storing' | 'measuring' | 'complete';
 
 const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
-const DEFAULT_DISTANCE: Record<Sport, string> = {
-  baseball: '60.5',
-  softball: '43',
+
+/**
+ * Standard, fixed pitching distances. Baseball's 60'6" is universal above 14U,
+ * softball's 43' is universal above 14U — so the standard setup needs zero
+ * input from the athlete. Non-standard setups (youth mounds) override below.
+ */
+const STANDARD_DISTANCE: Record<Sport, number> = {
+  baseball: 60.5,
+  softball: 43,
 };
+
+const STANDARD_LABEL: Record<Sport, string> = {
+  baseball: "Standard mound — 60 ft 6 in",
+  softball: 'Standard circle — 43 ft',
+};
+
+type SetupMode = 'standard' | 'custom';
+
 
 const STAGE_PROGRESS: Record<PrepStage, number> = {
   idle: 0,
@@ -90,8 +106,9 @@ export default function PitchVelocityPrep() {
   const [sport, setSport] = useState<Sport>(() => {
     return localStorage.getItem('selectedSport') === 'softball' ? 'softball' : 'baseball';
   });
-  const [referenceDistance, setReferenceDistance] = useState(() => DEFAULT_DISTANCE[sport]);
-  const [distanceTouched, setDistanceTouched] = useState(false);
+  const [setupMode, setSetupMode] = useState<SetupMode>('standard');
+  const [presetLevel, setPresetLevel] = useState<string>('custom');
+  const [customDistance, setCustomDistance] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [frames, setFrames] = useState<ExtractedFrame[]>([]);
@@ -112,14 +129,29 @@ export default function PitchVelocityPrep() {
 
   const isBusy = stage !== 'idle' && stage !== 'complete';
 
-  const distanceValue = useMemo(() => Number(referenceDistance), [referenceDistance]);
+  const leagueOptions = useMemo(
+    () => (sport === 'softball' ? softballLeagueDistances : baseballLeagueDistances),
+    [sport],
+  );
+
+  const distanceValue = useMemo(() => {
+    if (setupMode === 'standard') return STANDARD_DISTANCE[sport];
+    if (presetLevel !== 'custom') {
+      return leagueOptions.find((l) => l.level === presetLevel)?.mound_ft ?? Number.NaN;
+    }
+    return Number(customDistance);
+  }, [setupMode, sport, presetLevel, customDistance, leagueOptions]);
+
   const distanceValid = Number.isFinite(distanceValue) && distanceValue > 0 && distanceValue <= 500;
+  const distanceLabel = distanceValid ? `${distanceValue} ft` : '—';
 
   const handleSportChange = (next: Sport) => {
     setSport(next);
     localStorage.setItem('selectedSport', next);
-    if (!distanceTouched) setReferenceDistance(DEFAULT_DISTANCE[next]);
+    setPresetLevel('custom');
+    setCustomDistance('');
   };
+
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -397,26 +429,81 @@ export default function PitchVelocityPrep() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reference-distance" className="flex items-center gap-2">
-                    <Ruler className="h-4 w-4 text-muted-foreground" /> Known distance (ft)
+                  <Label className="flex items-center gap-2">
+                    <Ruler className="h-4 w-4 text-muted-foreground" /> Pitching distance
                   </Label>
-                  <Input
-                    id="reference-distance"
-                    inputMode="decimal"
-                    value={referenceDistance}
-                    disabled={isBusy}
-                    onChange={(event) => {
-                      setReferenceDistance(event.target.value);
-                      setDistanceTouched(true);
-                    }}
-                    placeholder={sport === 'baseball' ? '60.5' : '43'}
-                    className={cn(!distanceValid && referenceDistance && 'border-destructive focus-visible:ring-destructive')}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Usually mound to plate: 60.5 ft baseball, 43 ft softball.
-                  </p>
+
+                  {setupMode === 'standard' ? (
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                        {STANDARD_LABEL[sport]}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Set automatically — nothing to enter.
+                      </p>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="mt-1 h-auto p-0 text-xs"
+                        disabled={isBusy}
+                        onClick={() => setSetupMode('custom')}
+                      >
+                        Non-standard setup? Change distance
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Select
+                        value={presetLevel}
+                        onValueChange={setPresetLevel}
+                        disabled={isBusy}
+                      >
+                        <SelectTrigger id="distance-preset">
+                          <SelectValue placeholder="Pick a level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leagueOptions.map((level) => (
+                            <SelectItem key={level.level} value={level.level}>
+                              {level.label} — {level.mound_label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="custom">Custom distance…</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {presetLevel === 'custom' && (
+                        <Input
+                          id="reference-distance"
+                          inputMode="decimal"
+                          value={customDistance}
+                          disabled={isBusy}
+                          onChange={(event) => setCustomDistance(event.target.value)}
+                          placeholder={String(STANDARD_DISTANCE[sport])}
+                          className={cn(
+                            !distanceValid && customDistance && 'border-destructive focus-visible:ring-destructive',
+                          )}
+                        />
+                      )}
+
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        disabled={isBusy}
+                        onClick={() => {
+                          setSetupMode('standard');
+                          setPresetLevel('custom');
+                          setCustomDistance('');
+                        }}
+                      >
+                        Use the standard {STANDARD_DISTANCE[sport]} ft setup
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
+
 
               {!videoPreview ? (
                 <button
@@ -441,7 +528,7 @@ export default function PitchVelocityPrep() {
                     <div className="min-w-0">
                       <p className="truncate font-medium">{videoFile?.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {videoFile ? formatBytes(videoFile.size) : ''} · {sport} · {referenceDistance || '—'} ft reference
+                        {videoFile ? formatBytes(videoFile.size) : ''} · {sport} · {distanceLabel} reference
                       </p>
                     </div>
                     <Button variant="outline" size="sm" onClick={resetSelection} disabled={isBusy}>
