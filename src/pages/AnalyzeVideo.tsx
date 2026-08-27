@@ -1355,12 +1355,14 @@ export default function AnalyzeVideo() {
             {(analyzing || extractingFrames) && (
               <div className="space-y-4">
                 <AnalysisProgressIndicator
+                  module={module}
                   stageLabel={
                     extractingFrames
                       ? t('videoAnalysis.extractingFrames', 'Extracting key frames for analysis…')
                       : t('videoAnalysis.analyzing', 'Analyzing your video')
                   }
                 />
+
                 <AnalysisResultSkeleton />
               </div>
             )}
