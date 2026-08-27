@@ -11,7 +11,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAuthStable: boolean;
-  signUp: (email: string, password: string, fullName: string, ageMeta?: { date_of_birth: string; age_band: string }) => Promise<any>;
+  signUp: (email: string, password: string, fullName: string, ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string }) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string,
     fullName: string,
-    ageMeta?: { date_of_birth: string; age_band: string },
+    ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string },
   ) => {
     const redirectUrl = `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signUp({
@@ -160,13 +160,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 date_of_birth: ageMeta.date_of_birth,
                 age_band: ageMeta.age_band,
                 // Placeholder flag — 13–17 handling awaits legal review.
+                // The guardian notification below does NOT resolve this flag.
                 age_handling_pending_legal_review:
                   ageMeta.age_band === "minor_13_17",
+                ...(ageMeta.guardian_email
+                  ? { guardian_contact_email: ageMeta.guardian_email }
+                  : {}),
               }
             : {}),
         },
       },
     });
+
+    // Interim protective step for 13–17 signups: notify the parent/guardian
+    // contact that the account exists and how to reach support. Never blocks
+    // account creation.
+    if (
+      !error &&
+      data?.user?.id &&
+      ageMeta?.age_band === "minor_13_17" &&
+      ageMeta.guardian_email
+    ) {
+      void supabase.functions
+        .invoke("notify-guardian-minor-signup", {
+          body: { user_id: data.user.id, guardian_email: ageMeta.guardian_email },
+        })
+        .catch(() => undefined);
+    }
+
 
     // RFL-001 — canonical lifecycle topic. Lifetime-deduped per (athlete_id, topic, payload),
     // so failed signup never emits and refresh / replay never double-counts.

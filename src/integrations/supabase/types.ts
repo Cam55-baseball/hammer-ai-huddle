@@ -7990,6 +7990,42 @@ export type Database = {
         }
         Relationships: []
       }
+      minor_guardian_notifications: {
+        Row: {
+          age_band: string
+          created_at: string
+          error: string | null
+          guardian_email: string
+          id: string
+          notified_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_band: string
+          created_at?: string
+          error?: string | null
+          guardian_email: string
+          id?: string
+          notified_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_band?: string
+          created_at?: string
+          error?: string | null
+          guardian_email?: string
+          id?: string
+          notified_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           created_at: string | null

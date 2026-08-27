@@ -35,6 +35,24 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
+  const [guardianEmail, setGuardianEmail] = useState("");
+
+  // Display-only hint so the guardian field appears before submit. The server
+  // remains the sole authority on the age band.
+  const looksMinor = (() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) return false;
+    const dob = new Date(`${dateOfBirth}T00:00:00.000Z`);
+    if (Number.isNaN(dob.getTime())) return false;
+    const now = new Date();
+    let age = now.getUTCFullYear() - dob.getUTCFullYear();
+    const before =
+      now.getUTCMonth() < dob.getUTCMonth() ||
+      (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate());
+    if (before) age -= 1;
+    return age >= 13 && age < 18;
+  })();
+
+
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -204,11 +222,25 @@ const Auth = () => {
           return;
         }
 
+        const isMinor = ageResult.age_band === "minor_13_17";
+        const trimmedGuardian = guardianEmail.trim();
+        if (isMinor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedGuardian)) {
+          toast({
+            title: "Parent or guardian email needed",
+            description:
+              "Enter a parent or guardian's email address so we can let them know this account was created.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const validated = signUpSchema.parse({ email, password, fullName });
         const { error } = await signUp(validated.email, validated.password, validated.fullName, {
           date_of_birth: dob,
           age_band: ageResult.age_band,
+          ...(isMinor ? { guardian_email: trimmedGuardian } : {}),
         });
+
 
 
         if (error) {
@@ -311,6 +343,27 @@ const Auth = () => {
                 </p>
               </div>
             )}
+
+            {!isLogin && !isForgotPassword && looksMinor && (
+              <div className="space-y-2">
+                <Label htmlFor="guardianEmail">Parent or guardian email</Label>
+                <Input
+                  id="guardianEmail"
+                  type="email"
+                  placeholder="parent@example.com"
+                  value={guardianEmail}
+                  onChange={(e) => setGuardianEmail(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Because you're under 18, we'll email this parent or guardian to tell them an
+                  account was created, what the app does, and how to contact support to review or
+                  remove it.
+                </p>
+              </div>
+            )}
+
+
 
             {!isLogin && !isForgotPassword && (
               <div className="space-y-2">
