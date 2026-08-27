@@ -206,11 +206,25 @@ const Auth = () => {
           return;
         }
 
+        const isMinor = ageResult.age_band === "minor_13_17";
+        const trimmedGuardian = guardianEmail.trim();
+        if (isMinor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedGuardian)) {
+          toast({
+            title: "Parent or guardian email needed",
+            description:
+              "Enter a parent or guardian's email address so we can let them know this account was created.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const validated = signUpSchema.parse({ email, password, fullName });
         const { error } = await signUp(validated.email, validated.password, validated.fullName, {
           date_of_birth: dob,
           age_band: ageResult.age_band,
+          ...(isMinor ? { guardian_email: trimmedGuardian } : {}),
         });
+
 
 
         if (error) {
