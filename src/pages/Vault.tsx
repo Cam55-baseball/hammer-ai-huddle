@@ -48,6 +48,7 @@ import { VaultSavedItemsCard } from '@/components/vault/VaultSavedItemsCard';
 import { VaultPerformanceTestCard } from '@/components/vault/VaultPerformanceTestCard';
 import { VaultProgressPhotosCard } from '@/components/vault/VaultProgressPhotosCard';
 import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
+import { VaultSelfGradeGoalsSection } from '@/components/vault/VaultSelfGradeGoalsSection';
 // VaultRecapCard removed - merged into VaultStreakRecapCard
 import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
@@ -829,8 +830,33 @@ export default function Vault() {
                           />
                         </div>
                       )}
+
+                      {/* Athlete-private self-grade goals — never shared */}
+                      <VaultSelfGradeGoalsSection
+                        metrics={
+                          showPitchingGrader && !showHittingThrowingGrader
+                            ? (userSport === 'softball'
+                                ? ['rise_ball', 'fastball', 'offspeed', 'breaking_ball', 'control', 'delivery']
+                                : ['fastball', 'offspeed', 'breaking_ball', 'control', 'delivery'])
+                            : ['hitting', 'power', 'speed', 'defense', 'throwing']
+                        }
+                        currentSelfGrades={{
+                          hitting: scoutGrades[0]?.hitting_grade ?? null,
+                          power: scoutGrades[0]?.power_grade ?? null,
+                          speed: scoutGrades[0]?.speed_grade ?? null,
+                          defense: scoutGrades[0]?.defense_grade ?? null,
+                          throwing: scoutGrades[0]?.throwing_grade ?? null,
+                          fastball: pitchingGrades[0]?.fastball_grade ?? null,
+                          offspeed: pitchingGrades[0]?.offspeed_grade ?? null,
+                          breaking_ball: pitchingGrades[0]?.breaking_ball_grade ?? null,
+                          control: pitchingGrades[0]?.control_grade ?? null,
+                          delivery: pitchingGrades[0]?.delivery_grade ?? null,
+                          rise_ball: pitchingGrades[0]?.rise_ball_grade ?? null,
+                        }}
+                      />
                     </div>
                   )}
+
 
 
                   {/* 6-Week Recap moved to VaultStreakRecapCard in left column */}
