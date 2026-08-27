@@ -35,6 +35,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
+  const [guardianEmail, setGuardianEmail] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
