@@ -48,6 +48,7 @@ import { VaultSavedItemsCard } from '@/components/vault/VaultSavedItemsCard';
 import { VaultPerformanceTestCard } from '@/components/vault/VaultPerformanceTestCard';
 import { VaultProgressPhotosCard } from '@/components/vault/VaultProgressPhotosCard';
 import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
+import { VaultSelfGradeGoalsSection } from '@/components/vault/VaultSelfGradeGoalsSection';
 // VaultRecapCard removed - merged into VaultStreakRecapCard
 import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
