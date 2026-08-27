@@ -60,25 +60,39 @@ export async function hasActiveSubscription(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<boolean> {
+  // Deliberately a list query: a user can legitimately hold more than one
+  // active subscription row (per-module plans), and `.maybeSingle()` would
+  // error out on that and read as "no subscription".
   const { data, error } = await supabase
     .from("subscriptions")
     .select("status, current_period_end")
     .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
+    .eq("status", "active");
 
   if (error) {
     console.error("[authGuards] subscription lookup failed", { userId, error });
     return false;
   }
-  if (!data) return false;
+  if (!data?.length) return false;
 
-  if (data.current_period_end) {
-    const endsAt = new Date(data.current_period_end).getTime();
-    if (Number.isFinite(endsAt) && endsAt < Date.now()) return false;
-  }
-  return true;
+  return data.some((row) => {
+    if (!row.current_period_end) return true;
+    const endsAt = new Date(row.current_period_end as string).getTime();
+    return !Number.isFinite(endsAt) || endsAt >= Date.now();
+  });
 }
+
+/**
+ * Platform staff bypass. Mirrors the canonical rule used by
+ * `check-subscription`: an active `owner` OR `admin` role grants full access.
+ */
+export async function isPlatformStaff(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  return await hasAnyActiveRole(supabase, userId, ["owner", "admin"]);
+}
+
 
 /** Standard 403 body used by the guarded functions. */
 export function forbidden(message: string, corsHeaders: Record<string, string>): Response {
