@@ -43,6 +43,7 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { DelayCam } from "@/components/analyze/DelayCam";
+import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -1063,7 +1064,12 @@ export default function AnalyzeVideo() {
 
         {/* Capture method chooser — every analysis entry lands here first. */}
         {!videoPreview && captureMode === "choose" && (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            {/* Pre-recording filming guidance for pitching (both sports).
+                Grounded in the real 13/13-missing softball failure: each item
+                prevents one of the three filming gaps that killed the tiles. */}
+            {module === "pitching" && <PitchingFilmingGuide />}
+            <div className="grid md:grid-cols-2 gap-4">
             <button type="button" onClick={() => setCaptureMode("upload")} className="text-left">
               <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
                 <div className="flex flex-col items-center text-center space-y-3">
@@ -1090,6 +1096,7 @@ export default function AnalyzeVideo() {
                 </div>
               </Card>
             </button>
+            </div>
           </div>
         )}
 
