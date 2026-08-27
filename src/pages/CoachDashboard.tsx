@@ -427,7 +427,13 @@ export default function CoachDashboard() {
           const linkedIds = linkedPlayers.map(p => p.id);
           const nameMap: Record<string, string> = {};
           linkedPlayers.forEach(p => { nameMap[p.id] = p.full_name; });
-          return linkedIds.length > 0 ? <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} /> : null;
+          if (linkedIds.length === 0) return null;
+          return (
+            <>
+              <CoachAthleteRoster linkedPlayerIds={linkedIds} playerNames={nameMap} />
+              <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} />
+            </>
+          );
         })()}
 
         <ScheduledSessionsManager onSchedule={() => setScheduleDialogOpen(true)} />
