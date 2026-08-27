@@ -10417,6 +10417,48 @@ export type Database = {
           },
         ]
       }
+      self_grade_goals: {
+        Row: {
+          created_at: string
+          current_self_grade: number | null
+          goal_grade: number
+          id: string
+          is_active: boolean
+          metric: string
+          reached_at: string | null
+          reset_count: number
+          set_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_self_grade?: number | null
+          goal_grade: number
+          id?: string
+          is_active?: boolean
+          metric: string
+          reached_at?: string | null
+          reset_count?: number
+          set_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_self_grade?: number | null
+          goal_grade?: number
+          id?: string
+          is_active?: boolean
+          metric?: string
+          reached_at?: string | null
+          reset_count?: number
+          set_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sent_activity_templates: {
         Row: {
           accepted_template_id: string | null
