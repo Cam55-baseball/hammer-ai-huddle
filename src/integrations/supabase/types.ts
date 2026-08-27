@@ -2755,6 +2755,89 @@ export type Database = {
         }
         Relationships: []
       }
+      defensive_plays: {
+        Row: {
+          at_bat_id: string | null
+          ball_landing_location: Json | null
+          beaten_runner_grade: number | null
+          catch_probability: number | null
+          confidence: number | null
+          created_at: string
+          distance_to_cover: number | null
+          fielder_id: string | null
+          fielder_position: string | null
+          fielder_start_position: Json | null
+          hang_time_sec: number | null
+          id: string
+          missing_reason: string | null
+          oae_credit: number | null
+          outcome: string | null
+          route_efficiency: number | null
+          source: string
+          throw_accuracy: number | null
+          throw_velo: number | null
+          total_play_time_sec: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          at_bat_id?: string | null
+          ball_landing_location?: Json | null
+          beaten_runner_grade?: number | null
+          catch_probability?: number | null
+          confidence?: number | null
+          created_at?: string
+          distance_to_cover?: number | null
+          fielder_id?: string | null
+          fielder_position?: string | null
+          fielder_start_position?: Json | null
+          hang_time_sec?: number | null
+          id?: string
+          missing_reason?: string | null
+          oae_credit?: number | null
+          outcome?: string | null
+          route_efficiency?: number | null
+          source?: string
+          throw_accuracy?: number | null
+          throw_velo?: number | null
+          total_play_time_sec?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          at_bat_id?: string | null
+          ball_landing_location?: Json | null
+          beaten_runner_grade?: number | null
+          catch_probability?: number | null
+          confidence?: number | null
+          created_at?: string
+          distance_to_cover?: number | null
+          fielder_id?: string | null
+          fielder_position?: string | null
+          fielder_start_position?: Json | null
+          hang_time_sec?: number | null
+          id?: string
+          missing_reason?: string | null
+          oae_credit?: number | null
+          outcome?: string | null
+          route_efficiency?: number | null
+          source?: string
+          throw_accuracy?: number | null
+          throw_velo?: number | null
+          total_play_time_sec?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "defensive_plays_at_bat_id_fkey"
+            columns: ["at_bat_id"]
+            isOneToOne: false
+            referencedRelation: "gp_at_bats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_events: {
         Row: {
           created_at: string
