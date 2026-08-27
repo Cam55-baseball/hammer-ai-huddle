@@ -74,3 +74,49 @@ wildly-wrong measurement, which is not an improvement users would feel as one.
 - `src/lib/biomech/metrics/shoulderTiltDeg.ts` — pure geometry + canonical
   missingness, behind `MEDIAPIPE_SHOULDER_TILT_ENABLED = false`. Nothing reads it.
 - `src/lib/biomech/metrics/__tests__/shoulderTiltDeg.test.ts` — 9 tests, passing.
+
+---
+
+## Addendum — pre-flip guards (built, flag still off)
+
+Both guards named in this report now exist. Neither is on the athlete path;
+`MEDIAPIPE_SHOULDER_TILT_ENABLED` is still `false`.
+
+### Guard 1 — stability under a 1-frame shift
+`src/lib/biomech/metrics/shoulderTiltGuarded.ts`
+
+The metric is recomputed on the release frame's neighbour (release ± 1) using
+the identical pure function. If the two readings differ by more than
+`SHOULDER_TILT_STABILITY_TOLERANCE_DEG` (5°, a starting estimate from this
+report's data — tune with more sessions), the result is withheld:
+`insufficient_temporal_resolution`, guard `stability_1_frame_shift`, with the
+observed delta in lineage. No neighbour pose, or an unmeasurable neighbour, is
+also a withhold — the guard is never assumed satisfied.
+
+### Guard 2 — live pitch vs. dry/towel drill
+`src/lib/biomech/gates/livePitchGate.ts`
+
+Uses ball evidence from the existing pitch-velocity detection frames
+(`BallDetectionFrame`, same shape for hosted Roboflow and the on-device
+detector): ≥3 ball detections at ≥0.2 confidence within ±12 frames of release,
+with travel ≥12% of the frame diagonal. Verdicts:
+
+| Verdict | Condition | Effect |
+| --- | --- | --- |
+| `live_pitch` | ball present and travelling | measurement allowed |
+| `not_a_pitch` | no ball, or ball present but static | withheld, `ball_not_detected` |
+| `indeterminate` | no detection data at all | withheld, `ball_not_detected` |
+
+Absence of detection data is never a pass. The gate is evaluated before the
+stability guard so drill clips are never described as "unstable".
+
+Tests: `src/lib/biomech/metrics/__tests__/shoulderTiltGuarded.test.ts` (12
+cases, covering both guards, ordering, determinism, and base-missingness
+pass-through). No new missingness reasons were introduced; the canonical set is
+unchanged and the specific guard is carried in `guard` / `guard_detail`.
+
+### Still outstanding before a flip
+- Tolerance calibration on more real sessions (5° is provisional).
+- Gate parameters validated against real drill clips vs. real bullpens.
+- Detection frames must be available to the pose path at measurement time;
+  today they are produced by the velocity pipeline only.
