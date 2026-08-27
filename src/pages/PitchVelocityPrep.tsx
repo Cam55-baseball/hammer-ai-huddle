@@ -104,8 +104,9 @@ export default function PitchVelocityPrep() {
   const [sport, setSport] = useState<Sport>(() => {
     return localStorage.getItem('selectedSport') === 'softball' ? 'softball' : 'baseball';
   });
-  const [referenceDistance, setReferenceDistance] = useState(() => DEFAULT_DISTANCE[sport]);
-  const [distanceTouched, setDistanceTouched] = useState(false);
+  const [setupMode, setSetupMode] = useState<SetupMode>('standard');
+  const [presetLevel, setPresetLevel] = useState<string>('custom');
+  const [customDistance, setCustomDistance] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [frames, setFrames] = useState<ExtractedFrame[]>([]);
@@ -126,14 +127,29 @@ export default function PitchVelocityPrep() {
 
   const isBusy = stage !== 'idle' && stage !== 'complete';
 
-  const distanceValue = useMemo(() => Number(referenceDistance), [referenceDistance]);
+  const leagueOptions = useMemo(
+    () => (sport === 'softball' ? softballLeagueDistances : baseballLeagueDistances),
+    [sport],
+  );
+
+  const distanceValue = useMemo(() => {
+    if (setupMode === 'standard') return STANDARD_DISTANCE[sport];
+    if (presetLevel !== 'custom') {
+      return leagueOptions.find((l) => l.level === presetLevel)?.mound_ft ?? Number.NaN;
+    }
+    return Number(customDistance);
+  }, [setupMode, sport, presetLevel, customDistance, leagueOptions]);
+
   const distanceValid = Number.isFinite(distanceValue) && distanceValue > 0 && distanceValue <= 500;
+  const distanceLabel = distanceValid ? `${distanceValue} ft` : '—';
 
   const handleSportChange = (next: Sport) => {
     setSport(next);
     localStorage.setItem('selectedSport', next);
-    if (!distanceTouched) setReferenceDistance(DEFAULT_DISTANCE[next]);
+    setPresetLevel('custom');
+    setCustomDistance('');
   };
+
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
