@@ -30,6 +30,18 @@ const ROBOFLOW_CONFIDENCE = 15; // detector threshold (percent) — BaseballCV r
 const ROBOFLOW_OVERLAP = 30;
 const CONCURRENCY = 3;
 
+/**
+ * HARD SAFETY CAP — absolute maximum billable Roboflow inference calls for a
+ * single analysis. Enforced in three independent places below:
+ *   1. the frames query is `.limit(MAX_INFERENCE_CALLS_PER_ANALYSIS)`
+ *   2. the frame list is truncated after the query
+ *   3. an atomic pre-flight counter refuses to issue a call once the budget
+ *      is spent, even if 1 and 2 were somehow bypassed
+ * No code path may exceed this, regardless of how many frame rows exist.
+ */
+const MAX_INFERENCE_CALLS_PER_ANALYSIS = 60;
+
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -142,19 +154,30 @@ Deno.serve(async (req) => {
   if (videoError || !video) return json({ error: "Source video not found" }, 404);
   const sport = video.sport === "softball" ? "softball" : "baseball";
 
-  const { data: frames, error: framesError } = await supabase
+  const { data: frameRows, error: framesError } = await supabase
     .from("cv_calibration_frames")
     .select("frame_index, timestamp_seconds, storage_path, width, height")
     .eq("calibration_session_id", session.id)
-    .order("frame_index", { ascending: true });
+    .order("frame_index", { ascending: true })
+    .limit(MAX_INFERENCE_CALLS_PER_ANALYSIS);
 
   if (framesError) {
     console.error("[pitch-velocity-measure] frames lookup failed", framesError);
     return json({ error: "Could not load calibration frames" }, 500);
   }
-  if (!frames || frames.length < 3) {
+  if (!frameRows || frameRows.length < 3) {
     return json({ error: "Not enough stored frames to measure" }, 409);
   }
+  // Second, belt-and-braces truncation in case the query limit ever changes.
+  const frames = frameRows.slice(0, MAX_INFERENCE_CALLS_PER_ANALYSIS);
+  if (frameRows.length > MAX_INFERENCE_CALLS_PER_ANALYSIS) {
+    console.warn(
+      "[pitch-velocity-measure] frame set truncated to inference cap",
+      session.id,
+      frameRows.length,
+    );
+  }
+
 
   const failSession = async (reason: string, status = 500) => {
     await supabase
@@ -184,9 +207,24 @@ Deno.serve(async (req) => {
   let roboflowCalls = 0;
   let roboflowFailures = 0;
   let downloadFailures = 0;
+  let capHits = 0;
+
+  // Third guard: a synchronously-incremented budget. JS is single-threaded per
+  // isolate, so reserving before the await makes this unbypassable — no
+  // concurrent batch, retry, or future refactor can spend past the cap.
+  let inferenceBudget = MAX_INFERENCE_CALLS_PER_ANALYSIS;
+  const reserveInferenceCall = (): boolean => {
+    if (inferenceBudget <= 0) {
+      capHits++;
+      return false;
+    }
+    inferenceBudget--;
+    return true;
+  };
 
   const runOne = async (i: number): Promise<void> => {
     const frame = frames[i];
+
     observations[i] = {
       frame_index: frame.frame_index,
       timestamp_seconds: Number(frame.timestamp_seconds),
@@ -201,7 +239,13 @@ Deno.serve(async (req) => {
       chosen: null,
     };
 
+    if (!reserveInferenceCall()) {
+      console.warn("[pitch-velocity-measure] inference cap reached, skipping frame", frame.frame_index);
+      return;
+    }
+
     const { data: blob, error: downloadError } = await supabase.storage
+
       .from("videos")
       .download(frame.storage_path);
     if (downloadError || !blob) {
@@ -331,6 +375,9 @@ Deno.serve(async (req) => {
     frames_missed: result.frames_missed,
     roboflow_calls: roboflowCalls,
     roboflow_failures: roboflowFailures,
+    inference_cap: MAX_INFERENCE_CALLS_PER_ANALYSIS,
+    frames_skipped_by_cap: capHits,
+
     track: result.track,
     pair_samples: result.pair_samples,
   });
