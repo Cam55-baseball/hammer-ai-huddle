@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
-import { hasActiveRole, hasActiveSubscription, isPlatformStaff, forbidden } from '../_shared/authGuards.ts';
+import { hasActiveSubscription, isPlatformStaff, forbidden } from '../_shared/authGuards.ts';
 
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
