@@ -43,6 +43,7 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { DelayCam } from "@/components/analyze/DelayCam";
+import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
