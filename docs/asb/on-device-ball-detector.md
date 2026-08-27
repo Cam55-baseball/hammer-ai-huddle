@@ -23,12 +23,13 @@ inference), not a new model or a new grant — the existing clearance covers it.
 
 ## Model asset
 
-Expected at `public/models/ball_tracking_v4.onnx` (served as `/models/ball_tracking_v4.onnx`),
-an Ultralytics ONNX export of the same checkpoint at 640×640, output head
-`[1, 4 + numClasses, numAnchors]`, class order `glove, homeplate, baseball, rubber`.
-
-The asset is **not committed** — it is a large binary and belongs alongside
-`pose_landmarker_full.task` in the deployed `public/models/` directory. When it is absent the
+The model is a 218MB binary — too large for git — so it lives on the Lovable
+Assets CDN. The pointer is `public/models/ball_tracking_v4.onnx.asset.json`;
+`MODEL_ASSET_PATH` in the detector points at the same-origin CDN URL
+(`/__l5e/assets-v1/db8bc163-1c3b-411d-87ad-d55407d747ea/ball_tracking_v4.onnx`).
+It is an Ultralytics ONNX export (opset 12, simplified) of the same checkpoint
+at 640×640, output head `[1, 4 + numClasses, numAnchors]`, class order
+`glove, homeplate, baseball, rubber`. If the asset is ever unreachable the
 detector returns `{ ok: false, reason: "model_asset_missing" }`.
 
 ## Honesty rule

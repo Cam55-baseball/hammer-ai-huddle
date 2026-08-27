@@ -29,7 +29,14 @@ import {
 /** Kill switch — MUST stay false until parity is demonstrated and approved. */
 export const ON_DEVICE_BALL_DETECTOR_ENABLED = false as const;
 
-export const MODEL_ASSET_PATH = "/models/ball_tracking_v4.onnx";
+/**
+ * CDN-hosted model asset (Lovable Assets). The 218MB binary lives on the
+ * asset CDN, not in the repo — the pointer file at
+ * `public/models/ball_tracking_v4.onnx.asset.json` records it. Same-origin
+ * URL, so ONNX Runtime Web fetches it with no CORS handling.
+ */
+export const MODEL_ASSET_PATH =
+  "/__l5e/assets-v1/db8bc163-1c3b-411d-87ad-d55407d747ea/ball_tracking_v4.onnx";
 
 /** Matched to the hosted call: confidence=15 (percent), overlap=30. */
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.15;
