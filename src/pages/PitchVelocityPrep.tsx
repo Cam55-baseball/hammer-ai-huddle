@@ -427,26 +427,81 @@ export default function PitchVelocityPrep() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reference-distance" className="flex items-center gap-2">
-                    <Ruler className="h-4 w-4 text-muted-foreground" /> Known distance (ft)
+                  <Label className="flex items-center gap-2">
+                    <Ruler className="h-4 w-4 text-muted-foreground" /> Pitching distance
                   </Label>
-                  <Input
-                    id="reference-distance"
-                    inputMode="decimal"
-                    value={referenceDistance}
-                    disabled={isBusy}
-                    onChange={(event) => {
-                      setReferenceDistance(event.target.value);
-                      setDistanceTouched(true);
-                    }}
-                    placeholder={sport === 'baseball' ? '60.5' : '43'}
-                    className={cn(!distanceValid && referenceDistance && 'border-destructive focus-visible:ring-destructive')}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Usually mound to plate: 60.5 ft baseball, 43 ft softball.
-                  </p>
+
+                  {setupMode === 'standard' ? (
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                        {STANDARD_LABEL[sport]}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Set automatically — nothing to enter.
+                      </p>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="mt-1 h-auto p-0 text-xs"
+                        disabled={isBusy}
+                        onClick={() => setSetupMode('custom')}
+                      >
+                        Non-standard setup? Change distance
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Select
+                        value={presetLevel}
+                        onValueChange={setPresetLevel}
+                        disabled={isBusy}
+                      >
+                        <SelectTrigger id="distance-preset">
+                          <SelectValue placeholder="Pick a level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leagueOptions.map((level) => (
+                            <SelectItem key={level.level} value={level.level}>
+                              {level.label} — {level.mound_label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="custom">Custom distance…</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {presetLevel === 'custom' && (
+                        <Input
+                          id="reference-distance"
+                          inputMode="decimal"
+                          value={customDistance}
+                          disabled={isBusy}
+                          onChange={(event) => setCustomDistance(event.target.value)}
+                          placeholder={String(STANDARD_DISTANCE[sport])}
+                          className={cn(
+                            !distanceValid && customDistance && 'border-destructive focus-visible:ring-destructive',
+                          )}
+                        />
+                      )}
+
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        disabled={isBusy}
+                        onClick={() => {
+                          setSetupMode('standard');
+                          setPresetLevel('custom');
+                          setCustomDistance('');
+                        }}
+                      >
+                        Use the standard {STANDARD_DISTANCE[sport]} ft setup
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
+
 
               {!videoPreview ? (
                 <button
