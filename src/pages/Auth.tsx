@@ -328,6 +328,27 @@ const Auth = () => {
               </div>
             )}
 
+            {!isLogin && !isForgotPassword && looksMinor && (
+              <div className="space-y-2">
+                <Label htmlFor="guardianEmail">Parent or guardian email</Label>
+                <Input
+                  id="guardianEmail"
+                  type="email"
+                  placeholder="parent@example.com"
+                  value={guardianEmail}
+                  onChange={(e) => setGuardianEmail(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Because you're under 18, we'll email this parent or guardian to tell them an
+                  account was created, what the app does, and how to contact support to review or
+                  remove it.
+                </p>
+              </div>
+            )}
+
+
+
             {!isLogin && !isForgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">{t('auth.fullName')}</Label>
