@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
-import { hasActiveRole, hasActiveSubscription, forbidden } from '../_shared/authGuards.ts';
+import { hasActiveRole, hasActiveSubscription, isPlatformStaff, forbidden } from '../_shared/authGuards.ts';
 
 
 const corsHeaders = {
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     }
 
     // Check permissions
-    const isPlatformOwner = await hasActiveRole(supabase, user.id, 'owner');
+    const isPlatformOwner = await isPlatformStaff(supabase, user.id);
     const isPlayer = session.user_id === user.id;
 
     let hasAccess = isPlatformOwner || isPlayer;
