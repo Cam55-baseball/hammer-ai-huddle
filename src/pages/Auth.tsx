@@ -37,6 +37,22 @@ const Auth = () => {
   const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
   const [guardianEmail, setGuardianEmail] = useState("");
 
+  // Display-only hint so the guardian field appears before submit. The server
+  // remains the sole authority on the age band.
+  const looksMinor = (() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) return false;
+    const dob = new Date(`${dateOfBirth}T00:00:00.000Z`);
+    if (Number.isNaN(dob.getTime())) return false;
+    const now = new Date();
+    let age = now.getUTCFullYear() - dob.getUTCFullYear();
+    const before =
+      now.getUTCMonth() < dob.getUTCMonth() ||
+      (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate());
+    if (before) age -= 1;
+    return age >= 13 && age < 18;
+  })();
+
+
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
