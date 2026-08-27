@@ -27,6 +27,8 @@ import { noteProtectedEditing } from '@/lib/auth/protectedEditing';
 import { probeVideoMetadata } from '@/lib/biomech/probeVideoMetadata';
 import { extractKeyFramesDeterministic, type ExtractedFrame } from '@/lib/frameExtraction';
 import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
+import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
+import { softballLeagueDistances } from '@/data/softball/leagueDistances';
 import { cn } from '@/lib/utils';
 
 type Sport = 'baseball' | 'softball';
@@ -526,7 +528,7 @@ export default function PitchVelocityPrep() {
                     <div className="min-w-0">
                       <p className="truncate font-medium">{videoFile?.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {videoFile ? formatBytes(videoFile.size) : ''} · {sport} · {referenceDistance || '—'} ft reference
+                        {videoFile ? formatBytes(videoFile.size) : ''} · {sport} · {distanceLabel} reference
                       </p>
                     </div>
                     <Button variant="outline" size="sm" onClick={resetSelection} disabled={isBusy}>
