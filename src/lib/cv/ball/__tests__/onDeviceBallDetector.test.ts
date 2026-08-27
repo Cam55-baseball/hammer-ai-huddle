@@ -19,9 +19,9 @@ describe("on-device ball detector — kill switch", () => {
 
   it("refuses to run while disabled instead of returning empty detections", async () => {
     const run = await runOnDeviceBallDetection([]);
-    expect(run.ok).toBe(false);
-    if (!run.ok) expect(run.reason).toBe("not_enabled");
+    expect(run).toMatchObject({ ok: false, reason: "not_enabled" });
   });
+
 });
 
 describe("letterbox geometry", () => {
