@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "asset_id": "db8bc163-1c3b-411d-87ad-d55407d747ea",
+  "project_id": "cefbf3ce-1234-420d-b93f-77c839c5731b",
+  "url": "/__l5e/assets-v1/db8bc163-1c3b-411d-87ad-d55407d747ea/ball_tracking_v4.onnx",
+  "r2_key": "a/v1/cefbf3ce-1234-420d-b93f-77c839c5731b/db8bc163-1c3b-411d-87ad-d55407d747ea/ball_tracking_v4.onnx",
+  "original_filename": "ball_tracking_v4.onnx",
+  "size": 227705593,
+  "content_type": "application/octet-stream",
+  "created_at": "2026-08-27T23:55:54Z"
+}
