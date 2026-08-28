@@ -8735,6 +8735,77 @@ export type Database = {
         }
         Relationships: []
       }
+      org_standard_criteria: {
+        Row: {
+          created_at: string
+          field: string
+          id: string
+          operator: string
+          standard_id: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          id?: string
+          operator: string
+          standard_id: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          id?: string
+          operator?: string
+          standard_id?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_standard_criteria_standard_id_fkey"
+            columns: ["standard_id"]
+            isOneToOne: false
+            referencedRelation: "org_standards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_standards: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          org_name: string
+          org_user_id: string
+          sport: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          org_name: string
+          org_user_id: string
+          sport: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          org_name?: string
+          org_user_id?: string
+          sport?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           id: string
@@ -11084,6 +11155,47 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "speed_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standard_matches: {
+        Row: {
+          athlete_user_id: string
+          created_at: string
+          id: string
+          matched_at: string
+          notified_athlete: boolean
+          notified_org: boolean
+          standard_id: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_user_id: string
+          created_at?: string
+          id?: string
+          matched_at?: string
+          notified_athlete?: boolean
+          notified_org?: boolean
+          standard_id: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_user_id?: string
+          created_at?: string
+          id?: string
+          matched_at?: string
+          notified_athlete?: boolean
+          notified_org?: boolean
+          standard_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standard_matches_standard_id_fkey"
+            columns: ["standard_id"]
+            isOneToOne: false
+            referencedRelation: "org_standards"
             referencedColumns: ["id"]
           },
         ]
