@@ -87,6 +87,46 @@ export function describeCriterion(
   return `${fieldLabel(field)} ${OPERATOR_LABELS[operator]} ${rendered}`;
 }
 
+/**
+ * Plain-language running summary of a whole standard, e.g.
+ * "Position = RHP, Height ≥ 74in, Fastball grade ≥ 60".
+ * Every criterion must pass, so the parts read as an AND list.
+ */
+export function summarizeCriteria(
+  criteria: ReadonlyArray<{ field: string; operator: StandardOperator; value: unknown }>,
+): string {
+  if (!criteria.length) return "";
+  return criteria.map((c) => summarizeCriterion(c.field, c.operator, c.value)).join(", ");
+}
+
+const SUMMARY_SYMBOLS: Record<StandardOperator, string> = {
+  eq: "=",
+  gte: "≥",
+  lte: "≤",
+  in: "∈",
+};
+
+/** Compact form of one criterion for the running summary. */
+export function summarizeCriterion(
+  field: string,
+  operator: StandardOperator,
+  value: unknown,
+): string {
+  const rendered = Array.isArray(value) ? value.join(" / ") : String(value);
+  const suffix = field === "height_inches" ? "in" : "";
+  return `${fieldLabel(field).replace(" (inches)", "").replace(" (lbs)", "")} ${SUMMARY_SYMBOLS[operator]} ${rendered}${suffix}`;
+}
+
+/** The position a standard targets, derived from its own criteria. */
+export function standardPositionLabel(
+  criteria: ReadonlyArray<{ field: string; value: unknown }>,
+): string {
+  const row = criteria.find((c) => c.field === "position");
+  if (!row) return "No position set";
+  const v = row.value;
+  return Array.isArray(v) ? v.join(" / ") : String(v);
+}
+
 /** Age in whole years from an ISO date of birth. Null when unknown (a fail). */
 export function ageFromDob(dob: string | null | undefined): number | null {
   if (!dob) return null;
