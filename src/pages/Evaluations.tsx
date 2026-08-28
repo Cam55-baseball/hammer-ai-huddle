@@ -74,83 +74,67 @@ export default function Evaluations() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="about-me" className="gap-2">
-              About me
-              {pending.length > 0 && (
-                <Badge variant="destructive" className="h-5 px-1.5">{pending.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="filed" className="gap-2">
-              Filed by me
-              {awaiting > 0 && (
-                <Badge variant="outline" className="h-5 px-1.5">{awaiting}</Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          {isEvaluator ? (
+            <>
+              {/* Evaluators only see their own filed reports. */}
+              <TabsContent value="filed" className="space-y-4 mt-4">
+                {filedLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading your reports…
+                  </div>
+                ) : filed.length === 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">You haven't filed any reports</CardTitle>
+                      <CardDescription>
+                        Open a player from your dashboard to file a scouting report.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="outline" onClick={() => navigate('/scout-dashboard')}>
+                        Go to dashboard
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filed.map((r) => (
+                    <EvaluationReportCard
+                      key={r.id}
+                      report={r}
+                      attribution={names[r.user_id] ?? 'Athlete'}
+                      showConfirmationStatus
+                    />
+                  ))
+                )}
+              </TabsContent>
+            </>
+          ) : (
+            <>
+              {/* Players only see reports about themselves. */}
+              <TabsContent value="about-me" className="space-y-4 mt-4">
+                {pendingLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Checking for new reports…
+                  </div>
+                ) : (
+                  pending.map((p) => <PendingEvaluationCard key={p.id} pending={p} />)
+                )}
 
-          <TabsContent value="about-me" className="space-y-4 mt-4">
-            {pendingLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Checking for new reports…
-              </div>
-            ) : (
-              pending.map((p) => <PendingEvaluationCard key={p.id} pending={p} />)
-            )}
+                <EvaluatorDirectory athleteId={user?.id} title="Who has evaluated me" />
 
-            <EvaluatorDirectory athleteId={user?.id} title="Who has evaluated me" />
-
-            {!mineLoading && mine.length === 0 && pending.length === 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">No evaluations yet</CardTitle>
-                  <CardDescription>
-                    When a coach or scout files a report on you, it appears here for you to confirm.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="filed" className="space-y-4 mt-4">
-            {!canSendActivities ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Evaluator access required</CardTitle>
-                  <CardDescription>
-                    Filing scouting reports requires an active scout or coach role.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ) : filedLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading your reports…
-              </div>
-            ) : filed.length === 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">You haven't filed any reports</CardTitle>
-                  <CardDescription>
-                    Open a player from your dashboard to file a scouting report.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" onClick={() => navigate('/scout-dashboard')}>
-                    Go to dashboard
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              filed.map((r) => (
-                <EvaluationReportCard
-                  key={r.id}
-                  report={r}
-                  attribution={names[r.user_id] ?? 'Athlete'}
-                  showConfirmationStatus
-                />
-              ))
-            )}
-          </TabsContent>
+                {!mineLoading && mine.length === 0 && pending.length === 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">No evaluations yet</CardTitle>
+                      <CardDescription>
+                        When a coach or scout files a report on you, it appears here for you to confirm.
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                )}
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </div>
     </DashboardLayout>
