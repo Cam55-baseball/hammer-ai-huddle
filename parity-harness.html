@@ -3,18 +3,5 @@
   <head><meta charset="utf-8" /><title>parity harness (temporary)</title></head>
   <body>
     <div id="out">idle</div>
-    <script type="module">
-      import * as ort from "onnxruntime-web";
-      ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.29.0/dist/";
-      ort.env.wasm.numThreads = 1;
-      import { runOnDeviceBallDetection } from "/src/lib/cv/ball/onDeviceBallDetector.ts";
-      import { runBallDetectorParity } from "/src/lib/cv/ball/parity.ts";
-      window.__runParity = async (frames, hosted) => {
-        const run = await runOnDeviceBallDetection(frames, { bypassFlag: true, modelAssetPath: "http://127.0.0.1:8099/model.onnx" });
-        if (!run.ok) return { run };
-        return { run, report: runBallDetectorParity(hosted, run.frames) };
-      };
-      document.getElementById("out").textContent = "ready";
-    </script>
   </body>
 </html>
