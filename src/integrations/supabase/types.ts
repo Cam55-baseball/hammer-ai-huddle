@@ -14215,6 +14215,7 @@ export type Database = {
           metric_engine_version: string
           metrics_jsonb: Json
           metrics_sha256_hex: string
+          pitch_type: string | null
           updated_at: string
           video_id: string
         }
@@ -14226,6 +14227,7 @@ export type Database = {
           metric_engine_version: string
           metrics_jsonb: Json
           metrics_sha256_hex: string
+          pitch_type?: string | null
           updated_at?: string
           video_id: string
         }
@@ -14237,6 +14239,7 @@ export type Database = {
           metric_engine_version?: string
           metrics_jsonb?: Json
           metrics_sha256_hex?: string
+          pitch_type?: string | null
           updated_at?: string
           video_id?: string
         }
