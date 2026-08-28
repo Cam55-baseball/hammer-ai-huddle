@@ -2329,6 +2329,86 @@ export type Database = {
         }
         Relationships: []
       }
+      combine_results: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          event: string
+          id: string
+          missing_reason: string | null
+          session_id: string
+          source: string | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          event: string
+          id?: string
+          missing_reason?: string | null
+          session_id: string
+          source?: string | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          event?: string
+          id?: string
+          missing_reason?: string | null
+          session_id?: string
+          source?: string | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combine_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "combine_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combine_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          sport: string
+          tier_at_time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          sport: string
+          tier_at_time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          sport?: string
+          tier_at_time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupon_metadata: {
         Row: {
           coupon_code: string
