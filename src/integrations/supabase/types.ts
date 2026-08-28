@@ -14209,6 +14209,7 @@ export type Database = {
       video_metric_runs: {
         Row: {
           created_at: string
+          delivery_type: string | null
           event_run_id: string
           id: string
           landmark_run_id: string
@@ -14221,6 +14222,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          delivery_type?: string | null
           event_run_id: string
           id?: string
           landmark_run_id: string
@@ -14233,6 +14235,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          delivery_type?: string | null
           event_run_id?: string
           id?: string
           landmark_run_id?: string
