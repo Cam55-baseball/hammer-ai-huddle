@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { BellRing, ClipboardList, Copy, Info, Lock, Plus, Save, Shield, Trash2, Users } from "lucide-react";
+import { BellRing, ClipboardList, Copy, Info, Layers, Lock, Plus, Save, Shield, Trash2, Users } from "lucide-react";
 import {
   useMyStandardMatches,
   useOrgStandards,
@@ -67,6 +67,16 @@ function NewStandardForm({ onCreate, pending }: { onCreate: (v: { org_name: stri
         <CardDescription>Name the org and what you're looking for.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground flex gap-2">
+          <Layers className="h-4 w-4 mt-0.5 shrink-0" />
+          <span>
+            <span className="font-medium text-foreground">Build as many as you want.</span>{" "}
+            Create a separate standard for each position, or for different profiles you're
+            targeting at the same position — "RHP — Power Arm" and "RHP — Command" can live
+            side by side. There's no limit. Already have one that's close? Duplicate it below
+            instead of starting over.
+          </span>
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="org-name">Organization</Label>
@@ -157,8 +167,9 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
       <p className="text-xs text-muted-foreground flex gap-2">
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>
-          There's no required minimum or maximum number of criteria — two fields or twenty,
-          whatever this profile needs. Every one you add must pass for an athlete to match.
+          You don't need to fill in every possible field. Add only the criteria that actually
+          matter for this standard — there's no required minimum or maximum, two fields or
+          twenty, whatever this profile needs. Every criterion you do add must pass.
         </span>
       </p>
 
@@ -277,10 +288,21 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
             </Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Saving records the match. Sending pings notifies both sides once — the rep who owns
-          the standard and the athlete who met it. Already-notified matches are skipped.
-        </p>
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs space-y-1">
+          <p className="font-semibold flex items-center gap-1.5">
+            <Info className="h-3.5 w-3.5" />
+            A ping only fires when every criterion is met — not most, not some.
+          </p>
+          <p className="text-muted-foreground">
+            An athlete has to clear all {(criteria.data ?? []).length || "your"} criteria on this
+            standard. Partial matches never appear here and never notify anyone. Missing data
+            counts as a fail, and self-reported grades never count.
+          </p>
+          <p className="text-muted-foreground">
+            Saving records the match. Sending pings notifies both sides once — the rep who owns
+            the standard and the athlete who met it. Already-notified matches are skipped.
+          </p>
+        </div>
         {!criteria.data?.length ? (
           <p className="text-sm text-muted-foreground">Add at least one criterion to evaluate athletes.</p>
         ) : matches.isLoading ? (
