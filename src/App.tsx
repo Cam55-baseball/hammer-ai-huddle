@@ -78,6 +78,7 @@ const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStanda
 const CombineEntry = lazyWithRetry(() => import("./pages/CombineEntry"));
 const DefensivePlayEntry = lazyWithRetry(() => import("./pages/DefensivePlayEntry"));
 const MyDefensivePlays = lazyWithRetry(() => import("./pages/MyDefensivePlays"));
+const MyCombineResults = lazyWithRetry(() => import("./pages/MyCombineResults"));
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
@@ -349,6 +350,7 @@ const App = () => {
               {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
               <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
               {/* Pre-release: evaluator defensive play entry is staff-only until the module ships. */}
+              <Route path="/combine/results" element={<StaffOnlyRoute><MyCombineResults /></StaffOnlyRoute>} />
               <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
               <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
 
