@@ -13370,6 +13370,7 @@ export type Database = {
           development_index: number | null
           evaluation_context: string | null
           evaluator_id: string | null
+          event_description: string | null
           fastball_grade: number | null
           fastball_grade_future: number | null
           grade_source: string | null
@@ -13386,6 +13387,8 @@ export type Database = {
           offspeed_grade: number | null
           offspeed_grade_future: number | null
           overall_grade: number | null
+          player_confirmed: boolean
+          player_confirmed_at: string | null
           power_grade: number | null
           power_grade_future: number | null
           rise_ball_grade: number | null
@@ -13410,6 +13413,7 @@ export type Database = {
           development_index?: number | null
           evaluation_context?: string | null
           evaluator_id?: string | null
+          event_description?: string | null
           fastball_grade?: number | null
           fastball_grade_future?: number | null
           grade_source?: string | null
@@ -13426,6 +13430,8 @@ export type Database = {
           offspeed_grade?: number | null
           offspeed_grade_future?: number | null
           overall_grade?: number | null
+          player_confirmed?: boolean
+          player_confirmed_at?: string | null
           power_grade?: number | null
           power_grade_future?: number | null
           rise_ball_grade?: number | null
@@ -13450,6 +13456,7 @@ export type Database = {
           development_index?: number | null
           evaluation_context?: string | null
           evaluator_id?: string | null
+          event_description?: string | null
           fastball_grade?: number | null
           fastball_grade_future?: number | null
           grade_source?: string | null
@@ -13466,6 +13473,8 @@ export type Database = {
           offspeed_grade?: number | null
           offspeed_grade_future?: number | null
           overall_grade?: number | null
+          player_confirmed?: boolean
+          player_confirmed_at?: string | null
           power_grade?: number | null
           power_grade_future?: number | null
           rise_ball_grade?: number | null
@@ -16247,6 +16256,10 @@ export type Database = {
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
+      confirm_evaluation_attendance: {
+        Args: { p_evaluation_id: string }
+        Returns: boolean
+      }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }
         Returns: {
@@ -16322,6 +16335,17 @@ export type Database = {
         Returns: boolean
       }
       get_athlete_context_envelope: { Args: { p_user: string }; Returns: Json }
+      get_athlete_evaluators: {
+        Args: { p_athlete_id: string }
+        Returns: {
+          evaluator_id: string
+          evaluator_name: string
+          evaluator_organization: string
+          evaluator_role: string
+          latest_graded_at: string
+          report_count: number
+        }[]
+      }
       get_bundle_videos: {
         Args: { p_bundle_id: string }
         Returns: {
@@ -16331,6 +16355,20 @@ export type Database = {
           thumbnail_url: string
           title: string
           video_url: string
+        }[]
+      }
+      get_pending_evaluations: {
+        Args: never
+        Returns: {
+          evaluation_context: string
+          evaluator_id: string
+          evaluator_name: string
+          evaluator_organization: string
+          evaluator_role: string
+          event_description: string
+          grade_type: string
+          graded_at: string
+          id: string
         }[]
       }
       get_public_bundle: { Args: { p_slug: string }; Returns: Json }
