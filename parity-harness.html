@@ -10,7 +10,7 @@
       import { runOnDeviceBallDetection } from "/src/lib/cv/ball/onDeviceBallDetector.ts";
       import { runBallDetectorParity } from "/src/lib/cv/ball/parity.ts";
       window.__runParity = async (frames, hosted) => {
-        const run = await runOnDeviceBallDetection(frames, { bypassFlag: true });
+        const run = await runOnDeviceBallDetection(frames, { bypassFlag: true, modelAssetPath: "http://127.0.0.1:8099/model.onnx" });
         if (!run.ok) return { run };
         return { run, report: runBallDetectorParity(hosted, run.frames) };
       };
