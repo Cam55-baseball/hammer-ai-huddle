@@ -651,6 +651,21 @@ export function AppSidebar() {
                   )}
                 </SidebarMenuItem>
               )}
+              {/* Pre-release: recruiting standards are staff-only until the module ships. */}
+              {(isOwner || isAdmin) && (
+                <SidebarMenuItem className="sidebar-item">
+                  <SidebarMenuButton
+                    onClick={() => navigate('/recruiting/standards')}
+                    isActive={isActive('/recruiting/standards')}
+                    tooltip="Recruiting Standards"
+                    className="group sidebar-item-hover relative"
+                  >
+                    {isActive('/recruiting/standards') && <span className="sidebar-active-indicator" />}
+                    <ClipboardList className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="transition-colors duration-200">Recruiting Standards</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

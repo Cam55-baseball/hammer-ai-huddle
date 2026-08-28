@@ -6,6 +6,7 @@ import {
   triggerChunkReload,
   clearChunkReloadGuard,
 } from "@/utils/lazyWithRetry";
+import { StaffOnlyRoute } from "@/components/auth/StaffOnlyRoute";
 // Re-export for backward compatibility with existing imports.
 export { isChunkLoadError, triggerChunkReload };
 import { Toaster } from "@/components/ui/toaster";
@@ -73,6 +74,7 @@ const Activate = lazyWithRetry(() => import("./pages/Activate"));
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
+const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
@@ -338,6 +340,8 @@ const App = () => {
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
+              {/* Pre-release: recruiting standards are staff-only until the module ships. */}
+              <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
