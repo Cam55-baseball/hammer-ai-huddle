@@ -365,6 +365,8 @@ const App = () => {
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
               <Route path="/scout-evaluation" element={<ScoutEvaluation />} />
               <Route path="/scout-evaluation/:athleteId" element={<ScoutEvaluation />} />
+              <Route path="/evaluations" element={<Evaluations />} />
+
               <Route path="/coach-dashboard" element={<CoachDashboard />} />
               <Route path="/initialize-owner" element={<InitializeOwner />} />
               <Route path="/profile" element={<Profile />} />
