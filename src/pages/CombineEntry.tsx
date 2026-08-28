@@ -203,7 +203,7 @@ export default function CombineEntry() {
           </CardContent>
         </Card>
 
-        {blocked && eligibility && !eligibility.eligible && (
+        {eligibility && eligibility.eligible === false && (
           <Alert variant="destructive">
             <AlertTitle>Already used this month</AlertTitle>
             <AlertDescription>
@@ -214,6 +214,7 @@ export default function CombineEntry() {
             </AlertDescription>
           </Alert>
         )}
+
 
         {athleteId && !ctxLoading && (
           <Card>
