@@ -36,6 +36,14 @@ const tiles = [
     description: "Train your eyes to track pitches like a pro",
     getRoute: () => "/tex-vision",
   },
+  {
+    key: "pitch-tipping-101",
+    icon: Eye,
+    labelKey: "modules.pitchTipping101",
+    labelFallback: "Pitch Tipping 101",
+    description: "Learn what pitch tipping is and how hitters spot a pitcher's tells",
+    getRoute: () => "/learn/pitch-tipping",
+  },
 ] as const;
 
 export default function CompleteHitter() {

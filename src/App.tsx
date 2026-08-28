@@ -79,6 +79,8 @@ const CombineEntry = lazyWithRetry(() => import("./pages/CombineEntry"));
 const DefensivePlayEntry = lazyWithRetry(() => import("./pages/DefensivePlayEntry"));
 const MyDefensivePlays = lazyWithRetry(() => import("./pages/MyDefensivePlays"));
 const MyCombineResults = lazyWithRetry(() => import("./pages/MyCombineResults"));
+const MyTellReport = lazyWithRetry(() => import("./pages/MyTellReport"));
+const PitchTippingEducation = lazyWithRetry(() => import("./pages/PitchTippingEducation"));
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
@@ -353,6 +355,8 @@ const App = () => {
               <Route path="/combine/results" element={<StaffOnlyRoute><MyCombineResults /></StaffOnlyRoute>} />
               <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
               <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
+              <Route path="/pitching/tell-report" element={<StaffOnlyRoute><MyTellReport /></StaffOnlyRoute>} />
+              <Route path="/learn/pitch-tipping" element={<PitchTippingEducation />} />
 
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
