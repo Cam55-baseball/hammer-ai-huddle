@@ -19,9 +19,13 @@ import { Eye, FlaskConical, AlertCircle } from "lucide-react";
 import {
   describeFinding,
   TIPPING_DETECTION_ENABLED,
-  type TellFinding,
+  type MetricTellFinding,
 } from "@/lib/biomech/tipping/tellReport";
-import { TELL_METRIC_LABELS } from "@/lib/biomech/tipping/types";
+
+const TELL_METRIC_LABELS: Record<string, string> = {
+  energy_angle_deg: "Energy angle",
+  shoulder_tilt_deg: "Shoulder tilt",
+};
 import {
   useTellReportRuns,
   useSetRunPitchType,

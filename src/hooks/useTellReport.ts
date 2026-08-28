@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   buildTellReport,
-  ELIGIBLE_TELL_METRICS,
+  TIPPING_ELIGIBLE_METRICS,
   type PitchObservation,
   type TellReport,
 } from "@/lib/biomech/tipping/tellReport";
@@ -61,7 +61,7 @@ export function useTellReportRuns() {
           energy_angle_deg: extractMetric(row.metrics_jsonb, "energy_angle_deg"),
           shoulder_tilt_deg: extractMetric(row.metrics_jsonb, "shoulder_tilt_deg"),
         };
-        const eligibleMetricCount = ELIGIBLE_TELL_METRICS.filter(
+        const eligibleMetricCount = TIPPING_ELIGIBLE_METRICS.filter(
           (k) => metrics[k] !== null,
         ).length;
         return {
