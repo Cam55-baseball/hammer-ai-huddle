@@ -16293,6 +16293,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      dispatch_standard_match_pings: { Args: never; Returns: Json }
       expire_ab_link: {
         Args: { p_link_code: string; p_user_id: string }
         Returns: {
