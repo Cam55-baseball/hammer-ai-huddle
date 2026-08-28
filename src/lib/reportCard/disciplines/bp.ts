@@ -1,6 +1,45 @@
 import type { ReportCardSpec, ReportCardTileSpec, TileState, AnalysisLike } from "../types";
 import { readNumber, missingState } from "../metricReaders";
 import { isRelease1Hidden, isRelease1ShowcaseFuture } from "../release1";
+import { computeTempoSec } from "../../biomech/metrics/tempoSec";
+
+/**
+ * Read a plain numeric anchor off the analysis payload. Anchors are frame
+ * indices / fps emitted by the deterministic pose pass — not AI-vision
+ * metrics — so they are read leniently but never fabricated.
+ */
+function readAnchor(a: AnalysisLike, key: string): number | null {
+  const direct = (a as unknown as Record<string, unknown>)[key];
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+  const viaMetrics = readNumber(a, key);
+  return viaMetrics ? viaMetrics.value : null;
+}
+
+/**
+ * Tempo tile — deterministic path only (`src/lib/biomech/metrics/tempoSec.ts`).
+ * Returns canonical missingness whenever the frame anchors or true fps are
+ * unavailable. The AI-vision `tempo_sec` value is deliberately never consulted.
+ */
+function computeDeterministicTempoTile(a: AnalysisLike): TileState {
+  const fps = readAnchor(a, "fps_true");
+  const result = computeTempoSec({
+    peak_leg_lift_frame_index: readAnchor(a, "peak_leg_lift_frame_index"),
+    front_foot_strike_frame_index: readAnchor(a, "front_foot_strike_frame_index"),
+    fps_true: fps ?? 0,
+  });
+  if (result.value == null) {
+    return {
+      status: "missing",
+      missing_reason:
+        result.missingness?.missing_reason ?? "tempo_anchors_unavailable",
+    };
+  }
+  return {
+    status: result.value <= 1.05 ? "pass" : "fail",
+    value: `${result.value.toFixed(2)}s`,
+  };
+}
+
 
 const tiles: ReportCardTileSpec[] = [
   {
@@ -52,12 +91,15 @@ const tiles: ReportCardTileSpec[] = [
         "Metronome-paced bullpens. Down-mound work with explicit count cues. 'Fast hips, late hands' verbal cue between pitches.",
       encouragement: "Tempo is a decision. Decide to go.",
     },
-    compute: (a) => {
-      const m = readNumber(a, "tempo_sec");
-      if (!m) return missingState(a, "tempo_sec");
-      return { status: m.value <= 1.05 ? "pass" : "fail", value: `${m.value.toFixed(2)}s`, confidence: m.confidence };
-    },
+    // Deterministic only. The AI-vision `tempo_sec` value is NOT read here:
+    // the variability audit found every returned value fell outside the
+    // contract's plausible range (0.4–2.0s). Tempo is computed from the
+    // frame-index anchors by `src/lib/biomech/metrics/tempoSec.ts`; when
+    // those anchors are absent the tile reports canonical missingness
+    // instead of a guess.
+    compute: (a) => computeDeterministicTempoTile(a),
   },
+
   {
     key: "stride_length",
     name: "Stride Length",

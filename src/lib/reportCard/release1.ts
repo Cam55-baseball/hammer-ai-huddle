@@ -18,14 +18,20 @@
 
 export const RELEASE1_VISIBLE_METRICS = [
   "tempo_sec",
-  "energy_angle_deg",
   "lift_thrust_deg",
   "premature_shoulder_open_deg",
   "shoulder_tilt_deg",
-  "head_vertical_movement_pct",
 ] as const;
 
 export const RELEASE1_HIDDEN_METRICS = [
+  // BP — demoted by the AI-vision variability audit
+  // (docs/asb/ai-vision-metric-variability-audit.md, 2026-08).
+  // `energy_angle_deg` returned the identical value on every clip it measured
+  // (constant, not a measurement). `head_vertical_movement_pct` returned
+  // `missing` on 12/12 real clips (never measures). Both are suppressed until
+  // a deterministic pose-derived implementation replaces the AI-vision guess.
+  "energy_angle_deg",
+  "head_vertical_movement_pct",
   // BH physics / bat heuristics (LLM-only)
   "bat_speed_contact_mph",
   "time_to_contact_ms",
@@ -47,6 +53,7 @@ export const RELEASE1_HIDDEN_METRICS = [
   "shoulder_to_shoulder_hold_pass",
   "front_shoulder_leak_before_contact",
 ] as const;
+
 
 export const RELEASE1_SHOWCASE_FUTURE = [
   // BP — blocked on calibration / release-anchor detector
