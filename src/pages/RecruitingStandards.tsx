@@ -203,26 +203,51 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
       <Separator />
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <h4 className="text-sm font-semibold flex items-center gap-2">
             <Users className="h-4 w-4" />
             Current matches
             {matches.data && <Badge variant="secondary">{matches.data.length}</Badge>}
           </h4>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!matches.data || saveMatches.isPending}
-            onClick={() =>
-              saveMatches.mutate((matches.data ?? []).map((m) => m.athlete_user_id), {
-                onSuccess: () => toast.success("Matches saved — athletes can see this signal"),
-                onError: (e: unknown) => toast.error((e as Error).message),
-              })
-            }
-          >
-            <Save className="h-4 w-4 mr-1" /> Save matches
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!matches.data || saveMatches.isPending}
+              onClick={() =>
+                saveMatches.mutate((matches.data ?? []).map((m) => m.athlete_user_id), {
+                  onSuccess: () => {
+                    toast.success("Matches saved — athletes can see this signal");
+                    pending.refetch();
+                  },
+                  onError: (e: unknown) => toast.error((e as Error).message),
+                })
+              }
+            >
+              <Save className="h-4 w-4 mr-1" /> Save matches
+            </Button>
+            <Button
+              size="sm"
+              disabled={dispatch.isPending || pendingCount === 0}
+              onClick={() =>
+                dispatch.mutate(undefined, {
+                  onSuccess: (r) => {
+                    toast.success(`Pinged ${r.org_pings} rep${r.org_pings === 1 ? "" : "s"} and ${r.athlete_pings} athlete${r.athlete_pings === 1 ? "" : "s"}`);
+                    pending.refetch();
+                  },
+                  onError: (e: unknown) => toast.error((e as Error).message),
+                })
+              }
+            >
+              <BellRing className="h-4 w-4 mr-1" />
+              {pendingCount > 0 ? `Send ${pendingCount} ping${pendingCount === 1 ? "" : "s"}` : "All pinged"}
+            </Button>
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Saving records the match. Sending pings notifies both sides once — the rep who owns
+          the standard and the athlete who met it. Already-notified matches are skipped.
+        </p>
         {!criteria.data?.length ? (
           <p className="text-sm text-muted-foreground">Add at least one criterion to evaluate athletes.</p>
         ) : matches.isLoading ? (
@@ -242,6 +267,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
           </p>
         )}
       </div>
+
     </div>
   );
 }
