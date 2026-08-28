@@ -1,4 +1,3 @@
-import { assertPitchVelocityAccess } from "../_shared/pitchVelocityAccess.ts";
 /**
  * pitch-velocity-measure
  *
