@@ -344,6 +344,9 @@ const App = () => {
               <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
+              {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
+              <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
+
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
