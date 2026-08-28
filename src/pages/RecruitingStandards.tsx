@@ -24,12 +24,14 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { BellRing, ClipboardList, Lock, Plus, Save, Shield, Trash2, Users } from "lucide-react";
+import { BellRing, ClipboardList, Copy, Info, Lock, Plus, Save, Shield, Trash2, Users } from "lucide-react";
 import {
   useMyStandardMatches,
   useOrgStandards,
   useStandardCriteria,
+  useStandardsCriteriaMap,
 } from "@/hooks/useOrgStandards";
+import type { OrgStandard } from "@/hooks/useOrgStandards";
 import { useSaveStandardMatches, useStandardMatchPreview } from "@/hooks/useStandardMatchPreview";
 import {
   useDispatchStandardMatchPings,
@@ -45,6 +47,8 @@ import {
   describeCriterion,
   fieldByKey,
   parseCriterionValue,
+  standardPositionLabel,
+  summarizeCriteria,
 } from "@/lib/recruiting/standardFields";
 import type { StandardOperator } from "@/lib/recruiting/standardsMatching";
 
@@ -137,8 +141,27 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
     );
   };
 
+  const summary = summarizeCriteria(criteria.data ?? []);
+
   return (
     <div className="space-y-4">
+      <div className="rounded-md border bg-muted/40 px-3 py-2 space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          This standard requires
+        </p>
+        <p className="text-sm font-medium">
+          {summary || "Nothing yet — add a field below and the sheet builds here."}
+        </p>
+      </div>
+
+      <p className="text-xs text-muted-foreground flex gap-2">
+        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+        <span>
+          There's no required minimum or maximum number of criteria — two fields or twenty,
+          whatever this profile needs. Every one you add must pass for an athlete to match.
+        </span>
+      </p>
+
       <div className="space-y-2">
         {(criteria.data ?? []).map((c) => (
           <div key={c.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
@@ -282,8 +305,8 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
   );
 }
 
-function StandardCard({ standard }: { standard: ReturnType<typeof useOrgStandards>["standards"]["data"] extends (infer T)[] | undefined ? T : never }) {
-  const { updateStandard, deleteStandard } = useOrgStandards();
+function StandardCard({ standard }: { standard: OrgStandard }) {
+  const { updateStandard, deleteStandard, duplicateStandard } = useOrgStandards();
   const [label, setLabel] = useState(standard.label);
   const [orgName, setOrgName] = useState(standard.org_name);
 
@@ -298,6 +321,21 @@ function StandardCard({ standard }: { standard: ReturnType<typeof useOrgStandard
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={duplicateStandard.isPending}
+              aria-label="Duplicate standard"
+              onClick={() =>
+                duplicateStandard.mutate(standard, {
+                  onSuccess: (copy) =>
+                    toast.success(`Copied to "${copy.label}" — rename it and tweak the criteria`),
+                  onError: (e: unknown) => toast.error((e as Error).message),
+                })
+              }
+            >
+              <Copy className="h-4 w-4 mr-1" /> Duplicate
+            </Button>
             <Switch
               checked={standard.active}
               onCheckedChange={(v) => updateStandard.mutate({ id: standard.id, active: v })}
@@ -336,6 +374,61 @@ function StandardCard({ standard }: { standard: ReturnType<typeof useOrgStandard
         <CriteriaEditor standardId={standard.id} />
       </CardContent>
     </Card>
+  );
+}
+
+const SPORT_LABELS: Record<string, string> = { baseball: "Baseball", softball: "Softball" };
+
+/** Standards grouped by sport, then by the position each profile targets. */
+function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
+  const ids = useMemo(() => standards.map((s) => s.id), [standards]);
+  const criteriaMap = useStandardsCriteriaMap(ids);
+
+  const groups = useMemo(() => {
+    const map = criteriaMap.data ?? {};
+    const buckets = new Map<string, { sport: string; position: string; items: OrgStandard[] }>();
+    for (const s of standards) {
+      const position = standardPositionLabel(map[s.id] ?? []);
+      const key = `${s.sport}::${position}`;
+      const bucket = buckets.get(key) ?? { sport: s.sport, position, items: [] };
+      bucket.items.push(s);
+      buckets.set(key, bucket);
+    }
+    return [...buckets.values()].sort(
+      (a, b) => a.sport.localeCompare(b.sport) || a.position.localeCompare(b.position),
+    );
+  }, [standards, criteriaMap.data]);
+
+  // One flat list reads better than a single decorated group.
+  if (groups.length < 2) {
+    return (
+      <div className="space-y-6">
+        {standards.map((s) => (
+          <StandardCard key={s.id} standard={s} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {groups.map((g) => (
+        <section key={`${g.sport}-${g.position}`} className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {SPORT_LABELS[g.sport] ?? g.sport} · {g.position}
+            </h3>
+            <Badge variant="secondary">{g.items.length}</Badge>
+            <Separator className="flex-1" />
+          </div>
+          <div className="space-y-6">
+            {g.items.map((s) => (
+              <StandardCard key={s.id} standard={s} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
 
@@ -456,7 +549,7 @@ export default function RecruitingStandards() {
             {standards.isLoading ? (
               <p className="text-sm text-muted-foreground">Loading standards…</p>
             ) : standards.data?.length ? (
-              standards.data.map((s) => <StandardCard key={s.id} standard={s} />)
+              <GroupedStandardsList standards={standards.data} />
             ) : (
               <p className="text-sm text-muted-foreground">No standards yet.</p>
             )}

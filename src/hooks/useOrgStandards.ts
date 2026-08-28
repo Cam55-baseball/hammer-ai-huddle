@@ -78,7 +78,80 @@ export function useOrgStandards() {
     onSuccess: invalidate,
   });
 
-  return { standards, createStandard, updateStandard, deleteStandard };
+  /**
+   * Clone a standard and every one of its criteria into a fresh, renameable copy.
+   * Serves related profiles for one position ("RHP — Power Arm" / "RHP — Command")
+   * without rebuilding the sheet from zero.
+   */
+  const duplicateStandard = useMutation({
+    mutationFn: async (source: OrgStandard): Promise<OrgStandard> => {
+      const { data: created, error: createError } = await supabase
+        .from("org_standards")
+        .insert({
+          org_user_id: user!.id,
+          org_name: source.org_name,
+          label: `${source.label} (copy)`,
+          sport: source.sport,
+          // A clone starts inactive so a half-renamed profile never matches anyone.
+          active: false,
+        })
+        .select()
+        .single();
+      if (createError) throw createError;
+
+      const { data: sourceCriteria, error: readError } = await supabase
+        .from("org_standard_criteria")
+        .select("field, operator, value")
+        .eq("standard_id", source.id);
+      if (readError) throw readError;
+
+      if (sourceCriteria?.length) {
+        const { error: copyError } = await supabase.from("org_standard_criteria").insert(
+          sourceCriteria.map((c) => ({
+            standard_id: (created as OrgStandard).id,
+            field: c.field,
+            operator: c.operator,
+            value: c.value as never,
+          })),
+        );
+        if (copyError) throw copyError;
+      }
+
+      return created as OrgStandard;
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["org-standard-criteria"] });
+      qc.invalidateQueries({ queryKey: ["org-standards-criteria-map"] });
+    },
+  });
+
+  return { standards, createStandard, updateStandard, deleteStandard, duplicateStandard };
+}
+
+/**
+ * Every criterion across a set of standards, keyed by standard id.
+ * Used to group the standards list by the position each profile targets.
+ */
+export function useStandardsCriteriaMap(standardIds: string[]) {
+  const key = [...standardIds].sort().join(",");
+  return useQuery({
+    queryKey: ["org-standards-criteria-map", key],
+    enabled: standardIds.length > 0,
+    queryFn: async (): Promise<Record<string, OrgStandardCriterion[]>> => {
+      const { data, error } = await supabase
+        .from("org_standard_criteria")
+        .select("*")
+        .in("standard_id", standardIds)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      const map: Record<string, OrgStandardCriterion[]> = {};
+      for (const row of (data ?? []) as unknown as OrgStandardCriterion[]) {
+        (map[row.standard_id] ??= []).push(row);
+      }
+      return map;
+    },
+  });
 }
 
 export function useStandardCriteria(standardId: string | null) {
