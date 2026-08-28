@@ -22,16 +22,14 @@ describe("combine tier gating", () => {
 
   it("excludes bullpen_velocity for 5tool with a reason", () => {
     const r = isCombineEventIncluded("5tool", "bullpen_velocity");
-    expect(r.included).toBe(false);
-    if (r.included) return;
+    if (r.included) throw new Error("expected exclusion");
     expect(r.reason).toBe("tier_excludes_event");
     expect(r.message).toContain("Complete Pitcher");
   });
 
   it("excludes non-pitching events for pitcher with a reason", () => {
     const r = isCombineEventIncluded("pitcher", "broad_jump");
-    expect(r.included).toBe(false);
-    if (r.included) return;
+    if (r.included) throw new Error("expected exclusion");
     expect(r.reason).toBe("tier_excludes_event");
     expect(r.message).toContain("5Tool");
   });
@@ -39,16 +37,15 @@ describe("combine tier gating", () => {
   it("never grants access on an unknown tier", () => {
     for (const tier of [null, undefined, "", "free", "pro"]) {
       const r = isCombineEventIncluded(tier, "broad_jump");
-      expect(r.included).toBe(false);
-      if (!r.included) expect(r.reason).toBe("unknown_tier");
+      if (r.included) throw new Error("expected exclusion");
+      expect(r.reason).toBe("unknown_tier");
     }
     expect(combineEventsForTier("free")).toEqual([]);
   });
 
   it("never grants access on an unknown event", () => {
     const r = isCombineEventIncluded("golden2way", "forty_yard_dash");
-    expect(r.included).toBe(false);
-    if (r.included) return;
+    if (r.included) throw new Error("expected exclusion");
     expect(r.reason).toBe("unknown_event");
   });
 });

@@ -22,8 +22,7 @@ describe("combine monthly eligibility", () => {
 
   it("blocks a second attempt in the same calendar month", () => {
     const r = evaluateCombineEligibility(ATHLETE, "baseball", [session()], NOW);
-    expect(r.eligible).toBe(false);
-    if (r.eligible) return;
+    if (r.eligible) throw new Error("expected block");
     expect(r.reason).toBe("already_taken_this_month");
     expect(r.existing_session_created_at).toBe("2026-08-03T14:00:00.000Z");
     expect(r.next_eligible_at).toBe("2026-09-01T00:00:00.000Z");
@@ -62,8 +61,7 @@ describe("combine monthly eligibility", () => {
       [session({ created_at: "not-a-date" })],
       NOW,
     );
-    expect(r.eligible).toBe(false);
-    if (r.eligible) return;
+    if (r.eligible) throw new Error("expected block");
     expect(r.existing_session_created_at).toBeNull();
   });
 
