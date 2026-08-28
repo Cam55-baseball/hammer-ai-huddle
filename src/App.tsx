@@ -350,7 +350,7 @@ const App = () => {
               <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
               {/* Pre-release: evaluator defensive play entry is staff-only until the module ships. */}
               <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
-              <Route path="/defense/plays" element={<MyDefensivePlays />} />
+              <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
 
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
