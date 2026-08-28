@@ -359,7 +359,7 @@ export function describeFinding(finding: MetricTellFinding): string {
   if (finding.verdict === "indeterminate") {
     const why: Record<TellIndeterminateReason, string> = {
       not_enough_pitch_types: "not enough different pitch types tagged yet",
-      not_enough_pitches_per_type: `not enough pitches of each type yet (need ${finding.pitches_used === 0 ? DEFAULT_TELL_CONFIG.min_pitches_per_type : finding.min_group_n === null ? DEFAULT_TELL_CONFIG.min_pitches_per_type : DEFAULT_TELL_CONFIG.min_pitches_per_type} of each)`,
+      not_enough_pitches_per_type: `not enough pitches of each type yet (need ${DEFAULT_TELL_CONFIG.min_pitches_per_type} of each, in this delivery)`,
       no_within_type_variation:
         "the values are identical within each type, which is not measurable data",
     };
