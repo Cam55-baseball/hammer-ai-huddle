@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   ON_DEVICE_BALL_DETECTOR_ENABLED,
-  computeLetterbox,
+  computeStretch,
   decodeYoloOutput,
   iou,
   nonMaxSuppression,
   runOnDeviceBallDetection,
-  unletterbox,
+  unstretch,
 } from "../onDeviceBallDetector";
 import { pickBallPrediction } from "../types";
 import { runBallDetectorParity } from "../parity";
@@ -24,20 +24,28 @@ describe("on-device ball detector — kill switch", () => {
 
 });
 
-describe("letterbox geometry", () => {
-  it("round-trips a box through letterbox space", () => {
-    const t = computeLetterbox(1920, 1080);
-    const source = { x: 500, y: 400, width: 40, height: 40 };
+describe("stretch geometry (matches hosted preprocessing)", () => {
+  it("scales each axis independently — no padding", () => {
+    const t = computeStretch(1920, 1080);
+    expect(t.scaleX).toBeCloseTo(640 / 1920, 12);
+    expect(t.scaleY).toBeCloseTo(640 / 1080, 12);
+    expect(t.scaleX).not.toBeCloseTo(t.scaleY, 6);
+  });
+
+  it("round-trips a box through stretched model space", () => {
+    const t = computeStretch(1206, 1866);
+    const source = { x: 500, y: 400, width: 40, height: 60 };
     const inModel = {
-      x: source.x * t.scale + t.padX,
-      y: source.y * t.scale + t.padY,
-      width: source.width * t.scale,
-      height: source.height * t.scale,
+      x: source.x * t.scaleX,
+      y: source.y * t.scaleY,
+      width: source.width * t.scaleX,
+      height: source.height * t.scaleY,
     };
-    const back = unletterbox(inModel, t);
+    const back = unstretch(inModel, t);
     expect(back.x).toBeCloseTo(source.x, 6);
     expect(back.y).toBeCloseTo(source.y, 6);
     expect(back.width).toBeCloseTo(source.width, 6);
+    expect(back.height).toBeCloseTo(source.height, 6);
   });
 });
 
@@ -49,7 +57,7 @@ describe("YOLO decode + NMS", () => {
   }
 
   it("decodes the highest-scoring class above threshold", () => {
-    const t = computeLetterbox(640, 640);
+    const t = computeStretch(640, 640);
     const data = head([
       [320, 320], // cx
       [200, 200], // cy

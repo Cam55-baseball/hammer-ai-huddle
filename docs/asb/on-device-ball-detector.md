@@ -131,3 +131,40 @@ positive, which is background content distorted by the aspect change.
 Next step for parity is therefore a preprocessing fix, not a model hunt: match the
 hosted resize exactly (stretch to 640×640, no letterbox) before re-running the harness.
 Flag stays `false`.
+
+## Preprocessing fix + parity run 2 — 2026-08-28 (still divergent, flag stays off)
+
+**Change:** on-device preprocessing now matches the hosted path exactly.
+`computeLetterbox`/`unletterbox` are gone, replaced by `computeStretch`/`unstretch`
+(non-uniform scale per axis, `drawImage(bitmap, 0, 0, 640, 640)`, no grey pad).
+Box coordinates un-map by dividing each axis by its own scale.
+
+**Re-run:** same clip, same frames (60 fps, 1206×1866, frames 20–34), exported once
+as JPEGs and fed byte-identically to both sides — hosted `detect.roboflow.com`
+(`baseball-pitch-velocity/1`, confidence 15, overlap 30) and the on-device module in a
+real headless browser (WebGPU unavailable → WASM), same thresholds.
+
+| frame | hosted | on-device |
+|---|---|---|
+| 20–31 | — | — |
+| 32 | — | baseball 0.159 @ (11, 803) 21×49 |
+| 33 | baseball 0.362 @ (10, 800) 21×49 | baseball 0.375 @ (11, 799) 21×49 |
+| 34 | — | — |
+
+`runBallDetectorParity` verdict: **divergent** — 15 compared, 1 match, 13 agreed_absent,
+1 `on_device_only` (frame 32).
+
+The stationary 12-frame false positive from run 1 is **gone** — it was the aspect
+distortion, exactly as predicted. Frame 33 now matches within tolerance (IoU well above
+0.7, confidence delta 0.013). The single remaining divergence is a threshold-boundary
+artifact, not a disagreement: re-querying hosted on frame 32 at confidence 5 returns the
+**same box** (10, 802, 21×50) at **0.1228** — hosted scores that object just under the
+0.15 gate, on-device scores it 0.159 just over. Same detection, ~0.036 score difference
+straddling the cutoff (residual JPEG/resample rounding between a server-side resize and
+a canvas resize).
+
+Honest verdict: **not parity**. The harness is strict by design and this frame fails it.
+`ON_DEVICE_BALL_DETECTOR_ENABLED` stays `false`. What would close it is either
+demonstrating agreement on footage where detections sit away from the threshold, or an
+explicit decision that near-threshold single-frame disagreement is acceptable — that is a
+judgment call, not something the harness can silently absorb.
