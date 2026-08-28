@@ -23,21 +23,15 @@
  * module is read by nothing on the athlete path.
  */
 
-import {
-  MISSINGNESS_REASONS,
-  missingness,
-  type MissingnessRecord,
-} from "./missingness";
+import type { MissingnessRecord } from "./missingness";
 import { missingConfidence, type ConfidenceRecord } from "./confidence";
 import {
   computeShoulderTiltDeg,
   type ShoulderTiltLandmark,
   type ShoulderTiltResult,
 } from "./shoulderTiltDeg";
-import {
-  evaluateLivePitchGate,
-  type LivePitchGateResult,
-} from "../gates/livePitchGate";
+import { evaluateMetricGuards, type MetricGuard } from "./metricGuards";
+import type { LivePitchGateResult } from "../gates/livePitchGate";
 import type { BallDetectionFrame } from "@/lib/cv/ball/types";
 
 /**
@@ -47,9 +41,8 @@ import type { BallDetectionFrame } from "@/lib/cv/ball/types";
  */
 export const SHOULDER_TILT_STABILITY_TOLERANCE_DEG = 5;
 
-export type ShoulderTiltGuard =
-  | "stability_1_frame_shift"
-  | "live_pitch_gate";
+/** Retained for callers that imported the metric-specific alias. */
+export type ShoulderTiltGuard = MetricGuard;
 
 export interface GuardedShoulderTiltInputs {
   /** Landmarks at the release frame. */
@@ -88,10 +81,6 @@ export interface GuardedShoulderTiltResult {
   };
 }
 
-function round6(n: number): number {
-  return Math.round(n * 1_000_000) / 1_000_000;
-}
-
 export function computeGuardedShoulderTiltDeg(
   inputs: GuardedShoulderTiltInputs,
 ): GuardedShoulderTiltResult {
@@ -113,16 +102,31 @@ export function computeGuardedShoulderTiltDeg(
     frame_height,
   });
 
-  const livePitch = evaluateLivePitchGate({
+  const shifted = shifted_landmarks
+    ? computeShoulderTiltDeg({
+        landmarks: shifted_landmarks,
+        release_frame_index:
+          release_frame_index == null
+            ? null
+            : release_frame_index + shift_frames,
+        frame_width,
+        frame_height,
+      })
+    : null;
+
+  const outcome = evaluateMetricGuards({
+    primary,
+    shifted,
     detectionFrames,
     release_frame_index,
+    tolerance: stability_tolerance_deg,
+    tolerance_unit: "°",
+    metric_label: "tilt",
+    anchor_label: "release anchor",
   });
 
   const build = (
-    over: Partial<GuardedShoulderTiltResult> & {
-      shifted_value?: number | null;
-      delta_deg?: number | null;
-    },
+    over: Partial<GuardedShoulderTiltResult>,
   ): GuardedShoulderTiltResult => ({
     value: over.value ?? null,
     unit: "degrees",
@@ -133,11 +137,11 @@ export function computeGuardedShoulderTiltDeg(
     lineage: {
       base: primary.lineage,
       primary_value: primary.value,
-      shifted_value: over.shifted_value ?? null,
+      shifted_value: outcome.shifted_value,
       shift_frames,
-      delta_deg: over.delta_deg ?? null,
-      stability_tolerance_deg: stability_tolerance_deg,
-      live_pitch: livePitch,
+      delta_deg: outcome.delta,
+      stability_tolerance_deg,
+      live_pitch: outcome.live_pitch,
     },
   });
 
@@ -149,72 +153,16 @@ export function computeGuardedShoulderTiltDeg(
     });
   }
 
-  // Guard 2 first: a drill clip should never even be described as unstable.
-  if (livePitch.verdict !== "live_pitch") {
+  if (outcome.block) {
     return build({
-      missingness: missingness(
-        MISSINGNESS_REASONS.BALL_NOT_DETECTED,
-        "D-METRIC",
-      ),
-      guard: "live_pitch_gate",
-      guard_detail:
-        livePitch.verdict === "not_a_pitch"
-          ? `no live pitch in clip (${livePitch.reason}) — dry/towel drill reps are not measured`
-          : `cannot confirm a live pitch (${livePitch.reason}) — measurement withheld`,
-    });
-  }
-
-  // Guard 1: 1-frame-shift re-check.
-  if (!shifted_landmarks) {
-    return build({
-      missingness: missingness(
-        MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION,
-        "D-METRIC",
-      ),
-      guard: "stability_1_frame_shift",
-      guard_detail:
-        "no pose on the neighbouring frame — stability of the release anchor could not be checked",
-    });
-  }
-
-  const shifted = computeShoulderTiltDeg({
-    landmarks: shifted_landmarks,
-    release_frame_index:
-      release_frame_index == null ? null : release_frame_index + shift_frames,
-    frame_width,
-    frame_height,
-  });
-
-  if (shifted.value == null) {
-    return build({
-      missingness: missingness(
-        MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION,
-        "D-METRIC",
-      ),
-      guard: "stability_1_frame_shift",
-      guard_detail: `neighbouring frame unmeasurable (${shifted.missingness?.missing_reason ?? "unknown"}) — stability could not be checked`,
-    });
-  }
-
-  const delta = round6(Math.abs(primary.value - shifted.value));
-
-  if (delta > stability_tolerance_deg) {
-    return build({
-      shifted_value: shifted.value,
-      delta_deg: delta,
-      missingness: missingness(
-        MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION,
-        "D-METRIC",
-      ),
-      guard: "stability_1_frame_shift",
-      guard_detail: `tilt moved ${delta.toFixed(2)}° across a single frame (tolerance ${stability_tolerance_deg}°) — release anchor is not resolving the motion`,
+      missingness: outcome.block.missingness,
+      guard: outcome.block.guard,
+      guard_detail: outcome.block.guard_detail,
     });
   }
 
   return build({
     value: primary.value,
-    shifted_value: shifted.value,
-    delta_deg: delta,
     missingness: null,
     confidence: primary.confidence,
   });
