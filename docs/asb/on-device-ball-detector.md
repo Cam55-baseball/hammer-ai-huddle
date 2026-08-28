@@ -91,3 +91,43 @@ externally-uploaded checkpoint under a different model id, not necessarily the
 same `ball_tracking_v4` weights the ONNX was exported from. That has to be
 resolved before parity can mean anything. Runtime itself is fine: model fetched,
 session created, 15 frames decoded in ~159 s on WASM (single-thread, headless).
+
+## Model identity resolved — 2026-08-28: SAME WEIGHTS
+
+The Phase-1 hypothesis ("hosted may be a different artifact") is **wrong**. Both sides
+were checked against real metadata, then against each other numerically.
+
+**Hosted** (`api.roboflow.com`, workspace `55cam316-gmail-com`, project
+`baseball-pitch-velocity`, version `1`, created 2026-08-26):
+`modelType: yolov11x`, training job `jobType: "external-upload"`,
+`externalUpload: true`, project contains **0 images / 0 annotations**
+(dataset export is an empty zip). Nothing was trained on Roboflow — a
+finished checkpoint was uploaded and served.
+
+**On-device ONNX** (metadata_props read off the CDN binary):
+`Ultralytics YOLO11x`, `task detect`, `imgsz [640,640]`, `opset 12`,
+`simplify True`, input `images [1,3,640,640]`, output `output0 [1,8,8400]`
+(4 box + 4 class rows), names `{0: glove, 1: homeplate, 2: baseball, 3: rubber}`.
+
+**Numeric identity test** — one synthetic 640×640 JPEG sent byte-identically to both:
+
+| | class | class_id | box (x,y,w,h) | confidence |
+|---|---|---|---|---|
+| hosted Roboflow | baseball | 2 | 320.0, 311.5, 26.0, 21.0 | 0.046766 |
+| local ONNX (CPU) | baseball | 2 | 320.2, 311.6, 25.8, 21.4 | 0.0467 |
+
+Same architecture, same class count, same class order, same box, same confidence to
+four decimals. **They are the same weights.**
+
+### So what caused the divergence?
+
+Not the model — the **input pipeline**. The parity frames were 1206×1866 (non-square);
+the on-device path letterboxes to 640×640 (grey padding, aspect preserved) while the
+hosted Roboflow path resizes the frame to 640×640 by stretch (version preprocessing is
+empty, so the server does its own fit). Two different tensors go into the same network,
+so two different detection sets come out — including the stationary on-device false
+positive, which is background content distorted by the aspect change.
+
+Next step for parity is therefore a preprocessing fix, not a model hunt: match the
+hosted resize exactly (stretch to 640×640, no letterbox) before re-running the harness.
+Flag stays `false`.
