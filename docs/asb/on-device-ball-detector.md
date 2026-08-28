@@ -66,3 +66,28 @@ both sides agree on absence, not that either detects a ball.
 - Thresholds mirror the hosted call: confidence 0.15, IoU/overlap 0.30.
 - Once trusted, the on-device path removes the ~45 billable inference calls per pitch that the
   hosted path currently spends; the hosted path stays as fallback regardless.
+
+## Parity run 1 — 2026-08-28 (FAILED, flag stays off)
+
+Input: one real 60 fps pitch clip (1206×1866), frames 20–34 exported as identical
+JPEGs and fed byte-for-byte to both detectors.
+
+- Hosted (`detect.roboflow.com`, model `baseball-pitch-velocity/1`, confidence 15,
+  overlap 30, run through a throwaway probe function since no
+  `cv_velocity_measurements` rows exist): 14 frames empty, 1 detection on frame 33
+  (21×49 px "baseball" at x=10.5 — image edge, confidence 0.41).
+- On-device (CDN ONNX asset, WASM backend, same thresholds): a stationary
+  ~34×29 px "baseball" at (955, 571) on frames 20–31, confidence 0.28–0.67;
+  nothing on 32–34. Visual inspection of frame 27 shows no ball at that point —
+  it is a false positive on static field/background content.
+
+`runBallDetectorParity` verdict: **divergent** — 15 frames compared, 0 matches,
+2 agreed_absent, 12 `on_device_only`, 1 `hosted_only`.
+
+The two paths do not agree, so the swap is blocked. Direction of divergence
+(on-device detects more, hosted almost nothing) points at the hosted deployment
+being a different artifact than the local ONNX export — the Roboflow model is an
+externally-uploaded checkpoint under a different model id, not necessarily the
+same `ball_tracking_v4` weights the ONNX was exported from. That has to be
+resolved before parity can mean anything. Runtime itself is fine: model fetched,
+session created, 15 frames decoded in ~159 s on WASM (single-thread, headless).
