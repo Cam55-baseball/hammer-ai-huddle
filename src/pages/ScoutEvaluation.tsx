@@ -212,7 +212,7 @@ export default function ScoutEvaluation() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5 text-primary" />
               Scouting Report
@@ -221,7 +221,20 @@ export default function ScoutEvaluation() {
               {athleteName ? `Evaluation of ${athleteName}` : 'Evaluation'} · 20–80 scale
             </p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => navigate('/evaluations')}>
+            My reports
+          </Button>
         </div>
+
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
+          <p className="font-medium">Player confirmation required</p>
+          <p className="text-muted-foreground">
+            After you file this, only you can see it until the player confirms they were present at
+            this event. Once confirmed, it opens up to the player and their accepted coaches and
+            scouts.
+          </p>
+        </div>
+
 
         {/* 1. Evaluator & context */}
         <Card>
