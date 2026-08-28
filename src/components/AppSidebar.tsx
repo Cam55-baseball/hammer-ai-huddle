@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, Crosshair } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, Crosshair, ClipboardList } from "lucide-react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -284,6 +284,9 @@ export function AppSidebar() {
 
     // History — practices, games, reports and recaps (everything without video)
     items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });
+
+    // Evaluations — official scouting reports about me + reports I've filed
+    items.push({ key: 'evaluations', title: 'Evaluations', url: '/evaluations', icon: ClipboardList });
 
     // Royal Timing - visible to any subscribed user
     if (showAll || modules.length > 0) {
