@@ -107,6 +107,10 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
 
   const matches = useStandardMatchPreview(standardId, criteria.data);
   const saveMatches = useSaveStandardMatches(standardId);
+  const pending = usePendingStandardPings(standardId);
+  const dispatch = useDispatchStandardMatchPings();
+  const pendingCount = pending.data?.length ?? 0;
+
 
   const handleAdd = () => {
     if (!def) return;
