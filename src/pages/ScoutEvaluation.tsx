@@ -142,9 +142,11 @@ export default function ScoutEvaluation() {
         grade_source: 'coach_evaluated',
         grade_type: gradeType,
         graded_at: new Date(`${evaluationDate}T12:00:00`).toISOString(),
-        evaluation_context: [contextType, contextDetail.trim()].filter(Boolean).join(' — '),
+        evaluation_context: contextType,
+        event_description: contextDetail.trim() || null,
         overall_grade: overallGrade,
         notes: notes.trim() || null,
+        player_confirmed: false,
       };
       for (const t of tools) {
         row[t.key] = current[t.key] ?? null;
@@ -155,8 +157,8 @@ export default function ScoutEvaluation() {
       if (error) throw error;
 
       toast({
-        title: 'Evaluation filed',
-        description: `Scouting report saved for ${athleteName ?? 'this athlete'}.`,
+        title: 'Evaluation filed — awaiting player confirmation',
+        description: `${athleteName ?? 'The athlete'} must confirm they attended this event before the report becomes visible to them or to anyone following them.`,
       });
       navigate('/scout-dashboard');
     } catch (err) {
