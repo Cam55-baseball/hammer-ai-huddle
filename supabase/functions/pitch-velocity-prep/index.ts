@@ -1,3 +1,4 @@
+import { assertPitchVelocityAccess } from "../_shared/pitchVelocityAccess.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -84,6 +85,10 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  const accessError = await assertPitchVelocityAccess(supabase, user.id);
+  if (accessError) return json({ error: accessError }, 403);
+
 
   const { data: video, error: videoError } = await supabase
     .from("videos")

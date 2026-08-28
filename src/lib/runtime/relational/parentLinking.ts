@@ -67,7 +67,10 @@ function base64urlEncode(s: string): string {
 }
 
 function base64urlDecode(s: string): string {
-  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "==".slice((s.length + 3) % 4);
+  // Padding needed is (4 - len % 4) % 4. Indexing into "===" yields exactly
+  // that: len%4===0 -> "", len%4===2 -> "==", len%4===3 -> "=".
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
+
   if (typeof atob !== "undefined") {
     return decodeURIComponent(escape(atob(b64)));
   }

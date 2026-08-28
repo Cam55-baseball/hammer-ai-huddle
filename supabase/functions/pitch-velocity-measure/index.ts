@@ -1,3 +1,4 @@
+import { assertPitchVelocityAccess } from "../_shared/pitchVelocityAccess.ts";
 /**
  * pitch-velocity-measure
  *
@@ -127,6 +128,10 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  const accessError = await assertPitchVelocityAccess(supabase, user.id);
+  if (accessError) return json({ error: accessError }, 403);
+
 
   const { data: session, error: sessionError } = await supabase
     .from("cv_calibration_sessions")
