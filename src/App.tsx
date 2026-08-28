@@ -76,6 +76,8 @@ const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
 const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
 const CombineEntry = lazyWithRetry(() => import("./pages/CombineEntry"));
+const DefensivePlayEntry = lazyWithRetry(() => import("./pages/DefensivePlayEntry"));
+const MyDefensivePlays = lazyWithRetry(() => import("./pages/MyDefensivePlays"));
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
@@ -346,6 +348,9 @@ const App = () => {
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
               {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
               <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
+              {/* Pre-release: evaluator defensive play entry is staff-only until the module ships. */}
+              <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
+              <Route path="/defense/plays" element={<MyDefensivePlays />} />
 
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
