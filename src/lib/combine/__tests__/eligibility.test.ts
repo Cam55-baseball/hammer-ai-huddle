@@ -10,7 +10,7 @@ type Blocked = Extract<CombineEligibility, { eligible: false }>;
 
 function blocked(r: CombineEligibility): Blocked {
   if (r.eligible) throw new Error("expected the athlete to be blocked");
-  return r;
+  return r as never as Blocked;
 }
 
 const ATHLETE = "athlete-1";

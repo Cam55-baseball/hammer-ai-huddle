@@ -11,7 +11,7 @@ type Excluded = Extract<CombineGateResult, { included: false }>;
 
 function excluded(r: CombineGateResult): Excluded {
   if (r.included) throw new Error("expected the event to be excluded");
-  return r;
+  return r as never as Excluded;
 }
 
 describe("combine tier gating", () => {
