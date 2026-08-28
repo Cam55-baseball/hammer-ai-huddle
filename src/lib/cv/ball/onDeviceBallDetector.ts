@@ -66,36 +66,35 @@ export interface OnDeviceOptions {
 // Geometry helpers — pure, deterministic, unit-testable without a runtime.
 // ---------------------------------------------------------------------------
 
-export interface LetterboxTransform {
-  readonly scale: number;
-  readonly padX: number;
-  readonly padY: number;
+export interface StretchTransform {
+  readonly scaleX: number;
+  readonly scaleY: number;
 }
 
-/** Aspect-preserving resize into INPUT_SIZE², centered, as YOLO expects. */
-export function computeLetterbox(
+/**
+ * Non-uniform (stretch) resize into INPUT_SIZE², matching what the hosted
+ * Roboflow deployment does: the frame is squashed to 640×640 with no padding
+ * and no aspect preservation. Letterboxing was the source of the 2026-08-28
+ * parity divergence — same weights, different input tensor.
+ */
+export function computeStretch(
   width: number,
   height: number,
   target = INPUT_SIZE,
-): LetterboxTransform {
-  const scale = Math.min(target / width, target / height);
-  return {
-    scale,
-    padX: (target - width * scale) / 2,
-    padY: (target - height * scale) / 2,
-  };
+): StretchTransform {
+  return { scaleX: target / width, scaleY: target / height };
 }
 
-/** Map a box from letterboxed model space back to source-image pixels. */
-export function unletterbox(
+/** Map a box from stretched model space back to source-image pixels. */
+export function unstretch(
   box: { x: number; y: number; width: number; height: number },
-  t: LetterboxTransform,
+  t: StretchTransform,
 ): { x: number; y: number; width: number; height: number } {
   return {
-    x: (box.x - t.padX) / t.scale,
-    y: (box.y - t.padY) / t.scale,
-    width: box.width / t.scale,
-    height: box.height / t.scale,
+    x: box.x / t.scaleX,
+    y: box.y / t.scaleY,
+    width: box.width / t.scaleX,
+    height: box.height / t.scaleY,
   };
 }
 
@@ -139,13 +138,13 @@ export function nonMaxSuppression(
  * Decode a YOLOv11 detection head.
  *
  * Expected layout `[1, 4 + numClasses, numAnchors]` (Ultralytics export):
- * rows 0..3 are cx, cy, w, h in letterboxed pixels; rows 4.. are per-class
+ * rows 0..3 are cx, cy, w, h in stretched 640×640 pixels; rows 4.. are per-class
  * scores already sigmoid-activated.
  */
 export function decodeYoloOutput(
   data: Float32Array | number[],
   dims: readonly number[],
-  transform: LetterboxTransform,
+  transform: StretchTransform,
   confidenceThreshold: number,
   classNames: readonly string[] = BALL_TRACKING_V4_CLASSES,
 ): BallPrediction[] {
@@ -166,7 +165,7 @@ export function decodeYoloOutput(
       }
     }
     if (bestClass < 0 || bestScore < confidenceThreshold) continue;
-    const mapped = unletterbox(
+    const mapped = unstretch(
       {
         x: data[0 * anchors + a],
         y: data[1 * anchors + a],
@@ -229,20 +228,11 @@ async function dataUrlToTensorSource(
   const blob = await (await fetch(dataUrl)).blob();
   const bitmap = await createImageBitmap(blob);
   try {
-    const t = computeLetterbox(bitmap.width, bitmap.height);
     const canvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("2d context unavailable");
-    // Grey pad matches Ultralytics letterbox fill (114,114,114).
-    ctx.fillStyle = "rgb(114,114,114)";
-    ctx.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
-    ctx.drawImage(
-      bitmap,
-      t.padX,
-      t.padY,
-      bitmap.width * t.scale,
-      bitmap.height * t.scale,
-    );
+    // Stretch-resize, no padding — byte-equivalent to the hosted preprocessing.
+    ctx.drawImage(bitmap, 0, 0, INPUT_SIZE, INPUT_SIZE);
     const img = ctx.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE);
     return { pixels: img.data, width: bitmap.width, height: bitmap.height };
   } finally {
@@ -310,7 +300,7 @@ export async function runOnDeviceBallDetection(
     let predictions: BallPrediction[] = [];
     try {
       const { pixels, width, height } = await dataUrlToTensorSource(frame.dataUrl);
-      const transform = computeLetterbox(width, height);
+      const transform = computeStretch(width, height);
       const tensor = new ort.Tensor("float32", toChwFloat32(pixels), [
         1,
         3,
