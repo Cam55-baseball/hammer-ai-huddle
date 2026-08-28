@@ -429,7 +429,22 @@ export default function RecruitingStandards() {
           </TabsList>
 
           <TabsContent value="org" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BellRing className="h-4 w-4" /> Your match pings
+                </CardTitle>
+                <CardDescription>Athletes who met one of your standards.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StandardMatchNotificationList
+                  kind="standard_match_org"
+                  emptyText="No match pings yet. Save matches on a standard, then send pings."
+                />
+              </CardContent>
+            </Card>
             <NewStandardForm
+
               pending={createStandard.isPending}
               onCreate={(v) =>
                 createStandard.mutate(v, {
