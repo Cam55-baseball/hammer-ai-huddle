@@ -60,6 +60,7 @@ const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const SelectUserRole = lazyWithRetry(() => import("./pages/SelectUserRole"));
 const SelectSportScout = lazyWithRetry(() => import("./pages/SelectSportScout"));
 const ScoutEvaluation = lazyWithRetry(() => import("./pages/ScoutEvaluation"));
+const Evaluations = lazyWithRetry(() => import("./pages/Evaluations"));
 const ScoutApplication = lazyWithRetry(() => import("./pages/ScoutApplication"));
 const ScoutApplicationPending = lazyWithRetry(() => import("./pages/ScoutApplicationPending"));
 const SelectSport = lazyWithRetry(() => import("./pages/SelectSport"));
