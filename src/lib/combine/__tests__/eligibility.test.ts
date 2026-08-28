@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { combineMonthKey, evaluateCombineEligibility } from "../eligibility";
+import {
+  combineMonthKey,
+  evaluateCombineEligibility,
+  type CombineEligibility,
+} from "../eligibility";
+
+type Blocked = Extract<CombineEligibility, { eligible: false }>;
+
+function blocked(r: CombineEligibility): Blocked {
+  if (r.eligible) throw new Error("expected the athlete to be blocked");
+  return r;
+}
 
 const ATHLETE = "athlete-1";
 const NOW = new Date("2026-08-28T00:00:00.000Z");
@@ -21,8 +32,7 @@ describe("combine monthly eligibility", () => {
   });
 
   it("blocks a second attempt in the same calendar month", () => {
-    const r = evaluateCombineEligibility(ATHLETE, "baseball", [session()], NOW);
-    if (r.eligible) throw new Error("expected block");
+    const r = blocked(evaluateCombineEligibility(ATHLETE, "baseball", [session()], NOW));
     expect(r.reason).toBe("already_taken_this_month");
     expect(r.existing_session_created_at).toBe("2026-08-03T14:00:00.000Z");
     expect(r.next_eligible_at).toBe("2026-09-01T00:00:00.000Z");
@@ -55,13 +65,12 @@ describe("combine monthly eligibility", () => {
   });
 
   it("treats an unreadable prior timestamp as blocking, never as absent", () => {
-    const r = evaluateCombineEligibility(
+    const r = blocked(evaluateCombineEligibility(
       ATHLETE,
       "baseball",
       [session({ created_at: "not-a-date" })],
       NOW,
-    );
-    if (r.eligible) throw new Error("expected block");
+    ));
     expect(r.existing_session_created_at).toBeNull();
   });
 

@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import { COMBINE_EVENTS } from "../events";
-import { combineEventsForTier, isCombineEventIncluded } from "../tierGating";
+import {
+  combineEventsForTier,
+  isCombineEventIncluded,
+  type CombineGateResult,
+} from "../tierGating";
+
+type Excluded = Extract<CombineGateResult, { included: false }>;
+
+function excluded(r: CombineGateResult): Excluded {
+  if (r.included) throw new Error("expected the event to be excluded");
+  return r;
+}
 
 describe("combine tier gating", () => {
   it("gives golden2way every event", () => {
@@ -21,31 +32,27 @@ describe("combine tier gating", () => {
   });
 
   it("excludes bullpen_velocity for 5tool with a reason", () => {
-    const r = isCombineEventIncluded("5tool", "bullpen_velocity");
-    if (r.included) throw new Error("expected exclusion");
+    const r = excluded(isCombineEventIncluded("5tool", "bullpen_velocity"));
     expect(r.reason).toBe("tier_excludes_event");
     expect(r.message).toContain("Complete Pitcher");
   });
 
   it("excludes non-pitching events for pitcher with a reason", () => {
-    const r = isCombineEventIncluded("pitcher", "broad_jump");
-    if (r.included) throw new Error("expected exclusion");
+    const r = excluded(isCombineEventIncluded("pitcher", "broad_jump"));
     expect(r.reason).toBe("tier_excludes_event");
     expect(r.message).toContain("5Tool");
   });
 
   it("never grants access on an unknown tier", () => {
     for (const tier of [null, undefined, "", "free", "pro"]) {
-      const r = isCombineEventIncluded(tier, "broad_jump");
-      if (r.included) throw new Error("expected exclusion");
+      const r = excluded(isCombineEventIncluded(tier, "broad_jump"));
       expect(r.reason).toBe("unknown_tier");
     }
     expect(combineEventsForTier("free")).toEqual([]);
   });
 
   it("never grants access on an unknown event", () => {
-    const r = isCombineEventIncluded("golden2way", "forty_yard_dash");
-    if (r.included) throw new Error("expected exclusion");
+    const r = excluded(isCombineEventIncluded("golden2way", "forty_yard_dash"));
     expect(r.reason).toBe("unknown_event");
   });
 });
