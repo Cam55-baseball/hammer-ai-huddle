@@ -21,6 +21,8 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { noteProtectedEditing } from '@/lib/auth/protectedEditing';
@@ -101,7 +103,19 @@ export default function PitchVelocityPrep() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Pre-release lockdown: the hosted Roboflow inference path bills real credits
+  // per frame and is not accuracy-validated. Staff only until it ships.
+  const staffLoading = ownerLoading || adminLoading;
+  const isStaff = isOwner || isAdmin;
+
+  useEffect(() => {
+    if (!staffLoading && !isStaff) navigate('/dashboard');
+  }, [staffLoading, isStaff, navigate]);
+
 
   const [sport, setSport] = useState<Sport>(() => {
     return localStorage.getItem('selectedSport') === 'softball' ? 'softball' : 'baseball';
@@ -342,7 +356,7 @@ export default function PitchVelocityPrep() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || staffLoading) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[50vh] items-center justify-center">
@@ -351,6 +365,9 @@ export default function PitchVelocityPrep() {
       </DashboardLayout>
     );
   }
+
+  if (!isStaff) return null;
+
 
   if (!user) {
     return (
