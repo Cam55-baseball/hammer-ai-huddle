@@ -2858,6 +2858,7 @@ export type Database = {
           missing_reason: string | null
           oae_credit: number | null
           outcome: string | null
+          recorded_by: string | null
           route_efficiency: number | null
           source: string
           throw_accuracy: number | null
@@ -2882,6 +2883,7 @@ export type Database = {
           missing_reason?: string | null
           oae_credit?: number | null
           outcome?: string | null
+          recorded_by?: string | null
           route_efficiency?: number | null
           source?: string
           throw_accuracy?: number | null
@@ -2906,6 +2908,7 @@ export type Database = {
           missing_reason?: string | null
           oae_credit?: number | null
           outcome?: string | null
+          recorded_by?: string | null
           route_efficiency?: number | null
           source?: string
           throw_accuracy?: number | null
