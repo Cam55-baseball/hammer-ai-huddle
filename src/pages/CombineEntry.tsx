@@ -20,7 +20,7 @@ import {
 import { combineEventMeta, combineEventsForSport } from '@/lib/combine/sportEvents';
 import { isCombineEventIncluded } from '@/lib/combine/tierGating';
 import type { CombineEvent, CombineSport } from '@/lib/combine/events';
-import { Camera, ClipboardList, Loader2, Lock, ShieldAlert, Stopwatch } from 'lucide-react';
+import { Camera, ClipboardList, Loader2, Lock, ShieldAlert, Timer } from 'lucide-react';
 
 function SourceBadge({ source }: { source: string | null }) {
   if (source === 'video_detected') {
@@ -144,7 +144,7 @@ export default function CombineEntry() {
       <div className="max-w-4xl mx-auto space-y-6 pb-16">
         <header className="space-y-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Stopwatch className="h-6 w-6 text-primary" /> Combine Entry
+            <Timer className="h-6 w-6 text-primary" /> Combine Entry
           </h1>
           <p className="text-sm text-muted-foreground">
             Live-combine paperwork for {isScout ? 'scouts' : ''}
