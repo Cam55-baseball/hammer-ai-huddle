@@ -46,7 +46,7 @@ const PITCH_TYPES = [
   "other",
 ] as const;
 
-function verdictBadge(verdict: TellFinding["verdict"]) {
+function verdictBadge(verdict: MetricTellFinding["verdict"]) {
   if (verdict === "likely_tell") return <Badge variant="destructive">Likely tell</Badge>;
   if (verdict === "no_tell") return <Badge variant="secondary">No tell found</Badge>;
   return <Badge variant="outline">Not enough data yet</Badge>;
@@ -159,8 +159,8 @@ export default function MyTellReport() {
             ) : (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Based on {report.total_tagged} tagged{" "}
-                  {report.total_tagged === 1 ? "pitch" : "pitches"} across{" "}
+                  Based on {report.total_pitches} tagged{" "}
+                  {report.total_pitches === 1 ? "pitch" : "pitches"} across{" "}
                   {distinctTypes} pitch {distinctTypes === 1 ? "type" : "types"}.
                 </p>
                 <div className="space-y-2">
@@ -179,14 +179,14 @@ export default function MyTellReport() {
                       <p className="text-xs text-muted-foreground">
                         {describeFinding(f)}
                       </p>
-                      {Object.keys(f.per_type_means).length > 0 && (
+                      {f.groups.length > 0 && (
                         <div className="flex flex-wrap gap-2 pt-1">
-                          {Object.entries(f.per_type_means).map(([type, mean]) => (
+                          {f.groups.map((g) => (
                             <span
-                              key={type}
+                              key={g.pitch_type}
                               className="rounded bg-muted px-1.5 py-0.5 text-[10px] capitalize text-muted-foreground"
                             >
-                              {type}: avg {mean.toFixed(1)}°
+                              {g.pitch_type}: avg {g.mean.toFixed(1)}° (n={g.n})
                             </span>
                           ))}
                         </div>
