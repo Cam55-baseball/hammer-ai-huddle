@@ -1,6 +1,37 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
+
+/**
+ * Pre-release access gate for the single-camera pitch velocity pipeline.
+ *
+ * The hosted Roboflow inference path bills real credits per frame and is not
+ * yet accuracy-validated. Until it ships, ONLY `owner` and `admin` roles may
+ * reach this function. UI gating alone is insufficient because edge functions
+ * are directly invocable by any authenticated client. Fails closed.
+ */
+const PITCH_VELOCITY_RESTRICTED_TO_STAFF = true;
+
+async function assertPitchVelocityAccess(
+  serviceClient: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<string | null> {
+  if (!PITCH_VELOCITY_RESTRICTED_TO_STAFF) return null;
+  const { data, error } = await serviceClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["owner", "admin"])
+    .limit(1);
+  if (error) {
+    console.error("[pitchVelocityAccess] role lookup failed", error);
+    return "Could not verify access";
+  }
+  if (!data || data.length === 0) {
+    return "Pitch velocity measurement is not available yet";
+  }
+  return null;
+}
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
