@@ -34,7 +34,8 @@ export default function Evaluations() {
   const { data: mine = [], isLoading: mineLoading } = useMyEvaluations();
   const { data: filed = [], isLoading: filedLoading } = useFiledEvaluations();
 
-  const [tab, setTab] = useState('about-me');
+  const isEvaluator = canSendActivities;
+  const [tab, setTab] = useState(isEvaluator ? 'filed' : 'about-me');
 
   const athleteIds = useMemo(
     () => filed.map((r) => r.user_id).filter(Boolean) as string[],
