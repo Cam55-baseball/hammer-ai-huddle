@@ -285,6 +285,9 @@ export function AppSidebar() {
     // History — practices, games, reports and recaps (everything without video)
     items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });
 
+    // Evaluations — official scouting reports about me + reports I've filed
+    items.push({ key: 'evaluations', title: 'Evaluations', url: '/evaluations', icon: ClipboardList });
+
     // Royal Timing - visible to any subscribed user
     if (showAll || modules.length > 0) {
       items.push({ key: 'royal-timing', title: 'Royal Timing', url: '/royal-timing', icon: Crown });
