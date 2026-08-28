@@ -340,7 +340,29 @@ function StandardCard({ standard }: { standard: ReturnType<typeof useOrgStandard
 }
 
 function AthleteMatchesTab() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold flex items-center gap-2">
+          <BellRing className="h-4 w-4" /> Notifications
+        </h4>
+        <StandardMatchNotificationList
+          kind="standard_match_athlete"
+          emptyText="No recruiting notifications yet. You'll be told which org, which standard, and when."
+        />
+      </div>
+      <Separator />
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold">Standards matched</h4>
+        <AthleteMatchesList />
+      </div>
+    </div>
+  );
+}
+
+function AthleteMatchesList() {
   const { data, isLoading } = useMyStandardMatches();
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (!data?.length) {
     return (
