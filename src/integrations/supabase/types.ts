@@ -2336,6 +2336,7 @@ export type Database = {
           event: string
           id: string
           missing_reason: string | null
+          recorded_by: string | null
           session_id: string
           source: string | null
           unit: string | null
@@ -2349,6 +2350,7 @@ export type Database = {
           event: string
           id?: string
           missing_reason?: string | null
+          recorded_by?: string | null
           session_id: string
           source?: string | null
           unit?: string | null
@@ -2362,6 +2364,7 @@ export type Database = {
           event?: string
           id?: string
           missing_reason?: string | null
+          recorded_by?: string | null
           session_id?: string
           source?: string | null
           unit?: string | null
@@ -2384,6 +2387,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           id: string
+          recorded_by: string | null
           sport: string
           tier_at_time: string | null
           updated_at: string
@@ -2393,6 +2397,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          recorded_by?: string | null
           sport: string
           tier_at_time?: string | null
           updated_at?: string
@@ -2402,6 +2407,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          recorded_by?: string | null
           sport?: string
           tier_at_time?: string | null
           updated_at?: string
@@ -16256,6 +16262,10 @@ export type Database = {
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
+      combine_evaluator_context: {
+        Args: { p_athlete: string; p_sport: string }
+        Returns: Json
+      }
       confirm_evaluation_attendance: {
         Args: { p_evaluation_id: string }
         Returns: boolean

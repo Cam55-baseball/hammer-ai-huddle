@@ -75,6 +75,8 @@ const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
 const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
+const CombineEntry = lazyWithRetry(() => import("./pages/CombineEntry"));
+
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
@@ -342,6 +344,9 @@ const App = () => {
               <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
+              {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
+              <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
+
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />

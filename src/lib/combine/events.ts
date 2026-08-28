@@ -10,8 +10,13 @@
 export const COMBINE_EVENTS = [
   "thirty_yard_dash",
   "ten_yard_split",
+  "ten_yard_dash",
+  "twenty_yard_dash",
+  "forty_yard_dash",
+  "flying_twenty",
   "broad_jump",
   "vertical_jump_height",
+
   "y_balance_reach",
   "five_ten_five_shuttle",
   "reactive_agility",

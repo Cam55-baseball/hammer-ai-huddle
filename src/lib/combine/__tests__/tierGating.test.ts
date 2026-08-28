@@ -52,7 +52,8 @@ describe("combine tier gating", () => {
   });
 
   it("never grants access on an unknown event", () => {
-    const r = excluded(isCombineEventIncluded("golden2way", "forty_yard_dash"));
+    const r = excluded(isCombineEventIncluded("golden2way", "sixty_yard_dash"));
     expect(r.reason).toBe("unknown_event");
   });
+
 });
