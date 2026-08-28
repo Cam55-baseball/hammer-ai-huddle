@@ -3,5 +3,15 @@
   <head><meta charset="utf-8" /><title>parity harness (temporary)</title></head>
   <body>
     <div id="out">idle</div>
+    <script type="module">
+      import { runOnDeviceBallDetection } from "/src/lib/cv/ball/onDeviceBallDetector.ts";
+      import { runBallDetectorParity } from "/src/lib/cv/ball/parity.ts";
+      window.__runParity = async (frames, hosted) => {
+        const run = await runOnDeviceBallDetection(frames, { bypassFlag: true });
+        if (!run.ok) return { run };
+        return { run, report: runBallDetectorParity(hosted, run.frames) };
+      };
+      document.getElementById("out").textContent = "ready";
+    </script>
   </body>
 </html>
