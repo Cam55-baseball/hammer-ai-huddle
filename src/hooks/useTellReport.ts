@@ -2,7 +2,9 @@
  * useTellReport — data layer for the pitcher-facing Tell Report preview.
  * Reads the pitcher's own video_metric_runs (RLS-scoped to their videos),
  * extracts the eligible metrics (energy_angle_deg / shoulder_tilt_deg),
- * and lets the owner tag each analyzed pitch with a pitch type.
+ * and lets the owner tag each analyzed pitch with a pitch type AND a
+ * delivery (windup / stretch). Comparisons only ever happen within one
+ * delivery, so both tags are required before a pitch can be compared.
  * Pre-release only: TIPPING_DETECTION_ENABLED stays false.
  */
 import { useMemo } from "react";
@@ -12,7 +14,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   buildTellReport,
+  isDeliveryType,
   TIPPING_ELIGIBLE_METRICS,
+  type DeliveryType,
   type PitchObservation,
   type TellReport,
 } from "@/lib/biomech/tipping/tellReport";
@@ -22,6 +26,7 @@ export interface TellReportRun {
   videoId: string;
   createdAt: string;
   pitchType: string | null;
+  deliveryType: DeliveryType | null;
   metrics: { energy_angle_deg: number | null; shoulder_tilt_deg: number | null };
   eligibleMetricCount: number;
 }
@@ -46,7 +51,7 @@ export function useTellReportRuns() {
     queryFn: async (): Promise<TellReportRun[]> => {
       const { data, error } = await (supabase as any)
         .from("video_metric_runs")
-        .select("id, video_id, created_at, metrics_jsonb, pitch_type")
+        .select("id, video_id, created_at, metrics_jsonb, pitch_type, delivery_type")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
@@ -56,6 +61,7 @@ export function useTellReportRuns() {
         created_at: string;
         metrics_jsonb: MetricsJsonb;
         pitch_type: string | null;
+        delivery_type: string | null;
       }>).map((row) => {
         const metrics = {
           energy_angle_deg: extractMetric(row.metrics_jsonb, "energy_angle_deg"),
@@ -69,6 +75,7 @@ export function useTellReportRuns() {
           videoId: row.video_id as string,
           createdAt: row.created_at as string,
           pitchType: row.pitch_type as string | null,
+          deliveryType: isDeliveryType(row.delivery_type) ? row.delivery_type : null,
           metrics,
           eligibleMetricCount,
         };
@@ -77,22 +84,28 @@ export function useTellReportRuns() {
   });
 }
 
-export function useSetRunPitchType() {
+export function useSetRunTags() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ runId, pitchType }: { runId: string; pitchType: string | null }) => {
+    mutationFn: async ({
+      runId,
+      patch,
+    }: {
+      runId: string;
+      patch: { pitch_type?: string | null; delivery_type?: DeliveryType | null };
+    }) => {
       const { error } = await (supabase as any)
         .from("video_metric_runs")
-        .update({ pitch_type: pitchType })
+        .update(patch)
         .eq("id", runId);
       if (error) throw error;
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["tell-report-runs", user?.id] });
-      toast.success("Pitch type saved");
+      toast.success("Tag saved");
     },
-    onError: () => toast.error("Couldn't save pitch type"),
+    onError: () => toast.error("Couldn't save tag"),
   });
 }
 
@@ -105,6 +118,7 @@ export function useTellReport(runs: TellReportRun[] | undefined): TellReport | n
       .map((r) => ({
         pitch_id: r.id,
         pitch_type: r.pitchType!,
+        delivery_type: r.deliveryType,
         metrics: { ...r.metrics },
       }));
     return buildTellReport(user.id, observations);
