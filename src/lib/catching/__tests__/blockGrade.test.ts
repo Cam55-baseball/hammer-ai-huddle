@@ -1,17 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { scoreBlock, scoreReboundDistance } from '@/lib/catching/blockGrade';
+import {
+  scoreBlock,
+  scoreReboundDistance,
+  type BlockInput,
+  type BlockResult,
+} from '@/lib/catching/blockGrade';
+
+type Scored = Extract<BlockResult, { missing: false }>;
+const scored = (input: BlockInput): Scored => {
+  const r = scoreBlock(input);
+  if (r.missing) throw new Error('unexpected missing result');
+  return r as Scored;
+};
 
 describe('scoreBlock — two-way perfect definition', () => {
   it('scores a mitt-stick as perfect', () => {
-    const r = scoreBlock({ outcome: 'stuck_in_mitt' });
-    if (r.missing) throw new Error('unexpected missing');
+    const r = scored({ outcome: 'stuck_in_mitt' });
     expect(r.score).toBe(100);
     expect(r.perfect).toBe(true);
   });
 
   it('scores a deadened ball at the plate as equally perfect', () => {
-    const r = scoreBlock({ outcome: 'deadened_at_plate' });
-    if (r.missing) throw new Error('unexpected missing');
+    const r = scored({ outcome: 'deadened_at_plate' });
     expect(r.score).toBe(100);
     expect(r.perfect).toBe(true);
   });
@@ -36,8 +46,7 @@ describe('rebound grading', () => {
   });
 
   it('keeps a short rebound in the blocking zone highly scored', () => {
-    const r = scoreBlock({ outcome: 'rebound', rebound_distance_ft: 2 });
-    if (r.missing) throw new Error('unexpected missing');
+    const r = scored({ outcome: 'rebound', rebound_distance_ft: 2 });
     expect(r.score).toBeGreaterThanOrEqual(85);
   });
 
@@ -49,7 +58,6 @@ describe('rebound grading', () => {
 
   it('returns missing for a negative distance', () => {
     const r = scoreBlock({ outcome: 'rebound', rebound_distance_ft: -3 });
-    if (!r.missing) throw new Error('expected missing');
-    expect(r.missing_reason).toBe('negative_rebound_distance');
+    expect(r.missing && r.missing_reason).toBe('negative_rebound_distance');
   });
 });
