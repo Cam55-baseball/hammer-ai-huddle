@@ -18,8 +18,6 @@
 
 export const RELEASE1_VISIBLE_METRICS = [
   "tempo_sec",
-  "lift_thrust_deg",
-  "premature_shoulder_open_deg",
   "shoulder_tilt_deg",
 ] as const;
 
@@ -32,6 +30,15 @@ export const RELEASE1_HIDDEN_METRICS = [
   // a deterministic pose-derived implementation replaces the AI-vision guess.
   "energy_angle_deg",
   "head_vertical_movement_pct",
+  // BP — demoted by the full-app audit (2026-08-29). Same failure mode:
+  // the AI-vision values are pinned to the standard's threshold anchor rather
+  // than measured. Across every stored run, `lift_thrust_deg` was 20 on 6/6
+  // clips (zero variance) and `premature_shoulder_open_deg` was 20 on 7/8
+  // clips (one outlier at 25). Neither has a pose-derived implementation in
+  // src/lib/biomech/metrics/, so both are suppressed until one exists.
+  "lift_thrust_deg",
+  "premature_shoulder_open_deg",
+
   // BH physics / bat heuristics (LLM-only)
   "bat_speed_contact_mph",
   "time_to_contact_ms",
