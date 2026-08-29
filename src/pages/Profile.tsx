@@ -1702,6 +1702,33 @@ export default function Profile() {
           {!viewingOtherProfile && <CategoryGoalsCard />}
         </div>
 
+        {/* People & access — the only discoverable entry point for parent
+            invites and per-person access control. */}
+        {!viewingOtherProfile && (
+          <Card className="p-6 mb-6">
+            <h3 className="text-xl font-bold mb-1">People &amp; access</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Invite a parent, and control what each linked person can see.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => navigate("/parent-invite")}
+              >
+                Invite a parent
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => navigate("/relationships/settings")}
+              >
+                Manage who has access
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {/* Subscription Status Card */}
         {!viewingOtherProfile && (
           <Card className="p-6 mb-6">
