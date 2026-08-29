@@ -12,34 +12,8 @@
 import type { PitcherDayType } from "./pitchingMicrocycle";
 import type { PitcherLevel } from "./pitcherProfile";
 import type { RecentPitchingLoad } from "./recentLoad";
+import { baseballRestDays, softballRestDays } from "./restDays";
 
-function baseballRestDays(pitches: number, level: PitcherLevel): number {
-  const isYouth = level === "youth" || level === "middle_school";
-  if (isYouth) {
-    if (pitches >= 66) return 4;
-    if (pitches >= 51) return 3;
-    if (pitches >= 36) return 2;
-    if (pitches >= 21) return 1;
-    return 0;
-  }
-  if (pitches >= 76) return 4;
-  if (pitches >= 61) return 3;
-  if (pitches >= 46) return 2;
-  if (pitches >= 31) return 1;
-  return 0;
-}
-
-function softballRestDays(pitches: number, level: PitcherLevel): number {
-  const isYouth = level === "youth" || level === "middle_school";
-  if (isYouth) {
-    if (pitches >= 90) return 2;
-    if (pitches >= 60) return 1;
-    return 0;
-  }
-  if (pitches >= 130) return 2;
-  if (pitches >= 90) return 1;
-  return 0;
-}
 
 const MOUND_TYPES: ReadonlySet<PitcherDayType> = new Set([
   "start",

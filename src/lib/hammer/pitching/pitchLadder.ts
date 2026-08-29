@@ -14,6 +14,7 @@ import type { RoadmapRung } from "@/lib/hammer/roadmap/roadmapLadder";
 import type { QuarterDescriptor } from "@/lib/hammer/roadmap/seasonQuarters";
 import type { PitcherLevel, PitcherProfile, PitcherRole } from "./pitcherProfile";
 import type { PitcherDayType } from "./pitchingMicrocycle";
+import { baseballRestDays, softballRestDays } from "./restDays";
 
 export interface PitchLadderPrescription {
   readonly outingPitchCap: number;      // per outing
@@ -46,37 +47,6 @@ const SOFTBALL_OUTING_CAP: Record<PitcherLevel, number> = {
   pro:          140,
   unknown:       70,
 };
-
-// Rest days required after outings AT/ABOVE certain pitch thresholds.
-function baseballRestDays(pitches: number, level: PitcherLevel): number {
-  const isYouth = level === "youth" || level === "middle_school";
-  if (isYouth) {
-    if (pitches >= 66) return 4;
-    if (pitches >= 51) return 3;
-    if (pitches >= 36) return 2;
-    if (pitches >= 21) return 1;
-    return 0;
-  }
-  // HS+ (Pitch Smart 13-16 / 17-18)
-  if (pitches >= 76) return 4;
-  if (pitches >= 61) return 3;
-  if (pitches >= 46) return 2;
-  if (pitches >= 31) return 1;
-  return 0;
-}
-
-function softballRestDays(pitches: number, level: PitcherLevel): number {
-  // Softball tolerates less rest but is not free. Conservative bands.
-  const isYouth = level === "youth" || level === "middle_school";
-  if (isYouth) {
-    if (pitches >= 90) return 2;
-    if (pitches >= 60) return 1;
-    return 0;
-  }
-  if (pitches >= 130) return 2;
-  if (pitches >= 90) return 1;
-  return 0;
-}
 
 function roleMultiplier(role: PitcherRole): number {
   switch (role) {
