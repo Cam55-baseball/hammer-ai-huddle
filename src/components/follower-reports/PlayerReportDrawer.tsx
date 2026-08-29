@@ -17,14 +17,17 @@ export const PlayerReportDrawer = ({ reportId, role, open, onOpenChange }: Props
   const { data, isLoading } = useFollowerReport(reportId);
   const markViewed = useMarkReportViewed();
 
-  if (!reportId) return null;
-
+  // NOTE: no early return above this hook. A conditional `if (!reportId) return null`
+  // used to sit here, which changed the hook count between renders and crashed the
+  // inbox with "Rendered more hooks than during the previous render".
   useEffect(() => {
     if (open && reportId && data?.report && !data.report.viewed_at) {
       markViewed.mutate(reportId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reportId, data?.report?.id]);
+
+  if (!reportId) return null;
 
   const report = data?.report;
   const player = data?.player;
