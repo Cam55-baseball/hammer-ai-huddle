@@ -64,6 +64,13 @@ export const RELEASE1_HIDDEN_METRICS = [
   // all hitting output is suppressed and their thresholds are unvalidated.
   "back_knee_flex_maintained_pass",
   "post_landing_hip_drift_pass",
+  // Second wave of pose-only BH tiles (handsStayUpAtPlant.ts /
+  // leadElbowBendIncreasing.ts / headVerticalMovementPostLanding.ts /
+  // pelvisRotationEfficiency.ts). Thresholds are unvalidated estimates.
+  "hands_stay_up_at_plant_pass",
+  "lead_elbow_bend_increasing_pass",
+  "head_vertical_movement_post_landing_pct",
+  "pelvis_rotation_efficiency_deg",
 ] as const;
 
 
