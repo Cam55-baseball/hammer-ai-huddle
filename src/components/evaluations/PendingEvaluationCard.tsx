@@ -26,6 +26,7 @@ import {
  */
 export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation }) {
   const confirm = useConfirmAttendance();
+  const reject = useRejectAttendance();
   const { toast } = useToast();
 
   const credentials = [
