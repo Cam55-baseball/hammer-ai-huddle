@@ -17,6 +17,7 @@ import { EvaluationReportCard } from '@/components/evaluations/EvaluationReportC
 import { PendingEvaluationCard } from '@/components/evaluations/PendingEvaluationCard';
 import { EvaluatorDirectory } from '@/components/evaluations/EvaluatorDirectory';
 import { PositionGradeSummaryCard } from '@/components/evaluations/PositionGradeSummaryCard';
+import { ConfirmedSummaryCard } from '@/components/evaluations/ConfirmedSummaryCard';
 import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
 
 /**
@@ -124,6 +125,8 @@ export default function Evaluations() {
                 ) : (
                   pending.map((p) => <PendingEvaluationCard key={p.id} pending={p} />)
                 )}
+
+                <ConfirmedSummaryCard reports={mine as unknown as Record<string, unknown>[]} />
 
                 <EvaluatorDirectory athleteId={user?.id} title="Who has evaluated me" />
 

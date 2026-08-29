@@ -28,6 +28,9 @@ export interface EvaluationRow {
   notes: string | null;
   player_confirmed: boolean;
   player_confirmed_at: string | null;
+  /** Athlete stated they were NOT there. Terminal: stays author-only forever. */
+  player_rejected?: boolean;
+  player_rejected_at?: string | null;
   [key: string]: unknown;
 }
 
@@ -154,6 +157,29 @@ export function useConfirmAttendance() {
       qc.invalidateQueries({ queryKey: ['pending-evaluations'] });
       qc.invalidateQueries({ queryKey: ['my-evaluations'] });
       qc.invalidateQueries({ queryKey: ['athlete-evaluators'] });
+    },
+  });
+}
+
+/**
+ * Athlete states they were NOT at the event. Terminal: the report is closed out
+ * and stays visible only to its author — `player_confirmed` is never set, so the
+ * existing RLS keeps it away from the athlete and their followers forever.
+ */
+export function useRejectAttendance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (evaluationId: string) => {
+      const { data, error } = await supabase.rpc('reject_evaluation_attendance', {
+        p_evaluation_id: evaluationId,
+      });
+      if (error) throw error;
+      return data as boolean;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pending-evaluations'] });
+      qc.invalidateQueries({ queryKey: ['my-evaluations'] });
+      qc.invalidateQueries({ queryKey: ['filed-evaluations'] });
     },
   });
 }

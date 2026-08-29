@@ -1,9 +1,24 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CalendarDays, Check, Loader2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { AlertCircle, CalendarDays, Check, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useConfirmAttendance, type PendingEvaluation } from '@/hooks/useEvaluations';
+import {
+  useConfirmAttendance,
+  useRejectAttendance,
+  type PendingEvaluation,
+} from '@/hooks/useEvaluations';
 
 /**
  * Pending confirmation prompt. Shows ONLY event context and evaluator identity —
@@ -11,6 +26,7 @@ import { useConfirmAttendance, type PendingEvaluation } from '@/hooks/useEvaluat
  */
 export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation }) {
   const confirm = useConfirmAttendance();
+  const reject = useRejectAttendance();
   const { toast } = useToast();
 
   const credentials = [
@@ -34,6 +50,24 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
     } catch (err) {
       toast({
         title: 'Could not confirm',
+        description: (err as Error)?.message ?? 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      const ok = await reject.mutateAsync(pending.id);
+      toast({
+        title: ok ? 'Marked "not there"' : 'Already closed out',
+        description: ok
+          ? 'This report is closed. It stays visible only to the evaluator who wrote it — never to you or anyone following you.'
+          : 'This evaluation was already confirmed or rejected.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Could not reject',
         description: (err as Error)?.message ?? 'Please try again.',
         variant: 'destructive',
       });
@@ -83,14 +117,53 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
           </Badge>
         </div>
 
-        <Button onClick={handleConfirm} disabled={confirm.isPending} className="w-full sm:w-auto">
-          {confirm.isPending ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Check className="h-4 w-4 mr-2" />
-          )}
-          Yes, I was there — release this report
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            onClick={handleConfirm}
+            disabled={confirm.isPending || reject.isPending}
+            className="w-full sm:w-auto"
+          >
+            {confirm.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4 mr-2" />
+            )}
+            Yes, I was there — release this report
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={confirm.isPending || reject.isPending}
+                className="w-full sm:w-auto"
+              >
+                {reject.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <X className="h-4 w-4 mr-2" />
+                )}
+                No, I was not there
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Mark this report as "not there"?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This is permanent. The report is closed out and stays visible only to the
+                  evaluator who wrote it — it will never be released to you or to anyone following
+                  you, and it will stop appearing here.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleReject}>
+                  Yes, I was not there
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardContent>
     </Card>
   );
