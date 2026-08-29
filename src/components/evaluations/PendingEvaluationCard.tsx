@@ -117,14 +117,53 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
           </Badge>
         </div>
 
-        <Button onClick={handleConfirm} disabled={confirm.isPending} className="w-full sm:w-auto">
-          {confirm.isPending ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Check className="h-4 w-4 mr-2" />
-          )}
-          Yes, I was there — release this report
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            onClick={handleConfirm}
+            disabled={confirm.isPending || reject.isPending}
+            className="w-full sm:w-auto"
+          >
+            {confirm.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4 mr-2" />
+            )}
+            Yes, I was there — release this report
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={confirm.isPending || reject.isPending}
+                className="w-full sm:w-auto"
+              >
+                {reject.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <X className="h-4 w-4 mr-2" />
+                )}
+                No, I was not there
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Mark this report as "not there"?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This is permanent. The report is closed out and stays visible only to the
+                  evaluator who wrote it — it will never be released to you or to anyone following
+                  you, and it will stop appearing here.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleReject}>
+                  Yes, I was not there
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardContent>
     </Card>
   );
