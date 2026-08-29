@@ -128,3 +128,37 @@ export function useMarkStandardMatchNotificationRead() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["standard-match-notifications"] }),
   });
 }
+
+/**
+ * "Follow this player" straight off a match ping, so an org rep never has to
+ * copy an athlete id around. Writes the same `scout_follows` row the manual
+ * lookup flow writes (status stays 'pending' — the athlete still accepts).
+ */
+export function useFollowMatchedAthlete() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (athleteUserId: string) => {
+      const { data: existing } = await supabase
+        .from("scout_follows")
+        .select("id, status")
+        .eq("scout_id", user!.id)
+        .eq("player_id", athleteUserId)
+        .maybeSingle();
+      if (existing) return existing.status as string;
+
+      const { error } = await supabase.from("scout_follows").insert({
+        scout_id: user!.id,
+        player_id: athleteUserId,
+        status: "pending",
+        initiated_by: "coach",
+      });
+      if (error) throw error;
+      return "pending";
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coach-player-pool"] });
+      qc.invalidateQueries({ queryKey: ["scout-follows"] });
+    },
+  });
+}
