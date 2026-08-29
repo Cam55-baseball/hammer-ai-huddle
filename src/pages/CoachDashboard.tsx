@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { StaffGettingStarted } from '@/components/staff/StaffGettingStarted';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -268,6 +269,8 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
+
+        <StaffGettingStarted role="coach" />
 
         {/* Hammer Progress Reports Inbox */}
         <FollowerReportsInbox role="coach" />
