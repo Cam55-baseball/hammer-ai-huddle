@@ -221,7 +221,7 @@ export default function Profile() {
     try {
       // Determine which user's profile to fetch
       const userId = targetUserId || user.id;
-      console.log('[Profile] Fetching profile for userId:', userId, 'from param:', targetUserId, 'viewingOtherProfile:', viewingOtherProfile);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
