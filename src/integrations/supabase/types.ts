@@ -2183,6 +2183,48 @@ export type Database = {
         }
         Relationships: []
       }
+      catching_reps: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          metric: string
+          missing_reason: string | null
+          recorded_by: string | null
+          source: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          metric: string
+          missing_reason?: string | null
+          recorded_by?: string | null
+          source: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          metric?: string
+          missing_reason?: string | null
+          recorded_by?: string | null
+          source?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
       checkout_attempts: {
         Row: {
           ab_variant: string | null
@@ -11874,6 +11916,51 @@ export type Database = {
           outcome_intensity?: number | null
           situation?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      throwing_reps: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          metric: string
+          missing_reason: string | null
+          position_context: string
+          recorded_by: string | null
+          source: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          metric: string
+          missing_reason?: string | null
+          position_context: string
+          recorded_by?: string | null
+          source: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          metric?: string
+          missing_reason?: string | null
+          position_context?: string
+          recorded_by?: string | null
+          source?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: number | null
         }
         Relationships: []
       }

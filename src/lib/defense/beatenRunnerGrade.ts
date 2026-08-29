@@ -55,27 +55,23 @@ export function toScoutingGrade(raw: number): number {
 }
 
 /**
- * @param totalPlayTimeSec contact → out recorded, in seconds
- * @param hand batter-runner handedness
- * @param scaleRows rows loaded from `scale_reference`
+ * Shared 20–80 interpolation against ONE `scale_reference` row.
+ *
+ * This is the single implementation. Beaten-runner, home-to-first, and
+ * catcher pop time all route through here — there is no second copy.
  */
-export function computeBeatenRunnerGrade(
-  totalPlayTimeSec: number | null | undefined,
-  hand: BatterHandedness,
+export function gradeFromScaleRow(
+  value: number | null | undefined,
+  metric: string,
   scaleRows: readonly ScaleReferenceRow[],
+  noValueReason: BeatenRunnerMissingReason = "no_play_time",
 ): BeatenRunnerResult {
-  if (
-    totalPlayTimeSec == null ||
-    !Number.isFinite(totalPlayTimeSec) ||
-    totalPlayTimeSec <= 0
-  ) {
-    return missing("no_play_time");
+  if (value == null || !Number.isFinite(value) || value <= 0) {
+    return missing(noValueReason);
   }
 
-  const metric = metricForHandedness(hand);
   const row = scaleRows.find((r) => r.metric === metric);
   if (!row) return missing("no_scale_reference");
-
   if (row.direction !== "lower_better") return missing("unsupported_direction");
 
   const floor = row.floor_value;
@@ -91,7 +87,7 @@ export function computeBeatenRunnerGrade(
     return missing("incomplete_scale_reference");
   }
 
-  const t = totalPlayTimeSec;
+  const t = value;
   let raw: number;
   if (t <= record) {
     raw = 80;
@@ -107,3 +103,22 @@ export function computeBeatenRunnerGrade(
 
   return { grade: toScoutingGrade(raw), missing: false };
 }
+
+/**
+ * @param totalPlayTimeSec contact → out recorded, in seconds
+ * @param hand batter-runner handedness
+ * @param scaleRows rows loaded from `scale_reference`
+ */
+export function computeBeatenRunnerGrade(
+  totalPlayTimeSec: number | null | undefined,
+  hand: BatterHandedness,
+  scaleRows: readonly ScaleReferenceRow[],
+): BeatenRunnerResult {
+  return gradeFromScaleRow(
+    totalPlayTimeSec,
+    metricForHandedness(hand),
+    scaleRows,
+    "no_play_time",
+  );
+}
+
