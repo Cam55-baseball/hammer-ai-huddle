@@ -145,5 +145,31 @@ export function applyManualOrder<T extends OrderableRx>(
  * clients render in the canonical order without recomputing.
  */
 export function assignSequenceOrder<T extends OrderableRx>(rxs: T[]): (T & { sequence_order: number })[] {
-  return sortCanonical(rxs).map((rx, i) => ({ ...rx, sequence_order: i }));
+  // Items a coach pinned (marked by applyManualOrder) claim their stored slot
+  // in the final list first; the canonical order fills every remaining slot.
+  const isPinned = (rx: T) =>
+    (rx.why_payload as { manual_order?: unknown } | undefined)?.manual_order === true &&
+    typeof rx.sequence_order === "number";
+
+  const pinned = rxs.filter(isPinned).sort((a, b) => (a.sequence_order! - b.sequence_order!));
+  if (pinned.length === 0) {
+    return sortCanonical(rxs).map((rx, i) => ({ ...rx, sequence_order: i }));
+  }
+
+  const rest = sortCanonical(rxs.filter((rx) => !isPinned(rx)));
+  const total = rxs.length;
+  const out: (T | undefined)[] = new Array(total).fill(undefined);
+
+  for (const rx of pinned) {
+    let idx = Math.max(0, Math.min(total - 1, rx.sequence_order as number));
+    while (out[idx] !== undefined) idx = (idx + 1) % total; // collision → next free
+    out[idx] = rx;
+  }
+  let cursor = 0;
+  for (const rx of rest) {
+    while (out[cursor] !== undefined) cursor++;
+    out[cursor] = rx;
+  }
+
+  return (out as T[]).map((rx, i) => ({ ...rx, sequence_order: i }));
 }
