@@ -81,6 +81,10 @@ const MyDefensivePlays = lazyWithRetry(() => import("./pages/MyDefensivePlays"))
 const MyCombineResults = lazyWithRetry(() => import("./pages/MyCombineResults"));
 const MyTellReport = lazyWithRetry(() => import("./pages/MyTellReport"));
 const PitchTippingEducation = lazyWithRetry(() => import("./pages/PitchTippingEducation"));
+const BaserunningSplitEntry = lazyWithRetry(() => import("./pages/BaserunningSplitEntry"));
+const MyBaserunningSplits = lazyWithRetry(() => import("./pages/MyBaserunningSplits"));
+const CatchingRepEntry = lazyWithRetry(() => import("./pages/CatchingRepEntry"));
+const ThrowingRepEntry = lazyWithRetry(() => import("./pages/ThrowingRepEntry"));
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
@@ -356,6 +360,11 @@ const App = () => {
               <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
               <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
               <Route path="/pitching/tell-report" element={<StaffOnlyRoute><MyTellReport /></StaffOnlyRoute>} />
+              {/* Pre-release: baserunning / catching / throwing paperwork is staff-only until those modules ship. */}
+              <Route path="/baserunning/splits/entry" element={<StaffOnlyRoute><BaserunningSplitEntry /></StaffOnlyRoute>} />
+              <Route path="/baserunning/splits" element={<StaffOnlyRoute><MyBaserunningSplits /></StaffOnlyRoute>} />
+              <Route path="/catching/reps/entry" element={<StaffOnlyRoute><CatchingRepEntry /></StaffOnlyRoute>} />
+              <Route path="/throwing/reps/entry" element={<StaffOnlyRoute><ThrowingRepEntry /></StaffOnlyRoute>} />
               <Route path="/learn/pitch-tipping" element={<PitchTippingEducation />} />
 
               <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
