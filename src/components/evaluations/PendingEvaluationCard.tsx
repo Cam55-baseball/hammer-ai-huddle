@@ -56,6 +56,24 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
     }
   };
 
+  const handleReject = async () => {
+    try {
+      const ok = await reject.mutateAsync(pending.id);
+      toast({
+        title: ok ? 'Marked "not there"' : 'Already closed out',
+        description: ok
+          ? 'This report is closed. It stays visible only to the evaluator who wrote it — never to you or anyone following you.'
+          : 'This evaluation was already confirmed or rejected.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Could not reject',
+        description: (err as Error)?.message ?? 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Card className="border-amber-500/40">
       <CardHeader className="pb-3">
