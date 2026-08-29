@@ -31,6 +31,10 @@ import { ContractStatusCard } from "@/components/professional/ContractStatusCard
 import { VerifiedStatSubmission } from "@/components/professional/VerifiedStatSubmission";
 import { SportBadge } from "@/components/professional/SportBadge";
 import { PublicVerifiedStats } from "@/components/professional/PublicVerifiedStats";
+import { EvaluatorCredentialsCard } from "@/components/evaluations/EvaluatorCredentialsCard";
+import { FollowedPlayerGradesCard } from "@/components/evaluations/FollowedPlayerGradesCard";
+import { ScoutUpgradeCard } from "@/components/scout/ScoutUpgradeCard";
+import { ClipboardCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 
@@ -685,6 +689,16 @@ export default function Profile() {
                   {t('profile.following')}
                 </Badge>
               )}
+              {/* Filing a report is independent of following. */}
+              <Button
+                onClick={() => navigate(`/scout-evaluation/${viewingUserId}`)}
+                variant="secondary"
+                size="lg"
+                className="gap-2 h-12 px-5 text-base"
+              >
+                <ClipboardCheck className="h-5 w-5" />
+                File a report
+              </Button>
             </>
           )}
         </div>
@@ -1838,6 +1852,30 @@ export default function Profile() {
             </div>
           </Card>
         )}
+
+        {/* Evaluator credentials — own profile, scouts and coaches only */}
+        {!viewingOtherProfile && (currentUserRole === 'scout' || currentUserRole === 'coach') && (
+          <div className="mb-6">
+            <EvaluatorCredentialsCard />
+          </div>
+        )}
+
+        {/* Self-service scout upgrade — coaches only */}
+        {!viewingOtherProfile && currentUserRole === 'coach' && (
+          <div className="mb-6">
+            <ScoutUpgradeCard />
+          </div>
+        )}
+
+        {/* Running scout-grade average of a followed player */}
+        {viewingOtherProfile &&
+          isPlayer &&
+          followStatus === 'accepted' &&
+          (currentUserRole === 'coach' || currentUserRole === 'scout') && (
+            <div className="mb-6">
+              <FollowedPlayerGradesCard athleteId={viewingUserId ?? undefined} />
+            </div>
+          )}
 
         {/* Public Verified Stats - visible to everyone */}
         {profile && (

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, UserSearch } from 'lucide-react';
 import { useAthleteEvaluators, useAthleteEvaluations } from '@/hooks/useEvaluations';
 import { EvaluationReportCard } from './EvaluationReportCard';
+import { formatCredentials, formatAttribution } from '@/lib/evaluation/evaluatorCredentials';
 
 /**
  * "Who evaluated this player?" — a lookupable directory of every evaluator with
@@ -29,8 +30,6 @@ export function EvaluatorDirectory({
   const active = evaluators.find((e) => e.evaluator_id === selected);
   const activeReports = reports.filter((r) => r.evaluator_id === selected);
 
-  const credentials = (role: string | null, org: string | null) =>
-    [role ? role.charAt(0).toUpperCase() + role.slice(1) : null, org].filter(Boolean).join(' · ');
 
   return (
     <div className="space-y-4">
@@ -62,10 +61,7 @@ export function EvaluatorDirectory({
                 <SelectContent className="bg-popover z-50">
                   {evaluators.map((e) => (
                     <SelectItem key={e.evaluator_id} value={e.evaluator_id}>
-                      {e.evaluator_name}
-                      {credentials(e.evaluator_role, e.evaluator_organization)
-                        ? ` — ${credentials(e.evaluator_role, e.evaluator_organization)}`
-                        : ''}
+                      {formatAttribution(e)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -74,6 +70,9 @@ export function EvaluatorDirectory({
               {active && (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">{active.evaluator_name}</span>
+                  {active.evaluator_title && (
+                    <Badge variant="secondary">{active.evaluator_title}</Badge>
+                  )}
                   {active.evaluator_role && (
                     <Badge variant="secondary" className="capitalize">{active.evaluator_role}</Badge>
                   )}
@@ -95,15 +94,7 @@ export function EvaluatorDirectory({
         <EvaluationReportCard
           key={r.id}
           report={r}
-          attribution={
-            active
-              ? `${active.evaluator_name}${
-                  credentials(active.evaluator_role, active.evaluator_organization)
-                    ? ` — ${credentials(active.evaluator_role, active.evaluator_organization)}`
-                    : ''
-                }`
-              : undefined
-          }
+          attribution={active ? formatAttribution(active) : undefined}
         />
       ))}
     </div>

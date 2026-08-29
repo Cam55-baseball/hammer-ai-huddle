@@ -19,6 +19,7 @@ import {
   useRejectAttendance,
   type PendingEvaluation,
 } from '@/hooks/useEvaluations';
+import { formatCredentials } from '@/lib/evaluation/evaluatorCredentials';
 
 /**
  * Pending confirmation prompt. Shows ONLY event context and evaluator identity —
@@ -29,14 +30,7 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
   const reject = useRejectAttendance();
   const { toast } = useToast();
 
-  const credentials = [
-    pending.evaluator_role
-      ? pending.evaluator_role.charAt(0).toUpperCase() + pending.evaluator_role.slice(1)
-      : null,
-    pending.evaluator_organization,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const credentials = formatCredentials(pending);
 
   const handleConfirm = async () => {
     try {
@@ -106,12 +100,10 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">{pending.evaluator_name}</span>
+          {credentials && <Badge variant="outline">{credentials}</Badge>}
           {pending.evaluator_role && (
             <Badge variant="secondary" className="capitalize">{pending.evaluator_role}</Badge>
           )}
-          {credentials.includes('·') || pending.evaluator_organization ? (
-            <Badge variant="outline">{pending.evaluator_organization}</Badge>
-          ) : null}
           <Badge variant="outline">
             {pending.grade_type === 'pitching' ? 'Pitching report' : 'Position player report'}
           </Badge>

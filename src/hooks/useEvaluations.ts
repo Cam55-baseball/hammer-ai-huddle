@@ -38,6 +38,7 @@ export interface EvaluatorIdentity {
   evaluator_id: string;
   evaluator_name: string;
   evaluator_role: string | null;
+  evaluator_title: string | null;
   evaluator_organization: string | null;
   report_count: number;
   latest_graded_at: string;
@@ -52,6 +53,7 @@ export interface PendingEvaluation {
   evaluator_id: string | null;
   evaluator_name: string;
   evaluator_role: string | null;
+  evaluator_title: string | null;
   evaluator_organization: string | null;
 }
 

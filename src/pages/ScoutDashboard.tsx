@@ -436,40 +436,41 @@ export default function ScoutDashboard() {
                     <div className="flex flex-wrap gap-2 items-center">
                       <Button
                         onClick={() => navigate(`/profile?userId=${player.id}`)}
-                        size="sm"
+                        size="lg"
                         variant="outline"
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 h-12 px-5 text-base"
                       >
-                        <User className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">{t('scout.viewProfile')}</span>
+                        <User className="h-5 w-5 mr-2" />
+                        <span>{t('scout.viewProfile')}</span>
                       </Button>
                       <Button
                         onClick={() => navigate(`/players-club?playerId=${player.id}`)}
-                        size="sm"
+                        size="lg"
                         variant="outline"
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 h-12 px-5 text-base"
                       >
-                        <BookMarked className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">{t('scout.viewLibrary')}</span>
+                        <BookMarked className="h-5 w-5 mr-2" />
+                        <span>{t('scout.viewLibrary')}</span>
                       </Button>
                       <Button
                         onClick={() => navigate(`/scout-evaluation/${player.id}`)}
-                        size="sm"
+                        size="lg"
                         variant="secondary"
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 h-12 px-5 text-base"
                       >
-                        <ClipboardCheck className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">Evaluate</span>
+                        <ClipboardCheck className="h-5 w-5 mr-2" />
+                        <span>File a report</span>
                       </Button>
                       {player.id !== ownerId && (
                         <Button
                           onClick={() => handleUnfollowClick(player)}
-                          size="sm"
+                          size="lg"
                           variant="destructive"
-                          className="follow-button flex-shrink-0"
+                          className="follow-button flex-shrink-0 h-12 px-5 text-base"
                         >
-                          <UserMinus className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">{t('scout.unfollow')}</span>
+                          <UserMinus className="h-5 w-5 mr-2" />
+                          <span>{t('scout.unfollow')}</span>
+
                         </Button>
                       )}
                     </div>
@@ -622,35 +623,46 @@ export default function ScoutDashboard() {
                             }
                             navigate(`/profile?userId=${player.id}`);
                           }}
-                          size="sm"
+                          size="lg"
                           variant="outline"
-                          className="flex-shrink-0"
+                          className="flex-shrink-0 h-12 px-5 text-base"
                         >
-                          <User className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">{t('scout.viewProfile')}</span>
+                          <User className="h-5 w-5 mr-2" />
+                          <span>{t('scout.viewProfile')}</span>
+                        </Button>
+
+                        {/* Filing a report never requires a follow relationship. */}
+                        <Button
+                          onClick={() => navigate(`/scout-evaluation/${player.id}`)}
+                          size="lg"
+                          variant="secondary"
+                          className="flex-shrink-0 h-12 px-5 text-base"
+                        >
+                          <ClipboardCheck className="h-5 w-5 mr-2" />
+                          <span>File a report</span>
                         </Button>
 
                         
                         {player.followStatus === 'accepted' && (
                           <Button
                             onClick={() => navigate(`/players-club?playerId=${player.id}`)}
-                            size="sm"
+                            size="lg"
                             variant="outline"
-                            className="flex-shrink-0"
+                            className="flex-shrink-0 h-12 px-5 text-base"
                           >
-                            <BookMarked className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">{t('scout.viewLibrary')}</span>
+                            <BookMarked className="h-5 w-5 mr-2" />
+                            <span>{t('scout.viewLibrary')}</span>
                           </Button>
                         )}
                         
                         {player.followStatus === 'none' && (
                           <Button
                             onClick={() => handleSendFollow(player.id)}
-                            size="sm"
-                            className="follow-button flex-shrink-0"
+                            size="lg"
+                            className="follow-button flex-shrink-0 h-12 px-5 text-base"
                           >
-                            <UserPlus className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">{t('scout.follow')}</span>
+                            <UserPlus className="h-5 w-5 mr-2" />
+                            <span>{t('scout.follow')}</span>
                           </Button>
                         )}
                         {player.followStatus === 'pending' && (
