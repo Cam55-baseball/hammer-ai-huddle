@@ -9623,6 +9623,8 @@ export type Database = {
           currently_in_high_school: boolean | null
           date_of_birth: string | null
           enrolled_in_college: boolean | null
+          evaluator_organization: string | null
+          evaluator_title: string | null
           experience_level: string | null
           first_name: string | null
           full_name: string | null
@@ -9688,6 +9690,8 @@ export type Database = {
           currently_in_high_school?: boolean | null
           date_of_birth?: string | null
           enrolled_in_college?: boolean | null
+          evaluator_organization?: string | null
+          evaluator_title?: string | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -9753,6 +9757,8 @@ export type Database = {
           currently_in_high_school?: boolean | null
           date_of_birth?: string | null
           enrolled_in_college?: boolean | null
+          evaluator_organization?: string | null
+          evaluator_title?: string | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -16606,6 +16612,7 @@ export type Database = {
           evaluator_name: string
           evaluator_organization: string
           evaluator_role: string
+          evaluator_title: string
           latest_graded_at: string
           report_count: number
         }[]
@@ -16629,6 +16636,7 @@ export type Database = {
           evaluator_name: string
           evaluator_organization: string
           evaluator_role: string
+          evaluator_title: string
           event_description: string
           grade_type: string
           graded_at: string
