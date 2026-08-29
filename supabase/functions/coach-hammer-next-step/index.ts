@@ -153,7 +153,13 @@ serve(async (req) => {
     // ---- Cache lookup ------------------------------------------------------
     // The dashboard mounts on every page load; without this the model would run
     // on every refresh. Same athlete + same day + same coarse snapshot => replay.
-    const planDate = new Date().toISOString().slice(0, 10);
+    // Single source of truth for "what day is it": the client's local date,
+    // sent on the request. The server never derives its own UTC day — that
+    // disagreed with the client near midnight and split the cache.
+    const rawPlanDate = typeof body?.plan_date === "string" ? body.plan_date : null;
+    const planDate = rawPlanDate && /^\d{4}-\d{2}-\d{2}$/.test(rawPlanDate)
+      ? rawPlanDate
+      : new Date().toISOString().slice(0, 10); // legacy clients only
     const snapshotHash = await hashSnapshot(snapshot, planDate);
 
     const { data: cached } = await supabase
