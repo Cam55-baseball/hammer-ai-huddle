@@ -23,7 +23,7 @@ import { validate as wicValidate } from "../_shared/wic/validator.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
-import { assignSequenceOrder } from "../_shared/wic/ordering.ts";
+import { applyManualOrder, assignSequenceOrder } from "../_shared/wic/ordering.ts";
 // WIC engine modules — canonical slug pools per engine.
 import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
 import { selectSpeedPicks } from "../_shared/wic/engines/speed.ts";
@@ -1484,7 +1484,28 @@ const handler = async (req: Request): Promise<Response> => {
     // Phase 2 Fix 5 — deterministic canonical ordering. This is the ONLY
     // place sequence_order is assigned. Cards render by this key; no
     // component-level ordering is allowed.
-    const orderedRxs = assignSequenceOrder(dedupePrescriptions(rxs));
+    // Never ignore what a coach has done — read back any manual ordering
+    // already stored for this athlete/day and preserve it through regeneration.
+    let priorOrderRows: {
+      slot: string;
+      movement_slug: string;
+      sequence_order: number | null;
+      why_payload: Record<string, unknown> | null;
+    }[] = [];
+    try {
+      const { data: priorRows } = await admin
+        .from("wk_prescriptions")
+        .select("slot, movement_slug, sequence_order, why_payload")
+        .eq("user_id", user.id)
+        .eq("plan_date", planDate);
+      priorOrderRows = (priorRows ?? []) as typeof priorOrderRows;
+    } catch (_e) {
+      priorOrderRows = [];
+    }
+
+    const orderedRxs = assignSequenceOrder(
+      applyManualOrder(dedupePrescriptions(rxs), priorOrderRows),
+    );
     const finalRxs = orderedRxs;
 
 
