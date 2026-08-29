@@ -59,6 +59,11 @@ export const RELEASE1_HIDDEN_METRICS = [
   "hands_outside_shoulders_at_landing_pass",
   "shoulder_to_shoulder_hold_pass",
   "front_shoulder_leak_before_contact",
+  // BH pose-only tiles with real MediaPipe geometry built
+  // (backKneeFlexMaintained.ts / postLandingHipDrift.ts), still hidden while
+  // all hitting output is suppressed and their thresholds are unvalidated.
+  "back_knee_flex_maintained_pass",
+  "post_landing_hip_drift_pass",
 ] as const;
 
 
