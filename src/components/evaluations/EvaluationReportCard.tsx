@@ -30,14 +30,19 @@ export function EvaluationReportCard({
   attribution,
   showConfirmationStatus,
 }: EvaluationReportCardProps) {
-  const rows = Object.keys(TOOL_LABELS)
+  const position = (report.position_evaluated as string | null) ?? null;
+  const rows = TOOL_DISPLAY_ORDER
     .map((key) => ({
       key,
-      label: TOOL_LABELS[key],
+      label:
+        position && (POSITION_BOUND_KEYS as readonly string[]).includes(key)
+          ? `${TOOL_LABELS[key]} @ ${position}`
+          : TOOL_LABELS[key],
       present: (report[key] as number | null) ?? null,
       future: (report[`${key}_future`] as number | null) ?? null,
     }))
     .filter((r) => r.present != null || r.future != null);
+
 
   const dateLabel = new Date(report.graded_at).toLocaleDateString(undefined, {
     year: 'numeric',
