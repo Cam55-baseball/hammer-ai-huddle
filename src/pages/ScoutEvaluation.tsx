@@ -100,12 +100,8 @@ export default function ScoutEvaluation() {
     };
   }, [athleteId]);
 
-  const tools = useMemo(() => {
-    if (gradeType === 'pitching') {
-      return sport === 'softball' ? [...PITCHING_TOOLS.slice(0, 3), RISE_BALL_TOOL, ...PITCHING_TOOLS.slice(3)] : PITCHING_TOOLS;
-    }
-    return POSITION_TOOLS;
-  }, [gradeType, sport]);
+  const groups = useMemo(() => groupsFor(gradeType, sport), [gradeType, sport]);
+  const tools = useMemo(() => toolsFor(gradeType, sport), [gradeType, sport]);
 
   const gradedCount = tools.filter((t) => current[t.key] != null || future[t.key] != null).length;
 
@@ -124,7 +120,11 @@ export default function ScoutEvaluation() {
         overall_grade: overallGrade,
         notes: notes.trim() || null,
         player_confirmed: false,
+        // Defense / arm on this row are grades AT this position.
+        position_evaluated: positionEvaluated || null,
+        is_switch_hitter: gradeType === 'pitching' ? null : isSwitchHitter,
       };
+
       for (const t of tools) {
         row[t.key] = current[t.key] ?? null;
         row[`${t.key}_future`] = future[t.key] ?? null;
