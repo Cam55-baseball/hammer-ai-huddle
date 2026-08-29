@@ -19,40 +19,13 @@ import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft } from 'lucide-react';
 
 type GradeType = 'hitting_throwing' | 'pitching';
 
-interface ToolDef {
-  key: string;
-  label: string;
-  hint: string;
-}
-
-const POSITION_TOOLS: ToolDef[] = [
-  { key: 'hitting_grade', label: 'Hit', hint: 'Bat-to-ball, approach, contact quality' },
-  { key: 'power_grade', label: 'Power', hint: 'Raw and game power' },
-  { key: 'speed_grade', label: 'Run', hint: 'Home-to-first, underway speed' },
-  { key: 'defense_grade', label: 'Field', hint: 'Actions, hands, footwork, instincts' },
-  { key: 'throwing_grade', label: 'Arm', hint: 'Arm strength, carry, accuracy' },
-  { key: 'self_efficacy_grade', label: 'Competitiveness', hint: 'Self-belief, response to failure' },
-  { key: 'leadership_grade', label: 'Leadership', hint: 'Presence, dugout/field impact' },
-];
-
-const PITCHING_TOOLS: ToolDef[] = [
-  { key: 'fastball_grade', label: 'Fastball', hint: 'Velocity, life, plane' },
-  { key: 'offspeed_grade', label: 'Offspeed', hint: 'Changeup / drop-change separation' },
-  { key: 'breaking_ball_grade', label: 'Breaking Ball', hint: 'Shape, tilt, sharpness' },
-  { key: 'control_grade', label: 'Control / Command', hint: 'Strikes and location within zone' },
-  { key: 'delivery_grade', label: 'Delivery', hint: 'Repeatability, athleticism, arm action' },
-  { key: 'self_efficacy_grade', label: 'Competitiveness', hint: 'Mound presence under stress' },
-  { key: 'leadership_grade', label: 'Leadership', hint: 'Staff and clubhouse impact' },
-];
-
-const RISE_BALL_TOOL: ToolDef = { key: 'rise_ball_grade', label: 'Rise Ball', hint: 'Late lift, spin quality (softball)' };
-
 const CONTEXT_OPTIONS = [
   'In-person — game',
   'In-person — workout/practice',
   'In-person — showcase/camp',
   'Video review',
 ];
+
 
 const SCALE = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
 
