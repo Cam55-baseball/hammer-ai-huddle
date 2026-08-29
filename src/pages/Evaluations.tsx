@@ -16,6 +16,7 @@ import {
 import { EvaluationReportCard } from '@/components/evaluations/EvaluationReportCard';
 import { PendingEvaluationCard } from '@/components/evaluations/PendingEvaluationCard';
 import { EvaluatorDirectory } from '@/components/evaluations/EvaluatorDirectory';
+import { PositionGradeSummaryCard } from '@/components/evaluations/PositionGradeSummaryCard';
 import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
 
 /**
