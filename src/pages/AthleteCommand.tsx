@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { NotificationBell } from "@/components/command/NotificationBell";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { RecentEventsPreview } from "@/components/command/cards/RecentEventsPreview";
@@ -33,16 +34,26 @@ export default function AthleteCommand() {
   const navigate = useNavigate();
   const { data: rows, isLoading } = useAthleteCommandRows({ days: 30, limit: 500 });
   const { hasFirstEvent, loading: onboardingLoading } = useAthleteOnboardingState();
+  const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
 
   useEffect(() => {
     if (!authLoading && isAuthStable && !user) navigate("/auth", { replace: true });
   }, [authLoading, isAuthStable, user, navigate]);
 
+  // Hammers Today is an athlete surface. Coach/scout accounts get bounced to
+  // their own hub instead of an empty training plan.
   useEffect(() => {
+    if (!roleLoading && (isScout || isCoach)) {
+      navigate(isCoach ? "/coach-dashboard" : "/scout-dashboard", { replace: true });
+    }
+  }, [roleLoading, isScout, isCoach, navigate]);
+
+  useEffect(() => {
+    if (roleLoading || isScout || isCoach) return;
     if (!authLoading && isAuthStable && user && !onboardingLoading && !hasFirstEvent) {
       navigate("/onboarding/athlete", { replace: true });
     }
-  }, [authLoading, isAuthStable, user, onboardingLoading, hasFirstEvent, navigate]);
+  }, [authLoading, isAuthStable, user, onboardingLoading, hasFirstEvent, roleLoading, isScout, isCoach, navigate]);
 
   return (
     <DashboardLayout>

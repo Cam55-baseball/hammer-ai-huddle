@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { StaffGettingStarted } from '@/components/staff/StaffGettingStarted';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -359,6 +360,7 @@ export default function ScoutDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+      <StaffGettingStarted role="scout" />
       <div>
         <h1 className="text-3xl font-bold">{t('scout.dashboard')}</h1>
         <p className="text-muted-foreground mt-2">

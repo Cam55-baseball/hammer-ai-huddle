@@ -37,9 +37,10 @@ Deno.serve(async (req) => {
       // Hydrate player profile
       let player = null;
       if (data?.player_id) {
-        const { data: p } = await supabase.from('profiles')
-          .select('id, full_name, avatar_url, sport, primary_position, position, hs_grad_year')
+        const { data: p, error: pErr } = await supabase.from('profiles')
+          .select('id, full_name, avatar_url, position')
           .eq('id', data.player_id).maybeSingle();
+        if (pErr) console.error('[get-follower-reports] profile hydrate failed', pErr);
         player = p;
       }
       return new Response(JSON.stringify({ report: data, player }), {
@@ -57,9 +58,14 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const playerIds = [...new Set((reports ?? []).map((r: any) => r.player_id))];
-    const { data: players } = playerIds.length
-      ? await supabase.from('profiles').select('id, full_name, avatar_url, sport, primary_position, position').in('id', playerIds)
-      : { data: [] as any[] };
+    // Only columns that actually exist on `profiles`. Selecting phantom columns
+    // (sport / primary_position / hs_grad_year) made PostgREST 400 the whole
+    // query, and because the error was swallowed every row rendered as
+    // "Unknown Player".
+    const { data: players, error: playersErr } = playerIds.length
+      ? await supabase.from('profiles').select('id, full_name, avatar_url, position').in('id', playerIds)
+      : { data: [] as any[], error: null };
+    if (playersErr) console.error('[get-follower-reports] player hydrate failed', playersErr);
     const playerMap = new Map((players ?? []).map((p: any) => [p.id, p]));
 
     return new Response(JSON.stringify({

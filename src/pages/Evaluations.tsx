@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +35,11 @@ export default function Evaluations() {
   const { data: filed = [], isLoading: filedLoading } = useFiledEvaluations();
 
   const isEvaluator = canSendActivities;
-  const [tab, setTab] = useState(isEvaluator ? 'filed' : 'about-me');
+  // The tab value must be DERIVED, not seeded once. `canSendActivities` is
+  // false on the first render (role query still loading), so a useState seed
+  // permanently pinned evaluators to "about-me" while only the "filed" panel
+  // was mounted — rendering an empty page even though their reports existed.
+  const tab = isEvaluator ? 'filed' : 'about-me';
 
   const athleteIds = useMemo(
     () => filed.map((r) => r.user_id).filter(Boolean) as string[],
@@ -73,7 +77,7 @@ export default function Evaluations() {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={tab}>
           {isEvaluator ? (
             <>
               {/* Evaluators only see their own filed reports. */}

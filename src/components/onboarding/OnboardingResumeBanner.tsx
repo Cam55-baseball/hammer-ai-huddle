@@ -11,12 +11,15 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 
 const SS_KEY = "onboarding-resume-banner-dismissed";
 
 export function OnboardingResumeBanner() {
   const location = useLocation();
   const { hasCompletedOnboarding, hasScheduleEvent, loading } = useAthleteOnboardingState();
+  // Coaches and scouts have no athlete setup flow — never nag them into one.
+  const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -28,7 +31,8 @@ export function OnboardingResumeBanner() {
   }, []);
 
   // Don't render while on the onboarding flow itself, while loading, when complete, or when dismissed.
-  if (loading || hasCompletedOnboarding || dismissed) return null;
+  if (loading || roleLoading || hasCompletedOnboarding || dismissed) return null;
+  if (isScout || isCoach) return null;
   if (location.pathname.startsWith("/onboarding")) return null;
 
   return (
