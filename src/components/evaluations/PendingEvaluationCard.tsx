@@ -1,9 +1,24 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CalendarDays, Check, Loader2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { AlertCircle, CalendarDays, Check, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useConfirmAttendance, type PendingEvaluation } from '@/hooks/useEvaluations';
+import {
+  useConfirmAttendance,
+  useRejectAttendance,
+  type PendingEvaluation,
+} from '@/hooks/useEvaluations';
 
 /**
  * Pending confirmation prompt. Shows ONLY event context and evaluator identity —
