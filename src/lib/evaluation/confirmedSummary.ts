@@ -52,7 +52,7 @@ export function summarizeConfirmedEvaluations(reports: AnyReport[]): ConfirmedSu
   for (const key of TOOL_DISPLAY_ORDER) {
     if ((POSITION_BOUND_KEYS as readonly string[]).includes(key)) continue;
     const present = numbersAt(confirmed, key);
-    const future = numbersAt(confirmed, `${key.replace(/_grade$/, '')}_future_grade`);
+    const future = numbersAt(confirmed, `${key}_future`);
     if (present.length === 0 && future.length === 0) continue;
     rows.push({
       key,
