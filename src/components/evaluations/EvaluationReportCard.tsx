@@ -4,21 +4,8 @@ import { Separator } from '@/components/ui/separator';
 import { CalendarDays, ClipboardCheck, ShieldCheck, Clock } from 'lucide-react';
 import type { EvaluationRow } from '@/hooks/useEvaluations';
 
-const TOOL_LABELS: Record<string, string> = {
-  hitting_grade: 'Hit',
-  power_grade: 'Power',
-  speed_grade: 'Run',
-  defense_grade: 'Field',
-  throwing_grade: 'Arm',
-  fastball_grade: 'Fastball',
-  offspeed_grade: 'Offspeed',
-  breaking_ball_grade: 'Breaking Ball',
-  rise_ball_grade: 'Rise Ball',
-  control_grade: 'Control / Command',
-  delivery_grade: 'Delivery',
-  self_efficacy_grade: 'Competitiveness',
-  leadership_grade: 'Leadership',
-};
+import { TOOL_LABELS, TOOL_DISPLAY_ORDER, POSITION_BOUND_KEYS } from '@/lib/evaluation/scoutingTools';
+
 
 /** 20–80 scale colour anchor. 50 is average. */
 function gradeTone(n: number | null): string {
@@ -43,14 +30,19 @@ export function EvaluationReportCard({
   attribution,
   showConfirmationStatus,
 }: EvaluationReportCardProps) {
-  const rows = Object.keys(TOOL_LABELS)
+  const position = (report.position_evaluated as string | null) ?? null;
+  const rows = TOOL_DISPLAY_ORDER
     .map((key) => ({
       key,
-      label: TOOL_LABELS[key],
+      label:
+        position && (POSITION_BOUND_KEYS as readonly string[]).includes(key)
+          ? `${TOOL_LABELS[key]} @ ${position}`
+          : TOOL_LABELS[key],
       present: (report[key] as number | null) ?? null,
       future: (report[`${key}_future`] as number | null) ?? null,
     }))
     .filter((r) => r.present != null || r.future != null);
+
 
   const dateLabel = new Date(report.graded_at).toLocaleDateString(undefined, {
     year: 'numeric',
@@ -74,7 +66,14 @@ export function EvaluationReportCard({
               </span>
               {report.evaluation_context ? <> · {report.evaluation_context}</> : null}
               {report.event_description ? <> · {report.event_description}</> : null}
+              {(position || report.is_switch_hitter) && (
+                <span className="mt-1 flex flex-wrap gap-1">
+                  {position && <Badge variant="outline">Seen at {position}</Badge>}
+                  {report.is_switch_hitter ? <Badge variant="outline">Switch hitter</Badge> : null}
+                </span>
+              )}
             </CardDescription>
+
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
             {report.overall_grade != null && (

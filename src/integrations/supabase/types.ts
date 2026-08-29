@@ -13536,36 +13536,58 @@ export type Database = {
       }
       vault_scout_grades: {
         Row: {
+          body_type_frame_grade: number | null
+          body_type_frame_grade_future: number | null
           breaking_ball_grade: number | null
           breaking_ball_grade_future: number | null
           control_grade: number | null
           control_grade_future: number | null
+          deception_grade: number | null
+          deception_grade_future: number | null
           defense_grade: number | null
           defense_grade_future: number | null
+          delivery_arm_action_grade: number | null
+          delivery_arm_action_grade_future: number | null
           delivery_grade: number | null
           delivery_grade_future: number | null
           development_index: number | null
           evaluation_context: string | null
           evaluator_id: string | null
           event_description: string | null
+          eye_test_grade: number | null
+          eye_test_grade_future: number | null
           fastball_grade: number | null
           fastball_grade_future: number | null
+          game_iq_grade: number | null
+          game_iq_grade_future: number | null
           grade_source: string | null
           grade_type: string
           graded_at: string | null
           hitting_grade: number | null
           hitting_grade_future: number | null
+          hustle_grade: number | null
+          hustle_grade_future: number | null
           id: string
+          is_switch_hitter: boolean | null
           leadership_grade: number | null
           leadership_grade_future: number | null
           long_term_goals_text: string | null
+          mental_makeup_grade: number | null
+          mental_makeup_grade_future: number | null
           next_prompt_date: string | null
           notes: string | null
           offspeed_grade: number | null
           offspeed_grade_future: number | null
           overall_grade: number | null
+          pitchability_grade: number | null
+          pitchability_grade_future: number | null
+          plate_discipline_grade: number | null
+          plate_discipline_grade_future: number | null
           player_confirmed: boolean
           player_confirmed_at: string | null
+          poise_competitiveness_grade: number | null
+          poise_competitiveness_grade_future: number | null
+          position_evaluated: string | null
           power_grade: number | null
           power_grade_future: number | null
           rise_ball_grade: number | null
@@ -13579,36 +13601,58 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          body_type_frame_grade?: number | null
+          body_type_frame_grade_future?: number | null
           breaking_ball_grade?: number | null
           breaking_ball_grade_future?: number | null
           control_grade?: number | null
           control_grade_future?: number | null
+          deception_grade?: number | null
+          deception_grade_future?: number | null
           defense_grade?: number | null
           defense_grade_future?: number | null
+          delivery_arm_action_grade?: number | null
+          delivery_arm_action_grade_future?: number | null
           delivery_grade?: number | null
           delivery_grade_future?: number | null
           development_index?: number | null
           evaluation_context?: string | null
           evaluator_id?: string | null
           event_description?: string | null
+          eye_test_grade?: number | null
+          eye_test_grade_future?: number | null
           fastball_grade?: number | null
           fastball_grade_future?: number | null
+          game_iq_grade?: number | null
+          game_iq_grade_future?: number | null
           grade_source?: string | null
           grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
           hitting_grade_future?: number | null
+          hustle_grade?: number | null
+          hustle_grade_future?: number | null
           id?: string
+          is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
           long_term_goals_text?: string | null
+          mental_makeup_grade?: number | null
+          mental_makeup_grade_future?: number | null
           next_prompt_date?: string | null
           notes?: string | null
           offspeed_grade?: number | null
           offspeed_grade_future?: number | null
           overall_grade?: number | null
+          pitchability_grade?: number | null
+          pitchability_grade_future?: number | null
+          plate_discipline_grade?: number | null
+          plate_discipline_grade_future?: number | null
           player_confirmed?: boolean
           player_confirmed_at?: string | null
+          poise_competitiveness_grade?: number | null
+          poise_competitiveness_grade_future?: number | null
+          position_evaluated?: string | null
           power_grade?: number | null
           power_grade_future?: number | null
           rise_ball_grade?: number | null
@@ -13622,36 +13666,58 @@ export type Database = {
           user_id: string
         }
         Update: {
+          body_type_frame_grade?: number | null
+          body_type_frame_grade_future?: number | null
           breaking_ball_grade?: number | null
           breaking_ball_grade_future?: number | null
           control_grade?: number | null
           control_grade_future?: number | null
+          deception_grade?: number | null
+          deception_grade_future?: number | null
           defense_grade?: number | null
           defense_grade_future?: number | null
+          delivery_arm_action_grade?: number | null
+          delivery_arm_action_grade_future?: number | null
           delivery_grade?: number | null
           delivery_grade_future?: number | null
           development_index?: number | null
           evaluation_context?: string | null
           evaluator_id?: string | null
           event_description?: string | null
+          eye_test_grade?: number | null
+          eye_test_grade_future?: number | null
           fastball_grade?: number | null
           fastball_grade_future?: number | null
+          game_iq_grade?: number | null
+          game_iq_grade_future?: number | null
           grade_source?: string | null
           grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
           hitting_grade_future?: number | null
+          hustle_grade?: number | null
+          hustle_grade_future?: number | null
           id?: string
+          is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
           long_term_goals_text?: string | null
+          mental_makeup_grade?: number | null
+          mental_makeup_grade_future?: number | null
           next_prompt_date?: string | null
           notes?: string | null
           offspeed_grade?: number | null
           offspeed_grade_future?: number | null
           overall_grade?: number | null
+          pitchability_grade?: number | null
+          pitchability_grade_future?: number | null
+          plate_discipline_grade?: number | null
+          plate_discipline_grade_future?: number | null
           player_confirmed?: boolean
           player_confirmed_at?: string | null
+          poise_competitiveness_grade?: number | null
+          poise_competitiveness_grade_future?: number | null
+          position_evaluated?: string | null
           power_grade?: number | null
           power_grade_future?: number | null
           rise_ball_grade?: number | null

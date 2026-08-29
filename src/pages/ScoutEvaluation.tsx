@@ -15,37 +15,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayDate } from '@/utils/dateUtils';
+import { Switch } from '@/components/ui/switch';
+import { groupsFor, toolsFor, POSITION_OPTIONS } from '@/lib/evaluation/scoutingTools';
 import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft } from 'lucide-react';
 
 type GradeType = 'hitting_throwing' | 'pitching';
-
-interface ToolDef {
-  key: string;
-  label: string;
-  hint: string;
-}
-
-const POSITION_TOOLS: ToolDef[] = [
-  { key: 'hitting_grade', label: 'Hit', hint: 'Bat-to-ball, approach, contact quality' },
-  { key: 'power_grade', label: 'Power', hint: 'Raw and game power' },
-  { key: 'speed_grade', label: 'Run', hint: 'Home-to-first, underway speed' },
-  { key: 'defense_grade', label: 'Field', hint: 'Actions, hands, footwork, instincts' },
-  { key: 'throwing_grade', label: 'Arm', hint: 'Arm strength, carry, accuracy' },
-  { key: 'self_efficacy_grade', label: 'Competitiveness', hint: 'Self-belief, response to failure' },
-  { key: 'leadership_grade', label: 'Leadership', hint: 'Presence, dugout/field impact' },
-];
-
-const PITCHING_TOOLS: ToolDef[] = [
-  { key: 'fastball_grade', label: 'Fastball', hint: 'Velocity, life, plane' },
-  { key: 'offspeed_grade', label: 'Offspeed', hint: 'Changeup / drop-change separation' },
-  { key: 'breaking_ball_grade', label: 'Breaking Ball', hint: 'Shape, tilt, sharpness' },
-  { key: 'control_grade', label: 'Control / Command', hint: 'Strikes and location within zone' },
-  { key: 'delivery_grade', label: 'Delivery', hint: 'Repeatability, athleticism, arm action' },
-  { key: 'self_efficacy_grade', label: 'Competitiveness', hint: 'Mound presence under stress' },
-  { key: 'leadership_grade', label: 'Leadership', hint: 'Staff and clubhouse impact' },
-];
-
-const RISE_BALL_TOOL: ToolDef = { key: 'rise_ball_grade', label: 'Rise Ball', hint: 'Late lift, spin quality (softball)' };
 
 const CONTEXT_OPTIONS = [
   'In-person — game',
@@ -53,6 +27,7 @@ const CONTEXT_OPTIONS = [
   'In-person — showcase/camp',
   'Video review',
 ];
+
 
 const SCALE = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
 
@@ -97,6 +72,8 @@ export default function ScoutEvaluation() {
   const [athleteName, setAthleteName] = useState<string | null>(null);
   const [sport, setSport] = useState<string>('baseball');
   const [gradeType, setGradeType] = useState<GradeType>('hitting_throwing');
+  const [positionEvaluated, setPositionEvaluated] = useState<string>('');
+  const [isSwitchHitter, setIsSwitchHitter] = useState(false);
   const [contextType, setContextType] = useState<string>(CONTEXT_OPTIONS[0]);
   const [contextDetail, setContextDetail] = useState('');
   const [evaluationDate, setEvaluationDate] = useState(getTodayDate());
@@ -123,12 +100,8 @@ export default function ScoutEvaluation() {
     };
   }, [athleteId]);
 
-  const tools = useMemo(() => {
-    if (gradeType === 'pitching') {
-      return sport === 'softball' ? [...PITCHING_TOOLS.slice(0, 3), RISE_BALL_TOOL, ...PITCHING_TOOLS.slice(3)] : PITCHING_TOOLS;
-    }
-    return POSITION_TOOLS;
-  }, [gradeType, sport]);
+  const groups = useMemo(() => groupsFor(gradeType, sport), [gradeType, sport]);
+  const tools = useMemo(() => toolsFor(gradeType, sport), [gradeType, sport]);
 
   const gradedCount = tools.filter((t) => current[t.key] != null || future[t.key] != null).length;
 
@@ -147,7 +120,11 @@ export default function ScoutEvaluation() {
         overall_grade: overallGrade,
         notes: notes.trim() || null,
         player_confirmed: false,
+        // Defense / arm on this row are grades AT this position.
+        position_evaluated: positionEvaluated || null,
+        is_switch_hitter: gradeType === 'pitching' ? null : isSwitchHitter,
       };
+
       for (const t of tools) {
         row[t.key] = current[t.key] ?? null;
         row[`${t.key}_future`] = future[t.key] ?? null;
@@ -303,10 +280,47 @@ export default function ScoutEvaluation() {
                 </TabsList>
               </Tabs>
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Position seen</Label>
+                <Select value={positionEvaluated} onValueChange={setPositionEvaluated}>
+                  <SelectTrigger className="h-9" aria-label="Position evaluated">
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {POSITION_OPTIONS.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Defense and Arm below are graded at this position.
+                </p>
+              </div>
+
+              {gradeType !== 'pitching' && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Switch hitter</Label>
+                  <div className="flex items-center gap-2 h-9">
+                    <Switch
+                      checked={isSwitchHitter}
+                      onCheckedChange={setIsSwitchHitter}
+                      aria-label="Switch hitter"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {isSwitchHitter ? 'Hits from both sides' : 'One side'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        {/* 2. Tool grades */}
+        {/* 2. Tool grades — grouped */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Tool grades</CardTitle>
@@ -314,33 +328,49 @@ export default function ScoutEvaluation() {
               Present grade and projected (future) grade for each tool. {gradedCount}/{tools.length} graded.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
-              <span>Tool</span>
-              <span className="text-center">Present</span>
-              <span className="text-center">Future</span>
-            </div>
-            <Separator />
-            {tools.map((tool) => (
-              <div key={tool.key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{tool.label}</p>
-                  <p className="text-xs text-muted-foreground truncate">{tool.hint}</p>
+          <CardContent className="space-y-6">
+            {groups.map((group) => (
+              <section key={group.id} className="space-y-3">
+                <div>
+                  <h2 className="text-sm font-semibold">{group.title}</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {group.id === 'defense' && !positionEvaluated
+                      ? 'Select a position above so these grades are attributed correctly.'
+                      : group.description}
+                  </p>
                 </div>
-                <GradeSelect
-                  value={current[tool.key] ?? null}
-                  onChange={(v) => setCurrent((c) => ({ ...c, [tool.key]: v }))}
-                  ariaLabel={`${tool.label} present grade`}
-                />
-                <GradeSelect
-                  value={future[tool.key] ?? null}
-                  onChange={(v) => setFuture((f) => ({ ...f, [tool.key]: v }))}
-                  ariaLabel={`${tool.label} future grade`}
-                />
-              </div>
+                <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
+                  <span>Tool</span>
+                  <span className="text-center">Present</span>
+                  <span className="text-center">Future</span>
+                </div>
+                <Separator />
+                {group.tools.map((tool) => (
+                  <div key={tool.key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {tool.label}
+                        {group.id === 'defense' && positionEvaluated ? ` @ ${positionEvaluated}` : ''}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{tool.hint}</p>
+                    </div>
+                    <GradeSelect
+                      value={current[tool.key] ?? null}
+                      onChange={(v) => setCurrent((c) => ({ ...c, [tool.key]: v }))}
+                      ariaLabel={`${tool.label} present grade`}
+                    />
+                    <GradeSelect
+                      value={future[tool.key] ?? null}
+                      onChange={(v) => setFuture((f) => ({ ...f, [tool.key]: v }))}
+                      ariaLabel={`${tool.label} future grade`}
+                    />
+                  </div>
+                ))}
+              </section>
             ))}
           </CardContent>
         </Card>
+
 
         {/* 3. Overall */}
         <Card>
