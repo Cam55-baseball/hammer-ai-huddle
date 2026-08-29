@@ -88,6 +88,8 @@ export interface StandardMatchNotification {
     standard_label?: string;
     sport?: string;
     athlete_name?: string;
+    athlete_user_id?: string;
+    athlete_email?: string;
     matched_at?: string;
   } | null;
 }

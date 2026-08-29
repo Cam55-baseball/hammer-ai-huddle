@@ -6,8 +6,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BellRing, Check } from "lucide-react";
+import { BellRing, Check, Mail, UserPlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
+  useFollowMatchedAthlete,
   useMarkStandardMatchNotificationRead,
   useStandardMatchNotifications,
 } from "@/hooks/useStandardMatchPings";
@@ -21,6 +23,24 @@ export function StandardMatchNotificationList({
 }) {
   const { data, isLoading } = useStandardMatchNotifications(kind);
   const markRead = useMarkStandardMatchNotificationRead();
+  const follow = useFollowMatchedAthlete();
+  const { toast } = useToast();
+
+  const handleFollow = async (athleteUserId: string, athleteName?: string) => {
+    try {
+      const status = await follow.mutateAsync(athleteUserId);
+      toast({
+        title: status === "pending" ? "Follow request sent" : `Already ${status}`,
+        description: `${athleteName ?? "This athlete"} will see your request and accept it from their side.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Could not follow",
+        description: (err as Error)?.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading notifications…</p>;
   if (!data?.length) return <p className="text-sm text-muted-foreground">{emptyText}</p>;
@@ -43,6 +63,36 @@ export function StandardMatchNotificationList({
                 )}
                 <Badge variant="outline">{new Date(n.created_at).toLocaleDateString()}</Badge>
               </div>
+
+              {kind === "standard_match_org" && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  {n.template_snapshot?.athlete_email && (
+                    <a
+                      href={`mailto:${n.template_snapshot.athlete_email}`}
+                      className="inline-flex items-center gap-1 text-xs underline underline-offset-2"
+                    >
+                      <Mail className="h-3 w-3" />
+                      {n.template_snapshot.athlete_email}
+                    </a>
+                  )}
+                  {n.template_snapshot?.athlete_user_id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={follow.isPending}
+                      onClick={() =>
+                        handleFollow(
+                          n.template_snapshot!.athlete_user_id!,
+                          n.template_snapshot?.athlete_name,
+                        )
+                      }
+                    >
+                      <UserPlus className="h-3.5 w-3.5 mr-1" />
+                      Follow this player
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
             {!n.is_read && (
               <Button size="sm" variant="ghost" onClick={() => markRead.mutate(n.id)}>
