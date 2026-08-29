@@ -13585,6 +13585,8 @@ export type Database = {
           plate_discipline_grade_future: number | null
           player_confirmed: boolean
           player_confirmed_at: string | null
+          player_rejected: boolean
+          player_rejected_at: string | null
           poise_competitiveness_grade: number | null
           poise_competitiveness_grade_future: number | null
           position_evaluated: string | null
@@ -13650,6 +13652,8 @@ export type Database = {
           plate_discipline_grade_future?: number | null
           player_confirmed?: boolean
           player_confirmed_at?: string | null
+          player_rejected?: boolean
+          player_rejected_at?: string | null
           poise_competitiveness_grade?: number | null
           poise_competitiveness_grade_future?: number | null
           position_evaluated?: string | null
@@ -13715,6 +13719,8 @@ export type Database = {
           plate_discipline_grade_future?: number | null
           player_confirmed?: boolean
           player_confirmed_at?: string | null
+          player_rejected?: boolean
+          player_rejected_at?: string | null
           poise_competitiveness_grade?: number | null
           poise_competitiveness_grade_future?: number | null
           position_evaluated?: string | null
@@ -16724,6 +16730,10 @@ export type Database = {
       recompute_library_video_tier: {
         Args: { p_video_id: string }
         Returns: undefined
+      }
+      reject_evaluation_attendance: {
+        Args: { p_evaluation_id: string }
+        Returns: boolean
       }
       replace_video_version: {
         Args: {
