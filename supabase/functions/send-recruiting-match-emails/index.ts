@@ -51,7 +51,11 @@ function buildEmail(d: Record<string, unknown>) {
         `<p style="font-size:15px;line-height:1.6;margin:0">
            <strong>${esc(d.athlete_name)}</strong> met every criterion of your ${esc(d.sport)} standard
            <strong>"${esc(d.standard_label)}"</strong>${matched ? ` on ${esc(matched)}` : ""}.
-         </p>`,
+         </p>
+         ${d.athlete_email ? `<div style="margin:16px 0;font-size:14px;line-height:1.7;color:#374151">
+           <p style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:0 0 6px">Athlete contact (shared because of this match)</p>
+           <div><a href="mailto:${esc(d.athlete_email)}" style="color:#111827">${esc(d.athlete_email)}</a></div>
+         </div>` : ""}`,
         "View athlete profile",
         href,
       ),
