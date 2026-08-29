@@ -162,12 +162,6 @@ const Auth = () => {
           const hasCompletedOnboarding = hasFirstEvent || hasRole;
           const isScout = rolesCheck.data?.some((r: { role: string }) => r.role === 'scout');
 
-          console.log('[Auth] Onboarding check:', {
-            userId: data.user.id,
-            hasRole,
-            hasFirstEvent,
-            hasCompletedOnboarding,
-          });
 
           toast({
             title: t('auth.welcomeBack'),
