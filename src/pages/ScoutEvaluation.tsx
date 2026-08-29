@@ -72,6 +72,8 @@ export default function ScoutEvaluation() {
   const [athleteName, setAthleteName] = useState<string | null>(null);
   const [sport, setSport] = useState<string>('baseball');
   const [gradeType, setGradeType] = useState<GradeType>('hitting_throwing');
+  const [positionEvaluated, setPositionEvaluated] = useState<string>('');
+  const [isSwitchHitter, setIsSwitchHitter] = useState(false);
   const [contextType, setContextType] = useState<string>(CONTEXT_OPTIONS[0]);
   const [contextDetail, setContextDetail] = useState('');
   const [evaluationDate, setEvaluationDate] = useState(getTodayDate());
