@@ -14,7 +14,7 @@ import {
   POST_LANDING_HIP_DRIFT_MAX_PCT,
 } from "../postLandingHipDrift";
 import { runGuardedMetric } from "../guardedMetric";
-import { isMetricHidden } from "@/lib/reportCard/release1";
+import { isRelease1Hidden } from "@/lib/reportCard/release1";
 
 type LM = { x: number; y: number; visibility: number };
 
@@ -243,7 +243,7 @@ describe("shared guarded-metric runner", () => {
 
 describe("release gating", () => {
   it("keeps both new hitting tiles hidden", () => {
-    expect(isMetricHidden("back_knee_flex_maintained_pass")).toBe(true);
-    expect(isMetricHidden("post_landing_hip_drift_pass")).toBe(true);
+    expect(isRelease1Hidden("back_knee_flex_maintained_pass")).toBe(true);
+    expect(isRelease1Hidden("post_landing_hip_drift_pass")).toBe(true);
   });
 });
