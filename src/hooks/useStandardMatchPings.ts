@@ -43,15 +43,28 @@ export function usePendingStandardPings(standardId: string | null) {
 export interface PingResult {
   org_pings: number;
   athlete_pings: number;
+  emails_sent?: number;
+  email_errors?: string[];
 }
 
-/** Fires every outstanding ping across every standard the caller owns. */
+/**
+ * Fires every outstanding ping across every standard the caller owns, in-app
+ * AND by email. The edge function verifies the JWT and calls the same
+ * dispatch RPC as the caller, so ownership and once-only semantics are
+ * unchanged — email is layered on top of the atomic dispatch, never instead.
+ *
+ * `message` is the rep's optional personal note; it rides in the athlete email
+ * and the in-app notification.
+ */
 export function useDispatchStandardMatchPings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (): Promise<PingResult> => {
-      const { data, error } = await (supabase as any).rpc("dispatch_standard_match_pings");
+    mutationFn: async (message?: string): Promise<PingResult> => {
+      const { data, error } = await supabase.functions.invoke("send-recruiting-match-emails", {
+        body: { message: message ?? null },
+      });
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       return (data ?? { org_pings: 0, athlete_pings: 0 }) as PingResult;
     },
     onSuccess: () => {
@@ -60,6 +73,7 @@ export function useDispatchStandardMatchPings() {
     },
   });
 }
+
 
 export interface StandardMatchNotification {
   id: string;

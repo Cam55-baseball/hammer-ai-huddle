@@ -8877,6 +8877,7 @@ export type Database = {
           label: string
           org_name: string
           org_user_id: string
+          outreach_message: string | null
           sport: string
           updated_at: string
         }
@@ -8887,6 +8888,7 @@ export type Database = {
           label: string
           org_name: string
           org_user_id: string
+          outreach_message?: string | null
           sport: string
           updated_at?: string
         }
@@ -8897,6 +8899,7 @@ export type Database = {
           label?: string
           org_name?: string
           org_user_id?: string
+          outreach_message?: string | null
           sport?: string
           updated_at?: string
         }
@@ -10100,6 +10103,36 @@ export type Database = {
           metric?: string
           sport?: string
           value?: number
+        }
+        Relationships: []
+      }
+      recruiter_contacts: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_title: string | null
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -16438,6 +16471,10 @@ export type Database = {
         }
       }
       dispatch_standard_match_pings: { Args: never; Returns: Json }
+      dispatch_standard_match_pings_v2: {
+        Args: { p_message?: string }
+        Returns: Json
+      }
       expire_ab_link: {
         Args: { p_link_code: string; p_user_id: string }
         Returns: {
