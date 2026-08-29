@@ -161,6 +161,29 @@ export function useConfirmAttendance() {
   });
 }
 
+/**
+ * Athlete states they were NOT at the event. Terminal: the report is closed out
+ * and stays visible only to its author — `player_confirmed` is never set, so the
+ * existing RLS keeps it away from the athlete and their followers forever.
+ */
+export function useRejectAttendance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (evaluationId: string) => {
+      const { data, error } = await supabase.rpc('reject_evaluation_attendance', {
+        p_evaluation_id: evaluationId,
+      });
+      if (error) throw error;
+      return data as boolean;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pending-evaluations'] });
+      qc.invalidateQueries({ queryKey: ['my-evaluations'] });
+      qc.invalidateQueries({ queryKey: ['filed-evaluations'] });
+    },
+  });
+}
+
 /** Names for evaluator ids, for the "filed by me" list (athlete names). */
 export function useProfileNames(ids: string[]) {
   const key = [...new Set(ids)].sort().join(',');
