@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { RecruiterContactCard } from "@/components/recruiting/RecruiterContactCard";
 import { toast } from "sonner";
 import { BellRing, ClipboardList, Copy, Info, Layers, Lock, Plus, Save, Shield, Trash2, Users } from "lucide-react";
 import {
@@ -121,6 +123,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
   const [field, setField] = useState<string>(PROFILE_FIELDS[0].key);
   const [operator, setOperator] = useState<StandardOperator>("eq");
   const [raw, setRaw] = useState("");
+  const [pingMessage, setPingMessage] = useState("");
 
   const def = fieldByKey(field);
   const allowedOps = def?.operators ?? (["eq"] as const);
@@ -582,6 +585,7 @@ export default function RecruitingStandards() {
                 />
               </CardContent>
             </Card>
+            <RecruiterContactCard nudge={!!standards.data?.length} />
             <NewStandardForm
 
               pending={createStandard.isPending}
