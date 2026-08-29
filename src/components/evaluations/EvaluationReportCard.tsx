@@ -89,6 +89,10 @@ export function EvaluationReportCard({
                 <Badge variant="secondary" className="gap-1">
                   <ShieldCheck className="h-3 w-3" /> Confirmed
                 </Badge>
+              ) : report.player_rejected ? (
+                <Badge variant="outline" className="gap-1 border-destructive/50 text-destructive">
+                  <XCircle className="h-3 w-3" /> Player says not there
+                </Badge>
               ) : (
                 <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-600">
                   <Clock className="h-3 w-3" /> Awaiting player
