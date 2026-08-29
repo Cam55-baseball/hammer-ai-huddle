@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CalendarDays, ClipboardCheck, ShieldCheck, Clock } from 'lucide-react';
+import { CalendarDays, ClipboardCheck, ShieldCheck, Clock, XCircle } from 'lucide-react';
 import type { EvaluationRow } from '@/hooks/useEvaluations';
 
 import { TOOL_LABELS, TOOL_DISPLAY_ORDER, POSITION_BOUND_KEYS } from '@/lib/evaluation/scoutingTools';
