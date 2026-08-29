@@ -274,9 +274,15 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
               size="sm"
               disabled={dispatch.isPending || pendingCount === 0}
               onClick={() =>
-                dispatch.mutate(undefined, {
+                dispatch.mutate(pingMessage.trim() || undefined, {
                   onSuccess: (r) => {
-                    toast.success(`Pinged ${r.org_pings} rep${r.org_pings === 1 ? "" : "s"} and ${r.athlete_pings} athlete${r.athlete_pings === 1 ? "" : "s"}`);
+                    toast.success(
+                      `Pinged ${r.org_pings} rep${r.org_pings === 1 ? "" : "s"} and ${r.athlete_pings} athlete${r.athlete_pings === 1 ? "" : "s"} · ${r.emails_sent ?? 0} email${(r.emails_sent ?? 0) === 1 ? "" : "s"} sent`,
+                    );
+                    if (r.email_errors?.length) {
+                      toast.error(`${r.email_errors.length} email(s) failed to send — in-app pings still landed.`);
+                    }
+                    setPingMessage("");
                     pending.refetch();
                   },
                   onError: (e: unknown) => toast.error((e as Error).message),
@@ -288,6 +294,24 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
             </Button>
           </div>
         </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor={`ping-msg-${standardId}`} className="text-xs">
+            Personal message (optional — goes out in the athlete's email)
+          </Label>
+          <Textarea
+            id={`ping-msg-${standardId}`}
+            value={pingMessage}
+            onChange={(e) => setPingMessage(e.target.value.slice(0, 1000))}
+            rows={3}
+            placeholder="Who you are, why you're reaching out, and what you'd like them to do next — e.g. 'I'm the recruiting coordinator at State U. We liked your camera-measured pop time. Reply here or call if you'd like to talk about our fall camp.'"
+          />
+          <p className="text-xs text-muted-foreground">
+            {pingMessage.length}/1000 · A note makes follow-through far more likely than a bare
+            notification. Your saved contact details are attached automatically.
+          </p>
+        </div>
+
         <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs space-y-1">
           <p className="font-semibold flex items-center gap-1.5">
             <Info className="h-3.5 w-3.5" />
