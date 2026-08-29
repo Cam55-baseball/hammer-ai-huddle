@@ -53,6 +53,8 @@ const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
 export interface OrderableRx {
   slot: string;
   sequence_role?: string | null;
+  /** Preserved coach/manual ordering. Mirrors the client key in src/lib/wic/ordering.ts. */
+  sequence_order?: number;
   movement_slug: string;
   why_payload?: { placement?: string } & Record<string, unknown>;
 }
@@ -81,7 +83,7 @@ export function canonicalSortKey(rx: OrderableRx): [number, number, number, stri
       ? Math.max(0, LIFT_ROLE_ORDER.indexOf(rx.sequence_role as CanonicalRole))
       : 0;
 
-  return [slotIndex, roleIndex, 0, rx.movement_slug];
+  return [slotIndex, roleIndex, rx.sequence_order ?? 0, rx.movement_slug];
 }
 
 export function sortCanonical<T extends OrderableRx>(rxs: T[]): T[] {
@@ -97,9 +99,77 @@ export function sortCanonical<T extends OrderableRx>(rxs: T[]): T[] {
 }
 
 /**
+ * "Never ignore what a coach has done."
+ *
+ * Regeneration must not silently revert a manual reorder back to the
+ * canonical (alphabetical-within-role) default. Prior rows whose
+ * `why_payload.manual_order === true` keep their stored `sequence_order`;
+ * everything else falls back to the canonical key.
+ */
+export interface PriorOrderRow {
+  slot: string;
+  movement_slug: string;
+  sequence_order: number | null;
+  why_payload?: Record<string, unknown> | null;
+}
+
+export function manualOrderKey(slot: string, slug: string): string {
+  return `${slot}::${slug}`;
+}
+
+export function applyManualOrder<T extends OrderableRx>(
+  rxs: T[],
+  priorRows: readonly PriorOrderRow[],
+): T[] {
+  const pinned = new Map<string, number>();
+  for (const row of priorRows) {
+    const manual = (row.why_payload as { manual_order?: unknown } | null | undefined)
+      ?.manual_order === true;
+    if (!manual || row.sequence_order == null) continue;
+    pinned.set(manualOrderKey(row.slot, row.movement_slug), row.sequence_order);
+  }
+  if (pinned.size === 0) return rxs;
+
+  return rxs.map((rx) => {
+    const kept = pinned.get(manualOrderKey(rx.slot, rx.movement_slug));
+    if (kept == null) return rx;
+    const wp = { ...((rx.why_payload ?? {}) as Record<string, unknown>) };
+    wp.manual_order = true;
+    wp.manual_order_source = "coach";
+    return { ...rx, sequence_order: kept, why_payload: wp } as T;
+  });
+}
+
+/**
  * Assign monotonic sequence_order values (0..n-1) so downstream storage and
  * clients render in the canonical order without recomputing.
  */
 export function assignSequenceOrder<T extends OrderableRx>(rxs: T[]): (T & { sequence_order: number })[] {
-  return sortCanonical(rxs).map((rx, i) => ({ ...rx, sequence_order: i }));
+  // Items a coach pinned (marked by applyManualOrder) claim their stored slot
+  // in the final list first; the canonical order fills every remaining slot.
+  const isPinned = (rx: T) =>
+    (rx.why_payload as { manual_order?: unknown } | undefined)?.manual_order === true &&
+    typeof rx.sequence_order === "number";
+
+  const pinned = rxs.filter(isPinned).sort((a, b) => (a.sequence_order! - b.sequence_order!));
+  if (pinned.length === 0) {
+    return sortCanonical(rxs).map((rx, i) => ({ ...rx, sequence_order: i }));
+  }
+
+  const rest = sortCanonical(rxs.filter((rx) => !isPinned(rx)));
+  const total = rxs.length;
+  const out: (T | undefined)[] = new Array(total).fill(undefined);
+
+  for (const rx of pinned) {
+    let idx = Math.max(0, Math.min(total - 1, rx.sequence_order as number));
+    while (out[idx] !== undefined) idx = (idx + 1) % total; // collision → next free
+    out[idx] = rx;
+  }
+  let cursor = 0;
+  for (const rx of rest) {
+    while (out[cursor] !== undefined) cursor++;
+    out[cursor] = rx;
+  }
+
+  return (out as T[]).map((rx, i) => ({ ...rx, sequence_order: i }));
 }

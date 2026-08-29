@@ -45,8 +45,11 @@ function missing(reason: BeatenRunnerMissingReason): BeatenRunnerResult {
   return { grade: null, missing: true, missing_reason: reason };
 }
 
-/** Round to the nearest half-grade (scouting convention) and clamp to 20–80. */
-function toScoutingGrade(raw: number): number {
+/**
+ * Round to the nearest half-grade (scouting convention) and clamp to 20–80.
+ * Exported so aggregation reuses this exact rounding rather than duplicating it.
+ */
+export function toScoutingGrade(raw: number): number {
   const clamped = Math.max(20, Math.min(80, raw));
   return Math.round(clamped / 5) * 5;
 }

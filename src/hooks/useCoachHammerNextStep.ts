@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { coarseKey } from "@/lib/hammer/coachSnapshot";
+import { getTodayDate } from "@/utils/dateUtils";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useEscalationFeed } from "@/hooks/command/useEscalationFeed";
 import { useDayState } from "@/hooks/useDayState";
@@ -132,11 +133,13 @@ export function useCoachHammerNextStep(options?: { enabled?: boolean }) {
   // Key on the SAME coarse projection the edge function hashes (see
   // src/lib/hammer/coachSnapshot.ts). Identical coarse state on a later page
   // load reuses the query cache and never re-invokes the function.
+  // One implementation of "what day is it": the client's LOCAL date. It is
+  // sent to the edge function so both sides hash and cache the same day.
+  const planDate = getTodayDate();
   const hashKey = useMemo(() => {
     if (!snapshot) return null;
-    const day = new Date().toISOString().slice(0, 10);
-    return coarseKey(snapshot, day);
-  }, [snapshot]);
+    return coarseKey(snapshot, planDate);
+  }, [snapshot, planDate]);
 
   const query = useQuery({
     queryKey: ["coach-hammer-next-step", user?.id, hashKey],
@@ -149,7 +152,7 @@ export function useCoachHammerNextStep(options?: { enabled?: boolean }) {
     queryFn: async (): Promise<CoachHammerStep> => {
       const { data, error } = await supabase.functions.invoke(
         "coach-hammer-next-step",
-        { body: { snapshot } },
+        { body: { snapshot, plan_date: planDate } },
       );
       if (error) throw error;
       if (!data?.step) throw new Error("malformed_response");
