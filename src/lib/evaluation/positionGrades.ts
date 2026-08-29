@@ -56,10 +56,7 @@ export function summarizePositionGrades(
       defenseFuture: pick(rows, 'defense_grade_future'),
       armPresent: pick(rows, 'throwing_grade'),
       armFuture: pick(rows, 'throwing_grade_future'),
-      latestGradedAt: rows
-        .map((r) => r.graded_at)
-        .sort()
-        .at(-1) as string,
+      latestGradedAt: [...rows.map((r) => r.graded_at)].sort().slice(-1)[0],
     }))
     .sort((a, b) => b.looks - a.looks || a.position.localeCompare(b.position));
 }

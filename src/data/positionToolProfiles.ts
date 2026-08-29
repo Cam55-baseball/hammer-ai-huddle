@@ -217,6 +217,6 @@ export const TOOL_LABELS: Record<ToolName, string> = {
   hit: 'Hit',
   power: 'Power',
   run: 'Run',
-  field: 'Field',
+  field: 'Defense',
   arm: 'Arm',
 };
