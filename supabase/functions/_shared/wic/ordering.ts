@@ -53,6 +53,8 @@ const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
 export interface OrderableRx {
   slot: string;
   sequence_role?: string | null;
+  /** Preserved coach/manual ordering. Mirrors the client key in src/lib/wic/ordering.ts. */
+  sequence_order?: number;
   movement_slug: string;
   why_payload?: { placement?: string } & Record<string, unknown>;
 }
@@ -81,7 +83,7 @@ export function canonicalSortKey(rx: OrderableRx): [number, number, number, stri
       ? Math.max(0, LIFT_ROLE_ORDER.indexOf(rx.sequence_role as CanonicalRole))
       : 0;
 
-  return [slotIndex, roleIndex, 0, rx.movement_slug];
+  return [slotIndex, roleIndex, rx.sequence_order ?? 0, rx.movement_slug];
 }
 
 export function sortCanonical<T extends OrderableRx>(rxs: T[]): T[] {
@@ -93,6 +95,48 @@ export function sortCanonical<T extends OrderableRx>(rxs: T[]): T[] {
       if (ka[i] > kb[i]) return 1;
     }
     return 0;
+  });
+}
+
+/**
+ * "Never ignore what a coach has done."
+ *
+ * Regeneration must not silently revert a manual reorder back to the
+ * canonical (alphabetical-within-role) default. Prior rows whose
+ * `why_payload.manual_order === true` keep their stored `sequence_order`;
+ * everything else falls back to the canonical key.
+ */
+export interface PriorOrderRow {
+  slot: string;
+  movement_slug: string;
+  sequence_order: number | null;
+  why_payload?: Record<string, unknown> | null;
+}
+
+export function manualOrderKey(slot: string, slug: string): string {
+  return `${slot}::${slug}`;
+}
+
+export function applyManualOrder<T extends OrderableRx>(
+  rxs: T[],
+  priorRows: readonly PriorOrderRow[],
+): T[] {
+  const pinned = new Map<string, number>();
+  for (const row of priorRows) {
+    const manual = (row.why_payload as { manual_order?: unknown } | null | undefined)
+      ?.manual_order === true;
+    if (!manual || row.sequence_order == null) continue;
+    pinned.set(manualOrderKey(row.slot, row.movement_slug), row.sequence_order);
+  }
+  if (pinned.size === 0) return rxs;
+
+  return rxs.map((rx) => {
+    const kept = pinned.get(manualOrderKey(rx.slot, rx.movement_slug));
+    if (kept == null) return rx;
+    const wp = { ...((rx.why_payload ?? {}) as Record<string, unknown>) };
+    wp.manual_order = true;
+    wp.manual_order_source = "coach";
+    return { ...rx, sequence_order: kept, why_payload: wp } as T;
   });
 }
 
