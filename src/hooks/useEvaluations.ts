@@ -28,6 +28,9 @@ export interface EvaluationRow {
   notes: string | null;
   player_confirmed: boolean;
   player_confirmed_at: string | null;
+  /** Athlete stated they were NOT there. Terminal: stays author-only forever. */
+  player_rejected?: boolean;
+  player_rejected_at?: string | null;
   [key: string]: unknown;
 }
 
