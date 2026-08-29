@@ -103,7 +103,7 @@ async function bulkFetchSnapshots(
   if (!playerIds.length) return map;
 
   const [profilesRes, sessionsRes, gradesRes, weaknessRes, gamesRes] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, sport, position, primary_position, hs_grad_year').in('id', playerIds),
+    supabase.from('profiles').select('id, full_name, position').in('id', playerIds),
     supabase.from('performance_sessions')
       .select('id, user_id, session_date, module, composite_indexes, drill_blocks, session_type, opponent_level, coach_grade, shared_with_scouts')
       .in('user_id', playerIds)
@@ -293,7 +293,10 @@ async function generateForFollower(
     return { skipped: true, reason: 'invalid_snapshot' };
   }
 
-  if (!snapshot.sessions.length && !snapshot.games.length && reportType === 'weekly_digest') {
+  // No shared activity in the period => no report, for EVERY report type.
+  // This guard used to be weekly-only, which is what produced the flood of
+  // "this prospect remains an enigma" monthly reports on empty profiles.
+  if (!snapshot.sessions.length && !snapshot.games.length) {
     await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'no_activity' };
   }
@@ -342,8 +345,14 @@ async function generateForFollower(
 function periodFor(mode: ReportType, anchorDate?: string): { periodStart: string; periodEnd: string } {
   const today = anchorDate ? new Date(anchorDate) : new Date();
   const periodEnd = today.toISOString().slice(0, 10);
+  if (mode === 'monthly_deep') {
+    // Calendar-month anchored so the upsert conflict key is stable within a
+    // month. A rolling "today - 30" start minted a brand-new row on every run.
+    const start = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+    return { periodStart: start.toISOString().slice(0, 10), periodEnd };
+  }
   const start = new Date(today);
-  start.setDate(today.getDate() - (mode === 'weekly_digest' ? 7 : 30));
+  start.setDate(today.getDate() - 7);
   return { periodStart: start.toISOString().slice(0, 10), periodEnd };
 }
 
