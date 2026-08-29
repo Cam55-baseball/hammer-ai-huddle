@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/useAuth';
 import { useAthleteDefensivePlays } from '@/hooks/useDefensivePlays';
 import { DefensivePlayList } from '@/components/defense/DefensivePlayList';
+import { DefenseGradeCard } from '@/components/defense/DefenseGradeCard';
 import { Shield } from 'lucide-react';
 
 export default function MyDefensivePlays() {
@@ -25,6 +26,10 @@ export default function MyDefensivePlays() {
             grade the play would have beaten.
           </p>
         </header>
+
+        <DefenseGradeCard rows={rows} loading={loading} />
+
+
 
         <Card>
           <CardHeader>
