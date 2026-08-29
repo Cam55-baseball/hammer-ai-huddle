@@ -20,7 +20,12 @@ import {
 } from '@/components/ui/select';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { useToast } from '@/hooks/use-toast';
-import { useAthleteThrowingReps, useRecordThrowingRep } from '@/hooks/useThrowingReps';
+import {
+  useAthleteThrowingReps,
+  useRecordThrowingRep,
+  useThrowingScaleRows,
+} from '@/hooks/useThrowingReps';
+import { computeThrowVeloGrade } from '@/lib/throwing/throwVeloGrade';
 import {
   THROWING_CONTEXT_LABELS,
   THROWING_METRICS,
@@ -46,6 +51,7 @@ export default function ThrowingRepEntry() {
 
   const { rows, loading: rowsLoading, reload } = useAthleteThrowingReps(athleteId);
   const { record, saving } = useRecordThrowingRep();
+  const { rows: scaleRows } = useThrowingScaleRows();
 
   const parsed = value.trim() === '' ? null : Number(value);
 
@@ -215,7 +221,14 @@ export default function ThrowingRepEntry() {
                   </p>
                 ) : (
                   <ul className="divide-y">
-                    {rows.map((row) => (
+                    {rows.map((row) => {
+                      const graded = computeThrowVeloGrade(
+                        row.metric,
+                        row.position_context,
+                        row.value,
+                        scaleRows,
+                      );
+                      return (
                       <li key={row.id} className="py-3 space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium">
@@ -232,11 +245,25 @@ export default function ThrowingRepEntry() {
                           </span>
                           <Badge variant="secondary">Evaluator entered</Badge>
                         </div>
+                        {graded && !graded.missing && (
+                          <p className="text-sm">
+                            <span className="font-semibold">{graded.grade}</span> on the 20–80
+                            scale for a {THROWING_CONTEXT_LABELS[row.position_context] ??
+                              row.position_context}{' '}
+                            throw.
+                          </p>
+                        )}
+                        {graded && graded.missing && (
+                          <p className="text-xs text-muted-foreground">
+                            Not graded ({graded.missing_reason.replace(/_/g, ' ')}).
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           {new Date(row.created_at).toLocaleString()}
                         </p>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 )}
               </CardContent>
