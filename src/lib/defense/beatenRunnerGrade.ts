@@ -57,8 +57,10 @@ export function toScoutingGrade(raw: number): number {
 /**
  * Shared 20–80 interpolation against ONE `scale_reference` row.
  *
- * This is the single implementation. Beaten-runner, home-to-first, and
- * catcher pop time all route through here — there is no second copy.
+ * This is the single implementation. Beaten-runner, home-to-first, catcher pop
+ * time, baserunning splits, and throwing velocity all route through here —
+ * there is no second copy. Both `lower_better` (times) and `higher_better`
+ * (distances, velocities) anchor directions are supported.
  */
 export function gradeFromScaleRow(
   value: number | null | undefined,
@@ -72,37 +74,50 @@ export function gradeFromScaleRow(
 
   const row = scaleRows.find((r) => r.metric === metric);
   if (!row) return missing("no_scale_reference");
-  if (row.direction !== "lower_better") return missing("unsupported_direction");
+  if (row.direction !== "lower_better" && row.direction !== "higher_better") {
+    return missing("unsupported_direction");
+  }
 
   const floor = row.floor_value;
   const avg = row.avg_value;
   const record = row.record_value;
+  const ordered =
+    row.direction === "lower_better"
+      ? record < avg && avg < floor
+      : floor < avg && avg < record;
   if (
     floor == null ||
     !Number.isFinite(floor) ||
     !Number.isFinite(avg) ||
     !Number.isFinite(record) ||
-    !(record < avg && avg < floor)
+    !ordered
   ) {
     return missing("incomplete_scale_reference");
   }
 
-  const t = value;
+  // Normalize to a "lower is better" axis so one interpolation covers both.
+  const sign = row.direction === "lower_better" ? 1 : -1;
+  const t = sign * value;
+  const rec = sign * record;
+  const av = sign * avg;
+  const flo = sign * floor;
+
   let raw: number;
-  if (t <= record) {
+  if (t <= rec) {
     raw = 80;
-  } else if (t <= avg) {
+  } else if (t <= av) {
     // between record (80) and average (50)
-    raw = 50 + ((avg - t) / (avg - record)) * 30;
-  } else if (t <= floor) {
+    raw = 50 + ((av - t) / (av - rec)) * 30;
+  } else if (t <= flo) {
     // between average (50) and floor (20)
-    raw = 20 + ((floor - t) / (floor - avg)) * 30;
+    raw = 20 + ((flo - t) / (flo - av)) * 30;
   } else {
     raw = 20;
   }
 
   return { grade: toScoutingGrade(raw), missing: false };
 }
+
 
 /**
  * @param totalPlayTimeSec contact → out recorded, in seconds

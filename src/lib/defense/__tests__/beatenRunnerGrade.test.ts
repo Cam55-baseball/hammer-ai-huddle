@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  gradeFromScaleRow,
   computeBeatenRunnerGrade,
   metricForHandedness,
   type ScaleReferenceRow,
@@ -92,7 +93,7 @@ describe("computeBeatenRunnerGrade", () => {
   });
 
   it("returns missing when direction is not lower_better", () => {
-    const rows = [{ ...ROWS[0], direction: "higher_better" }];
+    const rows = [{ ...ROWS[0], direction: "sideways_better" }];
     expect(computeBeatenRunnerGrade(4.1, "R", rows)).toMatchObject({
       missing_reason: "unsupported_direction",
     });
@@ -102,6 +103,40 @@ describe("computeBeatenRunnerGrade", () => {
     let prev = -Infinity;
     for (let t = 5.0; t >= 3.5; t -= 0.05) {
       const g = computeBeatenRunnerGrade(t, "R", ROWS).grade!;
+      expect(g).toBeGreaterThanOrEqual(prev);
+      prev = g;
+    }
+  });
+});
+
+describe("gradeFromScaleRow with higher_better anchors", () => {
+  const VELO = [
+    {
+      metric: "throw_velo_mph_infield",
+      direction: "higher_better",
+      floor_value: 75,
+      avg_value: 88,
+      record_value: 95,
+    },
+  ];
+
+  it("grades 50 at the average and 80 at or above the record", () => {
+    expect(gradeFromScaleRow(88, "throw_velo_mph_infield", VELO)).toEqual({
+      grade: 50,
+      missing: false,
+    });
+    expect(gradeFromScaleRow(95, "throw_velo_mph_infield", VELO).grade).toBe(80);
+    expect(gradeFromScaleRow(101, "throw_velo_mph_infield", VELO).grade).toBe(80);
+  });
+
+  it("floors at 20 below the floor value", () => {
+    expect(gradeFromScaleRow(70, "throw_velo_mph_infield", VELO).grade).toBe(20);
+  });
+
+  it("is monotonic — harder throws never grade lower", () => {
+    let prev = -Infinity;
+    for (let v = 70; v <= 100; v += 1) {
+      const g = gradeFromScaleRow(v, "throw_velo_mph_infield", VELO).grade!;
       expect(g).toBeGreaterThanOrEqual(prev);
       prev = g;
     }

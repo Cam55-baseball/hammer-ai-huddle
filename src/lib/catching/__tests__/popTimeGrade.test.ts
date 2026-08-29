@@ -85,7 +85,7 @@ describe("computePopTimeGrade", () => {
 
   it("refuses a direction it was not built for", () => {
     expect(
-      computePopTimeGrade(2.0, [{ ...SCALE[0], direction: "higher_better" }]),
+      computePopTimeGrade(2.0, [{ ...SCALE[0], direction: "sideways_better" }]),
     ).toMatchObject({ missing: true, missing_reason: "unsupported_direction" });
   });
 });

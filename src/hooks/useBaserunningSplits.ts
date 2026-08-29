@@ -7,6 +7,10 @@ import {
   type HomeToFirstGradeResult,
 } from '@/lib/baserunning/homeToFirstGrade';
 import {
+  BASERUNNING_SCALE_METRICS,
+  computeBaserunningSplitGrade,
+} from '@/lib/baserunning/splitGrade';
+import {
   defaultUnitFor,
   requiresBatterHand,
   type BaserunningSplitEvent,
@@ -38,8 +42,9 @@ export interface BaserunningSplitInput {
 }
 
 /**
- * Home-to-first scouting anchors. Same two rows the defensive beaten-runner
- * grade reads — one source, so the two surfaces can never disagree.
+ * Baserunning scouting anchors. Includes the two home-to-first rows the
+ * defensive beaten-runner grade reads — one source, so the surfaces can never
+ * disagree — plus every other seeded split anchor.
  */
 export function useHomeToFirstScaleRows() {
   const [rows, setRows] = useState<ScaleReferenceRow[]>([]);
@@ -51,7 +56,7 @@ export function useHomeToFirstScaleRows() {
       const { data } = await (supabase as any)
         .from('scale_reference')
         .select('metric, direction, floor_value, avg_value, record_value')
-        .in('metric', ['home_to_first_rhh', 'home_to_first_lhh']);
+        .in('metric', BASERUNNING_SCALE_METRICS as string[]);
       if (!cancelled) {
         setRows((data ?? []) as ScaleReferenceRow[]);
         setLoading(false);
@@ -66,19 +71,27 @@ export function useHomeToFirstScaleRows() {
 }
 
 /**
- * Grade for one stored split row. Only home-to-first is anchored in
- * `scale_reference`; every other split returns null rather than a number
- * invented from an anchor that does not exist.
+ * Grade for one stored split row. Home-to-first is handedness-anchored; the
+ * 60-yard dash, 10-yard split and both lead distances read their own seeded
+ * `scale_reference` rows. Anything unanchored returns null rather than a
+ * number invented from an anchor that does not exist.
  */
 export function gradeForSplitRow(
   row: BaserunningSplitRow,
   scaleRows: readonly ScaleReferenceRow[],
 ): HomeToFirstGradeResult | null {
-  if (row.event !== 'home_to_first') return null;
-  const hand = row.batter_hand === 'L' ? 'L' : row.batter_hand === 'R' ? 'R' : null;
-  if (!hand) return null;
-  return computeHomeToFirstGrade(row.value, hand, scaleRows);
+  if (row.event === 'home_to_first') {
+    const hand = row.batter_hand === 'L' ? 'L' : row.batter_hand === 'R' ? 'R' : null;
+    if (!hand) return null;
+    return computeHomeToFirstGrade(row.value, hand, scaleRows);
+  }
+  return computeBaserunningSplitGrade(
+    row.event,
+    row.value,
+    scaleRows,
+  ) as HomeToFirstGradeResult | null;
 }
+
 
 /** Evaluator write path. Everything logged here is manual_entry provenance. */
 export function useRecordBaserunningSplit() {

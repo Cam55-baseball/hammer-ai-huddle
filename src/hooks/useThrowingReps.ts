@@ -7,6 +7,8 @@ import {
   type ThrowingPositionContext,
   type ThrowingRepRow,
 } from '@/lib/throwing/reps';
+import { THROWING_SCALE_METRICS } from '@/lib/throwing/throwVeloGrade';
+import type { ScaleReferenceRow } from '@/lib/defense/beatenRunnerGrade';
 
 export type { ThrowingRepRow };
 
@@ -80,4 +82,29 @@ export function useAthleteThrowingReps(athleteId: string) {
   }, [load]);
 
   return { rows, loading, reload: load };
+}
+
+/** Throwing velocity anchors (infield / outfield / catcher contexts). */
+export function useThrowingScaleRows() {
+  const [rows, setRows] = useState<ScaleReferenceRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await (supabase as any)
+        .from('scale_reference')
+        .select('metric, direction, floor_value, avg_value, record_value')
+        .in('metric', THROWING_SCALE_METRICS as string[]);
+      if (!cancelled) {
+        setRows((data ?? []) as ScaleReferenceRow[]);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { rows, loading };
 }

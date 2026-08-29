@@ -10426,6 +10426,7 @@ export type Database = {
           floor_value: number | null
           id: string
           metric: string
+          notes: string | null
           record_value: number
           sport: string
         }
@@ -10436,6 +10437,7 @@ export type Database = {
           floor_value?: number | null
           id?: string
           metric: string
+          notes?: string | null
           record_value: number
           sport: string
         }
@@ -10446,6 +10448,7 @@ export type Database = {
           floor_value?: number | null
           id?: string
           metric?: string
+          notes?: string | null
           record_value?: number
           sport?: string
         }

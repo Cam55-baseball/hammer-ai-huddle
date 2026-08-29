@@ -1,0 +1,1 @@
+ALTER TABLE public.scale_reference ADD COLUMN IF NOT EXISTS notes TEXT;
