@@ -66,7 +66,14 @@ export function EvaluationReportCard({
               </span>
               {report.evaluation_context ? <> · {report.evaluation_context}</> : null}
               {report.event_description ? <> · {report.event_description}</> : null}
+              {(position || report.is_switch_hitter) && (
+                <span className="mt-1 flex flex-wrap gap-1">
+                  {position && <Badge variant="outline">Seen at {position}</Badge>}
+                  {report.is_switch_hitter ? <Badge variant="outline">Switch hitter</Badge> : null}
+                </span>
+              )}
             </CardDescription>
+
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
             {report.overall_grade != null && (
