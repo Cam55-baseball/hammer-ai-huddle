@@ -11,6 +11,10 @@ import {
   CATCHER_POP_TIME_METRIC,
   computePopTimeGrade,
 } from '@/lib/catching/popTimeGrade';
+import {
+  EXCHANGE_TIME_METRIC,
+  computeExchangeTimeGrade,
+} from '@/lib/catching/exchangeTimeGrade';
 import type { ScaleReferenceRow } from '@/lib/defense/beatenRunnerGrade';
 
 export type { CatchingRepRow };
@@ -21,7 +25,13 @@ export interface CatchingRepInput {
   value: number | null;
 }
 
-/** Pop-time anchors, the only catching metric anchored in `scale_reference`. */
+/** Every catching metric anchored in `scale_reference`. */
+export const CATCHING_SCALE_METRICS = [
+  CATCHER_POP_TIME_METRIC,
+  EXCHANGE_TIME_METRIC,
+] as const;
+
+/** Anchored catching rows: pop time and exchange time. */
 export function usePopTimeScaleRows() {
   const [rows, setRows] = useState<ScaleReferenceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +42,7 @@ export function usePopTimeScaleRows() {
       const { data } = await (supabase as any)
         .from('scale_reference')
         .select('metric, direction, floor_value, avg_value, record_value')
-        .eq('metric', CATCHER_POP_TIME_METRIC);
+        .in('metric', CATCHING_SCALE_METRICS as unknown as string[]);
       if (!cancelled) {
         setRows((data ?? []) as ScaleReferenceRow[]);
         setLoading(false);
@@ -46,12 +56,15 @@ export function usePopTimeScaleRows() {
   return { rows, loading };
 }
 
-/** Grade for one stored rep. Only pop time has anchors; others return null. */
+/** Grade for one stored rep. Unanchored metrics return null. */
 export function gradeForCatchingRep(
   row: CatchingRepRow,
   scaleRows: readonly ScaleReferenceRow[],
 ) {
   if (!isScaleGraded(row.metric)) return null;
+  if (row.metric === 'exchange_time_sec') {
+    return computeExchangeTimeGrade(row.value, scaleRows);
+  }
   return computePopTimeGrade(row.value, scaleRows);
 }
 
