@@ -67,7 +67,7 @@ describe("computeHomeToFirstGrade", () => {
       computeHomeToFirstGrade(4.1, "R", [{ ...ROWS[0], floor_value: null }]),
     ).toMatchObject({ missing_reason: "incomplete_scale_reference" });
     expect(
-      computeHomeToFirstGrade(4.1, "R", [{ ...ROWS[0], direction: "higher_better" }]),
+      computeHomeToFirstGrade(4.1, "R", [{ ...ROWS[0], direction: "sideways_better" }]),
     ).toMatchObject({ missing_reason: "unsupported_direction" });
   });
 
