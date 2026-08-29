@@ -39,9 +39,9 @@ export const CATCHING_METRIC_LABELS: Record<CatchingMetric, string> = {
   exchange_time_sec: "Exchange time",
 };
 
-/** Only pop time is anchored in `scale_reference` today. */
+/** Metrics anchored in `scale_reference` today (pop time, exchange time). */
 export function isScaleGraded(metric: CatchingMetric): boolean {
-  return metric === "pop_time_sec";
+  return metric === "pop_time_sec" || metric === "exchange_time_sec";
 }
 
 export type CatchingSource = "video_detected" | "manual_entry";
