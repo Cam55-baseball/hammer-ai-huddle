@@ -15,6 +15,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayDate } from '@/utils/dateUtils';
+import { Switch } from '@/components/ui/switch';
+import { groupsFor, toolsFor, POSITION_OPTIONS } from '@/lib/evaluation/scoutingTools';
 import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft } from 'lucide-react';
 
 type GradeType = 'hitting_throwing' | 'pitching';
