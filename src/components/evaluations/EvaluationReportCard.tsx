@@ -4,21 +4,8 @@ import { Separator } from '@/components/ui/separator';
 import { CalendarDays, ClipboardCheck, ShieldCheck, Clock } from 'lucide-react';
 import type { EvaluationRow } from '@/hooks/useEvaluations';
 
-const TOOL_LABELS: Record<string, string> = {
-  hitting_grade: 'Hit',
-  power_grade: 'Power',
-  speed_grade: 'Run',
-  defense_grade: 'Field',
-  throwing_grade: 'Arm',
-  fastball_grade: 'Fastball',
-  offspeed_grade: 'Offspeed',
-  breaking_ball_grade: 'Breaking Ball',
-  rise_ball_grade: 'Rise Ball',
-  control_grade: 'Control / Command',
-  delivery_grade: 'Delivery',
-  self_efficacy_grade: 'Competitiveness',
-  leadership_grade: 'Leadership',
-};
+import { TOOL_LABELS, TOOL_DISPLAY_ORDER, POSITION_BOUND_KEYS } from '@/lib/evaluation/scoutingTools';
+
 
 /** 20–80 scale colour anchor. 50 is average. */
 function gradeTone(n: number | null): string {
