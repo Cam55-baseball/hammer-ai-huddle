@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,7 +77,7 @@ export default function Evaluations() {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={tab}>
           {isEvaluator ? (
             <>
               {/* Evaluators only see their own filed reports. */}
