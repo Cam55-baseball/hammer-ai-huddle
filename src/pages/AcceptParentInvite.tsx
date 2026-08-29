@@ -12,13 +12,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  acceptParentInvite,
   decodeInviteToken,
   isInviteTokenExpired,
-  AcceptInviteError,
 } from "@/lib/runtime/relational/parentLinking";
-import { useAsbTimeline } from "@/hooks/useAsbTimeline";
-import { RELATIONSHIP_TOPICS } from "@/lib/runtime/relational/relationshipSchemas";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -40,24 +36,10 @@ export default function AcceptParentInvite() {
   const decoded = token ? decodeInviteToken(token) : null;
   const [busy, setBusy] = useState(false);
 
-  // Pull the athlete's timeline so we can resolve the originating created
-  // event id by relationship_id (replay-derived; no side cache).
-  const { data } = useAsbTimeline({
-    athleteId: decoded?.athlete_id ?? null,
-    pageSize: 200,
-  });
-
-  const createdEventId = (() => {
-    if (!decoded || !data?.rows) return null;
-    const hit = data.rows.find(
-      (r) =>
-        r.topic_id === RELATIONSHIP_TOPICS.created &&
-        (r.payload as { relationship_id?: string })?.relationship_id ===
-          decoded.relationship_id,
-    );
-    return hit?.event_id ?? null;
-  })();
-
+  // Acceptance runs server-side. `asb_events` RLS scopes reads and writes to
+  // the athlete, so a parent can neither resolve the originating created event
+  // nor append the confirmation from the browser — the edge function is the
+  // authorized bridge.
   const expired = decoded ? isInviteTokenExpired(decoded) : false;
 
   useEffect(() => {
@@ -69,32 +51,22 @@ export default function AcceptParentInvite() {
   }, [decoded, expired]);
 
   async function handleAccept() {
-    if (!user || !decoded || !createdEventId || busy || expired) return;
+    if (!user || !decoded || busy || expired) return;
     setBusy(true);
     try {
-      await acceptParentInvite({
-        token,
-        parentUserId: user.id,
-        createdEventId,
-      });
-      // Best-effort dispatch correlation. Canonical activation is the DB
-      // trigger `project_relationship_to_parent_link` on asb_events; this
-      // update is purely operational hygiene for the dispatch log and must
-      // never block the success path.
-      try {
-        await supabase
-          .from("parent_invite_dispatches")
-          .update({ status: "accepted" })
-          .eq("relationship_id", decoded.relationship_id);
-      } catch (dispatchErr) {
-        console.info("[accept-parent-invite] dispatch update skipped", dispatchErr);
-      }
+      const { data, error } = await supabase.functions.invoke(
+        "accept-parent-invite",
+        { body: { token } },
+      );
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       toast.success(PARENT_INVITE_VOICE.successToast);
+
       // Wait for the DB trigger to project the link into
-      // parent_athlete_links before routing the parent into their
-      // dashboard. Bounded poll: ≤6 attempts × 500ms = 3s.
-      let activated = false;
-      for (let i = 0; i < 6; i++) {
+      // parent_athlete_links before routing. Bounded poll: ≤6 × 500ms.
+      let activated = Boolean(data?.activated);
+      for (let i = 0; !activated && i < 6; i++) {
         const { data: linkRows } = await supabase
           .from("parent_athlete_links")
           .select("id, status")
@@ -108,9 +80,9 @@ export default function AcceptParentInvite() {
         await new Promise((res) => setTimeout(res, 500));
       }
       navigate(activated ? "/parent/athletes" : "/");
-
     } catch (e) {
-      if (e instanceof AcceptInviteError && e.reason === "expired_token") {
+      const reason = e instanceof Error ? e.message : String(e);
+      if (reason === "expired_token") {
         toast.error(PARENT_INVITE_VOICE.expired);
       } else {
         toast.error(PARENT_INVITE_VOICE.fail);
@@ -190,15 +162,11 @@ export default function AcceptParentInvite() {
 
             <Button
               onClick={handleAccept}
-              disabled={!createdEventId || busy}
+              disabled={busy}
               size="lg"
               className="w-full min-h-11"
             >
-              {busy
-                ? PARENT_INVITE_VOICE.acceptBusy
-                : !createdEventId
-                  ? PARENT_INVITE_VOICE.resolving
-                  : PARENT_INVITE_VOICE.acceptCta}
+              {busy ? PARENT_INVITE_VOICE.acceptBusy : PARENT_INVITE_VOICE.acceptCta}
             </Button>
 
             <Collapsible>
