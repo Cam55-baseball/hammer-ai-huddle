@@ -468,8 +468,9 @@ export default function ScoutDashboard() {
                           variant="destructive"
                           className="follow-button flex-shrink-0 h-12 px-5 text-base"
                         >
-                          <UserMinus className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">{t('scout.unfollow')}</span>
+                          <UserMinus className="h-5 w-5 mr-2" />
+                          <span>{t('scout.unfollow')}</span>
+
                         </Button>
                       )}
                     </div>
