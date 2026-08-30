@@ -86,6 +86,10 @@ export default function Evaluations() {
     );
   }
 
+  // Signed-out visitors were seeing the full app shell with an empty hub.
+  if (!user) return <Navigate to="/auth" replace />;
+
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-4 pb-16">

@@ -369,7 +369,9 @@ const App = () => {
               <Route path="/throwing/reps/entry" element={<StaffOnlyRoute><ThrowingRepEntry /></StaffOnlyRoute>} />
               <Route path="/learn/pitch-tipping" element={<PitchTippingEducation />} />
 
-              <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
+              {/* Internal design harness (fixture data only) — staff only so it
+                  is not a publicly reachable debug surface in production. */}
+              <Route path="/dev/analysis-results-preview" element={<StaffOnlyRoute><AnalysisResultsPreview /></StaffOnlyRoute>} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />
