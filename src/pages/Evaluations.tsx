@@ -12,14 +12,16 @@ import {
   useMyEvaluations,
   useFiledEvaluations,
   useProfileNames,
+  useAthleteEvaluators,
 } from '@/hooks/useEvaluations';
-import { EvaluationReportCard } from '@/components/evaluations/EvaluationReportCard';
+import { ReportAccordionList } from '@/components/evaluations/ReportAccordionList';
 import { PendingEvaluationCard } from '@/components/evaluations/PendingEvaluationCard';
 import { EvaluatorDirectory } from '@/components/evaluations/EvaluatorDirectory';
 import { PositionGradeSummaryCard } from '@/components/evaluations/PositionGradeSummaryCard';
 import { useReportDetails } from '@/hooks/useReportDetails';
 import { expandPositionLooks } from '@/lib/evaluation/positionGrades';
 import { ConfirmedSummaryCard } from '@/components/evaluations/ConfirmedSummaryCard';
+import { formatAttribution } from '@/lib/evaluation/evaluatorCredentials';
 import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
 
 /**
@@ -57,6 +59,14 @@ export default function Evaluations() {
     [filed, mine],
   );
   const { data: details } = useReportDetails(reportIds);
+
+  // Credentials for the people who filed reports on me, so a collapsed row can
+  // say who wrote it without opening the report.
+  const { data: myEvaluators = [] } = useAthleteEvaluators(user?.id);
+  const attributionForMine = (evaluatorId: string | null) => {
+    const e = myEvaluators.find((x) => x.evaluator_id === evaluatorId);
+    return e ? formatAttribution(e) : undefined;
+  };
 
   const minePositionSources = useMemo(
     () => expandPositionLooks(mine as never, details?.positions ?? []),
