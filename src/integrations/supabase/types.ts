@@ -13644,6 +13644,8 @@ export type Database = {
           control_grade_future: number | null
           deception_grade: number | null
           deception_grade_future: number | null
+          defense_as_pitcher_grade: number | null
+          defense_as_pitcher_grade_future: number | null
           defense_grade: number | null
           defense_grade_future: number | null
           delivery_arm_action_grade: number | null
@@ -13665,6 +13667,8 @@ export type Database = {
           graded_at: string | null
           hitting_grade: number | null
           hitting_grade_future: number | null
+          hold_runners_grade: number | null
+          hold_runners_grade_future: number | null
           hustle_grade: number | null
           hustle_grade_future: number | null
           id: string
@@ -13714,6 +13718,8 @@ export type Database = {
           control_grade_future?: number | null
           deception_grade?: number | null
           deception_grade_future?: number | null
+          defense_as_pitcher_grade?: number | null
+          defense_as_pitcher_grade_future?: number | null
           defense_grade?: number | null
           defense_grade_future?: number | null
           delivery_arm_action_grade?: number | null
@@ -13735,6 +13741,8 @@ export type Database = {
           graded_at?: string | null
           hitting_grade?: number | null
           hitting_grade_future?: number | null
+          hold_runners_grade?: number | null
+          hold_runners_grade_future?: number | null
           hustle_grade?: number | null
           hustle_grade_future?: number | null
           id?: string
@@ -13784,6 +13792,8 @@ export type Database = {
           control_grade_future?: number | null
           deception_grade?: number | null
           deception_grade_future?: number | null
+          defense_as_pitcher_grade?: number | null
+          defense_as_pitcher_grade_future?: number | null
           defense_grade?: number | null
           defense_grade_future?: number | null
           delivery_arm_action_grade?: number | null
@@ -13805,6 +13815,8 @@ export type Database = {
           graded_at?: string | null
           hitting_grade?: number | null
           hitting_grade_future?: number | null
+          hold_runners_grade?: number | null
+          hold_runners_grade_future?: number | null
           hustle_grade?: number | null
           hustle_grade_future?: number | null
           id?: string
