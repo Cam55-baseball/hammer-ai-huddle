@@ -95,7 +95,7 @@ export function EvaluationReportCard({
               </span>
               {report.evaluation_context ? <> · {report.evaluation_context}</> : null}
               {report.event_description ? <> · {report.event_description}</> : null}
-              {(hasLooks || position || report.is_switch_hitter) && (
+              {(hasLooks || position || report.is_switch_hitter || report.is_ambidextrous_pitcher) && (
                 <span className="mt-1 flex flex-wrap gap-1">
                   {hasLooks
                     ? positions.map((p) => (
