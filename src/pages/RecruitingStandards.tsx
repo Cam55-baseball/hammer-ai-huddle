@@ -1123,8 +1123,8 @@ export default function RecruitingStandards() {
 
               <div className="grid gap-2 sm:grid-cols-3">
                 <RulePill icon={ShieldCheck}>
-                  <span className="font-medium text-foreground">Every criterion must pass.</span>{" "}
-                  Partial matches never surface.
+                  <span className="font-medium text-foreground">Every mandatory criterion must pass.</span>{" "}
+                  Preferred criteria add context, never block a match.
                 </RulePill>
                 <RulePill icon={Info}>
                   <span className="font-medium text-foreground">Missing data is a fail.</span>{" "}

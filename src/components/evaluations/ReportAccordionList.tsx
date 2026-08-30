@@ -116,6 +116,7 @@ export function ReportAccordionList({
                 attribution={attribution}
                 positions={details?.positionsByReport[r.id] ?? []}
                 batSides={details?.batSidesByReport[r.id] ?? []}
+                pitchingSides={details?.pitchingSidesByReport[r.id] ?? []}
                 showConfirmationStatus={showConfirmationStatus}
               />
             </AccordionContent>

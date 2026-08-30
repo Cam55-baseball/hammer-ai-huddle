@@ -10,10 +10,12 @@ import {
   POSITION_BOUND_KEYS,
   SIDE_SPLIT_KEYS,
   BAT_SIDE_LABELS,
+  PITCHING_SIDE_SPLIT_KEYS,
+  PITCHING_SIDE_LABELS,
   reportTypeLabel,
 } from '@/lib/evaluation/scoutingTools';
 import type { ReportPositionLook } from '@/lib/evaluation/positionGrades';
-import type { BatSideGrades } from '@/hooks/useReportDetails';
+import type { BatSideGrades, PitchingSideGrades } from '@/hooks/useReportDetails';
 
 
 /** 20–80 scale colour anchor. 50 is average. */
@@ -36,6 +38,8 @@ export interface EvaluationReportCardProps {
   positions?: ReportPositionLook[];
   /** Per-batting-side offensive grades for a switch hitter seen from both sides. */
   batSides?: BatSideGrades[];
+  /** Per-throwing-side pitching grades for an ambidextrous pitcher. */
+  pitchingSides?: PitchingSideGrades[];
 }
 
 export function EvaluationReportCard({
@@ -44,10 +48,12 @@ export function EvaluationReportCard({
   showConfirmationStatus,
   positions = [],
   batSides = [],
+  pitchingSides = [],
 }: EvaluationReportCardProps) {
   const position = (report.position_evaluated as string | null) ?? null;
   const hasLooks = positions.length > 0;
   const hasSides = batSides.length > 0;
+  const hasPitchingSides = pitchingSides.length > 0;
   const rows = TOOL_DISPLAY_ORDER
     .map((key) => ({
       key,
@@ -62,6 +68,7 @@ export function EvaluationReportCard({
     // are never also shown as a single blended row.
     .filter((r) => !(hasLooks && (POSITION_BOUND_KEYS as readonly string[]).includes(r.key)))
     .filter((r) => !(hasSides && (SIDE_SPLIT_KEYS as readonly string[]).includes(r.key)))
+    .filter((r) => !(hasPitchingSides && (PITCHING_SIDE_SPLIT_KEYS as readonly string[]).includes(r.key)))
     .filter((r) => r.present != null || r.future != null);
 
 
@@ -88,7 +95,7 @@ export function EvaluationReportCard({
               </span>
               {report.evaluation_context ? <> · {report.evaluation_context}</> : null}
               {report.event_description ? <> · {report.event_description}</> : null}
-              {(hasLooks || position || report.is_switch_hitter) && (
+              {(hasLooks || position || report.is_switch_hitter || report.is_ambidextrous_pitcher) && (
                 <span className="mt-1 flex flex-wrap gap-1">
                   {hasLooks
                     ? positions.map((p) => (
@@ -99,6 +106,8 @@ export function EvaluationReportCard({
                     : position && <Badge variant="outline">Seen at {position}</Badge>}
                   {report.is_switch_hitter ? <Badge variant="outline">Switch hitter</Badge> : null}
                   {hasSides ? <Badge variant="outline">Both sides seen</Badge> : null}
+                  {report.is_ambidextrous_pitcher ? <Badge variant="outline">Ambidextrous pitcher</Badge> : null}
+                  {hasPitchingSides ? <Badge variant="outline">Both arms seen</Badge> : null}
                 </span>
               )}
 
@@ -169,6 +178,42 @@ export function EvaluationReportCard({
                 {SIDE_SPLIT_KEYS.map((key) => {
                   const present = (s[key] as number | null) ?? null;
                   const future = (s[`${key}_future` as keyof BatSideGrades] as number | null) ?? null;
+                  if (present == null && future == null) return null;
+                  return (
+                    <div
+                      key={key}
+                      className="grid grid-cols-[1fr_64px_64px] gap-3 items-center text-sm"
+                    >
+                      <span className="truncate">{TOOL_LABELS[key]}</span>
+                      <span className={`text-center font-semibold ${gradeTone(present)}`}>
+                        {present ?? '—'}
+                      </span>
+                      <span className={`text-center font-semibold ${gradeTone(future)}`}>
+                        {future ?? '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {hasPitchingSides && (
+          <div className="space-y-2">
+            <Separator />
+            <p className="text-xs font-medium text-muted-foreground">Pitching by throwing arm</p>
+            <div className="grid grid-cols-[1fr_64px_64px] gap-3 text-xs font-medium text-muted-foreground">
+              <span>Tool</span>
+              <span className="text-center">Present</span>
+              <span className="text-center">Future</span>
+            </div>
+            {pitchingSides.map((s) => (
+              <div key={s.throwing_hand} className="space-y-1">
+                <p className="text-xs font-medium">{PITCHING_SIDE_LABELS[s.throwing_hand]}</p>
+                {PITCHING_SIDE_SPLIT_KEYS.map((key) => {
+                  const present = (s[key] as number | null) ?? null;
+                  const future = (s[`${key}_future`] as number | null) ?? null;
                   if (present == null && future == null) return null;
                   return (
                     <div
