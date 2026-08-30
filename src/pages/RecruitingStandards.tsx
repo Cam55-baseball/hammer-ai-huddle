@@ -8,7 +8,7 @@
  * surface cards, uppercase micro-labels, and rules stated as native chrome
  * rather than bolted-on paragraphs. Logic is unchanged from the prior version.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1069,6 +1069,18 @@ export default function RecruitingStandards() {
   const { standards, createStandard } = useOrgStandards();
   const fieldCount = useMemo(() => PROFILE_FIELDS.length + gradeFieldsFor("two_way", "baseball").length, []);
   const [creating, setCreating] = useState(false);
+  const createFormRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!creating) return;
+    const frame = requestAnimationFrame(() => {
+      createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      createFormRef.current?.querySelector<HTMLInputElement>("#org-name")?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [creating]);
+
+  const openCreateForm = () => setCreating(true);
 
   const all = standards.data ?? [];
   const activeCount = all.filter((s) => s.active).length;
@@ -1091,7 +1103,7 @@ export default function RecruitingStandards() {
                     Define the profile. The system finds who actually clears it.
                   </p>
                 </div>
-                <Button onClick={() => setCreating((v) => !v)}>
+                <Button onClick={openCreateForm} aria-expanded={creating} aria-controls="new-standard-form">
                   <Plus className="mr-1 h-4 w-4" /> New standard
                 </Button>
               </div>
@@ -1149,20 +1161,22 @@ export default function RecruitingStandards() {
               <RecruiterContactCard nudge={!!all.length} />
             </RevealSection>
 
-            <NewStandardForm
-              open={creating}
-              onOpenChange={setCreating}
-              pending={createStandard.isPending}
-              onCreate={(v) =>
-                createStandard.mutate(v, {
-                  onSuccess: () => {
-                    toast.success("Standard created");
-                    setCreating(false);
-                  },
-                  onError: (e: unknown) => toast.error((e as Error).message),
-                })
-              }
-            />
+            <div id="new-standard-form" ref={createFormRef}>
+              <NewStandardForm
+                open={creating}
+                onOpenChange={setCreating}
+                pending={createStandard.isPending}
+                onCreate={(v) =>
+                  createStandard.mutate(v, {
+                    onSuccess: () => {
+                      toast.success("Standard created");
+                      setCreating(false);
+                    },
+                    onError: (e: unknown) => toast.error((e as Error).message),
+                  })
+                }
+              />
+            </div>
 
             <RevealSection order={3}>
               {standards.isLoading ? (
@@ -1170,7 +1184,7 @@ export default function RecruitingStandards() {
               ) : all.length ? (
                 <GroupedStandardsList standards={all} />
               ) : (
-                !creating && <StandardsEmptyState onCreate={() => setCreating(true)} />
+                !creating && <StandardsEmptyState onCreate={openCreateForm} />
               )}
             </RevealSection>
           </TabsContent>
