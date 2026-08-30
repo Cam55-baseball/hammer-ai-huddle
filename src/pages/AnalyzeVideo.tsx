@@ -57,7 +57,11 @@ export default function AnalyzeVideo() {
   const navigate = useNavigate();
   const location = useLocation();
   const [uploading, setUploading] = useState(false);
-  // Phase 49: analysisView removed — only detailed (raw) view ships.
+  // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
+  // measurement-backed tiles; every unvalidated tile stays behind its
+  // existing kill switch in src/lib/reportCard/release1.ts.
+  const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
