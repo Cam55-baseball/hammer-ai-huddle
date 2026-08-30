@@ -103,13 +103,21 @@ describe('RecruitingStandards — role/position + mandatory/preferred', () => {
     renderPage();
     fireEvent.click(screen.getByText(standard.label));
 
-    const mandatoryHeads = await screen.findAllByText(/Mandatory/);
-    expect(mandatoryHeads.length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Preferred/).length).toBeGreaterThan(0);
+    // Both buckets render with their own flip control
+    const makePreferred = await screen.findAllByRole('button', { name: 'Make preferred' });
+    const makeMandatory = await screen.findAllByRole('button', { name: 'Make mandatory' });
+    expect(makePreferred.length).toBe(1); // the one mandatory criterion
+    expect(makeMandatory.length).toBe(1); // the one preferred criterion
 
-    const toggles = screen.getAllByRole('switch');
-    const criterionToggle = toggles.find((t) => t.getAttribute('aria-label')?.match(/mandatory|preferred/i)) ?? toggles[toggles.length - 1];
-    fireEvent.click(criterionToggle);
-    await waitFor(() => expect(setCriterionMandatory.mutate).toHaveBeenCalled());
+    fireEvent.click(makePreferred[0]);
+    await waitFor(() =>
+      expect(setCriterionMandatory.mutate).toHaveBeenCalledWith({ id: 'c-1', is_mandatory: false }),
+    );
+
+    fireEvent.click(makeMandatory[0]);
+    await waitFor(() =>
+      expect(setCriterionMandatory.mutate).toHaveBeenCalledWith({ id: 'c-2', is_mandatory: true }),
+    );
   });
 });
+
