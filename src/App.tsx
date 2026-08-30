@@ -350,7 +350,9 @@ const App = () => {
               <Route path="/forecast" element={<ForecastSurface />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
-              <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
+              {/* Route-level guard so the pre-release, credit-billing page never
+                  mounts for non-staff (the page also self-gates internally). */}
+              <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
               {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
@@ -367,7 +369,9 @@ const App = () => {
               <Route path="/throwing/reps/entry" element={<StaffOnlyRoute><ThrowingRepEntry /></StaffOnlyRoute>} />
               <Route path="/learn/pitch-tipping" element={<PitchTippingEducation />} />
 
-              <Route path="/dev/analysis-results-preview" element={<AnalysisResultsPreview />} />
+              {/* Internal design harness (fixture data only) — staff only so it
+                  is not a publicly reachable debug surface in production. */}
+              <Route path="/dev/analysis-results-preview" element={<StaffOnlyRoute><AnalysisResultsPreview /></StaffOnlyRoute>} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />

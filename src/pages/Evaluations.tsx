@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +85,10 @@ export default function Evaluations() {
       </DashboardLayout>
     );
   }
+
+  // Signed-out visitors were seeing the full app shell with an empty hub.
+  if (!user) return <Navigate to="/auth" replace />;
+
 
   return (
     <DashboardLayout>
