@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Heart, Play } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +14,14 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
+  // Some containers (.mov) fail to decode in certain browsers — fall back to the
+  // placeholder rather than leaving a black rectangle.
+  const [framePreviewFailed, setFramePreviewFailed] = useState(false);
   const info = getEmbedInfo(video.video_url);
   const thumbnail = video.thumbnail_url || info.thumbnailUrl;
+  const showFramePreview = !thumbnail && !framePreviewFailed && isDirectVideoFile(video.video_url);
   const platform = info.platform !== 'unknown' ? info.platform : detectPlatform(video.video_url);
+
   const platformLabel =
     platform === 'youtube' ? 'YouTube'
     : platform === 'vimeo' ? 'Vimeo'
