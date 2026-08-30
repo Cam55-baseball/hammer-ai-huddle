@@ -26,10 +26,11 @@ import { AnalysisProgressIndicator } from "@/components/report-card/hammer/Analy
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { useSideContext } from "@/contexts/SideContext";
 import { SideContextPicker } from "@/components/shared/SideContextPicker";
-// Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
-// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
-// TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
-// restored so users see live elapsed/countdown while the model runs.
+import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
+import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
+// Release-1: the Report Card tab is restored, but populated ONLY from tiles
+// whose backing metric is classified VISIBLE in src/lib/reportCard/release1.ts.
+
 
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
