@@ -4,7 +4,16 @@ import { Separator } from '@/components/ui/separator';
 import { CalendarDays, ClipboardCheck, ShieldCheck, Clock, XCircle } from 'lucide-react';
 import type { EvaluationRow } from '@/hooks/useEvaluations';
 
-import { TOOL_LABELS, TOOL_DISPLAY_ORDER, POSITION_BOUND_KEYS } from '@/lib/evaluation/scoutingTools';
+import {
+  TOOL_LABELS,
+  TOOL_DISPLAY_ORDER,
+  POSITION_BOUND_KEYS,
+  SIDE_SPLIT_KEYS,
+  BAT_SIDE_LABELS,
+  reportTypeLabel,
+} from '@/lib/evaluation/scoutingTools';
+import type { ReportPositionLook } from '@/lib/evaluation/positionGrades';
+import type { BatSideGrades } from '@/hooks/useReportDetails';
 
 
 /** 20–80 scale colour anchor. 50 is average. */
@@ -23,14 +32,22 @@ export interface EvaluationReportCardProps {
   attribution?: string;
   /** Show the confirmation state chip (evaluator-side view). */
   showConfirmationStatus?: boolean;
+  /** Every position look filed on this report (one event can carry several). */
+  positions?: ReportPositionLook[];
+  /** Per-batting-side offensive grades for a switch hitter seen from both sides. */
+  batSides?: BatSideGrades[];
 }
 
 export function EvaluationReportCard({
   report,
   attribution,
   showConfirmationStatus,
+  positions = [],
+  batSides = [],
 }: EvaluationReportCardProps) {
   const position = (report.position_evaluated as string | null) ?? null;
+  const hasLooks = positions.length > 0;
+  const hasSides = batSides.length > 0;
   const rows = TOOL_DISPLAY_ORDER
     .map((key) => ({
       key,
@@ -41,7 +58,12 @@ export function EvaluationReportCard({
       present: (report[key] as number | null) ?? null,
       future: (report[`${key}_future`] as number | null) ?? null,
     }))
+    // Position looks and per-side splits get their own sections below, so they
+    // are never also shown as a single blended row.
+    .filter((r) => !(hasLooks && (POSITION_BOUND_KEYS as readonly string[]).includes(r.key)))
+    .filter((r) => !(hasSides && (SIDE_SPLIT_KEYS as readonly string[]).includes(r.key)))
     .filter((r) => r.present != null || r.future != null);
+
 
 
   const dateLabel = new Date(report.graded_at).toLocaleDateString(undefined, {
