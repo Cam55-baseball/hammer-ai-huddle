@@ -46,6 +46,7 @@ import {
   ShieldCheck,
   Target,
   Trash2,
+  Star,
   Users,
   X,
 } from "lucide-react";
@@ -64,17 +65,23 @@ import {
 import { StandardMatchNotificationList } from "@/components/recruiting/StandardMatchNotificationList";
 
 import {
-  ALL_FIELDS,
-  GRADE_FIELDS,
   OPERATOR_LABELS,
   PROFILE_FIELDS,
+  RECRUITING_ROLE_LABELS,
   describeCriterion,
   fieldByKey,
+  gradeFieldsFor,
   parseCriterionValue,
+  positionOptionsFor,
   standardPositionLabel,
   summarizeCriteria,
+  type RecruitingRole,
 } from "@/lib/recruiting/standardFields";
-import type { StandardOperator } from "@/lib/recruiting/standardsMatching";
+import type {
+  PositionMatchLogic,
+  StandardContext,
+  StandardOperator,
+} from "@/lib/recruiting/standardsMatching";
 
 const SPORT_LABELS: Record<string, string> = { baseball: "Baseball", softball: "Softball" };
 
@@ -100,6 +107,123 @@ function RulePill({ icon: Icon, children }: { icon: typeof Shield; children: Rea
     <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2">
       <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
       <span className="text-xs leading-snug text-muted-foreground">{children}</span>
+    </div>
+  );
+}
+
+/**
+ * Role + position targeting. Shared by the create form and the edit panel so
+ * both express the same idea: who this profile is for, and where they play.
+ */
+function RoleAndPositions({
+  sport,
+  role,
+  onRoleChange,
+  positions,
+  onPositionsChange,
+  logic,
+  onLogicChange,
+}: {
+  sport: string;
+  role: RecruitingRole;
+  onRoleChange: (v: RecruitingRole) => void;
+  positions: string[];
+  onPositionsChange: (v: string[]) => void;
+  logic: PositionMatchLogic;
+  onLogicChange: (v: PositionMatchLogic) => void;
+}) {
+  const options = positionOptionsFor(sport);
+  const toggle = (pos: string) =>
+    onPositionsChange(
+      positions.includes(pos) ? positions.filter((p) => p !== pos) : [...positions, pos],
+    );
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Recruiting role</Label>
+        <Select value={role} onValueChange={(v) => onRoleChange(v as RecruitingRole)}>
+          <SelectTrigger className="bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(RECRUITING_ROLE_LABELS) as RecruitingRole[]).map((r) => (
+              <SelectItem key={r} value={r}>
+                {RECRUITING_ROLE_LABELS[r]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Decides which scouting tools you can require. Two-way offers both sets.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label>Positions</Label>
+          {positions.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => onPositionsChange([])}
+            >
+              Any position
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {options.map((pos) => {
+            const on = positions.includes(pos);
+            return (
+              <button
+                key={pos}
+                type="button"
+                onClick={() => toggle(pos)}
+                aria-pressed={on}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  on
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-primary/50",
+                )}
+              >
+                {pos}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {positions.length === 0
+            ? "No positions selected — this standard considers every athlete, and defense/arm grades read from their primary position."
+            : "Defense and arm criteria are graded at these positions specifically, not at the athlete's primary spot."}
+        </p>
+      </div>
+
+      {positions.length > 1 && (
+        <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+          <Label className="text-xs">When several positions are selected</Label>
+          <Select value={logic} onValueChange={(v) => onLogicChange(v as PositionMatchLogic)}>
+            <SelectTrigger className="bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">
+                Any one of them — athlete plays at least one
+              </SelectItem>
+              <SelectItem value="all">
+                All of them — athlete plays every one
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {logic === "any"
+              ? "A defense requirement passes if it clears the bar at one selected position."
+              : "A defense requirement must clear the bar at every selected position."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
