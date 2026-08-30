@@ -106,6 +106,8 @@ export function EvaluationReportCard({
                     : position && <Badge variant="outline">Seen at {position}</Badge>}
                   {report.is_switch_hitter ? <Badge variant="outline">Switch hitter</Badge> : null}
                   {hasSides ? <Badge variant="outline">Both sides seen</Badge> : null}
+                  {report.is_ambidextrous_pitcher ? <Badge variant="outline">Ambidextrous pitcher</Badge> : null}
+                  {hasPitchingSides ? <Badge variant="outline">Both arms seen</Badge> : null}
                 </span>
               )}
 
