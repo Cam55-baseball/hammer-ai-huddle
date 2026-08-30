@@ -532,9 +532,22 @@ export default function ScoutEvaluation() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                <Switch
+                  checked={isAmbiThrower}
+                  onCheckedChange={setIsAmbiThrower}
+                  aria-label="Ambidextrous thrower"
+                />
+                <span className="text-sm">
+                  <span className="font-medium block">Ambidextrous thrower</span>
+                  <span className="text-muted-foreground">
+                    Record which hand you saw him throw with at each position.
+                  </span>
+                </span>
+              </label>
               {looks.map((look, idx) => (
                 <div key={look.key} className="rounded-md border p-3 space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Select
                       value={look.position}
                       onValueChange={(v) => setLook(look.key, { position: v })}
@@ -552,6 +565,26 @@ export default function ScoutEvaluation() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {isAmbiThrower && (
+                      <Select
+                        value={look.throwing_hand ?? ''}
+                        onValueChange={(v) => setLook(look.key, { throwing_hand: v as Hand })}
+                      >
+                        <SelectTrigger
+                          className="h-9 w-44"
+                          aria-label={`Throwing hand for position ${idx + 1}`}
+                        >
+                          <SelectValue placeholder="Threw with…" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {HANDS.map((h) => (
+                            <SelectItem key={h} value={h}>
+                              {HAND_LABELS[h]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                     <div className="flex-1" />
                     {looks.length > 1 && (
                       <Button
@@ -564,6 +597,7 @@ export default function ScoutEvaluation() {
                       </Button>
                     )}
                   </div>
+
 
                   <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
                     <span>Tool</span>
