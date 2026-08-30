@@ -649,7 +649,8 @@ export default function ScoutEvaluation() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Batting side</CardTitle>
               <CardDescription>
-                A switch hitter is two hitters. Grade each side only if you actually saw it.
+                A switch hitter is two hitters. Grade each side only if you actually saw it — leave
+                a side blank, or dismiss it, and it simply won't be saved.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -658,7 +659,7 @@ export default function ScoutEvaluation() {
                   checked={isSwitchHitter}
                   onCheckedChange={(v) => {
                     setIsSwitchHitter(v);
-                    if (!v) setSawBothSides(false);
+                    if (v) setBatSidesShown(['R', 'L']);
                   }}
                   aria-label="Switch hitter"
                 />
@@ -666,48 +667,35 @@ export default function ScoutEvaluation() {
               </div>
 
               {isSwitchHitter && (
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={sawBothSides}
-                    onCheckedChange={setSawBothSides}
-                    aria-label="Saw both sides"
-                  />
-                  <span className="text-sm">
-                    {sawBothSides
-                      ? 'Saw both sides — grading them separately'
-                      : 'Only saw one side at this event'}
-                  </span>
-                </div>
-              )}
-
-              {splitSides && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Separator />
-                  <div className="grid grid-cols-[1fr_repeat(4,64px)] gap-2 text-[11px] font-medium text-muted-foreground">
-                    <span>Tool</span>
-                    <span className="text-center">R now</span>
-                    <span className="text-center">R fut</span>
-                    <span className="text-center">L now</span>
-                    <span className="text-center">L fut</span>
-                  </div>
-                  {SIDE_SPLIT_KEYS.map((key) => (
-                    <div key={key} className="grid grid-cols-[1fr_repeat(4,64px)] gap-2 items-center">
-                      <span className="text-sm truncate">{TOOL_LABELS[key]}</span>
-                      {(['R', 'L'] as BatSide[]).flatMap((side) =>
-                        [false, true].map((fut) => {
-                          const k = sideKey(side, key, fut);
-                          return (
-                            <GradeSelect
-                              key={k}
-                              ariaLabel={`${TOOL_LABELS[key]} ${BAT_SIDE_LABELS[side]} ${fut ? 'future' : 'present'}`}
-                              value={sideGrades[k] ?? null}
-                              onChange={(v) => setSideGrades((p) => ({ ...p, [k]: v }))}
-                            />
-                          );
-                        }),
-                      )}
-                    </div>
+                  {batSidesShown.map((side) => (
+                    <HandGradeTable
+                      key={side}
+                      title={`${HAND_LABELS[side]}`}
+                      tools={SIDE_SPLIT_KEYS.map((k) => ({ key: k, label: TOOL_LABELS[k], hint: '' }))}
+                      side={side}
+                      grades={sideGrades}
+                      setGrades={setSideGrades}
+                      sideKey={sideKey}
+                      onDismiss={() =>
+                        setBatSidesShown((prev) => prev.filter((s) => s !== side))
+                      }
+                    />
                   ))}
+                  {batSidesShown.length < 2 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setBatSidesShown((prev) =>
+                          HANDS.filter((h) => prev.includes(h) || !prev.length || h !== prev[0]),
+                        )
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Add the other side back
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     The report also stores the blend of the two sides so single-number readers stay
                     accurate — the per-side grades remain the truth.
@@ -717,6 +705,64 @@ export default function ScoutEvaluation() {
             </CardContent>
           </Card>
         )}
+
+        {/* 4b. Ambidextrous pitcher */}
+        {includePitching && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Throwing side (pitching)</CardTitle>
+              <CardDescription>
+                An ambidextrous pitcher is two pitchers. Grade the arsenal and craft once per hand —
+                blank or dismissed sides don't save.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={isAmbiPitcher}
+                  onCheckedChange={(v) => {
+                    setIsAmbiPitcher(v);
+                    if (v) setPitchSidesShown(['R', 'L']);
+                  }}
+                  aria-label="Ambidextrous pitcher"
+                />
+                <span className="text-sm">
+                  {isAmbiPitcher ? 'Ambidextrous pitcher' : 'Pitches with one hand'}
+                </span>
+              </div>
+
+              {splitPitching && (
+                <div className="space-y-4">
+                  <Separator />
+                  {pitchSidesShown.map((side) => (
+                    <HandGradeTable
+                      key={side}
+                      title={`${HAND_LABELS[side]} pitching`}
+                      tools={pitchSplitTools}
+                      side={side}
+                      grades={pitchSideGrades}
+                      setGrades={setPitchSideGrades}
+                      sideKey={sideKey}
+                      onDismiss={() =>
+                        setPitchSidesShown((prev) => prev.filter((s) => s !== side))
+                      }
+                    />
+                  ))}
+                  {pitchSidesShown.length < 2 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPitchSidesShown(['R', 'L'])}
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Add the other hand back
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* 5. Remaining tool grades */}
         {flatGroups.length > 0 && (
