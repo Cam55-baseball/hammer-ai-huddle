@@ -121,7 +121,6 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
 
   const sportArray = useMemo(() => {
     if (!sport) return [];
-    if (sport === 'both') return ['baseball', 'softball'];
     return [sport];
   }, [sport]);
 

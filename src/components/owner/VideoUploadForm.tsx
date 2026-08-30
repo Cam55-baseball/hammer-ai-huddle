@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
@@ -18,7 +16,7 @@ interface VideoUploadFormProps {
   onSuccess: () => void;
 }
 
-export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
+export function VideoUploadForm({ tags: _tags, onSuccess }: VideoUploadFormProps) {
   const { uploadVideo, uploading } = useVideoLibraryAdmin();
   const [mode, setMode] = useState<'upload' | 'link'>('link');
   const [title, setTitle] = useState('');
