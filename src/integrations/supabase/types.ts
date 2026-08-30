@@ -13540,6 +13540,100 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_scout_grade_bat_sides: {
+        Row: {
+          bat_side: string
+          created_at: string
+          grade_id: string
+          hitting_grade: number | null
+          hitting_grade_future: number | null
+          id: string
+          plate_discipline_grade: number | null
+          plate_discipline_grade_future: number | null
+          power_grade: number | null
+          power_grade_future: number | null
+          updated_at: string
+        }
+        Insert: {
+          bat_side: string
+          created_at?: string
+          grade_id: string
+          hitting_grade?: number | null
+          hitting_grade_future?: number | null
+          id?: string
+          plate_discipline_grade?: number | null
+          plate_discipline_grade_future?: number | null
+          power_grade?: number | null
+          power_grade_future?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bat_side?: string
+          created_at?: string
+          grade_id?: string
+          hitting_grade?: number | null
+          hitting_grade_future?: number | null
+          id?: string
+          plate_discipline_grade?: number | null
+          plate_discipline_grade_future?: number | null
+          power_grade?: number | null
+          power_grade_future?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_scout_grade_bat_sides_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "vault_scout_grades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_scout_grade_positions: {
+        Row: {
+          created_at: string
+          defense_grade: number | null
+          defense_grade_future: number | null
+          grade_id: string
+          id: string
+          position: string
+          throwing_grade: number | null
+          throwing_grade_future: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          defense_grade?: number | null
+          defense_grade_future?: number | null
+          grade_id: string
+          id?: string
+          position: string
+          throwing_grade?: number | null
+          throwing_grade_future?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          defense_grade?: number | null
+          defense_grade_future?: number | null
+          grade_id?: string
+          id?: string
+          position?: string
+          throwing_grade?: number | null
+          throwing_grade_future?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_scout_grade_positions_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "vault_scout_grades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vault_scout_grades: {
         Row: {
           body_type_frame_grade: number | null
@@ -13574,6 +13668,8 @@ export type Database = {
           hustle_grade: number | null
           hustle_grade_future: number | null
           id: string
+          includes_pitching_tools: boolean
+          includes_position_tools: boolean
           is_switch_hitter: boolean | null
           leadership_grade: number | null
           leadership_grade_future: number | null
@@ -13600,6 +13696,7 @@ export type Database = {
           power_grade_future: number | null
           rise_ball_grade: number | null
           rise_ball_grade_future: number | null
+          saw_both_batting_sides: boolean | null
           self_efficacy_grade: number | null
           self_efficacy_grade_future: number | null
           speed_grade: number | null
@@ -13641,6 +13738,8 @@ export type Database = {
           hustle_grade?: number | null
           hustle_grade_future?: number | null
           id?: string
+          includes_pitching_tools?: boolean
+          includes_position_tools?: boolean
           is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
@@ -13667,6 +13766,7 @@ export type Database = {
           power_grade_future?: number | null
           rise_ball_grade?: number | null
           rise_ball_grade_future?: number | null
+          saw_both_batting_sides?: boolean | null
           self_efficacy_grade?: number | null
           self_efficacy_grade_future?: number | null
           speed_grade?: number | null
@@ -13708,6 +13808,8 @@ export type Database = {
           hustle_grade?: number | null
           hustle_grade_future?: number | null
           id?: string
+          includes_pitching_tools?: boolean
+          includes_position_tools?: boolean
           is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
@@ -13734,6 +13836,7 @@ export type Database = {
           power_grade_future?: number | null
           rise_ball_grade?: number | null
           rise_ball_grade_future?: number | null
+          saw_both_batting_sides?: boolean | null
           self_efficacy_grade?: number | null
           self_efficacy_grade_future?: number | null
           speed_grade?: number | null
@@ -16468,6 +16571,7 @@ export type Database = {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
       }
+      can_view_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       check_bundle_discount: {
         Args: { p_bundle_id: string; p_code: string }
         Returns: Json
@@ -16735,6 +16839,7 @@ export type Database = {
           deleted_count: number
         }[]
       }
+      owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       recompute_library_video_tier: {
         Args: { p_video_id: string }
         Returns: undefined
