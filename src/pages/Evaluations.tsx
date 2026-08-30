@@ -146,6 +146,19 @@ export default function Evaluations() {
 
                 <PositionGradeSummaryCard reports={minePositionSources} />
 
+                {mine.length > 0 && (
+                  <div className="space-y-2">
+                    <h2 className="text-sm font-semibold">Every report about me</h2>
+                    <ReportAccordionList
+                      reports={mine}
+                      details={details}
+                      attributionFor={(r) => attributionForMine(r.evaluator_id)}
+                    />
+                  </div>
+                )}
+
+
+
 
                 {!mineLoading && mine.length === 0 && pending.length === 0 && (
                   <Card>
