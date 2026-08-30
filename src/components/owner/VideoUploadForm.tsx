@@ -10,18 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
+import { VideoClassificationFields } from './VideoClassificationFields';
+import { categoryToSkillDomain, isValidVideoClassification, type VideoCategory, type VideoSport } from '@/lib/videoCategoricalTaxonomy';
 
 interface VideoUploadFormProps {
   tags: LibraryTag[];
   onSuccess: () => void;
 }
-
-const SPORT_OPTIONS = ['baseball', 'softball', 'both'];
-const CATEGORY_OPTIONS = [
-  'hitting', 'pitching', 'fielding', 'catching', 'baserunning',
-  'throwing', 'strength', 'mobility', 'recovery', 'mental game',
-  'game iq', 'practice design', 'coaching concepts'
-];
 
 export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   const { uploadVideo, uploading } = useVideoLibraryAdmin();
@@ -31,16 +26,10 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   const [notes, setNotes] = useState('');
   const [externalUrl, setExternalUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [selectedSport, setSelectedSport] = useState<string[]>([]);
-  const [category, setCategory] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [tagSearch, setTagSearch] = useState('');
+  const [sport, setSport] = useState<VideoSport | ''>('');
+  const [category, setCategory] = useState<VideoCategory | ''>('');
+  const [subSkill, setSubSkill] = useState('');
   const [structured, setStructured] = useState<StructuredTagState>(emptyStructuredTagState);
-
-  const filteredTags = tags.filter(t =>
-    t.name.toLowerCase().includes(tagSearch.toLowerCase()) &&
-    !selectedTags.includes(t.name)
-  );
 
   const detectVideoType = (url: string): 'youtube' | 'vimeo' | 'external' => {
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
@@ -49,7 +38,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   };
 
   const handleSubmit = async () => {
-    if (!title.trim()) return;
+    if (!title.trim() || !isValidVideoClassification(sport, category, subSkill)) return;
     if (!structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()) {
       return;
     }
@@ -60,8 +49,8 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
       title: title.trim(),
       description: description.trim() || undefined,
       notes: notes.trim() || undefined,
-      tags: selectedTags,
-      sport: selectedSport,
+      tags: [subSkill],
+      sport: [sport],
       category: category || undefined,
       videoFile: videoFile || undefined,
       externalUrl: mode === 'link' ? externalUrl : undefined,
@@ -76,7 +65,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
 
     if (result) {
       setTitle(''); setDescription(''); setNotes(''); setExternalUrl('');
-      setVideoFile(null); setSelectedSport([]); setCategory(''); setSelectedTags([]);
+      setVideoFile(null); setSport(''); setCategory(''); setSubSkill('');
       setStructured(emptyStructuredTagState);
       onSuccess();
     }
@@ -131,79 +120,26 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
         <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional coaching notes (translated for international users)..." rows={3} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Sport</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {SPORT_OPTIONS.map(s => (
-              <Badge
-                key={s}
-                variant={selectedSport.includes(s) ? 'default' : 'outline'}
-                className="cursor-pointer capitalize"
-                onClick={() => setSelectedSport(prev =>
-                  prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
-                )}
-              >
-                {s}
-              </Badge>
-            ))}
-          </div>
-        </div>
+      <VideoClassificationFields
+        sport={sport}
+        category={category}
+        subSkill={subSkill}
+        onChange={(next) => {
+          setSport(next.sport);
+          setCategory(next.category);
+          setSubSkill(next.subSkill);
+          if (next.category) {
+            const domain = categoryToSkillDomain(next.category);
+            if (domain) setStructured((current) => ({ ...current, skillDomains: [domain as any], tagAssignments: {} }));
+          }
+        }}
+      />
 
-        <div className="space-y-2">
-          <Label>Category</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORY_OPTIONS.map(c => (
-                <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Tags</Label>
-        <Input
-          placeholder="Search tags..."
-          value={tagSearch}
-          onChange={e => setTagSearch(e.target.value)}
-        />
-        <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
-          {filteredTags.slice(0, 40).map(tag => (
-            <Badge
-              key={tag.id}
-              variant="outline"
-              className="cursor-pointer text-xs"
-              onClick={() => {
-                setSelectedTags(prev => [...prev, tag.name]);
-                setTagSearch('');
-              }}
-            >
-              {tag.name}
-            </Badge>
-          ))}
-        </div>
-        {selectedTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-2 border-t">
-            {selectedTags.map(t => (
-              <Badge key={t} variant="default" className="text-xs gap-1">
-                {t}
-                <span className="cursor-pointer" onClick={() => setSelectedTags(prev => prev.filter(x => x !== t))}>×</span>
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <StructuredTagEditor value={structured} onChange={setStructured} sports={selectedSport} />
+      <StructuredTagEditor value={structured} onChange={setStructured} sports={sport ? [sport] : []} />
 
       <Button
         onClick={handleSubmit}
-        disabled={uploading || !title.trim() || !structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()}
+        disabled={uploading || !title.trim() || !isValidVideoClassification(sport, category, subSkill) || !structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()}
         className="w-full"
       >
         {uploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</> : 'Add Video'}
