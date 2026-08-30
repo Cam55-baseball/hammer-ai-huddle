@@ -199,6 +199,42 @@ export function EvaluationReportCard({
           </div>
         )}
 
+        {hasPitchingSides && (
+          <div className="space-y-2">
+            <Separator />
+            <p className="text-xs font-medium text-muted-foreground">Pitching by throwing arm</p>
+            <div className="grid grid-cols-[1fr_64px_64px] gap-3 text-xs font-medium text-muted-foreground">
+              <span>Tool</span>
+              <span className="text-center">Present</span>
+              <span className="text-center">Future</span>
+            </div>
+            {pitchingSides.map((s) => (
+              <div key={s.throwing_hand} className="space-y-1">
+                <p className="text-xs font-medium">{PITCHING_SIDE_LABELS[s.throwing_hand]}</p>
+                {PITCHING_SIDE_SPLIT_KEYS.map((key) => {
+                  const present = (s[key] as number | null) ?? null;
+                  const future = (s[`${key}_future`] as number | null) ?? null;
+                  if (present == null && future == null) return null;
+                  return (
+                    <div
+                      key={key}
+                      className="grid grid-cols-[1fr_64px_64px] gap-3 items-center text-sm"
+                    >
+                      <span className="truncate">{TOOL_LABELS[key]}</span>
+                      <span className={`text-center font-semibold ${gradeTone(present)}`}>
+                        {present ?? '—'}
+                      </span>
+                      <span className={`text-center font-semibold ${gradeTone(future)}`}>
+                        {future ?? '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
         {hasLooks && (
           <div className="space-y-2">
             <Separator />
