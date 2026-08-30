@@ -110,8 +110,15 @@ export default function ScoutEvaluation() {
 
   const [looks, setLooks] = useState<PositionLookDraft[]>([newLook()]);
   const [isSwitchHitter, setIsSwitchHitter] = useState(false);
-  const [sawBothSides, setSawBothSides] = useState(false);
+  const [isAmbiThrower, setIsAmbiThrower] = useState(false);
+  const [isAmbiPitcher, setIsAmbiPitcher] = useState(false);
   const [sideGrades, setSideGrades] = useState<Record<string, number | null>>({});
+  const [pitchSideGrades, setPitchSideGrades] = useState<Record<string, number | null>>({});
+  // Sides the evaluator kept on the form. Dismissing a side removes its table;
+  // a side left blank simply never saves.
+  const [batSidesShown, setBatSidesShown] = useState<Hand[]>(['R', 'L']);
+  const [pitchSidesShown, setPitchSidesShown] = useState<Hand[]>(['R', 'L']);
+
 
   const [contextType, setContextType] = useState<string>(CONTEXT_OPTIONS[0]);
   const [contextDetail, setContextDetail] = useState('');
