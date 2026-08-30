@@ -19,14 +19,34 @@ function readAnchor(a: AnalysisLike, key: string): number | null {
  * Tempo tile — deterministic path only (`src/lib/biomech/metrics/tempoSec.ts`).
  * Returns canonical missingness whenever the frame anchors or true fps are
  * unavailable. The AI-vision `tempo_sec` value is deliberately never consulted.
+ *
+ * Two deterministic sources, in precedence order:
+ *  1. `tempo_sec_deterministic` — the persisted output of the tempo pipeline
+ *     (`runTempoPipeline`), read back from the session ledger. Same math,
+ *     already evidence-hashed.
+ *  2. Live frame anchors on the analysis payload.
  */
 function computeDeterministicTempoTile(a: AnalysisLike): TileState {
+  const persisted = (a as unknown as Record<string, unknown>)["tempo_sec_deterministic"] as
+    | { value: number | null; missing_reason?: string | null }
+    | undefined;
+  if (persisted && typeof persisted.value === "number" && Number.isFinite(persisted.value)) {
+    return {
+      status: persisted.value <= 1.05 ? "pass" : "fail",
+      value: `${persisted.value.toFixed(2)}s`,
+    };
+  }
+
   const fps = readAnchor(a, "fps_true");
   const result = computeTempoSec({
     peak_leg_lift_frame_index: readAnchor(a, "peak_leg_lift_frame_index"),
     front_foot_strike_frame_index: readAnchor(a, "front_foot_strike_frame_index"),
     fps_true: fps ?? 0,
   });
+  if (result.value == null && persisted?.missing_reason) {
+    return { status: "missing", missing_reason: persisted.missing_reason };
+  }
+
   if (result.value == null) {
     return {
       status: "missing",

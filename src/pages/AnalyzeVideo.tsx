@@ -26,10 +26,11 @@ import { AnalysisProgressIndicator } from "@/components/report-card/hammer/Analy
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { useSideContext } from "@/contexts/SideContext";
 import { SideContextPicker } from "@/components/shared/SideContextPicker";
-// Phase 49 — Release-1 Product Lock: report-card surfaces (HammerReportCard,
-// AnalysisToggle, RecomputeReportCardButton, CameraAngleHelper,
-// TheScorecard) removed from athlete-facing analysis page. AnalysisProgressIndicator
-// restored so users see live elapsed/countdown while the model runs.
+import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
+import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
+// Release-1: the Report Card tab is restored, but populated ONLY from tiles
+// whose backing metric is classified VISIBLE in src/lib/reportCard/release1.ts.
+
 
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
@@ -57,7 +58,11 @@ export default function AnalyzeVideo() {
   const navigate = useNavigate();
   const location = useLocation();
   const [uploading, setUploading] = useState(false);
-  // Phase 49: analysisView removed — only detailed (raw) view ships.
+  // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
+  // measurement-backed tiles; every unvalidated tile stays behind its
+  // existing kill switch in src/lib/reportCard/release1.ts.
+  const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
@@ -1390,16 +1395,37 @@ export default function AnalyzeVideo() {
             )}
 
             {analysis && (
-              <AnalysisResultsPanel
-                analysis={analysis}
-                moduleKey={module || 'hitting'}
-                persistedTempo={persistedTempo}
-                savedDrillIds={savedDrillIds}
-                onSaveDrill={handleSaveDrill}
-                onSaveToLibrary={() => setSaveDialogOpen(true)}
-                onReturnToDashboard={() => navigate('/dashboard')}
-              />
+              <div className="space-y-4">
+                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+
+                {analysisView === "report_card" ? (
+                  <HammerReportCard
+                    sport={sport}
+                    module={module}
+                    analysis={{
+                      ...analysis,
+                      metrics: (analysis.metrics ?? undefined) as never,
+                      // Deterministic tempo pipeline output (already evidence-hashed).
+                      tempo_sec_deterministic: persistedTempo
+                        ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
+                        : undefined,
+                    } as never}
+                    showShare={false}
+                  />
+                ) : (
+                  <AnalysisResultsPanel
+                    analysis={analysis}
+                    moduleKey={module || 'hitting'}
+                    persistedTempo={persistedTempo}
+                    savedDrillIds={savedDrillIds}
+                    onSaveDrill={handleSaveDrill}
+                    onSaveToLibrary={() => setSaveDialogOpen(true)}
+                    onReturnToDashboard={() => navigate('/dashboard')}
+                  />
+                )}
+              </div>
             )}
+
           </div>
         )}
 
