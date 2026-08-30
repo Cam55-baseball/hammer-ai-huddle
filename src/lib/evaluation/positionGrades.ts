@@ -60,3 +60,52 @@ export function summarizePositionGrades(
     }))
     .sort((a, b) => b.looks - a.looks || a.position.localeCompare(b.position));
 }
+
+/**
+ * One report can now carry several position looks (child rows). This folds the
+ * legacy single `position_evaluated` on the parent row together with the child
+ * looks into one flat list for `summarizePositionGrades`.
+ *
+ * Child rows win: when a report has explicit looks, the parent's legacy copy of
+ * its primary look is skipped so it is never double-counted.
+ */
+export interface ReportPositionLook {
+  grade_id: string;
+  position: string;
+  defense_grade?: number | null;
+  throwing_grade?: number | null;
+  defense_grade_future?: number | null;
+  throwing_grade_future?: number | null;
+}
+
+export function expandPositionLooks(
+  reports: (PositionGradeSource & { id?: string })[],
+  looks: ReportPositionLook[],
+): PositionGradeSource[] {
+  const byReport = new Map<string, ReportPositionLook[]>();
+  for (const l of looks) {
+    const list = byReport.get(l.grade_id) ?? [];
+    list.push(l);
+    byReport.set(l.grade_id, list);
+  }
+
+  const out: PositionGradeSource[] = [];
+  for (const r of reports) {
+    const children = r.id ? byReport.get(r.id) : undefined;
+    if (children && children.length > 0) {
+      for (const c of children) {
+        out.push({
+          position_evaluated: c.position,
+          defense_grade: c.defense_grade ?? null,
+          throwing_grade: c.throwing_grade ?? null,
+          defense_grade_future: c.defense_grade_future ?? null,
+          throwing_grade_future: c.throwing_grade_future ?? null,
+          graded_at: r.graded_at,
+        });
+      }
+      continue;
+    }
+    out.push(r);
+  }
+  return out;
+}

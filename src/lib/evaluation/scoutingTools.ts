@@ -23,12 +23,36 @@ export interface ToolGroup {
   tools: ToolDef[];
 }
 
-/** Grades that are only meaningful alongside `position_evaluated`. */
+/** Grades that are only meaningful alongside a position look. */
 export const POSITION_BOUND_KEYS = ['defense_grade', 'throwing_grade'] as const;
 
+/**
+ * Positions a POSITION-PLAYER look can be filed at.
+ *
+ * 'P' is deliberately absent: pitching is its own set of tools with its own
+ * section on the report, so a pitcher look is never a "position seen" entry.
+ */
 export const POSITION_OPTIONS = [
-  'P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'UTIL',
+  'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'UTIL',
 ] as const;
+
+/**
+ * Offensive tools that genuinely differ by batting side. When a switch hitter
+ * was seen from both sides, these are graded once per side; everything else on
+ * the report stays a single number (a player has one frame, one motor).
+ */
+export const SIDE_SPLIT_KEYS = [
+  'hitting_grade',
+  'power_grade',
+  'plate_discipline_grade',
+] as const;
+
+export type BatSide = 'R' | 'L';
+
+export const BAT_SIDE_LABELS: Record<BatSide, string> = {
+  R: 'Right-handed AB',
+  L: 'Left-handed AB',
+};
 
 const HITTING_TOOLS: ToolDef[] = [
   { key: 'hitting_grade', label: 'Hit', hint: 'Bat-to-ball, approach, contact quality' },
@@ -162,3 +186,30 @@ export const TOOL_DISPLAY_ORDER: string[] = [
 ]
   .map((t) => t.key)
   .filter((k, i, a) => a.indexOf(k) === i);
+
+/**
+ * A report can carry position-player tools, pitching tools, or both (two-way).
+ * `grade_type` stays the coarse label so existing readers keep working; the
+ * boolean section flags on the row are the precise truth.
+ */
+export function deriveGradeType(opts: {
+  includesPositionTools: boolean;
+  includesPitchingTools: boolean;
+}): 'hitting_throwing' | 'pitching' | 'two_way' {
+  if (opts.includesPositionTools && opts.includesPitchingTools) return 'two_way';
+  return opts.includesPitchingTools ? 'pitching' : 'hitting_throwing';
+}
+
+/** Human label for a report's coverage. */
+export function reportTypeLabel(gradeType: string | null | undefined): string {
+  if (gradeType === 'two_way') return 'Two-way report';
+  if (gradeType === 'pitching') return 'Pitching report';
+  return 'Position player report';
+}
+
+/** Average of the graded sides, or null when neither side was graded. */
+export function blendSides(a: number | null, b: number | null): number | null {
+  const vals = [a, b].filter((v): v is number => typeof v === 'number');
+  if (vals.length === 0) return null;
+  return Math.round(vals.reduce((x, y) => x + y, 0) / vals.length);
+}
