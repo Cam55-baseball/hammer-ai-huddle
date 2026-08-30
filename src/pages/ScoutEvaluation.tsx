@@ -18,16 +18,18 @@ import { Switch } from '@/components/ui/switch';
 import {
   positionPlayerGroups,
   pitchingGroups,
+  pitchingSideSplitTools,
   POSITION_OPTIONS,
   SIDE_SPLIT_KEYS,
-  BAT_SIDE_LABELS,
+  HAND_LABELS,
   deriveGradeType,
   blendSides,
   TOOL_LABELS,
+  type Hand,
   type BatSide,
   type ToolDef,
 } from '@/lib/evaluation/scoutingTools';
-import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft, Plus, Trash2, X } from 'lucide-react';
 
 const CONTEXT_OPTIONS = [
   'In-person — game',
@@ -38,9 +40,12 @@ const CONTEXT_OPTIONS = [
 
 const SCALE = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
 
+const HANDS: Hand[] = ['R', 'L'];
+
 interface PositionLookDraft {
   key: string;
   position: string;
+  throwing_hand: Hand | null;
   defense_grade: number | null;
   defense_grade_future: number | null;
   throwing_grade: number | null;
@@ -50,11 +55,13 @@ interface PositionLookDraft {
 const newLook = (): PositionLookDraft => ({
   key: Math.random().toString(36).slice(2),
   position: '',
+  throwing_hand: null,
   defense_grade: null,
   defense_grade_future: null,
   throwing_grade: null,
   throwing_grade_future: null,
 });
+
 
 function GradeSelect({
   value,
@@ -84,6 +91,62 @@ function GradeSelect({
   );
 }
 
+function HandGradeTable({
+  title,
+  tools,
+  side,
+  grades,
+  setGrades,
+  sideKey,
+  onDismiss,
+}: {
+  title: string;
+  tools: ToolDef[];
+  side: Hand;
+  grades: Record<string, number | null>;
+  setGrades: React.Dispatch<React.SetStateAction<Record<string, number | null>>>;
+  sideKey: (side: Hand, key: string, fut: boolean) => string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="rounded-md border p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <div className="flex-1" />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Dismiss ${title}`}
+          onClick={onDismiss}
+        >
+          <X className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
+        <span>Tool</span>
+        <span className="text-center">Present</span>
+        <span className="text-center">Future</span>
+      </div>
+      {tools.map((t) => (
+        <div key={t.key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
+          <span className="text-sm truncate">{t.label}</span>
+          {[false, true].map((fut) => {
+            const k = sideKey(side, t.key, fut);
+            return (
+              <GradeSelect
+                key={k}
+                ariaLabel={`${t.label} ${title} ${fut ? 'future' : 'present'}`}
+                value={grades[k] ?? null}
+                onChange={(v) => setGrades((p) => ({ ...p, [k]: v }))}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ScoutEvaluation() {
   const { athleteId: paramAthleteId } = useParams();
   const [searchParams] = useSearchParams();
@@ -103,8 +166,15 @@ export default function ScoutEvaluation() {
 
   const [looks, setLooks] = useState<PositionLookDraft[]>([newLook()]);
   const [isSwitchHitter, setIsSwitchHitter] = useState(false);
-  const [sawBothSides, setSawBothSides] = useState(false);
+  const [isAmbiThrower, setIsAmbiThrower] = useState(false);
+  const [isAmbiPitcher, setIsAmbiPitcher] = useState(false);
   const [sideGrades, setSideGrades] = useState<Record<string, number | null>>({});
+  const [pitchSideGrades, setPitchSideGrades] = useState<Record<string, number | null>>({});
+  // Sides the evaluator kept on the form. Dismissing a side removes its table;
+  // a side left blank simply never saves.
+  const [batSidesShown, setBatSidesShown] = useState<Hand[]>(['R', 'L']);
+  const [pitchSidesShown, setPitchSidesShown] = useState<Hand[]>(['R', 'L']);
+
 
   const [contextType, setContextType] = useState<string>(CONTEXT_OPTIONS[0]);
   const [contextDetail, setContextDetail] = useState('');
@@ -127,7 +197,15 @@ export default function ScoutEvaluation() {
     })();
   }, [athleteId]);
 
-  const splitSides = isSwitchHitter && sawBothSides;
+  // One toggle, one meaning: a switch hitter is graded per side. Sides the
+  // evaluator did not see are left blank or dismissed.
+  const splitSides = isSwitchHitter && batSidesShown.length > 0;
+  const pitchSplitTools = useMemo(() => pitchingSideSplitTools(sport), [sport]);
+  const splitPitching = includePitching && isAmbiPitcher && pitchSidesShown.length > 0;
+  const pitchSplitKeys = useMemo(
+    () => new Set(pitchSplitTools.map((t) => t.key)),
+    [pitchSplitTools],
+  );
 
   /** Groups rendered as flat single-value tools. Defense moves to position looks;
    *  side-split offensive tools move to the per-side grid when both sides were seen. */
@@ -139,6 +217,7 @@ export default function ScoutEvaluation() {
         if (g.id === 'defense') continue; // handled per position look
         const tools = g.tools.filter((t) => {
           if (splitSides && (SIDE_SPLIT_KEYS as readonly string[]).includes(t.key)) return false;
+          if (splitPitching && prefix === 'pit' && pitchSplitKeys.has(t.key)) return false;
           if (seen.has(t.key)) return false;
           seen.add(t.key);
           return true;
@@ -150,12 +229,13 @@ export default function ScoutEvaluation() {
     if (includePosition) push(positionPlayerGroups(), 'pos');
     if (includePitching) push(pitchingGroups(sport), 'pit');
     return out;
-  }, [includePosition, includePitching, sport, splitSides]);
+  }, [includePosition, includePitching, sport, splitSides, splitPitching, pitchSplitKeys]);
 
   const flatTools = useMemo(() => flatGroups.flatMap((g) => g.tools), [flatGroups]);
   const gradedCount = flatTools.filter((t) => current[t.key] != null || future[t.key] != null).length;
 
-  const sideKey = (side: BatSide, key: string, fut: boolean) => `${side}:${key}${fut ? '_future' : ''}`;
+  const sideKey = (side: Hand, key: string, fut: boolean) => `${side}:${key}${fut ? '_future' : ''}`;
+
 
   const setLook = (key: string, patch: Partial<PositionLookDraft>) =>
     setLooks((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -211,7 +291,10 @@ export default function ScoutEvaluation() {
         throwing_grade: primary?.throwing_grade ?? null,
         throwing_grade_future: primary?.throwing_grade_future ?? null,
         is_switch_hitter: includePosition ? isSwitchHitter : null,
-        saw_both_batting_sides: includePosition && isSwitchHitter ? sawBothSides : null,
+        saw_both_batting_sides: includePosition && isSwitchHitter ? batSidesShown.length > 1 : null,
+        is_ambidextrous_thrower: includePosition ? isAmbiThrower : null,
+        is_ambidextrous_pitcher: includePitching ? isAmbiPitcher : null,
+
       };
 
       for (const t of flatTools) {
@@ -231,6 +314,21 @@ export default function ScoutEvaluation() {
         }
       }
 
+      // Same contract for an ambidextrous pitcher: parent row blends, the
+      // per-hand rows keep the truth.
+      if (splitPitching) {
+        for (const t of pitchSplitTools) {
+          row[t.key] = blendSides(
+            pitchSideGrades[sideKey('R', t.key, false)] ?? null,
+            pitchSideGrades[sideKey('L', t.key, false)] ?? null,
+          );
+          row[`${t.key}_future`] = blendSides(
+            pitchSideGrades[sideKey('R', t.key, true)] ?? null,
+            pitchSideGrades[sideKey('L', t.key, true)] ?? null,
+          );
+        }
+      }
+
       const { data: inserted, error } = await supabase
         .from('vault_scout_grades')
         .insert(row as never)
@@ -244,6 +342,7 @@ export default function ScoutEvaluation() {
           filledLooks.map((l) => ({
             grade_id: gradeId,
             position: l.position,
+            throwing_hand: isAmbiThrower ? l.throwing_hand : null,
             defense_grade: l.defense_grade,
             defense_grade_future: l.defense_grade_future,
             throwing_grade: l.throwing_grade,
@@ -254,10 +353,10 @@ export default function ScoutEvaluation() {
       }
 
       if (splitSides) {
-        const sideRows = (['R', 'L'] as BatSide[])
+        const sideRows = batSidesShown
           .map((side) => ({
             grade_id: gradeId,
-            bat_side: side,
+            bat_side: side as BatSide,
             hitting_grade: sideGrades[sideKey(side, 'hitting_grade', false)] ?? null,
             hitting_grade_future: sideGrades[sideKey(side, 'hitting_grade', true)] ?? null,
             power_grade: sideGrades[sideKey(side, 'power_grade', false)] ?? null,
@@ -276,6 +375,30 @@ export default function ScoutEvaluation() {
           if (sideErr) throw sideErr;
         }
       }
+
+      if (splitPitching) {
+        const pitchRows = pitchSidesShown
+          .map((side) => {
+            const r: Record<string, unknown> = { grade_id: gradeId, throwing_hand: side };
+            for (const t of pitchSplitTools) {
+              r[t.key] = pitchSideGrades[sideKey(side, t.key, false)] ?? null;
+              r[`${t.key}_future`] = pitchSideGrades[sideKey(side, t.key, true)] ?? null;
+            }
+            return r;
+          })
+          .filter((r) =>
+            Object.entries(r).some(
+              ([k, v]) => k !== 'grade_id' && k !== 'throwing_hand' && v != null,
+            ),
+          );
+        if (pitchRows.length > 0) {
+          const { error: pitchErr } = await supabase
+            .from('vault_scout_grade_pitching_sides')
+            .insert(pitchRows as never);
+          if (pitchErr) throw pitchErr;
+        }
+      }
+
 
       toast({
         title: 'Evaluation filed — awaiting player confirmation',
@@ -465,9 +588,22 @@ export default function ScoutEvaluation() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+                <Switch
+                  checked={isAmbiThrower}
+                  onCheckedChange={setIsAmbiThrower}
+                  aria-label="Ambidextrous thrower"
+                />
+                <span className="text-sm">
+                  <span className="font-medium block">Ambidextrous thrower</span>
+                  <span className="text-muted-foreground">
+                    Record which hand you saw him throw with at each position.
+                  </span>
+                </span>
+              </label>
               {looks.map((look, idx) => (
                 <div key={look.key} className="rounded-md border p-3 space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Select
                       value={look.position}
                       onValueChange={(v) => setLook(look.key, { position: v })}
@@ -485,6 +621,26 @@ export default function ScoutEvaluation() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {isAmbiThrower && (
+                      <Select
+                        value={look.throwing_hand ?? ''}
+                        onValueChange={(v) => setLook(look.key, { throwing_hand: v as Hand })}
+                      >
+                        <SelectTrigger
+                          className="h-9 w-44"
+                          aria-label={`Throwing hand for position ${idx + 1}`}
+                        >
+                          <SelectValue placeholder="Threw with…" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {HANDS.map((h) => (
+                            <SelectItem key={h} value={h}>
+                              {HAND_LABELS[h]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                     <div className="flex-1" />
                     {looks.length > 1 && (
                       <Button
@@ -497,6 +653,7 @@ export default function ScoutEvaluation() {
                       </Button>
                     )}
                   </div>
+
 
                   <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
                     <span>Tool</span>
@@ -548,7 +705,8 @@ export default function ScoutEvaluation() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Batting side</CardTitle>
               <CardDescription>
-                A switch hitter is two hitters. Grade each side only if you actually saw it.
+                A switch hitter is two hitters. Grade each side only if you actually saw it — leave
+                a side blank, or dismiss it, and it simply won't be saved.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -557,7 +715,7 @@ export default function ScoutEvaluation() {
                   checked={isSwitchHitter}
                   onCheckedChange={(v) => {
                     setIsSwitchHitter(v);
-                    if (!v) setSawBothSides(false);
+                    if (v) setBatSidesShown(['R', 'L']);
                   }}
                   aria-label="Switch hitter"
                 />
@@ -565,48 +723,31 @@ export default function ScoutEvaluation() {
               </div>
 
               {isSwitchHitter && (
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={sawBothSides}
-                    onCheckedChange={setSawBothSides}
-                    aria-label="Saw both sides"
-                  />
-                  <span className="text-sm">
-                    {sawBothSides
-                      ? 'Saw both sides — grading them separately'
-                      : 'Only saw one side at this event'}
-                  </span>
-                </div>
-              )}
-
-              {splitSides && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Separator />
-                  <div className="grid grid-cols-[1fr_repeat(4,64px)] gap-2 text-[11px] font-medium text-muted-foreground">
-                    <span>Tool</span>
-                    <span className="text-center">R now</span>
-                    <span className="text-center">R fut</span>
-                    <span className="text-center">L now</span>
-                    <span className="text-center">L fut</span>
-                  </div>
-                  {SIDE_SPLIT_KEYS.map((key) => (
-                    <div key={key} className="grid grid-cols-[1fr_repeat(4,64px)] gap-2 items-center">
-                      <span className="text-sm truncate">{TOOL_LABELS[key]}</span>
-                      {(['R', 'L'] as BatSide[]).flatMap((side) =>
-                        [false, true].map((fut) => {
-                          const k = sideKey(side, key, fut);
-                          return (
-                            <GradeSelect
-                              key={k}
-                              ariaLabel={`${TOOL_LABELS[key]} ${BAT_SIDE_LABELS[side]} ${fut ? 'future' : 'present'}`}
-                              value={sideGrades[k] ?? null}
-                              onChange={(v) => setSideGrades((p) => ({ ...p, [k]: v }))}
-                            />
-                          );
-                        }),
-                      )}
-                    </div>
+                  {batSidesShown.map((side) => (
+                    <HandGradeTable
+                      key={side}
+                      title={`${HAND_LABELS[side]}`}
+                      tools={SIDE_SPLIT_KEYS.map((k) => ({ key: k, label: TOOL_LABELS[k], hint: '' }))}
+                      side={side}
+                      grades={sideGrades}
+                      setGrades={setSideGrades}
+                      sideKey={sideKey}
+                      onDismiss={() =>
+                        setBatSidesShown((prev) => prev.filter((s) => s !== side))
+                      }
+                    />
                   ))}
+                  {batSidesShown.length < 2 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBatSidesShown(['R', 'L'])}
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Add the other side back
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     The report also stores the blend of the two sides so single-number readers stay
                     accurate — the per-side grades remain the truth.
@@ -616,6 +757,64 @@ export default function ScoutEvaluation() {
             </CardContent>
           </Card>
         )}
+
+        {/* 4b. Ambidextrous pitcher */}
+        {includePitching && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Throwing side (pitching)</CardTitle>
+              <CardDescription>
+                An ambidextrous pitcher is two pitchers. Grade the arsenal and craft once per hand —
+                blank or dismissed sides don't save.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={isAmbiPitcher}
+                  onCheckedChange={(v) => {
+                    setIsAmbiPitcher(v);
+                    if (v) setPitchSidesShown(['R', 'L']);
+                  }}
+                  aria-label="Ambidextrous pitcher"
+                />
+                <span className="text-sm">
+                  {isAmbiPitcher ? 'Ambidextrous pitcher' : 'Pitches with one hand'}
+                </span>
+              </div>
+
+              {splitPitching && (
+                <div className="space-y-4">
+                  <Separator />
+                  {pitchSidesShown.map((side) => (
+                    <HandGradeTable
+                      key={side}
+                      title={`${HAND_LABELS[side]} pitching`}
+                      tools={pitchSplitTools}
+                      side={side}
+                      grades={pitchSideGrades}
+                      setGrades={setPitchSideGrades}
+                      sideKey={sideKey}
+                      onDismiss={() =>
+                        setPitchSidesShown((prev) => prev.filter((s) => s !== side))
+                      }
+                    />
+                  ))}
+                  {pitchSidesShown.length < 2 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPitchSidesShown(['R', 'L'])}
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Add the other hand back
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* 5. Remaining tool grades */}
         {flatGroups.length > 0 && (
