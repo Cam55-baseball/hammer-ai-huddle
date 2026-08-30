@@ -365,17 +365,34 @@ function NewStandardForm({
 /* Criteria                                                            */
 /* ------------------------------------------------------------------ */
 
-function CriteriaEditor({ standardId }: { standardId: string }) {
-  const { criteria, addCriterion, deleteCriterion } = useStandardCriteria(standardId);
+function CriteriaEditor({ standard }: { standard: OrgStandard }) {
+  const standardId = standard.id;
+  const { criteria, addCriterion, deleteCriterion, setCriterionMandatory } =
+    useStandardCriteria(standardId);
   const [field, setField] = useState<string>(PROFILE_FIELDS[0].key);
   const [operator, setOperator] = useState<StandardOperator>("eq");
   const [raw, setRaw] = useState("");
+  const [isMandatory, setIsMandatory] = useState(true);
   const [pingMessage, setPingMessage] = useState("");
 
   const def = fieldByKey(field);
   const allowedOps = def?.operators ?? (["eq"] as const);
 
-  const matches = useStandardMatchPreview(standardId, criteria.data);
+  // Only the tools that exist for this standard's sport and role are offered.
+  const gradeFields = useMemo(
+    () => gradeFieldsFor(standard.recruiting_role, standard.sport),
+    [standard.recruiting_role, standard.sport],
+  );
+
+  const context: StandardContext = useMemo(
+    () => ({
+      targetPositions: standard.target_positions ?? [],
+      positionMatchLogic: standard.position_match_logic ?? "any",
+    }),
+    [standard.target_positions, standard.position_match_logic],
+  );
+
+  const matches = useStandardMatchPreview(standardId, criteria.data, context);
   const saveMatches = useSaveStandardMatches(standardId);
   const pending = usePendingStandardPings(standardId);
   const dispatch = useDispatchStandardMatchPings();
@@ -389,7 +406,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
       return;
     }
     addCriterion.mutate(
-      { field, operator, value },
+      { field, operator, value, is_mandatory: isMandatory },
       {
         onSuccess: () => {
           setRaw("");
@@ -401,7 +418,51 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
   };
 
   const list = criteria.data ?? [];
-  const summary = summarizeCriteria(list);
+  const mandatoryList = list.filter((c) => c.is_mandatory !== false);
+  const preferredList = list.filter((c) => c.is_mandatory === false);
+  const summary = summarizeCriteria(mandatoryList);
+  const preferredSummary = summarizeCriteria(preferredList);
+  const noMandatory = mandatoryList.length === 0;
+
+  const renderRow = (c: (typeof list)[number], i: number) => (
+    <li
+      key={c.id}
+      className="flex items-center justify-between gap-3 rounded-lg border bg-card px-3 py-2"
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums">
+          {i + 1}
+        </span>
+        <span className="truncate text-sm">
+          {describeCriterion(c.field, c.operator, c.value)}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          disabled={setCriterionMandatory.isPending}
+          onClick={() =>
+            setCriterionMandatory.mutate({
+              id: c.id,
+              is_mandatory: c.is_mandatory === false,
+            })
+          }
+        >
+          {c.is_mandatory === false ? "Make mandatory" : "Make preferred"}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => deleteCriterion.mutate(c.id)}
+          aria-label="Delete criterion"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </li>
+  );
 
   return (
     <div className="space-y-6">
@@ -409,8 +470,24 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
       <div className="rounded-xl border-2 border-primary/25 bg-primary/[0.04] p-4">
         <MicroLabel>An athlete matches when</MicroLabel>
         <p className="mt-1.5 text-base font-medium leading-relaxed">
-          {summary || "…nothing yet. Add a field below and this sentence writes itself."}
+          {summary ||
+            "…nothing yet. Add a mandatory requirement below and this sentence writes itself."}
         </p>
+        {preferredSummary && (
+          <p className="mt-2 flex gap-1.5 text-sm text-muted-foreground">
+            <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <span>
+              <span className="font-medium text-foreground">Preferred, not required:</span>{" "}
+              {preferredSummary}
+            </span>
+          </p>
+        )}
+        {noMandatory && preferredList.length > 0 && (
+          <p className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            Every requirement here is preferred, so nothing actually gates the match. A standard
+            with no mandatory requirement matches nobody — make at least one mandatory.
+          </p>
+        )}
       </div>
 
       {/* Criteria as readable rows */}
@@ -433,32 +510,27 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
             </p>
           </div>
         ) : (
-          <ol className="space-y-2">
-            {list.map((c, i) => (
-              <li
-                key={c.id}
-                className="flex items-center justify-between gap-3 rounded-lg border bg-card px-3 py-2"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums">
-                    {i + 1}
-                  </span>
-                  <span className="truncate text-sm">
-                    {describeCriterion(c.field, c.operator, c.value)}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => deleteCriterion.mutate(c.id)}
-                  aria-label="Delete criterion"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
-          </ol>
+          <div className="space-y-4">
+            {mandatoryList.length > 0 && (
+              <div className="space-y-2">
+                <RulePill icon={ShieldCheck}>
+                  <span className="font-medium text-foreground">Mandatory</span> — every one of
+                  these must pass or there is no match. Missing data counts as a fail.
+                </RulePill>
+                <ol className="space-y-2">{mandatoryList.map(renderRow)}</ol>
+              </div>
+            )}
+            {preferredList.length > 0 && (
+              <div className="space-y-2">
+                <RulePill icon={Star}>
+                  <span className="font-medium text-foreground">Preferred</span> — never blocks a
+                  match on its own. Tracked and shown next to each athlete so you can see how
+                  much extra they bring.
+                </RulePill>
+                <ol className="space-y-2">{preferredList.map(renderRow)}</ol>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -489,8 +561,10 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                   ))}
                 </SelectGroup>
                 <SelectGroup>
-                  <SelectLabel>Official grades only</SelectLabel>
-                  {GRADE_FIELDS.map((f) => (
+                  <SelectLabel>
+                    {RECRUITING_ROLE_LABELS[standard.recruiting_role]} tools · official grades only
+                  </SelectLabel>
+                  {gradeFields.map((f) => (
                     <SelectItem key={f.key} value={f.key}>
                       {f.label}
                     </SelectItem>
@@ -526,6 +600,24 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
           <Button onClick={handleAdd} disabled={addCriterion.isPending}>
             Add
           </Button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id={`mandatory-${standardId}`}
+              checked={isMandatory}
+              onCheckedChange={setIsMandatory}
+            />
+            <Label htmlFor={`mandatory-${standardId}`} className="text-xs">
+              {isMandatory ? "Mandatory" : "Preferred"}
+            </Label>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {isMandatory
+              ? "Must pass — an athlete missing this never surfaces."
+              : "Nice to have — shown alongside the match, but never blocks it."}
+          </span>
         </div>
       </div>
 
@@ -591,7 +683,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
 
         {!list.length ? (
           <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-            Add at least one criterion to evaluate athletes.
+            Add at least one mandatory criterion to evaluate athletes.
           </p>
         ) : matches.isLoading ? (
           <p className="text-sm text-muted-foreground">Evaluating athletes…</p>
@@ -602,16 +694,34 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                 key={m.athlete_user_id}
                 className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm"
               >
-                <span className="truncate font-medium">{m.full_name ?? m.athlete_user_id}</span>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{m.full_name ?? m.athlete_user_id}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    Meets all {mandatoryList.length} mandatory
+                    {m.preferred_total > 0
+                      ? `, plus ${m.preferred_met} of ${m.preferred_total} preferred`
+                      : ""}
+                    {m.preferred_total > 0 && m.preferred_met < m.preferred_total
+                      ? ` · short on ${m.preferred
+                          .filter((r) => !r.passed)
+                          .map((r) => fieldByKey(r.field)?.label ?? r.field)
+                          .join(", ")}`
+                      : ""}
+                  </p>
+                </div>
                 <Badge variant="outline" className="shrink-0 tabular-nums">
-                  {m.passed.length} / {m.results.length} criteria
+                  {m.preferred_total > 0
+                    ? `${m.preferred_met}/${m.preferred_total} preferred`
+                    : "Full match"}
                 </Badge>
               </div>
             ))}
           </div>
         ) : (
           <div className="rounded-lg border border-dashed px-4 py-6 text-center">
-            <p className="text-sm font-medium">Nobody clears all {list.length} yet</p>
+            <p className="text-sm font-medium">
+              Nobody clears all {mandatoryList.length} mandatory yet
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Missing data counts as a fail, and self-reported grades never count.
             </p>
@@ -639,7 +749,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
         <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-xs">
           <p className="flex items-center gap-1.5 font-semibold">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            A ping only fires when every criterion is met — not most, not some.
+            A ping only fires when every mandatory criterion is met — not most, not some.
           </p>
           <p className="mt-1 text-muted-foreground">
             Saving records the match. Sending pings notifies both sides once — the rep who owns
