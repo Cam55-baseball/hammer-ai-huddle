@@ -49,7 +49,20 @@ export default function Evaluations() {
   );
   const { data: names = {} } = useProfileNames(athleteIds);
 
+  // Child rows: multi-position looks and per-batting-side offensive grades.
+  const reportIds = useMemo(
+    () => [...filed.map((r) => r.id), ...mine.map((r) => r.id)],
+    [filed, mine],
+  );
+  const { data: details } = useReportDetails(reportIds);
+
+  const minePositionSources = useMemo(
+    () => expandPositionLooks(mine as never, details?.positions ?? []),
+    [mine, details],
+  );
+
   const awaiting = filed.filter((r) => !r.player_confirmed).length;
+
 
   if (authLoading || accessLoading) {
     return (
