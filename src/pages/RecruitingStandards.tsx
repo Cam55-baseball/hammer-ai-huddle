@@ -3,6 +3,10 @@
  *
  * Org side: build named standards + criteria, see live matches.
  * Athlete side: the standards you have matched.
+ *
+ * Design: mirrors the analysis-results language — staggered reveal, tinted
+ * surface cards, uppercase micro-labels, and rules stated as native chrome
+ * rather than bolted-on paragraphs. Logic is unchanged from the prior version.
  */
 import { useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -11,8 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select,
   SelectContent,
@@ -25,8 +30,25 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { RecruiterContactCard } from "@/components/recruiting/RecruiterContactCard";
+import { RevealSection } from "@/components/analyze/RevealSection";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { BellRing, ClipboardList, Copy, Info, Layers, Lock, Plus, Save, Shield, Trash2, Users } from "lucide-react";
+import {
+  BellRing,
+  ChevronDown,
+  ClipboardList,
+  Copy,
+  Info,
+  Layers,
+  Plus,
+  Save,
+  Shield,
+  ShieldCheck,
+  Target,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
 import {
   useMyStandardMatches,
   useOrgStandards,
@@ -54,44 +76,103 @@ import {
 } from "@/lib/recruiting/standardFields";
 import type { StandardOperator } from "@/lib/recruiting/standardsMatching";
 
-function NewStandardForm({ onCreate, pending }: { onCreate: (v: { org_name: string; label: string; sport: string; active: boolean }) => void; pending: boolean }) {
+const SPORT_LABELS: Record<string, string> = { baseball: "Baseball", softball: "Softball" };
+
+/* ------------------------------------------------------------------ */
+/* Shared presentation atoms                                           */
+/* ------------------------------------------------------------------ */
+
+function MicroLabel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p
+      className={cn(
+        "text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground",
+        className,
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
+function RulePill({ icon: Icon, children }: { icon: typeof Shield; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2">
+      <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+      <span className="text-xs leading-snug text-muted-foreground">{children}</span>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Create                                                              */
+/* ------------------------------------------------------------------ */
+
+function NewStandardForm({
+  onCreate,
+  pending,
+  open,
+  onOpenChange,
+}: {
+  onCreate: (v: { org_name: string; label: string; sport: string; active: boolean }) => void;
+  pending: boolean;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const [orgName, setOrgName] = useState("");
   const [label, setLabel] = useState("");
   const [sport, setSport] = useState("baseball");
   const [active, setActive] = useState(true);
 
+  if (!open) return null;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Plus className="h-4 w-4" /> New standard
-        </CardTitle>
-        <CardDescription>Name the org and what you're looking for.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground flex gap-2">
-          <Layers className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>
-            <span className="font-medium text-foreground">Build as many as you want.</span>{" "}
-            Create a separate standard for each position, or for different profiles you're
-            targeting at the same position — "RHP — Power Arm" and "RHP — Command" can live
-            side by side. There's no limit. Already have one that's close? Duplicate it below
-            instead of starting over.
-          </span>
+    <Card className="border-2 border-primary/30 bg-primary/[0.03]">
+      <CardContent className="space-y-5 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <MicroLabel>New standard</MicroLabel>
+            <h2 className="text-lg font-semibold">Who are you looking for?</h2>
+          </div>
+          <Button variant="ghost" size="icon" aria-label="Close" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
+
+        <p className="flex gap-2 text-sm text-muted-foreground">
+          <Layers className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span>
+            One standard per profile you're actually recruiting — "RHP — Power Arm" and
+            "RHP — Command" can live side by side. There's no limit, and an existing
+            standard can be duplicated instead of rebuilt.
+          </span>
+        </p>
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="org-name">Organization</Label>
-            <Input id="org-name" value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="State U Baseball" />
+            <Input
+              id="org-name"
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              placeholder="State U Baseball"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="std-label">Label</Label>
-            <Input id="std-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="2027 RHP targets" />
+            <Input
+              id="std-label"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="2027 RHP targets"
+            />
           </div>
           <div className="space-y-2">
             <Label>Sport</Label>
             <Select value={sport} onValueChange={setSport}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="baseball">Baseball</SelectItem>
                 <SelectItem value="softball">Softball</SelectItem>
@@ -103,6 +184,7 @@ function NewStandardForm({ onCreate, pending }: { onCreate: (v: { org_name: stri
             <Label htmlFor="std-active">Active</Label>
           </div>
         </div>
+
         <Button
           disabled={pending || !orgName.trim() || !label.trim()}
           onClick={() => {
@@ -117,6 +199,10 @@ function NewStandardForm({ onCreate, pending }: { onCreate: (v: { org_name: stri
     </Card>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Criteria                                                            */
+/* ------------------------------------------------------------------ */
 
 function CriteriaEditor({ standardId }: { standardId: string }) {
   const { criteria, addCriterion, deleteCriterion } = useStandardCriteria(standardId);
@@ -133,7 +219,6 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
   const pending = usePendingStandardPings(standardId);
   const dispatch = useDispatchStandardMatchPings();
   const pendingCount = pending.data?.length ?? 0;
-
 
   const handleAdd = () => {
     if (!def) return;
@@ -154,108 +239,149 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
     );
   };
 
-  const summary = summarizeCriteria(criteria.data ?? []);
+  const list = criteria.data ?? [];
+  const summary = summarizeCriteria(list);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border bg-muted/40 px-3 py-2 space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          This standard requires
-        </p>
-        <p className="text-sm font-medium">
-          {summary || "Nothing yet — add a field below and the sheet builds here."}
+    <div className="space-y-6">
+      {/* Reads as a sentence, not a form dump. */}
+      <div className="rounded-xl border-2 border-primary/25 bg-primary/[0.04] p-4">
+        <MicroLabel>An athlete matches when</MicroLabel>
+        <p className="mt-1.5 text-base font-medium leading-relaxed">
+          {summary || "…nothing yet. Add a field below and this sentence writes itself."}
         </p>
       </div>
 
-      <p className="text-xs text-muted-foreground flex gap-2">
-        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-        <span>
-          You don't need to fill in every possible field. Add only the criteria that actually
-          matter for this standard — there's no required minimum or maximum, two fields or
-          twenty, whatever this profile needs. Every criterion you do add must pass.
-        </span>
-      </p>
-
+      {/* Criteria as readable rows */}
       <div className="space-y-2">
-        {(criteria.data ?? []).map((c) => (
-          <div key={c.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-            <span>{describeCriterion(c.field, c.operator, c.value)}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => deleteCriterion.mutate(c.id)}
-              aria-label="Delete criterion"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+        <div className="flex items-center gap-2">
+          <MicroLabel>Criteria</MicroLabel>
+          {list.length > 0 && (
+            <Badge variant="secondary" className="tabular-nums">
+              {list.length}
+            </Badge>
+          )}
+        </div>
+
+        {list.length === 0 ? (
+          <div className="rounded-lg border border-dashed px-4 py-6 text-center">
+            <p className="text-sm font-medium">No criteria yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A standard with no criteria matches nobody. Add only what actually matters —
+              two fields or twenty, there's no minimum.
+            </p>
           </div>
-        ))}
-        {criteria.data?.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No criteria yet. A standard with no criteria matches nobody.
-          </p>
+        ) : (
+          <ol className="space-y-2">
+            {list.map((c, i) => (
+              <li
+                key={c.id}
+                className="flex items-center justify-between gap-3 rounded-lg border bg-card px-3 py-2"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span className="truncate text-sm">
+                    {describeCriterion(c.field, c.operator, c.value)}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => deleteCriterion.mutate(c.id)}
+                  aria-label="Delete criterion"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </li>
+            ))}
+          </ol>
         )}
       </div>
 
-      <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
-        <div className="space-y-1">
-          <Label className="text-xs">Field</Label>
-          <Select
-            value={field}
-            onValueChange={(v) => {
-              setField(v);
-              const ops = fieldByKey(v)?.operators ?? [];
-              if (!ops.includes(operator)) setOperator(ops[0] ?? "eq");
-            }}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Profile</SelectLabel>
-                {PROFILE_FIELDS.map((f) => (
-                  <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
+      {/* Add row */}
+      <div className="rounded-lg border bg-muted/30 p-3">
+        <MicroLabel className="mb-2">Add a requirement</MicroLabel>
+        <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
+          <div className="space-y-1">
+            <Label className="text-xs">Field</Label>
+            <Select
+              value={field}
+              onValueChange={(v) => {
+                setField(v);
+                const ops = fieldByKey(v)?.operators ?? [];
+                if (!ops.includes(operator)) setOperator(ops[0] ?? "eq");
+              }}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Profile</SelectLabel>
+                  {PROFILE_FIELDS.map((f) => (
+                    <SelectItem key={f.key} value={f.key}>
+                      {f.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>Official grades only</SelectLabel>
+                  {GRADE_FIELDS.map((f) => (
+                    <SelectItem key={f.key} value={f.key}>
+                      {f.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Operator</Label>
+            <Select value={operator} onValueChange={(v) => setOperator(v as StandardOperator)}>
+              <SelectTrigger className="min-w-[120px] bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {allowedOps.map((op) => (
+                  <SelectItem key={op} value={op}>
+                    {OPERATOR_LABELS[op]}
+                  </SelectItem>
                 ))}
-              </SelectGroup>
-              <SelectGroup>
-                <SelectLabel>Official grades only</SelectLabel>
-                {GRADE_FIELDS.map((f) => (
-                  <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Value</Label>
+            <Input
+              className="bg-background"
+              value={raw}
+              onChange={(e) => setRaw(e.target.value)}
+              placeholder={operator === "in" ? "comma, separated, values" : def?.hint ?? "value"}
+            />
+          </div>
+          <Button onClick={handleAdd} disabled={addCriterion.isPending}>
+            Add
+          </Button>
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Operator</Label>
-          <Select value={operator} onValueChange={(v) => setOperator(v as StandardOperator)}>
-            <SelectTrigger className="min-w-[120px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {allowedOps.map((op) => (
-                <SelectItem key={op} value={op}>{OPERATOR_LABELS[op]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Value</Label>
-          <Input
-            value={raw}
-            onChange={(e) => setRaw(e.target.value)}
-            placeholder={operator === "in" ? "comma, separated, values" : def?.hint ?? "value"}
-          />
-        </div>
-        <Button onClick={handleAdd} disabled={addCriterion.isPending}>Add</Button>
       </div>
 
       <Separator />
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <h4 className="text-sm font-semibold flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Current matches
-            {matches.data && <Badge variant="secondary">{matches.data.length}</Badge>}
-          </h4>
+      {/* Matches */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <MicroLabel className="text-foreground">Current matches</MicroLabel>
+            {matches.data && (
+              <Badge variant="secondary" className="tabular-nums">
+                {matches.data.length}
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -271,7 +397,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                 })
               }
             >
-              <Save className="h-4 w-4 mr-1" /> Save matches
+              <Save className="mr-1 h-4 w-4" /> Save matches
             </Button>
             <Button
               size="sm"
@@ -283,7 +409,9 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                       `Pinged ${r.org_pings} rep${r.org_pings === 1 ? "" : "s"} and ${r.athlete_pings} athlete${r.athlete_pings === 1 ? "" : "s"} · ${r.emails_sent ?? 0} email${(r.emails_sent ?? 0) === 1 ? "" : "s"} sent`,
                     );
                     if (r.email_errors?.length) {
-                      toast.error(`${r.email_errors.length} email(s) failed to send — in-app pings still landed.`);
+                      toast.error(
+                        `${r.email_errors.length} email(s) failed to send — in-app pings still landed.`,
+                      );
                     }
                     setPingMessage("");
                     pending.refetch();
@@ -292,84 +420,134 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                 })
               }
             >
-              <BellRing className="h-4 w-4 mr-1" />
-              {pendingCount > 0 ? `Send ${pendingCount} ping${pendingCount === 1 ? "" : "s"}` : "All pinged"}
+              <BellRing className="mr-1 h-4 w-4" />
+              {pendingCount > 0
+                ? `Send ${pendingCount} ping${pendingCount === 1 ? "" : "s"}`
+                : "All pinged"}
             </Button>
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        {!list.length ? (
+          <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+            Add at least one criterion to evaluate athletes.
+          </p>
+        ) : matches.isLoading ? (
+          <p className="text-sm text-muted-foreground">Evaluating athletes…</p>
+        ) : matches.data?.length ? (
+          <div className="space-y-1.5">
+            {matches.data.map((m) => (
+              <div
+                key={m.athlete_user_id}
+                className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm"
+              >
+                <span className="truncate font-medium">{m.full_name ?? m.athlete_user_id}</span>
+                <Badge variant="outline" className="shrink-0 tabular-nums">
+                  {m.passed.length} / {m.results.length} criteria
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed px-4 py-6 text-center">
+            <p className="text-sm font-medium">Nobody clears all {list.length} yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Missing data counts as a fail, and self-reported grades never count.
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
           <Label htmlFor={`ping-msg-${standardId}`} className="text-xs">
             Personal message (optional — goes out in the athlete's email)
           </Label>
           <Textarea
             id={`ping-msg-${standardId}`}
+            className="bg-background"
             value={pingMessage}
             onChange={(e) => setPingMessage(e.target.value.slice(0, 1000))}
             rows={3}
             placeholder="Who you are, why you're reaching out, and what you'd like them to do next — e.g. 'I'm the recruiting coordinator at State U. We liked your camera-measured pop time. Reply here or call if you'd like to talk about our fall camp.'"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground tabular-nums">
             {pingMessage.length}/1000 · A note makes follow-through far more likely than a bare
             notification. Your saved contact details are attached automatically.
           </p>
         </div>
 
-        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs space-y-1">
-          <p className="font-semibold flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5" />
+        <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-xs">
+          <p className="flex items-center gap-1.5 font-semibold">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
             A ping only fires when every criterion is met — not most, not some.
           </p>
-          <p className="text-muted-foreground">
-            An athlete has to clear all {(criteria.data ?? []).length || "your"} criteria on this
-            standard. Partial matches never appear here and never notify anyone. Missing data
-            counts as a fail, and self-reported grades never count.
-          </p>
-          <p className="text-muted-foreground">
+          <p className="mt-1 text-muted-foreground">
             Saving records the match. Sending pings notifies both sides once — the rep who owns
             the standard and the athlete who met it. Already-notified matches are skipped.
           </p>
         </div>
-        {!criteria.data?.length ? (
-          <p className="text-sm text-muted-foreground">Add at least one criterion to evaluate athletes.</p>
-        ) : matches.isLoading ? (
-          <p className="text-sm text-muted-foreground">Evaluating athletes…</p>
-        ) : matches.data?.length ? (
-          <div className="space-y-1">
-            {matches.data.map((m) => (
-              <div key={m.athlete_user_id} className="rounded-md border px-3 py-2 text-sm flex items-center justify-between">
-                <span>{m.full_name ?? m.athlete_user_id}</span>
-                <Badge variant="outline">{m.passed.length} / {m.results.length} criteria</Badge>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No athletes match every criterion. Missing data counts as a fail, and self-reported grades never count.
-          </p>
-        )}
       </div>
-
     </div>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Standard card                                                       */
+/* ------------------------------------------------------------------ */
+
 function StandardCard({ standard }: { standard: OrgStandard }) {
   const { updateStandard, deleteStandard, duplicateStandard } = useOrgStandards();
+  const { criteria } = useStandardCriteria(standard.id);
   const [label, setLabel] = useState(standard.label);
   const [orgName, setOrgName] = useState(standard.org_name);
+  const [open, setOpen] = useState(false);
+
+  const count = criteria.data?.length ?? 0;
+  const summary = summarizeCriteria(criteria.data ?? []);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1 flex-1">
-            <CardTitle className="text-lg">{standard.label}</CardTitle>
-            <CardDescription>
-              {standard.org_name} · {standard.sport}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card
+        className={cn(
+          "overflow-hidden border-2 transition-colors",
+          standard.active ? "border-primary/25" : "border-border opacity-80",
+        )}
+      >
+        {/* Header — reads at a glance, closed by default */}
+        <div className="flex items-start justify-between gap-4 p-5">
+          <CollapsibleTrigger className="min-w-0 flex-1 text-left">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "h-2 w-2 shrink-0 rounded-full",
+                  standard.active ? "bg-primary" : "bg-muted-foreground/40",
+                )}
+                aria-hidden
+              />
+              <MicroLabel>
+                {SPORT_LABELS[standard.sport] ?? standard.sport} · {standard.org_name}
+              </MicroLabel>
+            </div>
+            <h3 className="mt-1 flex items-center gap-2 text-lg font-semibold">
+              {standard.label}
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                  open && "rotate-180",
+                )}
+              />
+            </h3>
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              {summary || "No criteria yet — this standard matches nobody."}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <Badge variant="secondary" className="tabular-nums">
+                {count} criteri{count === 1 ? "on" : "a"}
+              </Badge>
+              {!standard.active && <Badge variant="outline">Paused</Badge>}
+            </div>
+          </CollapsibleTrigger>
+
+          <div className="flex shrink-0 items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -383,50 +561,68 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
                 })
               }
             >
-              <Copy className="h-4 w-4 mr-1" /> Duplicate
+              <Copy className="mr-1 h-4 w-4" /> Duplicate
             </Button>
             <Switch
               checked={standard.active}
               onCheckedChange={(v) => updateStandard.mutate({ id: standard.id, active: v })}
               aria-label="Active"
             />
-            <Button variant="ghost" size="icon" aria-label="Delete standard" onClick={() => deleteStandard.mutate(standard.id)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Delete standard"
+              onClick={() => deleteStandard.mutate(standard.id)}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto] md:items-end">
-          <div className="space-y-1">
-            <Label className="text-xs">Organization</Label>
-            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Label</Label>
-            <Input value={label} onChange={(e) => setLabel(e.target.value)} />
-          </div>
-          <Button
-            variant="outline"
-            disabled={label === standard.label && orgName === standard.org_name}
-            onClick={() =>
-              updateStandard.mutate(
-                { id: standard.id, label: label.trim(), org_name: orgName.trim() },
-                { onSuccess: () => toast.success("Standard updated") },
-              )
-            }
-          >
-            Save
-          </Button>
-        </div>
-        <Separator />
-        <CriteriaEditor standardId={standard.id} />
-      </CardContent>
-    </Card>
+
+        <CollapsibleContent>
+          <CardContent className="space-y-5 border-t bg-muted/20 p-5 sm:p-6">
+            <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto] md:items-end">
+              <div className="space-y-1">
+                <Label className="text-xs">Organization</Label>
+                <Input
+                  className="bg-background"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Label</Label>
+                <Input
+                  className="bg-background"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="outline"
+                disabled={label === standard.label && orgName === standard.org_name}
+                onClick={() =>
+                  updateStandard.mutate(
+                    { id: standard.id, label: label.trim(), org_name: orgName.trim() },
+                    { onSuccess: () => toast.success("Standard updated") },
+                  )
+                }
+              >
+                Save
+              </Button>
+            </div>
+            <Separator />
+            <CriteriaEditor standardId={standard.id} />
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
 
-const SPORT_LABELS: Record<string, string> = { baseball: "Baseball", softball: "Softball" };
+/* ------------------------------------------------------------------ */
+/* Lists                                                               */
+/* ------------------------------------------------------------------ */
 
 /** Standards grouped by sport, then by the position each profile targets. */
 function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
@@ -451,7 +647,7 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
   // One flat list reads better than a single decorated group.
   if (groups.length < 2) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {standards.map((s) => (
           <StandardCard key={s.id} standard={s} />
         ))}
@@ -462,15 +658,17 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
   return (
     <div className="space-y-8">
       {groups.map((g) => (
-        <section key={`${g.sport}-${g.position}`} className="space-y-4">
+        <section key={`${g.sport}-${g.position}`} className="space-y-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <MicroLabel>
               {SPORT_LABELS[g.sport] ?? g.sport} · {g.position}
-            </h3>
-            <Badge variant="secondary">{g.items.length}</Badge>
+            </MicroLabel>
+            <Badge variant="secondary" className="tabular-nums">
+              {g.items.length}
+            </Badge>
             <Separator className="flex-1" />
           </div>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {g.items.map((s) => (
               <StandardCard key={s.id} standard={s} />
             ))}
@@ -481,23 +679,48 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
   );
 }
 
+function StandardsEmptyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <Card className="border-2 border-dashed">
+      <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Target className="h-7 w-7 text-primary" />
+        </div>
+        <h3 className="text-lg font-semibold">No standards built yet</h3>
+        <p className="max-w-md text-sm text-muted-foreground">
+          A standard is the profile you're actually recruiting — position, class year, and the
+          measured tools that have to be there. Athletes only surface once they clear every
+          line of it.
+        </p>
+        <p className="max-w-md text-xs text-muted-foreground">
+          Build as many as you want. "RHP — Power Arm" and "RHP — Command" can live side by
+          side, and any standard can be duplicated instead of rebuilt.
+        </p>
+        <Button className="mt-2" onClick={onCreate}>
+          <Plus className="mr-1 h-4 w-4" /> Build your first standard
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function AthleteMatchesTab() {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold flex items-center gap-2">
-          <BellRing className="h-4 w-4" /> Notifications
-        </h4>
+      <RevealSection order={0} className="space-y-2">
+        <div className="flex items-center gap-2">
+          <BellRing className="h-4 w-4 text-primary" />
+          <MicroLabel className="text-foreground">Notifications</MicroLabel>
+        </div>
         <StandardMatchNotificationList
           kind="standard_match_athlete"
           emptyText="No recruiting notifications yet. You'll be told which org, which standard, and when."
         />
-      </div>
-      <Separator />
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold">Standards matched</h4>
+      </RevealSection>
+      <RevealSection order={1} className="space-y-2">
+        <MicroLabel className="text-foreground">Standards matched</MicroLabel>
         <AthleteMatchesList />
-      </div>
+      </RevealSection>
     </div>
   );
 }
@@ -508,7 +731,7 @@ function AthleteMatchesList() {
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (!data?.length) {
     return (
-      <Card>
+      <Card className="border-dashed">
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
           No standards matched yet. When an organization's criteria are fully met by your
           official data, it shows up here.
@@ -519,15 +742,17 @@ function AthleteMatchesList() {
   return (
     <div className="space-y-2">
       {data.map((m) => (
-        <Card key={m.id}>
-          <CardContent className="py-4 flex items-center justify-between">
-            <div>
-              <p className="font-semibold">{m.org_standards?.label ?? "Standard"}</p>
-              <p className="text-sm text-muted-foreground">
+        <Card key={m.id} className="border-2 border-primary/20">
+          <CardContent className="flex items-center justify-between gap-3 py-4">
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{m.org_standards?.label ?? "Standard"}</p>
+              <p className="truncate text-sm text-muted-foreground">
                 {m.org_standards?.org_name} · {m.org_standards?.sport}
               </p>
             </div>
-            <Badge>Matched {new Date(m.matched_at).toLocaleDateString()}</Badge>
+            <Badge className="shrink-0">
+              Matched {new Date(m.matched_at).toLocaleDateString()}
+            </Badge>
           </CardContent>
         </Card>
       ))}
@@ -535,34 +760,71 @@ function AthleteMatchesList() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Page                                                                */
+/* ------------------------------------------------------------------ */
+
 export default function RecruitingStandards() {
   const { standards, createStandard } = useOrgStandards();
   const fieldCount = useMemo(() => ALL_FIELDS.length, []);
+  const [creating, setCreating] = useState(false);
+
+  const all = standards.data ?? [];
+  const activeCount = all.filter((s) => s.active).length;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <ClipboardList className="h-8 w-8" />
-            Recruiting Standards
-          </h1>
-          <p className="text-muted-foreground mt-1 flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Owner/admin only — pre-release. {fieldCount} matchable fields.
-          </p>
-        </div>
+      <div className="mx-auto max-w-4xl space-y-6">
+        {/* Hero */}
+        <RevealSection order={0}>
+          <Card className="overflow-hidden border-2 border-primary/25 bg-primary/[0.04]">
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-1.5">
+                  <MicroLabel>Recruiting · owner &amp; admin only · pre-release</MicroLabel>
+                  <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+                    <ClipboardList className="h-7 w-7 text-primary" />
+                    Recruiting Standards
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Define the profile. The system finds who actually clears it.
+                  </p>
+                </div>
+                <Button onClick={() => setCreating((v) => !v)}>
+                  <Plus className="mr-1 h-4 w-4" /> New standard
+                </Button>
+              </div>
 
-        <Card className="border-dashed">
-          <CardContent className="py-4 text-sm text-muted-foreground flex gap-2">
-            <Lock className="h-4 w-4 mt-0.5 shrink-0" />
-            <span>
-              Matching rules are fixed: every criterion must pass, missing data is a fail,
-              and only coach-evaluated or CV-measured grades count. Self-reported data can
-              never make an athlete match.
-            </span>
-          </CardContent>
-        </Card>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Standards", value: all.length },
+                  { label: "Active", value: activeCount },
+                  { label: "Matchable fields", value: fieldCount },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-lg border bg-background/60 px-3 py-2.5">
+                    <p className="text-2xl font-bold tabular-nums">{s.value}</p>
+                    <MicroLabel>{s.label}</MicroLabel>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3">
+                <RulePill icon={ShieldCheck}>
+                  <span className="font-medium text-foreground">Every criterion must pass.</span>{" "}
+                  Partial matches never surface.
+                </RulePill>
+                <RulePill icon={Info}>
+                  <span className="font-medium text-foreground">Missing data is a fail.</span>{" "}
+                  Nothing is assumed in an athlete's favor.
+                </RulePill>
+                <RulePill icon={Shield}>
+                  <span className="font-medium text-foreground">Official grades only.</span>{" "}
+                  Coach-evaluated or CV-measured — never self-reported.
+                </RulePill>
+              </div>
+            </CardContent>
+          </Card>
+        </RevealSection>
 
         <Tabs defaultValue="org" className="space-y-6">
           <TabsList>
@@ -571,38 +833,45 @@ export default function RecruitingStandards() {
           </TabsList>
 
           <TabsContent value="org" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BellRing className="h-4 w-4" /> Your match pings
-                </CardTitle>
-                <CardDescription>Athletes who met one of your standards.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <StandardMatchNotificationList
-                  kind="standard_match_org"
-                  emptyText="No match pings yet. Save matches on a standard, then send pings."
-                />
-              </CardContent>
-            </Card>
-            <RecruiterContactCard nudge={!!standards.data?.length} />
-            <NewStandardForm
+            <RevealSection order={1} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <BellRing className="h-4 w-4 text-primary" />
+                <MicroLabel className="text-foreground">Your match pings</MicroLabel>
+              </div>
+              <StandardMatchNotificationList
+                kind="standard_match_org"
+                emptyText="No match pings yet. Save matches on a standard, then send pings."
+              />
+            </RevealSection>
 
+            <RevealSection order={2}>
+              <RecruiterContactCard nudge={!!all.length} />
+            </RevealSection>
+
+            <NewStandardForm
+              open={creating}
+              onOpenChange={setCreating}
               pending={createStandard.isPending}
               onCreate={(v) =>
                 createStandard.mutate(v, {
-                  onSuccess: () => toast.success("Standard created"),
+                  onSuccess: () => {
+                    toast.success("Standard created");
+                    setCreating(false);
+                  },
                   onError: (e: unknown) => toast.error((e as Error).message),
                 })
               }
             />
-            {standards.isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading standards…</p>
-            ) : standards.data?.length ? (
-              <GroupedStandardsList standards={standards.data} />
-            ) : (
-              <p className="text-sm text-muted-foreground">No standards yet.</p>
-            )}
+
+            <RevealSection order={3}>
+              {standards.isLoading ? (
+                <p className="text-sm text-muted-foreground">Loading standards…</p>
+              ) : all.length ? (
+                <GroupedStandardsList standards={all} />
+              ) : (
+                !creating && <StandardsEmptyState onCreate={() => setCreating(true)} />
+              )}
+            </RevealSection>
           </TabsContent>
 
           <TabsContent value="athlete">
