@@ -91,6 +91,62 @@ function GradeSelect({
   );
 }
 
+function HandGradeTable({
+  title,
+  tools,
+  side,
+  grades,
+  setGrades,
+  sideKey,
+  onDismiss,
+}: {
+  title: string;
+  tools: ToolDef[];
+  side: Hand;
+  grades: Record<string, number | null>;
+  setGrades: React.Dispatch<React.SetStateAction<Record<string, number | null>>>;
+  sideKey: (side: Hand, key: string, fut: boolean) => string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="rounded-md border p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <div className="flex-1" />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Dismiss ${title}`}
+          onClick={onDismiss}
+        >
+          <X className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
+        <span>Tool</span>
+        <span className="text-center">Present</span>
+        <span className="text-center">Future</span>
+      </div>
+      {tools.map((t) => (
+        <div key={t.key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
+          <span className="text-sm truncate">{t.label}</span>
+          {[false, true].map((fut) => {
+            const k = sideKey(side, t.key, fut);
+            return (
+              <GradeSelect
+                key={k}
+                ariaLabel={`${t.label} ${title} ${fut ? 'future' : 'present'}`}
+                value={grades[k] ?? null}
+                onChange={(v) => setGrades((p) => ({ ...p, [k]: v }))}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ScoutEvaluation() {
   const { athleteId: paramAthleteId } = useParams();
   const [searchParams] = useSearchParams();
@@ -687,11 +743,7 @@ export default function ScoutEvaluation() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        setBatSidesShown((prev) =>
-                          HANDS.filter((h) => prev.includes(h) || !prev.length || h !== prev[0]),
-                        )
-                      }
+                      onClick={() => setBatSidesShown(['R', 'L'])}
                     >
                       <Plus className="h-4 w-4 mr-2" /> Add the other side back
                     </Button>
