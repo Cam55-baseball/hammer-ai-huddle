@@ -238,7 +238,15 @@ function NewStandardForm({
   open,
   onOpenChange,
 }: {
-  onCreate: (v: { org_name: string; label: string; sport: string; active: boolean }) => void;
+  onCreate: (v: {
+    org_name: string;
+    label: string;
+    sport: string;
+    active: boolean;
+    recruiting_role: RecruitingRole;
+    target_positions: string[];
+    position_match_logic: PositionMatchLogic;
+  }) => void;
   pending: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -247,6 +255,9 @@ function NewStandardForm({
   const [label, setLabel] = useState("");
   const [sport, setSport] = useState("baseball");
   const [active, setActive] = useState(true);
+  const [role, setRole] = useState<RecruitingRole>("position_player");
+  const [positions, setPositions] = useState<string[]>([]);
+  const [logic, setLogic] = useState<PositionMatchLogic>("any");
 
   if (!open) return null;
 
@@ -293,7 +304,13 @@ function NewStandardForm({
           </div>
           <div className="space-y-2">
             <Label>Sport</Label>
-            <Select value={sport} onValueChange={setSport}>
+            <Select
+              value={sport}
+              onValueChange={(v) => {
+                setSport(v);
+                setPositions([]);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -309,10 +326,30 @@ function NewStandardForm({
           </div>
         </div>
 
+        <Separator />
+
+        <RoleAndPositions
+          sport={sport}
+          role={role}
+          onRoleChange={setRole}
+          positions={positions}
+          onPositionsChange={setPositions}
+          logic={logic}
+          onLogicChange={setLogic}
+        />
+
         <Button
           disabled={pending || !orgName.trim() || !label.trim()}
           onClick={() => {
-            onCreate({ org_name: orgName.trim(), label: label.trim(), sport, active });
+            onCreate({
+              org_name: orgName.trim(),
+              label: label.trim(),
+              sport,
+              active,
+              recruiting_role: role,
+              target_positions: positions,
+              position_match_logic: logic,
+            });
             setOrgName("");
             setLabel("");
           }}
