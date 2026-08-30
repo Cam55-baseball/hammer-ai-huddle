@@ -258,6 +258,21 @@ export default function ScoutEvaluation() {
         }
       }
 
+      // Same contract for an ambidextrous pitcher: parent row blends, the
+      // per-hand rows keep the truth.
+      if (splitPitching) {
+        for (const t of pitchSplitTools) {
+          row[t.key] = blendSides(
+            pitchSideGrades[sideKey('R', t.key, false)] ?? null,
+            pitchSideGrades[sideKey('L', t.key, false)] ?? null,
+          );
+          row[`${t.key}_future`] = blendSides(
+            pitchSideGrades[sideKey('R', t.key, true)] ?? null,
+            pitchSideGrades[sideKey('L', t.key, true)] ?? null,
+          );
+        }
+      }
+
       const { data: inserted, error } = await supabase
         .from('vault_scout_grades')
         .insert(row as never)
@@ -271,6 +286,7 @@ export default function ScoutEvaluation() {
           filledLooks.map((l) => ({
             grade_id: gradeId,
             position: l.position,
+            throwing_hand: isAmbiThrower ? l.throwing_hand : null,
             defense_grade: l.defense_grade,
             defense_grade_future: l.defense_grade_future,
             throwing_grade: l.throwing_grade,
@@ -281,10 +297,10 @@ export default function ScoutEvaluation() {
       }
 
       if (splitSides) {
-        const sideRows = (['R', 'L'] as BatSide[])
+        const sideRows = batSidesShown
           .map((side) => ({
             grade_id: gradeId,
-            bat_side: side,
+            bat_side: side as BatSide,
             hitting_grade: sideGrades[sideKey(side, 'hitting_grade', false)] ?? null,
             hitting_grade_future: sideGrades[sideKey(side, 'hitting_grade', true)] ?? null,
             power_grade: sideGrades[sideKey(side, 'power_grade', false)] ?? null,
@@ -303,6 +319,30 @@ export default function ScoutEvaluation() {
           if (sideErr) throw sideErr;
         }
       }
+
+      if (splitPitching) {
+        const pitchRows = pitchSidesShown
+          .map((side) => {
+            const r: Record<string, unknown> = { grade_id: gradeId, throwing_hand: side };
+            for (const t of pitchSplitTools) {
+              r[t.key] = pitchSideGrades[sideKey(side, t.key, false)] ?? null;
+              r[`${t.key}_future`] = pitchSideGrades[sideKey(side, t.key, true)] ?? null;
+            }
+            return r;
+          })
+          .filter((r) =>
+            Object.entries(r).some(
+              ([k, v]) => k !== 'grade_id' && k !== 'throwing_hand' && v != null,
+            ),
+          );
+        if (pitchRows.length > 0) {
+          const { error: pitchErr } = await supabase
+            .from('vault_scout_grade_pitching_sides')
+            .insert(pitchRows as never);
+          if (pitchErr) throw pitchErr;
+        }
+      }
+
 
       toast({
         title: 'Evaluation filed — awaiting player confirmation',
