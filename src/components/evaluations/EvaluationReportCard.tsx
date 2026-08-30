@@ -68,6 +68,7 @@ export function EvaluationReportCard({
     // are never also shown as a single blended row.
     .filter((r) => !(hasLooks && (POSITION_BOUND_KEYS as readonly string[]).includes(r.key)))
     .filter((r) => !(hasSides && (SIDE_SPLIT_KEYS as readonly string[]).includes(r.key)))
+    .filter((r) => !(hasPitchingSides && (PITCHING_SIDE_SPLIT_KEYS as readonly string[]).includes(r.key)))
     .filter((r) => r.present != null || r.future != null);
 
 
