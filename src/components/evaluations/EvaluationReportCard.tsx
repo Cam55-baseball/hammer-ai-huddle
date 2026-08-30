@@ -79,7 +79,7 @@ export function EvaluationReportCard({
           <div className="min-w-0">
             <CardTitle className="text-base flex items-center gap-2">
               <ClipboardCheck className="h-4 w-4 text-primary shrink-0" />
-              {report.grade_type === 'pitching' ? 'Pitching report' : 'Position player report'}
+              {reportTypeLabel(report.grade_type)}
             </CardTitle>
             <CardDescription className="mt-1">
               {attribution ? <span className="block font-medium text-foreground">{attribution}</span> : null}
@@ -88,12 +88,20 @@ export function EvaluationReportCard({
               </span>
               {report.evaluation_context ? <> · {report.evaluation_context}</> : null}
               {report.event_description ? <> · {report.event_description}</> : null}
-              {(position || report.is_switch_hitter) && (
+              {(hasLooks || position || report.is_switch_hitter) && (
                 <span className="mt-1 flex flex-wrap gap-1">
-                  {position && <Badge variant="outline">Seen at {position}</Badge>}
+                  {hasLooks
+                    ? positions.map((p) => (
+                        <Badge key={p.position} variant="outline">
+                          Seen at {p.position}
+                        </Badge>
+                      ))
+                    : position && <Badge variant="outline">Seen at {position}</Badge>}
                   {report.is_switch_hitter ? <Badge variant="outline">Switch hitter</Badge> : null}
+                  {hasSides ? <Badge variant="outline">Both sides seen</Badge> : null}
                 </span>
               )}
+
             </CardDescription>
 
           </div>
