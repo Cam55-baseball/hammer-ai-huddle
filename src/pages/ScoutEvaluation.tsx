@@ -18,16 +18,18 @@ import { Switch } from '@/components/ui/switch';
 import {
   positionPlayerGroups,
   pitchingGroups,
+  pitchingSideSplitTools,
   POSITION_OPTIONS,
   SIDE_SPLIT_KEYS,
-  BAT_SIDE_LABELS,
+  HAND_LABELS,
   deriveGradeType,
   blendSides,
   TOOL_LABELS,
+  type Hand,
   type BatSide,
   type ToolDef,
 } from '@/lib/evaluation/scoutingTools';
-import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft, Plus, Trash2, X } from 'lucide-react';
 
 const CONTEXT_OPTIONS = [
   'In-person — game',
@@ -38,9 +40,12 @@ const CONTEXT_OPTIONS = [
 
 const SCALE = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
 
+const HANDS: Hand[] = ['R', 'L'];
+
 interface PositionLookDraft {
   key: string;
   position: string;
+  throwing_hand: Hand | null;
   defense_grade: number | null;
   defense_grade_future: number | null;
   throwing_grade: number | null;
@@ -50,11 +55,13 @@ interface PositionLookDraft {
 const newLook = (): PositionLookDraft => ({
   key: Math.random().toString(36).slice(2),
   position: '',
+  throwing_hand: null,
   defense_grade: null,
   defense_grade_future: null,
   throwing_grade: null,
   throwing_grade_future: null,
 });
+
 
 function GradeSelect({
   value,
