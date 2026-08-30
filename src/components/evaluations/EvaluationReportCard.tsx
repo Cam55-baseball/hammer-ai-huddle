@@ -153,6 +153,77 @@ export function EvaluationReportCard({
             ))}
           </>
         )}
+
+        {hasSides && (
+          <div className="space-y-2">
+            <Separator />
+            <p className="text-xs font-medium text-muted-foreground">Offense by batting side</p>
+            <div className="grid grid-cols-[1fr_64px_64px] gap-3 text-xs font-medium text-muted-foreground">
+              <span>Tool</span>
+              <span className="text-center">Present</span>
+              <span className="text-center">Future</span>
+            </div>
+            {batSides.map((s) => (
+              <div key={s.bat_side} className="space-y-1">
+                <p className="text-xs font-medium">{BAT_SIDE_LABELS[s.bat_side]}</p>
+                {SIDE_SPLIT_KEYS.map((key) => {
+                  const present = (s[key] as number | null) ?? null;
+                  const future = (s[`${key}_future` as keyof BatSideGrades] as number | null) ?? null;
+                  if (present == null && future == null) return null;
+                  return (
+                    <div
+                      key={key}
+                      className="grid grid-cols-[1fr_64px_64px] gap-3 items-center text-sm"
+                    >
+                      <span className="truncate">{TOOL_LABELS[key]}</span>
+                      <span className={`text-center font-semibold ${gradeTone(present)}`}>
+                        {present ?? '—'}
+                      </span>
+                      <span className={`text-center font-semibold ${gradeTone(future)}`}>
+                        {future ?? '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {hasLooks && (
+          <div className="space-y-2">
+            <Separator />
+            <p className="text-xs font-medium text-muted-foreground">Defense &amp; Arm by position</p>
+            <div className="grid grid-cols-[1fr_64px_64px_64px_64px] gap-2 text-[11px] font-medium text-muted-foreground">
+              <span>Position</span>
+              <span className="text-center">Def</span>
+              <span className="text-center">Def fut</span>
+              <span className="text-center">Arm</span>
+              <span className="text-center">Arm fut</span>
+            </div>
+            {positions.map((p) => (
+              <div
+                key={p.position}
+                className="grid grid-cols-[1fr_64px_64px_64px_64px] gap-2 items-center text-sm"
+              >
+                <span className="truncate">{p.position}</span>
+                <span className={`text-center font-semibold ${gradeTone(p.defense_grade ?? null)}`}>
+                  {p.defense_grade ?? '—'}
+                </span>
+                <span className={`text-center ${gradeTone(p.defense_grade_future ?? null)}`}>
+                  {p.defense_grade_future ?? '—'}
+                </span>
+                <span className={`text-center font-semibold ${gradeTone(p.throwing_grade ?? null)}`}>
+                  {p.throwing_grade ?? '—'}
+                </span>
+                <span className={`text-center ${gradeTone(p.throwing_grade_future ?? null)}`}>
+                  {p.throwing_grade_future ?? '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {report.notes && (
           <div className="rounded-md bg-muted/50 p-3">
             <p className="text-xs font-medium text-muted-foreground mb-1">Write-up</p>
