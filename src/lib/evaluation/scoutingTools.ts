@@ -171,9 +171,37 @@ export function pitchingGroups(sport: string): ToolGroup[] {
   ];
 }
 
+/**
+ * Hand labels used wherever a report is split by the hand/side the athlete
+ * used — batting side for switch hitters, throwing hand for ambidextrous
+ * throwers and pitchers.
+ */
+export type Hand = 'R' | 'L';
+
+export const HAND_LABELS: Record<Hand, string> = {
+  R: 'Right-handed',
+  L: 'Left-handed',
+};
+
+/**
+ * Pitching tools that genuinely differ by throwing hand for an ambidextrous
+ * pitcher: the arsenal, the command of it, the craft, and what happens once
+ * the ball is in play. Frame and makeup stay single — one body, one head.
+ */
+export function pitchingSideSplitTools(sport: string): ToolDef[] {
+  return pitchingGroups(sport)
+    .filter((g) => g.id !== 'physical-makeup')
+    .flatMap((g) => g.tools);
+}
+
+export function pitchingSideSplitKeys(sport: string): string[] {
+  return pitchingSideSplitTools(sport).map((t) => t.key);
+}
+
 export function groupsFor(gradeType: string, sport: string): ToolGroup[] {
   return gradeType === 'pitching' ? pitchingGroups(sport) : positionPlayerGroups();
 }
+
 
 /** Flat, de-duplicated tool list for a report type. */
 export function toolsFor(gradeType: string, sport: string): ToolDef[] {
