@@ -208,3 +208,30 @@ describe("roster matching", () => {
     expect(matches.map((m) => m.athlete_user_id)).toEqual(["a"]);
   });
 });
+
+describe("mandatory vs preferred criteria", () => {
+  const criteria = [
+    c("1", "position", "eq", "SS"),
+    c("2", "height_inches", "gte", 72, false),
+    c("3", "gpa", "gte", 3.5, false),
+  ];
+
+  it("matches on mandatory alone and reports preferred coverage", () => {
+    const r = evaluateStandardMatch(
+      criteria,
+      athlete({ position: "SS", height_inches: 70, gpa: 3.8 }),
+    );
+    expect(r.matched).toBe(true);
+    expect(r.preferred_total).toBe(2);
+    expect(r.preferred_met).toBe(1);
+  });
+
+  it("still fails when a mandatory criterion fails, however many preferred pass", () => {
+    const r = evaluateStandardMatch(
+      criteria,
+      athlete({ position: "2B", height_inches: 75, gpa: 4.0 }),
+    );
+    expect(r.matched).toBe(false);
+    expect(r.preferred_met).toBe(2);
+  });
+});
