@@ -5,7 +5,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { StandardOperator } from "@/lib/recruiting/standardsMatching";
+import type {
+  PositionMatchLogic,
+  StandardOperator,
+} from "@/lib/recruiting/standardsMatching";
+import type { RecruitingRole } from "@/lib/recruiting/standardFields";
 
 export interface OrgStandard {
   id: string;
@@ -14,6 +18,9 @@ export interface OrgStandard {
   label: string;
   sport: string;
   active: boolean;
+  recruiting_role: RecruitingRole;
+  target_positions: string[];
+  position_match_logic: PositionMatchLogic;
   created_at: string;
   updated_at: string;
 }
@@ -24,8 +31,11 @@ export interface OrgStandardCriterion {
   field: string;
   operator: StandardOperator;
   value: unknown;
+  /** Mandatory criteria gate the match; preferred ones only add nuance. */
+  is_mandatory: boolean;
   created_at: string;
 }
+
 
 export function useOrgStandards() {
   const { user } = useAuth();
