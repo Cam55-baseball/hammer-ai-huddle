@@ -235,7 +235,10 @@ export default function ScoutEvaluation() {
         throwing_grade: primary?.throwing_grade ?? null,
         throwing_grade_future: primary?.throwing_grade_future ?? null,
         is_switch_hitter: includePosition ? isSwitchHitter : null,
-        saw_both_batting_sides: includePosition && isSwitchHitter ? sawBothSides : null,
+        saw_both_batting_sides: includePosition && isSwitchHitter ? batSidesShown.length > 1 : null,
+        is_ambidextrous_thrower: includePosition ? isAmbiThrower : null,
+        is_ambidextrous_pitcher: includePitching ? isAmbiPitcher : null,
+
       };
 
       for (const t of flatTools) {
