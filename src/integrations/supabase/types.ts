@@ -13602,6 +13602,98 @@ export type Database = {
           },
         ]
       }
+      vault_scout_grade_pitching_sides: {
+        Row: {
+          breaking_ball_grade: number | null
+          breaking_ball_grade_future: number | null
+          control_grade: number | null
+          control_grade_future: number | null
+          created_at: string
+          deception_grade: number | null
+          deception_grade_future: number | null
+          defense_as_pitcher_grade: number | null
+          defense_as_pitcher_grade_future: number | null
+          delivery_arm_action_grade: number | null
+          delivery_arm_action_grade_future: number | null
+          fastball_grade: number | null
+          fastball_grade_future: number | null
+          grade_id: string
+          hold_runners_grade: number | null
+          hold_runners_grade_future: number | null
+          id: string
+          offspeed_grade: number | null
+          offspeed_grade_future: number | null
+          pitchability_grade: number | null
+          pitchability_grade_future: number | null
+          rise_ball_grade: number | null
+          rise_ball_grade_future: number | null
+          throwing_hand: string
+          updated_at: string
+        }
+        Insert: {
+          breaking_ball_grade?: number | null
+          breaking_ball_grade_future?: number | null
+          control_grade?: number | null
+          control_grade_future?: number | null
+          created_at?: string
+          deception_grade?: number | null
+          deception_grade_future?: number | null
+          defense_as_pitcher_grade?: number | null
+          defense_as_pitcher_grade_future?: number | null
+          delivery_arm_action_grade?: number | null
+          delivery_arm_action_grade_future?: number | null
+          fastball_grade?: number | null
+          fastball_grade_future?: number | null
+          grade_id: string
+          hold_runners_grade?: number | null
+          hold_runners_grade_future?: number | null
+          id?: string
+          offspeed_grade?: number | null
+          offspeed_grade_future?: number | null
+          pitchability_grade?: number | null
+          pitchability_grade_future?: number | null
+          rise_ball_grade?: number | null
+          rise_ball_grade_future?: number | null
+          throwing_hand: string
+          updated_at?: string
+        }
+        Update: {
+          breaking_ball_grade?: number | null
+          breaking_ball_grade_future?: number | null
+          control_grade?: number | null
+          control_grade_future?: number | null
+          created_at?: string
+          deception_grade?: number | null
+          deception_grade_future?: number | null
+          defense_as_pitcher_grade?: number | null
+          defense_as_pitcher_grade_future?: number | null
+          delivery_arm_action_grade?: number | null
+          delivery_arm_action_grade_future?: number | null
+          fastball_grade?: number | null
+          fastball_grade_future?: number | null
+          grade_id?: string
+          hold_runners_grade?: number | null
+          hold_runners_grade_future?: number | null
+          id?: string
+          offspeed_grade?: number | null
+          offspeed_grade_future?: number | null
+          pitchability_grade?: number | null
+          pitchability_grade_future?: number | null
+          rise_ball_grade?: number | null
+          rise_ball_grade_future?: number | null
+          throwing_hand?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_scout_grade_pitching_sides_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "vault_scout_grades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vault_scout_grade_positions: {
         Row: {
           created_at: string
@@ -13612,6 +13704,7 @@ export type Database = {
           position: string
           throwing_grade: number | null
           throwing_grade_future: number | null
+          throwing_hand: string | null
           updated_at: string
         }
         Insert: {
@@ -13623,6 +13716,7 @@ export type Database = {
           position: string
           throwing_grade?: number | null
           throwing_grade_future?: number | null
+          throwing_hand?: string | null
           updated_at?: string
         }
         Update: {
@@ -13634,6 +13728,7 @@ export type Database = {
           position?: string
           throwing_grade?: number | null
           throwing_grade_future?: number | null
+          throwing_hand?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -13686,6 +13781,8 @@ export type Database = {
           id: string
           includes_pitching_tools: boolean
           includes_position_tools: boolean
+          is_ambidextrous_pitcher: boolean | null
+          is_ambidextrous_thrower: boolean | null
           is_switch_hitter: boolean | null
           leadership_grade: number | null
           leadership_grade_future: number | null
@@ -13760,6 +13857,8 @@ export type Database = {
           id?: string
           includes_pitching_tools?: boolean
           includes_position_tools?: boolean
+          is_ambidextrous_pitcher?: boolean | null
+          is_ambidextrous_thrower?: boolean | null
           is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
@@ -13834,6 +13933,8 @@ export type Database = {
           id?: string
           includes_pitching_tools?: boolean
           includes_position_tools?: boolean
+          is_ambidextrous_pitcher?: boolean | null
+          is_ambidextrous_thrower?: boolean | null
           is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
