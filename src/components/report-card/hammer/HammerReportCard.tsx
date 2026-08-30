@@ -43,6 +43,26 @@ export function HammerReportCard({
     );
   }
 
+  // Honest zero-tile state. A discipline whose every metric is suppressed
+  // (all hitting today) says so plainly instead of rendering an empty grid
+  // or back-filling unvalidated values.
+  if (spec.tiles.length === 0) {
+    return (
+      <div className="space-y-2 rounded-2xl border bg-muted/30 p-6 text-center">
+        <p className="text-sm font-semibold text-foreground">
+          No graded tiles for {spec.disciplineLabel} yet
+        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Every {spec.disciplineLabel.toLowerCase()} measurement is still being
+          validated, so we're showing you nothing rather than a number we can't
+          stand behind. Your written analysis on the Analysis tab is unaffected.
+        </p>
+      </div>
+    );
+  }
+
+
+
   const tilesWithState = spec.tiles.map((t) => ({ spec: t, state: t.compute(analysis) }));
 
   const total = tilesWithState.length;
