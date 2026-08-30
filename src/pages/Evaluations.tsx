@@ -118,17 +118,14 @@ export default function Evaluations() {
                     </CardContent>
                   </Card>
                 ) : (
-                  filed.map((r) => (
-                    <EvaluationReportCard
-                      key={r.id}
-                      report={r}
-                      attribution={names[r.user_id] ?? 'Athlete'}
-                      positions={details?.positionsByReport[r.id] ?? []}
-                      batSides={details?.batSidesByReport[r.id] ?? []}
-                      showConfirmationStatus
-                    />
-                  ))
+                  <ReportAccordionList
+                    reports={filed}
+                    details={details}
+                    attributionFor={(r) => names[r.user_id] ?? 'Athlete'}
+                    showConfirmationStatus
+                  />
                 )}
+
               </TabsContent>
             </>
           ) : (
