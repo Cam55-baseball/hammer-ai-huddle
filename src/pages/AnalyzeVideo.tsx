@@ -1395,16 +1395,37 @@ export default function AnalyzeVideo() {
             )}
 
             {analysis && (
-              <AnalysisResultsPanel
-                analysis={analysis}
-                moduleKey={module || 'hitting'}
-                persistedTempo={persistedTempo}
-                savedDrillIds={savedDrillIds}
-                onSaveDrill={handleSaveDrill}
-                onSaveToLibrary={() => setSaveDialogOpen(true)}
-                onReturnToDashboard={() => navigate('/dashboard')}
-              />
+              <div className="space-y-4">
+                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+
+                {analysisView === "report_card" ? (
+                  <HammerReportCard
+                    sport={sport}
+                    module={module}
+                    analysis={{
+                      ...analysis,
+                      metrics: (analysis.metrics ?? undefined) as never,
+                      // Deterministic tempo pipeline output (already evidence-hashed).
+                      tempo_sec_deterministic: persistedTempo
+                        ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
+                        : undefined,
+                    } as never}
+                    showShare={false}
+                  />
+                ) : (
+                  <AnalysisResultsPanel
+                    analysis={analysis}
+                    moduleKey={module || 'hitting'}
+                    persistedTempo={persistedTempo}
+                    savedDrillIds={savedDrillIds}
+                    onSaveDrill={handleSaveDrill}
+                    onSaveToLibrary={() => setSaveDialogOpen(true)}
+                    onReturnToDashboard={() => navigate('/dashboard')}
+                  />
+                )}
+              </div>
             )}
+
           </div>
         )}
 
