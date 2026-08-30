@@ -34,7 +34,7 @@ export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
       <div className="relative aspect-video bg-muted flex items-center justify-center">
         {thumbnail ? (
           <img src={thumbnail} alt={video.title} className="w-full h-full object-cover" loading="lazy" />
-        ) : isDirectVideoFile(video.video_url) ? (
+        ) : showFramePreview ? (
           // Uploaded files have no poster image — paint the first frame instead
           // of an empty placeholder icon.
           <video
@@ -44,7 +44,9 @@ export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
             muted
             playsInline
             aria-label={video.title}
+            onError={() => setFramePreviewFailed(true)}
           />
+
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
             <Play className="h-10 w-10" />
