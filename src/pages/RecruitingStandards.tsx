@@ -772,6 +772,10 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
   const [orgName, setOrgName] = useState(standard.org_name);
   const [open, setOpen] = useState(false);
 
+  const role = standard.recruiting_role;
+  const positions = standard.target_positions ?? [];
+  const logic = standard.position_match_logic ?? "any";
+
   const count = criteria.data?.length ?? 0;
   const summary = summarizeCriteria(criteria.data ?? []);
 
@@ -795,7 +799,8 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
                 aria-hidden
               />
               <MicroLabel>
-                {SPORT_LABELS[standard.sport] ?? standard.sport} · {standard.org_name}
+                {SPORT_LABELS[standard.sport] ?? standard.sport} · {standard.org_name} ·{" "}
+                {RECRUITING_ROLE_LABELS[role]}
               </MicroLabel>
             </div>
             <h3 className="mt-1 flex items-center gap-2 text-lg font-semibold">
@@ -813,6 +818,13 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <Badge variant="secondary" className="tabular-nums">
                 {count} criteri{count === 1 ? "on" : "a"}
+              </Badge>
+              <Badge variant="outline">
+                {positions.length === 0
+                  ? "Any position"
+                  : positions.length === 1
+                    ? positions[0]
+                    : `${positions.join(" / ")} · ${logic === "all" ? "all" : "any one"}`}
               </Badge>
               {!standard.active && <Badge variant="outline">Paused</Badge>}
             </div>
@@ -883,7 +895,23 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
               </Button>
             </div>
             <Separator />
-            <CriteriaEditor standardId={standard.id} />
+
+            <RoleAndPositions
+              sport={standard.sport}
+              role={role}
+              onRoleChange={(v) => updateStandard.mutate({ id: standard.id, recruiting_role: v })}
+              positions={positions}
+              onPositionsChange={(v) =>
+                updateStandard.mutate({ id: standard.id, target_positions: v })
+              }
+              logic={logic}
+              onLogicChange={(v) =>
+                updateStandard.mutate({ id: standard.id, position_match_logic: v })
+              }
+            />
+
+            <Separator />
+            <CriteriaEditor standard={standard} />
           </CardContent>
         </CollapsibleContent>
       </Card>
@@ -904,7 +932,9 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
     const map = criteriaMap.data ?? {};
     const buckets = new Map<string, { sport: string; position: string; items: OrgStandard[] }>();
     for (const s of standards) {
-      const position = standardPositionLabel(map[s.id] ?? []);
+      const position = s.target_positions?.length
+        ? s.target_positions.join(" / ")
+        : standardPositionLabel(map[s.id] ?? []);
       const key = `${s.sport}::${position}`;
       const bucket = buckets.get(key) ?? { sport: s.sport, position, items: [] };
       bucket.items.push(s);
