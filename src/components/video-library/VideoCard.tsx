@@ -27,7 +27,18 @@ export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
     <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onPlay(video)}>
       <div className="relative aspect-video bg-muted flex items-center justify-center">
         {thumbnail ? (
-          <img src={thumbnail} alt={video.title} className="w-full h-full object-cover" />
+          <img src={thumbnail} alt={video.title} className="w-full h-full object-cover" loading="lazy" />
+        ) : isDirectVideoFile(video.video_url) ? (
+          // Uploaded files have no poster image — paint the first frame instead
+          // of an empty placeholder icon.
+          <video
+            src={firstFrameSrc(video.video_url)}
+            className="w-full h-full object-cover pointer-events-none"
+            preload="metadata"
+            muted
+            playsInline
+            aria-label={video.title}
+          />
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
             <Play className="h-10 w-10" />
