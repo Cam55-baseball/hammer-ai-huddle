@@ -10,10 +10,12 @@ import {
   POSITION_BOUND_KEYS,
   SIDE_SPLIT_KEYS,
   BAT_SIDE_LABELS,
+  PITCHING_SIDE_SPLIT_KEYS,
+  PITCHING_SIDE_LABELS,
   reportTypeLabel,
 } from '@/lib/evaluation/scoutingTools';
 import type { ReportPositionLook } from '@/lib/evaluation/positionGrades';
-import type { BatSideGrades } from '@/hooks/useReportDetails';
+import type { BatSideGrades, PitchingSideGrades } from '@/hooks/useReportDetails';
 
 
 /** 20–80 scale colour anchor. 50 is average. */
