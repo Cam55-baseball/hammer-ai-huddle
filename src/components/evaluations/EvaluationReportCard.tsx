@@ -38,6 +38,8 @@ export interface EvaluationReportCardProps {
   positions?: ReportPositionLook[];
   /** Per-batting-side offensive grades for a switch hitter seen from both sides. */
   batSides?: BatSideGrades[];
+  /** Per-throwing-side pitching grades for an ambidextrous pitcher. */
+  pitchingSides?: PitchingSideGrades[];
 }
 
 export function EvaluationReportCard({
@@ -46,10 +48,12 @@ export function EvaluationReportCard({
   showConfirmationStatus,
   positions = [],
   batSides = [],
+  pitchingSides = [],
 }: EvaluationReportCardProps) {
   const position = (report.position_evaluated as string | null) ?? null;
   const hasLooks = positions.length > 0;
   const hasSides = batSides.length > 0;
+  const hasPitchingSides = pitchingSides.length > 0;
   const rows = TOOL_DISPLAY_ORDER
     .map((key) => ({
       key,
