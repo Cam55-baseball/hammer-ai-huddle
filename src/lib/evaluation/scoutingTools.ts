@@ -186,3 +186,30 @@ export const TOOL_DISPLAY_ORDER: string[] = [
 ]
   .map((t) => t.key)
   .filter((k, i, a) => a.indexOf(k) === i);
+
+/**
+ * A report can carry position-player tools, pitching tools, or both (two-way).
+ * `grade_type` stays the coarse label so existing readers keep working; the
+ * boolean section flags on the row are the precise truth.
+ */
+export function deriveGradeType(opts: {
+  includesPositionTools: boolean;
+  includesPitchingTools: boolean;
+}): 'hitting_throwing' | 'pitching' | 'two_way' {
+  if (opts.includesPositionTools && opts.includesPitchingTools) return 'two_way';
+  return opts.includesPitchingTools ? 'pitching' : 'hitting_throwing';
+}
+
+/** Human label for a report's coverage. */
+export function reportTypeLabel(gradeType: string | null | undefined): string {
+  if (gradeType === 'two_way') return 'Two-way report';
+  if (gradeType === 'pitching') return 'Pitching report';
+  return 'Position player report';
+}
+
+/** Average of the graded sides, or null when neither side was graded. */
+export function blendSides(a: number | null, b: number | null): number | null {
+  const vals = [a, b].filter((v): v is number => typeof v === 'number');
+  if (vals.length === 0) return null;
+  return Math.round(vals.reduce((x, y) => x + y, 0) / vals.length);
+}
