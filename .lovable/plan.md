@@ -1,32 +1,57 @@
-# Report Card System — Full Reference Document
+# Standards criteria — sport/role-aware fields, positions, mandatory vs preferred
 
-Compile the complete, verbatim inventory of the legacy Hammer Report Card system into a single in-repo document the team can review. Documentation only — no behavior, flags, or components change.
+## What I found first (this changes the approach)
 
-## Deliverable
+**Item 3 is already done.** State, age, height, weight, grad year and GPA are all live matchable profile fields today (`PROFILE_FIELDS` in `standardFields.ts`). Nothing to build there — I'll only extend the set.
 
-One new file: `docs/asb/report-card-system-reference.md`
+**The bigger, unasked-for problem: the matcher is reading the wrong table for the graded tools that matter most.** Earlier this session the scout form was restructured so per-position defense/arm live in `vault_scout_grade_positions` and per-bat-side hitting/power/plate-discipline live in `vault_scout_grade_bat_sides`. The flat columns on `vault_scout_grades` are only a *primary position / primary side mirror*. The matcher reads only the flat columns — so a standard asking for "Defense ≥ 55 at C" silently grades that athlete's primary position instead, and a switch-hitter's off-side power is invisible to matching entirely. Your item 2 ("defense/arm criteria should follow whichever position(s) were selected") can't work without fixing this, so it's in scope.
 
-## Contents
+**12 grades added this session are not matchable at all:** eye test, hustle, game IQ, mental makeup, plate discipline, pitchability, delivery/arm action, deception, body type/frame, poise/competitiveness, defense as pitcher, hold runners. Plus `is_switch_hitter`.
 
-1. Current mount status — every render site that was removed (file + line), the Phase 49 lock reason, and the `RELEASE1_HITTING_SUPPRESSED` kill switch.
-2. Architecture map — `src/lib/reportCard/` (contracts, disciplines, v1, grade, release1, metricReaders, types) and `src/components/report-card/` (tiles, explainer sheet, visuals, UHRC panels), plus where measurements persist (`videos.ai_analysis.metrics`).
-3. Metric value contract — measured vs missing shapes, confidence semantics, no-imputation rule.
-4. Tile display modes and statuses, including every tile field (standard, threshold chip, non-negotiable, phase, explainer trio).
-5. Grading algorithm — pass/warn/fail weighting, missing exclusion, non-negotiable caps, letter bands, determinism.
-6. Discipline coverage matrix for both sports, explicitly noting softball reuses baseball tiles with a relabel and which modules never had cards.
-7. Pitching (BP) — all 9 tiles with metric key, unit, range, pass/elite standard, display mode, non-negotiable flag.
-8. Throwing — the 6-tile subset and what is excluded and why.
-9. Hitting (BH) — all tiles grouped P1–P4 with keys, bands, custom timing curves, and non-negotiables.
-10. BH V1 category schema — the four doctrine categories with every field, including the intentionally empty drill/video/roadmap slots.
-11. Release-1 Trust Lock — the full VISIBLE / HIDDEN / SHOWCASE_FUTURE classification lists and net rendering effect.
-12. UHRC aggregate layer — pillars, exact weights, and how hitting phases feed mechanics.
-13. Server pipeline — `analyze-video`, `recompute-report-card`, schema/prompt generation, validation, deterministic seeding.
-14. Support surfaces — trend hook and strip, share export, grade ribbon, phase rail, radial meter, camera angle helper, explainer sheet.
-15. Appendix A — verbatim explainer text (what/why, how to improve, encouragement) for every metric.
-16. Appendix B — verbatim AI prompt block and scoring examples for every metric.
+## Your item 4 — confirming the design before building
 
-## Technical notes
+Your mandatory/preferred design is right, and I'd build it exactly as described. One clarification I'll implement: a standard with **zero mandatory criteria** must match nobody, same as a standard with zero criteria today. Otherwise an all-preferred standard silently matches every athlete in the system — the single worst failure mode this feature has. Preferred-only standards will be blocked in the UI with a plain explanation.
 
-- Content is transcribed directly from the source files so the document stays byte-accurate to what shipped; each section cites its source file paths.
-- No source file is edited; the doc is additive under `docs/asb/`.
-- Appendices A and B will be long (every metric across BP, BH, throwing); they are kept at the end so the main body stays readable.
+## Technical plan
+
+### Migration
+`org_standards` gains:
+- `recruiting_role text not null default 'position_player'` — `position_player` | `pitcher` | `two_way`
+- `target_positions text[] not null default '{}'` — empty means "any position"
+- `position_match_logic text not null default 'any'` — `any` | `all`
+
+`org_standard_criteria` gains:
+- `is_mandatory boolean not null default true` — existing rows keep today's strict behavior
+
+Both with CHECK constraints on the enumerated text values. No new tables, no GRANT changes needed.
+
+### Field catalog (`standardFields.ts`)
+Each field gets `roles: ('position_player'|'pitcher')[]` and `sports: ('baseball'|'softball')[]`. Position-player fields: hitting, power, plate discipline, defense, arm, eye test, hustle, game IQ, mental makeup, speed, body type/frame, poise. Pitcher fields: fastball, breaking ball, offspeed, control, delivery, pitchability, delivery/arm action, deception, defense as pitcher, hold runners; rise ball is softball-only, hold runners and defense-as-pitcher are baseball-only. Two-way shows the union. Profile fields always show.
+
+### Position-aware grade resolution (`standardFields.ts` + preview hook)
+The preview hook additionally loads `vault_scout_grade_positions` and `vault_scout_grade_bat_sides` joined by `grade_id`. Grade flattening becomes position/side-scoped:
+- Defense and arm criteria resolve against the child rows for the standard's selected positions — under `any` logic the athlete's best qualifying position wins, under `all` every selected position must independently pass.
+- Hitting, power and plate discipline resolve against bat-side rows; a switch-hitter passes if either side qualifies (a scout targeting one side adds an explicit batting-side criterion).
+- When the standard targets any position, flat-column behavior is preserved so nothing regresses.
+
+### Matcher (`standardsMatching.ts`)
+`evaluateStandardMatch` gains position/side context and returns, alongside the existing shape:
+- `matched` — still requires every **mandatory** criterion to pass
+- `preferred_met` / `preferred_total` — tracked, never blocking
+- `preferred` results array for display
+
+Missing data stays a fail. Official-sources-only stays. Both are unchanged and covered by existing tests.
+
+### UI (`RecruitingStandards.tsx`)
+- New-standard form gains role selection, a multi-select position picker with an "any position" default, and an ALL/ANY toggle that only appears once 2+ positions are chosen.
+- The add-requirement field list filters by the standard's sport and role, grouped Profile / Position-player tools / Pitching tools.
+- Each criterion row gets a mandatory/preferred toggle, and the list renders in two sections so the strict set reads as the actual gate.
+- The running summary sentence becomes "…and preferred: X, Y".
+- Match rows show "meets all mandatory criteria, plus 3 of 4 preferred", with the unmet preferred named on expand.
+- `duplicateStandard` carries the new columns and the mandatory flag.
+
+### Tests
+Extend `src/lib/recruiting/__tests__/` — preferred criteria never block, all-preferred standards match nobody, position ALL vs ANY, switch-hitter side resolution, role/sport field filtering.
+
+## Scope note
+This stays inside the existing `StaffOnlyRoute` pre-release gating. The athlete-facing match view gets the preferred count read-only; no new athlete-visible surfaces.
