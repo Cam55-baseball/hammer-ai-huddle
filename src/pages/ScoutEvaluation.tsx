@@ -9,17 +9,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayDate } from '@/utils/dateUtils';
 import { Switch } from '@/components/ui/switch';
-import { groupsFor, toolsFor, POSITION_OPTIONS } from '@/lib/evaluation/scoutingTools';
-import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft } from 'lucide-react';
-
-type GradeType = 'hitting_throwing' | 'pitching';
+import {
+  positionPlayerGroups,
+  pitchingGroups,
+  POSITION_OPTIONS,
+  SIDE_SPLIT_KEYS,
+  BAT_SIDE_LABELS,
+  deriveGradeType,
+  blendSides,
+  TOOL_LABELS,
+  type BatSide,
+  type ToolDef,
+} from '@/lib/evaluation/scoutingTools';
+import { ClipboardCheck, Loader2, ShieldAlert, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 const CONTEXT_OPTIONS = [
   'In-person — game',
@@ -28,8 +36,25 @@ const CONTEXT_OPTIONS = [
   'Video review',
 ];
 
-
 const SCALE = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
+
+interface PositionLookDraft {
+  key: string;
+  position: string;
+  defense_grade: number | null;
+  defense_grade_future: number | null;
+  throwing_grade: number | null;
+  throwing_grade_future: number | null;
+}
+
+const newLook = (): PositionLookDraft => ({
+  key: Math.random().toString(36).slice(2),
+  position: '',
+  defense_grade: null,
+  defense_grade_future: null,
+  throwing_grade: null,
+  throwing_grade_future: null,
+});
 
 function GradeSelect({
   value,
@@ -71,9 +96,16 @@ export default function ScoutEvaluation() {
 
   const [athleteName, setAthleteName] = useState<string | null>(null);
   const [sport, setSport] = useState<string>('baseball');
-  const [gradeType, setGradeType] = useState<GradeType>('hitting_throwing');
-  const [positionEvaluated, setPositionEvaluated] = useState<string>('');
+
+  // Independent sections — a two-way player gets both on ONE report.
+  const [includePosition, setIncludePosition] = useState(true);
+  const [includePitching, setIncludePitching] = useState(false);
+
+  const [looks, setLooks] = useState<PositionLookDraft[]>([newLook()]);
   const [isSwitchHitter, setIsSwitchHitter] = useState(false);
+  const [sawBothSides, setSawBothSides] = useState(false);
+  const [sideGrades, setSideGrades] = useState<Record<string, number | null>>({});
+
   const [contextType, setContextType] = useState<string>(CONTEXT_OPTIONS[0]);
   const [contextDetail, setContextDetail] = useState('');
   const [evaluationDate, setEvaluationDate] = useState(getTodayDate());
@@ -85,53 +117,165 @@ export default function ScoutEvaluation() {
 
   useEffect(() => {
     if (!athleteId) return;
-    let cancelled = false;
     (async () => {
       const [{ data: profile }, { data: settings }] = await Promise.all([
         supabase.from('profiles').select('full_name').eq('id', athleteId).maybeSingle(),
         supabase.from('athlete_mpi_settings').select('sport').eq('user_id', athleteId).maybeSingle(),
       ]);
-      if (cancelled) return;
       setAthleteName((profile as { full_name?: string } | null)?.full_name ?? null);
       setSport((settings as { sport?: string } | null)?.sport ?? 'baseball');
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [athleteId]);
 
-  const groups = useMemo(() => groupsFor(gradeType, sport), [gradeType, sport]);
-  const tools = useMemo(() => toolsFor(gradeType, sport), [gradeType, sport]);
+  const splitSides = isSwitchHitter && sawBothSides;
 
-  const gradedCount = tools.filter((t) => current[t.key] != null || future[t.key] != null).length;
+  /** Groups rendered as flat single-value tools. Defense moves to position looks;
+   *  side-split offensive tools move to the per-side grid when both sides were seen. */
+  const flatGroups = useMemo(() => {
+    const out: { id: string; title: string; description: string; tools: ToolDef[] }[] = [];
+    const seen = new Set<string>();
+    const push = (groups: ReturnType<typeof positionPlayerGroups>, prefix: string) => {
+      for (const g of groups) {
+        if (g.id === 'defense') continue; // handled per position look
+        const tools = g.tools.filter((t) => {
+          if (splitSides && (SIDE_SPLIT_KEYS as readonly string[]).includes(t.key)) return false;
+          if (seen.has(t.key)) return false;
+          seen.add(t.key);
+          return true;
+        });
+        if (tools.length === 0) continue;
+        out.push({ id: `${prefix}-${g.id}`, title: g.title, description: g.description, tools });
+      }
+    };
+    if (includePosition) push(positionPlayerGroups(), 'pos');
+    if (includePitching) push(pitchingGroups(sport), 'pit');
+    return out;
+  }, [includePosition, includePitching, sport, splitSides]);
+
+  const flatTools = useMemo(() => flatGroups.flatMap((g) => g.tools), [flatGroups]);
+  const gradedCount = flatTools.filter((t) => current[t.key] != null || future[t.key] != null).length;
+
+  const sideKey = (side: BatSide, key: string, fut: boolean) => `${side}:${key}${fut ? '_future' : ''}`;
+
+  const setLook = (key: string, patch: Partial<PositionLookDraft>) =>
+    setLooks((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+
+  const usedPositions = new Set(looks.map((l) => l.position).filter(Boolean));
+
+  const canSubmit =
+    !!athleteId && (includePosition || includePitching) && !saving;
 
   const handleSubmit = async () => {
     if (!user || !athleteId) return;
+    if (!includePosition && !includePitching) {
+      toast({ title: 'Add at least one section', variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     try {
+      const gradeType = deriveGradeType({
+        includesPositionTools: includePosition,
+        includesPitchingTools: includePitching,
+      });
+
+      const filledLooks = includePosition
+        ? looks.filter(
+            (l) =>
+              l.position &&
+              (l.defense_grade != null ||
+                l.defense_grade_future != null ||
+                l.throwing_grade != null ||
+                l.throwing_grade_future != null),
+          )
+        : [];
+      const primary = filledLooks[0];
+
       const row: Record<string, unknown> = {
         user_id: athleteId,
         evaluator_id: user.id,
         grade_source: 'coach_evaluated',
         grade_type: gradeType,
+        includes_position_tools: includePosition,
+        includes_pitching_tools: includePitching,
         graded_at: new Date(`${evaluationDate}T12:00:00`).toISOString(),
         evaluation_context: contextType,
         event_description: contextDetail.trim() || null,
         overall_grade: overallGrade,
         notes: notes.trim() || null,
         player_confirmed: false,
-        // Defense / arm on this row are grades AT this position.
-        position_evaluated: positionEvaluated || null,
-        is_switch_hitter: gradeType === 'pitching' ? null : isSwitchHitter,
+        // Legacy single-look mirror: the primary position on this report, so
+        // every existing reader keeps working unchanged.
+        position_evaluated: primary?.position ?? null,
+        defense_grade: primary?.defense_grade ?? null,
+        defense_grade_future: primary?.defense_grade_future ?? null,
+        throwing_grade: primary?.throwing_grade ?? null,
+        throwing_grade_future: primary?.throwing_grade_future ?? null,
+        is_switch_hitter: includePosition ? isSwitchHitter : null,
+        saw_both_batting_sides: includePosition && isSwitchHitter ? sawBothSides : null,
       };
 
-      for (const t of tools) {
+      for (const t of flatTools) {
         row[t.key] = current[t.key] ?? null;
         row[`${t.key}_future`] = future[t.key] ?? null;
       }
 
-      const { error } = await supabase.from('vault_scout_grades').insert(row as never);
+      // Side-split tools: the parent row carries the blend so single-number
+      // readers stay honest; the per-side truth lives in the child rows.
+      if (splitSides) {
+        for (const key of SIDE_SPLIT_KEYS) {
+          row[key] = blendSides(sideGrades[sideKey('R', key, false)] ?? null, sideGrades[sideKey('L', key, false)] ?? null);
+          row[`${key}_future`] = blendSides(
+            sideGrades[sideKey('R', key, true)] ?? null,
+            sideGrades[sideKey('L', key, true)] ?? null,
+          );
+        }
+      }
+
+      const { data: inserted, error } = await supabase
+        .from('vault_scout_grades')
+        .insert(row as never)
+        .select('id')
+        .single();
       if (error) throw error;
+      const gradeId = (inserted as { id: string }).id;
+
+      if (filledLooks.length > 0) {
+        const { error: posErr } = await supabase.from('vault_scout_grade_positions').insert(
+          filledLooks.map((l) => ({
+            grade_id: gradeId,
+            position: l.position,
+            defense_grade: l.defense_grade,
+            defense_grade_future: l.defense_grade_future,
+            throwing_grade: l.throwing_grade,
+            throwing_grade_future: l.throwing_grade_future,
+          })) as never,
+        );
+        if (posErr) throw posErr;
+      }
+
+      if (splitSides) {
+        const sideRows = (['R', 'L'] as BatSide[])
+          .map((side) => ({
+            grade_id: gradeId,
+            bat_side: side,
+            hitting_grade: sideGrades[sideKey(side, 'hitting_grade', false)] ?? null,
+            hitting_grade_future: sideGrades[sideKey(side, 'hitting_grade', true)] ?? null,
+            power_grade: sideGrades[sideKey(side, 'power_grade', false)] ?? null,
+            power_grade_future: sideGrades[sideKey(side, 'power_grade', true)] ?? null,
+            plate_discipline_grade: sideGrades[sideKey(side, 'plate_discipline_grade', false)] ?? null,
+            plate_discipline_grade_future:
+              sideGrades[sideKey(side, 'plate_discipline_grade', true)] ?? null,
+          }))
+          .filter((r) =>
+            Object.entries(r).some(([k, v]) => k !== 'grade_id' && k !== 'bat_side' && v != null),
+          );
+        if (sideRows.length > 0) {
+          const { error: sideErr } = await supabase
+            .from('vault_scout_grade_bat_sides')
+            .insert(sideRows as never);
+          if (sideErr) throw sideErr;
+        }
+      }
 
       toast({
         title: 'Evaluation filed — awaiting player confirmation',
@@ -212,8 +356,7 @@ export default function ScoutEvaluation() {
           </p>
         </div>
 
-
-        {/* 1. Evaluator & context */}
+        {/* 1. Header */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Report header</CardTitle>
@@ -226,12 +369,9 @@ export default function ScoutEvaluation() {
             </div>
 
             {!athleteId && (
-              <div className="space-y-1">
-                <Label className="text-xs">Athlete</Label>
-                <p className="text-sm text-destructive">
-                  No athlete selected. Open this report from a player card on your dashboard.
-                </p>
-              </div>
+              <p className="text-sm text-destructive">
+                No athlete selected. Open this report from a player card on your dashboard.
+              </p>
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -270,142 +410,288 @@ export default function ScoutEvaluation() {
                 className="h-9"
               />
             </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs">Report type</Label>
-              <Tabs value={gradeType} onValueChange={(v) => setGradeType(v as GradeType)}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="hitting_throwing">Position player</TabsTrigger>
-                  <TabsTrigger value="pitching">Pitcher</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Position seen</Label>
-                <Select value={positionEvaluated} onValueChange={setPositionEvaluated}>
-                  <SelectTrigger className="h-9" aria-label="Position evaluated">
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {POSITION_OPTIONS.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Defense and Arm below are graded at this position.
-                </p>
-              </div>
-
-              {gradeType !== 'pitching' && (
-                <div className="space-y-1">
-                  <Label className="text-xs">Switch hitter</Label>
-                  <div className="flex items-center gap-2 h-9">
-                    <Switch
-                      checked={isSwitchHitter}
-                      onCheckedChange={setIsSwitchHitter}
-                      aria-label="Switch hitter"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {isSwitchHitter ? 'Hits from both sides' : 'One side'}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
           </CardContent>
         </Card>
 
-        {/* 2. Tool grades — grouped */}
+        {/* 2. What this report covers */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Tool grades</CardTitle>
+            <CardTitle className="text-base">What did you see?</CardTitle>
             <CardDescription>
-              Present grade and projected (future) grade for each tool. {gradedCount}/{tools.length} graded.
+              One event, one report. A two-way player can carry both sections.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {groups.map((group) => (
-              <section key={group.id} className="space-y-3">
-                <div>
-                  <h2 className="text-sm font-semibold">{group.title}</h2>
+          <CardContent className="space-y-3">
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+              <Switch
+                checked={includePosition}
+                onCheckedChange={setIncludePosition}
+                aria-label="Include position-player tools"
+              />
+              <span className="text-sm">
+                <span className="font-medium block">Position-player tools</span>
+                <span className="text-muted-foreground">
+                  Hit, power, run, defense and arm at every position you saw.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+              <Switch
+                checked={includePitching}
+                onCheckedChange={setIncludePitching}
+                aria-label="Include pitching tools"
+              />
+              <span className="text-sm">
+                <span className="font-medium block">Pitching tools</span>
+                <span className="text-muted-foreground">
+                  Arsenal, command, delivery and pitching craft.
+                </span>
+              </span>
+            </label>
+            {!includePosition && !includePitching && (
+              <p className="text-sm text-destructive">Turn on at least one section to file a report.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 3. Position looks */}
+        {includePosition && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Positions seen</CardTitle>
+              <CardDescription>
+                Defense and Arm are graded at each position separately — a look at short is not a
+                look in right field. Add a row for every position you saw at this event.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {looks.map((look, idx) => (
+                <div key={look.key} className="rounded-md border p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={look.position}
+                      onValueChange={(v) => setLook(look.key, { position: v })}
+                    >
+                      <SelectTrigger className="h-9 w-40" aria-label={`Position ${idx + 1}`}>
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {POSITION_OPTIONS.filter(
+                          (p) => p === look.position || !usedPositions.has(p),
+                        ).map((p) => (
+                          <SelectItem key={p} value={p}>
+                            {p}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex-1" />
+                    {looks.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Remove this position look"
+                        onClick={() => setLooks((prev) => prev.filter((l) => l.key !== look.key))}
+                      >
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
+                    <span>Tool</span>
+                    <span className="text-center">Present</span>
+                    <span className="text-center">Future</span>
+                  </div>
+                  {(
+                    [
+                      ['defense_grade', 'Defense'],
+                      ['throwing_grade', 'Arm'],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <div key={key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
+                      <span className="text-sm">
+                        {label}
+                        {look.position ? ` @ ${look.position}` : ''}
+                      </span>
+                      <GradeSelect
+                        ariaLabel={`${label} present`}
+                        value={look[key]}
+                        onChange={(v) => setLook(look.key, { [key]: v } as Partial<PositionLookDraft>)}
+                      />
+                      <GradeSelect
+                        ariaLabel={`${label} future`}
+                        value={look[`${key}_future` as const]}
+                        onChange={(v) =>
+                          setLook(look.key, { [`${key}_future`]: v } as Partial<PositionLookDraft>)
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLooks((prev) => [...prev, newLook()])}
+                disabled={usedPositions.size >= POSITION_OPTIONS.length}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add another position
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 4. Switch hitting */}
+        {includePosition && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Batting side</CardTitle>
+              <CardDescription>
+                A switch hitter is two hitters. Grade each side only if you actually saw it.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={isSwitchHitter}
+                  onCheckedChange={(v) => {
+                    setIsSwitchHitter(v);
+                    if (!v) setSawBothSides(false);
+                  }}
+                  aria-label="Switch hitter"
+                />
+                <span className="text-sm">{isSwitchHitter ? 'Switch hitter' : 'Hits one side'}</span>
+              </div>
+
+              {isSwitchHitter && (
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={sawBothSides}
+                    onCheckedChange={setSawBothSides}
+                    aria-label="Saw both sides"
+                  />
+                  <span className="text-sm">
+                    {sawBothSides
+                      ? 'Saw both sides — grading them separately'
+                      : 'Only saw one side at this event'}
+                  </span>
+                </div>
+              )}
+
+              {splitSides && (
+                <div className="space-y-3">
+                  <Separator />
+                  <div className="grid grid-cols-[1fr_repeat(4,64px)] gap-2 text-[11px] font-medium text-muted-foreground">
+                    <span>Tool</span>
+                    <span className="text-center">R now</span>
+                    <span className="text-center">R fut</span>
+                    <span className="text-center">L now</span>
+                    <span className="text-center">L fut</span>
+                  </div>
+                  {SIDE_SPLIT_KEYS.map((key) => (
+                    <div key={key} className="grid grid-cols-[1fr_repeat(4,64px)] gap-2 items-center">
+                      <span className="text-sm truncate">{TOOL_LABELS[key]}</span>
+                      {(['R', 'L'] as BatSide[]).flatMap((side) =>
+                        [false, true].map((fut) => {
+                          const k = sideKey(side, key, fut);
+                          return (
+                            <GradeSelect
+                              key={k}
+                              ariaLabel={`${TOOL_LABELS[key]} ${BAT_SIDE_LABELS[side]} ${fut ? 'future' : 'present'}`}
+                              value={sideGrades[k] ?? null}
+                              onChange={(v) => setSideGrades((p) => ({ ...p, [k]: v }))}
+                            />
+                          );
+                        }),
+                      )}
+                    </div>
+                  ))}
                   <p className="text-xs text-muted-foreground">
-                    {group.id === 'defense' && !positionEvaluated
-                      ? 'Select a position above so these grades are attributed correctly.'
-                      : group.description}
+                    The report also stores the blend of the two sides so single-number readers stay
+                    accurate — the per-side grades remain the truth.
                   </p>
                 </div>
-                <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
-                  <span>Tool</span>
-                  <span className="text-center">Present</span>
-                  <span className="text-center">Future</span>
-                </div>
-                <Separator />
-                {group.tools.map((tool) => (
-                  <div key={tool.key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {tool.label}
-                        {group.id === 'defense' && positionEvaluated ? ` @ ${positionEvaluated}` : ''}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">{tool.hint}</p>
-                    </div>
-                    <GradeSelect
-                      value={current[tool.key] ?? null}
-                      onChange={(v) => setCurrent((c) => ({ ...c, [tool.key]: v }))}
-                      ariaLabel={`${tool.label} present grade`}
-                    />
-                    <GradeSelect
-                      value={future[tool.key] ?? null}
-                      onChange={(v) => setFuture((f) => ({ ...f, [tool.key]: v }))}
-                      ariaLabel={`${tool.label} future grade`}
-                    />
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 5. Remaining tool grades */}
+        {flatGroups.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Tool grades</CardTitle>
+              <CardDescription>
+                Present grade and projected (future) grade for each tool. {gradedCount}/
+                {flatTools.length} graded.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {flatGroups.map((group) => (
+                <section key={group.id} className="space-y-3">
+                  <div>
+                    <h2 className="text-sm font-semibold">{group.title}</h2>
+                    <p className="text-xs text-muted-foreground">{group.description}</p>
                   </div>
-                ))}
-              </section>
-            ))}
-          </CardContent>
-        </Card>
+                  <div className="grid grid-cols-[1fr_84px_84px] gap-3 text-xs font-medium text-muted-foreground">
+                    <span>Tool</span>
+                    <span className="text-center">Present</span>
+                    <span className="text-center">Future</span>
+                  </div>
+                  {group.tools.map((t) => (
+                    <div key={t.key} className="grid grid-cols-[1fr_84px_84px] gap-3 items-center">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{t.label}</p>
+                        <p className="text-xs text-muted-foreground truncate">{t.hint}</p>
+                      </div>
+                      <GradeSelect
+                        ariaLabel={`${t.label} present`}
+                        value={current[t.key] ?? null}
+                        onChange={(v) => setCurrent((p) => ({ ...p, [t.key]: v }))}
+                      />
+                      <GradeSelect
+                        ariaLabel={`${t.label} future`}
+                        value={future[t.key] ?? null}
+                        onChange={(v) => setFuture((p) => ({ ...p, [t.key]: v }))}
+                      />
+                    </div>
+                  ))}
+                </section>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
-
-        {/* 3. Overall */}
+        {/* 6. Summary */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Overall future value</CardTitle>
-            <CardDescription>Your bottom-line summary grade, independent of the tool breakdown.</CardDescription>
+            <CardTitle className="text-base">Overall & write-up</CardTitle>
+            <CardDescription>OFP and what the numbers don't say.</CardDescription>
           </CardHeader>
-          <CardContent className="max-w-[160px]">
-            <GradeSelect value={overallGrade} onChange={setOverallGrade} ariaLabel="Overall grade" />
+          <CardContent className="space-y-4">
+            <div className="space-y-1 max-w-[140px]">
+              <Label className="text-xs">Overall (OFP)</Label>
+              <GradeSelect ariaLabel="Overall grade" value={overallGrade} onChange={setOverallGrade} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Write-up</Label>
+              <Textarea
+                rows={5}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="What stood out, what needs work, what you'd want to see next."
+              />
+            </div>
           </CardContent>
         </Card>
 
-        {/* 4. Write-up */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Write-up</CardTitle>
-            <CardDescription>Body, actions, makeup, projection, and next look.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              rows={6}
-              placeholder="Free-and-easy arm action, stays through the ball to the middle..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </CardContent>
-        </Card>
-
-        <Button
-          onClick={handleSubmit}
-          disabled={saving || !athleteId}
-          className="w-full"
-          size="lg"
-        >
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ClipboardCheck className="h-4 w-4 mr-2" />}
+        <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full" size="lg">
+          {saving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <ClipboardCheck className="h-4 w-4 mr-2" />
+          )}
           File scouting report
         </Button>
       </div>
