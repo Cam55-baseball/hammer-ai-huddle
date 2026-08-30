@@ -17,6 +17,8 @@ import { EvaluationReportCard } from '@/components/evaluations/EvaluationReportC
 import { PendingEvaluationCard } from '@/components/evaluations/PendingEvaluationCard';
 import { EvaluatorDirectory } from '@/components/evaluations/EvaluatorDirectory';
 import { PositionGradeSummaryCard } from '@/components/evaluations/PositionGradeSummaryCard';
+import { useReportDetails } from '@/hooks/useReportDetails';
+import { expandPositionLooks } from '@/lib/evaluation/positionGrades';
 import { ConfirmedSummaryCard } from '@/components/evaluations/ConfirmedSummaryCard';
 import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
 
@@ -121,6 +123,8 @@ export default function Evaluations() {
                       key={r.id}
                       report={r}
                       attribution={names[r.user_id] ?? 'Athlete'}
+                      positions={details?.positionsByReport[r.id] ?? []}
+                      batSides={details?.batSidesByReport[r.id] ?? []}
                       showConfirmationStatus
                     />
                   ))
@@ -143,7 +147,7 @@ export default function Evaluations() {
 
                 <EvaluatorDirectory athleteId={user?.id} title="Who has evaluated me" />
 
-                <PositionGradeSummaryCard reports={mine} />
+                <PositionGradeSummaryCard reports={minePositionSources} />
 
 
                 {!mineLoading && mine.length === 0 && pending.length === 0 && (
