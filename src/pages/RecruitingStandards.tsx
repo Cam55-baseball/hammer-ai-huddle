@@ -1067,7 +1067,7 @@ function AthleteMatchesList() {
 
 export default function RecruitingStandards() {
   const { standards, createStandard } = useOrgStandards();
-  const fieldCount = useMemo(() => ALL_FIELDS.length, []);
+  const fieldCount = useMemo(() => PROFILE_FIELDS.length + gradeFieldsFor("two_way", "baseball").length, []);
   const [creating, setCreating] = useState(false);
 
   const all = standards.data ?? [];

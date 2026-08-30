@@ -12,7 +12,8 @@ const c = (
   field: string,
   operator: StandardCriterion["operator"],
   value: StandardCriterion["value"],
-): StandardCriterion => ({ id, field, operator, value });
+  isMandatory = true,
+): StandardCriterion => ({ id, field, operator, value, is_mandatory: isMandatory });
 
 const athlete = (
   profile: AthleteMatchInput["profile"],
