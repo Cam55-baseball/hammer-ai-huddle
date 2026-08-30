@@ -54,6 +54,31 @@ export const BAT_SIDE_LABELS: Record<BatSide, string> = {
   L: 'Left-handed AB',
 };
 
+/**
+ * Pitching tools that genuinely differ by throwing arm. When an ambidextrous
+ * pitcher was seen throwing with both hands, every pitching tool is graded
+ * once per side; physical/mental makeup stays a single number per athlete.
+ */
+export const PITCHING_SIDE_SPLIT_KEYS = [
+  'fastball_grade',
+  'offspeed_grade',
+  'breaking_ball_grade',
+  'rise_ball_grade',
+  'control_grade',
+  'pitchability_grade',
+  'delivery_arm_action_grade',
+  'deception_grade',
+  'defense_as_pitcher_grade',
+  'hold_runners_grade',
+] as const;
+
+export type PitchingSide = 'R' | 'L';
+
+export const PITCHING_SIDE_LABELS: Record<PitchingSide, string> = {
+  R: 'Right-handed pitching',
+  L: 'Left-handed pitching',
+};
+
 const HITTING_TOOLS: ToolDef[] = [
   { key: 'hitting_grade', label: 'Hit', hint: 'Bat-to-ball, approach, contact quality' },
   { key: 'power_grade', label: 'Power', hint: 'Raw and game power' },
