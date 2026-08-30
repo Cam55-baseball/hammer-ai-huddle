@@ -12,14 +12,16 @@ import {
   useMyEvaluations,
   useFiledEvaluations,
   useProfileNames,
+  useAthleteEvaluators,
 } from '@/hooks/useEvaluations';
-import { EvaluationReportCard } from '@/components/evaluations/EvaluationReportCard';
+import { ReportAccordionList } from '@/components/evaluations/ReportAccordionList';
 import { PendingEvaluationCard } from '@/components/evaluations/PendingEvaluationCard';
 import { EvaluatorDirectory } from '@/components/evaluations/EvaluatorDirectory';
 import { PositionGradeSummaryCard } from '@/components/evaluations/PositionGradeSummaryCard';
 import { useReportDetails } from '@/hooks/useReportDetails';
 import { expandPositionLooks } from '@/lib/evaluation/positionGrades';
 import { ConfirmedSummaryCard } from '@/components/evaluations/ConfirmedSummaryCard';
+import { formatAttribution } from '@/lib/evaluation/evaluatorCredentials';
 import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
 
 /**
@@ -57,6 +59,14 @@ export default function Evaluations() {
     [filed, mine],
   );
   const { data: details } = useReportDetails(reportIds);
+
+  // Credentials for the people who filed reports on me, so a collapsed row can
+  // say who wrote it without opening the report.
+  const { data: myEvaluators = [] } = useAthleteEvaluators(user?.id);
+  const attributionForMine = (evaluatorId: string | null) => {
+    const e = myEvaluators.find((x) => x.evaluator_id === evaluatorId);
+    return e ? formatAttribution(e) : undefined;
+  };
 
   const minePositionSources = useMemo(
     () => expandPositionLooks(mine as never, details?.positions ?? []),
@@ -118,17 +128,14 @@ export default function Evaluations() {
                     </CardContent>
                   </Card>
                 ) : (
-                  filed.map((r) => (
-                    <EvaluationReportCard
-                      key={r.id}
-                      report={r}
-                      attribution={names[r.user_id] ?? 'Athlete'}
-                      positions={details?.positionsByReport[r.id] ?? []}
-                      batSides={details?.batSidesByReport[r.id] ?? []}
-                      showConfirmationStatus
-                    />
-                  ))
+                  <ReportAccordionList
+                    reports={filed}
+                    details={details}
+                    attributionFor={(r) => names[r.user_id] ?? 'Athlete'}
+                    showConfirmationStatus
+                  />
                 )}
+
               </TabsContent>
             </>
           ) : (
@@ -148,6 +155,19 @@ export default function Evaluations() {
                 <EvaluatorDirectory athleteId={user?.id} title="Who has evaluated me" />
 
                 <PositionGradeSummaryCard reports={minePositionSources} />
+
+                {mine.length > 0 && (
+                  <div className="space-y-2">
+                    <h2 className="text-sm font-semibold">Every report about me</h2>
+                    <ReportAccordionList
+                      reports={mine}
+                      details={details}
+                      attributionFor={(r) => attributionForMine(r.evaluator_id)}
+                    />
+                  </div>
+                )}
+
+
 
 
                 {!mineLoading && mine.length === 0 && pending.length === 0 && (
