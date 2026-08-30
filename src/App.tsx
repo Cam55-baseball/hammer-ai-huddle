@@ -350,7 +350,9 @@ const App = () => {
               <Route path="/forecast" element={<ForecastSurface />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
-              <Route path="/pitch-velocity" element={<PitchVelocityPrep />} />
+              {/* Route-level guard so the pre-release, credit-billing page never
+                  mounts for non-staff (the page also self-gates internally). */}
+              <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
               {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
