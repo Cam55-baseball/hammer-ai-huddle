@@ -1960,7 +1960,7 @@ Deno.serve(async (req) => {
       weaknessClusters as any,
       // Use micro-rep count when available so low-depth sessions cannot
       // produce a falsely confident priority phase.
-      { signalDepth: (microReps as any[] | undefined)?.length ?? undefined },
+      { signalDepth: allMicroReps?.length ?? undefined },
     );
 
     // ── UPSERT SNAPSHOT ──

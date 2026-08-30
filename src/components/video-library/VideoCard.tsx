@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Heart, Play } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getEmbedInfo, detectPlatform } from "@/lib/videoEmbed";
+import { getEmbedInfo, detectPlatform, isDirectVideoFile, firstFrameSrc } from "@/lib/videoEmbed";
 import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 
 interface VideoCardProps {
@@ -13,9 +14,14 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
+  // Some containers (.mov) fail to decode in certain browsers — fall back to the
+  // placeholder rather than leaving a black rectangle.
+  const [framePreviewFailed, setFramePreviewFailed] = useState(false);
   const info = getEmbedInfo(video.video_url);
   const thumbnail = video.thumbnail_url || info.thumbnailUrl;
+  const showFramePreview = !thumbnail && !framePreviewFailed && isDirectVideoFile(video.video_url);
   const platform = info.platform !== 'unknown' ? info.platform : detectPlatform(video.video_url);
+
   const platformLabel =
     platform === 'youtube' ? 'YouTube'
     : platform === 'vimeo' ? 'Vimeo'
@@ -27,7 +33,20 @@ export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
     <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onPlay(video)}>
       <div className="relative aspect-video bg-muted flex items-center justify-center">
         {thumbnail ? (
-          <img src={thumbnail} alt={video.title} className="w-full h-full object-cover" />
+          <img src={thumbnail} alt={video.title} className="w-full h-full object-cover" loading="lazy" />
+        ) : showFramePreview ? (
+          // Uploaded files have no poster image — paint the first frame instead
+          // of an empty placeholder icon.
+          <video
+            src={firstFrameSrc(video.video_url)}
+            className="w-full h-full object-cover pointer-events-none"
+            preload="metadata"
+            muted
+            playsInline
+            aria-label={video.title}
+            onError={() => setFramePreviewFailed(true)}
+          />
+
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
             <Play className="h-10 w-10" />

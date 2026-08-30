@@ -117,3 +117,19 @@ export function getEmbedInfo(url: string | null | undefined): EmbedInfo {
 
   return { platform: 'unknown', embedUrl: null, thumbnailUrl: null };
 }
+
+/**
+ * True for URLs that point straight at a video file (our own storage uploads,
+ * or any direct .mp4/.mov/.webm link). These have no derivable poster image, so
+ * card surfaces render a first-frame preview instead of a placeholder icon.
+ */
+export function isDirectVideoFile(url: string | null | undefined): boolean {
+  if (!url) return false;
+  if (detectPlatform(url) !== 'unknown') return false;
+  return /\.(mp4|mov|webm|m4v|ogg)(\?|#|$)/i.test(url) || /\/storage\/v1\/object\/public\//i.test(url);
+}
+
+/** Media fragment that makes a <video> element paint its first frame as a poster. */
+export function firstFrameSrc(url: string): string {
+  return url.includes('#') ? url : `${url}#t=0.1`;
+}
