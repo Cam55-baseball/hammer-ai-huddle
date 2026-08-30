@@ -46,6 +46,7 @@ import {
   ShieldCheck,
   Target,
   Trash2,
+  Star,
   Users,
   X,
 } from "lucide-react";
@@ -64,17 +65,23 @@ import {
 import { StandardMatchNotificationList } from "@/components/recruiting/StandardMatchNotificationList";
 
 import {
-  ALL_FIELDS,
-  GRADE_FIELDS,
   OPERATOR_LABELS,
   PROFILE_FIELDS,
+  RECRUITING_ROLE_LABELS,
   describeCriterion,
   fieldByKey,
+  gradeFieldsFor,
   parseCriterionValue,
+  positionOptionsFor,
   standardPositionLabel,
   summarizeCriteria,
+  type RecruitingRole,
 } from "@/lib/recruiting/standardFields";
-import type { StandardOperator } from "@/lib/recruiting/standardsMatching";
+import type {
+  PositionMatchLogic,
+  StandardContext,
+  StandardOperator,
+} from "@/lib/recruiting/standardsMatching";
 
 const SPORT_LABELS: Record<string, string> = { baseball: "Baseball", softball: "Softball" };
 
@@ -104,6 +111,123 @@ function RulePill({ icon: Icon, children }: { icon: typeof Shield; children: Rea
   );
 }
 
+/**
+ * Role + position targeting. Shared by the create form and the edit panel so
+ * both express the same idea: who this profile is for, and where they play.
+ */
+function RoleAndPositions({
+  sport,
+  role,
+  onRoleChange,
+  positions,
+  onPositionsChange,
+  logic,
+  onLogicChange,
+}: {
+  sport: string;
+  role: RecruitingRole;
+  onRoleChange: (v: RecruitingRole) => void;
+  positions: string[];
+  onPositionsChange: (v: string[]) => void;
+  logic: PositionMatchLogic;
+  onLogicChange: (v: PositionMatchLogic) => void;
+}) {
+  const options = positionOptionsFor(sport);
+  const toggle = (pos: string) =>
+    onPositionsChange(
+      positions.includes(pos) ? positions.filter((p) => p !== pos) : [...positions, pos],
+    );
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Recruiting role</Label>
+        <Select value={role} onValueChange={(v) => onRoleChange(v as RecruitingRole)}>
+          <SelectTrigger className="bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(RECRUITING_ROLE_LABELS) as RecruitingRole[]).map((r) => (
+              <SelectItem key={r} value={r}>
+                {RECRUITING_ROLE_LABELS[r]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Decides which scouting tools you can require. Two-way offers both sets.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label>Positions</Label>
+          {positions.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => onPositionsChange([])}
+            >
+              Any position
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {options.map((pos) => {
+            const on = positions.includes(pos);
+            return (
+              <button
+                key={pos}
+                type="button"
+                onClick={() => toggle(pos)}
+                aria-pressed={on}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  on
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-primary/50",
+                )}
+              >
+                {pos}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {positions.length === 0
+            ? "No positions selected — this standard considers every athlete, and defense/arm grades read from their primary position."
+            : "Defense and arm criteria are graded at these positions specifically, not at the athlete's primary spot."}
+        </p>
+      </div>
+
+      {positions.length > 1 && (
+        <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+          <Label className="text-xs">When several positions are selected</Label>
+          <Select value={logic} onValueChange={(v) => onLogicChange(v as PositionMatchLogic)}>
+            <SelectTrigger className="bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">
+                Any one of them — athlete plays at least one
+              </SelectItem>
+              <SelectItem value="all">
+                All of them — athlete plays every one
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {logic === "any"
+              ? "A defense requirement passes if it clears the bar at one selected position."
+              : "A defense requirement must clear the bar at every selected position."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Create                                                              */
 /* ------------------------------------------------------------------ */
@@ -114,7 +238,15 @@ function NewStandardForm({
   open,
   onOpenChange,
 }: {
-  onCreate: (v: { org_name: string; label: string; sport: string; active: boolean }) => void;
+  onCreate: (v: {
+    org_name: string;
+    label: string;
+    sport: string;
+    active: boolean;
+    recruiting_role: RecruitingRole;
+    target_positions: string[];
+    position_match_logic: PositionMatchLogic;
+  }) => void;
   pending: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -123,6 +255,9 @@ function NewStandardForm({
   const [label, setLabel] = useState("");
   const [sport, setSport] = useState("baseball");
   const [active, setActive] = useState(true);
+  const [role, setRole] = useState<RecruitingRole>("position_player");
+  const [positions, setPositions] = useState<string[]>([]);
+  const [logic, setLogic] = useState<PositionMatchLogic>("any");
 
   if (!open) return null;
 
@@ -169,7 +304,13 @@ function NewStandardForm({
           </div>
           <div className="space-y-2">
             <Label>Sport</Label>
-            <Select value={sport} onValueChange={setSport}>
+            <Select
+              value={sport}
+              onValueChange={(v) => {
+                setSport(v);
+                setPositions([]);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -185,10 +326,30 @@ function NewStandardForm({
           </div>
         </div>
 
+        <Separator />
+
+        <RoleAndPositions
+          sport={sport}
+          role={role}
+          onRoleChange={setRole}
+          positions={positions}
+          onPositionsChange={setPositions}
+          logic={logic}
+          onLogicChange={setLogic}
+        />
+
         <Button
           disabled={pending || !orgName.trim() || !label.trim()}
           onClick={() => {
-            onCreate({ org_name: orgName.trim(), label: label.trim(), sport, active });
+            onCreate({
+              org_name: orgName.trim(),
+              label: label.trim(),
+              sport,
+              active,
+              recruiting_role: role,
+              target_positions: positions,
+              position_match_logic: logic,
+            });
             setOrgName("");
             setLabel("");
           }}
@@ -204,17 +365,34 @@ function NewStandardForm({
 /* Criteria                                                            */
 /* ------------------------------------------------------------------ */
 
-function CriteriaEditor({ standardId }: { standardId: string }) {
-  const { criteria, addCriterion, deleteCriterion } = useStandardCriteria(standardId);
+function CriteriaEditor({ standard }: { standard: OrgStandard }) {
+  const standardId = standard.id;
+  const { criteria, addCriterion, deleteCriterion, setCriterionMandatory } =
+    useStandardCriteria(standardId);
   const [field, setField] = useState<string>(PROFILE_FIELDS[0].key);
   const [operator, setOperator] = useState<StandardOperator>("eq");
   const [raw, setRaw] = useState("");
+  const [isMandatory, setIsMandatory] = useState(true);
   const [pingMessage, setPingMessage] = useState("");
 
   const def = fieldByKey(field);
   const allowedOps = def?.operators ?? (["eq"] as const);
 
-  const matches = useStandardMatchPreview(standardId, criteria.data);
+  // Only the tools that exist for this standard's sport and role are offered.
+  const gradeFields = useMemo(
+    () => gradeFieldsFor(standard.recruiting_role, standard.sport),
+    [standard.recruiting_role, standard.sport],
+  );
+
+  const context: StandardContext = useMemo(
+    () => ({
+      targetPositions: standard.target_positions ?? [],
+      positionMatchLogic: standard.position_match_logic ?? "any",
+    }),
+    [standard.target_positions, standard.position_match_logic],
+  );
+
+  const matches = useStandardMatchPreview(standardId, criteria.data, context);
   const saveMatches = useSaveStandardMatches(standardId);
   const pending = usePendingStandardPings(standardId);
   const dispatch = useDispatchStandardMatchPings();
@@ -228,7 +406,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
       return;
     }
     addCriterion.mutate(
-      { field, operator, value },
+      { field, operator, value, is_mandatory: isMandatory },
       {
         onSuccess: () => {
           setRaw("");
@@ -240,7 +418,51 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
   };
 
   const list = criteria.data ?? [];
-  const summary = summarizeCriteria(list);
+  const mandatoryList = list.filter((c) => c.is_mandatory !== false);
+  const preferredList = list.filter((c) => c.is_mandatory === false);
+  const summary = summarizeCriteria(mandatoryList);
+  const preferredSummary = summarizeCriteria(preferredList);
+  const noMandatory = mandatoryList.length === 0;
+
+  const renderRow = (c: (typeof list)[number], i: number) => (
+    <li
+      key={c.id}
+      className="flex items-center justify-between gap-3 rounded-lg border bg-card px-3 py-2"
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums">
+          {i + 1}
+        </span>
+        <span className="truncate text-sm">
+          {describeCriterion(c.field, c.operator, c.value)}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          disabled={setCriterionMandatory.isPending}
+          onClick={() =>
+            setCriterionMandatory.mutate({
+              id: c.id,
+              is_mandatory: c.is_mandatory === false,
+            })
+          }
+        >
+          {c.is_mandatory === false ? "Make mandatory" : "Make preferred"}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => deleteCriterion.mutate(c.id)}
+          aria-label="Delete criterion"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </li>
+  );
 
   return (
     <div className="space-y-6">
@@ -248,8 +470,24 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
       <div className="rounded-xl border-2 border-primary/25 bg-primary/[0.04] p-4">
         <MicroLabel>An athlete matches when</MicroLabel>
         <p className="mt-1.5 text-base font-medium leading-relaxed">
-          {summary || "…nothing yet. Add a field below and this sentence writes itself."}
+          {summary ||
+            "…nothing yet. Add a mandatory requirement below and this sentence writes itself."}
         </p>
+        {preferredSummary && (
+          <p className="mt-2 flex gap-1.5 text-sm text-muted-foreground">
+            <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <span>
+              <span className="font-medium text-foreground">Preferred, not required:</span>{" "}
+              {preferredSummary}
+            </span>
+          </p>
+        )}
+        {noMandatory && preferredList.length > 0 && (
+          <p className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            Every requirement here is preferred, so nothing actually gates the match. A standard
+            with no mandatory requirement matches nobody — make at least one mandatory.
+          </p>
+        )}
       </div>
 
       {/* Criteria as readable rows */}
@@ -272,32 +510,27 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
             </p>
           </div>
         ) : (
-          <ol className="space-y-2">
-            {list.map((c, i) => (
-              <li
-                key={c.id}
-                className="flex items-center justify-between gap-3 rounded-lg border bg-card px-3 py-2"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums">
-                    {i + 1}
-                  </span>
-                  <span className="truncate text-sm">
-                    {describeCriterion(c.field, c.operator, c.value)}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => deleteCriterion.mutate(c.id)}
-                  aria-label="Delete criterion"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
-          </ol>
+          <div className="space-y-4">
+            {mandatoryList.length > 0 && (
+              <div className="space-y-2">
+                <RulePill icon={ShieldCheck}>
+                  <span className="font-medium text-foreground">Mandatory</span> — every one of
+                  these must pass or there is no match. Missing data counts as a fail.
+                </RulePill>
+                <ol className="space-y-2">{mandatoryList.map(renderRow)}</ol>
+              </div>
+            )}
+            {preferredList.length > 0 && (
+              <div className="space-y-2">
+                <RulePill icon={Star}>
+                  <span className="font-medium text-foreground">Preferred</span> — never blocks a
+                  match on its own. Tracked and shown next to each athlete so you can see how
+                  much extra they bring.
+                </RulePill>
+                <ol className="space-y-2">{preferredList.map(renderRow)}</ol>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -328,8 +561,10 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                   ))}
                 </SelectGroup>
                 <SelectGroup>
-                  <SelectLabel>Official grades only</SelectLabel>
-                  {GRADE_FIELDS.map((f) => (
+                  <SelectLabel>
+                    {RECRUITING_ROLE_LABELS[standard.recruiting_role]} tools · official grades only
+                  </SelectLabel>
+                  {gradeFields.map((f) => (
                     <SelectItem key={f.key} value={f.key}>
                       {f.label}
                     </SelectItem>
@@ -365,6 +600,24 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
           <Button onClick={handleAdd} disabled={addCriterion.isPending}>
             Add
           </Button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id={`mandatory-${standardId}`}
+              checked={isMandatory}
+              onCheckedChange={setIsMandatory}
+            />
+            <Label htmlFor={`mandatory-${standardId}`} className="text-xs">
+              {isMandatory ? "Mandatory" : "Preferred"}
+            </Label>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {isMandatory
+              ? "Must pass — an athlete missing this never surfaces."
+              : "Nice to have — shown alongside the match, but never blocks it."}
+          </span>
         </div>
       </div>
 
@@ -430,7 +683,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
 
         {!list.length ? (
           <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-            Add at least one criterion to evaluate athletes.
+            Add at least one mandatory criterion to evaluate athletes.
           </p>
         ) : matches.isLoading ? (
           <p className="text-sm text-muted-foreground">Evaluating athletes…</p>
@@ -441,16 +694,34 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
                 key={m.athlete_user_id}
                 className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm"
               >
-                <span className="truncate font-medium">{m.full_name ?? m.athlete_user_id}</span>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{m.full_name ?? m.athlete_user_id}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    Meets all {mandatoryList.length} mandatory
+                    {m.preferred_total > 0
+                      ? `, plus ${m.preferred_met} of ${m.preferred_total} preferred`
+                      : ""}
+                    {m.preferred_total > 0 && m.preferred_met < m.preferred_total
+                      ? ` · short on ${m.preferred
+                          .filter((r) => !r.passed)
+                          .map((r) => fieldByKey(r.field)?.label ?? r.field)
+                          .join(", ")}`
+                      : ""}
+                  </p>
+                </div>
                 <Badge variant="outline" className="shrink-0 tabular-nums">
-                  {m.passed.length} / {m.results.length} criteria
+                  {m.preferred_total > 0
+                    ? `${m.preferred_met}/${m.preferred_total} preferred`
+                    : "Full match"}
                 </Badge>
               </div>
             ))}
           </div>
         ) : (
           <div className="rounded-lg border border-dashed px-4 py-6 text-center">
-            <p className="text-sm font-medium">Nobody clears all {list.length} yet</p>
+            <p className="text-sm font-medium">
+              Nobody clears all {mandatoryList.length} mandatory yet
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Missing data counts as a fail, and self-reported grades never count.
             </p>
@@ -478,7 +749,7 @@ function CriteriaEditor({ standardId }: { standardId: string }) {
         <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-xs">
           <p className="flex items-center gap-1.5 font-semibold">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            A ping only fires when every criterion is met — not most, not some.
+            A ping only fires when every mandatory criterion is met — not most, not some.
           </p>
           <p className="mt-1 text-muted-foreground">
             Saving records the match. Sending pings notifies both sides once — the rep who owns
@@ -500,6 +771,10 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
   const [label, setLabel] = useState(standard.label);
   const [orgName, setOrgName] = useState(standard.org_name);
   const [open, setOpen] = useState(false);
+
+  const role = standard.recruiting_role;
+  const positions = standard.target_positions ?? [];
+  const logic = standard.position_match_logic ?? "any";
 
   const count = criteria.data?.length ?? 0;
   const summary = summarizeCriteria(criteria.data ?? []);
@@ -524,7 +799,8 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
                 aria-hidden
               />
               <MicroLabel>
-                {SPORT_LABELS[standard.sport] ?? standard.sport} · {standard.org_name}
+                {SPORT_LABELS[standard.sport] ?? standard.sport} · {standard.org_name} ·{" "}
+                {RECRUITING_ROLE_LABELS[role]}
               </MicroLabel>
             </div>
             <h3 className="mt-1 flex items-center gap-2 text-lg font-semibold">
@@ -542,6 +818,13 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <Badge variant="secondary" className="tabular-nums">
                 {count} criteri{count === 1 ? "on" : "a"}
+              </Badge>
+              <Badge variant="outline">
+                {positions.length === 0
+                  ? "Any position"
+                  : positions.length === 1
+                    ? positions[0]
+                    : `${positions.join(" / ")} · ${logic === "all" ? "all" : "any one"}`}
               </Badge>
               {!standard.active && <Badge variant="outline">Paused</Badge>}
             </div>
@@ -612,7 +895,23 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
               </Button>
             </div>
             <Separator />
-            <CriteriaEditor standardId={standard.id} />
+
+            <RoleAndPositions
+              sport={standard.sport}
+              role={role}
+              onRoleChange={(v) => updateStandard.mutate({ id: standard.id, recruiting_role: v })}
+              positions={positions}
+              onPositionsChange={(v) =>
+                updateStandard.mutate({ id: standard.id, target_positions: v })
+              }
+              logic={logic}
+              onLogicChange={(v) =>
+                updateStandard.mutate({ id: standard.id, position_match_logic: v })
+              }
+            />
+
+            <Separator />
+            <CriteriaEditor standard={standard} />
           </CardContent>
         </CollapsibleContent>
       </Card>
@@ -633,7 +932,9 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
     const map = criteriaMap.data ?? {};
     const buckets = new Map<string, { sport: string; position: string; items: OrgStandard[] }>();
     for (const s of standards) {
-      const position = standardPositionLabel(map[s.id] ?? []);
+      const position = s.target_positions?.length
+        ? s.target_positions.join(" / ")
+        : standardPositionLabel(map[s.id] ?? []);
       const key = `${s.sport}::${position}`;
       const bucket = buckets.get(key) ?? { sport: s.sport, position, items: [] };
       bucket.items.push(s);
@@ -766,7 +1067,7 @@ function AthleteMatchesList() {
 
 export default function RecruitingStandards() {
   const { standards, createStandard } = useOrgStandards();
-  const fieldCount = useMemo(() => ALL_FIELDS.length, []);
+  const fieldCount = useMemo(() => PROFILE_FIELDS.length + gradeFieldsFor("two_way", "baseball").length, []);
   const [creating, setCreating] = useState(false);
 
   const all = standards.data ?? [];

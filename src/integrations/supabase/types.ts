@@ -8836,6 +8836,7 @@ export type Database = {
           created_at: string
           field: string
           id: string
+          is_mandatory: boolean
           operator: string
           standard_id: string
           updated_at: string
@@ -8845,6 +8846,7 @@ export type Database = {
           created_at?: string
           field: string
           id?: string
+          is_mandatory?: boolean
           operator: string
           standard_id: string
           updated_at?: string
@@ -8854,6 +8856,7 @@ export type Database = {
           created_at?: string
           field?: string
           id?: string
+          is_mandatory?: boolean
           operator?: string
           standard_id?: string
           updated_at?: string
@@ -8878,7 +8881,10 @@ export type Database = {
           org_name: string
           org_user_id: string
           outreach_message: string | null
+          position_match_logic: string
+          recruiting_role: string
           sport: string
+          target_positions: string[]
           updated_at: string
         }
         Insert: {
@@ -8889,7 +8895,10 @@ export type Database = {
           org_name: string
           org_user_id: string
           outreach_message?: string | null
+          position_match_logic?: string
+          recruiting_role?: string
           sport: string
+          target_positions?: string[]
           updated_at?: string
         }
         Update: {
@@ -8900,7 +8909,10 @@ export type Database = {
           org_name?: string
           org_user_id?: string
           outreach_message?: string | null
+          position_match_logic?: string
+          recruiting_role?: string
           sport?: string
+          target_positions?: string[]
           updated_at?: string
         }
         Relationships: []
