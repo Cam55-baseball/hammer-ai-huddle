@@ -94,6 +94,25 @@ const PITCHER_CRAFT_TOOLS: ToolDef[] = [
   { key: 'deception_grade', label: 'Deception', hint: 'Hidden release, unorthodox look that disguises velo/pitch type' },
 ];
 
+/**
+ * What the pitcher does once the ball is in play or a runner is on. Fielding
+ * their own position is graded here, never in the position-player Defense
+ * section, and holding runners is baseball-only (no leads in softball).
+ */
+const PITCHER_DEFENSE_TOOLS: ToolDef[] = [
+  {
+    key: 'defense_as_pitcher_grade',
+    label: 'Defense as Pitcher',
+    hint: 'Comebackers, covering first, backing up the correct base on every play',
+  },
+];
+
+const HOLD_RUNNERS_TOOL: ToolDef = {
+  key: 'hold_runners_grade',
+  label: 'Holding Runners',
+  hint: 'Keeps leads short, varies looks and times, does not give away jumps on the steal break',
+};
+
 const PITCHER_PHYSICAL_TOOLS: ToolDef[] = [
   { key: 'body_type_frame_grade', label: 'Body Type / Frame', hint: 'Pitcher-specific physical projection' },
   { key: 'poise_competitiveness_grade', label: 'Poise & Competitiveness', hint: 'Composure in high-stress counts, handles adversity' },
@@ -132,6 +151,18 @@ export function pitchingGroups(sport: string): ToolGroup[] {
       tools: PITCHER_CRAFT_TOOLS,
     },
     {
+      id: 'pitcher-defense',
+      title: 'Defense & Runner Control',
+      description:
+        sport === 'softball'
+          ? 'What happens once the ball is in play.'
+          : 'What happens once the ball is in play or a runner reaches.',
+      tools:
+        sport === 'softball'
+          ? PITCHER_DEFENSE_TOOLS
+          : [...PITCHER_DEFENSE_TOOLS, HOLD_RUNNERS_TOOL],
+    },
+    {
       id: 'physical-makeup',
       title: 'Physical & Makeup',
       description: 'Frame, composure, and impact on a staff.',
@@ -167,6 +198,8 @@ export const TOOL_LABELS: Record<string, string> = Object.fromEntries(
     ...PITCH_ARSENAL_TOOLS,
     RISE_BALL_TOOL,
     ...PITCHER_CRAFT_TOOLS,
+    ...PITCHER_DEFENSE_TOOLS,
+    HOLD_RUNNERS_TOOL,
     ...PITCHER_PHYSICAL_TOOLS,
     // Legacy column kept for historical reports filed before the split.
     { key: 'delivery_grade', label: 'Delivery (legacy)', hint: '' },
@@ -180,6 +213,8 @@ export const TOOL_DISPLAY_ORDER: string[] = [
   ...PITCH_ARSENAL_TOOLS,
   RISE_BALL_TOOL,
   ...PITCHER_CRAFT_TOOLS,
+  ...PITCHER_DEFENSE_TOOLS,
+  HOLD_RUNNERS_TOOL,
   ...PHYSICAL_MAKEUP_TOOLS,
   ...PITCHER_PHYSICAL_TOOLS,
   { key: 'delivery_grade', label: '', hint: '' },
