@@ -16,6 +16,8 @@ import { computeMissingFields } from "@/lib/videoReadiness";
 import { getSmartDefaults } from "@/lib/ownerLearning";
 import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
 import { toast } from "@/hooks/use-toast";
+import { VideoClassificationFields } from './VideoClassificationFields';
+import { categoryToSkillDomain, isValidVideoClassification, type VideoCategory, type VideoSport } from '@/lib/videoCategoricalTaxonomy';
 
 interface Props {
   tags: LibraryTag[];
@@ -24,13 +26,6 @@ interface Props {
   /** When true, smart defaults pre-fill domain & format and Step 4 review is skipped. */
   fastMode?: boolean;
 }
-
-const SPORTS = ['baseball', 'softball', 'both'] as const;
-const CATEGORIES = [
-  'hitting', 'pitching', 'fielding', 'catching', 'baserunning',
-  'throwing', 'strength', 'mobility', 'recovery', 'mental game',
-  'game iq', 'practice design', 'coaching concepts',
-];
 
 const STEPS = [
   { n: 1, title: 'Upload Video' },
@@ -57,8 +52,9 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
 
   // Step 2 — pre-filled by smart defaults in Fast Mode (only suggests; owner can change)
   const [title, setTitle] = useState('');
-  const [sport, setSport] = useState<string>('');
-  const [category, setCategory] = useState('');
+  const [sport, setSport] = useState<VideoSport | ''>('');
+  const [category, setCategory] = useState<VideoCategory | ''>('');
+  const [subSkill, setSubSkill] = useState('');
   const [description, setDescription] = useState('');
 
   // Foundation toggle (long-form A–Z philosophy videos)
@@ -82,7 +78,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
   const step1Valid = mode === 'link'
     ? externalUrl.trim().length > 0 && /^https?:\/\//.test(externalUrl.trim())
     : !!videoFile;
-  const step2Valid = title.trim().length > 0 && !!sport;
+  const step2Valid = title.trim().length > 0 && isValidVideoClassification(sport, category, subSkill);
   const step3Missing = isFoundation ? [] : computeMissingFields({
     videoFormat: structured.videoFormat,
     skillDomains: structured.skillDomains,
@@ -125,7 +121,6 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
 
   const sportArray = useMemo(() => {
     if (!sport) return [];
-    if (sport === 'both') return ['baseball', 'softball'];
     return [sport];
   }, [sport]);
 
@@ -142,7 +137,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
     const result = await uploadVideo({
       title: title.trim(),
       description: finalDescription || undefined,
-      tags: [],
+       tags: [subSkill],
       sport: sportArray,
       category: category || undefined,
       videoFile: videoFile || undefined,
@@ -161,7 +156,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       // Reset
       setStep(1);
       setMode('link'); setExternalUrl(''); setVideoFile(null);
-      setTitle(''); setSport(''); setCategory(''); setDescription('');
+       setTitle(''); setSport(''); setCategory(''); setSubSkill(''); setDescription('');
       setStructured(emptyStructuredTagState);
       setIsFoundation(false);
       setFoundationMeta(EMPTY_FOUNDATION_META);
@@ -297,38 +292,20 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Sport</Label>
-            <div className="flex gap-1.5 flex-wrap">
-              {SPORTS.map(s => (
-                <Badge
-                  key={s}
-                  variant={sport === s ? 'default' : 'outline'}
-                  className="cursor-pointer capitalize"
-                  onClick={() => setSport(s)}
-                >
-                  {s}
-                </Badge>
-              ))}
-            </div>
-            <p className="text-[10px] text-muted-foreground">Pick one. "Both" covers baseball + softball.</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Category (optional)</Label>
-            <div className="flex flex-wrap gap-1">
-              {CATEGORIES.map(c => (
-                <Badge
-                  key={c}
-                  variant={category === c ? 'default' : 'outline'}
-                  className="cursor-pointer text-[10px] capitalize"
-                  onClick={() => setCategory(prev => (prev === c ? '' : c))}
-                >
-                  {c}
-                </Badge>
-              ))}
-            </div>
-          </div>
+          <VideoClassificationFields
+            sport={sport}
+            category={category}
+            subSkill={subSkill}
+            onChange={(next) => {
+              setSport(next.sport);
+              setCategory(next.category);
+              setSubSkill(next.subSkill);
+              if (next.category) {
+                const domain = categoryToSkillDomain(next.category);
+                if (domain) setStructured((current) => ({ ...current, skillDomains: [domain as any], tagAssignments: {} }));
+              }
+            }}
+          />
 
           <details className="group">
             <summary className="text-[11px] cursor-pointer text-muted-foreground hover:text-foreground select-none">
@@ -397,6 +374,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
             <Row label="Title">{title}</Row>
             <Row label="Sport"><span className="capitalize">{sport}</span></Row>
             {category && <Row label="Category"><span className="capitalize">{category}</span></Row>}
+            {subSkill && <Row label="Sub-skill">{subSkill}</Row>}
             <Row label="Format"><span className="capitalize">{structured.videoFormat.replace(/_/g, ' ')}</span></Row>
             <Row label="Skills">
               <div className="flex flex-wrap gap-1">

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,8 @@ import { expandPositionLooks } from '@/lib/evaluation/positionGrades';
 import { ConfirmedSummaryCard } from '@/components/evaluations/ConfirmedSummaryCard';
 import { formatAttribution } from '@/lib/evaluation/evaluatorCredentials';
 import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /**
  * Evaluations hub.
@@ -52,6 +54,17 @@ export default function Evaluations() {
     [filed],
   );
   const { data: names = {} } = useProfileNames(athleteIds);
+  const [playerFilter, setPlayerFilter] = useState('all');
+  const playerOptions = useMemo(
+    () => [...new Set(athleteIds)]
+      .map((id) => ({ id, name: names[id] ?? 'Athlete' }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [athleteIds, names],
+  );
+  const filteredFiled = useMemo(
+    () => playerFilter === 'all' ? filed : filed.filter((report) => report.user_id === playerFilter),
+    [filed, playerFilter],
+  );
 
   // Child rows: multi-position looks and per-batting-side offensive grades.
   const reportIds = useMemo(
@@ -132,12 +145,29 @@ export default function Evaluations() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <ReportAccordionList
-                    reports={filed}
-                    details={details}
-                    attributionFor={(r) => names[r.user_id] ?? 'Athlete'}
-                    showConfirmationStatus
-                  />
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="evaluation-player-filter">Player</Label>
+                      <Select value={playerFilter} onValueChange={setPlayerFilter}>
+                        <SelectTrigger id="evaluation-player-filter" aria-label="Filter evaluations by player">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All players</SelectItem>
+                          {playerOptions.map((player) => (
+                            <SelectItem key={player.id} value={player.id}>{player.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <ReportAccordionList
+                      reports={filteredFiled}
+                      details={details}
+                      attributionFor={(r) => names[r.user_id] ?? 'Athlete'}
+                      showConfirmationStatus
+                      emptyLabel="No evaluations filed for this player."
+                    />
+                  </div>
                 )}
 
               </TabsContent>
