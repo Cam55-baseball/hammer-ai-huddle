@@ -141,7 +141,15 @@ export default function ScoutEvaluation() {
     })();
   }, [athleteId]);
 
-  const splitSides = isSwitchHitter && sawBothSides;
+  // One toggle, one meaning: a switch hitter is graded per side. Sides the
+  // evaluator did not see are left blank or dismissed.
+  const splitSides = isSwitchHitter && batSidesShown.length > 0;
+  const pitchSplitTools = useMemo(() => pitchingSideSplitTools(sport), [sport]);
+  const splitPitching = includePitching && isAmbiPitcher && pitchSidesShown.length > 0;
+  const pitchSplitKeys = useMemo(
+    () => new Set(pitchSplitTools.map((t) => t.key)),
+    [pitchSplitTools],
+  );
 
   /** Groups rendered as flat single-value tools. Defense moves to position looks;
    *  side-split offensive tools move to the per-side grid when both sides were seen. */
@@ -153,6 +161,7 @@ export default function ScoutEvaluation() {
         if (g.id === 'defense') continue; // handled per position look
         const tools = g.tools.filter((t) => {
           if (splitSides && (SIDE_SPLIT_KEYS as readonly string[]).includes(t.key)) return false;
+          if (splitPitching && prefix === 'pit' && pitchSplitKeys.has(t.key)) return false;
           if (seen.has(t.key)) return false;
           seen.add(t.key);
           return true;
@@ -164,12 +173,13 @@ export default function ScoutEvaluation() {
     if (includePosition) push(positionPlayerGroups(), 'pos');
     if (includePitching) push(pitchingGroups(sport), 'pit');
     return out;
-  }, [includePosition, includePitching, sport, splitSides]);
+  }, [includePosition, includePitching, sport, splitSides, splitPitching, pitchSplitKeys]);
 
   const flatTools = useMemo(() => flatGroups.flatMap((g) => g.tools), [flatGroups]);
   const gradedCount = flatTools.filter((t) => current[t.key] != null || future[t.key] != null).length;
 
-  const sideKey = (side: BatSide, key: string, fut: boolean) => `${side}:${key}${fut ? '_future' : ''}`;
+  const sideKey = (side: Hand, key: string, fut: boolean) => `${side}:${key}${fut ? '_future' : ''}`;
+
 
   const setLook = (key: string, patch: Partial<PositionLookDraft>) =>
     setLooks((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
