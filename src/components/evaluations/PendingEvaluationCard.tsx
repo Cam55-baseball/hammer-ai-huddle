@@ -1,3 +1,4 @@
+import { reportTypeLabel } from '@/lib/evaluation/scoutingTools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -105,7 +106,7 @@ export function PendingEvaluationCard({ pending }: { pending: PendingEvaluation 
             <Badge variant="secondary" className="capitalize">{pending.evaluator_role}</Badge>
           )}
           <Badge variant="outline">
-            {pending.grade_type === 'pitching' ? 'Pitching report' : 'Position player report'}
+            {reportTypeLabel(pending.grade_type)}
           </Badge>
         </div>
 
