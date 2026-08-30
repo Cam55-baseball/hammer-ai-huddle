@@ -60,7 +60,15 @@ export function useOrgStandards() {
   };
 
   const createStandard = useMutation({
-    mutationFn: async (input: { org_name: string; label: string; sport: string; active: boolean }) => {
+    mutationFn: async (input: {
+      org_name: string;
+      label: string;
+      sport: string;
+      active: boolean;
+      recruiting_role: RecruitingRole;
+      target_positions: string[];
+      position_match_logic: PositionMatchLogic;
+    }) => {
       const { data, error } = await supabase
         .from("org_standards")
         .insert({ ...input, org_user_id: user!.id })
@@ -102,6 +110,9 @@ export function useOrgStandards() {
           org_name: source.org_name,
           label: `${source.label} (copy)`,
           sport: source.sport,
+          recruiting_role: source.recruiting_role,
+          target_positions: source.target_positions ?? [],
+          position_match_logic: source.position_match_logic,
           // A clone starts inactive so a half-renamed profile never matches anyone.
           active: false,
         })
@@ -111,7 +122,7 @@ export function useOrgStandards() {
 
       const { data: sourceCriteria, error: readError } = await supabase
         .from("org_standard_criteria")
-        .select("field, operator, value")
+        .select("field, operator, value, is_mandatory")
         .eq("standard_id", source.id);
       if (readError) throw readError;
 
@@ -122,6 +133,7 @@ export function useOrgStandards() {
             field: c.field,
             operator: c.operator,
             value: c.value as never,
+            is_mandatory: c.is_mandatory,
           })),
         );
         if (copyError) throw copyError;
@@ -186,13 +198,31 @@ export function useStandardCriteria(standardId: string | null) {
   };
 
   const addCriterion = useMutation({
-    mutationFn: async (input: { field: string; operator: StandardOperator; value: unknown }) => {
+    mutationFn: async (input: {
+      field: string;
+      operator: StandardOperator;
+      value: unknown;
+      is_mandatory: boolean;
+    }) => {
       const { error } = await supabase.from("org_standard_criteria").insert({
         standard_id: standardId!,
         field: input.field,
         operator: input.operator,
         value: input.value as never,
+        is_mandatory: input.is_mandatory,
       });
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  /** Flip a criterion between mandatory (gates the match) and preferred. */
+  const setCriterionMandatory = useMutation({
+    mutationFn: async ({ id, is_mandatory }: { id: string; is_mandatory: boolean }) => {
+      const { error } = await supabase
+        .from("org_standard_criteria")
+        .update({ is_mandatory })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: invalidate,
@@ -206,7 +236,7 @@ export function useStandardCriteria(standardId: string | null) {
     onSuccess: invalidate,
   });
 
-  return { criteria, addCriterion, deleteCriterion };
+  return { criteria, addCriterion, deleteCriterion, setCriterionMandatory };
 }
 
 /** Athlete side: standards this user has matched. */
@@ -218,7 +248,9 @@ export function useMyStandardMatches() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("standard_matches")
-        .select("id, matched_at, standard_id, org_standards(label, org_name, sport, active)")
+        .select(
+          "id, matched_at, standard_id, org_standards(label, org_name, sport, active, recruiting_role, target_positions)",
+        )
         .eq("athlete_user_id", user!.id)
         .order("matched_at", { ascending: false });
       if (error) throw error;
@@ -226,7 +258,14 @@ export function useMyStandardMatches() {
         id: string;
         matched_at: string;
         standard_id: string;
-        org_standards: { label: string; org_name: string; sport: string; active: boolean } | null;
+        org_standards: {
+          label: string;
+          org_name: string;
+          sport: string;
+          active: boolean;
+          recruiting_role: string;
+          target_positions: string[] | null;
+        } | null;
       }>;
     },
   });
