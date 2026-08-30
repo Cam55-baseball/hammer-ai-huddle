@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getEmbedInfo, detectPlatform } from "@/lib/videoEmbed";
+import { getEmbedInfo, detectPlatform, isDirectVideoFile, firstFrameSrc } from "@/lib/videoEmbed";
 import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 
 interface VideoCardProps {
