@@ -58,8 +58,8 @@ describe('EvaluationReportCard side splits', () => {
     expect(screen.getByText('Right-handed AB')).toBeTruthy();
     expect(screen.getByText('Left-handed AB')).toBeTruthy();
     expect(screen.getAllByText('Switch hitter').length).toBeGreaterThan(0);
-    // Blended "Hit" row must not appear outside the per-side sections.
-    expect(screen.queryByText(/^Hit$/)).toBeNull();
+    // Blended "Hit" row is suppressed — the only two are the per-side rows.
+    expect(screen.getAllByText(/^Hit$/).length).toBe(2);
   });
 
   it('renders ambidextrous pitching grades per throwing arm and hides blended rows', () => {
