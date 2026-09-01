@@ -189,6 +189,9 @@ const Auth = () => {
           const redirectTarget = resolveRedirect();
           if (redirectTarget) {
             setTimeout(() => navigate(redirectTarget, { replace: true }), 0);
+          } else if (staffOnboardingPath) {
+            const path = staffOnboardingPath;
+            setTimeout(() => navigate(path, { replace: true }), 0);
           } else if (isScout) {
             setTimeout(() => navigate("/scout-dashboard", { replace: true }), 0);
           } else if (!hasCompletedOnboarding) {
