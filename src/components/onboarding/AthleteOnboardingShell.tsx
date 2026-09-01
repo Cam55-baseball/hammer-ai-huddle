@@ -27,7 +27,11 @@ interface Props {
   /** Optional "x of y answered" counter shown under the step row. */
   answeredCount?: number;
   totalAnswerable?: number;
+  /** Optional header overrides so non-athlete roles get their own framing. */
+  eyebrow?: string;
+  title?: string;
 }
+
 
 export function AthleteOnboardingShell({
   stepIndex,
@@ -40,7 +44,10 @@ export function AthleteOnboardingShell({
   stepStatus,
   answeredCount,
   totalAnswerable,
+  eyebrow = "Welcome to your organism",
+  title = "First-run setup",
 }: Props) {
+
   const navigate = useNavigate();
   const handleExit = async () => {
     try {
@@ -75,9 +82,10 @@ export function AthleteOnboardingShell({
             )}
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Welcome to your organism
+                {eyebrow}
               </p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">First-run setup</h1>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
+
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={handleExit} className="shrink-0">
