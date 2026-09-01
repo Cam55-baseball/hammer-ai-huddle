@@ -806,7 +806,7 @@ When sequence is correct, the pitch should feel EFFORTLESS and AUTOMATIC due to 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
 - **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (critical defect)
-- **CRITICAL CHECK:** Flag if chest is already facing home plate when foot lands (this IS early rotation - score CAPPED at 70)
+- **CRITICAL CHECK:** Flag if chest is already facing home plate when foot lands (this IS early rotation - critical defect)
 - **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (critical defect)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If chest was facing home plate at landing:** Explain that the correct position is sideways - glove shoulder points at catcher, chest stays closed until AFTER foot plants
@@ -1501,7 +1501,7 @@ When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
 - **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (critical defect)
-- **CRITICAL CHECK:** Flag if chest is already facing target when foot lands (this IS early rotation - score CAPPED at 65)
+- **CRITICAL CHECK:** Flag if chest is already facing target when foot lands (this IS early rotation - critical defect)
 - **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (critical defect)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If chest was facing target at landing:** Explain that the correct position is sideways - glove shoulder points at target, chest stays closed until AFTER foot plants
