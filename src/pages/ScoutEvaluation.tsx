@@ -156,9 +156,18 @@ export default function ScoutEvaluation() {
   const { toast } = useToast();
 
   const athleteId = paramAthleteId ?? searchParams.get('athleteId') ?? '';
+  // Prospect mode: a full report on someone who has no Hammers account yet.
+  // It is stored unlinked and can be attached to a real profile later.
+  const prospectMode = !athleteId;
 
   const [athleteName, setAthleteName] = useState<string | null>(null);
   const [sport, setSport] = useState<string>('baseball');
+  const [prospectName, setProspectName] = useState('');
+  const [prospectTeam, setProspectTeam] = useState('');
+  const [prospectGradYear, setProspectGradYear] = useState('');
+  const [prospectPosition, setProspectPosition] = useState('');
+  const [prospectContact, setProspectContact] = useState('');
+
 
   // Independent sections — a two-way player gets both on ONE report.
   const [includePosition, setIncludePosition] = useState(true);
