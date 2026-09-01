@@ -583,8 +583,9 @@ export default function AnalyzeVideo() {
       } catch (poseErr: any) {
         console.error('[D-POSE] pose inference failed:', poseErr);
         // Do not block the rest of the analysis flow — surface honest failure.
-        toast.error('Pose inference failed — see console for details');
+        toast.error(UPLOAD_ERRORS.poseFailed);
       }
+
     }
     // ===== END FRAME EXTRACTION =====
 
