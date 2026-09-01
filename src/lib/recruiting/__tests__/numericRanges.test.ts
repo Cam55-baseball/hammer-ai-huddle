@@ -15,14 +15,14 @@ describe("height options", () => {
   it("starts at <3' and lists every inch to 8'0\"", () => {
     expect(h.min[0]).toMatchObject({ label: "<3'", unbounded: true });
     expect(h.min[1].label).toBe("3'0\"");
-    expect(h.min.at(-1)!.label).toBe("8'0\"");
+    expect(h.min[h.min.length - 1].label).toBe("8'0\"");
     // 36..96 inclusive = 61 values, plus the bookend.
     expect(h.min).toHaveLength(62);
   });
 
   it("mirrors on the max side and tops out at 8'+", () => {
     expect(h.max[0].label).toBe("3'0\"");
-    expect(h.max.at(-1)).toMatchObject({ label: "8'+", unbounded: true });
+    expect(h.max[h.max.length - 1]).toMatchObject({ label: "8'+", unbounded: true });
   });
 
   it("formats inches as feet and inches", () => {
@@ -40,7 +40,7 @@ describe("every numeric field has paired options", () => {
 
   it("grades use the 20-80 scale", () => {
     expect(GRADE_RANGE.min.some((o) => o.label === "20")).toBe(true);
-    expect(GRADE_RANGE.max.at(-1)!.label).toBe("80+");
+    expect(GRADE_RANGE.max[GRADE_RANGE.max.length - 1].label).toBe("80+");
     expect(optionsForField("fastball_grade", "grade")).toBe(GRADE_RANGE);
   });
 
