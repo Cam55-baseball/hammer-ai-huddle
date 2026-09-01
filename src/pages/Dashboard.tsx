@@ -59,7 +59,11 @@ function OrgBadge() {
  * rest of the day. Reads the same canonical organism context as /command, so
  * Dashboard and Command Center stay in lockstep — never random.
  */
-function DashboardTodayPlan() {
+function DashboardTodayPlan({
+  beforeStartPortalTarget,
+}: {
+  beforeStartPortalTarget: HTMLElement | null;
+}) {
   const dayKey = `hammer.today.dashboard.open.${new Date().toISOString().slice(0, 10)}`;
   const [open, setOpen] = useState<boolean>(() => {
     try {
@@ -94,7 +98,7 @@ function DashboardTodayPlan() {
         <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
           <div className="p-3 sm:p-4 border-t border-border/60 space-y-3">
             <TodaysHammerPick />
-            <HammerDailyPlan />
+            <HammerDailyPlan beforeStartPortalTarget={beforeStartPortalTarget} />
             {/* HumanPerformanceCard moved inside HammerDailyPlan (positioned under Today's Wisdom). */}
           </div>
         </CollapsibleContent>
@@ -124,6 +128,7 @@ export default function Dashboard() {
   const [pendingSportSwitch, setPendingSportSwitch] = useState<SportType | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [beforeStartPortalTarget, setBeforeStartPortalTarget] = useState<HTMLDivElement | null>(null);
   
   // Tier-based display: only the purchased tier card shows "Start Training"
   const activeTier = getActiveTier(subscribedModules, selectedSport);
@@ -594,16 +599,19 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
-        {/* Order: Before You Start + Hammers Today Plan (both rendered by
-            DashboardTodayPlan) → spacing → game plan controls + card. */}
+        {/* Exact athlete order: Identity → standalone Before You Start →
+            Hammers Today Plan. The ref-backed host prevents portal timing races. */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
 
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <section className="pb-2">
-            <DashboardTodayPlan />
-          </section>
+          <>
+            <div ref={setBeforeStartPortalTarget} className="pb-3 sm:pb-5" />
+            <section className="pb-2">
+              <DashboardTodayPlan beforeStartPortalTarget={beforeStartPortalTarget} />
+            </section>
+          </>
         )}
 
         {/* Hard visual break so the daily plan and the game plan read as two
