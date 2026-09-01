@@ -126,33 +126,31 @@ async function buildReplayFingerprint(parts: {
 // IMPORTANT: back_leg_not_facing_target does NOT apply to HITTING modules.
 // For hitting: back hip rotates AFTER front foot lands (not at landing like pitching/throwing).
 const VIOLATION_KEYWORDS: Record<string, string[]> = {
+  // Only UNAMBIGUOUS assertions belong here. Weak substrings such as
+  // "before front foot", "shoulders already", "continues to rotate" and
+  // "not inline with" also appear in instructional/negated coaching prose
+  // ("shoulders should not rotate before front foot lands"), which forced
+  // false violations and collapsed scores onto the cap constant.
   // NOTE: back_leg_not_facing_target keywords are only scanned for pitching/throwing, NOT hitting
   back_leg_not_facing_target: [
     "back leg not facing", "back hip not facing", "back foot not facing",
-    "back leg still rotating", "back hip still rotating", "hips haven't reached",
-    "hips have not reached", "hip not inline", "hip not in line",
-    "back leg isn't facing", "back hip isn't facing", "back leg continues",
-    "back foot continues", "hip rotation incomplete", "hip hasn't reached",
-    "back leg not fully facing", "back hip not fully", "continues to rotate",
-    "still rotating after", "not inline with", "not in line with target",
-    "hip not facing", "back knee not facing", "hip rotation not complete"
+    "back leg still rotating", "back hip still rotating",
+    "back leg isn't facing", "back hip isn't facing",
+    "back leg not fully facing", "back hip not fully",
+    "back knee not facing", "hip rotation not complete",
+    "hip rotation incomplete",
   ],
   // REMOVED shoulders_not_aligned - this was causing false positives and contradicting feedback.
-  // For baseball pitching and throwing: if chest faces home plate at landing, that's EARLY ROTATION.
-  // Correct position: shoulders LATERAL (sideways), glove shoulder points at target, chest closed.
   early_shoulder_rotation: [
-    "shoulder rotation before", "shoulders rotate before", "early shoulder rotation",
-    "rotating before landing", "shoulders rotating early", "premature shoulder rotation",
-    "shoulders open before", "shoulder rotation begins before", "shoulders already",
-    "shoulder already rotating", "rotating too early", "before foot lands",
-    "before front foot", "rotation starts early",
-    // NEW: Keywords for detecting when chest/shoulders are already rotated at landing
-    "chest already facing", "chest was facing", "chest facing home plate",
-    "shoulders already turned", "shoulders were open", "shoulders already open",
-    "upper body rotated early", "chest facing target at landing", "chest was open",
-    "shoulders not sideways", "chest not sideways"
+    "shoulders rotate before", "early shoulder rotation",
+    "shoulders rotating early", "premature shoulder rotation",
+    "shoulders open before", "shoulder rotation begins before",
+    "shoulders already started to turn", "shoulders have already started",
+    "chest was facing the catcher", "chest facing home plate at landing",
+    "shoulders already turned", "shoulders were already open",
   ]
 };
+
 
 // Scan feedback text for violation keywords and return detected violations
 // NOTE: module parameter used to skip back_leg check for hitting
@@ -2295,58 +2293,42 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         
         console.log(`[VIOLATIONS] Module: ${module}, After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
-        // ============ STRICT SCORE CAPS - MAX 60 FOR EITHER ALIGNMENT VIOLATION ============
-        // Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
-        if (violationCount >= 2) {
-          const cappedScore = Math.min(efficiency_score, 55);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Multiple critical violations (${violationCount}) - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
+        // ============ GRADED VIOLATION PENALTIES ============
+        // Previously these were FLAT CEILINGS (Math.min(score, 55/60/65/70)).
+        // Because ~90% of analyses flag 2+ violations, every one of those
+        // collapsed onto the literal constant 55 — a fabricated-looking
+        // constant that destroyed all variance between real athletes.
+        // Replaced with deductions off the model's own score, so the output
+        // still moves with the input while violations still cost real points.
+        const VIOLATION_PENALTY: Record<string, number> = {
+          early_shoulder_rotation: 18,
+          shoulders_not_aligned: 12,
+          back_leg_not_facing_target: 12,
+          hands_pass_elbow_early: 8,
+          front_shoulder_opens_early: 8,
+        };
+        const SCORE_FLOOR = 20;
+
+        let penalty = 0;
+        const appliedPenalties: string[] = [];
+        for (const [key, cost] of Object.entries(VIOLATION_PENALTY)) {
+          if (!violations[key]) continue;
+          // back leg / shoulder alignment checks do not apply to hitting
+          if (module === 'hitting' && (key === 'back_leg_not_facing_target' || key === 'shoulders_not_aligned')) continue;
+          penalty += cost;
+          appliedPenalties.push(`${key}:-${cost}`);
+        }
+
+        if (penalty > 0) {
+          const penalized = Math.max(SCORE_FLOOR, Math.round(efficiency_score - penalty));
+          if (penalized !== efficiency_score) {
+            console.log(`[SCORE PENALTY] ${appliedPenalties.join(', ')} → ${efficiency_score} to ${penalized}`);
+            efficiency_score = penalized;
             scoreWasAdjusted = true;
           }
         }
-        // BACK LEG CHECK - Only applies to pitching/throwing, NOT hitting
-        else if (violations.back_leg_not_facing_target && module !== 'hitting') {
-          const cappedScore = Math.min(efficiency_score, 60);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Back leg not facing target - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
-        else if (violations.shoulders_not_aligned) {
-          const cappedScore = Math.min(efficiency_score, 60);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Shoulders not aligned - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
-        else if (violations.early_shoulder_rotation) {
-          const cappedScore = Math.min(efficiency_score, 65);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Early shoulder rotation - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
-        else if (violations.hands_pass_elbow_early) {
-          const cappedScore = Math.min(efficiency_score, 70);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Hands pass elbow early - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
-        else if (violations.front_shoulder_opens_early) {
-          const cappedScore = Math.min(efficiency_score, 70);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Front shoulder opens early - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
-        // ============ END STRICT SCORE CAPS ============
+        // ============ END GRADED VIOLATION PENALTIES ============
+
         
         // ============ HIGH SCORE SKEPTICISM CHECK ============
         // If AI gives high score (>75) with zero violations, but feedback mentions issues - be suspicious
