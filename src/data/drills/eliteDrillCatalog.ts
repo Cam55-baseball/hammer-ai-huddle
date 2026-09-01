@@ -251,7 +251,7 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Arm rides the body", "No stop, no rush"],
     dosage: "2 x 10 throws",
     equipment: ["none"],
-    violationKeys: ["early_shoulder_rotation"],
+    violationKeys: ["early_shoulder_rotation", "front_shoulder_opens_early"],
     pieV2Signals: ["separation", "tempo"],
     movementPatterns: ["arm_lag", "early_shoulder_rotation"],
   },
