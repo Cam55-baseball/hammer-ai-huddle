@@ -102,6 +102,8 @@ const ParentRecruitingAuthorization = lazyWithRetry(
   () => import("./pages/ParentRecruitingAuthorization"),
 );
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
+const ScoutOnboarding = lazyWithRetry(() => import("./pages/ScoutOnboarding"));
+const CoachOnboarding = lazyWithRetry(() => import("./pages/CoachOnboarding"));
 const HammerRecall = lazyWithRetry(() => import("./pages/HammerRecall"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
@@ -331,6 +333,8 @@ const App = () => {
                 }
               />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
+              <Route path="/onboarding/scout" element={<ScoutOnboarding />} />
+              <Route path="/onboarding/coach" element={<CoachOnboarding />} />
               <Route path="/hammer/recall" element={<HammerRecall />} />
               <Route path="/hammer/recall/:threadId" element={<HammerRecall />} />
               {/* Wave 3 — longitudinal continuity surfaces (capability-gated) */}

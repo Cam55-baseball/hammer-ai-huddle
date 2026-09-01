@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHydrationReminders } from "@/hooks/useHydrationReminders";
 import { useUnifiedDataSync } from "@/hooks/useUnifiedDataSync";
 import { OnboardingResumeBanner } from "@/components/onboarding/OnboardingResumeBanner";
+import { StaffOnboardingResumeBanner } from "@/components/onboarding/StaffOnboardingResumeBanner";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -140,6 +141,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-w-full box-border">
             <OfflineIndicator />
             <OnboardingResumeBanner />
+            <StaffOnboardingResumeBanner />
             {children}
           </main>
         </SidebarInset>

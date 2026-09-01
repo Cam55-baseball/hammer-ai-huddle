@@ -161,7 +161,23 @@ const Auth = () => {
           const hasFirstEvent = (asbEventCheck.count ?? 0) > 0;
           const hasCompletedOnboarding = hasFirstEvent || hasRole;
           const isScout = rolesCheck.data?.some((r: { role: string }) => r.role === 'scout');
+          const isCoach = rolesCheck.data?.some((r: { role: string }) => r.role === 'coach');
 
+          // Staff first-run gate: a scout/coach who has never filled in their
+          // canonical role context row lands in their own onboarding flow —
+          // never the athlete flow. Completion is derived, never a stored flag.
+          let staffOnboardingPath: string | null = null;
+          if (isScout || isCoach) {
+            const table = isScout ? 'scout_context' : 'coach_context';
+            const { data: ctx } = await supabase
+              .from(table)
+              .select('org_name')
+              .eq('user_id', data.user.id)
+              .maybeSingle();
+            if (!ctx?.org_name) {
+              staffOnboardingPath = isScout ? '/onboarding/scout' : '/onboarding/coach';
+            }
+          }
 
           toast({
             title: t('auth.welcomeBack'),
@@ -173,6 +189,9 @@ const Auth = () => {
           const redirectTarget = resolveRedirect();
           if (redirectTarget) {
             setTimeout(() => navigate(redirectTarget, { replace: true }), 0);
+          } else if (staffOnboardingPath) {
+            const path = staffOnboardingPath;
+            setTimeout(() => navigate(path, { replace: true }), 0);
           } else if (isScout) {
             setTimeout(() => navigate("/scout-dashboard", { replace: true }), 0);
           } else if (!hasCompletedOnboarding) {
