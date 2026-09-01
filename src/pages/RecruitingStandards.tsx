@@ -30,6 +30,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { RecruiterContactCard } from "@/components/recruiting/RecruiterContactCard";
+import { NumericRangePicker } from "@/components/recruiting/NumericRangePicker";
+import {
+  isInvertedRange,
+  optionsForField,
+  rangeToCriteria,
+} from "@/lib/recruiting/numericRanges";
+
 import { RevealSection } from "@/components/analyze/RevealSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
