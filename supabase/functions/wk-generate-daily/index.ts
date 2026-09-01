@@ -808,10 +808,11 @@ const handler = async (req: Request): Promise<Response> => {
     const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {
       for (const s of slugs) {
         const m = lib.find((x) => x.slug === s);
-        if (eligible(m) && coerceCanonicalCategory(m as any) === category) return m;
+        if (eligibleLift(m) && coerceCanonicalCategory(m as any) === category) return m;
       }
       return undefined;
     };
+
     const pickCat = (cat: string): MovementRow | undefined =>
       lib.find((m) => m.category === cat && eligible(m));
 
