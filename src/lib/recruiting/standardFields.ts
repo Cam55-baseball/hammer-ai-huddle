@@ -148,6 +148,14 @@ export function fieldLabel(key: string): string {
   return fieldByKey(key)?.label ?? key;
 }
 
+/** Height reads as feet/inches everywhere it is shown back to a scout. */
+export function renderFieldValue(field: string, value: unknown): string {
+  if (field === "height_inches" && typeof value === "number" && Number.isFinite(value)) {
+    return `${Math.floor(value / 12)}'${value % 12}"`;
+  }
+  return String(value);
+}
+
 export const OPERATOR_LABELS: Record<StandardOperator, string> = {
   eq: "equals",
   gte: "at least",
@@ -160,7 +168,9 @@ export function describeCriterion(
   operator: StandardOperator,
   value: unknown,
 ): string {
-  const rendered = Array.isArray(value) ? value.join(", ") : String(value);
+  const rendered = Array.isArray(value)
+    ? value.map((v) => renderFieldValue(field, v)).join(", ")
+    : renderFieldValue(field, value);
   return `${fieldLabel(field)} ${OPERATOR_LABELS[operator]} ${rendered}`;
 }
 
@@ -189,8 +199,10 @@ export function summarizeCriterion(
   operator: StandardOperator,
   value: unknown,
 ): string {
-  const rendered = Array.isArray(value) ? value.join(" / ") : String(value);
-  const suffix = field === "height_inches" ? "in" : "";
+  const rendered = Array.isArray(value)
+    ? value.map((v) => renderFieldValue(field, v)).join(" / ")
+    : renderFieldValue(field, value);
+  const suffix = "";
   return `${fieldLabel(field).replace(" (inches)", "").replace(" (lbs)", "")} ${SUMMARY_SYMBOLS[operator]} ${rendered}${suffix}`;
 }
 
