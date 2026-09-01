@@ -357,22 +357,17 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
             ? "No fast-twitch work today — prep only, we're protecting the CNS."
             : ""
           : `Fast-twitch layer: ${Math.round(built.singleLegShare * 100)}% single-leg. Baseball and softball are one-leg, quick-burst games — quickness is built one leg at a time.`;
-      const swapNote = built.diagnostics
-        .filter((d) => d.code === "equipment_substitution")
-        .map((d) => d.detail)
-        .join(" ");
+      // Equipment-substitution diagnostics remain on `built.diagnostics` for
+      // internal replay/debugging only — they are never surfaced in athlete
+      // copy. Each drill already carries its own "You need: …" line.
       return {
         modality,
         title: titleByContext[contextKey] ?? titleByContext.default,
         why: [whyByContext[contextKey] ?? whyByContext.default, twitchNote, hpi.qiDirective]
           .filter(Boolean)
           .join(" "),
-        roadmapReason: [
-          `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
-          swapNote,
-        ]
-          .filter(Boolean)
-          .join(" "),
+        roadmapReason: `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
+
         phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
