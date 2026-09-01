@@ -397,6 +397,57 @@ function HammerDailyPlanBody() {
   );
 
   return (
+    <div className="space-y-6">
+      {/* Before you start — standalone section ABOVE the plan card. */}
+      <BeforeYouStartSection>
+        {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
+        <ErrorBoundary>
+          <ScheduledPriorityStrip />
+        </ErrorBoundary>
+        {/* 1. Schedule & What Changed */}
+        <ScheduleDropdownWrapper />
+
+        {/* 2. Today's Wisdom */}
+        <TodaysWisdomCard />
+        {/* 3. Human Performance Intelligence */}
+        <HumanPerformanceCard />
+        {/* 4. Start Line (DailyIntentHeader) */}
+        <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
+        {/* 5. Ask Hammer — Recall & Clarity */}
+        <button
+          type="button"
+          onClick={() => navigate("/hammer/recall")}
+          className="flex w-full items-center justify-between rounded-md border border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 px-3 py-2 text-left hover:from-primary/15 hover:to-primary/10"
+        >
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <div>
+              <div className="text-sm font-medium">Ask Hammer — Recall & Clarity</div>
+              <div className="text-[11px] text-muted-foreground">
+                Dialogue about anything you've logged. Reset your head. Reshape today.
+              </div>
+            </div>
+          </div>
+          <span className="text-xs text-primary">Open →</span>
+        </button>
+        {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
+        {plan.blocks
+          .filter((b) => PRE_START_MODALITIES.has(b.modality))
+          .map((b) => {
+            const adj = adaptive.find((a) => a.modality === b.modality);
+            return (
+              <BlockCard
+                key={`pre-${b.modality}-${b.side ?? "x"}`}
+                block={b}
+                onNavigate={(r) => navigate(r)}
+                onEngagementChanged={bumpEngagement}
+                adaptiveNote={adj?.note}
+              />
+            );
+          })}
+        {/* Quarter / phase + weekly rhythm context */}
+        <WeeklyRoadmapStrip plan={plan} />
+      </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center justify-between gap-2">
@@ -494,58 +545,7 @@ function HammerDailyPlanBody() {
         )}
       </CardHeader>
       <CardContent className="space-y-2">
-        {/* "Before you start" — every pre-work surface behind one collapsed
-            drawer so the plan itself is the immediate focus. */}
-        <BeforeYouStartSection>
-          {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
-          <ErrorBoundary>
-            <ScheduledPriorityStrip />
-          </ErrorBoundary>
-          {/* 1. Schedule & What Changed */}
-          <ScheduleDropdownWrapper />
 
-          {/* 2. Today's Wisdom */}
-          <TodaysWisdomCard />
-          {/* 3. Human Performance Intelligence */}
-          <HumanPerformanceCard />
-          {/* 4. Start Line (DailyIntentHeader) */}
-          <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
-          {/* 5. Ask Hammer — Recall & Clarity */}
-          <button
-            type="button"
-            onClick={() => navigate("/hammer/recall")}
-            className="flex w-full items-center justify-between rounded-md border border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 px-3 py-2 text-left hover:from-primary/15 hover:to-primary/10"
-          >
-            <div className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-primary" />
-              <div>
-                <div className="text-sm font-medium">Ask Hammer — Recall & Clarity</div>
-                <div className="text-[11px] text-muted-foreground">
-                  Dialogue about anything you've logged. Reset your head. Reshape today.
-                </div>
-              </div>
-            </div>
-            <span className="text-xs text-primary">Open →</span>
-          </button>
-          {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
-          {plan.blocks
-            .filter((b) => PRE_START_MODALITIES.has(b.modality))
-            .map((b) => {
-              const adj = adaptive.find((a) => a.modality === b.modality);
-              return (
-                <BlockCard
-                  key={`pre-${b.modality}-${b.side ?? "x"}`}
-                  block={b}
-                  onNavigate={(r) => navigate(r)}
-                  onEngagementChanged={bumpEngagement}
-                  adaptiveNote={adj?.note}
-                />
-              );
-            })}
-        </BeforeYouStartSection>
-
-        {/* Weekly rhythm + in-game advisory + do-in-this-order */}
-        <WeeklyRoadmapStrip plan={plan} />
         <GpInGameAdvisoryStrip />
 
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
@@ -656,6 +656,7 @@ function HammerDailyPlanBody() {
         />
       )}
     </Card>
+    </div>
   );
 }
 

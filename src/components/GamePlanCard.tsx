@@ -1763,6 +1763,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // that transiently empty `tasks`.
   if (planHidden) {
     return (
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <GamePlanCollapseControls
+            open={planOpen}
+            onOpenChange={setPlanOpen}
+            inUse={planInUse}
+            onInUseChange={setPlanInUse}
+            idPrefix="athlete-game-plan"
+          />
+        </div>
       <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
         <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 transform rotate-45 translate-x-20 -translate-y-20" />
         <CardContent className="relative p-4 sm:p-6 space-y-4">
@@ -1779,16 +1789,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
                 </div>
               </div>
-              <GamePlanCollapseControls
-                open={planOpen}
-                onOpenChange={setPlanOpen}
-                inUse={planInUse}
-                onInUseChange={setPlanInUse}
-                tone="dark"
-                idPrefix="athlete-game-plan"
-              />
             </div>
           </div>
+
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
@@ -1816,7 +1819,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           onSuccess={refetch}
         />
       </Card>
+      </div>
     );
+
   }
 
   // Only show skeleton on initial load (when we have no tasks yet)
@@ -1844,12 +1849,24 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
 
   return (
+    <div className="space-y-3">
+      {/* Controls live ABOVE the card, in their own row, outside the card border. */}
+      <div className="flex justify-end">
+        <GamePlanCollapseControls
+          open={planOpen}
+          onOpenChange={setPlanOpen}
+          inUse={planInUse}
+          onInUseChange={setPlanInUse}
+          idPrefix="athlete-game-plan"
+        />
+      </div>
     <Card
       className={cn(
         "relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl transition-shadow duration-700",
         pulseStandard && "ring-2 ring-emerald-500/60 shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)]"
       )}
     >
+
       {/* Athletic diagonal stripe accent */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 transform rotate-45 translate-x-20 -translate-y-20" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 transform -rotate-45 -translate-x-16 translate-y-16" />
@@ -1896,14 +1913,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </span>
               </div>
             </div>
-            <GamePlanCollapseControls
-              open={planOpen}
-              onOpenChange={setPlanOpen}
-              inUse={planInUse}
-              onInUseChange={setPlanInUse}
-              tone="dark"
-              idPrefix="athlete-game-plan"
-            />
           </div>
         </div>
         
@@ -3632,7 +3641,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {/* Quick Note Dialog */}
       <QuickNoteDialog open={quickNoteOpen} onOpenChange={setQuickNoteOpen} />
     </Card>
+    </div>
   );
+
 }
 
 // ─────────────────────────────────────────────────────────────────────
