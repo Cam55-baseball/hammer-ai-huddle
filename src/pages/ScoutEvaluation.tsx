@@ -501,14 +501,26 @@ export default function ScoutEvaluation() {
           </Button>
         </div>
 
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-          <p className="font-medium">Player confirmation required</p>
-          <p className="text-muted-foreground">
-            After you file this, only you can see it until the player confirms they were present at
-            this event. Once confirmed, it opens up to the player and their accepted coaches and
-            scouts.
-          </p>
-        </div>
+        {prospectMode ? (
+          <div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-3 text-sm">
+            <p className="font-medium">Prospect with no Hammers account</p>
+            <p className="text-muted-foreground">
+              This report is saved unlinked and stays private to you. When the player signs up, open
+              Prospect reports and link it to their profile — they will then be asked to confirm they
+              were at this event before it becomes visible to anyone else.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
+            <p className="font-medium">Player confirmation required</p>
+            <p className="text-muted-foreground">
+              After you file this, only you can see it until the player confirms they were present at
+              this event. Once confirmed, it opens up to the player and their accepted coaches and
+              scouts.
+            </p>
+          </div>
+        )}
+
 
         {/* 1. Header */}
         <Card>
