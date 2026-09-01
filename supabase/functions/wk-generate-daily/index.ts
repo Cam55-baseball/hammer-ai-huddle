@@ -1302,7 +1302,24 @@ const handler = async (req: Request): Promise<Response> => {
         trainingAgeClass: (trainingAgeContext as any)?.classification,
       });
       const bsSessionName = batSpeedSelection.template.displayName;
-      for (const pick of batSpeedSelection.picks) {
+      // Graceful degradation: if a template-required category has no legal
+      // candidate for this athlete, the block is DROPPED with a reason rather
+      // than published half-built and then failed by the certifier
+      // (`bs_unresolved_template`), which used to kill the entire plan.
+      const bsMissingRequired = batSpeedSelection.warnings
+        .filter((w) => w.startsWith("bat_speed_missing_required:"))
+        .map((w) => w.split(":")[1]);
+      if (bsMissingRequired.length > 0) {
+        for (const cat of bsMissingRequired) {
+          selectionSkips.record({
+            domain: "bat_speed",
+            requirement: cat,
+            reason: skipReasonCopy("bat_speed", cat),
+          });
+        }
+      }
+      for (const pick of bsMissingRequired.length > 0 ? [] : batSpeedSelection.picks) {
+
         const m = pick.movement as unknown as MovementRow;
         const payload = buildProgressionPayload({
           state: progression,
