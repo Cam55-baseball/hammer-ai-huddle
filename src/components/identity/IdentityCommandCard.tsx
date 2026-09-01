@@ -182,27 +182,13 @@ export function IdentityCommandCard({ className }: Props) {
   }, [user?.id, today]);
 
   // ─── Open / closed ──────────────────────────────────────────────────────
-  // Auto-open on first visit of the day, when standard not confirmed,
-  // when there are unacknowledged pressure events, or after day rollover.
+  // Defaults to CLOSED. The athlete opens it when they want it; alerts are
+  // still surfaced on the collapsed header (unread dot), never auto-expanded.
   const hasAlerts = (allEvents?.length ?? 0) > 0;
-  const stampedDate = safeGet(COLLAPSE_KEY);
-  const initialOpen = !(stampedDate === today)
-    || standardConfirmed === false
-    || hasAlerts;
-  const [open, setOpen] = useState<boolean>(initialOpen);
+  void hasAlerts;
 
-  // Re-evaluate when async state arrives (standardConfirmed loads after mount)
-  useEffect(() => {
-    if (standardConfirmed === false || hasAlerts) setOpen(true);
-  }, [standardConfirmed, hasAlerts]);
+  const [open, setOpen] = useState<boolean>(false);
 
-  // Day rollover: re-open the next day even if collapsed previously.
-  useEffect(() => {
-    const stamped = safeGet(COLLAPSE_KEY);
-    if (stamped && stamped !== today) {
-      setOpen(true);
-    }
-  }, [today]);
 
   const stampCollapsed = () => safeSet(COLLAPSE_KEY, today);
   const handleToggle = () => {

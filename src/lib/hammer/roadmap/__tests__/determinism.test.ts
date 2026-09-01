@@ -17,7 +17,12 @@ import {
 // Minimal QuarterDescriptor stub for isolated math.
 const Q2_OFF = resolveSeasonQuarter(
   { seasonPhase: "off" } as never,
-  null,
+  { phaseStartedAt: "2025-12-01", resolvedPhase: "off", phaseSource: "date_window" },
+  new Date("2026-01-15T12:00:00Z"),
+);
+const UNKNOWN_PHASE = resolveSeasonQuarter(
+  { seasonPhase: null } as never,
+  { phaseStartedAt: null, resolvedPhase: null, phaseSource: "default" },
   new Date("2026-01-15T12:00:00Z"),
 );
 
@@ -33,9 +38,17 @@ describe("roadmap — determinism guards", () => {
     }
   });
 
-  it("season quarter is Q2 middle when phaseStartedAt is unknown", () => {
+  it("season quarter is derived from a real phase start date", () => {
     expect(Q2_OFF.quarter).toBe(2);
     expect(Q2_OFF.phase).toBe("off");
+    expect(Q2_OFF.phaseKnown).toBe(true);
+    expect(Q2_OFF.quarterKnown).toBe(true);
+  });
+
+  it("never fabricates a phase/quarter when there is no real season signal", () => {
+    expect(UNKNOWN_PHASE.phaseKnown).toBe(false);
+    expect(UNKNOWN_PHASE.quarterKnown).toBe(false);
+    expect(UNKNOWN_PHASE.label).toBe("Season phase not set");
   });
 
   it("quartersFromWeeks partitions ~12 weeks into 4 quarters", () => {

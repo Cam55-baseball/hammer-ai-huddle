@@ -60,6 +60,15 @@ import {
 import { prescribePitchLadder } from "@/lib/hammer/pitching/pitchLadder";
 import { pickPfpDrillsForToday } from "@/lib/hammer/pitching/pfpLibrary";
 import { clampDayTypeForRecovery } from "@/lib/hammer/pitching/recoveryClamp";
+
+function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
+  if (!p) return null;
+  if (p.startsWith("pre")) return "pre";
+  if (p.startsWith("in")) return "in";
+  if (p.startsWith("post")) return "post";
+  if (p.startsWith("off")) return "off";
+  return null;
+}
 import { currentStage, progressionFor } from "@/lib/hammer/pitching/rehabProgression";
 
 const DAY_TONE: Record<PitcherDayType, string> = {
@@ -97,7 +106,7 @@ export function PitchingCard() {
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
   const proj = useMemo(() => projectEnvelope(ctx), [ctx]);
-  const { phaseStartedAt } = useSeasonStatus();
+  const { phaseStartedAt, resolvedPhase, phaseSource } = useSeasonStatus();
   const sched = useScheduleWindow();
   const armCare = useArmCareBudget();
 
@@ -124,8 +133,17 @@ export function PitchingCard() {
   const todayIso = useMemo(() => today.toISOString().slice(0, 10), [today]);
   const rung = useMemo(() => resolveRoadmapRung(proj).descriptor.rung, [proj]);
   const quarter = useMemo(
-    () => resolveSeasonQuarter(proj, phaseStartedAt ?? null, today),
-    [proj, phaseStartedAt, today],
+    () =>
+      resolveSeasonQuarter(
+        proj,
+        {
+          phaseStartedAt: phaseStartedAt ?? null,
+          resolvedPhase: shortSeasonPhase(resolvedPhase),
+          phaseSource: phaseSource ?? null,
+        },
+        today,
+      ),
+    [proj, phaseStartedAt, resolvedPhase, phaseSource, today],
   );
 
   const recentLoad = useRecentPitchingLoad(7);

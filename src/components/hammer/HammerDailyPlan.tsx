@@ -111,6 +111,15 @@ import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTask
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
 import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
+
+function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
+  if (!p) return null;
+  if (p.startsWith("pre")) return "pre";
+  if (p.startsWith("in")) return "in";
+  if (p.startsWith("post")) return "post";
+  if (p.startsWith("off")) return "off";
+  return null;
+}
 import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
 
 /**
@@ -333,7 +342,7 @@ function HammerDailyPlanBody() {
     () => ({ isSwitchHitter, isAmbidextrousThrower }),
     [isSwitchHitter, isAmbidextrousThrower],
   );
-  const { phaseStartedAt } = useSeasonStatus();
+  const { phaseStartedAt, resolvedPhase, phaseSource } = useSeasonStatus();
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const rawPlan = useMemo(
     () =>
@@ -344,9 +353,14 @@ function HammerDailyPlanBody() {
         gpForPlan,
         identityOverride,
         new Date(),
-        { recentCompletions: recentCompletions ?? [], phaseStartedAt: phaseStartedAt ?? null },
+        {
+          recentCompletions: recentCompletions ?? [],
+          phaseStartedAt: phaseStartedAt ?? null,
+          resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
+          seasonPhaseSource: phaseSource ?? null,
+        },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
