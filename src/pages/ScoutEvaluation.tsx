@@ -534,11 +534,95 @@ export default function ScoutEvaluation() {
               <Badge variant="outline">{sport === 'softball' ? 'Softball' : 'Baseball'}</Badge>
             </div>
 
-            {!athleteId && (
-              <p className="text-sm text-destructive">
-                No athlete selected. Open this report from a player card on your dashboard.
-              </p>
+            {prospectMode && (
+              <div className="space-y-3 rounded-md border p-3">
+                <div>
+                  <p className="text-sm font-medium">Who is this report on?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Capture whatever identifies the player. Only the name is required.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-name">
+                      Player name
+                    </Label>
+                    <Input
+                      id="prospect-name"
+                      className="h-9"
+                      placeholder="First and last name"
+                      value={prospectName}
+                      onChange={(e) => setProspectName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-team">
+                      Team / school (optional)
+                    </Label>
+                    <Input
+                      id="prospect-team"
+                      className="h-9"
+                      placeholder="e.g. Central High"
+                      value={prospectTeam}
+                      onChange={(e) => setProspectTeam(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-grad">
+                      Grad year (optional)
+                    </Label>
+                    <Input
+                      id="prospect-grad"
+                      className="h-9"
+                      inputMode="numeric"
+                      placeholder="e.g. 2028"
+                      value={prospectGradYear}
+                      onChange={(e) => setProspectGradYear(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-position">
+                      Primary position (optional)
+                    </Label>
+                    <Input
+                      id="prospect-position"
+                      className="h-9"
+                      placeholder="e.g. SS"
+                      value={prospectPosition}
+                      onChange={(e) => setProspectPosition(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs" htmlFor="prospect-contact">
+                      Contact or where to find them (optional)
+                    </Label>
+                    <Input
+                      id="prospect-contact"
+                      className="h-9"
+                      placeholder="Coach name, email, travel org…"
+                      value={prospectContact}
+                      onChange={(e) => setProspectContact(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Sport</Label>
+                    <Select value={sport} onValueChange={setSport}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        <SelectItem value="baseball">Baseball</SelectItem>
+                        <SelectItem value="softball">Softball</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {prospectName.trim().length > 0 && prospectName.trim().length < 2 && (
+                  <p className="text-xs text-destructive">Enter the player's full name.</p>
+                )}
+              </div>
             )}
+
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
