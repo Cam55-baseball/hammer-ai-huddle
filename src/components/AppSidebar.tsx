@@ -101,10 +101,15 @@ export function AppSidebar() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
+  // Keys must match the `key` field on trainingModules below. The old
+  // 'hitting' key never matched anything, so hitting tiers rendered collapsed
+  // and their submodules were undiscoverable.
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
-    hitting: true,
     pitching: true,
+    '5tool': true,
+    golden2way: true,
   });
+
 
   // Check if user has vault access (any module subscription or owner/admin)
   const hasVaultAccess = isOwner || isAdmin || modules.length > 0;
