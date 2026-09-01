@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { ExternalLink } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getEmbedInfo } from "@/lib/videoEmbed";
 
@@ -13,6 +13,9 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlayerProps) {
   const info = useMemo(() => getEmbedInfo(videoUrl), [videoUrl]);
+  // A video that fails to decode/download must say so — never render nothing.
+  const [failed, setFailed] = useState(false);
+
 
   if (!videoUrl) {
     return (
