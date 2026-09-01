@@ -254,7 +254,11 @@ function scheduleLine(sched: ReturnType<typeof useScheduleWindow>): string | nul
  * canonical prescription snapshot. No card is allowed to instantiate
  * useWkDailyPrescriptions directly.
  */
-export function HammerDailyPlan() {
+export function HammerDailyPlan({
+  beforeStartPortalTarget,
+}: {
+  beforeStartPortalTarget?: HTMLElement | null;
+} = {}) {
   const { modules, loading, initialized } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const navigate = useNavigate();
@@ -299,13 +303,17 @@ export function HammerDailyPlan() {
 
   return (
     <HammersTodayProvider>
-      <HammerDailyPlanBody />
+      <HammerDailyPlanBody beforeStartPortalTarget={beforeStartPortalTarget} />
     </HammersTodayProvider>
   );
 }
 
 
-function HammerDailyPlanBody() {
+function HammerDailyPlanBody({
+  beforeStartPortalTarget,
+}: {
+  beforeStartPortalTarget?: HTMLElement | null;
+}) {
   const ctx = useHammerAthleteContext();
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const navigate = useNavigate();
@@ -413,7 +421,7 @@ function HammerDailyPlanBody() {
   return (
     <div className="space-y-6">
       {/* Before you start — standalone section ABOVE the plan card. */}
-      <BeforeYouStartSection>
+      <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
         <ErrorBoundary>
           <ScheduledPriorityStrip />

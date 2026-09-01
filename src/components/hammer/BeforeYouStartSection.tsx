@@ -9,6 +9,7 @@
  * remembered per day only (localStorage), never server state.
  */
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,13 @@ import {
 const dayKey = () =>
   `hammer.today.beforeYouStart.open.${new Date().toISOString().slice(0, 10)}`;
 
-export function BeforeYouStartSection({ children }: { children: ReactNode }) {
+export function BeforeYouStartSection({
+  children,
+  portalTarget,
+}: {
+  children: ReactNode;
+  portalTarget?: HTMLElement | null;
+}) {
   const [open, setOpen] = useState<boolean>(() => {
     try {
       return localStorage.getItem(dayKey()) === "1";
@@ -39,11 +46,7 @@ export function BeforeYouStartSection({ children }: { children: ReactNode }) {
     }
   }, [open]);
 
-  // Rendered inline, always. (A previous version portaled this card into a
-  // slot resolved once on mount — when the slot was absent at that instant the
-  // drawer vanished with no way back. No portal now: no disappearing card.)
-  return (
-
+  const card = (
     <Card className="border-border/70 bg-muted/20">
       <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex items-center justify-between gap-3 px-3 py-2.5">
@@ -76,5 +79,12 @@ export function BeforeYouStartSection({ children }: { children: ReactNode }) {
       </Collapsible>
     </Card>
   );
+
+  // Dashboard passes an explicit ref-backed host. Unlike the old one-shot
+  // document lookup, this target is supplied by React when the host mounts and
+  // remains correct across remounts. Never fall back inside Hammers Today while
+  // that host is pending, because that would recreate the nesting bug.
+  if (portalTarget === null) return null;
+  return portalTarget ? createPortal(card, portalTarget) : card;
 }
 
