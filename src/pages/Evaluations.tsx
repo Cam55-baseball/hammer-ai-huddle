@@ -22,7 +22,9 @@ import { useReportDetails } from '@/hooks/useReportDetails';
 import { expandPositionLooks } from '@/lib/evaluation/positionGrades';
 import { ConfirmedSummaryCard } from '@/components/evaluations/ConfirmedSummaryCard';
 import { formatAttribution } from '@/lib/evaluation/evaluatorCredentials';
-import { ArrowLeft, ClipboardList, Loader2 } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Loader2, UserPlus, Users } from 'lucide-react';
+import { subjectLabel } from '@/lib/evaluation/reportSubject';
+import { exportReportPdf } from '@/lib/evaluation/reportPdf';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -121,6 +123,17 @@ export default function Evaluations() {
           </div>
         </div>
 
+        {isEvaluator && (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/evaluations/prospects')}>
+              <UserPlus className="h-4 w-4 mr-2" /> Prospect reports
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/evaluations/compare')}>
+              <Users className="h-4 w-4 mr-2" /> Compare players
+            </Button>
+          </div>
+        )}
+
         <Tabs value={tab}>
           {isEvaluator ? (
             <>
@@ -163,8 +176,17 @@ export default function Evaluations() {
                     <ReportAccordionList
                       reports={filteredFiled}
                       details={details}
-                      attributionFor={(r) => names[r.user_id] ?? 'Athlete'}
+                      attributionFor={(r) => subjectLabel(r, names)}
                       showConfirmationStatus
+                      onExport={(r) =>
+                        exportReportPdf({
+                          report: r,
+                          subject: subjectLabel(r, names),
+                          positions: details?.positionsByReport[r.id] ?? [],
+                          batSides: details?.batSidesByReport[r.id] ?? [],
+                          pitchingSides: details?.pitchingSidesByReport[r.id] ?? [],
+                        })
+                      }
                       emptyLabel="No evaluations filed for this player."
                     />
                   </div>
