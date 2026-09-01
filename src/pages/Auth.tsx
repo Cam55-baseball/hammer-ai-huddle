@@ -13,6 +13,8 @@ import { z } from "zod";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
+import { resolvePostLoginRoute, withLoginTimeout } from "@/lib/auth/postLoginRoute";
+
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
