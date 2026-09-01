@@ -677,21 +677,9 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
-              {(isOwner || isAdmin) && (
-                <SidebarMenuItem className="sidebar-item">
-                  <SidebarMenuButton
-                    onClick={() => navigate('/combine/entry')}
-                    isActive={isActive('/combine/entry')}
-                    tooltip="Combine Entry"
-                    className="group sidebar-item-hover relative"
-                  >
-                    {isActive('/combine/entry') && <span className="sidebar-active-indicator" />}
-                    <ClipboardList className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
-                    <span className="transition-colors duration-200">Combine Entry</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              {/* Pre-release: Combine is fully locked (coming soon) for players and
+                  scouts alike, so it gets no sidebar entry at all. */}
+
 
             </SidebarMenu>
           </SidebarGroupContent>
