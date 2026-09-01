@@ -372,11 +372,15 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
   const [field, setField] = useState<string>(PROFILE_FIELDS[0].key);
   const [operator, setOperator] = useState<StandardOperator>("eq");
   const [raw, setRaw] = useState("");
+  const [rangeMin, setRangeMin] = useState<number | null>(null);
+  const [rangeMax, setRangeMax] = useState<number | null>(null);
   const [isMandatory, setIsMandatory] = useState(true);
   const [pingMessage, setPingMessage] = useState("");
 
   const def = fieldByKey(field);
   const allowedOps = def?.operators ?? (["eq"] as const);
+  // Numeric and grade fields are picked from paired min/max dropdowns, never typed.
+  const rangeOptions = def ? optionsForField(def.key, def.kind) : null;
 
   // Only the tools that exist for this standard's sport and role are offered.
   const gradeFields = useMemo(
@@ -398,8 +402,39 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
   const dispatch = useDispatchStandardMatchPings();
   const pendingCount = pending.data?.length ?? 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!def) return;
+
+    // Numeric path: one or two rows depending on which sides were picked.
+    if (rangeOptions) {
+      if (isInvertedRange(rangeMin, rangeMax)) {
+        toast.error("The minimum is above the maximum — flip them and try again.");
+        return;
+      }
+      const rows = rangeToCriteria(rangeMin, rangeMax);
+      if (!rows.length) {
+        toast.error("Pick a minimum, a maximum, or both.");
+        return;
+      }
+      try {
+        for (const row of rows) {
+          await addCriterion.mutateAsync({
+            field,
+            operator: row.operator,
+            value: row.value,
+            is_mandatory: isMandatory,
+          });
+        }
+        // Selections stay put so the next requirement is a two-click edit.
+        setRangeMin(null);
+        setRangeMax(null);
+        toast.success(rows.length > 1 ? "Range added" : "Criterion added");
+      } catch (e: unknown) {
+        toast.error((e as Error).message);
+      }
+      return;
+    }
+
     const value = parseCriterionValue(raw, def.kind, operator);
     if (value === null) {
       toast.error("Enter a valid value for this field.");
@@ -416,6 +451,7 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
       },
     );
   };
+
 
   const list = criteria.data ?? [];
   const mandatoryList = list.filter((c) => c.is_mandatory !== false);
