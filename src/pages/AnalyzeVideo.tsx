@@ -25,7 +25,7 @@ import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSke
 import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { useSideContext } from "@/contexts/SideContext";
-import { SideContextPicker } from "@/components/shared/SideContextPicker";
+import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 // Release-1: the Report Card tab is restored, but populated ONLY from tiles
@@ -345,14 +345,15 @@ export default function AnalyzeVideo() {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
-      toast.error(t('videoAnalysis.invalidVideoFile', "Please select a valid video file"));
+      toast.error(UPLOAD_ERRORS.notAVideo);
       return;
     }
 
     if (file.size > 52428800) { // 50MB limit
-      toast.error(t('videoAnalysis.fileTooLarge', "Video file size must be under 50MB"));
+      toast.error(UPLOAD_ERRORS.tooLarge);
       return;
     }
+
 
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
@@ -440,7 +441,7 @@ export default function AnalyzeVideo() {
       console.log("[ANALYSIS] probed metadata", probed);
     } catch (probeErr) {
       console.error("[ANALYSIS] probe failed", probeErr);
-      toast.error(t('videoAnalysis.probeFailed', "Could not read video metadata. Please try a different file."));
+      toast.error(UPLOAD_ERRORS.unreadable);
       setUploading(false);
       return;
     }
@@ -451,21 +452,27 @@ export default function AnalyzeVideo() {
     {
       const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC } = await import("@/lib/biomech/videoAcceptance");
       if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
-        toast.error(`This clip is too small to analyze (${probed.width}×${probed.height}). Please upload at least ${MIN_WIDTH}×${MIN_HEIGHT} — re-exporting from your camera roll instead of forwarding from a messaging app usually fixes this.`);
+        toast.error(UPLOAD_ERRORS.tooSmall);
         setUploading(false);
         return;
       }
       if (probed.fps_true < MIN_FPS) {
-        toast.error(`Video frame rate is too low (${probed.fps_true.toFixed(1)} fps). Please upload a clip recorded at ${MIN_FPS} fps or higher.`);
+        toast.error(UPLOAD_ERRORS.lowFps);
         setUploading(false);
         return;
       }
-      if (probed.duration_sec < MIN_DURATION_SEC || probed.duration_sec > MAX_DURATION_SEC) {
-        toast.error(`Clips must be between ${MIN_DURATION_SEC}s and ${MAX_DURATION_SEC}s (this one is ${probed.duration_sec.toFixed(1)}s). Please trim and try again.`);
+      if (probed.duration_sec < MIN_DURATION_SEC) {
+        toast.error(UPLOAD_ERRORS.tooShort);
+        setUploading(false);
+        return;
+      }
+      if (probed.duration_sec > MAX_DURATION_SEC) {
+        toast.error(UPLOAD_ERRORS.tooLong);
         setUploading(false);
         return;
       }
     }
+
 
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
@@ -498,8 +505,9 @@ export default function AnalyzeVideo() {
         }));
 
         if (frames.length < 3) {
-          throw new Error("Could not extract enough frames for accurate analysis");
+          throw new Error(UPLOAD_ERRORS.notEnoughFrames);
         }
+
 
         if (landingTime != null) {
           landingFrameIndex = calculateLandingFrameIndex(
@@ -515,10 +523,13 @@ export default function AnalyzeVideo() {
       } catch (frameError: any) {
         console.error('[ANALYSIS] Frame extraction failed:', frameError);
         setExtractingFrames(false);
-        toast.error(t('videoAnalysis.frameExtractionFailed', "Failed to extract video frames. Please try a different video format or browser."));
+        toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
+          ? UPLOAD_ERRORS.frameExtractionFailed
+          : friendlyThrownError(frameError));
         setUploading(false);
         return;
       }
+
 
       // ===== PHASE 42B — Real D-POSE landmark production =====
       // Runs MediaPipe Tasks Vision (BlazePose Full) over the same PNG
@@ -572,8 +583,9 @@ export default function AnalyzeVideo() {
       } catch (poseErr: any) {
         console.error('[D-POSE] pose inference failed:', poseErr);
         // Do not block the rest of the analysis flow — surface honest failure.
-        toast.error('Pose inference failed — see console for details');
+        toast.error(UPLOAD_ERRORS.poseFailed);
       }
+
     }
     // ===== END FRAME EXTRACTION =====
 
@@ -589,14 +601,10 @@ export default function AnalyzeVideo() {
 
       if (uploadError) {
         console.error('[upload] storage upload failed', uploadError);
-        toast.error(
-          t(
-            'videoAnalysis.storageUploadFailed',
-            `Video upload to storage failed: ${uploadError.message}`
-          )
-        );
-        throw uploadError;
+        toast.error(UPLOAD_ERRORS.storageFailed);
+        throw new Error(UPLOAD_ERRORS.storageFailed);
       }
+
 
       const { data: { publicUrl } } = supabase.storage
         .from('videos')
@@ -663,18 +671,13 @@ export default function AnalyzeVideo() {
 
       if (videoError) {
         console.error('[upload] videos insert failed', videoError);
-        toast.error(
-          t(
-            'videoAnalysis.videosInsertFailed',
-            `Could not create video record: ${videoError.message}${
-              (videoError as any)?.code === '42501'
-                ? ' — your sign-in session may have expired. Please sign in again.'
-                : ''
-            }`
-          )
-        );
-        throw videoError;
+        const msg = (videoError as any)?.code === '42501'
+          ? UPLOAD_ERRORS.sessionExpired
+          : UPLOAD_ERRORS.recordFailed;
+        toast.error(msg);
+        throw new Error(msg);
       }
+
 
 
       setCurrentVideoId(videoData.id);
@@ -856,23 +859,8 @@ export default function AnalyzeVideo() {
           }
         } catch { /* ignore parse failures, fall through to generic */ }
 
-        const friendly = (() => {
-          switch (rejectReason) {
-            case "reject_low_resolution":
-              return "This clip is too small to analyze reliably. Please upload a higher-resolution version (at least 320×320). Re-exporting from your camera roll — instead of forwarding from a messaging app — usually fixes this.";
-            case "reject_low_fps":
-              return "Video frame rate is too low — please upload a clip recorded at 24 fps or higher.";
-            case "reject_duration_out_of_bounds":
-              return "Clips must be between 0.5 and 60 seconds. Please trim and try again.";
-            case "reject_excessive_dropped_frames":
-              return "Too many frames couldn't be read from this clip. Try re-exporting it from your camera roll and uploading again.";
-            case "missing_video_sha256":
-            case "missing_probe_metadata":
-              return "Upload didn't finish preparing — please try again in a moment.";
-            default:
-              return null;
-          }
-        })();
+        const friendly = friendlyRejectReason(rejectReason);
+
 
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
           toast.error(t('videoAnalysis.rateLimitError'));
@@ -897,7 +885,7 @@ export default function AnalyzeVideo() {
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
-      toast.error(error.message || t('videoAnalysis.processingFailed', "Failed to process video"));
+      toast.error(friendlyThrownError(error));
       setAnalyzing(false);
     } finally {
       setUploading(false);
@@ -934,7 +922,7 @@ export default function AnalyzeVideo() {
     
     // Guard: Need video file to re-extract frames
     if (!videoFile) {
-      toast.error(t('videoAnalysis.videoFileLost', "Video file not available. Please re-upload the video to retry analysis."));
+      toast.error("That clip isn't loaded anymore. Pick the video again to run the analysis.");
       return;
     }
     
@@ -967,8 +955,9 @@ export default function AnalyzeVideo() {
       }));
 
       if (frames.length < 3) {
-        throw new Error("Could not extract enough frames for accurate analysis");
+        throw new Error(UPLOAD_ERRORS.notEnoughFrames);
       }
+
 
       if (landingTime != null) {
         landingFrameIndex = calculateLandingFrameIndex(
@@ -984,7 +973,10 @@ export default function AnalyzeVideo() {
     } catch (frameError: any) {
       console.error('[RETRY ANALYSIS] Frame extraction failed:', frameError);
       setExtractingFrames(false);
-      toast.error(t('videoAnalysis.frameExtractionFailed', "Failed to extract video frames. Please try a different video format or browser."));
+      toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
+        ? UPLOAD_ERRORS.frameExtractionFailed
+        : friendlyThrownError(frameError));
+
       setAnalyzing(false);
       return;
     }
@@ -1027,7 +1019,7 @@ export default function AnalyzeVideo() {
     } catch (error: any) {
       console.error("Retry error:", error);
       setAnalysisError(error);
-      toast.error(error.message || t('videoAnalysis.analysisFailed', "Failed to analyze video"));
+      toast.error(friendlyThrownError(error));
     } finally {
       setAnalyzing(false);
       setExtractingFrames(false);
@@ -1212,20 +1204,9 @@ export default function AnalyzeVideo() {
                   />
                 </div>
 
-                {/* Side filing selector — switch hitters / ambidextrous throwers only */}
-                {shouldShowPicker(sideDiscipline) && (
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                    <div className="space-y-0.5 pr-3">
-                      <Label className="text-sm font-medium">
-                        {sideDiscipline === 'hit' ? 'Filing side (Hitting)' : 'Filing side (Throwing)'}
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        This analysis, notes, and drill recommendations will be filed under the selected side of your profile.
-                      </p>
-                    </div>
-                    <SideContextPicker discipline={sideDiscipline} size="md" />
-                  </div>
-                )}
+                {/* Side is asked exactly once, in the confirmation card below.
+                    Do not add a second side control on this screen. */}
+
 
                 {/* Landing Marker for Pitching/Throwing */}
                 {analysisEnabled && (module === 'pitching' || module === 'throwing') && (
