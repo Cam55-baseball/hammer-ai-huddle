@@ -333,6 +333,8 @@ const App = () => {
                 }
               />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
+              <Route path="/onboarding/scout" element={<ScoutOnboarding />} />
+              <Route path="/onboarding/coach" element={<CoachOnboarding />} />
               <Route path="/hammer/recall" element={<HammerRecall />} />
               <Route path="/hammer/recall/:threadId" element={<HammerRecall />} />
               {/* Wave 3 — longitudinal continuity surfaces (capability-gated) */}
