@@ -503,7 +503,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Circle by the ear", "Flat to the plate"],
     dosage: "4 x 6",
     equipment: ["net"],
-    violationKeys: [],
+    violationKeys: ["hands_pass_elbow_early"],
+
     pieV2Signals: ["arm_slot_consistency"],
     movementPatterns: ["arm_slot_variance"],
   },
