@@ -671,18 +671,13 @@ export default function AnalyzeVideo() {
 
       if (videoError) {
         console.error('[upload] videos insert failed', videoError);
-        toast.error(
-          t(
-            'videoAnalysis.videosInsertFailed',
-            `Could not create video record: ${videoError.message}${
-              (videoError as any)?.code === '42501'
-                ? ' — your sign-in session may have expired. Please sign in again.'
-                : ''
-            }`
-          )
-        );
-        throw videoError;
+        const msg = (videoError as any)?.code === '42501'
+          ? UPLOAD_ERRORS.sessionExpired
+          : UPLOAD_ERRORS.recordFailed;
+        toast.error(msg);
+        throw new Error(msg);
       }
+
 
 
       setCurrentVideoId(videoData.id);
