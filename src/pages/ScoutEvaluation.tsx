@@ -490,8 +490,11 @@ export default function ScoutEvaluation() {
               Scouting Report
             </h1>
             <p className="text-sm text-muted-foreground">
-              {athleteName ? `Evaluation of ${athleteName}` : 'Evaluation'} · 20–80 scale
+              {prospectMode
+                ? `Prospect report${prospectName.trim() ? ` — ${prospectName.trim()}` : ''} · 20–80 scale`
+                : `${athleteName ? `Evaluation of ${athleteName}` : 'Evaluation'} · 20–80 scale`}
             </p>
+
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate('/evaluations')}>
             My reports
