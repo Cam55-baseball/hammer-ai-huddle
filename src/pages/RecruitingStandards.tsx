@@ -996,7 +996,13 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
 /* Lists                                                               */
 /* ------------------------------------------------------------------ */
 
-/** Standards grouped by sport, then by the position each profile targets. */
+/**
+ * Standards grouped by sport, then by the position each profile targets.
+ *
+ * Everything renders inside ONE parent element with stable per-standard keys.
+ * Group headers move around as criteria and positions change, but React keeps
+ * each card mounted, so an open editor never collapses mid-edit.
+ */
 function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
   const ids = useMemo(() => standards.map((s) => s.id), [standards]);
   const criteriaMap = useStandardsCriteriaMap(ids);
@@ -1018,40 +1024,32 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
     );
   }, [standards, criteriaMap.data]);
 
-  // One flat list reads better than a single decorated group.
-  if (groups.length < 2) {
-    return (
-      <div className="space-y-4">
-        {standards.map((s) => (
-          <StandardCard key={s.id} standard={s} />
-        ))}
-      </div>
-    );
-  }
+  const showHeaders = groups.length > 1;
 
   return (
-    <div className="space-y-8">
-      {groups.map((g) => (
-        <section key={`${g.sport}-${g.position}`} className="space-y-3">
-          <div className="flex items-center gap-2">
-            <MicroLabel>
-              {SPORT_LABELS[g.sport] ?? g.sport} · {g.position}
-            </MicroLabel>
-            <Badge variant="secondary" className="tabular-nums">
-              {g.items.length}
-            </Badge>
-            <Separator className="flex-1" />
-          </div>
-          <div className="space-y-4">
-            {g.items.map((s) => (
-              <StandardCard key={s.id} standard={s} />
-            ))}
-          </div>
-        </section>
-      ))}
+    <div className="space-y-4">
+      {groups.flatMap((g) => {
+        const nodes: React.ReactNode[] = [];
+        if (showHeaders) {
+          nodes.push(
+            <div key={`hdr-${g.sport}-${g.position}`} className="flex items-center gap-2 pt-4">
+              <MicroLabel>
+                {SPORT_LABELS[g.sport] ?? g.sport} · {g.position}
+              </MicroLabel>
+              <Badge variant="secondary" className="tabular-nums">
+                {g.items.length}
+              </Badge>
+              <Separator className="flex-1" />
+            </div>,
+          );
+        }
+        for (const s of g.items) nodes.push(<StandardCard key={s.id} standard={s} />);
+        return nodes;
+      })}
     </div>
   );
 }
+
 
 function StandardsEmptyState({ onCreate }: { onCreate: () => void }) {
   return (
