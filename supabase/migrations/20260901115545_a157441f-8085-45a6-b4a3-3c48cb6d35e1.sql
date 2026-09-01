@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_scout_grade_subject() FROM PUBLIC, anon, authenticated;
