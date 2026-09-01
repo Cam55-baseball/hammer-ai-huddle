@@ -345,14 +345,15 @@ export default function AnalyzeVideo() {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
-      toast.error(t('videoAnalysis.invalidVideoFile', "Please select a valid video file"));
+      toast.error(UPLOAD_ERRORS.notAVideo);
       return;
     }
 
     if (file.size > 52428800) { // 50MB limit
-      toast.error(t('videoAnalysis.fileTooLarge', "Video file size must be under 50MB"));
+      toast.error(UPLOAD_ERRORS.tooLarge);
       return;
     }
+
 
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
