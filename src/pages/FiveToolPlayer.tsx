@@ -51,6 +51,16 @@ const tiles = [
     softballOnly: false,
   },
   {
+    key: "pitch-tipping-101",
+    icon: Eye,
+    label: "Pitch Tipping 101",
+    description: "Learn what pitch tipping is and how hitters spot a pitcher's tells",
+    getRoute: () => "/learn/pitch-tipping",
+    baseballOnly: false,
+    softballOnly: false,
+  },
+
+  {
     key: "base-stealing",
     icon: Footprints,
     label: "Base Stealing",
