@@ -29,6 +29,8 @@ import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useGamePlanPreferences } from '@/hooks/useGamePlanPreferences';
+import { useGamePlanInUse } from '@/hooks/useGamePlanInUse';
+import { GamePlanCollapseControls } from '@/components/game-plan/GamePlanCollapseControls';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
@@ -109,28 +111,6 @@ function DraggableTaskItem({
     >
       {children(controls, disabled)}
     </Reorder.Item>
-  );
-}
-
-function GamePlanVisibilityToggle({
-  hidden,
-  onToggle,
-}: {
-  hidden: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onToggle}
-      className="h-8 px-2 gap-1 text-xs text-white/70 hover:text-white shrink-0"
-      title={hidden ? 'Show Game Plan' : 'Hide Game Plan'}
-      aria-label={hidden ? 'Show Game Plan' : 'Hide Game Plan'}
-    >
-      {hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-      <span className="whitespace-nowrap">{hidden ? 'Show plan' : 'Hide'}</span>
-    </Button>
   );
 }
 
@@ -1799,9 +1779,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
                 </div>
               </div>
-              <GamePlanVisibilityToggle
-                hidden={planHidden}
-                onToggle={() => setPlanHidden(!planHidden)}
+              <GamePlanCollapseControls
+                open={planOpen}
+                onOpenChange={setPlanOpen}
+                inUse={planInUse}
+                onInUseChange={setPlanInUse}
+                tone="dark"
+                idPrefix="athlete-game-plan"
               />
             </div>
           </div>
@@ -1912,9 +1896,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </span>
               </div>
             </div>
-            <GamePlanVisibilityToggle
-              hidden={planHidden}
-              onToggle={() => setPlanHidden(!planHidden)}
+            <GamePlanCollapseControls
+              open={planOpen}
+              onOpenChange={setPlanOpen}
+              inUse={planInUse}
+              onInUseChange={setPlanInUse}
+              tone="dark"
+              idPrefix="athlete-game-plan"
             />
           </div>
         </div>
