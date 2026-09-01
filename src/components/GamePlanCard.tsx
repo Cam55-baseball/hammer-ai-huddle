@@ -174,13 +174,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
-  const [planHidden, setPlanHiddenState] = useState<boolean>(() => {
-    try { return (typeof window !== 'undefined') && window.localStorage?.getItem('gamePlan.hidden.v1') === '1'; } catch { return false; }
-  });
-  const setPlanHidden = (v: boolean) => {
-    setPlanHiddenState(v);
-    try { window.localStorage?.setItem('gamePlan.hidden.v1', v ? '1' : '0'); } catch { /* noop */ }
-  };
+  // "Game plan in use?" is a saved per-user answer; the open/closed state for
+  // this visit is seeded from it but can be toggled freely via the Hide button.
+  const {
+    inUse: planInUse,
+    setInUse: setPlanInUse,
+    open: planOpen,
+    setOpen: setPlanOpen,
+  } = useGamePlanInUse('athlete');
+  const planHidden = !planOpen;
+
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
