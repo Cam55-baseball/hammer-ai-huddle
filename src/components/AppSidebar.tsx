@@ -101,10 +101,15 @@ export function AppSidebar() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
+  // Keys must match the `key` field on trainingModules below. The old
+  // 'hitting' key never matched anything, so hitting tiers rendered collapsed
+  // and their submodules were undiscoverable.
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
-    hitting: true,
     pitching: true,
+    '5tool': true,
+    golden2way: true,
   });
+
 
   // Check if user has vault access (any module subscription or owner/admin)
   const hasVaultAccess = isOwner || isAdmin || modules.length > 0;
@@ -248,6 +253,10 @@ export function AppSidebar() {
           { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "Iron Bambino" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          // Hitter-facing education. Ships to any tier with hitting access
+          // (5Tool, Golden, legacy hitting) — never to pitcher-only.
+          { title: 'Pitch Tipping 101', url: '/learn/pitch-tipping', icon: Eye, description: "Spot a pitcher's tells at the plate" },
+
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
           ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
           { title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Baserunning decision training' },
@@ -270,6 +279,8 @@ export function AppSidebar() {
           { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          { title: 'Pitch Tipping 101', url: '/learn/pitch-tipping', icon: Eye, description: "Spot a pitcher's tells at the plate" },
+
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
           ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
           ...(selectedSport === 'baseball' ? [{ title: 'Pick-Off Trainer', url: '/pickoff-trainer', icon: Target, description: 'Pick-off decision training' }] : []),

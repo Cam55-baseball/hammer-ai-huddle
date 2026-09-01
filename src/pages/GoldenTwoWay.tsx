@@ -65,6 +65,14 @@ const tiles = [
     getRoute: () => "/tex-vision",
   },
   {
+    key: "pitch-tipping-101",
+    icon: Eye,
+    label: "Pitch Tipping 101",
+    description: "Learn what pitch tipping is and how hitters spot a pitcher's tells",
+    getRoute: () => "/learn/pitch-tipping",
+  },
+
+  {
     key: "pickoff-trainer",
     icon: Crosshair,
     label: "Pick-Off Trainer",

@@ -230,7 +230,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Thumb down, fingers on top", "Arm up on time with the front foot"],
     dosage: "3 x 10",
     equipment: ["none", "net"],
-    violationKeys: [],
+    violationKeys: ["hands_pass_elbow_early"],
+
     pieV2Signals: ["arm_slot_consistency", "tempo"],
     movementPatterns: ["arm_lag"],
   },
@@ -251,7 +252,7 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Arm rides the body", "No stop, no rush"],
     dosage: "2 x 10 throws",
     equipment: ["none"],
-    violationKeys: ["early_shoulder_rotation"],
+    violationKeys: ["early_shoulder_rotation", "front_shoulder_opens_early"],
     pieV2Signals: ["separation", "tempo"],
     movementPatterns: ["arm_lag", "early_shoulder_rotation"],
   },
@@ -400,7 +401,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Sit in the back pocket", "Shin toward the target"],
     dosage: "4 x 5 holds",
     equipment: ["none"],
-    violationKeys: [],
+    violationKeys: ["early_shoulder_rotation"],
+
     pieV2Signals: ["energy_angle", "stride"],
     movementPatterns: ["weak_back_side_load"],
   },
@@ -440,7 +442,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Reach the target", "Chest over the front knee"],
     dosage: "3 x 8",
     equipment: ["none"],
-    violationKeys: [],
+    violationKeys: ["hands_pass_elbow_early"],
+
     pieV2Signals: ["extension_consistency", "arm_slot_consistency"],
     movementPatterns: ["extension_variance", "arm_slot_variance"],
   },
@@ -500,7 +503,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Circle by the ear", "Flat to the plate"],
     dosage: "4 x 6",
     equipment: ["net"],
-    violationKeys: [],
+    violationKeys: ["hands_pass_elbow_early"],
+
     pieV2Signals: ["arm_slot_consistency"],
     movementPatterns: ["arm_slot_variance"],
   },
