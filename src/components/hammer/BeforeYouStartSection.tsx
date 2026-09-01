@@ -9,6 +9,7 @@
  * remembered per day only (localStorage), never server state.
  */
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -38,7 +39,14 @@ export function BeforeYouStartSection({ children }: { children: ReactNode }) {
     }
   }, [open]);
 
-  return (
+  // When the host page provides a slot (Dashboard renders one at the very top),
+  // hoist the drawer there so it sits above the game plan section.
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setSlot(document.getElementById("before-you-start-slot"));
+  }, []);
+
+  const card = (
     <Card className="border-border/70 bg-muted/20">
       <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex items-center justify-between gap-3 px-3 py-2.5">
@@ -71,4 +79,6 @@ export function BeforeYouStartSection({ children }: { children: ReactNode }) {
       </Collapsible>
     </Card>
   );
+
+  return slot ? createPortal(card, slot) : card;
 }

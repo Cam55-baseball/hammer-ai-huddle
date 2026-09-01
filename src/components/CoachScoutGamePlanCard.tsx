@@ -184,6 +184,17 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
   );
 
   return (
+    <div className="space-y-3">
+      {/* Controls sit above the card, outside its border. */}
+      <div className="flex justify-end">
+        <GamePlanCollapseControls
+          open={planOpen}
+          onOpenChange={setPlanOpen}
+          inUse={planInUse}
+          onInUseChange={setPlanInUse}
+          idPrefix="staff-game-plan"
+        />
+      </div>
     <Card className="relative overflow-hidden border-3 border-cyan-500 bg-secondary shadow-2xl">
       {/* Diagonal accent */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/20 transform rotate-45 translate-x-20 -translate-y-20" />
@@ -248,15 +259,6 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
             )}
           </div>
 
-          <GamePlanCollapseControls
-            open={planOpen}
-            onOpenChange={setPlanOpen}
-            inUse={planInUse}
-            onInUseChange={setPlanInUse}
-            tone="dark"
-            idPrefix="staff-game-plan"
-            className="w-full sm:w-auto"
-          />
         </div>
 
         {!planOpen && (
@@ -375,5 +377,6 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
         </>)}
       </CardContent>
     </Card>
+    </div>
   );
 }
