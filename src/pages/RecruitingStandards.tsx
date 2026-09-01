@@ -1165,7 +1165,7 @@ export default function RecruitingStandards() {
   useEffect(() => {
     if (!creating) return;
     const frame = requestAnimationFrame(() => {
-      createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      createFormRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
       createFormRef.current?.querySelector<HTMLInputElement>("#org-name")?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
