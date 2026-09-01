@@ -230,7 +230,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Thumb down, fingers on top", "Arm up on time with the front foot"],
     dosage: "3 x 10",
     equipment: ["none", "net"],
-    violationKeys: [],
+    violationKeys: ["hands_pass_elbow_early"],
+
     pieV2Signals: ["arm_slot_consistency", "tempo"],
     movementPatterns: ["arm_lag"],
   },
