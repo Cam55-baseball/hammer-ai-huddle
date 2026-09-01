@@ -39,6 +39,7 @@ import { runPoseInference } from "@/lib/biomech/pose/poseRunner";
 import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
+import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
 import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
@@ -95,6 +96,8 @@ export default function AnalyzeVideo() {
     /** Hammer Report Card — structured per-tile metrics with confidence/missingness. */
     metrics?: Record<string, unknown> | null;
     report_card_contract_id?: string | null;
+    /** Raw AI violation flags — drive the in-report prescription section. */
+    violations_detected?: Record<string, boolean> | null;
   } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
@@ -1423,6 +1426,12 @@ export default function AnalyzeVideo() {
                     onReturnToDashboard={() => navigate('/dashboard')}
                   />
                 )}
+
+                <AnalysisPrescriptionSection
+                  module={module}
+                  sport={sport}
+                  violations={analysis.violations_detected ?? null}
+                />
               </div>
             )}
 
