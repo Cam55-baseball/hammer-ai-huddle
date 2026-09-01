@@ -955,8 +955,9 @@ export default function AnalyzeVideo() {
       }));
 
       if (frames.length < 3) {
-        throw new Error("Could not extract enough frames for accurate analysis");
+        throw new Error(UPLOAD_ERRORS.notEnoughFrames);
       }
+
 
       if (landingTime != null) {
         landingFrameIndex = calculateLandingFrameIndex(
