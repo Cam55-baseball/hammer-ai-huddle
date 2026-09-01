@@ -56,9 +56,11 @@ describe("resolvePostLoginRoute", () => {
     expect(isSafeRelativePath("https://evil.test")).toBe(false);
     expect(isSafeRelativePath("//evil.test")).toBe(false);
     expect(isSafeRelativePath("/ok")).toBe(true);
-    expect(resolvePostLoginRoute({ redirectTarget: "//evil.test" })).toBe(
-      POST_LOGIN_FALLBACK_ROUTE,
-    );
+    // Off-origin target is discarded; routing falls through to the real gate.
+    expect(
+      resolvePostLoginRoute({ redirectTarget: "//evil.test", roles: [], hasFirstEvent: true }),
+    ).toBe(POST_LOGIN_FALLBACK_ROUTE);
+
   });
 
   it("routes staff first-run into their own onboarding", () => {
