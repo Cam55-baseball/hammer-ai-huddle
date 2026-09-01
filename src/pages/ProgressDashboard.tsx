@@ -2,7 +2,6 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
 // UhrcAthleteSection removed — Hammer Report Card now lives inside each video analysis result.
-import { PrescriptiveActionsCard } from '@/components/hie/PrescriptiveActionsCard';
 import { ReadinessCard } from '@/components/hie/ReadinessCard';
 import { ReadinessBreakdownCard } from '@/components/hie/ReadinessBreakdownCard';
 import { SmartWeekPlan } from '@/components/hie/SmartWeekPlan';
@@ -157,8 +156,8 @@ Confidence: ${snapshot.development_confidence}%
                 {/* Section 2: What's Holding You Back (detailed drill-down) */}
                 <WeaknessClusterCard />
 
-                {/* Section 3: What To Do Next */}
-                <PrescriptiveActionsCard />
+                {/* Section 3 moved: prescriptions now live inside the video
+                    analysis report (AnalysisPrescriptionSection). */}
 
                 {/* Section 4: Today's Readiness */}
                 <ReadinessCard />
