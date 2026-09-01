@@ -1683,6 +1683,14 @@ const handler = async (req: Request): Promise<Response> => {
       } as any);
     }
 
+    // Blocks or slots deliberately left out because no legal candidate existed
+    // for this athlete. These are ALWAYS warnings: a skipped block is a valid
+    // plan with an honest gap, never a failed generation.
+    for (const w of selectionSkips.warnings()) {
+      validatorReport.issues.push(w as any);
+    }
+
+
 
 
     const allWhysComplete = finalRxs.every((r) => (r as any).why_v2 && whyIsComplete((r as any).why_v2 as WhyV2));
