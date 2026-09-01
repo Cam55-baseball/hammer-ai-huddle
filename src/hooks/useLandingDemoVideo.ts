@@ -59,6 +59,8 @@ export function useLandingDemoVideo(includeHidden = false) {
   const [video, setVideo] = useState<LandingDemoVideo | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  /** True when the lookup itself failed (backend down), not merely "no row". */
+  const [errored, setErrored] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,6 +71,7 @@ export function useLandingDemoVideo(includeHidden = false) {
       .limit(1);
     if (!includeHidden) query = query.eq("is_visible", true);
     const { data, error } = await query.maybeSingle();
+    setErrored(!!error);
     if (error || !data) {
       setVideo(null);
     } else {
@@ -237,6 +240,7 @@ export function useLandingDemoVideo(includeHidden = false) {
 
   return {
     video,
+    errored,
     loading,
     saving,
     save,
