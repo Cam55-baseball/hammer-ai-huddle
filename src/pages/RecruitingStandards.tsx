@@ -846,11 +846,28 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
   const [open, setOpen] = useState(false);
 
   const role = standard.recruiting_role;
-  const positions = standard.target_positions ?? [];
   const logic = standard.position_match_logic ?? "any";
+
+  /**
+   * Positions are held locally and pushed up in the background, so a scout can
+   * tap several in a row without the panel re-rendering out from under them.
+   */
+  const serverPositions = standard.target_positions ?? [];
+  const [positions, setPositions] = useState<string[]>(serverPositions);
+  const serverKey = serverPositions.join(",");
+  const lastServerKey = useRef(serverKey);
+  useEffect(() => {
+    if (lastServerKey.current !== serverKey) {
+      lastServerKey.current = serverKey;
+      setPositions(serverPositions);
+    }
+    // serverPositions is derived from serverKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverKey]);
 
   const count = criteria.data?.length ?? 0;
   const summary = summarizeCriteria(criteria.data ?? []);
+
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
