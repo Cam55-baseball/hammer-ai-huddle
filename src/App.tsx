@@ -77,7 +77,10 @@ const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
 const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
-const CombineEntry = lazyWithRetry(() => import("./pages/CombineEntry"));
+// Pre-release: CombineEntry / MyCombineResults stay in the codebase but are not
+// routed — every /combine/* path renders the coming-soon page instead.
+const CombineComingSoon = lazyWithRetry(() => import("./pages/CombineComingSoon"));
+
 const DefensivePlayEntry = lazyWithRetry(() => import("./pages/DefensivePlayEntry"));
 const MyDefensivePlays = lazyWithRetry(() => import("./pages/MyDefensivePlays"));
 const MyCombineResults = lazyWithRetry(() => import("./pages/MyCombineResults"));
