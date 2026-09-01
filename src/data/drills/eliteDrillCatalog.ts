@@ -401,7 +401,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Sit in the back pocket", "Shin toward the target"],
     dosage: "4 x 5 holds",
     equipment: ["none"],
-    violationKeys: [],
+    violationKeys: ["early_shoulder_rotation"],
+
     pieV2Signals: ["energy_angle", "stride"],
     movementPatterns: ["weak_back_side_load"],
   },
