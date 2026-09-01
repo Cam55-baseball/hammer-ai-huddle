@@ -885,7 +885,7 @@ export default function AnalyzeVideo() {
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
-      toast.error(error.message || t('videoAnalysis.processingFailed', "Failed to process video"));
+      toast.error(friendlyThrownError(error));
       setAnalyzing(false);
     } finally {
       setUploading(false);
