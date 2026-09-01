@@ -1383,7 +1383,21 @@ const handler = async (req: Request): Promise<Response> => {
         isRecoveryDay: isRecoveryDayCtx,
       });
       const spSessionName = speedSelection.template.displayName;
-      for (const pick of speedSelection.picks) {
+      // Same graceful-degradation rule as bat speed: an unfillable required
+      // category drops the sprint block with a reason instead of publishing a
+      // session the certifier will reject.
+      const spMissingRequired = speedSelection.warnings
+        .filter((w) => w.startsWith("speed_missing_required:"))
+        .map((w) => w.split(":")[1]);
+      for (const cat of spMissingRequired) {
+        selectionSkips.record({
+          domain: "speed",
+          requirement: cat,
+          reason: skipReasonCopy("speed", cat),
+        });
+      }
+      for (const pick of spMissingRequired.length > 0 ? [] : speedSelection.picks) {
+
         const m = pick.movement as unknown as MovementRow;
         const metricKey =
           pick.category === "top_speed" || pick.category === "overspeed"
