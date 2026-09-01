@@ -9,6 +9,8 @@ import {
   ArrowRight, Zap, UserCheck, PenLine, Send
 } from 'lucide-react';
 import { useScoutGamePlan } from '@/hooks/useScoutGamePlan';
+import { useGamePlanInUse } from '@/hooks/useGamePlanInUse';
+import { GamePlanCollapseControls } from '@/components/game-plan/GamePlanCollapseControls';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -23,6 +25,13 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
   const navigate = useNavigate();
   const { user } = useAuth();
   const { players, totalUnreviewed, loading: reviewsLoading } = useScoutGamePlan();
+  // Saved "Game plan in use?" answer decides whether this card opens expanded.
+  const {
+    inUse: planInUse,
+    setInUse: setPlanInUse,
+    open: planOpen,
+    setOpen: setPlanOpen,
+  } = useGamePlanInUse('staff');
 
   const [todayNotesCount, setTodayNotesCount] = useState(0);
   const [pendingAssignments, setPendingAssignments] = useState(0);
@@ -238,8 +247,25 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
               </>
             )}
           </div>
+
+          <GamePlanCollapseControls
+            open={planOpen}
+            onOpenChange={setPlanOpen}
+            inUse={planInUse}
+            onInUseChange={setPlanInUse}
+            tone="dark"
+            idPrefix="staff-game-plan"
+            className="w-full sm:w-auto"
+          />
         </div>
 
+        {!planOpen && (
+          <p className="text-xs text-muted-foreground">
+            Game plan hidden. {tasksTotal > 0 ? `${tasksTotal} action item${tasksTotal !== 1 ? 's' : ''} waiting.` : 'Nothing pending right now.'}
+          </p>
+        )}
+
+        {planOpen && (<>
         {/* Task Sections */}
         <div className="space-y-2">
           <h3 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-2">
@@ -346,6 +372,7 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
             View Profiles
           </Button>
         </div>
+        </>)}
       </CardContent>
     </Card>
   );

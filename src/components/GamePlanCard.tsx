@@ -29,6 +29,8 @@ import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useGamePlanPreferences } from '@/hooks/useGamePlanPreferences';
+import { useGamePlanInUse } from '@/hooks/useGamePlanInUse';
+import { GamePlanCollapseControls } from '@/components/game-plan/GamePlanCollapseControls';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
@@ -112,28 +114,6 @@ function DraggableTaskItem({
   );
 }
 
-function GamePlanVisibilityToggle({
-  hidden,
-  onToggle,
-}: {
-  hidden: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onToggle}
-      className="h-8 px-2 gap-1 text-xs text-white/70 hover:text-white shrink-0"
-      title={hidden ? 'Show Game Plan' : 'Hide Game Plan'}
-      aria-label={hidden ? 'Show Game Plan' : 'Hide Game Plan'}
-    >
-      {hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-      <span className="whitespace-nowrap">{hidden ? 'Show plan' : 'Hide'}</span>
-    </Button>
-  );
-}
-
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -174,13 +154,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
-  const [planHidden, setPlanHiddenState] = useState<boolean>(() => {
-    try { return (typeof window !== 'undefined') && window.localStorage?.getItem('gamePlan.hidden.v1') === '1'; } catch { return false; }
-  });
-  const setPlanHidden = (v: boolean) => {
-    setPlanHiddenState(v);
-    try { window.localStorage?.setItem('gamePlan.hidden.v1', v ? '1' : '0'); } catch { /* noop */ }
-  };
+  // "Game plan in use?" is a saved per-user answer; the open/closed state for
+  // this visit is seeded from it but can be toggled freely via the Hide button.
+  const {
+    inUse: planInUse,
+    setInUse: setPlanInUse,
+    open: planOpen,
+    setOpen: setPlanOpen,
+  } = useGamePlanInUse('athlete');
+  const planHidden = !planOpen;
+
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
@@ -1796,9 +1779,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
                 </div>
               </div>
-              <GamePlanVisibilityToggle
-                hidden={planHidden}
-                onToggle={() => setPlanHidden(!planHidden)}
+              <GamePlanCollapseControls
+                open={planOpen}
+                onOpenChange={setPlanOpen}
+                inUse={planInUse}
+                onInUseChange={setPlanInUse}
+                tone="dark"
+                idPrefix="athlete-game-plan"
               />
             </div>
           </div>
@@ -1909,9 +1896,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </span>
               </div>
             </div>
-            <GamePlanVisibilityToggle
-              hidden={planHidden}
-              onToggle={() => setPlanHidden(!planHidden)}
+            <GamePlanCollapseControls
+              open={planOpen}
+              onOpenChange={setPlanOpen}
+              inUse={planInUse}
+              onInUseChange={setPlanInUse}
+              tone="dark"
+              idPrefix="athlete-game-plan"
             />
           </div>
         </div>
