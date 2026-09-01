@@ -16767,6 +16767,7 @@ export type Database = {
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
+      coach_calibration_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
         Returns: Json
@@ -16894,6 +16895,10 @@ export type Database = {
         }[]
       }
       get_public_bundle: { Args: { p_slug: string }; Returns: Json }
+      grade_row_overall: {
+        Args: { g: Database["public"]["Tables"]["vault_scout_grades"]["Row"] }
+        Returns: number
+      }
       has_active_evaluator_role: {
         Args: { _user_id: string }
         Returns: boolean
@@ -17007,6 +17012,7 @@ export type Database = {
         Args: { _athlete_id: string }
         Returns: boolean
       }
+      scout_calibration_summary: { Args: never; Returns: Json }
       shift_workouts_forward: {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
         Returns: number
