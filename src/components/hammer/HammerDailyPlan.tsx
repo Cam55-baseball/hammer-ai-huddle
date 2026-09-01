@@ -111,6 +111,16 @@ import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTask
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
 import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
+import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
+
+/**
+ * Non-physical prescribed blocks that belong in the "Before you start"
+ * drawer rather than the training sequence: scheduled mental / vision work
+ * (Game IQ micro-reps) and the eating plan (fueling).
+ */
+const PRE_START_MODALITIES = new Set(["game_iq", "fueling"]);
+
+
 
 function DrillRow({
   drill: d,
