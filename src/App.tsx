@@ -361,10 +361,13 @@ const App = () => {
               <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
-              {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
-              <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
+              {/* Pre-release: the whole Combine module (athlete results AND evaluator
+                  paperwork) is locked to a coming-soon state for every role. */}
+              <Route path="/combine/entry" element={<CombineComingSoon />} />
+              <Route path="/combine/results" element={<CombineComingSoon />} />
+              <Route path="/combine/*" element={<CombineComingSoon />} />
               {/* Pre-release: evaluator defensive play entry is staff-only until the module ships. */}
-              <Route path="/combine/results" element={<StaffOnlyRoute><MyCombineResults /></StaffOnlyRoute>} />
+
               <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
               <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
               <Route path="/pitching/tell-report" element={<StaffOnlyRoute><MyTellReport /></StaffOnlyRoute>} />
