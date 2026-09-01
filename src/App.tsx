@@ -77,10 +77,12 @@ const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
 const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
-const CombineEntry = lazyWithRetry(() => import("./pages/CombineEntry"));
+// Pre-release: CombineEntry / MyCombineResults stay in the codebase but are not
+// routed — every /combine/* path renders the coming-soon page instead.
+const CombineComingSoon = lazyWithRetry(() => import("./pages/CombineComingSoon"));
+
 const DefensivePlayEntry = lazyWithRetry(() => import("./pages/DefensivePlayEntry"));
 const MyDefensivePlays = lazyWithRetry(() => import("./pages/MyDefensivePlays"));
-const MyCombineResults = lazyWithRetry(() => import("./pages/MyCombineResults"));
 const MyTellReport = lazyWithRetry(() => import("./pages/MyTellReport"));
 const PitchTippingEducation = lazyWithRetry(() => import("./pages/PitchTippingEducation"));
 const BaserunningSplitEntry = lazyWithRetry(() => import("./pages/BaserunningSplitEntry"));
@@ -361,10 +363,13 @@ const App = () => {
               <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
-              {/* Pre-release: evaluator combine paperwork is staff-only until the module ships. */}
-              <Route path="/combine/entry" element={<StaffOnlyRoute><CombineEntry /></StaffOnlyRoute>} />
+              {/* Pre-release: the whole Combine module (athlete results AND evaluator
+                  paperwork) is locked to a coming-soon state for every role. */}
+              <Route path="/combine/entry" element={<CombineComingSoon />} />
+              <Route path="/combine/results" element={<CombineComingSoon />} />
+              <Route path="/combine/*" element={<CombineComingSoon />} />
               {/* Pre-release: evaluator defensive play entry is staff-only until the module ships. */}
-              <Route path="/combine/results" element={<StaffOnlyRoute><MyCombineResults /></StaffOnlyRoute>} />
+
               <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
               <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
               <Route path="/pitching/tell-report" element={<StaffOnlyRoute><MyTellReport /></StaffOnlyRoute>} />
