@@ -289,8 +289,22 @@ const Auth = () => {
           description: error.issues[0].message,
           variant: "destructive",
         });
+      } else {
+        // Never swallow: an unexpected failure used to leave the user staring
+        // at a login form that appeared to do nothing.
+        // eslint-disable-next-line no-console
+        console.error('[auth] unexpected sign-in failure', error);
+        toast({
+          title: t('auth.loginFailed'),
+          description:
+            error instanceof Error && error.message
+              ? error.message
+              : "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
     } finally {
+
       setIsLoading(false);
     }
   };
