@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
 import { ChevronDown, ChevronUp, Calendar, Target } from "lucide-react";
 import type {
   HammerDailyPlanResult,
@@ -64,9 +66,19 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
             <div className="text-xs font-semibold text-foreground truncate">
               {roadmap.rung.label} · {roadmap.quarter.label}
             </div>
-            <div className="text-[11px] text-muted-foreground truncate">
-              {weeklyTemplate.label} · builds toward {roadmap.eliteTarget.league} 6-game weeks
-            </div>
+            {!roadmap.quarter.phaseKnown ? (
+              <div className="text-[11px] text-muted-foreground truncate">
+                No season dates on file —{' '}
+                <Link to="/profile" className="font-medium text-primary hover:underline">
+                  set your season dates
+                </Link>
+              </div>
+            ) : (
+              <div className="text-[11px] text-muted-foreground truncate">
+                {weeklyTemplate.label} · builds toward {roadmap.eliteTarget.league} 6-game weeks
+              </div>
+            )}
+
           </div>
         </div>
         <button

@@ -1,22 +1,32 @@
 /**
  * Season Quarter Mesocycles — splits each season phase into Q1..Q4 so the
  * program has a real mesocycle arc instead of a flat "in-season / off-season"
- * label. Pure, replay-safe, missingness-permissive: unknown phase → Q2 of
- * "off" as a safe middle.
+ * label.
  *
- * We use `AthleteContextProjection.seasonPhase` and an optional
- * `phaseStartedAt` (ISO date) to compute weeks-into-phase. When
- * `phaseStartedAt` is missing we default to Q2 rather than fabricate a
- * start date.
+ * Honesty rules (no fabricated phases):
+ *  - The phase comes from the SAME resolver the rest of the app uses
+ *    (`resolveSeasonPhase` / `resolveWkPhase`, i.e. real season-date windows,
+ *    then the stored status). Callers pass that resolution in.
+ *  - If the phase resolution had no real signal (`source === 'default'`) we do
+ *    NOT print a confident "Off-season Q2". We return an UNSET descriptor
+ *    (`phaseKnown: false`) and the UI asks the athlete to set season dates.
+ *  - If the phase is known but the phase start date is missing, the phase is
+ *    shown without a fabricated quarter (`quarterKnown: false`) and dosing
+ *    falls back to the conservative middle multipliers.
  */
 import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilters";
 
 export type SeasonPhase = "off" | "pre" | "in" | "post";
 export type SeasonQuarter = 1 | 2 | 3 | 4;
+export type SeasonPhaseSource = "date_window" | "stored" | "default";
 
 export interface QuarterDescriptor {
   readonly phase: SeasonPhase;
   readonly quarter: SeasonQuarter;
+  /** False when nothing real (dates or stored status) backed the phase. */
+  readonly phaseKnown: boolean;
+  /** False when we have a phase but no phase-start date to slice quarters. */
+  readonly quarterKnown: boolean;
   readonly label: string;             // e.g. "Off-season Q2 · Strength"
   readonly accent: string;            // one-word accent
   readonly headline: string;
@@ -27,7 +37,8 @@ export interface QuarterDescriptor {
   readonly volumeCeilingMultiplier: number;
 }
 
-const TABLE: Record<SeasonPhase, Record<SeasonQuarter, Omit<QuarterDescriptor, "phase" | "quarter">>> = {
+
+const TABLE: Record<SeasonPhase, Record<SeasonQuarter, Omit<QuarterDescriptor, "phase" | "quarter" | "phaseKnown" | "quarterKnown">>> = {
   off: {
     1: { label: "Off-season Q1 · Hypertrophy", accent: "Hypertrophy",
          headline: "Build the tissue.", description: "Higher-volume lifting, controlled skill volume — the arm and hip machinery is being built.",
@@ -114,13 +125,74 @@ export function quartersFromWeeks(weeks: number): SeasonQuarter {
   return 4;
 }
 
+export interface SeasonQuarterInput {
+  /** ISO start of the current phase, from the canonical season resolver. */
+  readonly phaseStartedAt?: string | null;
+  /** Canonical phase (short form) from `resolveSeasonPhase`/`resolveWkPhase`. */
+  readonly resolvedPhase?: SeasonPhase | null;
+  /** Where that phase came from. `default` == no real signal. */
+  readonly phaseSource?: SeasonPhaseSource | null;
+}
+
+export const UNSET_QUARTER: QuarterDescriptor = {
+  phase: "off",
+  quarter: 2,
+  phaseKnown: false,
+  quarterKnown: false,
+  label: "Season phase not set",
+  accent: "Unset",
+  headline: "Set your season dates.",
+  description:
+    "No season dates or phase are on file, so we can't say which block you're in. Set your season dates in your profile and this becomes a real mesocycle arc.",
+  // Conservative middle dosing until the athlete tells us the truth.
+  recoveryWindowMultiplier: 1.0,
+  volumeCeilingMultiplier: 0.85,
+};
+
 export function resolveSeasonQuarter(
   proj: AthleteContextProjection,
-  phaseStartedAt: string | null,
+  input: SeasonQuarterInput | string | null,
   today: Date,
 ): QuarterDescriptor {
-  const phase = coercePhase(proj.seasonPhase);
-  const q = quartersFromWeeks(weeksBetween(phaseStartedAt, today));
+  const opts: SeasonQuarterInput =
+    input == null
+      ? { phaseStartedAt: null }
+      : typeof input === "string"
+        ? { phaseStartedAt: input }
+        : input;
+
+  const phaseStartedAt = opts.phaseStartedAt ?? null;
+  const source = opts.phaseSource ?? null;
+
+  // Unified with the canonical season resolver: prefer its phase, fall back to
+  // the context projection only when the caller didn't pass one.
+  const rawPhase = opts.resolvedPhase ?? (proj.seasonPhase as string | null);
+  const phaseIsReal =
+    source != null ? source !== "default" : rawPhase === "pre" || rawPhase === "in" || rawPhase === "post" || rawPhase === "off";
+
+  if (!phaseIsReal) return UNSET_QUARTER;
+
+  const phase = coercePhase(rawPhase ?? null);
+  const weeks = weeksBetween(phaseStartedAt, today);
+  const quarterKnown = weeks >= 0;
+  const q = quartersFromWeeks(weeks);
   const row = TABLE[phase][q];
-  return { phase, quarter: q, ...row };
+  if (!quarterKnown) {
+    const phaseName = row.label.split(" ")[0]; // "Off-season" / "In-season" ...
+    return {
+      phase,
+      quarter: q,
+      phaseKnown: true,
+      quarterKnown: false,
+      label: `${phaseName} · block not set`,
+      accent: row.accent,
+      headline: row.headline,
+      description:
+        "We know your season phase, but not when it started — so we can't place you in a specific block. Add your season dates to unlock the quarter arc.",
+      recoveryWindowMultiplier: 1.0,
+      volumeCeilingMultiplier: 0.85,
+    };
+  }
+  return { phase, quarter: q, phaseKnown: true, quarterKnown: true, ...row };
 }
+

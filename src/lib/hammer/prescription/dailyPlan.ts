@@ -1826,6 +1826,10 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 export interface RoadmapInputs {
   readonly recentCompletions?: RecentCompletions;
   readonly phaseStartedAt?: string | null;
+  /** Canonical phase from resolveSeasonPhase (short form: off/pre/in/post). */
+  readonly resolvedSeasonPhase?: "off" | "pre" | "in" | "post" | null;
+  /** Provenance of that phase; 'default' means no real season signal. */
+  readonly seasonPhaseSource?: "date_window" | "stored" | "default" | null;
 }
 
 export function buildHammerDailyPlan(
@@ -1842,7 +1846,15 @@ export function buildHammerDailyPlan(
 
   // Roadmap primitives — rung + season quarter + elite target + throwing ladder.
   const rung = resolveRoadmapRung(proj);
-  const quarter = resolveSeasonQuarter(proj, roadmapInputs.phaseStartedAt ?? null, today);
+  const quarter = resolveSeasonQuarter(
+    proj,
+    {
+      phaseStartedAt: roadmapInputs.phaseStartedAt ?? null,
+      resolvedPhase: roadmapInputs.resolvedSeasonPhase ?? null,
+      phaseSource: roadmapInputs.seasonPhaseSource ?? null,
+    },
+    today,
+  );
   const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
   const positionRaw =
     ctx.get<unknown>("position_primary")?.value ??

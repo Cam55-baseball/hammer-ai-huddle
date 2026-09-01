@@ -594,35 +594,30 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
-        {/* Slot: the Hammers "Before you start" drawer portals in here so it
-            sits at the very top, above the game plan. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <div id="before-you-start-slot" className="mb-6 sm:mb-8" />
-        )}
-
-        {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
+        {/* Order: Before You Start + Hammers Today Plan (both rendered by
+            DashboardTodayPlan) → spacing → game plan controls + card. */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
+
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <section className="pb-2">
+            <DashboardTodayPlan />
+          </section>
+        )}
+
+        {/* Hard visual break so the daily plan and the game plan read as two
+            distinct sections instead of one crowded block. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <div aria-hidden className="my-8 sm:my-10 border-t-2 border-border/70" />
+        )}
+
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <section className="pt-1">
             <GamePlanCard selectedSport={selectedSport} />
           </section>
         )}
 
-        {/* Hard visual break so the game plan and the daily plan read as two
-            distinct sections instead of one crowded block. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <div aria-hidden className="my-8 sm:my-10 border-t-2 border-border/70" />
-        )}
-
-        {/* Hammers Today Plan — collapsible, populated from forward-moving
-            organism data (never random). */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <section className="pb-2">
-            <DashboardTodayPlan />
-          </section>
-        )}
 
         {/* Long-term Hammer video picks — athletes only */}
         {(!isScout && !isCoach) && <LongTermVideoSuggestions />}
