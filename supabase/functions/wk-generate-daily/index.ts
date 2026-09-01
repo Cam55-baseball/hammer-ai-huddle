@@ -123,6 +123,14 @@ import {
   type TrainingAgeContext,
 } from "../_shared/wic/trainingAge.ts";
 import {
+  createCategoryBudget,
+  createSkipLog,
+  isTrainingAgeLegal,
+  skipReasonCopy,
+  PRE_SELECTION_VERSION,
+  type EngineDomain,
+} from "../_shared/wic/legality/preSelection.ts";
+import {
   DOSAGE_DOCTRINE_VERSION,
   resolveDose,
   describeDose,
@@ -131,11 +139,23 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 
 
+
 interface MovementRow {
   slug: string;
   name: string;
   category: string;
   movement_category?: string | null;
+  // Categorical legality maps — these, not `min_training_age_years`, are what
+  // every WIC certifier consults. The selector must read the same field or it
+  // proposes picks that are guaranteed to fail certification.
+  training_age_legality?: Record<string, boolean> | null;
+  season_legality?: Record<string, boolean> | null;
+  speed_category?: string | null;
+  bat_speed_category?: string | null;
+  conditioning_category?: string | null;
+  cross_sport_category?: string | null;
+  arm_care_category?: string | null;
+
   pattern: string | null;
   variant: string | null;
   sport_scope: "baseball" | "softball" | "both";
@@ -609,15 +629,49 @@ const handler = async (req: Request): Promise<Response> => {
     // consulted inside `isMovementSeasonLegal` in `_shared/wic/season.ts`.
     const seasonCtx = seasonContextFromPhase(phaseRes.phase);
 
+    // -------- Pre-selection legality state (Phase: selection-first) --------
+    // The certifiers used to be the first place a training-age-illegal pick or
+    // a duplicate single-slot category was noticed — by then the whole plan was
+    // already dead. These two objects move those exact rules in FRONT of
+    // selection, so an illegal candidate is never proposed in the first place.
+    const trainingAgeClassForSelection: string | null =
+      ((trainingAgeContext as any)?.classification ?? null) as string | null;
+    const categoryBudget = createCategoryBudget();
+    const selectionSkips = createSkipLog();
+    /** Canonical category a row would occupy inside a given engine's session. */
+    const domainCategoryOf = (m: MovementRow, domain: EngineDomain): string | null => {
+      switch (domain) {
+        case "lift": return coerceCanonicalCategory(m as any) ?? null;
+        case "speed": return m.speed_category ?? null;
+        case "bat_speed": return m.bat_speed_category ?? null;
+        case "conditioning": return m.conditioning_category ?? null;
+        case "cross_sport": return m.cross_sport_category ?? null;
+        case "arm_care": return m.arm_care_category ?? null;
+      }
+    };
+    const domainForSlot = (slot: Slot, role: SequenceRole): EngineDomain | null => {
+      if (slot === "lift") return role === "arm_care" ? "arm_care" : "lift";
+      if (slot === "speed") return "speed";
+      if (slot === "bat_speed") return "bat_speed";
+      if (slot === "conditioning") return "conditioning";
+      if (slot === "cross_sport") return "cross_sport";
+      return null;
+    };
+
     // -------- Movement filters --------
     const eligibleWith = (
       m: MovementRow | undefined | null,
-      opts?: { ignoreAdaptation?: boolean },
+      opts?: { ignoreAdaptation?: boolean; domain?: EngineDomain },
     ): m is MovementRow => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
       if (m.wic_metadata_complete === false) return false;
       if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      // Categorical training-age legality — the SAME field every certifier
+      // reads. Never relaxable: a beginner-illegal movement is a safety call,
+      // not a preference. Without this gate the selector proposed picks the
+      // certifier then killed with `*_illegal_training_age`.
+      if (!isTrainingAgeLegal(m as any, trainingAgeClassForSelection)) return false;
       if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
       // Single canonical seasonal legality gate — overrides may unlock.
@@ -628,6 +682,12 @@ const handler = async (req: Request): Promise<Response> => {
       if (usedNamesThisSession.has(normalizeName(m.name))) return false;
       // 72h non-repeat for compound lifts.
       if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return false;
+      // Single-slot category budget for the engine that is asking. Prevents
+      // two different sequence ROLES resolving to the same canonical CATEGORY
+      // (the `compound_lower appears 2 times` failure).
+      if (opts?.domain && !categoryBudget.hasRoom(opts.domain, domainCategoryOf(m, opts.domain))) {
+        return false;
+      }
       // WIC Stage 3 — day-adaptation compatibility. This is the ONLY gate the
       // template-completion fallback is allowed to relax: safety, season,
       // injury, training age and scope gates always apply.
@@ -644,6 +704,9 @@ const handler = async (req: Request): Promise<Response> => {
       return true;
     };
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => eligibleWith(m);
+    /** Lift-slot eligibility — adds the lift category budget to every gate. */
+    const eligibleLift = (m: MovementRow | undefined | null): m is MovementRow =>
+      eligibleWith(m, { domain: "lift" });
     const swap = (m: MovementRow) => {
       if (!m.contraindications?.some((c) => injurySlugs.has(c))) return { movement: m, substitutedFrom: null as string | null, reason: null as string | null };
       if (m.regression_slug) {
@@ -652,23 +715,28 @@ const handler = async (req: Request): Promise<Response> => {
       }
       return { movement: m, substitutedFrom: null, reason: null };
     };
-    const pickFirst = (slugs: string[]): MovementRow | undefined => {
+    const pickFirst = (slugs: string[], domain?: EngineDomain): MovementRow | undefined => {
       for (const s of slugs) {
         const m = lib.find((x) => x.slug === s);
-        if (eligible(m)) return m;
+        if (eligibleWith(m, domain ? { domain } : undefined)) return m;
       }
       return undefined;
     };
+    /** Lift-slot variant of `pickFirst` — respects the single-slot budget. */
+    const pickFirstLift = (slugs: string[]): MovementRow | undefined => pickFirst(slugs, "lift");
     // Last-resort picker for template-mandatory categories: relaxes ONLY the
     // day-adaptation gate. Never relaxes season legality, injury
-    // contraindications, training age, scope or catalog integrity.
-    const pickFirstRelaxed = (slugs: string[]): MovementRow | undefined => {
+    // contraindications, training age, scope, category budget or integrity.
+    const pickFirstRelaxed = (slugs: string[], domain?: EngineDomain): MovementRow | undefined => {
       for (const s of slugs) {
         const m = lib.find((x) => x.slug === s);
-        if (eligibleWith(m, { ignoreAdaptation: true })) return m;
+        if (eligibleWith(m, { ignoreAdaptation: true, domain })) return m;
       }
       return undefined;
     };
+    const pickFirstRelaxedLift = (slugs: string[]): MovementRow | undefined =>
+      pickFirstRelaxed(slugs, "lift");
+
 
     // ---- Goal Emphasis Authority + Weekly Balance Ledger -------------------
     // Emphasis biases WHICH legal movement fills a discretionary slot. It can
@@ -705,22 +773,25 @@ const handler = async (req: Request): Promise<Response> => {
         poolIndex * 0.001; // stable pool-order tie-break
       return Math.round(score * 1e6) / 1e6;
     };
-    const pickBest = (slugs: string[]): MovementRow | undefined => {
+    const pickBest = (slugs: string[], domain?: EngineDomain): MovementRow | undefined => {
       let best: MovementRow | undefined;
       let bestScore = -Infinity;
       slugs.forEach((slug, i) => {
         const m = lib.find((x) => x.slug === slug);
-        if (!eligible(m)) return;
+        if (!eligibleWith(m, domain ? { domain } : undefined)) return;
         const sc = scoreCandidate(m, i);
         if (sc > bestScore) { bestScore = sc; best = m; }
       });
       return best;
     };
+    /** Lift-slot variant of `pickBest` — respects the single-slot budget. */
+    const pickBestLift = (slugs: string[]): MovementRow | undefined => pickBest(slugs, "lift");
     const pickBestByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined =>
       pickBest(slugs.filter((slug) => {
         const m = lib.find((x) => x.slug === slug);
         return !!m && coerceCanonicalCategory(m as any) === category;
-      }));
+      }), "lift");
+
 
     /** One athlete-legible line tying a pick to their own stated goals. */
     const goalWhy = (m: MovementRow): string => {
