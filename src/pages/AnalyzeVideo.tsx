@@ -441,7 +441,7 @@ export default function AnalyzeVideo() {
       console.log("[ANALYSIS] probed metadata", probed);
     } catch (probeErr) {
       console.error("[ANALYSIS] probe failed", probeErr);
-      toast.error(t('videoAnalysis.probeFailed', "Could not read video metadata. Please try a different file."));
+      toast.error(UPLOAD_ERRORS.unreadable);
       setUploading(false);
       return;
     }
@@ -452,21 +452,27 @@ export default function AnalyzeVideo() {
     {
       const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC } = await import("@/lib/biomech/videoAcceptance");
       if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
-        toast.error(`This clip is too small to analyze (${probed.width}×${probed.height}). Please upload at least ${MIN_WIDTH}×${MIN_HEIGHT} — re-exporting from your camera roll instead of forwarding from a messaging app usually fixes this.`);
+        toast.error(UPLOAD_ERRORS.tooSmall);
         setUploading(false);
         return;
       }
       if (probed.fps_true < MIN_FPS) {
-        toast.error(`Video frame rate is too low (${probed.fps_true.toFixed(1)} fps). Please upload a clip recorded at ${MIN_FPS} fps or higher.`);
+        toast.error(UPLOAD_ERRORS.lowFps);
         setUploading(false);
         return;
       }
-      if (probed.duration_sec < MIN_DURATION_SEC || probed.duration_sec > MAX_DURATION_SEC) {
-        toast.error(`Clips must be between ${MIN_DURATION_SEC}s and ${MAX_DURATION_SEC}s (this one is ${probed.duration_sec.toFixed(1)}s). Please trim and try again.`);
+      if (probed.duration_sec < MIN_DURATION_SEC) {
+        toast.error(UPLOAD_ERRORS.tooShort);
+        setUploading(false);
+        return;
+      }
+      if (probed.duration_sec > MAX_DURATION_SEC) {
+        toast.error(UPLOAD_ERRORS.tooLong);
         setUploading(false);
         return;
       }
     }
+
 
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
