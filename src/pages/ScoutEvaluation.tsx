@@ -419,11 +419,20 @@ export default function ScoutEvaluation() {
       }
 
 
-      toast({
-        title: 'Evaluation filed — awaiting player confirmation',
-        description: `${athleteName ?? 'The athlete'} must confirm they attended this event before the report becomes visible to them or to anyone following them.`,
-      });
-      navigate('/scout-dashboard');
+      if (prospectMode) {
+        toast({
+          title: 'Prospect report saved',
+          description: `${prospectName.trim()} has no Hammers account yet, so this report stays private to you. Link it to their profile once they sign up.`,
+        });
+        navigate('/evaluations/prospects');
+      } else {
+        toast({
+          title: 'Evaluation filed — awaiting player confirmation',
+          description: `${athleteName ?? 'The athlete'} must confirm they attended this event before the report becomes visible to them or to anyone following them.`,
+        });
+        navigate('/scout-dashboard');
+      }
+
     } catch (err) {
       toast({
         title: 'Could not file evaluation',
