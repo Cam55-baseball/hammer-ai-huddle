@@ -991,9 +991,12 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
               role={role}
               onRoleChange={(v) => updateStandard.mutate({ id: standard.id, recruiting_role: v })}
               positions={positions}
-              onPositionsChange={(v) =>
-                updateStandard.mutate({ id: standard.id, target_positions: v })
-              }
+              onPositionsChange={(v) => {
+                setPositions(v);
+                lastServerKey.current = v.join(",");
+                updateStandard.mutate({ id: standard.id, target_positions: v });
+              }}
+
               logic={logic}
               onLogicChange={(v) =>
                 updateStandard.mutate({ id: standard.id, position_match_logic: v })
