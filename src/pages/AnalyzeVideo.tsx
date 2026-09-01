@@ -601,14 +601,10 @@ export default function AnalyzeVideo() {
 
       if (uploadError) {
         console.error('[upload] storage upload failed', uploadError);
-        toast.error(
-          t(
-            'videoAnalysis.storageUploadFailed',
-            `Video upload to storage failed: ${uploadError.message}`
-          )
-        );
-        throw uploadError;
+        toast.error(UPLOAD_ERRORS.storageFailed);
+        throw new Error(UPLOAD_ERRORS.storageFailed);
       }
+
 
       const { data: { publicUrl } } = supabase.storage
         .from('videos')
