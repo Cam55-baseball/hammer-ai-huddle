@@ -25,8 +25,11 @@ export interface ReportAccordionListProps {
   details?: ReportDetails;
   /** Evaluator-side view: show whether the player has confirmed. */
   showConfirmationStatus?: boolean;
+  /** When given, each opened report offers a "Download PDF" action. */
+  onExport?: (report: EvaluationRow) => void;
   emptyLabel?: string;
 }
+
 
 function dateLabel(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
