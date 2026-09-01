@@ -25,7 +25,7 @@ import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSke
 import { AnalysisProgressIndicator } from "@/components/report-card/hammer/AnalysisProgressIndicator";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { useSideContext } from "@/contexts/SideContext";
-import { SideContextPicker } from "@/components/shared/SideContextPicker";
+import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 // Release-1: the Report Card tab is restored, but populated ONLY from tiles
@@ -922,7 +922,7 @@ export default function AnalyzeVideo() {
     
     // Guard: Need video file to re-extract frames
     if (!videoFile) {
-      toast.error(t('videoAnalysis.videoFileLost', "Video file not available. Please re-upload the video to retry analysis."));
+      toast.error("That clip isn't loaded anymore. Pick the video again to run the analysis.");
       return;
     }
     
@@ -1019,7 +1019,7 @@ export default function AnalyzeVideo() {
     } catch (error: any) {
       console.error("Retry error:", error);
       setAnalysisError(error);
-      toast.error(error.message || t('videoAnalysis.analysisFailed', "Failed to analyze video"));
+      toast.error(friendlyThrownError(error));
     } finally {
       setAnalyzing(false);
       setExtractingFrames(false);
