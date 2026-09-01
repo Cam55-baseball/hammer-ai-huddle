@@ -547,7 +547,13 @@ function HammerDailyPlanBody() {
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup");
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
-          const otherBlocks = plan.blocks.filter((b) => b.modality !== "warmup" && !WK_OWNED.has(b.modality));
+          const otherBlocks = plan.blocks.filter(
+            (b) =>
+              b.modality !== "warmup" &&
+              !WK_OWNED.has(b.modality) &&
+              !PRE_START_MODALITIES.has(b.modality),
+          );
+
           // Arm-care budget: throwing block owns arm care whenever it's rendered
           // as a real block (ready/awaiting-input). Otherwise the lift card carries it.
           const throwingBlock = plan.blocks.find((b) => b.modality === "throwing");
