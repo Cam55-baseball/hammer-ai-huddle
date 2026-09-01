@@ -12,10 +12,24 @@ import { Badge } from "@/components/ui/badge";
 export function LandingDemoVideo() {
   const { isOwner } = useOwnerAccess();
   // Owners see hidden videos too so they can preview.
-  const { video, loading } = useLandingDemoVideo(isOwner);
+  const { video, loading, errored } = useLandingDemoVideo(isOwner);
 
   if (loading) return null;
-  if (!video) return null;
+  if (!video) {
+    // A failed lookup is visibly different from "no video configured" —
+    // silence here is exactly how the missing demo went unnoticed before.
+    if (!errored) return null;
+    return (
+      <div className="max-w-2xl mx-auto pt-2">
+        <div className="rounded-xl border border-border bg-muted/40 aspect-video flex items-center justify-center text-center p-6">
+          <p className="text-sm text-muted-foreground">
+            The demo video can't be loaded right now. Please refresh in a moment.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="max-w-2xl mx-auto pt-2">
