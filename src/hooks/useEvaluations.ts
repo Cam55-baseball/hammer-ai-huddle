@@ -214,3 +214,75 @@ export function useProfileNames(ids: string[]) {
     },
   });
 }
+
+/**
+ * Reports the signed-in evaluator filed on prospects who had no Hammers
+ * account at the time. They stay author-only until they are linked to a real
+ * athlete, at which point the athlete's normal confirmation gate applies.
+ */
+export function useProspectReports() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['prospect-reports', user?.id],
+    enabled: !!user?.id,
+    queryFn: async (): Promise<EvaluationRow[]> => {
+      const { data, error } = await supabase
+        .from('vault_scout_grades')
+        .select('*')
+        .eq('evaluator_id', user!.id)
+        .is('user_id', null)
+        .order('graded_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as EvaluationRow[];
+    },
+  });
+}
+
+/**
+ * Attach a prospect report to a real athlete account once that athlete signs
+ * up. The database stamps who linked it and when, and resets the report to
+ * "awaiting player confirmation" — linking never bypasses the athlete's say.
+ */
+export function useLinkProspectReport() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ reportId, athleteId }: { reportId: string; athleteId: string }) => {
+      const { error } = await supabase
+        .from('vault_scout_grades')
+        .update({ user_id: athleteId } as never)
+        .eq('id', reportId)
+        .eq('evaluator_id', user!.id);
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['prospect-reports'] });
+      qc.invalidateQueries({ queryKey: ['filed-evaluations'] });
+    },
+  });
+}
+
+export interface PlayerSearchResult {
+  id: string;
+  full_name: string | null;
+  position?: string | null;
+  state?: string | null;
+  high_school_grad_year?: number | null;
+}
+
+/** Scout-side athlete lookup, reusing the existing search-players function. */
+export function usePlayerSearch(query: string) {
+  const term = query.trim();
+  return useQuery({
+    queryKey: ['player-search', term],
+    enabled: term.length >= 2,
+    queryFn: async (): Promise<PlayerSearchResult[]> => {
+      const { data, error } = await supabase.functions.invoke('search-players', {
+        body: { query: term, limit: 20 },
+      });
+      if (error) throw error;
+      return ((data as { results?: PlayerSearchResult[] })?.results ?? []) as PlayerSearchResult[];
+    },
+  });
+}
