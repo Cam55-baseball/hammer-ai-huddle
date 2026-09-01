@@ -17,8 +17,18 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface EvaluationRow {
   id: string;
-  user_id: string;
+  /** Null while the report is about a prospect with no Hammers account yet. */
+  user_id: string | null;
+  /** Prospect identity, used only while `user_id` is null. */
+  prospect_name?: string | null;
+  prospect_team?: string | null;
+  prospect_grad_year?: number | null;
+  prospect_position?: string | null;
+  prospect_contact?: string | null;
+  linked_at?: string | null;
+  linked_by?: string | null;
   evaluator_id: string | null;
+
   grade_type: string | null;
   grade_source: string | null;
   graded_at: string;
