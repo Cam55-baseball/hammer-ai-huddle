@@ -251,11 +251,12 @@ export default function ScoutEvaluation() {
 
   const usedPositions = new Set(looks.map((l) => l.position).filter(Boolean));
 
-  const canSubmit =
-    !!athleteId && (includePosition || includePitching) && !saving;
+  const subjectReady = prospectMode ? prospectName.trim().length >= 2 : !!athleteId;
+  const canSubmit = subjectReady && (includePosition || includePitching) && !saving;
 
   const handleSubmit = async () => {
-    if (!user || !athleteId) return;
+    if (!user || !subjectReady) return;
+
     if (!includePosition && !includePitching) {
       toast({ title: 'Add at least one section', variant: 'destructive' });
       return;
