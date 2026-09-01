@@ -102,6 +102,8 @@ const ParentRecruitingAuthorization = lazyWithRetry(
   () => import("./pages/ParentRecruitingAuthorization"),
 );
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
+const ScoutOnboarding = lazyWithRetry(() => import("./pages/ScoutOnboarding"));
+const CoachOnboarding = lazyWithRetry(() => import("./pages/CoachOnboarding"));
 const HammerRecall = lazyWithRetry(() => import("./pages/HammerRecall"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
