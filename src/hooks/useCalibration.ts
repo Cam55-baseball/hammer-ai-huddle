@@ -39,6 +39,7 @@ export interface CoachCalibrationPlayer {
   first_overall: number;
   last_overall: number;
   delta: number;
+  display_name?: string;
 }
 
 export interface CoachCalibration {
@@ -77,7 +78,24 @@ export function useCoachCalibration(enabled = true) {
     queryFn: async (): Promise<CoachCalibration | null> => {
       const { data, error } = await (supabase as any).rpc("coach_calibration_summary");
       if (error) throw error;
-      return (data as CoachCalibration) ?? null;
+      const summary = (data as CoachCalibration) ?? null;
+      if (!summary?.players?.length) return summary;
+      // Hydrate athlete names from the public profile view (best-effort).
+      const ids = summary.players.map((p) => p.athlete_id);
+      const { data: profiles } = await supabase
+        .from("profiles_public")
+        .select("id, full_name")
+        .in("id", ids);
+      const names = new Map<string, string>(
+        ((profiles ?? []) as any[]).map((p) => [p.id, p.full_name ?? "Athlete"]),
+      );
+      return {
+        ...summary,
+        players: summary.players.map((p) => ({
+          ...p,
+          display_name: names.get(p.athlete_id) ?? "Athlete",
+        })),
+      };
     },
   });
 }

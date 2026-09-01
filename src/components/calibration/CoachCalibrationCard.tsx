@@ -100,7 +100,7 @@ export function CoachCalibrationCard() {
                       <div key={p.athlete_id} className="flex items-center gap-3 p-3">
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">
-                            Player {p.athlete_id.slice(0, 8)}
+                            {p.display_name ?? `Player ${p.athlete_id.slice(0, 8)}`}
                           </p>
                           <p className="text-[11px] text-muted-foreground">
                             {p.first_overall.toFixed(1)} → {p.last_overall.toFixed(1)} ·{" "}
