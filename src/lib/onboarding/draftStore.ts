@@ -30,7 +30,10 @@ export type DraftSlot =
   | "anthropometrics"
   | "fuel-recovery"
   | "mental-career"
-  | "connections";
+  | "connections"
+  | "scout-onboarding"
+  | "coach-onboarding";
+
 
 type DraftBag = Partial<Record<DraftSlot, unknown>>;
 
