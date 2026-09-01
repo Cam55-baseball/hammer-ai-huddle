@@ -17,7 +17,7 @@ import {
 // Minimal QuarterDescriptor stub for isolated math.
 const Q2_OFF = resolveSeasonQuarter(
   { seasonPhase: "off" } as never,
-  { phaseStartedAt: "2025-12-01", resolvedPhase: "off", phaseSource: "date_window" },
+  { phaseStartedAt: "2025-12-25", resolvedPhase: "off", phaseSource: "date_window" },
   new Date("2026-01-15T12:00:00Z"),
 );
 const UNKNOWN_PHASE = resolveSeasonQuarter(
