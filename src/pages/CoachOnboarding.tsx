@@ -10,7 +10,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Whistle, Users, Layers, Bell, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Megaphone, Users, Layers, Bell, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,7 +183,7 @@ export default function CoachOnboarding() {
       {step === S_WELCOME && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <Whistle className="h-5 w-5 text-primary" />
+            <Megaphone className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Welcome, coach.</h2>
           </div>
           <p className="text-sm text-muted-foreground">
