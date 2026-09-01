@@ -597,15 +597,28 @@ export default function Dashboard() {
         {/* Hammers Today Plan — collapsible above Game Plan, populated from
             forward-moving organism data (never random). Second home for the
             Today Plan so users can act on it without leaving the Dashboard. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <DashboardTodayPlan />}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <section className="pb-2">
+            <DashboardTodayPlan />
+          </section>
+        )}
+
+        {/* Hard visual break so the plan and the game plan read as two
+            distinct sections instead of one crowded block. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <div aria-hidden className="my-6 sm:my-8 border-t-2 border-border/70" />
+        )}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <GamePlanCard selectedSport={selectedSport} />
+          <section className="pt-1">
+            <GamePlanCard selectedSport={selectedSport} />
+          </section>
         )}
+
 
 
         {/* Long-term Hammer video picks — athletes only */}
