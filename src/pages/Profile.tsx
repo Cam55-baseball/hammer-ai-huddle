@@ -32,6 +32,9 @@ import { VerifiedStatSubmission } from "@/components/professional/VerifiedStatSu
 import { SportBadge } from "@/components/professional/SportBadge";
 import { PublicVerifiedStats } from "@/components/professional/PublicVerifiedStats";
 import { EvaluatorCredentialsCard } from "@/components/evaluations/EvaluatorCredentialsCard";
+import { ScoutCalibrationCard } from "@/components/calibration/ScoutCalibrationCard";
+import { CoachCalibrationCard } from "@/components/calibration/CoachCalibrationCard";
+
 import { FollowedPlayerGradesCard } from "@/components/evaluations/FollowedPlayerGradesCard";
 import { ScoutUpgradeCard } from "@/components/scout/ScoutUpgradeCard";
 import { ClipboardCheck } from "lucide-react";
