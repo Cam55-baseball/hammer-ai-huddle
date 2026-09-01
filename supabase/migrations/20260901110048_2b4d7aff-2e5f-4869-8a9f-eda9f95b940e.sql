@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_afl_created_effectiveness ON public.advisory_feedback_logs (created_at DESC) WHERE effectiveness_score IS NOT NULL;
