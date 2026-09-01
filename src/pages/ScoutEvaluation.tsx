@@ -156,9 +156,18 @@ export default function ScoutEvaluation() {
   const { toast } = useToast();
 
   const athleteId = paramAthleteId ?? searchParams.get('athleteId') ?? '';
+  // Prospect mode: a full report on someone who has no Hammers account yet.
+  // It is stored unlinked and can be attached to a real profile later.
+  const prospectMode = !athleteId;
 
   const [athleteName, setAthleteName] = useState<string | null>(null);
   const [sport, setSport] = useState<string>('baseball');
+  const [prospectName, setProspectName] = useState('');
+  const [prospectTeam, setProspectTeam] = useState('');
+  const [prospectGradYear, setProspectGradYear] = useState('');
+  const [prospectPosition, setProspectPosition] = useState('');
+  const [prospectContact, setProspectContact] = useState('');
+
 
   // Independent sections — a two-way player gets both on ONE report.
   const [includePosition, setIncludePosition] = useState(true);
@@ -242,11 +251,12 @@ export default function ScoutEvaluation() {
 
   const usedPositions = new Set(looks.map((l) => l.position).filter(Boolean));
 
-  const canSubmit =
-    !!athleteId && (includePosition || includePitching) && !saving;
+  const subjectReady = prospectMode ? prospectName.trim().length >= 2 : !!athleteId;
+  const canSubmit = subjectReady && (includePosition || includePitching) && !saving;
 
   const handleSubmit = async () => {
-    if (!user || !athleteId) return;
+    if (!user || !subjectReady) return;
+
     if (!includePosition && !includePitching) {
       toast({ title: 'Add at least one section', variant: 'destructive' });
       return;
@@ -271,7 +281,16 @@ export default function ScoutEvaluation() {
       const primary = filledLooks[0];
 
       const row: Record<string, unknown> = {
-        user_id: athleteId,
+        user_id: prospectMode ? null : athleteId,
+        prospect_name: prospectMode ? prospectName.trim() : null,
+        prospect_team: prospectMode ? prospectTeam.trim() || null : null,
+        prospect_grad_year:
+          prospectMode && /^\d{4}$/.test(prospectGradYear.trim())
+            ? Number(prospectGradYear.trim())
+            : null,
+        prospect_position: prospectMode ? prospectPosition.trim() || null : null,
+        prospect_contact: prospectMode ? prospectContact.trim() || null : null,
+
         evaluator_id: user.id,
         grade_source: 'coach_evaluated',
         grade_type: gradeType,
@@ -400,11 +419,20 @@ export default function ScoutEvaluation() {
       }
 
 
-      toast({
-        title: 'Evaluation filed — awaiting player confirmation',
-        description: `${athleteName ?? 'The athlete'} must confirm they attended this event before the report becomes visible to them or to anyone following them.`,
-      });
-      navigate('/scout-dashboard');
+      if (prospectMode) {
+        toast({
+          title: 'Prospect report saved',
+          description: `${prospectName.trim()} has no Hammers account yet, so this report stays private to you. Link it to their profile once they sign up.`,
+        });
+        navigate('/evaluations/prospects');
+      } else {
+        toast({
+          title: 'Evaluation filed — awaiting player confirmation',
+          description: `${athleteName ?? 'The athlete'} must confirm they attended this event before the report becomes visible to them or to anyone following them.`,
+        });
+        navigate('/scout-dashboard');
+      }
+
     } catch (err) {
       toast({
         title: 'Could not file evaluation',
@@ -462,22 +490,37 @@ export default function ScoutEvaluation() {
               Scouting Report
             </h1>
             <p className="text-sm text-muted-foreground">
-              {athleteName ? `Evaluation of ${athleteName}` : 'Evaluation'} · 20–80 scale
+              {prospectMode
+                ? `Prospect report${prospectName.trim() ? ` — ${prospectName.trim()}` : ''} · 20–80 scale`
+                : `${athleteName ? `Evaluation of ${athleteName}` : 'Evaluation'} · 20–80 scale`}
             </p>
+
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate('/evaluations')}>
             My reports
           </Button>
         </div>
 
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-          <p className="font-medium">Player confirmation required</p>
-          <p className="text-muted-foreground">
-            After you file this, only you can see it until the player confirms they were present at
-            this event. Once confirmed, it opens up to the player and their accepted coaches and
-            scouts.
-          </p>
-        </div>
+        {prospectMode ? (
+          <div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-3 text-sm">
+            <p className="font-medium">Prospect with no Hammers account</p>
+            <p className="text-muted-foreground">
+              This report is saved unlinked and stays private to you. When the player signs up, open
+              Prospect reports and link it to their profile — they will then be asked to confirm they
+              were at this event before it becomes visible to anyone else.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
+            <p className="font-medium">Player confirmation required</p>
+            <p className="text-muted-foreground">
+              After you file this, only you can see it until the player confirms they were present at
+              this event. Once confirmed, it opens up to the player and their accepted coaches and
+              scouts.
+            </p>
+          </div>
+        )}
+
 
         {/* 1. Header */}
         <Card>
@@ -491,11 +534,95 @@ export default function ScoutEvaluation() {
               <Badge variant="outline">{sport === 'softball' ? 'Softball' : 'Baseball'}</Badge>
             </div>
 
-            {!athleteId && (
-              <p className="text-sm text-destructive">
-                No athlete selected. Open this report from a player card on your dashboard.
-              </p>
+            {prospectMode && (
+              <div className="space-y-3 rounded-md border p-3">
+                <div>
+                  <p className="text-sm font-medium">Who is this report on?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Capture whatever identifies the player. Only the name is required.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-name">
+                      Player name
+                    </Label>
+                    <Input
+                      id="prospect-name"
+                      className="h-9"
+                      placeholder="First and last name"
+                      value={prospectName}
+                      onChange={(e) => setProspectName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-team">
+                      Team / school (optional)
+                    </Label>
+                    <Input
+                      id="prospect-team"
+                      className="h-9"
+                      placeholder="e.g. Central High"
+                      value={prospectTeam}
+                      onChange={(e) => setProspectTeam(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-grad">
+                      Grad year (optional)
+                    </Label>
+                    <Input
+                      id="prospect-grad"
+                      className="h-9"
+                      inputMode="numeric"
+                      placeholder="e.g. 2028"
+                      value={prospectGradYear}
+                      onChange={(e) => setProspectGradYear(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="prospect-position">
+                      Primary position (optional)
+                    </Label>
+                    <Input
+                      id="prospect-position"
+                      className="h-9"
+                      placeholder="e.g. SS"
+                      value={prospectPosition}
+                      onChange={(e) => setProspectPosition(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs" htmlFor="prospect-contact">
+                      Contact or where to find them (optional)
+                    </Label>
+                    <Input
+                      id="prospect-contact"
+                      className="h-9"
+                      placeholder="Coach name, email, travel org…"
+                      value={prospectContact}
+                      onChange={(e) => setProspectContact(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Sport</Label>
+                    <Select value={sport} onValueChange={setSport}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        <SelectItem value="baseball">Baseball</SelectItem>
+                        <SelectItem value="softball">Softball</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {prospectName.trim().length > 0 && prospectName.trim().length < 2 && (
+                  <p className="text-xs text-destructive">Enter the player's full name.</p>
+                )}
+              </div>
             )}
+
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">

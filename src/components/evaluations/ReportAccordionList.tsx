@@ -5,7 +5,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Clock, ShieldCheck, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CalendarDays, Clock, Download, ShieldCheck, XCircle } from 'lucide-react';
 import type { EvaluationRow } from '@/hooks/useEvaluations';
 import { EvaluationReportCard } from './EvaluationReportCard';
 import { reportTypeLabel } from '@/lib/evaluation/scoutingTools';
@@ -25,8 +26,11 @@ export interface ReportAccordionListProps {
   details?: ReportDetails;
   /** Evaluator-side view: show whether the player has confirmed. */
   showConfirmationStatus?: boolean;
+  /** When given, each opened report offers a "Download PDF" action. */
+  onExport?: (report: EvaluationRow) => void;
   emptyLabel?: string;
 }
+
 
 function dateLabel(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -47,6 +51,7 @@ export function ReportAccordionList({
   attributionFor,
   details,
   showConfirmationStatus,
+  onExport,
   emptyLabel = 'No reports yet.',
 }: ReportAccordionListProps) {
   if (reports.length === 0) {
@@ -119,6 +124,13 @@ export function ReportAccordionList({
                 pitchingSides={details?.pitchingSidesByReport[r.id] ?? []}
                 showConfirmationStatus={showConfirmationStatus}
               />
+              {onExport && (
+                <div className="pt-2">
+                  <Button size="sm" variant="outline" onClick={() => onExport(r)}>
+                    <Download className="h-4 w-4 mr-2" /> Download PDF
+                  </Button>
+                </div>
+              )}
             </AccordionContent>
           </AccordionItem>
         );

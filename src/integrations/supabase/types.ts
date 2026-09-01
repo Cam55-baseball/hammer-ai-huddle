@@ -13786,6 +13786,8 @@ export type Database = {
           is_switch_hitter: boolean | null
           leadership_grade: number | null
           leadership_grade_future: number | null
+          linked_at: string | null
+          linked_by: string | null
           long_term_goals_text: string | null
           mental_makeup_grade: number | null
           mental_makeup_grade_future: number | null
@@ -13807,6 +13809,11 @@ export type Database = {
           position_evaluated: string | null
           power_grade: number | null
           power_grade_future: number | null
+          prospect_contact: string | null
+          prospect_grad_year: number | null
+          prospect_name: string | null
+          prospect_position: string | null
+          prospect_team: string | null
           rise_ball_grade: number | null
           rise_ball_grade_future: number | null
           saw_both_batting_sides: boolean | null
@@ -13816,7 +13823,7 @@ export type Database = {
           speed_grade_future: number | null
           throwing_grade: number | null
           throwing_grade_future: number | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           body_type_frame_grade?: number | null
@@ -13862,6 +13869,8 @@ export type Database = {
           is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
+          linked_at?: string | null
+          linked_by?: string | null
           long_term_goals_text?: string | null
           mental_makeup_grade?: number | null
           mental_makeup_grade_future?: number | null
@@ -13883,6 +13892,11 @@ export type Database = {
           position_evaluated?: string | null
           power_grade?: number | null
           power_grade_future?: number | null
+          prospect_contact?: string | null
+          prospect_grad_year?: number | null
+          prospect_name?: string | null
+          prospect_position?: string | null
+          prospect_team?: string | null
           rise_ball_grade?: number | null
           rise_ball_grade_future?: number | null
           saw_both_batting_sides?: boolean | null
@@ -13892,7 +13906,7 @@ export type Database = {
           speed_grade_future?: number | null
           throwing_grade?: number | null
           throwing_grade_future?: number | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           body_type_frame_grade?: number | null
@@ -13938,6 +13952,8 @@ export type Database = {
           is_switch_hitter?: boolean | null
           leadership_grade?: number | null
           leadership_grade_future?: number | null
+          linked_at?: string | null
+          linked_by?: string | null
           long_term_goals_text?: string | null
           mental_makeup_grade?: number | null
           mental_makeup_grade_future?: number | null
@@ -13959,6 +13975,11 @@ export type Database = {
           position_evaluated?: string | null
           power_grade?: number | null
           power_grade_future?: number | null
+          prospect_contact?: string | null
+          prospect_grad_year?: number | null
+          prospect_name?: string | null
+          prospect_position?: string | null
+          prospect_team?: string | null
           rise_ball_grade?: number | null
           rise_ball_grade_future?: number | null
           saw_both_batting_sides?: boolean | null
@@ -13968,7 +13989,7 @@ export type Database = {
           speed_grade_future?: number | null
           throwing_grade?: number | null
           throwing_grade_future?: number | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
