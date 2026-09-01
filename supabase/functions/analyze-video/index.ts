@@ -429,12 +429,11 @@ STARTING POINT: Begin at 50 (mediocre baseline)
 - ADD points for correct mechanics
 - Scores above 80 require NEAR-PERFECT fundamentals
 
-SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders open BEFORE back elbow passes belly button → MAX SCORE: 70
-- If chest opens toward pitcher before hips finish rotating → MAX SCORE: 70
-- If hands drift forward during stride/load → MAX SCORE: 75
-- If back elbow stays tucked (doesn't extend forward) → MAX SCORE: 75
-- If TWO OR MORE critical violations → MAX SCORE: 60
+CRITICAL DEFECTS (do NOT flatten your score to a fixed number — report the true form quality):
+- If shoulders open BEFORE back elbow passes belly button → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If chest opens toward pitcher before hips finish rotating → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If hands drift forward during stride/load → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If back elbow stays tucked (doesn't extend forward) → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
 
 SCORING BANDS:
 - 90-100: Elite. ALL fundamentals correct. Minor refinements only.
@@ -472,9 +471,9 @@ Focus on (in this order):
 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
-- **CRITICAL CHECK:** Flag if shoulders/chest open before back elbow passes belly button (score CAPPED at 70)
-- **PRIORITY CHECK:** Flag if hands drift forward during stride (score CAPPED at 75)
-- **PRIORITY CHECK:** Flag if back elbow stays tucked instead of extending forward (score CAPPED at 75)
+- **CRITICAL CHECK:** Flag if shoulders/chest open before back elbow passes belly button (critical defect)
+- **PRIORITY CHECK:** Flag if hands drift forward during stride (critical defect)
+- **PRIORITY CHECK:** Flag if back elbow stays tucked instead of extending forward (critical defect)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
 - Specific feedback on:
   * Front foot landing timing relative to hip rotation (MUST land first)
@@ -760,11 +759,10 @@ STARTING POINT: Begin at 50 (mediocre baseline)
 - ADD points for correct mechanics
 - Scores above 80 require NEAR-PERFECT fundamentals
 
-SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE front foot lands → MAX SCORE: 70
-- If chest already faces home plate at landing (shoulders already rotated) → MAX SCORE: 70
-- If back hip/leg NOT facing target at landing → MAX SCORE: 75
-- If TWO OR MORE critical violations → MAX SCORE: 60
+CRITICAL DEFECTS (do NOT flatten your score to a fixed number — report the true form quality):
+- If shoulders rotate BEFORE front foot lands → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If chest already faces home plate at landing (shoulders already rotated) → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If back hip/leg NOT facing target at landing → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
 
 SCORING BANDS:
 - 90-100: Elite. ALL fundamentals correct. Minor refinements only.
@@ -807,9 +805,9 @@ When sequence is correct, the pitch should feel EFFORTLESS and AUTOMATIC due to 
 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
-- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (score CAPPED at 70)
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (critical defect)
 - **CRITICAL CHECK:** Flag if chest is already facing home plate when foot lands (this IS early rotation - score CAPPED at 70)
-- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (score CAPPED at 75)
+- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (critical defect)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If chest was facing home plate at landing:** Explain that the correct position is sideways - glove shoulder points at catcher, chest stays closed until AFTER foot plants
 - Specific feedback on landing position and sequence
@@ -1068,24 +1066,24 @@ STARTING POINT: Begin at 50 (mediocre baseline)
 - ADD points for correct mechanics
 - Scores above 80 require NEAR-PERFECT fundamentals
 
-SCORE CAPS (NON-NEGOTIABLE - Research-Based):
+CRITICAL DEFECTS (do NOT flatten your score to a fixed number — report the true form quality):
 
 CRITICAL VIOLATIONS (These destroy efficiency):
-- If trunk/shoulders rotate BEFORE front foot lands → MAX SCORE: 55
-- If front side collapse at SFC → MAX SCORE: 60
-- If arm circle crosses body's midline → MAX SCORE: 60
-- If stride foot NOT on power line → MAX SCORE: 70
+- If trunk/shoulders rotate BEFORE front foot lands → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If front side collapse at SFC → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If arm circle crosses body's midline → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If stride foot NOT on power line → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
 
 MODERATE VIOLATIONS:
-- If front shoulder NOT pointing at target at SFC → MAX SCORE: 65
-- If chest not closed (facing catcher) at SFC → MAX SCORE: 65
-- If stride foot angle >45° or pointing at catcher → MAX SCORE: 70
-- If drive leg strays far from power line during drag → MAX SCORE: 70
-- If excessive trunk lean at SFC → MAX SCORE: 70
+- If front shoulder NOT pointing at target at SFC → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If chest not closed (facing catcher) at SFC → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If stride foot angle >45° or pointing at catcher → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If drive leg strays far from power line during drag → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If excessive trunk lean at SFC → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
 
 COMPOUNDING RULE:
-- TWO critical violations → MAX SCORE: 50
-- THREE OR MORE critical violations → MAX SCORE: 45
+- TWO critical violations → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- THREE OR MORE critical violations → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
 
 SCORING BANDS:
 - 90-100: Elite. ALL fundamentals correct. Minor refinements only.
@@ -1133,10 +1131,10 @@ Focus on (in this order):
 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
-- **CRITICAL CHECK:** Flag if body rotates before front foot lands (score CAPPED at 55)
-- **POSITION CHECK:** Flag if front shoulder not pointing at target at landing (score CAPPED at 65)
-- **POSITION CHECK:** Flag if chest facing catcher at landing instead of sideways (score CAPPED at 65)
-- **ARM CIRCLE CHECK:** Flag if arm circle breaks, stalls, or crosses midline (score CAPPED at 60)
+- **CRITICAL CHECK:** Flag if body rotates before front foot lands (critical defect)
+- **POSITION CHECK:** Flag if front shoulder not pointing at target at landing (critical defect)
+- **POSITION CHECK:** Flag if chest facing catcher at landing instead of sideways (critical defect)
+- **ARM CIRCLE CHECK:** Flag if arm circle breaks, stalls, or crosses midline (critical defect)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If closed position not achieved:** Explain the path from squared to closed during stride
 - **If arm circle compromised:** Explain how perpendicular arm path protects shoulder and maximizes power
@@ -1456,11 +1454,10 @@ STARTING POINT: Begin at 50 (mediocre baseline)
 - ADD points for correct mechanics
 - Scores above 80 require NEAR-PERFECT fundamentals
 
-SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 65
-- If chest already faces target at landing (shoulders already rotated) → MAX SCORE: 65
-- If back hip/leg NOT facing target at landing → MAX SCORE: 60
-- If TWO OR MORE critical violations → MAX SCORE: 55
+CRITICAL DEFECTS (do NOT flatten your score to a fixed number — report the true form quality):
+- If shoulders rotate BEFORE stride foot lands → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If chest already faces target at landing (shoulders already rotated) → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- If back hip/leg NOT facing target at landing → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
 
 SCORING BANDS:
 - 90-100: Elite. ALL fundamentals correct. Minor refinements only.
@@ -1503,9 +1500,9 @@ When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to 
 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
-- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (score CAPPED at 65)
+- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (critical defect)
 - **CRITICAL CHECK:** Flag if chest is already facing target when foot lands (this IS early rotation - score CAPPED at 65)
-- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (score CAPPED at 60)
+- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (critical defect)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If chest was facing target at landing:** Explain that the correct position is sideways - glove shoulder points at target, chest stays closed until AFTER foot plants
 - Specific feedback on sequence and alignment
@@ -1940,9 +1937,9 @@ HITTING SEQUENCE REMINDER:
 6. Shoulders rotate
 7. Hands/bat release
 
-The score caps depend on accurate flags:
-- Early shoulder rotation (before foot lands) → MAX SCORE: 65
-- Multiple violations → MAX SCORE: 55`;
+These flags must be accurate — the system applies graded deductions from them:
+- Early shoulder rotation (before foot lands) → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- Multiple violations → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)`;
     } else {
       // PITCHING & THROWING: Back leg/hip should face target at landing
       alignmentChecksInstruction = `
@@ -1963,10 +1960,10 @@ The score caps depend on accurate flags:
 
 THESE ARE PASS/FAIL CHECKPOINTS. No partial credit. Be BRUTALLY HONEST in your violation detection.
 
-The score caps depend on accurate flags:
-- Either alignment violation (back leg OR shoulders) → MAX SCORE: 60
-- Both alignment violations → MAX SCORE: 55
-- Early shoulder rotation → MAX SCORE: 65`;
+These flags must be accurate — the system applies graded deductions from them:
+- Either alignment violation (back leg OR shoulders) → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- Both alignment violations → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)
+- Early shoulder rotation → CRITICAL DEFECT (score the movement honestly; the system applies its own deduction)`;
     }
     
     // Add text instruction first
