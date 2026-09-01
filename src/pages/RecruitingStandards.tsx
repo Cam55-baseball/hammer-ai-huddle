@@ -573,7 +573,12 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
       {/* Add row */}
       <div className="rounded-lg border bg-muted/30 p-3">
         <MicroLabel className="mb-2">Add a requirement</MicroLabel>
-        <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
+        <div
+          className={cn(
+            "grid gap-2 md:items-end",
+            rangeOptions ? "md:grid-cols-[1fr_1.4fr_auto]" : "md:grid-cols-[1fr_auto_1fr_auto]",
+          )}
+        >
           <div className="space-y-1">
             <Label className="text-xs">Field</Label>
             <Select
@@ -582,6 +587,9 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
                 setField(v);
                 const ops = fieldByKey(v)?.operators ?? [];
                 if (!ops.includes(operator)) setOperator(ops[0] ?? "eq");
+                setRangeMin(null);
+                setRangeMax(null);
+                setRaw("");
               }}
             >
               <SelectTrigger className="bg-background">
@@ -609,34 +617,56 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Operator</Label>
-            <Select value={operator} onValueChange={(v) => setOperator(v as StandardOperator)}>
-              <SelectTrigger className="min-w-[120px] bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allowedOps.map((op) => (
-                  <SelectItem key={op} value={op}>
-                    {OPERATOR_LABELS[op]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Value</Label>
-            <Input
-              className="bg-background"
-              value={raw}
-              onChange={(e) => setRaw(e.target.value)}
-              placeholder={operator === "in" ? "comma, separated, values" : def?.hint ?? "value"}
+
+          {rangeOptions ? (
+            <NumericRangePicker
+              label="Minimum – maximum"
+              options={rangeOptions}
+              min={rangeMin}
+              max={rangeMax}
+              onMinChange={setRangeMin}
+              onMaxChange={setRangeMax}
+              idPrefix={`range-${standardId}-${field}`}
             />
-          </div>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs">Operator</Label>
+                <Select value={operator} onValueChange={(v) => setOperator(v as StandardOperator)}>
+                  <SelectTrigger className="min-w-[120px] bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allowedOps.map((op) => (
+                      <SelectItem key={op} value={op}>
+                        {OPERATOR_LABELS[op]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Value</Label>
+                <Input
+                  className="bg-background"
+                  value={raw}
+                  onChange={(e) => setRaw(e.target.value)}
+                  placeholder={operator === "in" ? "comma, separated, values" : def?.hint ?? "value"}
+                />
+              </div>
+            </>
+          )}
           <Button onClick={handleAdd} disabled={addCriterion.isPending}>
             Add
           </Button>
         </div>
+        {rangeOptions && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Same value on both sides is an exact requirement. One side only leaves the other
+            open-ended. The form stays put — keep adding requirements back to back.
+          </p>
+        )}
+
 
         <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
           <div className="flex items-center gap-2">
