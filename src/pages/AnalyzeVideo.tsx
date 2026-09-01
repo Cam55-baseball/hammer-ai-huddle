@@ -523,10 +523,13 @@ export default function AnalyzeVideo() {
       } catch (frameError: any) {
         console.error('[ANALYSIS] Frame extraction failed:', frameError);
         setExtractingFrames(false);
-        toast.error(t('videoAnalysis.frameExtractionFailed', "Failed to extract video frames. Please try a different video format or browser."));
+        toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
+          ? UPLOAD_ERRORS.frameExtractionFailed
+          : friendlyThrownError(frameError));
         setUploading(false);
         return;
       }
+
 
       // ===== PHASE 42B — Real D-POSE landmark production =====
       // Runs MediaPipe Tasks Vision (BlazePose Full) over the same PNG
