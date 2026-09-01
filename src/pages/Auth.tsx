@@ -142,42 +142,54 @@ const Auth = () => {
             variant: "destructive",
           });
         } else if (data.user) {
+          const userId = data.user.id;
+
           // Ledger-truth onboarding check. Profile/subscription existence
           // is NOT proof of onboarding — only a canonical asb_events row
           // (or a non-athlete role like scout/admin/owner) counts.
-          const [rolesCheck, asbEventCheck] = await Promise.all([
-            supabase
-              .from('user_roles')
-              .select('id, role')
-              .eq('user_id', data.user.id)
-              .limit(1),
-            supabase
-              .from('asb_events')
-              .select('event_id', { count: 'exact', head: true })
-              .eq('athlete_id', data.user.id),
-          ]);
+          //
+          // These reads are TIME-BOUNDED and failure-tolerant on purpose: a
+          // slow or erroring backend must never strand a signed-in user on the
+          // login screen. If they don't resolve, we degrade to /dashboard.
+          const gateRead = (async () => {
+            const [rolesCheck, asbEventCheck] = await Promise.all([
+              supabase.from('user_roles').select('id, role').eq('user_id', userId).limit(1),
+              supabase
+                .from('asb_events')
+                .select('event_id', { count: 'exact', head: true })
+                .eq('athlete_id', userId),
+            ]);
 
-          const hasRole = !!(rolesCheck.data && rolesCheck.data.length > 0);
-          const hasFirstEvent = (asbEventCheck.count ?? 0) > 0;
-          const hasCompletedOnboarding = hasFirstEvent || hasRole;
-          const isScout = rolesCheck.data?.some((r: { role: string }) => r.role === 'scout');
-          const isCoach = rolesCheck.data?.some((r: { role: string }) => r.role === 'coach');
+            const roles = (rolesCheck.data ?? []).map((r: { role: string }) => r.role);
+            const isScout = roles.includes('scout');
+            const isCoach = roles.includes('coach');
 
-          // Staff first-run gate: a scout/coach who has never filled in their
-          // canonical role context row lands in their own onboarding flow —
-          // never the athlete flow. Completion is derived, never a stored flag.
-          let staffOnboardingPath: string | null = null;
-          if (isScout || isCoach) {
-            const table = isScout ? 'scout_context' : 'coach_context';
-            const { data: ctx } = await supabase
-              .from(table)
-              .select('org_name')
-              .eq('user_id', data.user.id)
-              .maybeSingle();
-            if (!ctx?.org_name) {
-              staffOnboardingPath = isScout ? '/onboarding/scout' : '/onboarding/coach';
+            // Staff first-run gate: a scout/coach who has never filled in their
+            // canonical role context row lands in their own onboarding flow —
+            // never the athlete flow. Completion is derived, never a stored flag.
+            let hasStaffContext = true;
+            if (isScout || isCoach) {
+              const table = isScout ? 'scout_context' : 'coach_context';
+              const { data: ctx } = await supabase
+                .from(table)
+                .select('org_name')
+                .eq('user_id', userId)
+                .maybeSingle();
+              hasStaffContext = !!ctx?.org_name;
             }
-          }
+
+            return {
+              roles,
+              hasFirstEvent: (asbEventCheck.count ?? 0) > 0,
+              hasStaffContext,
+            };
+          })();
+
+          const { value: gate, degraded } = await withLoginTimeout(gateRead, {
+            roles: [] as string[],
+            hasFirstEvent: false,
+            hasStaffContext: true,
+          });
 
           toast({
             title: t('auth.welcomeBack'),
@@ -186,24 +198,14 @@ const Auth = () => {
 
           // Preserve invite/parent flows: ?redirect=… wins over the
           // default onboarding gate when it's a safe relative path.
-          const redirectTarget = resolveRedirect();
-          if (redirectTarget) {
-            setTimeout(() => navigate(redirectTarget, { replace: true }), 0);
-          } else if (staffOnboardingPath) {
-            const path = staffOnboardingPath;
-            setTimeout(() => navigate(path, { replace: true }), 0);
-          } else if (isScout) {
-            setTimeout(() => navigate("/scout-dashboard", { replace: true }), 0);
-          } else if (!hasCompletedOnboarding) {
-            // Athlete with no canonical event and no role → start onboarding.
-            setTimeout(() => navigate("/onboarding/athlete", { replace: true }), 0);
-          } else if (!hasFirstEvent && !hasRole) {
-            // Defensive: should be unreachable, but route to onboarding.
-            setTimeout(() => navigate("/onboarding/athlete", { replace: true }), 0);
-          } else {
-            setTimeout(() => navigate("/dashboard", { replace: true }), 0);
-          }
+          const target = resolvePostLoginRoute({
+            redirectTarget: resolveRedirect(),
+            ...gate,
+            degraded,
+          });
+          setTimeout(() => navigate(target, { replace: true }), 0);
         }
+
 
       } else {
         // Age is computed server-side. The DOB is checked BEFORE any other
