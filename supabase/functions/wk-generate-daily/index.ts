@@ -874,8 +874,33 @@ const handler = async (req: Request): Promise<Response> => {
       if (usedThisSession.has(s.movement.slug)) return false;
       const nameKey = normalizeName(s.movement.name);
       if (usedNamesThisSession.has(nameKey)) return false;
+      // Final backstop for the single-slot category budget. Selection already
+      // filters for this; a swap (injury regression) can still land on a
+      // category that is spoken for, and a duplicate here would fail the
+      // certifier and kill the whole plan. Refusing one row is always better.
+      const pushDomain = domainForSlot(slot, role);
+      const pushCategory = pushDomain ? domainCategoryOf(s.movement, pushDomain) : null;
+      if (pushDomain && !categoryBudget.hasRoom(pushDomain, pushCategory)) {
+        selectionSkips.record({
+          domain: pushDomain,
+          requirement: `${role} slot`,
+          reason: `${s.movement.name} was skipped because today's ${String(pushCategory).replace(/_/g, " ")} slot is already filled.`,
+        });
+        return false;
+      }
+      // Training-age legality is never bypassed by a swap either.
+      if (!isTrainingAgeLegal(s.movement as any, trainingAgeClassForSelection)) {
+        selectionSkips.record({
+          domain: pushDomain ?? "session",
+          requirement: `${role} slot`,
+          reason: `${s.movement.name} is not cleared for your training level yet.`,
+        });
+        return false;
+      }
       usedThisSession.add(s.movement.slug);
       usedNamesThisSession.add(nameKey);
+      if (pushDomain) categoryBudget.commit(pushDomain, pushCategory);
+
       const setsBase = overrides.sets ?? s.movement.default_sets ?? null;
       const repsBase = overrides.reps ?? s.movement.default_reps ?? null;
       const totalDose =
