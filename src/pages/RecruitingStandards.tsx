@@ -30,6 +30,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { RecruiterContactCard } from "@/components/recruiting/RecruiterContactCard";
+import { NumericRangePicker } from "@/components/recruiting/NumericRangePicker";
+import {
+  isInvertedRange,
+  optionsForField,
+  rangeToCriteria,
+} from "@/lib/recruiting/numericRanges";
+
 import { RevealSection } from "@/components/analyze/RevealSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -372,11 +379,15 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
   const [field, setField] = useState<string>(PROFILE_FIELDS[0].key);
   const [operator, setOperator] = useState<StandardOperator>("eq");
   const [raw, setRaw] = useState("");
+  const [rangeMin, setRangeMin] = useState<number | null>(null);
+  const [rangeMax, setRangeMax] = useState<number | null>(null);
   const [isMandatory, setIsMandatory] = useState(true);
   const [pingMessage, setPingMessage] = useState("");
 
   const def = fieldByKey(field);
   const allowedOps = def?.operators ?? (["eq"] as const);
+  // Numeric and grade fields are picked from paired min/max dropdowns, never typed.
+  const rangeOptions = def ? optionsForField(def.key, def.kind) : null;
 
   // Only the tools that exist for this standard's sport and role are offered.
   const gradeFields = useMemo(
@@ -398,8 +409,39 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
   const dispatch = useDispatchStandardMatchPings();
   const pendingCount = pending.data?.length ?? 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!def) return;
+
+    // Numeric path: one or two rows depending on which sides were picked.
+    if (rangeOptions) {
+      if (isInvertedRange(rangeMin, rangeMax)) {
+        toast.error("The minimum is above the maximum — flip them and try again.");
+        return;
+      }
+      const rows = rangeToCriteria(rangeMin, rangeMax);
+      if (!rows.length) {
+        toast.error("Pick a minimum, a maximum, or both.");
+        return;
+      }
+      try {
+        for (const row of rows) {
+          await addCriterion.mutateAsync({
+            field,
+            operator: row.operator,
+            value: row.value,
+            is_mandatory: isMandatory,
+          });
+        }
+        // Selections stay put so the next requirement is a two-click edit.
+        setRangeMin(null);
+        setRangeMax(null);
+        toast.success(rows.length > 1 ? "Range added" : "Criterion added");
+      } catch (e: unknown) {
+        toast.error((e as Error).message);
+      }
+      return;
+    }
+
     const value = parseCriterionValue(raw, def.kind, operator);
     if (value === null) {
       toast.error("Enter a valid value for this field.");
@@ -416,6 +458,7 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
       },
     );
   };
+
 
   const list = criteria.data ?? [];
   const mandatoryList = list.filter((c) => c.is_mandatory !== false);
@@ -537,7 +580,12 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
       {/* Add row */}
       <div className="rounded-lg border bg-muted/30 p-3">
         <MicroLabel className="mb-2">Add a requirement</MicroLabel>
-        <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
+        <div
+          className={cn(
+            "grid gap-2 md:items-end",
+            rangeOptions ? "md:grid-cols-[1fr_1.4fr_auto]" : "md:grid-cols-[1fr_auto_1fr_auto]",
+          )}
+        >
           <div className="space-y-1">
             <Label className="text-xs">Field</Label>
             <Select
@@ -546,6 +594,9 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
                 setField(v);
                 const ops = fieldByKey(v)?.operators ?? [];
                 if (!ops.includes(operator)) setOperator(ops[0] ?? "eq");
+                setRangeMin(null);
+                setRangeMax(null);
+                setRaw("");
               }}
             >
               <SelectTrigger className="bg-background">
@@ -573,34 +624,56 @@ function CriteriaEditor({ standard }: { standard: OrgStandard }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Operator</Label>
-            <Select value={operator} onValueChange={(v) => setOperator(v as StandardOperator)}>
-              <SelectTrigger className="min-w-[120px] bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allowedOps.map((op) => (
-                  <SelectItem key={op} value={op}>
-                    {OPERATOR_LABELS[op]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Value</Label>
-            <Input
-              className="bg-background"
-              value={raw}
-              onChange={(e) => setRaw(e.target.value)}
-              placeholder={operator === "in" ? "comma, separated, values" : def?.hint ?? "value"}
+
+          {rangeOptions ? (
+            <NumericRangePicker
+              label="Minimum – maximum"
+              options={rangeOptions}
+              min={rangeMin}
+              max={rangeMax}
+              onMinChange={setRangeMin}
+              onMaxChange={setRangeMax}
+              idPrefix={`range-${standardId}-${field}`}
             />
-          </div>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs">Operator</Label>
+                <Select value={operator} onValueChange={(v) => setOperator(v as StandardOperator)}>
+                  <SelectTrigger className="min-w-[120px] bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allowedOps.map((op) => (
+                      <SelectItem key={op} value={op}>
+                        {OPERATOR_LABELS[op]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Value</Label>
+                <Input
+                  className="bg-background"
+                  value={raw}
+                  onChange={(e) => setRaw(e.target.value)}
+                  placeholder={operator === "in" ? "comma, separated, values" : def?.hint ?? "value"}
+                />
+              </div>
+            </>
+          )}
           <Button onClick={handleAdd} disabled={addCriterion.isPending}>
             Add
           </Button>
         </div>
+        {rangeOptions && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Same value on both sides is an exact requirement. One side only leaves the other
+            open-ended. The form stays put — keep adding requirements back to back.
+          </p>
+        )}
+
 
         <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
           <div className="flex items-center gap-2">
@@ -773,11 +846,28 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
   const [open, setOpen] = useState(false);
 
   const role = standard.recruiting_role;
-  const positions = standard.target_positions ?? [];
   const logic = standard.position_match_logic ?? "any";
+
+  /**
+   * Positions are held locally and pushed up in the background, so a scout can
+   * tap several in a row without the panel re-rendering out from under them.
+   */
+  const serverPositions = standard.target_positions ?? [];
+  const [positions, setPositions] = useState<string[]>(serverPositions);
+  const serverKey = serverPositions.join(",");
+  const lastServerKey = useRef(serverKey);
+  useEffect(() => {
+    if (lastServerKey.current !== serverKey) {
+      lastServerKey.current = serverKey;
+      setPositions(serverPositions);
+    }
+    // serverPositions is derived from serverKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverKey]);
 
   const count = criteria.data?.length ?? 0;
   const summary = summarizeCriteria(criteria.data ?? []);
+
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -901,9 +991,12 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
               role={role}
               onRoleChange={(v) => updateStandard.mutate({ id: standard.id, recruiting_role: v })}
               positions={positions}
-              onPositionsChange={(v) =>
-                updateStandard.mutate({ id: standard.id, target_positions: v })
-              }
+              onPositionsChange={(v) => {
+                setPositions(v);
+                lastServerKey.current = v.join(",");
+                updateStandard.mutate({ id: standard.id, target_positions: v });
+              }}
+
               logic={logic}
               onLogicChange={(v) =>
                 updateStandard.mutate({ id: standard.id, position_match_logic: v })
@@ -923,7 +1016,13 @@ function StandardCard({ standard }: { standard: OrgStandard }) {
 /* Lists                                                               */
 /* ------------------------------------------------------------------ */
 
-/** Standards grouped by sport, then by the position each profile targets. */
+/**
+ * Standards grouped by sport, then by the position each profile targets.
+ *
+ * Everything renders inside ONE parent element with stable per-standard keys.
+ * Group headers move around as criteria and positions change, but React keeps
+ * each card mounted, so an open editor never collapses mid-edit.
+ */
 function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
   const ids = useMemo(() => standards.map((s) => s.id), [standards]);
   const criteriaMap = useStandardsCriteriaMap(ids);
@@ -945,40 +1044,32 @@ function GroupedStandardsList({ standards }: { standards: OrgStandard[] }) {
     );
   }, [standards, criteriaMap.data]);
 
-  // One flat list reads better than a single decorated group.
-  if (groups.length < 2) {
-    return (
-      <div className="space-y-4">
-        {standards.map((s) => (
-          <StandardCard key={s.id} standard={s} />
-        ))}
-      </div>
-    );
-  }
+  const showHeaders = groups.length > 1;
 
   return (
-    <div className="space-y-8">
-      {groups.map((g) => (
-        <section key={`${g.sport}-${g.position}`} className="space-y-3">
-          <div className="flex items-center gap-2">
-            <MicroLabel>
-              {SPORT_LABELS[g.sport] ?? g.sport} · {g.position}
-            </MicroLabel>
-            <Badge variant="secondary" className="tabular-nums">
-              {g.items.length}
-            </Badge>
-            <Separator className="flex-1" />
-          </div>
-          <div className="space-y-4">
-            {g.items.map((s) => (
-              <StandardCard key={s.id} standard={s} />
-            ))}
-          </div>
-        </section>
-      ))}
+    <div className="space-y-4">
+      {groups.flatMap((g) => {
+        const nodes: React.ReactNode[] = [];
+        if (showHeaders) {
+          nodes.push(
+            <div key={`hdr-${g.sport}-${g.position}`} className="flex items-center gap-2 pt-4">
+              <MicroLabel>
+                {SPORT_LABELS[g.sport] ?? g.sport} · {g.position}
+              </MicroLabel>
+              <Badge variant="secondary" className="tabular-nums">
+                {g.items.length}
+              </Badge>
+              <Separator className="flex-1" />
+            </div>,
+          );
+        }
+        for (const s of g.items) nodes.push(<StandardCard key={s.id} standard={s} />);
+        return nodes;
+      })}
     </div>
   );
 }
+
 
 function StandardsEmptyState({ onCreate }: { onCreate: () => void }) {
   return (
@@ -1074,7 +1165,7 @@ export default function RecruitingStandards() {
   useEffect(() => {
     if (!creating) return;
     const frame = requestAnimationFrame(() => {
-      createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      createFormRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
       createFormRef.current?.querySelector<HTMLInputElement>("#org-name")?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
