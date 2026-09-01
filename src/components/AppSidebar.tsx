@@ -274,6 +274,8 @@ export function AppSidebar() {
           { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          { title: 'Pitch Tipping 101', url: '/learn/pitch-tipping', icon: Eye, description: "Spot a pitcher's tells at the plate" },
+
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
           ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
           ...(selectedSport === 'baseball' ? [{ title: 'Pick-Off Trainer', url: '/pickoff-trainer', icon: Target, description: 'Pick-off decision training' }] : []),
