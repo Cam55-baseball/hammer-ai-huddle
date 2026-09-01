@@ -2789,6 +2789,11 @@ const handler = async (req: Request): Promise<Response> => {
       adaptation: adaptationDecision.primary,
       adaptation_reason: adaptationDecision.reason,
       generator_version: WIC_VERSION,
+      // Blocks intentionally left out today, with athlete-readable reasons.
+      // An empty array means every legal block was filled.
+      skipped_blocks: selectionSkips.list(),
+      pre_selection_version: PRE_SELECTION_VERSION,
+
       game_day: isGameDay,
       practice_day: isPracticeDay,
       practice_kinds: practiceKinds,
