@@ -1860,6 +1860,19 @@ export default function Profile() {
           </div>
         )}
 
+        {/* Calibration / track record — own profile only */}
+        {!viewingOtherProfile && currentUserRole === 'scout' && (
+          <div className="mb-6">
+            <ScoutCalibrationCard />
+          </div>
+        )}
+        {!viewingOtherProfile && currentUserRole === 'coach' && (
+          <div className="mb-6">
+            <CoachCalibrationCard />
+          </div>
+        )}
+
+
         {/* Self-service scout upgrade — coaches only */}
         {!viewingOtherProfile && currentUserRole === 'coach' && (
           <div className="mb-6">
