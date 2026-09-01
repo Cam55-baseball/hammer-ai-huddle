@@ -442,7 +442,8 @@ export const ELITE_DRILL_CATALOG: EliteDrill[] = [
     cues: ["Reach the target", "Chest over the front knee"],
     dosage: "3 x 8",
     equipment: ["none"],
-    violationKeys: [],
+    violationKeys: ["hands_pass_elbow_early"],
+
     pieV2Signals: ["extension_consistency", "arm_slot_consistency"],
     movementPatterns: ["extension_variance", "arm_slot_variance"],
   },
