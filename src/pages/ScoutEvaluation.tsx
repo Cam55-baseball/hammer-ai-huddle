@@ -281,7 +281,16 @@ export default function ScoutEvaluation() {
       const primary = filledLooks[0];
 
       const row: Record<string, unknown> = {
-        user_id: athleteId,
+        user_id: prospectMode ? null : athleteId,
+        prospect_name: prospectMode ? prospectName.trim() : null,
+        prospect_team: prospectMode ? prospectTeam.trim() || null : null,
+        prospect_grad_year:
+          prospectMode && /^\d{4}$/.test(prospectGradYear.trim())
+            ? Number(prospectGradYear.trim())
+            : null,
+        prospect_position: prospectMode ? prospectPosition.trim() || null : null,
+        prospect_contact: prospectMode ? prospectContact.trim() || null : null,
+
         evaluator_id: user.id,
         grade_source: 'coach_evaluated',
         grade_type: gradeType,
