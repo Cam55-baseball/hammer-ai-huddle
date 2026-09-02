@@ -4,6 +4,11 @@ import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, forma
 import { ENGINE_VERSION, sha256Hex } from "../_shared/asbEmit.ts";
 import { getContractFor, buildMetricsSchema, buildMetricsPromptBlock, countMissing } from "../_shared/reportCardContracts.ts";
 import {
+  evaluateBallTrackingGate,
+  suppressBallFlightMetrics,
+  BALL_TRACKING_FLOOR_FPS,
+} from "../_shared/ballTrackingGate.ts";
+import {
   buildCacheFingerprint,
   LANDMARK_MODEL_VERSION,
   DETECTOR_VERSION,
@@ -39,6 +44,14 @@ const requestSchema = z.object({
    * keyed on the resulting video_analysis_runs.id.
    */
   frameExtractions: z.array(frameExtractionSchema).optional(),
+  /**
+   * Capture-honesty inputs. `captureFps` is the frame rate the recorder
+   * actually achieved (measured, not requested). `ballTrackingEligible` is the
+   * client's own verdict — advisory, and it can only ever close the gate,
+   * never open it (see _shared/ballTrackingGate.ts).
+   */
+  captureFps: z.number().positive().optional(),
+  ballTrackingEligible: z.boolean().optional(),
 });
 
 /**
@@ -1652,7 +1665,7 @@ Deno.serve(async (req) => {
   try {
     // Validate input
     const body = await req.json();
-    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions } = requestSchema.parse(body);
+    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions, captureFps, ballTrackingEligible } = requestSchema.parse(body);
     auditCtx.videoId = videoId;
     auditCtx.userId = userId;
 
