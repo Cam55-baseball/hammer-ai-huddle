@@ -41,22 +41,6 @@ type PrepStage = 'idle' | 'extracting' | 'uploading' | 'registering' | 'storing'
 
 const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 
-/**
- * Standard, fixed pitching distances. Baseball's 60'6" is universal above 14U,
- * softball's 43' is universal above 14U — so the standard setup needs zero
- * input from the athlete. Non-standard setups (youth mounds) override below.
- */
-const STANDARD_DISTANCE: Record<Sport, number> = {
-  baseball: 60.5,
-  softball: 43,
-};
-
-const STANDARD_LABEL: Record<Sport, string> = {
-  baseball: "Standard mound — 60 ft 6 in",
-  softball: 'Standard circle — 43 ft',
-};
-
-type SetupMode = 'standard' | 'custom';
 
 
 const STAGE_PROGRESS: Record<PrepStage, number> = {
