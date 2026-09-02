@@ -2256,6 +2256,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let scoreWasAdjusted = false;
     
     let metrics: Record<string, unknown> | null = null;
+    let ballFlightSuppressedKeys: string[] = [];
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
@@ -2293,9 +2294,20 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           }
         }
 
+        // ===== BALL-TRACKING GATE (missing beats fabricated) =====
+        // Footage below the tracking floor cannot support a ball-flight number.
+        // Force those tiles to missing with the honest reason. Mechanics tiles
+        // are untouched.
+        if (!ballGate.eligible) {
+          const supp = suppressBallFlightMetrics(metrics, ballGate);
+          ballFlightSuppressedKeys = supp.suppressedKeys;
+          if (supp.suppressedKeys.length > 0) {
+            console.log(
+              `[BALL-GATE] ${supp.suppressedKeys.length} ball-flight tile(s) marked missing: ${supp.suppressedKeys.join(", ")}`,
+            );
+          }
+        }
 
-
-        
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
         // Scan feedback text for violation keywords - override AI flags if needed
         // NOTE: Pass module so back_leg check is skipped for hitting
@@ -2462,6 +2474,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       detector_version: DETECTOR_VERSION,
       metric_engine_version: METRIC_ENGINE_VERSION,
       fps_true: fpsTrue,
+      // Capture honesty — what the footage could actually support.
+      capture_fps: ballGate.fps,
+      capture_fps_source: ballGate.fpsSource,
+      ball_tracking_eligible: ballGate.eligible,
+      ball_tracking_floor_fps: BALL_TRACKING_FLOOR_FPS,
+      ball_flight_unavailable_reason: ballGate.reason,
+      ball_flight_suppressed_keys: ballFlightSuppressedKeys,
       analyzed_at: new Date().toISOString(),
     };
 
@@ -2597,6 +2616,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         // grade ribbon + tiles render without an extra round-trip.
         metrics: metrics ?? null,
         report_card_contract_id: reportCardContract?.id ?? null,
+        ball_tracking_eligible: ballGate.eligible,
+        capture_fps: ballGate.fps,
+        ball_flight_unavailable_reason: ballGate.reason,
+        ball_flight_suppressed_keys: ballFlightSuppressedKeys,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
