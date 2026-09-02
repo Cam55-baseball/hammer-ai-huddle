@@ -199,7 +199,7 @@ export function analysisScopeForFps(fps: number | null | undefined): {
   note: string;
 } {
   const f = fps ?? 0;
-  if (f >= FPS_TRACKING_FLOOR - 2) {
+  if (f >= FPS_TRACKING_FLOOR) {
     return { ballTracking: true, mechanics: true, note: `Captured at ${Math.round(f)}fps — full analysis available.` };
   }
   if (f >= 24) {
