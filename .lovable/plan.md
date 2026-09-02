@@ -1,55 +1,51 @@
-# Capture & Analysis Consolidation
+# Record Now vs Upload — split by purpose
 
-## Current state (verified, not assumed)
+## The reframe
 
-**Four entry points exist, and only three of them are actually "capture choices."**
+| | Record Now | Upload |
+|---|---|---|
+| Purpose | Live/continuous capture, **per-rep metrics across a session** | Single clip in, **mechanics report card** out |
+| Comparable to | PitchLab / SmartScout / HeyBLU | Mustard / Teammstrd |
+| Pitching output | velocity, location in the zone, extension, movement, spin — per pitch | joint angles, sequencing, tiles, prescribed drills |
+| Hitting output | exit velo, launch angle, distance, spray, bat speed — per swing | same mechanics report card |
+| Reference distance | required (velocity/location math) | not asked for |
+| Surface | new **Session metrics view** (list of reps + summary) | existing `HammerReportCard` |
+| Both | feed the same athlete profile and grading | |
 
-| Path | Where | What it really is | Feeds |
-|---|---|---|---|
-| Upload | `AnalyzeVideo.tsx:1129` (mode `upload`) | Pick an existing file | `analyze-video` |
-| Record here | `HighFpsCapture.tsx` via `AnalyzeVideo.tsx:1457` | In-app record, negotiates 120→60fps, measures real fps | `analyze-video` |
-| DelayCam | `DelayCam.tsx` via `AnalyzeVideo.tsx:1474` | In-app record **plus** a 1–55s delayed mirror for self-review | `analyze-video` |
-| /pitch-velocity | `PitchVelocityPrep.tsx`, `App.tsx:363`, StaffOnlyRoute | Separate upload + reference-distance form | `pitch-velocity-prep` → `pitch-velocity-measure` |
+## What this changes about work already done
 
-DelayCam and Record here both record in-app with the same high-fps constraints. The only real difference is the delayed-mirror playback. So it is a *mode*, not a pipeline.
+Keep as-is:
+- Two-option chooser, DelayCam as its own sidebar module (`/delaycam`) — already shipped.
+- Fully adjustable reference distance (presets 42/46/50/54/60.5 + 35/40/43 + manual entry) in `referenceDistance.ts` / `ReferenceDistanceStep.tsx` — already shipped, and it stays the single source anywhere a distance is collected.
+- `FPS_TRACKING_FLOOR` unified at 58; honesty gates unchanged.
+- `/pitch-velocity` stays an unlinked dev harness.
+- Record Now stays owner/admin gated until real-device testing backs the claim.
 
-**Where the report card comes from:** `analyze-video` returns `metrics`; `AnalyzeVideo.tsx` renders `HammerReportCard`, which resolves tiles through `getReportCardSpec(sport, module)` and each tile's `compute()` reads `analysis.metrics`. Visibility is filtered by `reportCard/release1.ts` (today only `tempo_sec` and `shoulder_tilt_deg` are visible; hitting fully suppressed).
+Changes:
+1. **Move `ReferenceDistanceStep` out of the Upload flow** in `AnalyzeVideo.tsx` and into the Record Now panel. Upload stops asking for it entirely.
+2. **`BallFlightPanel` leaves the Upload report.** Ball flight is a Record Now output, not a mechanics-report tile. Upload's report card returns to pure mechanics.
+3. **`runBallFlight` gets re-pointed** from "one clip → one velocity" to "one rep of a session → that rep's metrics", called per detected rep.
+4. Copy rewrite on both chooser cards to describe purpose, not capture quality ("Measure every pitch in a bullpen" vs "Break down one rep in detail").
 
-**The velocity pipeline is genuinely separate.** `pitch-velocity-prep`/`-measure` write `cv_calibration_sessions` / `cv_calibration_frames` / `cv_velocity_measurements`. Calibration is keyed **per video**, and `PitchVelocityPrep` inserts its *own* new `videos` row rather than reusing an analyzed clip. `analyze-video` never reads any `cv_*` table. No report-card tile exists for pitch velocity. The two pipelines share exactly one thing: the `_shared/ballTrackingGate.ts` module.
+## What multi-rep session capture actually requires
 
-**Honesty gates today:** server floor 58fps in `ballTrackingGate.ts`; fail-closed (a client claiming eligibility can never open the gate). But only `HighFpsCapture` actually sends `captureFps`/`ballTrackingEligible` — Upload and DelayCam rely on the server's `fps_true` fallback. Also three near-duplicate floor constants (`58` server, `60` in `highFpsCapture.ts:18`, `58` in `classifyFps`).
+Exists today: high-fps constraint negotiation, achieved-fps measurement, `MediaRecorder` capture of one clip, deterministic frame extraction, a hosted Roboflow ball detector reachable via `pitch-velocity-prep`/`-measure`, per-video calibration keyed to one reference distance.
 
-**Other duplication found:** sport resolution is re-implemented in `PitchVelocityPrep` instead of shared; the on-device ONNX detector (`onDeviceBallDetector.ts`) is hard-disabled and unreferenced.
+Missing, in order of difficulty:
 
-## Proposed consolidation
+- **Rep segmentation.** Nothing today splits a 6-minute bullpen into 30 pitches. Needs a motion/ball-appearance segmenter over the frame stream producing rep windows. This is the gating piece — everything else is plumbing behind it.
+- **Session data model.** Today calibration and measurement are per-video. Needs `capture_sessions` (one recording, one calibration, one athlete, one discipline) and `capture_session_reps` (per-rep metrics + confidence + missingness). Calibration becomes per-session, computed once, reused by every rep.
+- **Location, extension, movement, spin.** Only velocity exists. Location needs plate-plane geometry (a second reference in frame or a marked plate); extension needs a rubber reference; movement needs a multi-point trajectory fit rather than two endpoints; spin is not obtainable from 60fps phone video and should be declared unavailable rather than approximated.
+- **Hitting metrics.** Exit velo/launch angle/distance/spray need contact detection plus post-contact trajectory — a separate detector class from the pitching path. Bat speed needs bat detection, which the current model does not do.
+- **Cost/throughput.** Hosted inference per rep multiplies credits by rep count. Needs a per-session frame budget and a hard cap before it can open past staff.
+- **Session metrics surface.** New page: rep table, per-rep confidence, session summary, and the same missing-beats-fabricated treatment per metric.
 
-### 1. One capture entry point, two honest choices
-Replace the 3-card chooser with 2 cards:
-- **Record now** — "Your camera records as fast as it can, so the ball stays sharp. Best results."
-- **Upload a video I already have** — "Send a clip from your camera roll. Mechanics always work; ball speed needs a fast enough clip."
+Honest read: velocity-per-rep across a session is reachable on the current stack once segmentation and the session model exist. Location, extension, movement, spin, and all hitting ball-flight metrics are new capability, not refactors, and each should ship as `missing` with a plain-language reason until its own detector is validated.
 
-Inside Record now, a toggle: **Delayed mirror (watch yourself right after each rep)** — off by default. Toggling it swaps in the existing `DelayCam` recorder; both share the same high-fps constraints and the same save/analyze handoff. `captureMode` becomes `choose | record | upload`, with `delayedMirror: boolean`.
+## Proposed build order
 
-### 2. Inline reference distance step
-New `CalibrationStep` component shown *after* the athlete has a clip, only when the discipline can produce ball flight (pitching now; hitting later). It pre-fills the standard distance from `leagueDistances.ts` (baseball 60.5ft, softball 43ft), offers a league-level dropdown and manual entry, and has a plain **"Skip — just check my mechanics"**. Skipping is a first-class, non-penalised choice.
-
-### 3. One recording → one report card
-- Extract the calibration + measure call sequence out of `PitchVelocityPrep` into `src/lib/cv/velocityRun.ts`, taking an existing `videoId` + `reference_distance_ft`.
-- `AnalyzeVideo` runs it alongside `analyze-video` on the same video row when a distance was supplied and the gate is open.
-- Merge the result into `analysis.metrics` under a new `pitch_velocity_mph` key with the existing `MetricValue` shape (value/confidence, or `missing` + reason).
-- Add a `pitch_velocity_mph` tile to the BP and SP contracts; register it in `release1.ts` (visibility to be set by you — default proposal: visible for staff, `SHOWCASE_FUTURE` for athletes, matching the current pre-release lock).
-- `/pitch-velocity` stays as a staff diagnostics page but stops being an athlete-facing path.
-
-### 4. Plain-language everywhere
-Every new option, and the velocity tile's missing states, get copy in the `uploadErrorCopy.ts` voice — what happened, why, what to do next. New strings centralised in `src/lib/capture/captureCopy.ts`.
-
-### 5. Gates preserved
-- Single floor constant, exported once from `highFpsCapture.ts` and mirrored server-side, removing the 58/60 drift.
-- Upload and DelayCam paths start sending `captureFps`/`ballTrackingEligible` explicitly, so the fallback path is a backstop rather than the norm.
-- No calibration → velocity reports `missing` with "we don't know the distance", mechanics unaffected.
-- Below floor → velocity and any other ball-flight metric report `missing`, mechanics unaffected.
-
-## Notes / assumptions
-- Pitch velocity remains **credit-billing and unvalidated**, so per the existing lock I will keep the actual Roboflow call staff-gated; the flow, the tile, and the missing-state copy ship for everyone. Say the word to open it to athletes.
-- No changes to `analyze-video`'s mechanics analysis itself.
-- The disabled on-device ONNX detector stays untouched.
+1. Move reference distance to Record Now; strip ball flight from the Upload report; rewrite chooser copy. (Small, lands now.)
+2. Session data model + per-session calibration.
+3. Rep segmentation over the recorded stream.
+4. Session metrics view, velocity only, everything else declared unavailable.
+5. Per-metric detectors, one at a time, each behind the staff gate until validated.
