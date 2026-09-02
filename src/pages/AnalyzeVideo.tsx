@@ -492,6 +492,9 @@ export default function AnalyzeVideo() {
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
     let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
+    // Full frame objects (data URL + geometry) kept for the ball-flight pass,
+    // which needs pixels, not just the audit record.
+    let extractedFrames: Awaited<ReturnType<typeof extractKeyFramesDeterministic>>["frames"] = [];
     let landingFrameIndex: number | null = null;
     // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
     // captured here and persisted into `video_landmark_runs` after the video
@@ -511,6 +514,7 @@ export default function AnalyzeVideo() {
           landingTime,
         });
         frames = result.frames.map((f) => f.dataUrl);
+        extractedFrames = result.frames;
         frameExtractions = result.frames.map((f) => ({
           frame_index: f.frame_index,
           timestamp_seconds: f.timestamp_seconds,
@@ -913,7 +917,7 @@ export default function AnalyzeVideo() {
       try {
         const flight = await runBallFlight({
           videoId: videoData.id,
-          frames,
+          frames: extractedFrames,
           referenceDistanceFt,
           captureFps: probed?.fps_true ?? null,
           measurementEnabled: Boolean(isOwner || isAdmin),
