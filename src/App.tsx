@@ -76,6 +76,7 @@ const Activate = lazyWithRetry(() => import("./pages/Activate"));
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
+const DelayCamPage = lazyWithRetry(() => import("./pages/DelayCamPage"));
 const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
 // Pre-release: CombineEntry / MyCombineResults stay in the codebase but are not
 // routed — every /combine/* path renders the coming-soon page instead.
