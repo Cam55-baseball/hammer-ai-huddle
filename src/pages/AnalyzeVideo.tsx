@@ -1114,6 +1114,11 @@ export default function AnalyzeVideo() {
                 prevents one of the three filming gaps that killed the tiles. */}
             {module === "pitching" && <PitchingFilmingGuide />}
             <div className="grid md:grid-cols-2 gap-4">
+            {/* Pre-release gate: in-app high-frame-rate recording is brand new and
+                has not been validated on real devices, so it cannot yet claim
+                "best quality" to athletes. Owner/admin only until device testing
+                confirms it. Everyone keeps Upload (and DelayCam for self-review). */}
+            {(isOwner || isAdmin) && (
             <button type="button" onClick={() => setCaptureMode("capture")} className="text-left">
               <Card className="p-4 sm:p-6 h-full border-2 border-primary/40 bg-primary/[0.03] transition-colors hover:border-primary/70 hover:bg-accent/40">
                 <div className="flex flex-col items-center text-center space-y-3">
@@ -1126,9 +1131,12 @@ export default function AnalyzeVideo() {
                   <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
                     {t('videoAnalysis.chooseCaptureDescription', 'Film the rep right here. We ask your camera for the fastest recording it can do, so the ball stays sharp enough to measure. You get mechanics feedback, drills, and ball speed when the footage supports it.')}
                   </p>
+                  <span className="text-[11px] font-medium text-primary/80">Staff preview — not released yet</span>
                 </div>
               </Card>
             </button>
+            )}
+
             <button type="button" onClick={() => setCaptureMode("upload")} className="text-left">
 
               <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
