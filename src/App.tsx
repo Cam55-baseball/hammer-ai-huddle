@@ -76,6 +76,7 @@ const Activate = lazyWithRetry(() => import("./pages/Activate"));
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
+const DelayCamPage = lazyWithRetry(() => import("./pages/DelayCamPage"));
 const RecruitingStandards = lazyWithRetry(() => import("./pages/RecruitingStandards"));
 // Pre-release: CombineEntry / MyCombineResults stay in the codebase but are not
 // routed — every /combine/* path renders the coming-soon page instead.
@@ -361,6 +362,10 @@ const App = () => {
               {/* Route-level guard so the pre-release, credit-billing page never
                   mounts for non-staff (the page also self-gates internally). */}
               <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
+              {/* DelayCam is its own module: a delayed mirror for self-review,
+                  not an analysis capture path. */}
+              <Route path="/delaycam" element={<DelayCamPage />} />
+
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
               {/* Pre-release: the whole Combine module (athlete results AND evaluator

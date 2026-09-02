@@ -44,8 +44,11 @@ import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel"
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
-import { DelayCam } from "@/components/analyze/DelayCam";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
+import { ReferenceDistanceStep } from "@/components/analyze/ReferenceDistanceStep";
+import { BallFlightPanel } from "@/components/analyze/BallFlightPanel";
+import { runBallFlight, type BallFlightResult } from "@/lib/cv/runBallFlight";
+import { DEFAULT_DISTANCE_FT } from "@/lib/capture/referenceDistance";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
@@ -127,8 +130,18 @@ export default function AnalyzeVideo() {
   const [landingTime, setLandingTime] = useState<number | null>(null);
   const [extractingFrames, setExtractingFrames] = useState(false);
   // Every analysis entry (sidebar buttons, dashboard module cards) lands on a
-  // method chooser first: upload a video, or use the DelayCam live-delay flow.
-  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "delaycam" | "capture">("choose");
+  // method chooser first, with exactly two real choices: record in-app at the
+  // highest frame rate the device allows, or upload a file they already have.
+  // DelayCam is NOT here — it is a delayed mirror for self-review with no
+  // report card, so it has its own module at /delaycam.
+  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "capture">("choose");
+  // Real-world reference distance for ball-flight math. Pre-filled with the
+  // sport standard, freely changeable, and skippable (null = mechanics only).
+  const [referenceDistanceFt, setReferenceDistanceFt] = useState<number | null>(
+    module === "pitching" ? DEFAULT_DISTANCE_FT[sport === "softball" ? "softball" : "baseball"] : null,
+  );
+  const [ballFlight, setBallFlight] = useState<BallFlightResult | null>(null);
+  const [ballFlightRunning, setBallFlightRunning] = useState(false);
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
@@ -479,6 +492,9 @@ export default function AnalyzeVideo() {
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
     let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
+    // Full frame objects (data URL + geometry) kept for the ball-flight pass,
+    // which needs pixels, not just the audit record.
+    let extractedFrames: Awaited<ReturnType<typeof extractKeyFramesDeterministic>>["frames"] = [];
     let landingFrameIndex: number | null = null;
     // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
     // captured here and persisted into `video_landmark_runs` after the video
@@ -498,6 +514,7 @@ export default function AnalyzeVideo() {
           landingTime,
         });
         frames = result.frames.map((f) => f.dataUrl);
+        extractedFrames = result.frames;
         frameExtractions = result.frames.map((f) => ({
           frame_index: f.frame_index,
           timestamp_seconds: f.timestamp_seconds,
@@ -891,6 +908,24 @@ export default function AnalyzeVideo() {
       fireAnalysisVideoMoment(analysisData);
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
+
+      // One recording, one report: ball-flight measurement rides the same
+      // pipeline as mechanics. Every honesty gate (frame rate, reference
+      // distance, account eligibility) returns a stated reason instead of a
+      // fabricated number, and mechanics output is never affected.
+      setBallFlightRunning(true);
+      try {
+        const flight = await runBallFlight({
+          videoId: videoData.id,
+          frames: extractedFrames,
+          referenceDistanceFt,
+          captureFps: probed?.fps_true ?? null,
+          measurementEnabled: Boolean(isOwner || isAdmin),
+        });
+        setBallFlight(flight);
+      } finally {
+        setBallFlightRunning(false);
+      }
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
@@ -1078,7 +1113,7 @@ export default function AnalyzeVideo() {
                 Grounded in the real 13/13-missing softball failure: each item
                 prevents one of the three filming gaps that killed the tiles. */}
             {module === "pitching" && <PitchingFilmingGuide />}
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
             <button type="button" onClick={() => setCaptureMode("capture")} className="text-left">
               <Card className="p-4 sm:p-6 h-full border-2 border-primary/40 bg-primary/[0.03] transition-colors hover:border-primary/70 hover:bg-accent/40">
                 <div className="flex flex-col items-center text-center space-y-3">
@@ -1086,10 +1121,10 @@ export default function AnalyzeVideo() {
                     <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold">
-                    {t('videoAnalysis.chooseCaptureTitle', 'Record here (best quality)')}
+                    {t('videoAnalysis.chooseCaptureTitle', 'Record now (best results)')}
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                    {t('videoAnalysis.chooseCaptureDescription', 'We ask your camera for the fastest recording it can do, so the ball stays sharp enough to measure. Just press record.')}
+                    {t('videoAnalysis.chooseCaptureDescription', 'Film the rep right here. We ask your camera for the fastest recording it can do, so the ball stays sharp enough to measure. You get mechanics feedback, drills, and ball speed when the footage supports it.')}
                   </p>
                 </div>
               </Card>
@@ -1101,26 +1136,14 @@ export default function AnalyzeVideo() {
                   <div className="p-3 sm:p-4 rounded-full bg-primary/10">
                     <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.chooseUploadTitle', 'Upload a video')}</h3>
+                  <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.chooseUploadTitle', 'Upload a file I already have')}</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                    {t('videoAnalysis.chooseUploadDescription', 'Send in a recorded rep — get your score, feedback, and drills.')}
+                    {t('videoAnalysis.chooseUploadDescription', 'Send in a clip from your phone or camera roll. You get the same mechanics feedback and drills. Ball speed only works if that clip was filmed fast enough.')}
                   </p>
                 </div>
               </Card>
             </button>
-            <button type="button" onClick={() => setCaptureMode("delaycam")} className="text-left">
-              <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
-                    <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.chooseDelayCamTitle', 'Use DelayCam')}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                    {t('videoAnalysis.chooseDelayCamDescription', 'Live camera with a 1–55s delay — watch your rep right after it happens.')}
-                  </p>
-                </div>
-              </Card>
-            </button>
+            
             </div>
           </div>
         )}
@@ -1303,6 +1326,14 @@ export default function AnalyzeVideo() {
               </Card>
             )}
 
+            {!analyzing && !analysis && analysisEnabled && (
+              <ReferenceDistanceStep
+                sport={sport === "softball" ? "softball" : "baseball"}
+                value={referenceDistanceFt}
+                onChange={setReferenceDistanceFt}
+              />
+            )}
+
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
@@ -1433,6 +1464,8 @@ export default function AnalyzeVideo() {
                   />
                 )}
 
+                <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
+
                 <AnalysisPrescriptionSection
                   module={module}
                   sport={sport}
@@ -1461,22 +1494,6 @@ export default function AnalyzeVideo() {
           </div>
         )}
 
-        {!videoPreview && captureMode === "delaycam" && (
-          <div className="mt-4 space-y-2">
-            <button
-              type="button"
-              onClick={() => setCaptureMode("choose")}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              {t('videoAnalysis.chooseDifferentMethod', 'Choose a different method')}
-            </button>
-            <DelayCam
-              module={(module as "hitting" | "pitching" | "throwing") || "hitting"}
-              sport={sport as "baseball" | "softball"}
-            />
-          </div>
-        )}
 
       </div>
 

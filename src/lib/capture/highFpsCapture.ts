@@ -14,8 +14,14 @@
 
 export const FPS_TARGET = 120;
 export const FPS_ACCEPTABLE = 60;
-/** Below this, tracking-grade analysis is not honest to attempt. */
-export const FPS_TRACKING_FLOOR = 60;
+/**
+ * Single source of truth for the ball-tracking frame-rate floor. Below this,
+ * tracking-grade analysis is not honest to attempt. Mirrored verbatim by the
+ * server gate in `supabase/functions/_shared/ballTrackingGate.ts`
+ * (`BALL_TRACKING_FLOOR_FPS`) — the two must never drift apart.
+ */
+export const FPS_TRACKING_FLOOR = 58;
+
 
 export type FpsTier = "elite" | "good" | "limited" | "unusable";
 
@@ -193,7 +199,7 @@ export function analysisScopeForFps(fps: number | null | undefined): {
   note: string;
 } {
   const f = fps ?? 0;
-  if (f >= FPS_TRACKING_FLOOR - 2) {
+  if (f >= FPS_TRACKING_FLOOR) {
     return { ballTracking: true, mechanics: true, note: `Captured at ${Math.round(f)}fps — full analysis available.` };
   }
   if (f >= 24) {
