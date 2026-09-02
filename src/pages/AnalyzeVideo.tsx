@@ -1419,6 +1419,23 @@ export default function AnalyzeVideo() {
           </div>
         )}
 
+        {!videoPreview && captureMode === "capture" && (
+          <div className="mt-4 space-y-2">
+            <button
+              type="button"
+              onClick={() => setCaptureMode("choose")}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              {t('videoAnalysis.chooseDifferentMethod', 'Choose a different method')}
+            </button>
+            <HighFpsCapture
+              module={(module as "hitting" | "pitching" | "throwing") || "hitting"}
+              sport={sport as "baseball" | "softball"}
+            />
+          </div>
+        )}
+
         {!videoPreview && captureMode === "delaycam" && (
           <div className="mt-4 space-y-2">
             <button
@@ -1435,6 +1452,7 @@ export default function AnalyzeVideo() {
             />
           </div>
         )}
+
       </div>
 
 
