@@ -17,6 +17,7 @@ import {
   type BallDetection,
   type FrameObservation,
 } from "../_shared/pitchMath.ts";
+import { evaluateBallTrackingGate, BALL_TRACKING_FLOOR_FPS } from "../_shared/ballTrackingGate.ts";
 
 const BodySchema = z.object({
   calibration_session_id: z.string().uuid(),
@@ -183,11 +184,65 @@ Deno.serve(async (req) => {
 
   const { data: video, error: videoError } = await supabase
     .from("videos")
-    .select("id, sport")
+    .select("id, sport, fps_true, achieved_fps")
     .eq("id", session.video_id)
     .single();
   if (videoError || !video) return json({ error: "Source video not found" }, 404);
   const sport = video.sport === "softball" ? "softball" : "baseball";
+
+  // ===== BALL-TRACKING FRAME-RATE GATE =====
+  // Below the tracking floor the ball is destroyed by motion blur between
+  // frames. Report missing with the honest reason instead of producing a
+  // number the footage cannot support — and do it BEFORE spending inference.
+  const ballGate = evaluateBallTrackingGate({
+    captureFps: video.achieved_fps as number | null,
+    fpsTrue: video.fps_true as number | null,
+  });
+  if (!ballGate.eligible) {
+    const reason = ballGate.reason ?? `Footage below ${BALL_TRACKING_FLOOR_FPS} fps ball-tracking floor`;
+    console.log(`[pitch-velocity-measure] gate closed for ${session.id}: fps=${ballGate.fps ?? "unknown"}`);
+    const { data: gated } = await supabase
+      .from("cv_velocity_measurements")
+      .insert({
+        calibration_session_id: session.id,
+        video_id: session.video_id,
+        user_id: user.id,
+        status: "unavailable",
+        velocity_mph: null,
+        confidence: 0,
+        missingness_reason: reason,
+        method: "capture_fps_gate",
+        model_id: null,
+        sport,
+        reference_distance_ft: session.reference_distance_ft,
+        frames_total: 0,
+        frames_detected: 0,
+        frames_missed: 0,
+        roboflow_calls: 0,
+      })
+      .select("id, created_at")
+      .maybeSingle();
+
+    await supabase
+      .from("cv_calibration_sessions")
+      .update({ calibration_status: "unavailable", failure_reason: reason.slice(0, 500) })
+      .eq("id", session.id);
+
+    return json({
+      measurement_id: gated?.id ?? null,
+      measured_at: gated?.created_at ?? new Date().toISOString(),
+      status: "unavailable",
+      velocity_mph: null,
+      confidence: 0,
+      missingness_reason: reason,
+      method: "capture_fps_gate",
+      sport,
+      capture_fps: ballGate.fps,
+      capture_fps_source: ballGate.fpsSource,
+      ball_tracking_floor_fps: BALL_TRACKING_FLOOR_FPS,
+      roboflow_calls: 0,
+    });
+  }
 
   const { data: frameRows, error: framesError } = await supabase
     .from("cv_calibration_frames")
@@ -411,6 +466,8 @@ Deno.serve(async (req) => {
     roboflow_calls: roboflowCalls,
     roboflow_failures: roboflowFailures,
     inference_cap: MAX_INFERENCE_CALLS_PER_ANALYSIS,
+    capture_fps: ballGate.fps,
+    capture_fps_source: ballGate.fpsSource,
     frames_skipped_by_cap: capHits,
 
     track: result.track,
