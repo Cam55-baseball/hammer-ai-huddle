@@ -15191,11 +15191,15 @@ export type Database = {
       }
       videos: {
         Row: {
+          achieved_fps: number | null
           ai_analysis: Json | null
           analysis_public: boolean | null
           batting_side: string | null
           blurhash: string | null
           calibration_h_px: number | null
+          capture_fps_source: string | null
+          capture_fps_tier: string | null
+          capture_source: string | null
           contributes_to_progress: boolean
           created_at: string
           direction_sign: number | null
@@ -15212,6 +15216,7 @@ export type Database = {
           module: Database["public"]["Enums"]["module_type"]
           orientation: string | null
           practice_session_id: string | null
+          requested_fps: number | null
           saved_to_library: boolean | null
           session_date: string | null
           sha256_hex: string | null
@@ -15228,11 +15233,15 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          achieved_fps?: number | null
           ai_analysis?: Json | null
           analysis_public?: boolean | null
           batting_side?: string | null
           blurhash?: string | null
           calibration_h_px?: number | null
+          capture_fps_source?: string | null
+          capture_fps_tier?: string | null
+          capture_source?: string | null
           contributes_to_progress?: boolean
           created_at?: string
           direction_sign?: number | null
@@ -15249,6 +15258,7 @@ export type Database = {
           module: Database["public"]["Enums"]["module_type"]
           orientation?: string | null
           practice_session_id?: string | null
+          requested_fps?: number | null
           saved_to_library?: boolean | null
           session_date?: string | null
           sha256_hex?: string | null
@@ -15265,11 +15275,15 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          achieved_fps?: number | null
           ai_analysis?: Json | null
           analysis_public?: boolean | null
           batting_side?: string | null
           blurhash?: string | null
           calibration_h_px?: number | null
+          capture_fps_source?: string | null
+          capture_fps_tier?: string | null
+          capture_source?: string | null
           contributes_to_progress?: boolean
           created_at?: string
           direction_sign?: number | null
@@ -15286,6 +15300,7 @@ export type Database = {
           module?: Database["public"]["Enums"]["module_type"]
           orientation?: string | null
           practice_session_id?: string | null
+          requested_fps?: number | null
           saved_to_library?: boolean | null
           session_date?: string | null
           sha256_hex?: string | null

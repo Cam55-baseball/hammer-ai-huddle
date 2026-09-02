@@ -26,6 +26,9 @@ import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
 import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
+import {
+  FPS_TARGET, highFpsVideoConstraints, readTrackFps, tryRaiseTrackFps, classifyFps,
+} from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
 
 type ClipModule = "hitting" | "pitching" | "throwing";
@@ -105,6 +108,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const drawRafRef = useRef<number | null>(null);
   const replayUrlRef = useRef<string | null>(null);
   const mimeRef = useRef<string>("video/webm");
+  /** Frame rate the camera track reported after negotiation, persisted with
+   * any clip saved from this session. */
+  const capturedFpsRef = useRef<number | null>(null);
 
   const [running, setRunning] = useState(false);
   const [facing, setFacing] = useState<Facing>("environment");
@@ -348,6 +354,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           width: probed.width,
           height: probed.height,
           orientation: probed.orientation,
+          capture_source: "delaycam",
+          requested_fps: FPS_TARGET,
+          achieved_fps: capturedFpsRef.current ?? probed.fps_true,
+          capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
+          capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
           ...sideStamp,
         }] as never)
         .select("id")
@@ -432,10 +443,21 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     const useFacing = nextFacing ?? facing;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: useFacing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        // Ask for the fastest frame rate the device can give us. Motion blur
+        // at 30fps is what destroys ball tracking, so we request high fps here
+        // too and record whatever the camera actually delivered.
+        video: highFpsVideoConstraints(useFacing),
         audio: false,
       });
       streamRef.current = stream;
+      {
+        const negotiated = readTrackFps(stream);
+        if (!negotiated.settingsFps || negotiated.settingsFps < 60) {
+          await tryRaiseTrackFps(stream);
+        }
+        const after = readTrackFps(stream);
+        capturedFpsRef.current = after.settingsFps ?? negotiated.settingsFps ?? null;
+      }
       const lv = liveRef.current;
       if (!lv) throw new Error("Live video element not mounted");
       lv.srcObject = stream;

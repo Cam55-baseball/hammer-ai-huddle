@@ -45,6 +45,8 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { DelayCam } from "@/components/analyze/DelayCam";
+import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
+import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
 export default function AnalyzeVideo() {
@@ -126,7 +128,7 @@ export default function AnalyzeVideo() {
   const [extractingFrames, setExtractingFrames] = useState(false);
   // Every analysis entry (sidebar buttons, dashboard module cards) lands on a
   // method chooser first: upload a video, or use the DelayCam live-delay flow.
-  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "delaycam">("choose");
+  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "delaycam" | "capture">("choose");
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
@@ -658,7 +660,14 @@ export default function AnalyzeVideo() {
           width: probed.width,
           height: probed.height,
           orientation: probed.orientation,
+          // Uploaded footage: we never requested a frame rate, we only measured
+          // what the file already had. Stored so analysis can scope its claims.
+          capture_source: "upload",
+          achieved_fps: probed.fps_true,
+          capture_fps_tier: classifyFps(probed.fps_true),
+          capture_fps_source: "file_probe",
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
+
           // Side stamp — only when picker is shown (switch hitter / ambidextrous thrower)
           ...(shouldShowPicker(sideDiscipline)
             ? (sideDiscipline === 'hit'
@@ -1069,8 +1078,24 @@ export default function AnalyzeVideo() {
                 Grounded in the real 13/13-missing softball failure: each item
                 prevents one of the three filming gaps that killed the tiles. */}
             {module === "pitching" && <PitchingFilmingGuide />}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
+            <button type="button" onClick={() => setCaptureMode("capture")} className="text-left">
+              <Card className="p-4 sm:p-6 h-full border-2 border-primary/40 bg-primary/[0.03] transition-colors hover:border-primary/70 hover:bg-accent/40">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
+                    <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold">
+                    {t('videoAnalysis.chooseCaptureTitle', 'Record here (best quality)')}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+                    {t('videoAnalysis.chooseCaptureDescription', 'We ask your camera for the fastest recording it can do, so the ball stays sharp enough to measure. Just press record.')}
+                  </p>
+                </div>
+              </Card>
+            </button>
             <button type="button" onClick={() => setCaptureMode("upload")} className="text-left">
+
               <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <div className="p-3 sm:p-4 rounded-full bg-primary/10">
@@ -1419,6 +1444,23 @@ export default function AnalyzeVideo() {
           </div>
         )}
 
+        {!videoPreview && captureMode === "capture" && (
+          <div className="mt-4 space-y-2">
+            <button
+              type="button"
+              onClick={() => setCaptureMode("choose")}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              {t('videoAnalysis.chooseDifferentMethod', 'Choose a different method')}
+            </button>
+            <HighFpsCapture
+              module={(module as "hitting" | "pitching" | "throwing") || "hitting"}
+              sport={sport as "baseball" | "softball"}
+            />
+          </div>
+        )}
+
         {!videoPreview && captureMode === "delaycam" && (
           <div className="mt-4 space-y-2">
             <button
@@ -1435,6 +1477,7 @@ export default function AnalyzeVideo() {
             />
           </div>
         )}
+
       </div>
 
 
