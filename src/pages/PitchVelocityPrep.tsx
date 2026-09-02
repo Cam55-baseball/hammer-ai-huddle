@@ -78,7 +78,13 @@ interface MeasurementResult {
   status: 'measured' | 'low_confidence' | 'unavailable';
   velocity_mph: number | null;
   confidence: number | null;
-  missingness_reason: 'ball_not_detected' | 'insufficient_temporal_resolution' | null;
+  missingness_reason:
+    | 'ball_not_detected'
+    | 'insufficient_temporal_resolution'
+    | 'capture_fps_below_tracking_floor'
+    | null;
+  missingness_detail?: string | null;
+  capture_fps?: number | null;
   method: string;
   model_id: string;
   sport: Sport;
@@ -685,13 +691,20 @@ export default function PitchVelocityPrep() {
                     <Alert variant="destructive" className="mt-2">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertTitle>No reliable reading</AlertTitle>
-                      <AlertDescription className="text-xs">
-                        {measurement.missingness_reason === 'insufficient_temporal_resolution'
-                          ? 'The ball was only visible for a split second — not enough tracked flight to measure honestly.'
-                          : 'The ball could not be found in enough frames to establish its flight path.'}
-                        {' '}Tracked in {measurement.frames_detected} of {measurement.frames_total} frames.
-                        Try a locked-off camera, brighter light, and a clip trimmed to one pitch.
-                      </AlertDescription>
+                      {measurement.missingness_reason === 'capture_fps_below_tracking_floor' ? (
+                        <AlertDescription className="text-xs">
+                          {measurement.missingness_detail ??
+                            'This footage was captured too slowly to track the ball in flight, so pitch speed cannot be measured from it.'}
+                        </AlertDescription>
+                      ) : (
+                        <AlertDescription className="text-xs">
+                          {measurement.missingness_reason === 'insufficient_temporal_resolution'
+                            ? 'The ball was only visible for a split second — not enough tracked flight to measure honestly.'
+                            : 'The ball could not be found in enough frames to establish its flight path.'}
+                          {' '}Tracked in {measurement.frames_detected} of {measurement.frames_total} frames.
+                          Try a locked-off camera, brighter light, and a clip trimmed to one pitch.
+                        </AlertDescription>
+                      )}
                       <Button variant="outline" size="sm" className="mt-3 w-full" onClick={handleMeasure} disabled={stage === 'measuring'}>
                         Try again
                       </Button>

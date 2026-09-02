@@ -2820,6 +2820,8 @@ export type Database = {
       cv_velocity_measurements: {
         Row: {
           calibration_session_id: string
+          capture_fps: number | null
+          capture_fps_source: string | null
           confidence: number | null
           created_at: string
           detections: Json
@@ -2828,6 +2830,7 @@ export type Database = {
           frames_total: number
           id: string
           method: string
+          missingness_detail: string | null
           missingness_reason: string | null
           model_id: string
           pair_samples: Json | null
@@ -2842,6 +2845,8 @@ export type Database = {
         }
         Insert: {
           calibration_session_id: string
+          capture_fps?: number | null
+          capture_fps_source?: string | null
           confidence?: number | null
           created_at?: string
           detections: Json
@@ -2850,6 +2855,7 @@ export type Database = {
           frames_total: number
           id?: string
           method: string
+          missingness_detail?: string | null
           missingness_reason?: string | null
           model_id: string
           pair_samples?: Json | null
@@ -2864,6 +2870,8 @@ export type Database = {
         }
         Update: {
           calibration_session_id?: string
+          capture_fps?: number | null
+          capture_fps_source?: string | null
           confidence?: number | null
           created_at?: string
           detections?: Json
@@ -2872,6 +2880,7 @@ export type Database = {
           frames_total?: number
           id?: string
           method?: string
+          missingness_detail?: string | null
           missingness_reason?: string | null
           model_id?: string
           pair_samples?: Json | null

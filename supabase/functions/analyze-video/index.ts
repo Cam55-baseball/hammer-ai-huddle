@@ -4,6 +4,11 @@ import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, forma
 import { ENGINE_VERSION, sha256Hex } from "../_shared/asbEmit.ts";
 import { getContractFor, buildMetricsSchema, buildMetricsPromptBlock, countMissing } from "../_shared/reportCardContracts.ts";
 import {
+  evaluateBallTrackingGate,
+  suppressBallFlightMetrics,
+  BALL_TRACKING_FLOOR_FPS,
+} from "../_shared/ballTrackingGate.ts";
+import {
   buildCacheFingerprint,
   LANDMARK_MODEL_VERSION,
   DETECTOR_VERSION,
@@ -39,6 +44,14 @@ const requestSchema = z.object({
    * keyed on the resulting video_analysis_runs.id.
    */
   frameExtractions: z.array(frameExtractionSchema).optional(),
+  /**
+   * Capture-honesty inputs. `captureFps` is the frame rate the recorder
+   * actually achieved (measured, not requested). `ballTrackingEligible` is the
+   * client's own verdict — advisory, and it can only ever close the gate,
+   * never open it (see _shared/ballTrackingGate.ts).
+   */
+  captureFps: z.number().positive().optional(),
+  ballTrackingEligible: z.boolean().optional(),
 });
 
 /**
@@ -1652,7 +1665,7 @@ Deno.serve(async (req) => {
   try {
     // Validate input
     const body = await req.json();
-    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions } = requestSchema.parse(body);
+    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions, captureFps, ballTrackingEligible } = requestSchema.parse(body);
     auditCtx.videoId = videoId;
     auditCtx.userId = userId;
 
@@ -1684,12 +1697,30 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("sha256_hex, fps_true, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
       .eq("id", videoId)
       .maybeSingle();
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
+    const achievedFps = videoRow?.achieved_fps == null ? null : Number(videoRow.achieved_fps);
+
+    /**
+     * Ball-tracking gate. Mechanics analysis is NOT affected by this — it runs
+     * normally at any usable frame rate. Only ball-flight outputs (speed /
+     * movement / location), which require locating a fast ball across
+     * consecutive frames, are suppressed when the footage can't support them.
+     */
+    const ballGate = evaluateBallTrackingGate({
+      captureFps: captureFps ?? achievedFps,
+      fpsTrue,
+      clientEligible: ballTrackingEligible ?? null,
+    });
+    if (!ballGate.eligible) {
+      console.log(
+        `[BALL-GATE] suppressed for ${videoId}: fps=${ballGate.fps ?? "unknown"} (${ballGate.fpsSource}) floor=${BALL_TRACKING_FLOOR_FPS}`,
+      );
+    }
     const durationSec = videoRow?.duration_sec == null ? null : Number(videoRow.duration_sec);
     const videoWidth = videoRow?.width == null ? null : Number(videoRow.width);
     const videoHeight = videoRow?.height == null ? null : Number(videoRow.height);
@@ -2225,6 +2256,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let scoreWasAdjusted = false;
     
     let metrics: Record<string, unknown> | null = null;
+    let ballFlightSuppressedKeys: string[] = [];
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
@@ -2262,9 +2294,20 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           }
         }
 
+        // ===== BALL-TRACKING GATE (missing beats fabricated) =====
+        // Footage below the tracking floor cannot support a ball-flight number.
+        // Force those tiles to missing with the honest reason. Mechanics tiles
+        // are untouched.
+        if (!ballGate.eligible) {
+          const supp = suppressBallFlightMetrics(metrics, ballGate);
+          ballFlightSuppressedKeys = supp.suppressedKeys;
+          if (supp.suppressedKeys.length > 0) {
+            console.log(
+              `[BALL-GATE] ${supp.suppressedKeys.length} ball-flight tile(s) marked missing: ${supp.suppressedKeys.join(", ")}`,
+            );
+          }
+        }
 
-
-        
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
         // Scan feedback text for violation keywords - override AI flags if needed
         // NOTE: Pass module so back_leg check is skipped for hitting
@@ -2431,6 +2474,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       detector_version: DETECTOR_VERSION,
       metric_engine_version: METRIC_ENGINE_VERSION,
       fps_true: fpsTrue,
+      // Capture honesty — what the footage could actually support.
+      capture_fps: ballGate.fps,
+      capture_fps_source: ballGate.fpsSource,
+      ball_tracking_eligible: ballGate.eligible,
+      ball_tracking_floor_fps: BALL_TRACKING_FLOOR_FPS,
+      ball_flight_unavailable_reason: ballGate.reason,
+      ball_flight_suppressed_keys: ballFlightSuppressedKeys,
       analyzed_at: new Date().toISOString(),
     };
 
@@ -2566,6 +2616,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         // grade ribbon + tiles render without an extra round-trip.
         metrics: metrics ?? null,
         report_card_contract_id: reportCardContract?.id ?? null,
+        ball_tracking_eligible: ballGate.eligible,
+        capture_fps: ballGate.fps,
+        ball_flight_unavailable_reason: ballGate.reason,
+        ball_flight_suppressed_keys: ballFlightSuppressedKeys,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
