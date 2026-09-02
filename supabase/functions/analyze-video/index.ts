@@ -1697,12 +1697,30 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("sha256_hex, fps_true, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
       .eq("id", videoId)
       .maybeSingle();
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
+    const achievedFps = videoRow?.achieved_fps == null ? null : Number(videoRow.achieved_fps);
+
+    /**
+     * Ball-tracking gate. Mechanics analysis is NOT affected by this — it runs
+     * normally at any usable frame rate. Only ball-flight outputs (speed /
+     * movement / location), which require locating a fast ball across
+     * consecutive frames, are suppressed when the footage can't support them.
+     */
+    const ballGate = evaluateBallTrackingGate({
+      captureFps: captureFps ?? achievedFps,
+      fpsTrue,
+      clientEligible: ballTrackingEligible ?? null,
+    });
+    if (!ballGate.eligible) {
+      console.log(
+        `[BALL-GATE] suppressed for ${videoId}: fps=${ballGate.fps ?? "unknown"} (${ballGate.fpsSource}) floor=${BALL_TRACKING_FLOOR_FPS}`,
+      );
+    }
     const durationSec = videoRow?.duration_sec == null ? null : Number(videoRow.duration_sec);
     const videoWidth = videoRow?.width == null ? null : Number(videoRow.width);
     const videoHeight = videoRow?.height == null ? null : Number(videoRow.height);
