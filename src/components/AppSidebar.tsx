@@ -227,9 +227,9 @@ export function AppSidebar() {
         icon: Target,
         subModules: [
           { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
-          // Pre-release: hosted pitch-velocity inference bills real credits and is
-          // not accuracy-validated. Staff-only until it ships.
-          ...((isOwner || isAdmin) ? [{ title: 'Velocity Calibration', url: '/pitch-velocity', icon: Crosshair, description: 'Prepare single-camera pitch measurement' }] : []),
+          // Velocity measurement is no longer its own surface: it lives inside the
+          // unified "Record now" analysis flow and lands on the same report card.
+
 
           { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: t('workoutModules.productionStudio.subtitle') || "6-week workout" },
           { title: 'Explosive Conditioning', url: "/explosive-conditioning", icon: Zap, description: "Build elite speed and explosive power" },
