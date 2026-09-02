@@ -361,6 +361,10 @@ const App = () => {
               {/* Route-level guard so the pre-release, credit-billing page never
                   mounts for non-staff (the page also self-gates internally). */}
               <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
+              {/* DelayCam is its own module: a delayed mirror for self-review,
+                  not an analysis capture path. */}
+              <Route path="/delaycam" element={<DelayCamPage />} />
+
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />
               {/* Pre-release: the whole Combine module (athlete results AND evaluator
