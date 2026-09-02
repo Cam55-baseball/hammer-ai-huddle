@@ -31,7 +31,6 @@ import {
   analysisScopeForFps,
   describeCaptureFps,
   highFpsVideoConstraints,
-  measureLiveFps,
   readTrackFps,
   tryRaiseTrackFps,
   type CameraFpsCapability,

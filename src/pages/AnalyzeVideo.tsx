@@ -45,6 +45,7 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { DelayCam } from "@/components/analyze/DelayCam";
+import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
 export default function AnalyzeVideo() {
@@ -126,7 +127,7 @@ export default function AnalyzeVideo() {
   const [extractingFrames, setExtractingFrames] = useState(false);
   // Every analysis entry (sidebar buttons, dashboard module cards) lands on a
   // method chooser first: upload a video, or use the DelayCam live-delay flow.
-  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "delaycam">("choose");
+  const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "delaycam" | "capture">("choose");
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
