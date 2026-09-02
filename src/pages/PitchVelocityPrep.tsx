@@ -1,3 +1,11 @@
+/**
+ * DEVELOPER TEST HARNESS — NOT A PRODUCT FEATURE.
+ * Bare internal rig for exercising the Roboflow ball-tracking / velocity pipeline.
+ * Velocity measurement ships to users inside the unified capture + analysis flow
+ * (AnalyzeVideo -> runBallFlight -> the normal report card). This page is reachable
+ * only via the unlinked /pitch-velocity dev route and must never appear in
+ * navigation for anyone, staff included.
+ */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {

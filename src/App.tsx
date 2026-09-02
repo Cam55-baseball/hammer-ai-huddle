@@ -359,8 +359,12 @@ const App = () => {
               <Route path="/forecast" element={<ForecastSurface />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
-              {/* Route-level guard so the pre-release, credit-billing page never
-                  mounts for non-staff (the page also self-gates internally). */}
+              {/* DEVELOPER TEST HARNESS — NOT A PRODUCT FEATURE.
+                  /pitch-velocity was built to exercise the Roboflow ball-tracking
+                  pipeline before velocity had a real home. Velocity now lives in the
+                  unified capture/analysis flow and lands on the normal report card.
+                  This route is intentionally unlinked from all navigation (including
+                  staff nav) and exists only for internal testing. Do not surface it. */}
               <Route path="/pitch-velocity" element={<StaffOnlyRoute><PitchVelocityPrep /></StaffOnlyRoute>} />
               {/* DelayCam is its own module: a delayed mirror for self-review,
                   not an analysis capture path. */}
