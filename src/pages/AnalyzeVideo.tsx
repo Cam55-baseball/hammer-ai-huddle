@@ -1485,7 +1485,7 @@ export default function AnalyzeVideo() {
           </div>
         )}
 
-        {!videoPreview && captureMode === "capture" && (
+        {!videoPreview && captureMode === "capture" && (isOwner || isAdmin) && (
           <div className="mt-4 space-y-2">
             <button
               type="button"
