@@ -1069,8 +1069,24 @@ export default function AnalyzeVideo() {
                 Grounded in the real 13/13-missing softball failure: each item
                 prevents one of the three filming gaps that killed the tiles. */}
             {module === "pitching" && <PitchingFilmingGuide />}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
+            <button type="button" onClick={() => setCaptureMode("capture")} className="text-left">
+              <Card className="p-4 sm:p-6 h-full border-2 border-primary/40 bg-primary/[0.03] transition-colors hover:border-primary/70 hover:bg-accent/40">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
+                    <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold">
+                    {t('videoAnalysis.chooseCaptureTitle', 'Record here (best quality)')}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+                    {t('videoAnalysis.chooseCaptureDescription', 'We ask your camera for the fastest recording it can do, so the ball stays sharp enough to measure. Just press record.')}
+                  </p>
+                </div>
+              </Card>
+            </button>
             <button type="button" onClick={() => setCaptureMode("upload")} className="text-left">
+
               <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <div className="p-3 sm:p-4 rounded-full bg-primary/10">
