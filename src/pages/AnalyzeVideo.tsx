@@ -46,6 +46,7 @@ import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxon
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { DelayCam } from "@/components/analyze/DelayCam";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
+import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
 export default function AnalyzeVideo() {
