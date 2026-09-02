@@ -659,7 +659,14 @@ export default function AnalyzeVideo() {
           width: probed.width,
           height: probed.height,
           orientation: probed.orientation,
+          // Uploaded footage: we never requested a frame rate, we only measured
+          // what the file already had. Stored so analysis can scope its claims.
+          capture_source: "upload",
+          achieved_fps: probed.fps_true,
+          capture_fps_tier: classifyFps(probed.fps_true),
+          capture_fps_source: "file_probe",
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
+
           // Side stamp — only when picker is shown (switch hitter / ambidextrous thrower)
           ...(shouldShowPicker(sideDiscipline)
             ? (sideDiscipline === 'hit'
