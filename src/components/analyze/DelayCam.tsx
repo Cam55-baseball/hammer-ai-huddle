@@ -124,7 +124,19 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   /** Object URL for the full recorded session, built on demand after Stop. */
   const [sessionUrl, setSessionUrl] = useState<string | null>(null);
   const sessionUrlRef = useRef<string | null>(null);
-  const [saving, setSaving] = useState<null | "club">(null);
+  const [saving, setSaving] = useState<null | "club" | "annotated">(null);
+  /** Set once the session has a `videos` row, so a marked-up copy can attach to it. */
+  const savedVideoIdRef = useRef<string | null>(null);
+  const [savedVideoId, setSavedVideoId] = useState<string | null>(null);
+  /** Marked-up copy: rendered on the device, held here until the user saves it. */
+  const annotatedBlobRef = useRef<Blob | null>(null);
+  const annotatedUrlRef = useRef<string | null>(null);
+  const [annotatedUrl, setAnnotatedUrl] = useState<string | null>(null);
+  const [hasAnnotatedCopy, setHasAnnotatedCopy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const exportAbortRef = useRef<AbortController | null>(null);
+
 
   /** "idle" before start; "recording" runs MediaRecorder buffer for
    * replay/save; "streaming" is delayed mirror only for long practice
