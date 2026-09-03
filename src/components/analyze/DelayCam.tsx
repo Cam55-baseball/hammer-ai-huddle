@@ -484,6 +484,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setHasStoppedClip(false);
     recordedBytesRef.current = 0;
     setRecordedBytes(0);
+    recordedBlobRef.current = null;
+    setAudioMissing(false);
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
       sessionUrlRef.current = null;
@@ -495,14 +497,28 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     cleanup();
     const useFacing = nextFacing ?? facing;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        // Ask for the fastest frame rate the device can give us. Motion blur
-        // at 30fps is what destroys ball tracking, so we request high fps here
-        // too and record whatever the camera actually delivered.
-        video: highFpsVideoConstraints(useFacing),
-        audio: false,
-      });
+      // Ask for the fastest frame rate the device can give us, plus sound so a
+      // recorded session can actually be listened back to. If the mic is
+      // denied or unavailable we still record video and say audio is missing.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: highFpsVideoConstraints(useFacing),
+          audio: true,
+        });
+      } catch (audioErr: any) {
+        if (audioErr?.name === "NotAllowedError" || audioErr?.name === "SecurityError") throw audioErr;
+        console.warn("[DelayCam] audio unavailable, continuing video-only", audioErr);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: highFpsVideoConstraints(useFacing),
+          audio: false,
+        });
+      }
+      if (stream.getAudioTracks().length === 0) setAudioMissing(true);
       streamRef.current = stream;
+      // Now that permission has been granted the device list is labelled, so
+      // refine what we know about how many cameras this phone really has.
+      refreshDevices();
       {
         const negotiated = readTrackFps(stream);
         if (!negotiated.settingsFps || negotiated.settingsFps < 60) {
@@ -511,6 +527,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         const after = readTrackFps(stream);
         capturedFpsRef.current = after.settingsFps ?? negotiated.settingsFps ?? null;
       }
+
       const lv = liveRef.current;
       if (!lv) throw new Error("Live video element not mounted");
       lv.srcObject = stream;
