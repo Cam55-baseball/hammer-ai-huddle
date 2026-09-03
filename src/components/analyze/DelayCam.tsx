@@ -831,6 +831,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       sessionUrlRef.current = null;
     }
     setSessionUrl(null);
+    // A new session means the previous session's notes no longer apply.
+    setNotes((prev) => {
+      prev.forEach((n) => { if (n.audioObjectUrl) URL.revokeObjectURL(n.audioObjectUrl); });
+      return [];
+    });
   }, [cleanup]);
 
   /** Stop the active session. If the user was recording, finalise the file,
