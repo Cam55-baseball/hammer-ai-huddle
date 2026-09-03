@@ -394,12 +394,16 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
       try {
         probed = await probeVideoMetadata(file);
-      } catch (probeErr) {
+      } catch (probeErr: any) {
         console.error("[DelayCam] probe failed", probeErr);
-        toast.error("Couldn't read the recorded clip. Try recording again.", { id: toastId });
+        toast.error(
+          `Couldn't read the recorded clip: ${probeErr?.message || "unknown decode error"}`,
+          { id: toastId },
+        );
         setSaving(null);
         return;
       }
+
 
       const { error: uploadError } = await supabase.storage
         .from("videos")
@@ -455,13 +459,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       fireDelayCamMoment();
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);
-      toast.error(e?.message || "Couldn't save this clip. Please try again.", { id: toastId });
+      const reason = e?.message || e?.error_description || e?.error || "unknown error";
+      toast.error(`Couldn't save to Players Club: ${reason}`, { id: toastId });
     } finally {
       setSaving(null);
     }
   }, [
     activeSide,
-    buildDecodableBlob,
     fireDelayCamMoment,
     requiresSideConfirmation,
     resolvedModule,
@@ -470,6 +474,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     sideDiscipline,
     user,
   ]);
+
 
 
 
