@@ -929,14 +929,18 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           )}
           {(() => {
             // Enable off actual recorded bytes, never off the mode alone.
-            const canSave = recordedBytes > 0 && saving === null;
+            const canSave = hasStoppedClip && recordedBytes > 0 && !repairing && saving === null;
             const saveTip = canSave
               ? ""
-              : recordError
-                ? "Recording failed, so there's nothing to save."
-                : mode === "streaming"
-                  ? "Mirror only doesn't record. Press Record session to save."
-                  : "Press Record session to capture before saving.";
+              : repairing
+                ? "Getting your session ready…"
+                : recordError
+                  ? "Recording failed, so there's nothing to save."
+                  : mode === "streaming"
+                    ? "Mirror only doesn't record. Press Record session to save."
+                    : "Press Record session, then Stop, before saving."
+            ;
+
             return (
               <>
                 <Button
