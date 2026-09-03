@@ -738,15 +738,42 @@ export function SessionDetailDialog({
           {session.video_url && (
             <div className="space-y-2">
               <Label>{t('sessionDetail.video')}</Label>
+              {/* A marked-up copy is the same session with the drawings shown in
+                  the picture, so it lives here as a second version to switch to
+                  rather than a separate library entry. */}
+              {markedUpVersions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeVideoId === session.id ? 'default' : 'outline'}
+                    onClick={() => setActiveVideoId(session.id)}
+                  >
+                    Original
+                  </Button>
+                  {markedUpVersions.map((v: any, i: number) => (
+                    <Button
+                      key={v.id}
+                      type="button"
+                      size="sm"
+                      variant={activeVideoId === v.id ? 'default' : 'outline'}
+                      onClick={() => setActiveVideoId(v.id)}
+                    >
+                      {markedUpVersions.length > 1 ? `Marked up ${i + 1}` : 'Marked up'}
+                    </Button>
+                  ))}
+                </div>
+              )}
               <div className="relative">
                 <video
                   ref={mainVideoRef}
                   style={{ display: 'none' }}
-                  src={session.video_url}
+                  src={activeVideoUrl}
                   crossOrigin="anonymous"
                 />
                 <EnhancedVideoPlayer
-                  videoSrc={session.video_url}
+                  key={activeVideoId}
+                  videoSrc={activeVideoUrl}
                   playbackRate={1}
                   videoId={session.id}
                   playerId={session.user_id}
