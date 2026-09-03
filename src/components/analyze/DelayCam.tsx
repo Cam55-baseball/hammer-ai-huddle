@@ -22,7 +22,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
-import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import {
