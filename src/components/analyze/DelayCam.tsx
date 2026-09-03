@@ -173,6 +173,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const capTimerRef = useRef<number | null>(null);
   /** The repaired, seekable recording from the last session. */
   const recordedBlobRef = useRef<Blob | null>(null);
+  /** Lets the memory-cap timer stop the session without a declaration cycle. */
+  const stopRef = useRef<(() => void) | null>(null);
+
 
   const framesRef = useRef<Frame[]>([]);
   const rvfcIdRef = useRef<number | null>(null);
