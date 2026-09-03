@@ -989,6 +989,21 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         </div>
       )}
 
+      {repairing && (
+        <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2 text-xs">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Getting your session ready to watch back…</span>
+        </div>
+      )}
+
+      {audioMissing && (
+        <div className="flex items-start gap-2 rounded-md border bg-muted/40 p-2 text-xs">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>No microphone available, so this session is recording video without sound.</span>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className={liveExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col" : "space-y-1"}>
           <div
