@@ -27,16 +27,20 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Pencil, Minus, Triangle, Eraser, Play, Pause, ChevronLeft, ChevronRight,
-  Maximize2, X, Mic, Square, Trash2, Volume2, VolumeX, MessageSquare,
+  Maximize2, X, Mic, Square, Trash2, Volume2, VolumeX, MessageSquare, Stamp,
 } from "lucide-react";
+import { drawShapes, type Pt, type Shape } from "@/lib/delaycam/annotationRender";
 
 type Tool = "pen" | "line" | "angle";
-/** Normalised 0–1 coordinates, so shapes survive any resize. */
-type Pt = { x: number; y: number };
-type Shape =
-  | { kind: "pen"; pts: Pt[]; color: string }
-  | { kind: "line"; a: Pt; b: Pt; color: string }
-  | { kind: "angle"; a: Pt; v: Pt; b: Pt; color: string };
+export type { Pt, Shape };
+
+/** What the parent needs to render a marked-up copy of the session. */
+export interface AnnotatedExportRequest {
+  shapes: Shape[];
+  includeVideoSound: boolean;
+  includeVoiceNotes: boolean;
+}
+
 
 /**
  * A note held in local state. `timestampSec === null` means it is about the
@@ -60,14 +64,9 @@ const SPEEDS = [0.25, 0.5, 1];
 /** How long a pinned note stays on screen as a caption once it fires. */
 const CAPTION_HOLD_SEC = 4;
 
-function angleDeg(a: Pt, v: Pt, b: Pt, aspect: number): number {
-  // Compare in display space so the read-out matches what the user sees.
-  const a1 = Math.atan2((a.y - v.y) / aspect, a.x - v.x);
-  const a2 = Math.atan2((b.y - v.y) / aspect, b.x - v.x);
-  let d = Math.abs((a1 - a2) * (180 / Math.PI));
-  if (d > 180) d = 360 - d;
-  return d;
-}
+// angleDeg lives in @/lib/delaycam/annotationRender so the review canvas and
+// the burned-in export always agree on the read-out.
+
 
 function fmt(t: number): string {
   if (!Number.isFinite(t) || t < 0) return "0:00";
@@ -89,6 +88,14 @@ interface SessionReviewPlayerProps {
    * permission already granted during recording, so iOS doesn't re-prompt.
    */
   getMicStream?: () => Promise<MediaStream>;
+  /**
+   * Asks the parent to render a copy of the session with these drawings burned
+   * into the picture. The parent owns it because saving the copy — to the
+   * device or to Players Club — is the parent's job.
+   */
+  onExportAnnotated?: (req: AnnotatedExportRequest) => void;
+  /** True while that render is running, so the button can't be pressed twice. */
+  exporting?: boolean;
 }
 
 export function SessionReviewPlayer({
@@ -96,7 +103,10 @@ export function SessionReviewPlayer({
   notes,
   onNotesChange,
   getMicStream,
+  onExportAnnotated,
+  exporting = false,
 }: SessionReviewPlayerProps) {
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -192,51 +202,19 @@ export function SessionReviewPlayer({
     const dpr = c.width / box.w;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, box.w, box.h);
-    const X = (p: Pt) => p.x * box.w;
-    const Y = (p: Pt) => p.y * box.h;
-    const aspect = box.h / box.w || 1;
-    const all = draft ? [...shapes, draft] : shapes;
-    for (const s of all) {
-      ctx.strokeStyle = s.color;
-      ctx.fillStyle = s.color;
-      ctx.lineWidth = 3;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-      if (s.kind === "pen") {
-        ctx.beginPath();
-        s.pts.forEach((p, i) => (i === 0 ? ctx.moveTo(X(p), Y(p)) : ctx.lineTo(X(p), Y(p))));
-        ctx.stroke();
-      } else if (s.kind === "line") {
-        ctx.beginPath();
-        ctx.moveTo(X(s.a), Y(s.a));
-        ctx.lineTo(X(s.b), Y(s.b));
-        ctx.stroke();
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(X(s.a), Y(s.a));
-        ctx.lineTo(X(s.v), Y(s.v));
-        ctx.lineTo(X(s.b), Y(s.b));
-        ctx.stroke();
-        const deg = angleDeg(s.a, s.v, s.b, aspect);
-        ctx.font = "600 15px system-ui, sans-serif";
-        const label = `${Math.round(deg)}°`;
-        const tx = X(s.v) + 10;
-        const ty = Y(s.v) - 10;
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.fillRect(tx - 4, ty - 16, ctx.measureText(label).width + 8, 20);
-        ctx.fillStyle = s.color;
-        ctx.fillText(label, tx, ty);
-      }
-    }
+    // Same drawing routine the exported copy uses, so what is burned into the
+    // picture is exactly what the athlete saw here.
+    drawShapes(ctx, draft ? [...shapes, draft] : shapes, box.w, box.h, 1);
     if (tool === "angle" && anglePts.length > 0) {
       ctx.fillStyle = color;
       for (const p of anglePts) {
         ctx.beginPath();
-        ctx.arc(X(p), Y(p), 5, 0, Math.PI * 2);
+        ctx.arc(p.x * box.w, p.y * box.h, 5, 0, Math.PI * 2);
         ctx.fill();
       }
     }
   }, [shapes, draft, anglePts, tool, color, box]);
+
 
   useEffect(() => { render(); }, [render]);
 
@@ -699,6 +677,20 @@ export function SessionReviewPlayer({
         <Button size="sm" variant="outline" onClick={() => { setShapes([]); setDraft(null); setAnglePts([]); }} className="gap-1.5">
           <Eraser className="h-4 w-4" /> Clear
         </Button>
+        {onExportAnnotated && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={shapes.length === 0 || exporting}
+            onClick={() => onExportAnnotated({ shapes, includeVideoSound: videoSound, includeVoiceNotes: voiceNotesSound })}
+            className="gap-1.5"
+            title={shapes.length === 0
+              ? "Draw on the video first, then you can save a copy with your drawings on it"
+              : "Make a copy of this session with your drawings shown in the picture"}
+          >
+            <Stamp className="h-4 w-4" /> {exporting ? "Making copy…" : "Save marked-up copy"}
+          </Button>
+        )}
         <div className="flex items-center gap-1">
           {COLORS.map((c) => (
             <button

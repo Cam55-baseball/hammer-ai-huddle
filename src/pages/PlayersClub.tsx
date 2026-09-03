@@ -49,6 +49,12 @@ interface LibrarySession {
   shared_with_scouts: boolean;
   ai_analysis?: any;
   annotation_count?: Array<{ count: number }>;
+  /** Set when this row is a derived copy (e.g. a marked-up export) of another video. */
+  parent_video_id?: string | null;
+  /** 'original' = the recording itself, 'annotated' = a copy with drawings burned in. */
+  variant?: string | null;
+  /** Marked-up copies of this session, folded in so the library shows one entry. */
+  markedUpVersions?: LibrarySession[];
   source: 'video';
 }
 
@@ -182,7 +188,29 @@ export default function PlayersClub() {
 
   const allItems: LibrarySession[] = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return videos
+
+    // A marked-up copy is the same session, not a separate one. Fold each copy
+    // into its original so the library shows one entry the user can switch
+    // between, instead of two cards that look unrelated.
+    const childrenByParent = new Map<string, LibrarySession[]>();
+    for (const v of videos) {
+      if (v.parent_video_id) {
+        const list = childrenByParent.get(v.parent_video_id) ?? [];
+        list.push(v);
+        childrenByParent.set(v.parent_video_id, list);
+      }
+    }
+    const parentIds = new Set(videos.map((v) => v.id));
+    const grouped: LibrarySession[] = videos
+      // Keep a copy visible on its own only if its original is missing —
+      // hiding it entirely would lose the user's video.
+      .filter((v) => !v.parent_video_id || !parentIds.has(v.parent_video_id))
+      .map((v) => {
+        const kids = childrenByParent.get(v.id);
+        return kids && kids.length > 0 ? { ...v, markedUpVersions: kids } : v;
+      });
+
+    return grouped
       .filter((item) => {
         const matchesSport = sportFilter === 'all' || item.sport === sportFilter;
         const matchesModule = moduleFilter === 'all' || item.module === moduleFilter;
@@ -241,6 +269,11 @@ export default function PlayersClub() {
               <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
                 <BookmarkCheck className="h-3 w-3 mr-1" />
                 {t('playersClub.annotated')}
+              </Badge>
+            )}
+            {(session.markedUpVersions?.length ?? 0) > 0 && (
+              <Badge className="absolute bottom-2 left-2" variant="secondary">
+                + marked-up version
               </Badge>
             )}
             {session.shared_with_scouts && (
