@@ -807,9 +807,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     void finish();
   }, [cleanup, mode]);
 
-  /** Lets the memory-cap timer stop the session without a declaration cycle. */
-  const stopRef = useRef<(() => void) | null>(null);
   useEffect(() => { stopRef.current = stop; }, [stop]);
+
 
 
 
