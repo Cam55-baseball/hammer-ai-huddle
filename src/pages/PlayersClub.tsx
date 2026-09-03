@@ -271,6 +271,11 @@ export default function PlayersClub() {
                 {t('playersClub.annotated')}
               </Badge>
             )}
+            {(session.markedUpVersions?.length ?? 0) > 0 && (
+              <Badge className="absolute bottom-2 left-2" variant="secondary">
+                + marked-up version
+              </Badge>
+            )}
             {session.shared_with_scouts && (
               <Badge className="absolute top-2 right-2" variant="secondary">
                 <Share2 className="h-3 w-3 mr-1" />
