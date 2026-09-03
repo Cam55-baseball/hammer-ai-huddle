@@ -722,7 +722,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       setMode("idle");
       setTransitioning(false);
     }
-  }, [cleanup, facing]);
+  }, [cleanup, facing, refreshDevices]);
 
   /** Full teardown that also clears any buffered clip. Used when the user
    * starts a fresh session or unmounts. */
@@ -735,6 +735,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setRecordError(null);
     recordedBytesRef.current = 0;
     setRecordedBytes(0);
+    recordedBlobRef.current = null;
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
       sessionUrlRef.current = null;
@@ -742,52 +743,65 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setSessionUrl(null);
   }, [cleanup]);
 
-  /** Stop the active session. If the user was recording, preserve the
-   * buffered clip so save-to-device / save-to-club / replay still work.
-   * Streaming has no clip to preserve, so it fully resets. */
+  /** Stop the active session. If the user was recording, finalise the file,
+   * repair its duration so it is seekable, and bring up the review player. */
   const stop = useCallback(() => {
     const wasRecording = mode === "recording";
+    const durationMs = performance.now() - recordStartRef.current;
 
-    const finish = () => {
-      const preservedChunks = wasRecording ? timedChunksRef.current : [];
-      const preservedInit = wasRecording ? initChunkRef.current : null;
+    const finish = async () => {
+      const parts = wasRecording ? chunksRef.current.slice() : [];
       const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
       cleanup();
       setRunning(false);
       setMode("idle");
-      if (wasRecording && preservedChunks.length > 0) {
-        // Restore the buffer that cleanup() cleared so save/review still work.
-        timedChunksRef.current = preservedChunks;
-        initChunkRef.current = preservedInit;
-        setHasStoppedClip(true);
-        // Bring the session review up on its own — the user shouldn't have to
-        // hunt for a button to see what they just recorded.
-        const blob = buildDecodableBlob(preservedChunks.map((x) => x.blob), mime);
-        if (blob && blob.size > 0) {
-          if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
-          const url = URL.createObjectURL(blob);
-          sessionUrlRef.current = url;
-          setSessionUrl(url);
-        }
-      } else {
+      if (!wasRecording || parts.length === 0) {
         setBufferedSec(0);
         setHasStoppedClip(false);
+        return;
+      }
+
+      const raw = new Blob(parts, { type: mime });
+      setRepairing(true);
+      try {
+        const fixed = await repairRecording(raw, mime, durationMs);
+        recordedBlobRef.current = fixed;
+        setHasStoppedClip(true);
+        if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
+        const url = URL.createObjectURL(fixed);
+        sessionUrlRef.current = url;
+        setSessionUrl(url);
+      } catch (e: any) {
+        console.error("[DelayCam] duration repair failed", e);
+        recordedBlobRef.current = null;
+        setHasStoppedClip(false);
+        setRecordError(
+          `This recording couldn't be made playable on this device${e?.message ? `: ${e.message}` : "."}`,
+        );
+        toast.error("This recording couldn't be made playable. Please record again.");
+      } finally {
+        setRepairing(false);
       }
     };
 
     const rec = recorderRef.current;
     if (wasRecording && rec && rec.state !== "inactive") {
       // Wait for the recorder's final chunk before building the file.
-      rec.onstop = () => finish();
+      rec.onstop = () => { void finish(); };
       try {
         rec.stop();
       } catch {
-        finish();
+        void finish();
       }
       return;
     }
-    finish();
-  }, [buildDecodableBlob, cleanup, mode]);
+    void finish();
+  }, [cleanup, mode]);
+
+  /** Lets the memory-cap timer stop the session without a declaration cycle. */
+  const stopRef = useRef<(() => void) | null>(null);
+  useEffect(() => { stopRef.current = stop; }, [stop]);
+
 
 
   const swap = useCallback(async () => {
