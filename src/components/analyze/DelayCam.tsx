@@ -304,6 +304,26 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   useEffect(() => cleanup, [cleanup]);
 
+  /**
+   * Microphone for voice notes. The camera stream is torn down at Stop, so we
+   * open a mic-only stream once and hold it — the permission granted during
+   * recording means iOS Safari doesn't prompt again.
+   */
+  const getNoteMicStream = useCallback(async (): Promise<MediaStream> => {
+    const existing = noteMicRef.current;
+    if (existing && existing.getAudioTracks().some((t) => t.readyState === "live")) return existing;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    noteMicRef.current = stream;
+    return stream;
+  }, []);
+
+  useEffect(
+    () => () => { noteMicRef.current?.getTracks().forEach((t) => t.stop()); },
+    [],
+  );
+
+
+
   const recordedFileName = useCallback(() => {
     const mime = recordedBlobRef.current?.type || mimeRef.current || "video/webm";
     const ext = mime.includes("mp4") ? "mp4" : "webm";
