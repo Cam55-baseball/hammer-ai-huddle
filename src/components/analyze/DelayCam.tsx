@@ -1244,7 +1244,14 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               </Button>
             )}
           </div>
-          {sessionUrl && <SessionReviewPlayer url={sessionUrl} />}
+          {sessionUrl && (
+            <SessionReviewPlayer
+              url={sessionUrl}
+              notes={notes}
+              onNotesChange={(updater) => setNotes(updater)}
+              getMicStream={getNoteMicStream}
+            />
+          )}
         </div>
       )}
 
