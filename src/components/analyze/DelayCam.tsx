@@ -364,17 +364,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       );
       return;
     }
-    const items = timedChunksRef.current;
-    if (items.length === 0) {
+    const blob = recordedBlobRef.current;
+    if (!blob || blob.size === 0) {
       toast.error("Nothing to save yet — record a clip first.");
       return;
     }
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
-    if (!blob) {
-      toast.error("Couldn't build the clip. Try recording again.");
-      return;
-    }
+    const mime = blob.type || mimeRef.current || "video/webm";
+
 
     setSaving("club");
     const toastId = toast.loading("Saving to Players Club…");
