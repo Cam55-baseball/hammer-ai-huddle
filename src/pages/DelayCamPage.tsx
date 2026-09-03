@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -19,22 +19,23 @@ export default function DelayCamPage() {
   const sport = (searchParams.get("sport") === "softball" ? "softball" : "baseball") as
     | "baseball"
     | "softball";
-  const moduleParam = searchParams.get("module");
+  const params = useParams();
+  const moduleParam = params.module ?? searchParams.get("module");
   const module = (moduleParam === "pitching" || moduleParam === "throwing" ? moduleParam : "hitting") as
     | "hitting"
     | "pitching"
     | "throwing";
 
   useEffect(() => {
-    document.title = "DelayCam — Watch Yourself | Hammers Modality";
-  }, []);
+    document.title = `DelayCam ${module === "pitching" ? "Pitching" : "Hitting"} — Watch Yourself | Hammers Modality`;
+  }, [module]);
 
   return (
     <DashboardLayout>
       <div className="space-y-4" data-protected-editing="true">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">DelayCam</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">DelayCam — {module === "pitching" ? "Pitching" : module === "throwing" ? "Throwing" : "Hitting"}</h1>
             <p className="text-sm text-muted-foreground max-w-xl">
               A live camera that plays back a few seconds behind. Take your rep, turn around, and watch
               yourself do it. No scoring, no report — just your own eyes on your own swing or delivery.
