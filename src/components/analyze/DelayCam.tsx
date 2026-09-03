@@ -846,7 +846,28 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         )}
       </div>
 
+      {hasStoppedClip && (
+        <div className="space-y-2 rounded-md border p-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <div className="text-sm font-medium">Watch the whole session back</div>
+              <p className="text-xs text-muted-foreground">
+                Play it, slow it down, step frame by frame, and draw lines or angles on top to
+                critique yourself. Nothing here is scored or sent anywhere.
+              </p>
+            </div>
+            {!sessionUrl && (
+              <Button size="sm" onClick={openSessionReview} className="gap-1.5">
+                <Play className="h-4 w-4" /> Open session review
+              </Button>
+            )}
+          </div>
+          {sessionUrl && <SessionReviewPlayer url={sessionUrl} />}
+        </div>
+      )}
+
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
+
         <Badge variant={running || hasStoppedClip ? "default" : "outline"} className="text-[10px]">
           {running
             ? hidden
