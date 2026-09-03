@@ -1017,23 +1017,21 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             >
               {liveExpanded ? <X className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
             </Button>
-            {hasMulti && (
-              <>
-                <Button
-                  size="sm"
-                  onClick={swap}
-                  className="absolute top-2 right-2 gap-1.5 shadow-md bg-background/90 text-foreground hover:bg-background"
-                >
-                  <SwitchCamera className="h-4 w-4" /> Flip camera
-                </Button>
-                <Badge
-                  variant="secondary"
-                  className="absolute bottom-2 left-2 pointer-events-none bg-background/80 text-foreground"
-                >
-                  {cameraLabel} camera
-                </Badge>
-              </>
-            )}
+            <Button
+              size="sm"
+              onClick={swap}
+              aria-label="Flip camera"
+              className="absolute top-2 right-2 gap-1.5 shadow-md bg-background/90 text-foreground hover:bg-background"
+            >
+              <SwitchCamera className="h-4 w-4" /> Flip camera
+            </Button>
+            <Badge
+              variant="secondary"
+              className="absolute bottom-2 left-2 pointer-events-none bg-background/80 text-foreground"
+            >
+              {cameraLabel} camera{hasMulti ? "" : ""}
+            </Badge>
+
             {liveExpanded && (
               <Button
                 size="sm"
