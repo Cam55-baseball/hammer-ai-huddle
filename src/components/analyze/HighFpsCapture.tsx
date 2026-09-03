@@ -30,6 +30,8 @@ import { toast } from "sonner";
 import {
   analysisScopeForFps,
   describeCaptureFps,
+  resolveCaptureFps,
+
   highFpsVideoConstraints,
   readTrackFps,
   tryRaiseTrackFps,
