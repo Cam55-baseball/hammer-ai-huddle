@@ -7,7 +7,9 @@
  * uniformly on iOS Safari, Android Chrome, and desktop — no MediaSource, no
  * <video src> swaps, no flicker.
  *
- * MediaRecorder runs in parallel purely to power Replay Last Ns and Save clip.
+ * MediaRecorder runs in parallel to record the whole session for review and
+ * saving. If it cannot be created or fails, we say so — we never present the
+ * UI as recording when it is not.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -16,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
-  BookMarked, Loader2, Eye, Video,
+  BookMarked, Loader2, Eye, Video, Maximize2, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -55,8 +57,6 @@ const MAX_SESSION_BYTES = 900 * 1024 * 1024;
 
 const MAX_FRAME_W = 1280;
 const MAX_FRAME_H = 720;
-
-const REPLAY_DURATIONS = [3, 5, 10, 15];
 
 type Facing = "user" | "environment";
 
@@ -101,7 +101,6 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const liveRef = useRef<HTMLVideoElement>(null);
   const delayedCanvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const replayRef = useRef<HTMLVideoElement>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -111,7 +110,6 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const rvfcIdRef = useRef<number | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const drawRafRef = useRef<number | null>(null);
-  const replayUrlRef = useRef<string | null>(null);
   const mimeRef = useRef<string>("video/webm");
   /** Frame rate the camera track reported after negotiation, persisted with
    * any clip saved from this session. */
@@ -123,8 +121,6 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [error, setError] = useState<string | null>(null);
   const [bufferedSec, setBufferedSec] = useState(0);
   const [hasMulti, setHasMulti] = useState(false);
-  const [replayDuration, setReplayDuration] = useState(5);
-  const [replayUrl, setReplayUrl] = useState<string | null>(null);
   /** Object URL for the full recorded session, built on demand after Stop. */
   const [sessionUrl, setSessionUrl] = useState<string | null>(null);
   const sessionUrlRef = useRef<string | null>(null);
@@ -143,6 +139,21 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const streamOnlyRef = useRef(false);
   const frameCounterRef = useRef(0);
   const recordedBytesRef = useRef(0);
+  /** Bytes actually captured this session — drives whether save/review are
+   * possible, instead of guessing from the mode. */
+  const [recordedBytes, setRecordedBytes] = useState(0);
+  /** Set when MediaRecorder can't be created or fails mid-session. */
+  const [recordError, setRecordError] = useState<string | null>(null);
+  /** Which panel, if any, is expanded to fill the screen. */
+  const [expanded, setExpanded] = useState<null | "live" | "delayed">(null);
+
+  /** Whether this browser can record at all. Checked once so the Record
+   * session button can be honestly disabled rather than failing on press. */
+  const canRecord =
+    typeof window !== "undefined" &&
+    typeof MediaRecorder !== "undefined" &&
+    typeof (window as any).MediaRecorder === "function";
+
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
@@ -202,36 +213,16 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   useEffect(() => cleanup, [cleanup]);
 
-  // Build a decodable Blob by ensuring the recorder's first init segment is always first.
+  /** Build a playable Blob from the whole session, in recorded order. The
+   * recorder's first chunk carries the init segment, so concatenating every
+   * chunk in order always decodes. */
   const buildDecodableBlob = useCallback((body: Blob[], fallbackMime?: string): Blob | null => {
-    const init = initChunkRef.current;
     const mime = recorderRef.current?.mimeType || fallbackMime || mimeRef.current || "video/webm";
-    if (!init) return body.length ? new Blob(body, { type: mime }) : null;
-    const parts = body[0] === init ? body : [init, ...body];
+    if (body.length === 0) return null;
+    const init = initChunkRef.current;
+    const parts = init && body[0] !== init ? [init, ...body] : body;
     return new Blob(parts, { type: mime });
   }, []);
-
-  const replayLastN = useCallback((n: number) => {
-    const items = timedChunksRef.current;
-    if (items.length === 0) return;
-    const now = items[items.length - 1].t;
-    const cutoff = now - n * 1000;
-    const selected = items.filter((x) => x.t >= cutoff).map((x) => x.blob);
-    if (selected.length === 0) return;
-    const blob = buildDecodableBlob(selected);
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    setReplayUrl(url);
-    if (replayUrlRef.current) URL.revokeObjectURL(replayUrlRef.current);
-    replayUrlRef.current = url;
-    setTimeout(() => {
-      const rv = replayRef.current;
-      if (rv) {
-        rv.currentTime = 0;
-        rv.play().catch(() => {});
-      }
-    }, 0);
-  }, [buildDecodableBlob]);
 
   const saveClip = useCallback(() => {
     const items = timedChunksRef.current;
@@ -409,6 +400,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     streamOnlyRef.current = nextMode === "streaming";
     setHasStoppedClip(false);
     recordedBytesRef.current = 0;
+    setRecordedBytes(0);
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
       sessionUrlRef.current = null;
@@ -416,7 +408,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setSessionUrl(null);
 
     setError(null);
-    setReplayUrl(null);
+    setRecordError(null);
     cleanup();
     const useFacing = nextFacing ?? facing;
     try {
@@ -558,11 +550,12 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       };
       drawRafRef.current = requestAnimationFrame(renderDelayed);
 
-      // ----- MediaRecorder (for Replay Last Ns / Save clip only) -----
-      // Skip entirely in stream-only mode so long sessions don't accumulate
+      // ----- MediaRecorder — records the whole session for review and saving.
+      // Skipped entirely in mirror-only mode so long sessions don't accumulate
       // any encoded video in memory.
       const mime = pickRecorderMime();
       mimeRef.current = mime;
+      let recordingStarted = false;
       if (!streamOnlyRef.current) {
         try {
           const rec = new MediaRecorder(stream, { mimeType: mime });
@@ -577,6 +570,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             // it is hit we stop cleanly and say so rather than silently
             // dropping the front of the session.
             recordedBytesRef.current += ev.data.size;
+            setRecordedBytes(recordedBytesRef.current);
             const first = timedChunksRef.current[0];
             const elapsedSec = first ? (now - first.t) / 1000 : 0;
             if (
@@ -589,17 +583,31 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               );
             }
           };
+          rec.onerror = (ev: any) => {
+            const msg = ev?.error?.message || "Recording failed on this device.";
+            console.error("[DelayCam] recorder error", ev);
+            setRecordError(msg);
+            toast.error(`Recording stopped: ${msg}`);
+          };
 
           rec.start(250);
-        } catch {
-          // Recording is optional; the delayed mirror still works.
+          recordingStarted = true;
+        } catch (recErr: any) {
+          // Never pretend to be recording. Tell the user plainly.
+          const msg = recErr?.message || "This browser can't record video.";
+          console.error("[DelayCam] recorder could not start", recErr);
+          recorderRef.current = null;
+          setRecordError(msg);
+          toast.error(`Couldn't start recording: ${msg}`);
         }
       }
 
-
       setRunning(true);
-      setMode(nextMode);
+      // If recording was requested but the recorder never started, run as the
+      // mirror only — the badge and banner say so.
+      setMode(nextMode === "recording" && !recordingStarted ? "streaming" : nextMode);
       setTransitioning(false);
+
     } catch (e: any) {
       const name = e?.name || "";
       if (name === "NotAllowedError") setError("Camera permission denied. Enable it in your browser settings.");
@@ -621,11 +629,14 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setMode("idle");
     setBufferedSec(0);
     setHasStoppedClip(false);
-    if (replayUrlRef.current) {
-      URL.revokeObjectURL(replayUrlRef.current);
-      replayUrlRef.current = null;
+    setRecordError(null);
+    recordedBytesRef.current = 0;
+    setRecordedBytes(0);
+    if (sessionUrlRef.current) {
+      URL.revokeObjectURL(sessionUrlRef.current);
+      sessionUrlRef.current = null;
     }
-    setReplayUrl(null);
+    setSessionUrl(null);
   }, [cleanup]);
 
   /** Stop the active session. If the user was recording, preserve the
@@ -633,27 +644,48 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
    * Streaming has no clip to preserve, so it fully resets. */
   const stop = useCallback(() => {
     const wasRecording = mode === "recording";
-    const preservedChunks = wasRecording ? timedChunksRef.current : [];
-    const preservedInit = wasRecording ? initChunkRef.current : null;
-    cleanup();
-    setRunning(false);
-    if (wasRecording && preservedChunks.length > 0) {
-      // Restore the buffer that cleanup() cleared so save/replay still work.
-      timedChunksRef.current = preservedChunks;
-      initChunkRef.current = preservedInit;
-      setHasStoppedClip(true);
+
+    const finish = () => {
+      const preservedChunks = wasRecording ? timedChunksRef.current : [];
+      const preservedInit = wasRecording ? initChunkRef.current : null;
+      const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+      cleanup();
+      setRunning(false);
       setMode("idle");
-    } else {
-      setBufferedSec(0);
-      setHasStoppedClip(false);
-      if (replayUrlRef.current) {
-        URL.revokeObjectURL(replayUrlRef.current);
-        replayUrlRef.current = null;
+      if (wasRecording && preservedChunks.length > 0) {
+        // Restore the buffer that cleanup() cleared so save/review still work.
+        timedChunksRef.current = preservedChunks;
+        initChunkRef.current = preservedInit;
+        setHasStoppedClip(true);
+        // Bring the session review up on its own — the user shouldn't have to
+        // hunt for a button to see what they just recorded.
+        const blob = buildDecodableBlob(preservedChunks.map((x) => x.blob), mime);
+        if (blob && blob.size > 0) {
+          if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
+          const url = URL.createObjectURL(blob);
+          sessionUrlRef.current = url;
+          setSessionUrl(url);
+        }
+      } else {
+        setBufferedSec(0);
+        setHasStoppedClip(false);
       }
-      setReplayUrl(null);
-      setMode("idle");
+    };
+
+    const rec = recorderRef.current;
+    if (wasRecording && rec && rec.state !== "inactive") {
+      // Wait for the recorder's final chunk before building the file.
+      rec.onstop = () => finish();
+      try {
+        rec.stop();
+      } catch {
+        finish();
+      }
+      return;
     }
-  }, [cleanup, mode]);
+    finish();
+  }, [buildDecodableBlob, cleanup, mode]);
+
 
   const swap = useCallback(async () => {
     const next: Facing = facing === "user" ? "environment" : "user";
@@ -663,6 +695,44 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     }
   }, [facing, running, mode, start]);
 
+
+  const liveExpanded = expanded === "live";
+  const delayedExpanded = expanded === "delayed";
+
+  /** Expand one panel to fill the screen. Implemented as a full-viewport
+   * overlay because iOS Safari does not support requestFullscreen on
+   * arbitrary elements (a <canvas> in particular) — the real Fullscreen API
+   * is only used as an enhancement where it exists. The camera stream and the
+   * delayed frame buffer keep running: only CSS changes. */
+  const toggleExpanded = useCallback((which: "live" | "delayed") => {
+    setExpanded((cur) => {
+      const next = cur === which ? null : which;
+      try {
+        if (next && document.fullscreenEnabled && !document.fullscreenElement) {
+          void document.documentElement.requestFullscreen?.().catch(() => {});
+        } else if (!next && document.fullscreenElement) {
+          void document.exitFullscreen?.().catch(() => {});
+        }
+      } catch { /* enhancement only */ }
+      return next;
+    });
+  }, []);
+
+  // Esc and hardware/browser back close the expanded view.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(null);
+    };
+    const onPop = () => setExpanded(null);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("popstate", onPop);
+    try { window.history.pushState({ delaycamExpanded: true }, ""); } catch { /* ignore */ }
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPop);
+    };
+  }, [expanded]);
 
   const cameraLabel = facing === "user" ? "Front" : "Rear";
 
@@ -688,9 +758,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               <Button
                 size="sm"
                 onClick={() => { fullReset(); void start("recording"); }}
-                disabled={transitioning}
+                disabled={transitioning || !canRecord}
                 className="gap-1.5"
-                title="Record the whole session so you can watch it back, draw on it, and save it."
+                title={canRecord
+                  ? "Record the whole session so you can watch it back, draw on it, and save it."
+                  : "This browser can't record video, so there'd be nothing to watch back. Use Mirror only instead."}
               >
                 <Video className="h-4 w-4" /> Record session
               </Button>
@@ -731,12 +803,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             </Button>
           )}
           {(() => {
-            const canSave = (mode === "recording" || hasStoppedClip) && saving === null && timedChunksRef.current.length > 0;
-            const saveTip = mode === "streaming"
-              ? "Switch to Record session to save clips."
-              : !canSave && !hasStoppedClip && mode !== "recording"
-                ? "Press Record session to capture before saving."
-                : "";
+            // Enable off actual recorded bytes, never off the mode alone.
+            const canSave = recordedBytes > 0 && saving === null;
+            const saveTip = canSave
+              ? ""
+              : recordError
+                ? "Recording failed, so there's nothing to save."
+                : mode === "streaming"
+                  ? "Mirror only doesn't record. Press Record session to save."
+                  : "Press Record session to capture before saving.";
             return (
               <>
                 <Button
@@ -775,17 +850,48 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         </div>
       )}
 
+      {recordError && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            Not recording — {recordError} The delayed mirror still works, but nothing is being
+            saved from this session.
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Live</div>
-          <div className="relative">
+        <div className={liveExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col" : "space-y-1"}>
+          <div
+            className={
+              liveExpanded
+                ? "text-[10px] uppercase tracking-wide text-white/70 px-3 pt-3"
+                : "text-[10px] uppercase tracking-wide text-muted-foreground"
+            }
+          >
+            Live
+          </div>
+          <div className={liveExpanded ? "relative flex-1 min-h-0" : "relative"}>
             <video
               ref={liveRef}
               muted
               playsInline
               autoPlay
-              className="w-full aspect-video rounded-md bg-muted object-cover"
+              className={
+                liveExpanded
+                  ? "w-full h-full object-contain bg-black"
+                  : "w-full aspect-video rounded-md bg-muted object-cover"
+              }
             />
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label={liveExpanded ? "Close full screen live view" : "Expand live view to full screen"}
+              onClick={() => toggleExpanded("live")}
+              className="absolute top-2 left-2 h-11 w-11 shadow-md bg-background/90 text-foreground hover:bg-background"
+            >
+              {liveExpanded ? <X className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+            </Button>
             {hasMulti && (
               <>
                 <Button
@@ -803,18 +909,62 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                 </Badge>
               </>
             )}
+            {liveExpanded && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => toggleExpanded("live")}
+                className="absolute bottom-3 right-3 gap-1.5"
+              >
+                <X className="h-4 w-4" /> Close
+              </Button>
+            )}
           </div>
         </div>
-        <div className="space-y-1">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <div className={delayedExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col" : "space-y-1"}>
+          <div
+            className={
+              delayedExpanded
+                ? "text-[10px] uppercase tracking-wide text-white/70 px-3 pt-3"
+                : "text-[10px] uppercase tracking-wide text-muted-foreground"
+            }
+          >
             Delayed ({delay}s behind)
           </div>
-          <canvas
-            ref={delayedCanvasRef}
-            className="w-full aspect-video rounded-md bg-muted object-cover"
-          />
+          <div className={delayedExpanded ? "relative flex-1 min-h-0" : "relative"}>
+            <canvas
+              ref={delayedCanvasRef}
+              className={
+                delayedExpanded
+                  ? "w-full h-full object-contain bg-black"
+                  : "w-full aspect-video rounded-md bg-muted object-cover"
+              }
+            />
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label={
+                delayedExpanded ? "Close full screen delayed view" : "Expand delayed view to full screen"
+              }
+              onClick={() => toggleExpanded("delayed")}
+              className="absolute top-2 left-2 h-11 w-11 shadow-md bg-background/90 text-foreground hover:bg-background"
+            >
+              {delayedExpanded ? <X className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+            </Button>
+            {delayedExpanded && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => toggleExpanded("delayed")}
+                className="absolute bottom-3 right-3 gap-1.5"
+              >
+                <X className="h-4 w-4" /> Close
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs">
@@ -847,51 +997,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-medium">Instant replay</span>
-          <span className="tabular-nums text-muted-foreground">Last {replayDuration}s</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {REPLAY_DURATIONS.map((n) => (
-            <Button
-              key={n}
-              size="sm"
-              variant={replayDuration === n ? "default" : "outline"}
-              disabled={mode !== "recording" || !running || bufferedSec < n + delay}
-              onClick={() => {
-                setReplayDuration(n);
-                replayLastN(n);
-              }}
-              className="gap-1.5"
-            >
-              <Play className="h-3.5 w-3.5" /> Replay {n}s
-            </Button>
-          ))}
-        </div>
-        {replayUrl && (
-          <div className="space-y-1">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Replay clip</div>
-            <video
-              ref={replayRef}
-              src={replayUrl}
-              muted
-              playsInline
-              controls
-              autoPlay
-              onError={() => {
-                setError("Replay clip couldn't decode. Try pressing Start again and wait until the buffer is ready.");
-                if (replayUrlRef.current) {
-                  URL.revokeObjectURL(replayUrlRef.current);
-                  replayUrlRef.current = null;
-                }
-                setReplayUrl(null);
-              }}
-              className="w-full aspect-video rounded-md bg-muted object-cover"
-            />
-          </div>
-        )}
-      </div>
+
+
 
       {hasStoppedClip && (
         <div className="space-y-2 rounded-md border p-3">

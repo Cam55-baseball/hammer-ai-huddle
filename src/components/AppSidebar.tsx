@@ -227,6 +227,8 @@ export function AppSidebar() {
         icon: Target,
         subModules: [
           { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
+          { title: 'DelayCam Pitching', url: `/delaycam/pitching?sport=${selectedSport}`, icon: Camera, description: 'Watch your delivery back seconds after you throw it' },
+
           // Velocity measurement is no longer its own surface: it lives inside the
           // unified "Record now" analysis flow and lands on the same report card.
 
@@ -250,6 +252,8 @@ export function AppSidebar() {
         subModules: [
           { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
           { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
+          { title: 'DelayCam Hitting', url: `/delaycam/hitting?sport=${selectedSport}`, icon: Camera, description: 'Watch your swing back seconds after you take it' },
+
           { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "Iron Bambino" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
@@ -276,6 +280,9 @@ export function AppSidebar() {
           { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
           { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
           { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
+          { title: 'DelayCam Hitting', url: `/delaycam/hitting?sport=${selectedSport}`, icon: Camera, description: 'Watch your swing back seconds after you take it' },
+          { title: 'DelayCam Pitching', url: `/delaycam/pitching?sport=${selectedSport}`, icon: Camera, description: 'Watch your delivery back seconds after you throw it' },
+
           { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
@@ -296,17 +303,9 @@ export function AppSidebar() {
     // Players Club always visible
     items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
 
-    // DelayCam — its own module: a delayed mirror for watching yourself back.
-    // Not an analysis path (no scoring, no report card), so it lives here
-    // rather than inside the analyze capture chooser.
-    // Tier-gated: hitting DelayCam for 5Tool / Golden, pitching DelayCam for
-    // Pitcher / Golden. Owner and admin always see both.
-    if (showAll || hasFiveTool || hasGolden || hasLegacyHitting) {
-      items.push({ key: 'delaycam-hitting', title: 'DelayCam Hitting', url: '/delaycam/hitting', icon: Camera });
-    }
-    if (showAll || hasPitcherTier || hasGolden || hasLegacyPitching) {
-      items.push({ key: 'delaycam-pitching', title: 'DelayCam Pitching', url: '/delaycam/pitching', icon: Camera });
-    }
+    // DelayCam now lives inside the tier blocks above as a subModule, so its
+    // gating comes from the parent block's conditions.
+
 
     // History — practices, games, reports and recaps (everything without video)
     items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });
