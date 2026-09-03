@@ -16,20 +16,20 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
-  BookMarked, Sparkles, Loader2, Eye, Video,
+  BookMarked, Loader2, Eye, Video,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
-import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import {
   FPS_TARGET, highFpsVideoConstraints, readTrackFps, tryRaiseTrackFps, classifyFps,
 } from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
+import { SessionReviewPlayer } from "@/components/analyze/SessionReviewPlayer";
 
 type ClipModule = "hitting" | "pitching" | "throwing";
 type ClipSport = "baseball" | "softball";
@@ -143,6 +143,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [hidden, setHidden] = useState(false);
   const streamOnlyRef = useRef(false);
   const frameCounterRef = useRef(0);
+  const recordedBytesRef = useRef(0);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
@@ -408,6 +409,12 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setTransitioning(true);
     streamOnlyRef.current = nextMode === "streaming";
     setHasStoppedClip(false);
+    recordedBytesRef.current = 0;
+    if (sessionUrlRef.current) {
+      URL.revokeObjectURL(sessionUrlRef.current);
+      sessionUrlRef.current = null;
+    }
+    setSessionUrl(null);
 
     setError(null);
     setReplayUrl(null);
