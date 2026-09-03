@@ -31,6 +31,8 @@ import {
 } from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
 import { SessionReviewPlayer } from "@/components/analyze/SessionReviewPlayer";
+import fixWebmDuration from "fix-webm-duration";
+
 
 type ClipModule = "hitting" | "pitching" | "throwing";
 type ClipSport = "baseball" | "softball";
@@ -60,7 +62,6 @@ const MAX_FRAME_H = 720;
 
 type Facing = "user" | "environment";
 
-type TimedBlob = { blob: Blob; t: number };
 type Frame = { bitmap: ImageBitmap; t: number };
 
 function pickRecorderMime(): string {
@@ -77,6 +78,69 @@ function pickRecorderMime(): string {
   }
   return "video/webm";
 }
+
+/**
+ * Force the browser to index a freshly recorded blob so it becomes seekable.
+ * MediaRecorder output has no duration/cue data: loading it, seeking far past
+ * the end and waiting for durationchange/seeked makes the browser build the
+ * index, after which scrubbing and frame stepping work.
+ */
+async function forceSeekIndex(blob: Blob): Promise<{ ok: boolean; reason?: string }> {
+  const url = URL.createObjectURL(blob);
+  try {
+    return await new Promise<{ ok: boolean; reason?: string }>((resolve) => {
+      const v = document.createElement("video");
+      v.preload = "auto";
+      v.muted = true;
+      (v as any).playsInline = true;
+      let settled = false;
+      const finish = (ok: boolean, reason?: string) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try { v.removeAttribute("src"); v.load(); } catch { /* ignore */ }
+        resolve({ ok, reason });
+      };
+      // A slow phone can take a while to index a long session; a timeout is
+      // not proof of failure, so we let it through rather than lying either way.
+      const timer = setTimeout(() => finish(true, "indexing timed out"), 15000);
+      v.addEventListener("loadedmetadata", () => {
+        try { v.currentTime = 1e101; } catch { /* ignore */ }
+      });
+      v.addEventListener("durationchange", () => {
+        if (v.duration !== Infinity && !Number.isNaN(v.duration) && v.duration > 0) {
+          try { v.currentTime = 0; } catch { /* ignore */ }
+        }
+      });
+      v.addEventListener("seeked", () => {
+        if (v.currentTime === 0) finish(true);
+      });
+      v.addEventListener("error", () => finish(false, "the browser could not decode it"));
+      v.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Repair a recorded blob so it carries a real duration and is seekable.
+ * Throws if the result genuinely cannot be decoded — we never hand the user a
+ * dead player and call it a session. */
+async function repairRecording(blob: Blob, mime: string, durationMs: number): Promise<Blob> {
+  let out = blob;
+  if (mime.includes("webm") && durationMs > 0) {
+    try {
+      out = await fixWebmDuration(blob, durationMs, { logger: false });
+    } catch (e) {
+      console.warn("[DelayCam] webm duration fix failed", e);
+    }
+  }
+  const indexed = await forceSeekIndex(out);
+  if (!indexed.ok) throw new Error(indexed.reason || "the recording could not be indexed");
+  return out;
+}
+
+
 
 export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
   const { user } = useOptionalAuth();
@@ -104,8 +168,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const timedChunksRef = useRef<TimedBlob[]>([]);
-  const initChunkRef = useRef<Blob | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordStartRef = useRef<number>(0);
+  const capTimerRef = useRef<number | null>(null);
+  /** The repaired, seekable recording from the last session. */
+  const recordedBlobRef = useRef<Blob | null>(null);
+  /** Lets the memory-cap timer stop the session without a declaration cycle. */
+  const stopRef = useRef<(() => void) | null>(null);
+
+
   const framesRef = useRef<Frame[]>([]);
   const rvfcIdRef = useRef<number | null>(null);
   const rafIdRef = useRef<number | null>(null);
@@ -144,8 +215,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [recordedBytes, setRecordedBytes] = useState(0);
   /** Set when MediaRecorder can't be created or fails mid-session. */
   const [recordError, setRecordError] = useState<string | null>(null);
+  /** True while the recording is being made seekable after Stop. */
+  const [repairing, setRepairing] = useState(false);
+  /** True when the mic was denied/unavailable so the session has no sound. */
+  const [audioMissing, setAudioMissing] = useState(false);
   /** Which panel, if any, is expanded to fill the screen. */
   const [expanded, setExpanded] = useState<null | "live" | "delayed">(null);
+
 
   /** Whether this browser can record at all. Checked once so the Record
    * session button can be honestly disabled rather than failing on press. */
@@ -168,11 +244,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  useEffect(() => {
+  /** Refine the camera list. Before permission is granted iOS Safari reports
+   * a single unlabelled videoinput, so this is only ever used to enrich the
+   * label — the Flip button itself is always available. */
+  const refreshDevices = useCallback(() => {
     navigator.mediaDevices?.enumerateDevices?.().then((d) => {
       setHasMulti(d.filter((x) => x.kind === "videoinput").length > 1);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => { refreshDevices(); }, [refreshDevices]);
+
 
   // ----- Frame ring buffer helpers -----
 
@@ -193,14 +275,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     if (drawRafRef.current != null) cancelAnimationFrame(drawRafRef.current);
     drawRafRef.current = null;
 
+    if (capTimerRef.current != null) { clearInterval(capTimerRef.current); capTimerRef.current = null; }
     try { recorderRef.current?.state !== "inactive" && recorderRef.current?.stop(); } catch {}
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
 
-    timedChunksRef.current = [];
-    initChunkRef.current = null;
+    chunksRef.current = [];
     clearFrames();
+
     offscreenCanvasRef.current = null;
 
     if (liveRef.current) liveRef.current.srcObject = null;
@@ -213,60 +296,68 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   useEffect(() => cleanup, [cleanup]);
 
-  /** Build a playable Blob from the whole session, in recorded order. The
-   * recorder's first chunk carries the init segment, so concatenating every
-   * chunk in order always decodes. */
-  const buildDecodableBlob = useCallback((body: Blob[], fallbackMime?: string): Blob | null => {
-    const mime = recorderRef.current?.mimeType || fallbackMime || mimeRef.current || "video/webm";
-    if (body.length === 0) return null;
-    const init = initChunkRef.current;
-    const parts = init && body[0] !== init ? [init, ...body] : body;
-    return new Blob(parts, { type: mime });
+  const recordedFileName = useCallback(() => {
+    const mime = recordedBlobRef.current?.type || mimeRef.current || "video/webm";
+    const ext = mime.includes("mp4") ? "mp4" : "webm";
+    return `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
   }, []);
 
-  const saveClip = useCallback(() => {
-    const items = timedChunksRef.current;
-    if (items.length === 0) {
+  /**
+   * Save to device. iOS Safari ignores <a download>, and almost all of our
+   * users are on phones, so the Web Share sheet ("Save Video" / "Save to
+   * Files") is the primary path and the anchor download is the desktop
+   * fallback. We only claim success when a path actually completed.
+   */
+  const saveClip = useCallback(async () => {
+    const blob = recordedBlobRef.current;
+    if (!blob || blob.size === 0) {
       toast.error("Nothing recorded yet — press Record session first.");
       return;
     }
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
-    if (!blob || blob.size === 0) {
-      toast.error("Couldn't build the file from this recording. Try recording again.");
-      return;
+    const name = recordedFileName();
+    const file = new File([blob], name, { type: blob.type || "video/webm" });
+    const nav = navigator as any;
+    if (typeof nav.canShare === "function" && nav.canShare({ files: [file] }) && typeof nav.share === "function") {
+      try {
+        await nav.share({ files: [file], title: "DelayCam session" });
+        toast.success("Saved from the share sheet.");
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return; // user cancelled — say nothing
+        console.warn("[DelayCam] share failed, falling back to download", e);
+      }
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${mime.includes("mp4") ? "mp4" : "webm"}`;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast.success("Saved to your device.");
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }, [buildDecodableBlob]);
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+      toast.success("Saved to your device.");
+    } catch (e: any) {
+      console.error("[DelayCam] save to device failed", e);
+      toast.error(e?.message || "Couldn't save this video to your device.");
+    }
+  }, [recordedFileName]);
 
   /** Build a playable URL for the entire recorded session so the athlete can
    * watch it all back with the drawing tools. */
   const openSessionReview = useCallback(() => {
-    const items = timedChunksRef.current;
-    if (items.length === 0) {
-      toast.error("Nothing recorded yet — press Record session first.");
-      return;
-    }
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    const blob = recordedBlobRef.current;
     if (!blob || blob.size === 0) {
-      toast.error("Couldn't open this recording. Try recording again.");
+      toast.error("Nothing recorded yet — press Record session first.");
       return;
     }
     if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
     const url = URL.createObjectURL(blob);
     sessionUrlRef.current = url;
     setSessionUrl(url);
-  }, [buildDecodableBlob]);
+  }, []);
+
 
 
   const saveToPlayersClub = useCallback(async () => {
@@ -282,17 +373,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       );
       return;
     }
-    const items = timedChunksRef.current;
-    if (items.length === 0) {
+    const blob = recordedBlobRef.current;
+    if (!blob || blob.size === 0) {
       toast.error("Nothing to save yet — record a clip first.");
       return;
     }
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
-    if (!blob) {
-      toast.error("Couldn't build the clip. Try recording again.");
-      return;
-    }
+    const mime = blob.type || mimeRef.current || "video/webm";
+
 
     setSaving("club");
     const toastId = toast.loading("Saving to Players Club…");
@@ -316,12 +403,16 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
       try {
         probed = await probeVideoMetadata(file);
-      } catch (probeErr) {
+      } catch (probeErr: any) {
         console.error("[DelayCam] probe failed", probeErr);
-        toast.error("Couldn't read the recorded clip. Try recording again.", { id: toastId });
+        toast.error(
+          `Couldn't read the recorded clip: ${probeErr?.message || "unknown decode error"}`,
+          { id: toastId },
+        );
         setSaving(null);
         return;
       }
+
 
       const { error: uploadError } = await supabase.storage
         .from("videos")
@@ -377,13 +468,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       fireDelayCamMoment();
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);
-      toast.error(e?.message || "Couldn't save this clip. Please try again.", { id: toastId });
+      const reason = e?.message || e?.error_description || e?.error || "unknown error";
+      toast.error(`Couldn't save to Players Club: ${reason}`, { id: toastId });
     } finally {
       setSaving(null);
     }
   }, [
     activeSide,
-    buildDecodableBlob,
     fireDelayCamMoment,
     requiresSideConfirmation,
     resolvedModule,
@@ -395,12 +486,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
 
 
+
   const start = useCallback(async (nextMode: "streaming" | "recording", nextFacing?: Facing) => {
     setTransitioning(true);
     streamOnlyRef.current = nextMode === "streaming";
     setHasStoppedClip(false);
     recordedBytesRef.current = 0;
     setRecordedBytes(0);
+    recordedBlobRef.current = null;
+    setAudioMissing(false);
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
       sessionUrlRef.current = null;
@@ -412,14 +506,29 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     cleanup();
     const useFacing = nextFacing ?? facing;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        // Ask for the fastest frame rate the device can give us. Motion blur
-        // at 30fps is what destroys ball tracking, so we request high fps here
-        // too and record whatever the camera actually delivered.
-        video: highFpsVideoConstraints(useFacing),
-        audio: false,
-      });
+      // Ask for the fastest frame rate the device can give us, plus sound so a
+      // recorded session can actually be listened back to. If the mic is
+      // denied or unavailable we still record video and say audio is missing.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: highFpsVideoConstraints(useFacing),
+          audio: true,
+        });
+      } catch (audioErr: any) {
+        // Mic denied or missing must never cost the user their video.
+        console.warn("[DelayCam] audio unavailable, continuing video-only", audioErr);
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: highFpsVideoConstraints(useFacing),
+          audio: false,
+        });
+      }
+      if (stream.getAudioTracks().length === 0) setAudioMissing(true);
       streamRef.current = stream;
+      // Now that permission has been granted the device list is labelled, so
+      // refine what we know about how many cameras this phone really has.
+      refreshDevices();
       {
         const negotiated = readTrackFps(stream);
         if (!negotiated.settingsFps || negotiated.settingsFps < 60) {
@@ -428,6 +537,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         const after = readTrackFps(stream);
         capturedFpsRef.current = after.settingsFps ?? negotiated.settingsFps ?? null;
       }
+
       const lv = liveRef.current;
       if (!lv) throw new Error("Live video element not mounted");
       lv.srcObject = stream;
@@ -560,28 +670,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         try {
           const rec = new MediaRecorder(stream, { mimeType: mime });
           recorderRef.current = rec;
+          chunksRef.current = [];
+          recordStartRef.current = performance.now();
           rec.ondataavailable = (ev) => {
             if (!ev.data || ev.data.size === 0) return;
-            const now = performance.now();
-            if (!initChunkRef.current) initChunkRef.current = ev.data;
-            timedChunksRef.current.push({ blob: ev.data, t: now });
-            // Record the WHOLE session — the athlete watches it all back, so
-            // nothing is evicted. The only limit is a memory safety cap; when
-            // it is hit we stop cleanly and say so rather than silently
-            // dropping the front of the session.
+            chunksRef.current.push(ev.data);
             recordedBytesRef.current += ev.data.size;
             setRecordedBytes(recordedBytesRef.current);
-            const first = timedChunksRef.current[0];
-            const elapsedSec = first ? (now - first.t) / 1000 : 0;
-            if (
-              recordedBytesRef.current > MAX_SESSION_BYTES ||
-              elapsedSec > MAX_SESSION_SEC
-            ) {
-              try { rec.state !== "inactive" && rec.stop(); } catch { /* noop */ }
-              toast.info(
-                `Recording stopped at the ${Math.round(MAX_SESSION_SEC / 60)}-minute limit. Your session is ready to watch back.`,
-              );
-            }
           };
           rec.onerror = (ev: any) => {
             const msg = ev?.error?.message || "Recording failed on this device.";
@@ -590,8 +685,24 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             toast.error(`Recording stopped: ${msg}`);
           };
 
-          rec.start(250);
+          // One un-sliced recording so the browser finalises a single complete
+          // file on stop — spliced chunks produce an unseekable blob.
+          rec.start();
           recordingStarted = true;
+
+          // Safety cap, checked on a timer rather than per-chunk.
+          if (capTimerRef.current != null) clearInterval(capTimerRef.current);
+          capTimerRef.current = window.setInterval(() => {
+            const elapsedSec = (performance.now() - recordStartRef.current) / 1000;
+            const estBytes = recordedBytesRef.current;
+            if (elapsedSec > MAX_SESSION_SEC || estBytes > MAX_SESSION_BYTES) {
+              if (capTimerRef.current != null) { clearInterval(capTimerRef.current); capTimerRef.current = null; }
+              toast.info(
+                `Recording stopped at the ${Math.round(MAX_SESSION_SEC / 60)}-minute limit. Your session is ready to watch back.`,
+              );
+              stopRef.current?.();
+            }
+          }, 5000);
         } catch (recErr: any) {
           // Never pretend to be recording. Tell the user plainly.
           const msg = recErr?.message || "This browser can't record video.";
@@ -601,6 +712,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           toast.error(`Couldn't start recording: ${msg}`);
         }
       }
+
 
       setRunning(true);
       // If recording was requested but the recorder never started, run as the
@@ -619,7 +731,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       setMode("idle");
       setTransitioning(false);
     }
-  }, [cleanup, facing]);
+  }, [cleanup, facing, refreshDevices]);
 
   /** Full teardown that also clears any buffered clip. Used when the user
    * starts a fresh session or unmounts. */
@@ -632,6 +744,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setRecordError(null);
     recordedBytesRef.current = 0;
     setRecordedBytes(0);
+    recordedBlobRef.current = null;
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
       sessionUrlRef.current = null;
@@ -639,52 +752,64 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setSessionUrl(null);
   }, [cleanup]);
 
-  /** Stop the active session. If the user was recording, preserve the
-   * buffered clip so save-to-device / save-to-club / replay still work.
-   * Streaming has no clip to preserve, so it fully resets. */
+  /** Stop the active session. If the user was recording, finalise the file,
+   * repair its duration so it is seekable, and bring up the review player. */
   const stop = useCallback(() => {
     const wasRecording = mode === "recording";
+    const durationMs = performance.now() - recordStartRef.current;
 
-    const finish = () => {
-      const preservedChunks = wasRecording ? timedChunksRef.current : [];
-      const preservedInit = wasRecording ? initChunkRef.current : null;
+    const finish = async () => {
+      const parts = wasRecording ? chunksRef.current.slice() : [];
       const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
       cleanup();
       setRunning(false);
       setMode("idle");
-      if (wasRecording && preservedChunks.length > 0) {
-        // Restore the buffer that cleanup() cleared so save/review still work.
-        timedChunksRef.current = preservedChunks;
-        initChunkRef.current = preservedInit;
-        setHasStoppedClip(true);
-        // Bring the session review up on its own — the user shouldn't have to
-        // hunt for a button to see what they just recorded.
-        const blob = buildDecodableBlob(preservedChunks.map((x) => x.blob), mime);
-        if (blob && blob.size > 0) {
-          if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
-          const url = URL.createObjectURL(blob);
-          sessionUrlRef.current = url;
-          setSessionUrl(url);
-        }
-      } else {
+      if (!wasRecording || parts.length === 0) {
         setBufferedSec(0);
         setHasStoppedClip(false);
+        return;
+      }
+
+      const raw = new Blob(parts, { type: mime });
+      setRepairing(true);
+      try {
+        const fixed = await repairRecording(raw, mime, durationMs);
+        recordedBlobRef.current = fixed;
+        setHasStoppedClip(true);
+        if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
+        const url = URL.createObjectURL(fixed);
+        sessionUrlRef.current = url;
+        setSessionUrl(url);
+      } catch (e: any) {
+        console.error("[DelayCam] duration repair failed", e);
+        recordedBlobRef.current = null;
+        setHasStoppedClip(false);
+        setRecordError(
+          `This recording couldn't be made playable on this device${e?.message ? `: ${e.message}` : "."}`,
+        );
+        toast.error("This recording couldn't be made playable. Please record again.");
+      } finally {
+        setRepairing(false);
       }
     };
 
     const rec = recorderRef.current;
     if (wasRecording && rec && rec.state !== "inactive") {
       // Wait for the recorder's final chunk before building the file.
-      rec.onstop = () => finish();
+      rec.onstop = () => { void finish(); };
       try {
         rec.stop();
       } catch {
-        finish();
+        void finish();
       }
       return;
     }
-    finish();
-  }, [buildDecodableBlob, cleanup, mode]);
+    void finish();
+  }, [cleanup, mode]);
+
+  useEffect(() => { stopRef.current = stop; }, [stop]);
+
+
 
 
   const swap = useCallback(async () => {
@@ -804,14 +929,18 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           )}
           {(() => {
             // Enable off actual recorded bytes, never off the mode alone.
-            const canSave = recordedBytes > 0 && saving === null;
+            const canSave = hasStoppedClip && recordedBytes > 0 && !repairing && saving === null;
             const saveTip = canSave
               ? ""
-              : recordError
-                ? "Recording failed, so there's nothing to save."
-                : mode === "streaming"
-                  ? "Mirror only doesn't record. Press Record session to save."
-                  : "Press Record session to capture before saving.";
+              : repairing
+                ? "Getting your session ready…"
+                : recordError
+                  ? "Recording failed, so there's nothing to save."
+                  : mode === "streaming"
+                    ? "Mirror only doesn't record. Press Record session to save."
+                    : "Press Record session, then Stop, before saving."
+            ;
+
             return (
               <>
                 <Button
@@ -860,6 +989,21 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         </div>
       )}
 
+      {repairing && (
+        <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2 text-xs">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Getting your session ready to watch back…</span>
+        </div>
+      )}
+
+      {audioMissing && (
+        <div className="flex items-start gap-2 rounded-md border bg-muted/40 p-2 text-xs">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>No microphone available, so this session is recording video without sound.</span>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className={liveExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col" : "space-y-1"}>
           <div
@@ -892,23 +1036,21 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             >
               {liveExpanded ? <X className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
             </Button>
-            {hasMulti && (
-              <>
-                <Button
-                  size="sm"
-                  onClick={swap}
-                  className="absolute top-2 right-2 gap-1.5 shadow-md bg-background/90 text-foreground hover:bg-background"
-                >
-                  <SwitchCamera className="h-4 w-4" /> Flip camera
-                </Button>
-                <Badge
-                  variant="secondary"
-                  className="absolute bottom-2 left-2 pointer-events-none bg-background/80 text-foreground"
-                >
-                  {cameraLabel} camera
-                </Badge>
-              </>
-            )}
+            <Button
+              size="sm"
+              onClick={swap}
+              aria-label="Flip camera"
+              className="absolute top-2 right-2 gap-1.5 shadow-md bg-background/90 text-foreground hover:bg-background"
+            >
+              <SwitchCamera className="h-4 w-4" /> Flip camera
+            </Button>
+            <Badge
+              variant="secondary"
+              className="absolute bottom-2 left-2 pointer-events-none bg-background/80 text-foreground"
+            >
+              {cameraLabel} camera{hasMulti ? "" : ""}
+            </Badge>
+
             {liveExpanded && (
               <Button
                 size="sm"
