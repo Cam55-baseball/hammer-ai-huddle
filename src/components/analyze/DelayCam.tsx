@@ -206,8 +206,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [recordedBytes, setRecordedBytes] = useState(0);
   /** Set when MediaRecorder can't be created or fails mid-session. */
   const [recordError, setRecordError] = useState<string | null>(null);
+  /** True while the recording is being made seekable after Stop. */
+  const [repairing, setRepairing] = useState(false);
+  /** True when the mic was denied/unavailable so the session has no sound. */
+  const [audioMissing, setAudioMissing] = useState(false);
   /** Which panel, if any, is expanded to fill the screen. */
   const [expanded, setExpanded] = useState<null | "live" | "delayed">(null);
+
 
   /** Whether this browser can record at all. Checked once so the Record
    * session button can be honestly disabled rather than failing on press. */
@@ -230,11 +235,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  useEffect(() => {
+  /** Refine the camera list. Before permission is granted iOS Safari reports
+   * a single unlabelled videoinput, so this is only ever used to enrich the
+   * label — the Flip button itself is always available. */
+  const refreshDevices = useCallback(() => {
     navigator.mediaDevices?.enumerateDevices?.().then((d) => {
       setHasMulti(d.filter((x) => x.kind === "videoinput").length > 1);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => { refreshDevices(); }, [refreshDevices]);
+
 
   // ----- Frame ring buffer helpers -----
 
