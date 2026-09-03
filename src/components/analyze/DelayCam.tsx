@@ -661,28 +661,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         try {
           const rec = new MediaRecorder(stream, { mimeType: mime });
           recorderRef.current = rec;
+          chunksRef.current = [];
+          recordStartRef.current = performance.now();
           rec.ondataavailable = (ev) => {
             if (!ev.data || ev.data.size === 0) return;
-            const now = performance.now();
-            if (!initChunkRef.current) initChunkRef.current = ev.data;
-            timedChunksRef.current.push({ blob: ev.data, t: now });
-            // Record the WHOLE session — the athlete watches it all back, so
-            // nothing is evicted. The only limit is a memory safety cap; when
-            // it is hit we stop cleanly and say so rather than silently
-            // dropping the front of the session.
+            chunksRef.current.push(ev.data);
             recordedBytesRef.current += ev.data.size;
             setRecordedBytes(recordedBytesRef.current);
-            const first = timedChunksRef.current[0];
-            const elapsedSec = first ? (now - first.t) / 1000 : 0;
-            if (
-              recordedBytesRef.current > MAX_SESSION_BYTES ||
-              elapsedSec > MAX_SESSION_SEC
-            ) {
-              try { rec.state !== "inactive" && rec.stop(); } catch { /* noop */ }
-              toast.info(
-                `Recording stopped at the ${Math.round(MAX_SESSION_SEC / 60)}-minute limit. Your session is ready to watch back.`,
-              );
-            }
           };
           rec.onerror = (ev: any) => {
             const msg = ev?.error?.message || "Recording failed on this device.";
@@ -691,8 +676,24 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             toast.error(`Recording stopped: ${msg}`);
           };
 
-          rec.start(250);
+          // One un-sliced recording so the browser finalises a single complete
+          // file on stop — spliced chunks produce an unseekable blob.
+          rec.start();
           recordingStarted = true;
+
+          // Safety cap, checked on a timer rather than per-chunk.
+          if (capTimerRef.current != null) clearInterval(capTimerRef.current);
+          capTimerRef.current = window.setInterval(() => {
+            const elapsedSec = (performance.now() - recordStartRef.current) / 1000;
+            const estBytes = recordedBytesRef.current;
+            if (elapsedSec > MAX_SESSION_SEC || estBytes > MAX_SESSION_BYTES) {
+              if (capTimerRef.current != null) { clearInterval(capTimerRef.current); capTimerRef.current = null; }
+              toast.info(
+                `Recording stopped at the ${Math.round(MAX_SESSION_SEC / 60)}-minute limit. Your session is ready to watch back.`,
+              );
+              stopRef.current?.();
+            }
+          }, 5000);
         } catch (recErr: any) {
           // Never pretend to be recording. Tell the user plainly.
           const msg = recErr?.message || "This browser can't record video.";
@@ -702,6 +703,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           toast.error(`Couldn't start recording: ${msg}`);
         }
       }
+
 
       setRunning(true);
       // If recording was requested but the recorder never started, run as the
