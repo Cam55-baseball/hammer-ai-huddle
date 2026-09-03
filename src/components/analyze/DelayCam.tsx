@@ -624,10 +624,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
-            <Timer className="h-4 w-4 text-primary" /> DelayCam — Instant Replay
+            <Timer className="h-4 w-4 text-primary" /> DelayCam — watch yourself back
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Live camera with adjustable 1–55s playback delay for self-review.
+            Live camera that plays back 1–55 seconds behind. Record the whole session, then watch it
+            all back and draw on it. No scores, no report card.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -642,9 +643,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                 onClick={() => { fullReset(); void start("recording"); }}
                 disabled={transitioning}
                 className="gap-1.5"
-                title="Record this session. Save to device, Save to Players Club, and Analyze become available."
+                title="Record the whole session so you can watch it back, draw on it, and save it."
               >
-                <Video className="h-4 w-4" /> Record
+                <Video className="h-4 w-4" /> Record session
               </Button>
               <Button
                 size="sm"
@@ -652,9 +653,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                 onClick={() => { fullReset(); void start("streaming"); }}
                 disabled={transitioning}
                 className="gap-1.5"
-                title="Delayed mirror only. Best for long practice sessions (hours). No recording, no save."
+                title="Delayed mirror only — nothing is recorded or saved. Best for hours-long practice."
               >
-                <Eye className="h-4 w-4" /> Stream
+                <Eye className="h-4 w-4" /> Mirror only
               </Button>
             </>
           )}
@@ -665,9 +666,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               onClick={() => { void start("recording"); }}
               disabled={transitioning}
               className="gap-1.5"
-              title="Switch to a recording session so you can save and analyze clips."
+              title="Start recording this session so you can watch it back and save it."
             >
-              <Video className="h-4 w-4" /> Switch to Record
+              <Video className="h-4 w-4" /> Start recording
             </Button>
           )}
           {running && mode === "recording" && (
@@ -677,17 +678,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               onClick={() => { void start("streaming"); }}
               disabled={transitioning}
               className="gap-1.5"
-              title="Switch to stream-only for long sessions. Current recorded buffer will be cleared."
+              title="Switch to mirror only for long sessions. What you have recorded so far is discarded."
             >
-              <Eye className="h-4 w-4" /> Switch to Stream
+              <Eye className="h-4 w-4" /> Switch to mirror only
             </Button>
           )}
           {(() => {
             const canSave = (mode === "recording" || hasStoppedClip) && saving === null && timedChunksRef.current.length > 0;
             const saveTip = mode === "streaming"
-              ? "Switch to Record mode to save clips."
+              ? "Switch to Record session to save clips."
               : !canSave && !hasStoppedClip && mode !== "recording"
-                ? "Press Record to capture a session before saving."
+                ? "Press Record session to capture before saving."
                 : "";
             return (
               <>
@@ -697,34 +698,25 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                   onClick={saveClip}
                   disabled={!canSave}
                   className="gap-1.5"
-                  title={saveTip || "Download this clip to your phone or computer"}
+                  title={saveTip || "Download this session to your phone or computer"}
                 >
                   <Download className="h-4 w-4" /> Save to device
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => void saveToPlayersClub({ analyze: false })}
+                  onClick={() => void saveToPlayersClub()}
                   disabled={!canSave || !user}
                   className="gap-1.5"
-                  title={saveTip || "Save this clip to your Players Club library"}
+                  title={saveTip || "Save this session to your Players Club library"}
                 >
                   {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
                   Save to Players Club
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => void saveToPlayersClub({ analyze: true })}
-                  disabled={!canSave || !user}
-                  className="gap-1.5"
-                  title={saveTip || "Save and run Hammer analysis on this clip"}
-                >
-                  {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Save & Analyze
-                </Button>
               </>
             );
           })()}
+
         </div>
       </div>
 
