@@ -30,7 +30,7 @@ import {
   FPS_TARGET, highFpsVideoConstraints, readTrackFps, tryRaiseTrackFps, classifyFps,
 } from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
-import { SessionReviewPlayer } from "@/components/analyze/SessionReviewPlayer";
+import { SessionReviewPlayer, type SessionNote } from "@/components/analyze/SessionReviewPlayer";
 import fixWebmDuration from "fix-webm-duration";
 
 
