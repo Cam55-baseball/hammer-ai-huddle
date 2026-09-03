@@ -120,7 +120,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [hasMulti, setHasMulti] = useState(false);
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
-  const [saving, setSaving] = useState<null | "club" | "analyze">(null);
+  /** Object URL for the full recorded session, built on demand after Stop. */
+  const [sessionUrl, setSessionUrl] = useState<string | null>(null);
+  const sessionUrlRef = useRef<string | null>(null);
+  const [saving, setSaving] = useState<null | "club">(null);
+
   /** "idle" before start; "recording" runs MediaRecorder buffer for
    * replay/save; "streaming" is delayed mirror only for long practice
    * sessions. */
