@@ -30,7 +30,7 @@ import {
   FPS_TARGET, highFpsVideoConstraints, readTrackFps, tryRaiseTrackFps, classifyFps,
 } from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
-import { SessionReviewPlayer } from "@/components/analyze/SessionReviewPlayer";
+import { SessionReviewPlayer, type SessionNote } from "@/components/analyze/SessionReviewPlayer";
 import fixWebmDuration from "fix-webm-duration";
 
 
@@ -221,6 +221,14 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [audioMissing, setAudioMissing] = useState(false);
   /** Which panel, if any, is expanded to fill the screen. */
   const [expanded, setExpanded] = useState<null | "live" | "delayed">(null);
+  /**
+   * Notes taken on the recorded session. They live here, not in the review
+   * player, because the recording has no database row until it is saved to
+   * Players Club — at which point these are written to `video_notes`.
+   */
+  const [notes, setNotes] = useState<SessionNote[]>([]);
+  /** Mic stream kept open across voice notes so iOS doesn't re-prompt. */
+  const noteMicRef = useRef<MediaStream | null>(null);
 
 
   /** Whether this browser can record at all. Checked once so the Record
@@ -295,6 +303,26 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   }, [clearFrames]);
 
   useEffect(() => cleanup, [cleanup]);
+
+  /**
+   * Microphone for voice notes. The camera stream is torn down at Stop, so we
+   * open a mic-only stream once and hold it — the permission granted during
+   * recording means iOS Safari doesn't prompt again.
+   */
+  const getNoteMicStream = useCallback(async (): Promise<MediaStream> => {
+    const existing = noteMicRef.current;
+    if (existing && existing.getAudioTracks().some((t) => t.readyState === "live")) return existing;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    noteMicRef.current = stream;
+    return stream;
+  }, []);
+
+  useEffect(
+    () => () => { noteMicRef.current?.getTracks().forEach((t) => t.stop()); },
+    [],
+  );
+
+
 
   const recordedFileName = useCallback(() => {
     const mime = recordedBlobRef.current?.type || mimeRef.current || "video/webm";
@@ -438,7 +466,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           : { throwing_hand: activeSide }
         : {};
 
-      const { error: insertError } = await supabase
+      const { data: insertedVideo, error: insertError } = await supabase
         .from("videos")
         .insert([{
           user_id: user.id,
@@ -461,10 +489,62 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
           capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
           ...sideStamp,
-        }] as never);
+        }] as never)
+        .select("id")
+        .single();
       if (insertError) throw insertError;
 
-      toast.success("Saved to Players Club.", { id: toastId });
+      // Notes ride along with the clip. Each one is reported individually so a
+      // partial failure is never presented as a clean save.
+      const videoId = (insertedVideo as { id: string } | null)?.id ?? null;
+      const failedNotes: string[] = [];
+      if (videoId && notes.length > 0) {
+        for (const note of notes) {
+          const label = note.timestampSec != null
+            ? `note at ${Math.floor(note.timestampSec / 60)}:${String(Math.floor(note.timestampSec % 60)).padStart(2, "0")}`
+            : "session note";
+          try {
+            let audioUrl: string | null = null;
+            if (note.kind === "voice" && note.audioBlob) {
+              const aType = note.audioBlob.type || "audio/webm";
+              const aExt = aType.includes("mp4") ? "m4a" : "webm";
+              const aPath = `${user.id}/delaycam-notes/${videoId}/${note.id}.${aExt}`;
+              const { error: aErr } = await supabase.storage
+                .from("videos")
+                .upload(aPath, note.audioBlob, { contentType: aType, upsert: false });
+              if (aErr) throw aErr;
+              audioUrl = supabase.storage.from("videos").getPublicUrl(aPath).data.publicUrl;
+            }
+            const { error: noteErr } = await supabase.from("video_notes").insert([{
+              user_id: user.id,
+              video_id: videoId,
+              timestamp_sec: note.timestampSec,
+              kind: note.kind,
+              body: note.body,
+              audio_url: audioUrl,
+              duration_sec: note.durationSec,
+            }] as never);
+            if (noteErr) throw noteErr;
+          } catch (noteFail: any) {
+            console.error("[DelayCam] note save failed", note.id, noteFail);
+            failedNotes.push(`${label} (${noteFail?.message || "unknown error"})`);
+          }
+        }
+      }
+
+      if (failedNotes.length > 0) {
+        toast.error(
+          `Video saved, but ${failedNotes.length} of ${notes.length} notes didn't save: ${failedNotes.join("; ")}`,
+          { id: toastId, duration: 12000 },
+        );
+      } else {
+        toast.success(
+          notes.length > 0
+            ? `Saved to Players Club with ${notes.length} note${notes.length === 1 ? "" : "s"}.`
+            : "Saved to Players Club.",
+          { id: toastId },
+        );
+      }
       fireDelayCamMoment();
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);
@@ -476,6 +556,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   }, [
     activeSide,
     fireDelayCamMoment,
+    notes,
     requiresSideConfirmation,
     resolvedModule,
     resolvedSport,
@@ -750,6 +831,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       sessionUrlRef.current = null;
     }
     setSessionUrl(null);
+    // A new session means the previous session's notes no longer apply.
+    setNotes((prev) => {
+      prev.forEach((n) => { if (n.audioObjectUrl) URL.revokeObjectURL(n.audioObjectUrl); });
+      return [];
+    });
   }, [cleanup]);
 
   /** Stop the active session. If the user was recording, finalise the file,
@@ -1158,7 +1244,14 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               </Button>
             )}
           </div>
-          {sessionUrl && <SessionReviewPlayer url={sessionUrl} />}
+          {sessionUrl && (
+            <SessionReviewPlayer
+              url={sessionUrl}
+              notes={notes}
+              onNotesChange={(updater) => setNotes(updater)}
+              getMicStream={getNoteMicStream}
+            />
+          )}
         </div>
       )}
 
