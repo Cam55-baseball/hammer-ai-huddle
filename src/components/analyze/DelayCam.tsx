@@ -85,23 +85,25 @@ function pickRecorderMime(): string {
  * the end and waiting for durationchange/seeked makes the browser build the
  * index, after which scrubbing and frame stepping work.
  */
-async function forceSeekIndex(blob: Blob): Promise<void> {
+async function forceSeekIndex(blob: Blob): Promise<{ ok: boolean; reason?: string }> {
   const url = URL.createObjectURL(blob);
   try {
-    await new Promise<void>((resolve) => {
+    return await new Promise<{ ok: boolean; reason?: string }>((resolve) => {
       const v = document.createElement("video");
       v.preload = "auto";
       v.muted = true;
       (v as any).playsInline = true;
       let settled = false;
-      const finish = () => {
+      const finish = (ok: boolean, reason?: string) => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
         try { v.removeAttribute("src"); v.load(); } catch { /* ignore */ }
-        resolve();
+        resolve({ ok, reason });
       };
-      const timer = setTimeout(finish, 5000);
+      // A slow phone can take a while to index a long session; a timeout is
+      // not proof of failure, so we let it through rather than lying either way.
+      const timer = setTimeout(() => finish(true, "indexing timed out"), 15000);
       v.addEventListener("loadedmetadata", () => {
         try { v.currentTime = 1e101; } catch { /* ignore */ }
       });
@@ -111,9 +113,9 @@ async function forceSeekIndex(blob: Blob): Promise<void> {
         }
       });
       v.addEventListener("seeked", () => {
-        if (v.currentTime === 0) finish();
+        if (v.currentTime === 0) finish(true);
       });
-      v.addEventListener("error", finish);
+      v.addEventListener("error", () => finish(false, "the browser could not decode it"));
       v.src = url;
     });
   } finally {
@@ -121,7 +123,9 @@ async function forceSeekIndex(blob: Blob): Promise<void> {
   }
 }
 
-/** Repair a recorded blob so it carries a real duration and is seekable. */
+/** Repair a recorded blob so it carries a real duration and is seekable.
+ * Throws if the result genuinely cannot be decoded — we never hand the user a
+ * dead player and call it a session. */
 async function repairRecording(blob: Blob, mime: string, durationMs: number): Promise<Blob> {
   let out = blob;
   if (mime.includes("webm") && durationMs > 0) {
@@ -131,9 +135,11 @@ async function repairRecording(blob: Blob, mime: string, durationMs: number): Pr
       console.warn("[DelayCam] webm duration fix failed", e);
     }
   }
-  await forceSeekIndex(out);
+  const indexed = await forceSeekIndex(out);
+  if (!indexed.ok) throw new Error(indexed.reason || "the recording could not be indexed");
   return out;
 }
+
 
 
 export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
