@@ -560,22 +560,24 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             const now = performance.now();
             if (!initChunkRef.current) initChunkRef.current = ev.data;
             timedChunksRef.current.push({ blob: ev.data, t: now });
-            // Evict old body chunks. Keep index 0 reserved for the init
-            // segment reference; if everything ages out, reset the buffer
-            // entirely so the next chunk becomes the new init segment.
-            const cutoff = now - MAX_BUFFER_SEC * 1000;
-            while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
-              timedChunksRef.current.splice(1, 1);
-            }
+            // Record the WHOLE session — the athlete watches it all back, so
+            // nothing is evicted. The only limit is a memory safety cap; when
+            // it is hit we stop cleanly and say so rather than silently
+            // dropping the front of the session.
+            recordedBytesRef.current += ev.data.size;
+            const first = timedChunksRef.current[0];
+            const elapsedSec = first ? (now - first.t) / 1000 : 0;
             if (
-              timedChunksRef.current.length > 0 &&
-              timedChunksRef.current[timedChunksRef.current.length - 1].t <
-                now - (MAX_BUFFER_SEC + 5) * 1000
+              recordedBytesRef.current > MAX_SESSION_BYTES ||
+              elapsedSec > MAX_SESSION_SEC
             ) {
-              timedChunksRef.current = [];
-              initChunkRef.current = null;
+              try { rec.state !== "inactive" && rec.stop(); } catch { /* noop */ }
+              toast.info(
+                `Recording stopped at the ${Math.round(MAX_SESSION_SEC / 60)}-minute limit. Your session is ready to watch back.`,
+              );
             }
           };
+
           rec.start(250);
         } catch {
           // Recording is optional; the delayed mirror still works.
