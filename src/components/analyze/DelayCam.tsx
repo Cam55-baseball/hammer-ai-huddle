@@ -287,60 +287,68 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   useEffect(() => cleanup, [cleanup]);
 
-  /** Build a playable Blob from the whole session, in recorded order. The
-   * recorder's first chunk carries the init segment, so concatenating every
-   * chunk in order always decodes. */
-  const buildDecodableBlob = useCallback((body: Blob[], fallbackMime?: string): Blob | null => {
-    const mime = recorderRef.current?.mimeType || fallbackMime || mimeRef.current || "video/webm";
-    if (body.length === 0) return null;
-    const init = initChunkRef.current;
-    const parts = init && body[0] !== init ? [init, ...body] : body;
-    return new Blob(parts, { type: mime });
+  const recordedFileName = useCallback(() => {
+    const mime = recordedBlobRef.current?.type || mimeRef.current || "video/webm";
+    const ext = mime.includes("mp4") ? "mp4" : "webm";
+    return `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
   }, []);
 
-  const saveClip = useCallback(() => {
-    const items = timedChunksRef.current;
-    if (items.length === 0) {
+  /**
+   * Save to device. iOS Safari ignores <a download>, and almost all of our
+   * users are on phones, so the Web Share sheet ("Save Video" / "Save to
+   * Files") is the primary path and the anchor download is the desktop
+   * fallback. We only claim success when a path actually completed.
+   */
+  const saveClip = useCallback(async () => {
+    const blob = recordedBlobRef.current;
+    if (!blob || blob.size === 0) {
       toast.error("Nothing recorded yet — press Record session first.");
       return;
     }
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
-    if (!blob || blob.size === 0) {
-      toast.error("Couldn't build the file from this recording. Try recording again.");
-      return;
+    const name = recordedFileName();
+    const file = new File([blob], name, { type: blob.type || "video/webm" });
+    const nav = navigator as any;
+    if (typeof nav.canShare === "function" && nav.canShare({ files: [file] }) && typeof nav.share === "function") {
+      try {
+        await nav.share({ files: [file], title: "DelayCam session" });
+        toast.success("Saved from the share sheet.");
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return; // user cancelled — say nothing
+        console.warn("[DelayCam] share failed, falling back to download", e);
+      }
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${mime.includes("mp4") ? "mp4" : "webm"}`;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast.success("Saved to your device.");
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }, [buildDecodableBlob]);
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+      toast.success("Saved to your device.");
+    } catch (e: any) {
+      console.error("[DelayCam] save to device failed", e);
+      toast.error(e?.message || "Couldn't save this video to your device.");
+    }
+  }, [recordedFileName]);
 
   /** Build a playable URL for the entire recorded session so the athlete can
    * watch it all back with the drawing tools. */
   const openSessionReview = useCallback(() => {
-    const items = timedChunksRef.current;
-    if (items.length === 0) {
-      toast.error("Nothing recorded yet — press Record session first.");
-      return;
-    }
-    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
-    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    const blob = recordedBlobRef.current;
     if (!blob || blob.size === 0) {
-      toast.error("Couldn't open this recording. Try recording again.");
+      toast.error("Nothing recorded yet — press Record session first.");
       return;
     }
     if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
     const url = URL.createObjectURL(blob);
     sessionUrlRef.current = url;
     setSessionUrl(url);
-  }, [buildDecodableBlob]);
+  }, []);
+
 
 
   const saveToPlayersClub = useCallback(async () => {
