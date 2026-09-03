@@ -221,6 +221,14 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [audioMissing, setAudioMissing] = useState(false);
   /** Which panel, if any, is expanded to fill the screen. */
   const [expanded, setExpanded] = useState<null | "live" | "delayed">(null);
+  /**
+   * Notes taken on the recorded session. They live here, not in the review
+   * player, because the recording has no database row until it is saved to
+   * Players Club — at which point these are written to `video_notes`.
+   */
+  const [notes, setNotes] = useState<SessionNote[]>([]);
+  /** Mic stream kept open across voice notes so iOS doesn't re-prompt. */
+  const noteMicRef = useRef<MediaStream | null>(null);
 
 
   /** Whether this browser can record at all. Checked once so the Record
