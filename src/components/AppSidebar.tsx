@@ -299,7 +299,14 @@ export function AppSidebar() {
     // DelayCam — its own module: a delayed mirror for watching yourself back.
     // Not an analysis path (no scoring, no report card), so it lives here
     // rather than inside the analyze capture chooser.
-    items.push({ key: 'delaycam', title: 'DelayCam', url: '/delaycam', icon: Camera });
+    // Tier-gated: hitting DelayCam for 5Tool / Golden, pitching DelayCam for
+    // Pitcher / Golden. Owner and admin always see both.
+    if (showAll || hasFiveTool || hasGolden || hasLegacyHitting) {
+      items.push({ key: 'delaycam-hitting', title: 'DelayCam Hitting', url: '/delaycam/hitting', icon: Camera });
+    }
+    if (showAll || hasPitcherTier || hasGolden || hasLegacyPitching) {
+      items.push({ key: 'delaycam-pitching', title: 'DelayCam Pitching', url: '/delaycam/pitching', icon: Camera });
+    }
 
     // History — practices, games, reports and recaps (everything without video)
     items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });

@@ -49,19 +49,57 @@ export function classifyFps(fps: number | null | undefined): FpsTier {
   return "unusable";
 }
 
+/**
+ * Resolve the honest frame rate of a stream.
+ *
+ * The NEGOTIATED rate (`track.getSettings().frameRate`) is the primary signal:
+ * it is what the camera agreed to deliver. Counting painted frames is noisy —
+ * the same 60fps camera measures 56-60 run to run — so a measured count is
+ * only used as a sanity check. If the measurement lands within ~10% of the
+ * negotiated rate, the negotiated rate is the truth. If it comes in well
+ * below, the camera is not actually delivering what it promised and the
+ * measured number wins.
+ *
+ * 60fps is a passing result, not a degraded one. 120 is requested as an
+ * ideal; not getting it is not a failure.
+ */
+export const FPS_MEASURE_TOLERANCE = 0.9;
+
+export function resolveCaptureFps(input: {
+  settingsFps: number | null | undefined;
+  measuredFps?: number | null;
+}): { fps: number | null; source: "track_settings" | "measured" | "none"; confirmed: boolean } {
+  const negotiated = Number.isFinite(input.settingsFps as number) ? (input.settingsFps as number) : null;
+  const measured = Number.isFinite(input.measuredFps as number) ? (input.measuredFps as number) : null;
+
+  if (negotiated == null) {
+    return measured == null
+      ? { fps: null, source: "none", confirmed: false }
+      : { fps: measured, source: "measured", confirmed: false };
+  }
+  if (measured == null) return { fps: negotiated, source: "track_settings", confirmed: false };
+  // Within tolerance (or faster than negotiated) — the negotiated rate holds.
+  if (measured >= negotiated * FPS_MEASURE_TOLERANCE) {
+    return { fps: negotiated, source: "track_settings", confirmed: true };
+  }
+  // Measurement is materially below what the track claimed. Be honest.
+  return { fps: measured, source: "measured", confirmed: false };
+}
+
 export function fpsMessage(tier: FpsTier, fps: number | null): string {
   const n = fps ? Math.round(fps) : null;
   switch (tier) {
     case "elite":
       return `Your camera is recording at ${n} frames per second. That's plenty to track the ball in flight.`;
     case "good":
-      return `Your camera is recording at ${n} frames per second. Good enough for full mechanics and ball tracking.`;
+      return `Your camera is recording at ${n} frames per second. That's a pass — good enough for full mechanics and ball tracking.`;
     case "limited":
       return `Your camera can only record at ${n} frames per second. Mechanics will still be analyzed, but the ball blurs between frames at this speed, so pitch speed and ball flight can't be measured honestly. If your phone has a slow-motion mode, record there and upload the file instead.`;
     default:
       return "We couldn't confirm how fast this camera records. Analysis may be limited.";
   }
 }
+
 
 /** The constraint set we ask every device for. Ideal 120, floor 60 as a hint —
  * never `exact`, which would fail outright on capable-but-slower cameras. */
@@ -179,7 +217,9 @@ export async function describeCaptureFps(
 ): Promise<CameraFpsCapability> {
   const { settingsFps, maxAdvertisedFps } = readTrackFps(stream);
   const measuredFps = video ? await measureLiveFps(video) : null;
-  const effectiveFps = measuredFps ?? settingsFps ?? maxAdvertisedFps ?? null;
+  // Negotiated rate is the primary signal; the frame count is a sanity check.
+  const resolved = resolveCaptureFps({ settingsFps, measuredFps });
+  const effectiveFps = resolved.fps ?? maxAdvertisedFps ?? null;
   const tier = classifyFps(effectiveFps);
   return {
     maxAdvertisedFps,
@@ -191,6 +231,7 @@ export async function describeCaptureFps(
     message: fpsMessage(tier, effectiveFps),
   };
 }
+
 
 /** What downstream analysis is allowed to claim from this footage. */
 export function analysisScopeForFps(fps: number | null | undefined): {

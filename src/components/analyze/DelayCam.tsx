@@ -16,20 +16,19 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
-  BookMarked, Sparkles, Loader2, Eye, Video,
+  BookMarked, Loader2, Eye, Video,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
-import { evaluateProbe } from "@/lib/biomech/videoAcceptance";
-import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import {
   FPS_TARGET, highFpsVideoConstraints, readTrackFps, tryRaiseTrackFps, classifyFps,
 } from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
+import { SessionReviewPlayer } from "@/components/analyze/SessionReviewPlayer";
 
 type ClipModule = "hitting" | "pitching" | "throwing";
 type ClipSport = "baseball" | "softball";
@@ -48,6 +47,12 @@ const MIN_DELAY = 1;
 const MAX_DELAY = 55;
 const MAX_BUFFER_SEC = 55;
 const MAX_FRAMES = MAX_BUFFER_SEC * 30 + 30; // safety cap
+/** Full-session recording limits. The delayed mirror only ever needs 55s of
+ * frames, but the recording itself keeps the whole session so it can be
+ * watched back. These caps exist so a forgotten camera can't exhaust memory. */
+const MAX_SESSION_SEC = 45 * 60;
+const MAX_SESSION_BYTES = 900 * 1024 * 1024;
+
 const MAX_FRAME_W = 1280;
 const MAX_FRAME_H = 720;
 
@@ -120,7 +125,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [hasMulti, setHasMulti] = useState(false);
   const [replayDuration, setReplayDuration] = useState(5);
   const [replayUrl, setReplayUrl] = useState<string | null>(null);
-  const [saving, setSaving] = useState<null | "club" | "analyze">(null);
+  /** Object URL for the full recorded session, built on demand after Stop. */
+  const [sessionUrl, setSessionUrl] = useState<string | null>(null);
+  const sessionUrlRef = useRef<string | null>(null);
+  const [saving, setSaving] = useState<null | "club">(null);
+
   /** "idle" before start; "recording" runs MediaRecorder buffer for
    * replay/save; "streaming" is delayed mirror only for long practice
    * sessions. */
@@ -133,6 +142,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [hidden, setHidden] = useState(false);
   const streamOnlyRef = useRef(false);
   const frameCounterRef = useRef(0);
+  const recordedBytesRef = useRef(0);
 
   const delayRef = useRef(delay);
   useEffect(() => { delayRef.current = delay; }, [delay]);
@@ -225,21 +235,50 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   const saveClip = useCallback(() => {
     const items = timedChunksRef.current;
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      toast.error("Nothing recorded yet — press Record session first.");
+      return;
+    }
     const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
     const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
-    if (!blob) return;
+    if (!blob || blob.size === 0) {
+      toast.error("Couldn't build the file from this recording. Try recording again.");
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${mime.includes("mp4") ? "mp4" : "webm"}`;
+    a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast.success("Saved to your device.");
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
   }, [buildDecodableBlob]);
 
-  const saveToPlayersClub = useCallback(async (opts: { analyze: boolean }) => {
+  /** Build a playable URL for the entire recorded session so the athlete can
+   * watch it all back with the drawing tools. */
+  const openSessionReview = useCallback(() => {
+    const items = timedChunksRef.current;
+    if (items.length === 0) {
+      toast.error("Nothing recorded yet — press Record session first.");
+      return;
+    }
+    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    if (!blob || blob.size === 0) {
+      toast.error("Couldn't open this recording. Try recording again.");
+      return;
+    }
+    if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
+    const url = URL.createObjectURL(blob);
+    sessionUrlRef.current = url;
+    setSessionUrl(url);
+  }, [buildDecodableBlob]);
+
+
+  const saveToPlayersClub = useCallback(async () => {
     if (!user) {
       toast.error("Sign in to save clips to Players Club.");
       return;
@@ -264,10 +303,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       return;
     }
 
-    setSaving(opts.analyze ? "analyze" : "club");
-    const toastId = toast.loading(
-      opts.analyze ? "Saving & sending to Hammer for analysis…" : "Saving to Players Club…",
-    );
+    setSaving("club");
+    const toastId = toast.loading("Saving to Players Club…");
 
     try {
       // Session preflight — surface a clear error instead of a silent RLS reject.
@@ -284,31 +321,13 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       const filePath = `${user.id}/delaycam/${ts}.${ext}`;
       const file = new File([blob], `delaycam-${ts}.${ext}`, { type: mime });
 
-      // Phase 0 probe — required by the videos schema + analyze-video edge fn.
+      // Phase 0 probe — required by the videos schema.
       let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
       try {
         probed = await probeVideoMetadata(file);
       } catch (probeErr) {
         console.error("[DelayCam] probe failed", probeErr);
         toast.error("Couldn't read the recorded clip. Try recording again.", { id: toastId });
-        setSaving(null);
-        return;
-      }
-
-      const verdict = evaluateProbe(probed);
-      if (verdict.ok === false) {
-        const reason = verdict.reason;
-        console.warn("[DelayCam] probe rejected", verdict);
-        toast.error(
-          reason === "reject_low_fps"
-            ? `Recorded clip fps too low (${probed.fps_true.toFixed(1)}). Try again with better lighting.`
-            : reason === "reject_low_resolution"
-              ? `Recorded clip too small (${probed.width}×${probed.height}).`
-              : reason === "reject_duration_out_of_bounds"
-                ? `Clip length ${probed.duration_sec.toFixed(1)}s is outside the accepted range.`
-                : "Recorded clip couldn't be validated for analysis.",
-          { id: toastId },
-        );
         setSaving(null);
         return;
       }
@@ -337,7 +356,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           : { throwing_hand: activeSide }
         : {};
 
-      const { data: videoRow, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("videos")
         .insert([{
           user_id: user.id,
@@ -345,8 +364,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           module: resolvedModule,
           video_url: publicUrl,
           thumbnail_url: thumbnailUrl,
-          status: opts.analyze ? "processing" : "completed",
-          library_title: `DelayCam replay — ${new Date().toLocaleString()}`,
+          status: "completed",
+          library_title: `DelayCam session — ${new Date().toLocaleString()}`,
           saved_to_library: true,
           sha256_hex: probed.sha256_hex,
           fps_true: probed.fps_true,
@@ -360,60 +379,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
           capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
           ...sideStamp,
-        }] as never)
-        .select("id")
-        .single();
+        }] as never);
       if (insertError) throw insertError;
 
-      if (opts.analyze) {
-        // Extract deterministic frames + call analyze-video with the full payload.
-        toast.loading("Extracting frames for analysis…", { id: toastId });
-        try {
-          const extraction = await extractKeyFramesDeterministic({
-            videoFile: file,
-            fps_true: probed.fps_true,
-            duration_sec: probed.duration_sec,
-            landingTime: null,
-          });
-          if (extraction.frames.length < 3) {
-            throw new Error("not_enough_frames");
-          }
-          const frames = extraction.frames.map((f) => f.dataUrl);
-          const frameExtractions = extraction.frames.map((f) => ({
-            frame_index: f.frame_index,
-            timestamp_seconds: f.timestamp_seconds,
-            sha256_hex: f.sha256_hex,
-            width: f.width,
-            height: f.height,
-          }));
-
-          toast.loading("Hammer is analyzing your clip…", { id: toastId });
-          const { error: fnError } = await supabase.functions.invoke("analyze-video", {
-            body: {
-              videoId: (videoRow as { id: string }).id,
-              module: resolvedModule,
-              sport: resolvedSport,
-              userId: user.id,
-              frames,
-              frameExtractions,
-            },
-          });
-          if (fnError) throw fnError;
-          toast.success("Saved to Players Club — analysis complete.", { id: toastId });
-          fireDelayCamMoment();
-        } catch (analyzeErr: any) {
-          console.error("[DelayCam] analyze failed", analyzeErr);
-          toast.error(
-            analyzeErr?.message === "not_enough_frames"
-              ? "Saved to Players Club. Clip was too short for analysis."
-              : "Saved to Players Club. Analysis failed — open the clip to retry.",
-            { id: toastId },
-          );
-        }
-      } else {
-        toast.success("Saved to Players Club.", { id: toastId });
-        fireDelayCamMoment();
-      }
+      toast.success("Saved to Players Club.", { id: toastId });
+      fireDelayCamMoment();
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);
       toast.error(e?.message || "Couldn't save this clip. Please try again.", { id: toastId });
@@ -423,6 +393,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   }, [
     activeSide,
     buildDecodableBlob,
+    fireDelayCamMoment,
     requiresSideConfirmation,
     resolvedModule,
     resolvedSport,
@@ -432,10 +403,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   ]);
 
 
+
   const start = useCallback(async (nextMode: "streaming" | "recording", nextFacing?: Facing) => {
     setTransitioning(true);
     streamOnlyRef.current = nextMode === "streaming";
     setHasStoppedClip(false);
+    recordedBytesRef.current = 0;
+    if (sessionUrlRef.current) {
+      URL.revokeObjectURL(sessionUrlRef.current);
+      sessionUrlRef.current = null;
+    }
+    setSessionUrl(null);
 
     setError(null);
     setReplayUrl(null);
@@ -594,22 +572,24 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             const now = performance.now();
             if (!initChunkRef.current) initChunkRef.current = ev.data;
             timedChunksRef.current.push({ blob: ev.data, t: now });
-            // Evict old body chunks. Keep index 0 reserved for the init
-            // segment reference; if everything ages out, reset the buffer
-            // entirely so the next chunk becomes the new init segment.
-            const cutoff = now - MAX_BUFFER_SEC * 1000;
-            while (timedChunksRef.current.length > 2 && timedChunksRef.current[1]?.t < cutoff) {
-              timedChunksRef.current.splice(1, 1);
-            }
+            // Record the WHOLE session — the athlete watches it all back, so
+            // nothing is evicted. The only limit is a memory safety cap; when
+            // it is hit we stop cleanly and say so rather than silently
+            // dropping the front of the session.
+            recordedBytesRef.current += ev.data.size;
+            const first = timedChunksRef.current[0];
+            const elapsedSec = first ? (now - first.t) / 1000 : 0;
             if (
-              timedChunksRef.current.length > 0 &&
-              timedChunksRef.current[timedChunksRef.current.length - 1].t <
-                now - (MAX_BUFFER_SEC + 5) * 1000
+              recordedBytesRef.current > MAX_SESSION_BYTES ||
+              elapsedSec > MAX_SESSION_SEC
             ) {
-              timedChunksRef.current = [];
-              initChunkRef.current = null;
+              try { rec.state !== "inactive" && rec.stop(); } catch { /* noop */ }
+              toast.info(
+                `Recording stopped at the ${Math.round(MAX_SESSION_SEC / 60)}-minute limit. Your session is ready to watch back.`,
+              );
             }
           };
+
           rec.start(250);
         } catch {
           // Recording is optional; the delayed mirror still works.
@@ -691,10 +671,11 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
-            <Timer className="h-4 w-4 text-primary" /> DelayCam — Instant Replay
+            <Timer className="h-4 w-4 text-primary" /> DelayCam — watch yourself back
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Live camera with adjustable 1–55s playback delay for self-review.
+            Live camera that plays back 1–55 seconds behind. Record the whole session, then watch it
+            all back and draw on it. No scores, no report card.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -709,9 +690,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                 onClick={() => { fullReset(); void start("recording"); }}
                 disabled={transitioning}
                 className="gap-1.5"
-                title="Record this session. Save to device, Save to Players Club, and Analyze become available."
+                title="Record the whole session so you can watch it back, draw on it, and save it."
               >
-                <Video className="h-4 w-4" /> Record
+                <Video className="h-4 w-4" /> Record session
               </Button>
               <Button
                 size="sm"
@@ -719,9 +700,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                 onClick={() => { fullReset(); void start("streaming"); }}
                 disabled={transitioning}
                 className="gap-1.5"
-                title="Delayed mirror only. Best for long practice sessions (hours). No recording, no save."
+                title="Delayed mirror only — nothing is recorded or saved. Best for hours-long practice."
               >
-                <Eye className="h-4 w-4" /> Stream
+                <Eye className="h-4 w-4" /> Mirror only
               </Button>
             </>
           )}
@@ -732,9 +713,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               onClick={() => { void start("recording"); }}
               disabled={transitioning}
               className="gap-1.5"
-              title="Switch to a recording session so you can save and analyze clips."
+              title="Start recording this session so you can watch it back and save it."
             >
-              <Video className="h-4 w-4" /> Switch to Record
+              <Video className="h-4 w-4" /> Start recording
             </Button>
           )}
           {running && mode === "recording" && (
@@ -744,17 +725,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               onClick={() => { void start("streaming"); }}
               disabled={transitioning}
               className="gap-1.5"
-              title="Switch to stream-only for long sessions. Current recorded buffer will be cleared."
+              title="Switch to mirror only for long sessions. What you have recorded so far is discarded."
             >
-              <Eye className="h-4 w-4" /> Switch to Stream
+              <Eye className="h-4 w-4" /> Switch to mirror only
             </Button>
           )}
           {(() => {
             const canSave = (mode === "recording" || hasStoppedClip) && saving === null && timedChunksRef.current.length > 0;
             const saveTip = mode === "streaming"
-              ? "Switch to Record mode to save clips."
+              ? "Switch to Record session to save clips."
               : !canSave && !hasStoppedClip && mode !== "recording"
-                ? "Press Record to capture a session before saving."
+                ? "Press Record session to capture before saving."
                 : "";
             return (
               <>
@@ -764,34 +745,25 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
                   onClick={saveClip}
                   disabled={!canSave}
                   className="gap-1.5"
-                  title={saveTip || "Download this clip to your phone or computer"}
+                  title={saveTip || "Download this session to your phone or computer"}
                 >
                   <Download className="h-4 w-4" /> Save to device
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => void saveToPlayersClub({ analyze: false })}
+                  onClick={() => void saveToPlayersClub()}
                   disabled={!canSave || !user}
                   className="gap-1.5"
-                  title={saveTip || "Save this clip to your Players Club library"}
+                  title={saveTip || "Save this session to your Players Club library"}
                 >
                   {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
                   Save to Players Club
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => void saveToPlayersClub({ analyze: true })}
-                  disabled={!canSave || !user}
-                  className="gap-1.5"
-                  title={saveTip || "Save and run Hammer analysis on this clip"}
-                >
-                  {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Save & Analyze
-                </Button>
               </>
             );
           })()}
+
         </div>
       </div>
 
@@ -921,7 +893,28 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         )}
       </div>
 
+      {hasStoppedClip && (
+        <div className="space-y-2 rounded-md border p-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <div className="text-sm font-medium">Watch the whole session back</div>
+              <p className="text-xs text-muted-foreground">
+                Play it, slow it down, step frame by frame, and draw lines or angles on top to
+                critique yourself. Nothing here is scored or sent anywhere.
+              </p>
+            </div>
+            {!sessionUrl && (
+              <Button size="sm" onClick={openSessionReview} className="gap-1.5">
+                <Play className="h-4 w-4" /> Open session review
+              </Button>
+            )}
+          </div>
+          {sessionUrl && <SessionReviewPlayer url={sessionUrl} />}
+        </div>
+      )}
+
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
+
         <Badge variant={running || hasStoppedClip ? "default" : "outline"} className="text-[10px]">
           {running
             ? hidden

@@ -369,6 +369,7 @@ const App = () => {
               {/* DelayCam is its own module: a delayed mirror for self-review,
                   not an analysis capture path. */}
               <Route path="/delaycam" element={<DelayCamPage />} />
+              <Route path="/delaycam/:module" element={<DelayCamPage />} />
 
               {/* Pre-release: recruiting standards are staff-only until the module ships. */}
               <Route path="/recruiting/standards" element={<StaffOnlyRoute><RecruitingStandards /></StaffOnlyRoute>} />

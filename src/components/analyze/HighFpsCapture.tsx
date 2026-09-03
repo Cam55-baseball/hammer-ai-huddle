@@ -30,6 +30,8 @@ import { toast } from "sonner";
 import {
   analysisScopeForFps,
   describeCaptureFps,
+  resolveCaptureFps,
+
   highFpsVideoConstraints,
   readTrackFps,
   tryRaiseTrackFps,
@@ -233,9 +235,16 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
         rvfcIdRef.current = null;
       }
       const secs = (performance.now() - recordStartRef.current) / 1000;
-      const measured = secs > 0.4 && recordFramesRef.current > 4
+      const countedFps = secs > 0.4 && recordFramesRef.current > 4
         ? recordFramesRef.current / secs
-        : cap?.effectiveFps ?? null;
+        : null;
+      // Painted-frame counts jitter (56-60 on the same 60fps camera), so the
+      // negotiated track rate decides and the count is only a sanity check.
+      const measured = resolveCaptureFps({
+        settingsFps: cap?.settingsFps ?? null,
+        measuredFps: countedFps,
+      }).fps ?? cap?.effectiveFps ?? null;
+
       const blob = new Blob(chunksRef.current, { type: mimeRef.current });
       const url = URL.createObjectURL(blob);
       clipUrlRef.current = url;
