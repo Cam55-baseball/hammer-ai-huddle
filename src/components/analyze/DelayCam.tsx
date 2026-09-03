@@ -556,6 +556,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   }, [
     activeSide,
     fireDelayCamMoment,
+    notes,
     requiresSideConfirmation,
     resolvedModule,
     resolvedSport,
