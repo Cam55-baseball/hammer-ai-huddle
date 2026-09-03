@@ -14728,6 +14728,50 @@ export type Database = {
           },
         ]
       }
+      video_notes: {
+        Row: {
+          audio_url: string | null
+          body: string | null
+          created_at: string
+          duration_sec: number | null
+          id: string
+          kind: string
+          timestamp_sec: number | null
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          body?: string | null
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          kind: string
+          timestamp_sec?: number | null
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          body?: string | null
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          kind?: string
+          timestamp_sec?: number | null
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_notes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_performance_metrics: {
         Row: {
           last_recomputed_at: string | null
