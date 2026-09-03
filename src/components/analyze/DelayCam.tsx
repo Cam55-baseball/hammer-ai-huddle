@@ -507,8 +507,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           audio: true,
         });
       } catch (audioErr: any) {
-        if (audioErr?.name === "NotAllowedError" || audioErr?.name === "SecurityError") throw audioErr;
+        // Mic denied or missing must never cost the user their video.
         console.warn("[DelayCam] audio unavailable, continuing video-only", audioErr);
+
         stream = await navigator.mediaDevices.getUserMedia({
           video: highFpsVideoConstraints(useFacing),
           audio: false,
