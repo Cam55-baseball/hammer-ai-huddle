@@ -217,7 +217,9 @@ export async function describeCaptureFps(
 ): Promise<CameraFpsCapability> {
   const { settingsFps, maxAdvertisedFps } = readTrackFps(stream);
   const measuredFps = video ? await measureLiveFps(video) : null;
-  const effectiveFps = measuredFps ?? settingsFps ?? maxAdvertisedFps ?? null;
+  // Negotiated rate is the primary signal; the frame count is a sanity check.
+  const resolved = resolveCaptureFps({ settingsFps, measuredFps });
+  const effectiveFps = resolved.fps ?? maxAdvertisedFps ?? null;
   const tier = classifyFps(effectiveFps);
   return {
     maxAdvertisedFps,
@@ -229,6 +231,7 @@ export async function describeCaptureFps(
     message: fpsMessage(tier, effectiveFps),
   };
 }
+
 
 /** What downstream analysis is allowed to claim from this footage. */
 export function analysisScopeForFps(fps: number | null | undefined): {
