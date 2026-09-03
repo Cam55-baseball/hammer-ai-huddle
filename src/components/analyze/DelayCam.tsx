@@ -656,6 +656,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     recordedBytesRef.current = 0;
     setRecordedBytes(0);
     recordedBlobRef.current = null;
+    // A fresh session invalidates any marked-up copy of the previous one.
+    savedVideoIdRef.current = null;
+    setSavedVideoId(null);
+    annotatedBlobRef.current = null;
+    if (annotatedUrlRef.current) {
+      URL.revokeObjectURL(annotatedUrlRef.current);
+      annotatedUrlRef.current = null;
+    }
+    setAnnotatedUrl(null);
+    setHasAnnotatedCopy(false);
+    setExportProgress(0);
     setAudioMissing(false);
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
@@ -907,6 +918,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     recordedBytesRef.current = 0;
     setRecordedBytes(0);
     recordedBlobRef.current = null;
+    // A fresh session invalidates any marked-up copy of the previous one.
+    savedVideoIdRef.current = null;
+    setSavedVideoId(null);
+    annotatedBlobRef.current = null;
+    if (annotatedUrlRef.current) {
+      URL.revokeObjectURL(annotatedUrlRef.current);
+      annotatedUrlRef.current = null;
+    }
+    setAnnotatedUrl(null);
+    setHasAnnotatedCopy(false);
+    setExportProgress(0);
     if (sessionUrlRef.current) {
       URL.revokeObjectURL(sessionUrlRef.current);
       sessionUrlRef.current = null;
@@ -1326,12 +1348,69 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             )}
           </div>
           {sessionUrl && (
-            <SessionReviewPlayer
-              url={sessionUrl}
-              notes={notes}
-              onNotesChange={(updater) => setNotes(updater)}
-              getMicStream={getNoteMicStream}
-            />
+            <>
+              <SessionReviewPlayer
+                url={sessionUrl}
+                notes={notes}
+                onNotesChange={(updater) => setNotes(updater)}
+                getMicStream={getNoteMicStream}
+                onExportAnnotated={(req) => void handleExportAnnotated(req)}
+                exporting={exporting}
+              />
+
+              {exporting && (
+                <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Making a copy with your drawings in the picture. This plays the session
+                    through once, so it takes about as long as the session itself.
+                  </p>
+                  <div className="h-2 w-full rounded-full bg-border overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${Math.round(exportProgress * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {Math.round(exportProgress * 100)}%
+                    </span>
+                    <Button size="sm" variant="outline" onClick={cancelExport}>Cancel</Button>
+                  </div>
+                </div>
+              )}
+
+              {hasAnnotatedCopy && annotatedUrl && !exporting && (
+                <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3 space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Your marked-up copy is ready — the drawings are now part of the picture, so it
+                    plays anywhere. The original session is kept too.
+                  </p>
+                  <video
+                    src={annotatedUrl}
+                    controls
+                    playsInline
+                    className="w-full rounded-md bg-black"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => void saveAnnotatedToDevice()}>
+                      Save copy to device
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => void saveAnnotatedToPlayersClub()}
+                      disabled={saving !== null}
+                    >
+                      {saving === "annotated" ? "Saving…" : "Save copy to Players Club"}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {savedVideoId
+                      ? "It will be attached to this session in Players Club."
+                      : "Saving the copy also saves the original session, so they stay together."}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
