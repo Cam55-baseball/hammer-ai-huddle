@@ -31,6 +31,8 @@ import {
 } from "@/lib/capture/highFpsCapture";
 import { toast } from "sonner";
 import { SessionReviewPlayer } from "@/components/analyze/SessionReviewPlayer";
+import fixWebmDuration from "fix-webm-duration";
+
 
 type ClipModule = "hitting" | "pitching" | "throwing";
 type ClipSport = "baseball" | "softball";
@@ -60,7 +62,6 @@ const MAX_FRAME_H = 720;
 
 type Facing = "user" | "environment";
 
-type TimedBlob = { blob: Blob; t: number };
 type Frame = { bitmap: ImageBitmap; t: number };
 
 function pickRecorderMime(): string {
@@ -77,6 +78,63 @@ function pickRecorderMime(): string {
   }
   return "video/webm";
 }
+
+/**
+ * Force the browser to index a freshly recorded blob so it becomes seekable.
+ * MediaRecorder output has no duration/cue data: loading it, seeking far past
+ * the end and waiting for durationchange/seeked makes the browser build the
+ * index, after which scrubbing and frame stepping work.
+ */
+async function forceSeekIndex(blob: Blob): Promise<void> {
+  const url = URL.createObjectURL(blob);
+  try {
+    await new Promise<void>((resolve) => {
+      const v = document.createElement("video");
+      v.preload = "auto";
+      v.muted = true;
+      (v as any).playsInline = true;
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try { v.removeAttribute("src"); v.load(); } catch { /* ignore */ }
+        resolve();
+      };
+      const timer = setTimeout(finish, 5000);
+      v.addEventListener("loadedmetadata", () => {
+        try { v.currentTime = 1e101; } catch { /* ignore */ }
+      });
+      v.addEventListener("durationchange", () => {
+        if (v.duration !== Infinity && !Number.isNaN(v.duration) && v.duration > 0) {
+          try { v.currentTime = 0; } catch { /* ignore */ }
+        }
+      });
+      v.addEventListener("seeked", () => {
+        if (v.currentTime === 0) finish();
+      });
+      v.addEventListener("error", finish);
+      v.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Repair a recorded blob so it carries a real duration and is seekable. */
+async function repairRecording(blob: Blob, mime: string, durationMs: number): Promise<Blob> {
+  let out = blob;
+  if (mime.includes("webm") && durationMs > 0) {
+    try {
+      out = await fixWebmDuration(blob, durationMs, { logger: false });
+    } catch (e) {
+      console.warn("[DelayCam] webm duration fix failed", e);
+    }
+  }
+  await forceSeekIndex(out);
+  return out;
+}
+
 
 export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps = {}) {
   const { user } = useOptionalAuth();
@@ -104,8 +162,12 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const timedChunksRef = useRef<TimedBlob[]>([]);
-  const initChunkRef = useRef<Blob | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordStartRef = useRef<number>(0);
+  const capTimerRef = useRef<number | null>(null);
+  /** The repaired, seekable recording from the last session. */
+  const recordedBlobRef = useRef<Blob | null>(null);
+
   const framesRef = useRef<Frame[]>([]);
   const rvfcIdRef = useRef<number | null>(null);
   const rafIdRef = useRef<number | null>(null);
