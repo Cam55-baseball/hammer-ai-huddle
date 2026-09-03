@@ -229,19 +229,48 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   const saveClip = useCallback(() => {
     const items = timedChunksRef.current;
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      toast.error("Nothing recorded yet — press Record session first.");
+      return;
+    }
     const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
     const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
-    if (!blob) return;
+    if (!blob || blob.size === 0) {
+      toast.error("Couldn't build the file from this recording. Try recording again.");
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${mime.includes("mp4") ? "mp4" : "webm"}`;
+    a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast.success("Saved to your device.");
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
   }, [buildDecodableBlob]);
+
+  /** Build a playable URL for the entire recorded session so the athlete can
+   * watch it all back with the drawing tools. */
+  const openSessionReview = useCallback(() => {
+    const items = timedChunksRef.current;
+    if (items.length === 0) {
+      toast.error("Nothing recorded yet — press Record session first.");
+      return;
+    }
+    const mime = recorderRef.current?.mimeType || mimeRef.current || "video/webm";
+    const blob = buildDecodableBlob(items.map((x) => x.blob), mime);
+    if (!blob || blob.size === 0) {
+      toast.error("Couldn't open this recording. Try recording again.");
+      return;
+    }
+    if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
+    const url = URL.createObjectURL(blob);
+    sessionUrlRef.current = url;
+    setSessionUrl(url);
+  }, [buildDecodableBlob]);
+
 
   const saveToPlayersClub = useCallback(async () => {
     if (!user) {
