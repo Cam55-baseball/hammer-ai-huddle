@@ -15268,6 +15268,7 @@ export type Database = {
           mocap_data: Json | null
           module: Database["public"]["Enums"]["module_type"]
           orientation: string | null
+          parent_video_id: string | null
           practice_session_id: string | null
           requested_fps: number | null
           saved_to_library: boolean | null
@@ -15282,6 +15283,7 @@ export type Database = {
           thumbnail_webp_url: string | null
           updated_at: string
           user_id: string
+          variant: string
           video_url: string
           width: number | null
         }
@@ -15310,6 +15312,7 @@ export type Database = {
           mocap_data?: Json | null
           module: Database["public"]["Enums"]["module_type"]
           orientation?: string | null
+          parent_video_id?: string | null
           practice_session_id?: string | null
           requested_fps?: number | null
           saved_to_library?: boolean | null
@@ -15324,6 +15327,7 @@ export type Database = {
           thumbnail_webp_url?: string | null
           updated_at?: string
           user_id: string
+          variant?: string
           video_url: string
           width?: number | null
         }
@@ -15352,6 +15356,7 @@ export type Database = {
           mocap_data?: Json | null
           module?: Database["public"]["Enums"]["module_type"]
           orientation?: string | null
+          parent_video_id?: string | null
           practice_session_id?: string | null
           requested_fps?: number | null
           saved_to_library?: boolean | null
@@ -15366,10 +15371,18 @@ export type Database = {
           thumbnail_webp_url?: string | null
           updated_at?: string
           user_id?: string
+          variant?: string
           video_url?: string
           width?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "videos_parent_video_id_fkey"
+            columns: ["parent_video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "videos_practice_session_id_fkey"
             columns: ["practice_session_id"]
