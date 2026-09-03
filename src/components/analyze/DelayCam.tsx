@@ -253,30 +253,25 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
 
 
-  const recordedFileName = useCallback(() => {
+
+  const recordedFileName = useCallback((suffix = "") => {
     const mime = recordedBlobRef.current?.type || mimeRef.current || "video/webm";
     const ext = mime.includes("mp4") ? "mp4" : "webm";
-    return `delaycam-${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
+    return `delaycam${suffix}-${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
   }, []);
 
   /**
-   * Save to device. iOS Safari ignores <a download>, and almost all of our
-   * users are on phones, so the Web Share sheet ("Save Video" / "Save to
-   * Files") is the primary path and the anchor download is the desktop
-   * fallback. We only claim success when a path actually completed.
+   * Save any recorded blob to the device. iOS Safari ignores <a download>, and
+   * almost all of our users are on phones, so the Web Share sheet ("Save Video"
+   * / "Save to Files") is the primary path and the anchor download is the
+   * desktop fallback. We only claim success when a path actually completed.
    */
-  const saveClip = useCallback(async () => {
-    const blob = recordedBlobRef.current;
-    if (!blob || blob.size === 0) {
-      toast.error("Nothing recorded yet — press Record session first.");
-      return;
-    }
-    const name = recordedFileName();
+  const shareOrDownload = useCallback(async (blob: Blob, name: string, label: string) => {
     const file = new File([blob], name, { type: blob.type || "video/webm" });
     const nav = navigator as any;
     if (typeof nav.canShare === "function" && nav.canShare({ files: [file] }) && typeof nav.share === "function") {
       try {
-        await nav.share({ files: [file], title: "DelayCam session" });
+        await nav.share({ files: [file], title: label });
         toast.success("Saved from the share sheet.");
         return;
       } catch (e: any) {
@@ -299,7 +294,16 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       console.error("[DelayCam] save to device failed", e);
       toast.error(e?.message || "Couldn't save this video to your device.");
     }
-  }, [recordedFileName]);
+  }, []);
+
+  const saveClip = useCallback(async () => {
+    const blob = recordedBlobRef.current;
+    if (!blob || blob.size === 0) {
+      toast.error("Nothing recorded yet — press Record session first.");
+      return;
+    }
+    await shareOrDownload(blob, recordedFileName(), "DelayCam session");
+  }, [recordedFileName, shareOrDownload]);
 
   /** Build a playable URL for the entire recorded session so the athlete can
    * watch it all back with the drawing tools. */
@@ -315,12 +319,136 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     setSessionUrl(url);
   }, []);
 
+  /**
+   * Upload one video file and create its `videos` row. Used for both the
+   * recorded session ('original') and the marked-up copy ('annotated'), so the
+   * copy lands with exactly the same handling as the session it came from.
+   * Notes are only written for the original — the copy is the same session.
+   */
+  const uploadSessionVideo = useCallback(async (
+    blob: Blob,
+    opts: { variant: "original" | "annotated"; parentVideoId?: string | null; withNotes: boolean },
+  ): Promise<{ videoId: string; failedNotes: string[] }> => {
+    if (!user) throw new Error("Sign in to save clips to Players Club.");
+    const mime = blob.type || mimeRef.current || "video/webm";
+    const ext = mime.includes("mp4") ? "mp4" : "webm";
+    const ts = Date.now();
+    const kind = opts.variant === "annotated" ? "delaycam-marked" : "delaycam";
+    const filePath = `${user.id}/${kind}/${ts}.${ext}`;
+    const file = new File([blob], `${kind}-${ts}.${ext}`, { type: mime });
 
+    // Phase 0 probe — required by the videos schema.
+    let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
+    try {
+      probed = await probeVideoMetadata(file);
+    } catch (probeErr: any) {
+      console.error("[DelayCam] probe failed", probeErr);
+      throw new Error(`Couldn't read the video: ${probeErr?.message || "unknown decode error"}`);
+    }
 
-  const saveToPlayersClub = useCallback(async () => {
+    const { error: uploadError } = await supabase.storage
+      .from("videos")
+      .upload(filePath, file, { contentType: mime, upsert: false });
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filePath);
+
+    // Thumbnail generation is best-effort — never block the save.
+    let thumbnailUrl: string | null = null;
+    try {
+      const thumbBlob = await generateVideoThumbnail(file, 0.1);
+      thumbnailUrl = await uploadVideoThumbnail(thumbBlob, user.id, filePath);
+    } catch (thumbErr) {
+      console.warn("[DelayCam] thumbnail generation failed", thumbErr);
+    }
+
+    const sideStamp = shouldShowPicker(sideDiscipline)
+      ? sideDiscipline === "hit"
+        ? { batting_side: activeSide }
+        : { throwing_hand: activeSide }
+      : {};
+
+    const { data: insertedVideo, error: insertError } = await supabase
+      .from("videos")
+      .insert([{
+        user_id: user.id,
+        sport: resolvedSport,
+        module: resolvedModule,
+        video_url: publicUrl,
+        thumbnail_url: thumbnailUrl,
+        status: "completed",
+        library_title: opts.variant === "annotated"
+          ? `DelayCam session — marked up — ${new Date().toLocaleString()}`
+          : `DelayCam session — ${new Date().toLocaleString()}`,
+        saved_to_library: true,
+        sha256_hex: probed.sha256_hex,
+        fps_true: probed.fps_true,
+        duration_sec: probed.duration_sec,
+        width: probed.width,
+        height: probed.height,
+        orientation: probed.orientation,
+        capture_source: "delaycam",
+        requested_fps: FPS_TARGET,
+        achieved_fps: capturedFpsRef.current ?? probed.fps_true,
+        capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
+        capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
+        variant: opts.variant,
+        parent_video_id: opts.parentVideoId ?? null,
+        ...sideStamp,
+      }] as never)
+      .select("id")
+      .single();
+    if (insertError) throw insertError;
+
+    const videoId = (insertedVideo as { id: string } | null)?.id ?? "";
+
+    // Notes ride along with the original clip. Each one is reported
+    // individually so a partial failure is never presented as a clean save.
+    const failedNotes: string[] = [];
+    if (opts.withNotes && videoId && notes.length > 0) {
+      for (const note of notes) {
+        const label = note.timestampSec != null
+          ? `note at ${Math.floor(note.timestampSec / 60)}:${String(Math.floor(note.timestampSec % 60)).padStart(2, "0")}`
+          : "session note";
+        try {
+          let audioUrl: string | null = null;
+          if (note.kind === "voice" && note.audioBlob) {
+            const aType = note.audioBlob.type || "audio/webm";
+            const aExt = aType.includes("mp4") ? "m4a" : "webm";
+            const aPath = `${user.id}/delaycam-notes/${videoId}/${note.id}.${aExt}`;
+            const { error: aErr } = await supabase.storage
+              .from("videos")
+              .upload(aPath, note.audioBlob, { contentType: aType, upsert: false });
+            if (aErr) throw aErr;
+            audioUrl = supabase.storage.from("videos").getPublicUrl(aPath).data.publicUrl;
+          }
+          const { error: noteErr } = await supabase.from("video_notes").insert([{
+            user_id: user.id,
+            video_id: videoId,
+            timestamp_sec: note.timestampSec,
+            kind: note.kind,
+            body: note.body,
+            audio_url: audioUrl,
+            duration_sec: note.durationSec,
+          }] as never);
+          if (noteErr) throw noteErr;
+        } catch (noteFail: any) {
+          console.error("[DelayCam] note save failed", note.id, noteFail);
+          failedNotes.push(`${label} (${noteFail?.message || "unknown error"})`);
+        }
+      }
+    }
+
+    return { videoId, failedNotes };
+  }, [
+    activeSide, notes, resolvedModule, resolvedSport, shouldShowPicker, sideDiscipline, user,
+  ]);
+
+  /** Shared guard so both save buttons refuse for the same honest reasons. */
+  const preflightSave = useCallback(async (): Promise<boolean> => {
     if (!user) {
       toast.error("Sign in to save clips to Players Club.");
-      return;
+      return false;
     }
     if (requiresSideConfirmation && !activeSide) {
       toast.error(
@@ -328,139 +456,39 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           ? "Confirm the batting side used in this clip before saving."
           : "Confirm the throwing hand used in this clip before saving.",
       );
-      return;
+      return false;
     }
+    // Session preflight — surface a clear error instead of a silent RLS reject.
+    const { data: sessionCheck } = await supabase.auth.getSession();
+    const liveSession = sessionCheck?.session ?? null;
+    if (!liveSession?.user?.id || liveSession.user.id !== user.id) {
+      toast.error("Your session expired. Sign in again to save this clip.");
+      return false;
+    }
+    return true;
+  }, [activeSide, requiresSideConfirmation, sideDiscipline, user]);
+
+  const saveToPlayersClub = useCallback(async () => {
     const blob = recordedBlobRef.current;
     if (!blob || blob.size === 0) {
       toast.error("Nothing to save yet — record a clip first.");
       return;
     }
-    const mime = blob.type || mimeRef.current || "video/webm";
-
+    if (!(await preflightSave())) return;
 
     setSaving("club");
     const toastId = toast.loading("Saving to Players Club…");
-
     try {
-      // Session preflight — surface a clear error instead of a silent RLS reject.
-      const { data: sessionCheck } = await supabase.auth.getSession();
-      const liveSession = sessionCheck?.session ?? null;
-      if (!liveSession?.user?.id || liveSession.user.id !== user.id) {
-        toast.error("Your session expired. Sign in again to save this clip.", { id: toastId });
-        setSaving(null);
+      if (savedVideoIdRef.current) {
+        toast.success("This session is already in Players Club.", { id: toastId });
         return;
       }
-
-      const ext = mime.includes("mp4") ? "mp4" : "webm";
-      const ts = Date.now();
-      const filePath = `${user.id}/delaycam/${ts}.${ext}`;
-      const file = new File([blob], `delaycam-${ts}.${ext}`, { type: mime });
-
-      // Phase 0 probe — required by the videos schema.
-      let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
-      try {
-        probed = await probeVideoMetadata(file);
-      } catch (probeErr: any) {
-        console.error("[DelayCam] probe failed", probeErr);
-        toast.error(
-          `Couldn't read the recorded clip: ${probeErr?.message || "unknown decode error"}`,
-          { id: toastId },
-        );
-        setSaving(null);
-        return;
-      }
-
-
-      const { error: uploadError } = await supabase.storage
-        .from("videos")
-        .upload(filePath, file, { contentType: mime, upsert: false });
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("videos")
-        .getPublicUrl(filePath);
-
-      // Thumbnail generation is best-effort — never block the save.
-      let thumbnailUrl: string | null = null;
-      try {
-        const thumbBlob = await generateVideoThumbnail(file, 0.1);
-        thumbnailUrl = await uploadVideoThumbnail(thumbBlob, user.id, filePath);
-      } catch (thumbErr) {
-        console.warn("[DelayCam] thumbnail generation failed", thumbErr);
-      }
-
-      const sideStamp = shouldShowPicker(sideDiscipline)
-        ? sideDiscipline === "hit"
-          ? { batting_side: activeSide }
-          : { throwing_hand: activeSide }
-        : {};
-
-      const { data: insertedVideo, error: insertError } = await supabase
-        .from("videos")
-        .insert([{
-          user_id: user.id,
-          sport: resolvedSport,
-          module: resolvedModule,
-          video_url: publicUrl,
-          thumbnail_url: thumbnailUrl,
-          status: "completed",
-          library_title: `DelayCam session — ${new Date().toLocaleString()}`,
-          saved_to_library: true,
-          sha256_hex: probed.sha256_hex,
-          fps_true: probed.fps_true,
-          duration_sec: probed.duration_sec,
-          width: probed.width,
-          height: probed.height,
-          orientation: probed.orientation,
-          capture_source: "delaycam",
-          requested_fps: FPS_TARGET,
-          achieved_fps: capturedFpsRef.current ?? probed.fps_true,
-          capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
-          capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
-          ...sideStamp,
-        }] as never)
-        .select("id")
-        .single();
-      if (insertError) throw insertError;
-
-      // Notes ride along with the clip. Each one is reported individually so a
-      // partial failure is never presented as a clean save.
-      const videoId = (insertedVideo as { id: string } | null)?.id ?? null;
-      const failedNotes: string[] = [];
-      if (videoId && notes.length > 0) {
-        for (const note of notes) {
-          const label = note.timestampSec != null
-            ? `note at ${Math.floor(note.timestampSec / 60)}:${String(Math.floor(note.timestampSec % 60)).padStart(2, "0")}`
-            : "session note";
-          try {
-            let audioUrl: string | null = null;
-            if (note.kind === "voice" && note.audioBlob) {
-              const aType = note.audioBlob.type || "audio/webm";
-              const aExt = aType.includes("mp4") ? "m4a" : "webm";
-              const aPath = `${user.id}/delaycam-notes/${videoId}/${note.id}.${aExt}`;
-              const { error: aErr } = await supabase.storage
-                .from("videos")
-                .upload(aPath, note.audioBlob, { contentType: aType, upsert: false });
-              if (aErr) throw aErr;
-              audioUrl = supabase.storage.from("videos").getPublicUrl(aPath).data.publicUrl;
-            }
-            const { error: noteErr } = await supabase.from("video_notes").insert([{
-              user_id: user.id,
-              video_id: videoId,
-              timestamp_sec: note.timestampSec,
-              kind: note.kind,
-              body: note.body,
-              audio_url: audioUrl,
-              duration_sec: note.durationSec,
-            }] as never);
-            if (noteErr) throw noteErr;
-          } catch (noteFail: any) {
-            console.error("[DelayCam] note save failed", note.id, noteFail);
-            failedNotes.push(`${label} (${noteFail?.message || "unknown error"})`);
-          }
-        }
-      }
-
+      const { videoId, failedNotes } = await uploadSessionVideo(blob, {
+        variant: "original",
+        withNotes: true,
+      });
+      savedVideoIdRef.current = videoId;
+      setSavedVideoId(videoId);
       if (failedNotes.length > 0) {
         toast.error(
           `Video saved, but ${failedNotes.length} of ${notes.length} notes didn't save: ${failedNotes.join("; ")}`,
@@ -482,17 +510,129 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     } finally {
       setSaving(null);
     }
-  }, [
-    activeSide,
-    fireDelayCamMoment,
-    notes,
-    requiresSideConfirmation,
-    resolvedModule,
-    resolvedSport,
-    shouldShowPicker,
-    sideDiscipline,
-    user,
-  ]);
+  }, [fireDelayCamMoment, notes, preflightSave, uploadSessionVideo]);
+
+  /**
+   * Render a copy of the session with the drawings burned into the picture.
+   * This plays the whole session through in real time, so it takes as long as
+   * the session does — hence the progress read-out and the cancel button.
+   */
+  const handleExportAnnotated = useCallback(async (req: AnnotatedExportRequest) => {
+    if (!sessionUrlRef.current) {
+      toast.error("Open the session review first.");
+      return;
+    }
+    if (req.shapes.length === 0) {
+      toast.error("Draw on the video first — there's nothing to burn in yet.");
+      return;
+    }
+    const controller = new AbortController();
+    exportAbortRef.current = controller;
+    setExportProgress(0);
+    setExporting(true);
+    if (annotatedUrlRef.current) {
+      URL.revokeObjectURL(annotatedUrlRef.current);
+      annotatedUrlRef.current = null;
+    }
+    annotatedBlobRef.current = null;
+    setHasAnnotatedCopy(false);
+
+    try {
+      const { blob } = await renderAnnotatedCopy({
+        sourceUrl: sessionUrlRef.current,
+        shapes: req.shapes,
+        includeVideoSound: req.includeVideoSound,
+        includeVoiceNotes: req.includeVoiceNotes,
+        voiceNotes: notes
+          .filter((n) => n.kind === "voice")
+          .map((n) => ({ id: n.id, timestampSec: n.timestampSec, audioBlob: n.audioBlob ?? null })),
+        onProgress: (f) => setExportProgress(f),
+        signal: controller.signal,
+      });
+      annotatedBlobRef.current = blob;
+      const url = URL.createObjectURL(blob);
+      annotatedUrlRef.current = url;
+      setAnnotatedUrl(url);
+      setHasAnnotatedCopy(true);
+      toast.success("Marked-up copy ready. You can save it to your device or Players Club.");
+    } catch (e: any) {
+      const msg = e?.message || "the marked-up copy couldn't be made";
+      if (msg === "Export cancelled.") {
+        toast.message("Export cancelled.");
+      } else {
+        console.error("[DelayCam] annotated export failed", e);
+        toast.error(`Couldn't make the marked-up copy: ${msg}`);
+      }
+    } finally {
+      exportAbortRef.current = null;
+      setExporting(false);
+    }
+  }, [notes]);
+
+  const cancelExport = useCallback(() => {
+    exportAbortRef.current?.abort();
+  }, []);
+
+  const saveAnnotatedToDevice = useCallback(async () => {
+    const blob = annotatedBlobRef.current;
+    if (!blob || blob.size === 0) {
+      toast.error("Make the marked-up copy first.");
+      return;
+    }
+    await shareOrDownload(blob, recordedFileName("-marked"), "DelayCam session (marked up)");
+  }, [recordedFileName, shareOrDownload]);
+
+  /**
+   * Put the marked-up copy in Players Club, attached to the same session entry.
+   * If the session itself hasn't been saved yet we save it first, so the user
+   * presses one button and doesn't have to remember an order.
+   */
+  const saveAnnotatedToPlayersClub = useCallback(async () => {
+    const copy = annotatedBlobRef.current;
+    if (!copy || copy.size === 0) {
+      toast.error("Make the marked-up copy first.");
+      return;
+    }
+    const original = recordedBlobRef.current;
+    if (!original || original.size === 0) {
+      toast.error("The original session is no longer in memory — record again.");
+      return;
+    }
+    if (!(await preflightSave())) return;
+
+    setSaving("annotated");
+    const toastId = toast.loading("Saving the marked-up copy…");
+    try {
+      let parentId = savedVideoIdRef.current;
+      if (!parentId) {
+        toast.loading("Saving the session first…", { id: toastId });
+        const first = await uploadSessionVideo(original, { variant: "original", withNotes: true });
+        parentId = first.videoId;
+        savedVideoIdRef.current = parentId;
+        setSavedVideoId(parentId);
+        if (first.failedNotes.length > 0) {
+          toast.error(
+            `Session saved, but ${first.failedNotes.length} note(s) didn't save: ${first.failedNotes.join("; ")}`,
+            { duration: 12000 },
+          );
+        }
+      }
+      toast.loading("Uploading the marked-up copy…", { id: toastId });
+      await uploadSessionVideo(copy, {
+        variant: "annotated",
+        parentVideoId: parentId,
+        withNotes: false,
+      });
+      toast.success("Marked-up copy saved with this session in Players Club.", { id: toastId });
+      fireDelayCamMoment();
+    } catch (e: any) {
+      console.error("[DelayCam] annotated save failed", e);
+      toast.error(`Couldn't save the marked-up copy: ${e?.message || "unknown error"}`, { id: toastId });
+    } finally {
+      setSaving(null);
+    }
+  }, [fireDelayCamMoment, preflightSave, uploadSessionVideo]);
+
 
 
 
