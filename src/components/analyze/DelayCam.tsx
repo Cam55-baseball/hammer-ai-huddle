@@ -48,6 +48,12 @@ const MIN_DELAY = 1;
 const MAX_DELAY = 55;
 const MAX_BUFFER_SEC = 55;
 const MAX_FRAMES = MAX_BUFFER_SEC * 30 + 30; // safety cap
+/** Full-session recording limits. The delayed mirror only ever needs 55s of
+ * frames, but the recording itself keeps the whole session so it can be
+ * watched back. These caps exist so a forgotten camera can't exhaust memory. */
+const MAX_SESSION_SEC = 45 * 60;
+const MAX_SESSION_BYTES = 900 * 1024 * 1024;
+
 const MAX_FRAME_W = 1280;
 const MAX_FRAME_H = 720;
 
