@@ -55,6 +55,15 @@ export function SessionDetailDialog({
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [loadingAnnotations, setLoadingAnnotations] = useState(false);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
+  /** Marked-up copies of this session, if any were saved alongside it. */
+  const markedUpVersions: any[] = Array.isArray(session?.markedUpVersions) ? session.markedUpVersions : [];
+  const [activeVideoId, setActiveVideoId] = useState<string>(session?.id);
+  useEffect(() => { setActiveVideoId(session?.id); }, [session?.id]);
+  const activeVideoUrl: string =
+    (activeVideoId && activeVideoId !== session?.id
+      ? markedUpVersions.find((v) => v.id === activeVideoId)?.video_url
+      : null) || session?.video_url;
+
   const [showScorecard, setShowScorecard] = useState<boolean>(() => {
     return localStorage.getItem('showProgressReport') !== 'false';
   });
