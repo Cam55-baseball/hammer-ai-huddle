@@ -266,14 +266,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     if (drawRafRef.current != null) cancelAnimationFrame(drawRafRef.current);
     drawRafRef.current = null;
 
+    if (capTimerRef.current != null) { clearInterval(capTimerRef.current); capTimerRef.current = null; }
     try { recorderRef.current?.state !== "inactive" && recorderRef.current?.stop(); } catch {}
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
 
-    timedChunksRef.current = [];
-    initChunkRef.current = null;
+    chunksRef.current = [];
     clearFrames();
+
     offscreenCanvasRef.current = null;
 
     if (liveRef.current) liveRef.current.srcObject = null;
