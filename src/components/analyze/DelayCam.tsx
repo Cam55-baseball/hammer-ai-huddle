@@ -466,7 +466,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           : { throwing_hand: activeSide }
         : {};
 
-      const { error: insertError } = await supabase
+      const { data: insertedVideo, error: insertError } = await supabase
         .from("videos")
         .insert([{
           user_id: user.id,
@@ -489,10 +489,62 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
           capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
           ...sideStamp,
-        }] as never);
+        }] as never)
+        .select("id")
+        .single();
       if (insertError) throw insertError;
 
-      toast.success("Saved to Players Club.", { id: toastId });
+      // Notes ride along with the clip. Each one is reported individually so a
+      // partial failure is never presented as a clean save.
+      const videoId = (insertedVideo as { id: string } | null)?.id ?? null;
+      const failedNotes: string[] = [];
+      if (videoId && notes.length > 0) {
+        for (const note of notes) {
+          const label = note.timestampSec != null
+            ? `note at ${Math.floor(note.timestampSec / 60)}:${String(Math.floor(note.timestampSec % 60)).padStart(2, "0")}`
+            : "session note";
+          try {
+            let audioUrl: string | null = null;
+            if (note.kind === "voice" && note.audioBlob) {
+              const aType = note.audioBlob.type || "audio/webm";
+              const aExt = aType.includes("mp4") ? "m4a" : "webm";
+              const aPath = `${user.id}/delaycam-notes/${videoId}/${note.id}.${aExt}`;
+              const { error: aErr } = await supabase.storage
+                .from("videos")
+                .upload(aPath, note.audioBlob, { contentType: aType, upsert: false });
+              if (aErr) throw aErr;
+              audioUrl = supabase.storage.from("videos").getPublicUrl(aPath).data.publicUrl;
+            }
+            const { error: noteErr } = await supabase.from("video_notes").insert([{
+              user_id: user.id,
+              video_id: videoId,
+              timestamp_sec: note.timestampSec,
+              kind: note.kind,
+              body: note.body,
+              audio_url: audioUrl,
+              duration_sec: note.durationSec,
+            }] as never);
+            if (noteErr) throw noteErr;
+          } catch (noteFail: any) {
+            console.error("[DelayCam] note save failed", note.id, noteFail);
+            failedNotes.push(`${label} (${noteFail?.message || "unknown error"})`);
+          }
+        }
+      }
+
+      if (failedNotes.length > 0) {
+        toast.error(
+          `Video saved, but ${failedNotes.length} of ${notes.length} notes didn't save: ${failedNotes.join("; ")}`,
+          { id: toastId, duration: 12000 },
+        );
+      } else {
+        toast.success(
+          notes.length > 0
+            ? `Saved to Players Club with ${notes.length} note${notes.length === 1 ? "" : "s"}.`
+            : "Saved to Players Club.",
+          { id: toastId },
+        );
+      }
       fireDelayCamMoment();
     } catch (e: any) {
       console.error("[DelayCam] save to club failed", e);
