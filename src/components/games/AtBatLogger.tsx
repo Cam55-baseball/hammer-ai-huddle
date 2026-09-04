@@ -434,14 +434,21 @@ function AtBatForm({
 
   return (
     <Card ref={containerRef} className="p-4 space-y-3 bg-muted/30">
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Full at-bat form — every field is optional except the result</p>
+        <FieldHelp>
+          Fill in as much or as little as you want. Anything you skip stays empty rather than
+          being guessed.
+        </FieldHelp>
+      </div>
       <p className="text-[11px] text-muted-foreground">
-        Shortcuts: <span className="font-mono">1·2·3·4</span> = 1B/2B/3B/HR ·{" "}
+        Shortcuts: <span className="font-mono">1·2·3·4</span> = single/double/triple/home run ·{" "}
         <span className="font-mono">K</span> = strikeout · <span className="font-mono">B</span> = walk ·{" "}
-        <span className="font-mono">H</span> = HBP · <span className="font-mono">Enter</span> to save ·{" "}
+        <span className="font-mono">H</span> = hit by pitch · <span className="font-mono">Enter</span> to save ·{" "}
         <span className="font-mono">Esc</span> to cancel
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Field label="Pitcher faced">
+        <Field label="Pitcher you faced" help="Only if you've saved a scouting profile for them.">
           <Select value={f.opponent_pitcher_id || "__none"} onValueChange={(v) => set("opponent_pitcher_id", v === "__none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Pick / none" /></SelectTrigger>
             <SelectContent>
@@ -454,22 +461,22 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Inning">
+        <Field label="Inning" help="Which inning you batted in.">
           <NumberField
             value={f.inning}
             onValueChange={(v) => set("inning", v ?? 0)}
           />
         </Field>
-        <Field label="Side">
+        <Field label="Which side of the plate you batted from" help="Left-handed or right-handed for this at-bat.">
           <Select value={f.batting_side} onValueChange={(v) => set("batting_side", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="L">L</SelectItem>
-              <SelectItem value="R">R</SelectItem>
+              <SelectItem value="L">L — batted left-handed</SelectItem>
+              <SelectItem value="R">R — batted right-handed</SelectItem>
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Position">
+        <Field label="Position you were playing" help="Where you were in the field this game.">
           <Select value={f.position_played} onValueChange={(v) => set("position_played", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
@@ -477,38 +484,42 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Result">
+        <Field
+          label="How the at-bat ended"
+          help={abResultHelp(f.result) ?? "Pick what happened — each option is spelled out."}
+        >
           <Select value={f.result} onValueChange={(v) => set("result", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
-              {RESULTS.map((r) => (<SelectItem key={r} value={r}>{r}</SelectItem>))}
+              {RESULTS.map((r) => (
+                <SelectItem key={r.code} value={r.code}>
+                  {r.code} — {r.plain}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Balls">
+        <Field label="Balls in the count" help="How many balls the pitcher threw you.">
           <NumberField min={0} max={4} value={f.count_balls}
             onValueChange={(v) => set("count_balls", v ?? 0)} />
         </Field>
-        <Field label="Strikes">
+        <Field label="Strikes in the count" help="How many strikes you had against you.">
           <NumberField min={0} max={3} value={f.count_strikes}
             onValueChange={(v) => set("count_strikes", v ?? 0)} />
         </Field>
-        <Field label="Contact">
+        <Field label="How well you hit it" help="Contact quality — how cleanly the ball came off the bat.">
           <Select value={f.contact_quality} onValueChange={(v) => set("contact_quality", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
-              {CONTACT.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+              {CONTACT.map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.plain}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Direction">
-          <Select value={f.exit_direction} onValueChange={(v) => set("exit_direction", v)}>
-            <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>
-              {DIRECTIONS.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </Field>
+
         <Field label="Pitch type">
           <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
