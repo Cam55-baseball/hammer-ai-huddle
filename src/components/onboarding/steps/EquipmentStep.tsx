@@ -116,13 +116,15 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("athlete_equipment_context")
         .select("equipment")
         .eq("user_id", user.id)
         .eq("scope", "persistent")
         .maybeSingle();
       if (cancelled) return;
+      if (error) setLoadError(`We couldn't load your saved equipment: ${error.message}`);
+
       const eq = (data as { equipment?: string[] } | null)?.equipment ?? [];
       setSelected(new Set(eq));
       setLoaded(true);
