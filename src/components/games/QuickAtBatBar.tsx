@@ -45,7 +45,7 @@ export function QuickAtBatBar({
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Quick log
+            Log an at-bat
           </span>
           <div className="flex items-center gap-1">
             <Button
@@ -79,7 +79,7 @@ export function QuickAtBatBar({
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {QUICK_RESULTS.map((r) => (
           <Button
             key={r.code}
