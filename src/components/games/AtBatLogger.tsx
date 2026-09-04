@@ -38,6 +38,19 @@ import { AbSwingPanel } from "./AbSwingPanel";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
 import { QuickAtBatBar } from "./QuickAtBatBar";
+import { FieldDirectionPicker } from "./FieldDirectionPicker";
+import { TabIntro, FieldHelp } from "./TabIntro";
+import {
+  AB_RESULTS,
+  CONTACT_QUALITY,
+  DIRECTIONS,
+  describeAtBat,
+  abResultPlain,
+  abResultHelp,
+  directionPlain,
+  detailStatus,
+} from "@/lib/games/glossary";
+
 
 const RESULTS = AB_RESULTS;
 const CONTACT = CONTACT_QUALITY;
