@@ -198,10 +198,14 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         count_strikes: tally.strikes,
       },
     });
-    toast.message(`AB auto-closed: ${tally.suggestedResult}`, {
-      description: "Tap to edit the result if needed.",
-      duration: 6_000,
-    });
+    toast.message(
+      `At-bat closed automatically: ${abResultPlain(tally.suggestedResult) ?? tally.suggestedResult}`,
+      {
+        description: abResultHelp(tally.suggestedResult) ?? "Tap the at-bat to change the result.",
+        duration: 6_000,
+      }
+    );
+
   };
 
   const items = list.data ?? [];
