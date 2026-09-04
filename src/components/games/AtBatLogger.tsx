@@ -595,18 +595,7 @@ function AtBatForm({
           </Select>
         </Field>
 
-        <Field label="Pitch type you hit (or last saw)" help="What the pitcher threw.">
-          <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
-            <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>
-              {PITCH_TYPES.map((p) => (<SelectItem key={p.value} value={p.value}>{p.full}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Pitch speed (mph)" help="How fast the pitch was, if you know it.">
-          <NumberField value={f.pitch_velo}
-            onChange={(e) => set("pitch_velo", e.target.value)} />
-        </Field>
+
         <Field label="Outs when you came up" help="How many outs the team already had (0, 1 or 2).">
           <NumberField min={0} max={2} value={f.outs}
             onValueChange={(v) => set("outs", v ?? 0)} />
