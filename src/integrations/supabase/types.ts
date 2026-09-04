@@ -3021,6 +3021,13 @@ export type Database = {
             referencedRelation: "gp_at_bats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "defensive_plays_at_bat_id_fkey"
+            columns: ["at_bat_id"]
+            isOneToOne: false
+            referencedRelation: "gp_v_at_bat_facts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       demo_events: {
@@ -5162,6 +5169,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gp_ab_swing_analyses_ab_id_fkey"
+            columns: ["ab_id"]
+            isOneToOne: false
+            referencedRelation: "gp_v_at_bat_facts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gp_ab_swing_analyses_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
@@ -5842,6 +5856,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gp_pitches_at_bat_id_fkey"
+            columns: ["at_bat_id"]
+            isOneToOne: false
+            referencedRelation: "gp_v_at_bat_facts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gp_pitches_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
@@ -5896,6 +5917,13 @@ export type Database = {
             columns: ["ab_id"]
             isOneToOne: false
             referencedRelation: "gp_at_bats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_plan_outcomes_ab_id_fkey"
+            columns: ["ab_id"]
+            isOneToOne: false
+            referencedRelation: "gp_v_at_bat_facts"
             referencedColumns: ["id"]
           },
           {
@@ -16613,6 +16641,245 @@ export type Database = {
         }
         Relationships: []
       }
+      gp_v_at_bat_facts: {
+        Row: {
+          batting_side: string | null
+          contact_quality: string | null
+          count_balls: number | null
+          count_label: string | null
+          count_strikes: number | null
+          created_at: string | null
+          exit_direction: string | null
+          exit_velo: number | null
+          game_date: string | null
+          game_id: string | null
+          game_type: string | null
+          h1_time_sec: number | null
+          id: string | null
+          inning: number | null
+          is_ab: boolean | null
+          is_hit: boolean | null
+          is_on_base_walk: boolean | null
+          is_strikeout: boolean | null
+          launch_angle: number | null
+          opponent_team: string | null
+          pitch_type: string | null
+          pitch_velo: number | null
+          pitcher_archetype_snapshot: string | null
+          pitcher_throws: string | null
+          position_played: string | null
+          rbi: number | null
+          result: string | null
+          risp: boolean | null
+          runners_on: string | null
+          sport: string | null
+          total_bases: number | null
+          user_id: string | null
+          velo_band: string | null
+          zone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_at_bats_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_v_baserunning: {
+        Row: {
+          avg_run_time_sec: number | null
+          n: number | null
+          run_time_n: number | null
+          split_value: string | null
+          sport: string | null
+          successes: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_contact_quality: {
+        Row: {
+          n: number | null
+          split_value: string | null
+          sport: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_defense_by_position: {
+        Row: {
+          arm_velo_n: number | null
+          assists: number | null
+          avg_arm_velo: number | null
+          avg_pop_time_sec: number | null
+          errors: number | null
+          n: number | null
+          pop_time_n: number | null
+          putouts: number | null
+          split_value: string | null
+          sport: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_hitting_by_count: {
+        Row: {
+          at_bats: number | null
+          hard_contact: number | null
+          hits: number | null
+          n: number | null
+          split_value: string | null
+          sport: string | null
+          strikeouts: number | null
+          total_bases: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_hitting_by_pitch_type: {
+        Row: {
+          at_bats: number | null
+          avg_exit_velo: number | null
+          exit_velo_n: number | null
+          hard_contact: number | null
+          hits: number | null
+          n: number | null
+          split_value: string | null
+          sport: string | null
+          strikeouts: number | null
+          total_bases: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_hitting_by_pitcher_hand: {
+        Row: {
+          at_bats: number | null
+          hard_contact: number | null
+          hits: number | null
+          n: number | null
+          split_value: string | null
+          sport: string | null
+          strikeouts: number | null
+          total_bases: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_hitting_by_velo_band: {
+        Row: {
+          at_bats: number | null
+          hard_contact: number | null
+          hits: number | null
+          n: number | null
+          split_value: string | null
+          sport: string | null
+          strikeouts: number | null
+          total_bases: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_hitting_by_zone: {
+        Row: {
+          at_bats: number | null
+          hard_contact: number | null
+          hits: number | null
+          n: number | null
+          split_value: string | null
+          sport: string | null
+          strikeouts: number | null
+          total_bases: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_hitting_risp: {
+        Row: {
+          at_bats: number | null
+          hits: number | null
+          n: number | null
+          rbi: number | null
+          split_value: string | null
+          sport: string | null
+          total_bases: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      gp_v_home_to_first: {
+        Row: {
+          avg_sec: number | null
+          best_sec: number | null
+          n: number | null
+          sport: string | null
+          user_id: string | null
+          worst_sec: number | null
+        }
+        Relationships: []
+      }
+      gp_v_pitch_facts: {
+        Row: {
+          at_bat_id: string | null
+          count_balls: number | null
+          count_strikes: number | null
+          created_at: string | null
+          game_date: string | null
+          game_id: string | null
+          id: string | null
+          in_zone: boolean | null
+          is_swing: boolean | null
+          is_whiff: boolean | null
+          perspective: string | null
+          pitch_type: string | null
+          pitch_velo: number | null
+          result: string | null
+          sport: string | null
+          user_id: string | null
+          zone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_pitches_at_bat_id_fkey"
+            columns: ["at_bat_id"]
+            isOneToOne: false
+            referencedRelation: "gp_at_bats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_pitches_at_bat_id_fkey"
+            columns: ["at_bat_id"]
+            isOneToOne: false
+            referencedRelation: "gp_v_at_bat_facts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_pitches_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_v_plate_discipline: {
+        Row: {
+          chases: number | null
+          in_zone_pitches: number | null
+          in_zone_swings: number | null
+          n: number | null
+          out_of_zone_pitches: number | null
+          perspective: string | null
+          sport: string | null
+          swings: number | null
+          user_id: string | null
+          whiffs: number | null
+        }
+        Relationships: []
+      }
       library_videos_readiness: {
         Row: {
           assignment_count: number | null
@@ -16982,6 +17249,17 @@ export type Database = {
         }[]
       }
       get_public_bundle: { Args: { p_slug: string }; Returns: Json }
+      gp_game_rep_counts: {
+        Args: { _user_id: string }
+        Returns: {
+          at_bats: number
+          baserun_events: number
+          defense_plays: number
+          games: number
+          pitches: number
+          total_reps: number
+        }[]
+      }
       grade_row_overall: {
         Args: { g: Database["public"]["Tables"]["vault_scout_grades"]["Row"] }
         Returns: number
