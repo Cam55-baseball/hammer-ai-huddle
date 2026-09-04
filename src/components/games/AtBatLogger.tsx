@@ -185,19 +185,28 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
     });
   };
 
+  /**
+   * The count always comes from the logged pitches — it is derived data, not
+   * a user opinion, so it syncs whether or not a result is already set. The
+   * result is the only thing we refuse to overwrite.
+   */
+  const syncCount = (abId: string, tally: AtBatPitchTally) => {
+    const row = (list.data ?? []).find((r) => r.id === abId);
+    if (!row) return;
+    if (row.count_balls === tally.balls && row.count_strikes === tally.strikes) return;
+    update.mutate({
+      id: abId,
+      patch: { count_balls: tally.balls, count_strikes: tally.strikes },
+    });
+  };
+
   const handleTerminal = (abId: string, tally: AtBatPitchTally) => {
+    syncCount(abId, tally);
     if (!tally.suggestedResult) return;
     const row = (list.data ?? []).find((r) => r.id === abId);
     if (!row) return;
     if (row.result) return; // never overwrite an existing AB result
-    update.mutate({
-      id: abId,
-      patch: {
-        result: tally.suggestedResult,
-        count_balls: tally.balls,
-        count_strikes: tally.strikes,
-      },
-    });
+    update.mutate({ id: abId, patch: { result: tally.suggestedResult } });
     toast.message(
       `At-bat closed automatically: ${abResultPlain(tally.suggestedResult) ?? tally.suggestedResult}`,
       {
@@ -209,6 +218,35 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
   };
 
   const items = list.data ?? [];
+
+  /** Highest inning already used in this game — the honest starting point. */
+  const latestInning = items.reduce(
+    (max, r) => (typeof r.inning === "number" && r.inning > max ? r.inning : max),
+    1
+  );
+
+  /** How many at-bats in a row are already saved to a given inning. */
+  const streakIn = (inning: number) => {
+    let n = 0;
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i].inning === inning) n++;
+      else break;
+    }
+    return n;
+  };
+
+  const saveAtBat = (row: Record<string, any>) => {
+    const inning = Number(row.inning);
+    if (Number.isFinite(inning) && streakIn(inning) >= 2) {
+      const ok = window.confirm(
+        `This would be at-bat ${streakIn(inning) + 1} in a row in inning ${inning}. ` +
+          `That is unusual — most hitters bat once per inning.\n\n` +
+          `OK to save it in inning ${inning} anyway, or Cancel to change the inning first.`
+      );
+      if (!ok) return;
+    }
+    add.mutate(row);
+  };
 
   return (
     <div className="space-y-3">
@@ -236,9 +274,10 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
           opt-in via "Add detail", never required to record the rep. */}
       {!showNew && (
         <QuickAtBatBar
-          onQuickSave={(row) => add.mutate(row)}
+          onQuickSave={saveAtBat}
           onOpenFullForm={() => setShowNew(true)}
           submitting={add.isPending}
+          defaultInning={latestInning}
         />
       )}
 
@@ -246,8 +285,10 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         <AtBatForm
           sport={sport}
           onCancel={() => setShowNew(false)}
-          onSave={(row) => add.mutate(row)}
+          onSave={saveAtBat}
           submitting={add.isPending}
+          defaultInning={latestInning}
+
           pitcherOptions={pitcherOptions as any[]}
           defaultPitcherId={probable.data ?? null}
         />
