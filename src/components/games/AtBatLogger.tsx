@@ -347,6 +347,38 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
             >
               {isOpen && (
                 <>
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="font-medium">Inning:</span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6"
+                      aria-label="Move this at-bat one inning earlier"
+                      disabled={(ab.inning ?? 1) <= 1}
+                      onClick={() =>
+                        update.mutate({ id: ab.id, patch: { inning: Math.max(1, (ab.inning ?? 1) - 1) } })
+                      }
+                    >
+                      –
+                    </Button>
+                    <span className="font-mono font-semibold">{ab.inning ?? "not set"}</span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6"
+                      aria-label="Move this at-bat one inning later"
+                      onClick={() =>
+                        update.mutate({ id: ab.id, patch: { inning: Math.min(30, (ab.inning ?? 0) + 1) } })
+                      }
+                    >
+                      +
+                    </Button>
+                    <span className="text-muted-foreground">
+                      Wrong inning? Fix it here — nothing else changes.
+                    </span>
+                  </div>
                   {status.empty.length > 0 && (
                     <p className="text-[11px] text-muted-foreground">
                       Still empty (all optional): {status.empty.map((f) => f.label).join(", ")}.
@@ -358,7 +390,9 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
                     inning={ab.inning ?? null}
                     sport={sport}
                     onTerminal={(t) => handleTerminal(ab.id, t)}
+                    onTally={(t) => syncCount(ab.id, t)}
                   />
+
                   <AbSwingPanel
                     abId={ab.id}
                     gameId={gameId}
