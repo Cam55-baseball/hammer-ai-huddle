@@ -324,7 +324,11 @@ const handler = async (req: Request): Promise<Response> => {
         .or(`scheduled_date.eq.${planDate},recurring_active.is.true`)
         .limit(50),
       admin.from("athlete_side_preferences").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).maybeSingle(),
+      // Precedence session > temporary > persistent > inferred; expired rows
+      // are dropped below. maybeSingle() would throw once an athlete has more
+      // than one scope row, so we take the ordered set and resolve in code.
+      admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).limit(10),
+
       admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("weight_entries").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }).limit(1).maybeSingle(),
       admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
