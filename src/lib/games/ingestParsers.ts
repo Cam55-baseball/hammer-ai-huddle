@@ -54,7 +54,7 @@ export type ParsedRow = ParsedPitch | ParsedAtBat;
 
 export interface ParseResult {
   source: IngestSource;
-  /** true when the header row was recognised for a known vendor */
+  /** true when the header row was recognized for a known vendor */
   recognized: boolean;
   rows: ParsedRow[];
   /** rows the parser saw but could not map (kept for the review UI) */
@@ -427,7 +427,7 @@ export function parseIngestText(text: string, forced?: IngestSource): ParseResul
         rows: [],
         skipped: body.length,
         warnings: [
-          "Couldn't recognise this export. Pick the source manually, or check that the header row is the first line.",
+          "Couldn't recognize this export. Pick the source manually, or check that the header row is the first line.",
         ],
         headers,
       };
