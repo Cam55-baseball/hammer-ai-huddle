@@ -33,12 +33,22 @@ export function QuickAtBatBar({
   onQuickSave,
   onOpenFullForm,
   submitting,
+  defaultInning = 1,
 }: {
   onQuickSave: (row: Record<string, any>) => void;
   onOpenFullForm: () => void;
   submitting?: boolean;
+  /** Highest inning already used in this game — never a blind 1. */
+  defaultInning?: number;
 }) {
-  const [inning, setInning] = useState(1);
+  const [inning, setInning] = useState(defaultInning);
+  const [touched, setTouched] = useState(false);
+
+  // Follow the game forward until the user takes over the control.
+  useEffect(() => {
+    if (!touched) setInning(defaultInning);
+  }, [defaultInning, touched]);
+
 
   return (
     <Card className="p-3 space-y-2.5 border-primary/30">
