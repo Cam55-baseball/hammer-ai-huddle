@@ -128,6 +128,8 @@ import {
   isTrainingAgeLegal,
   skipReasonCopy,
   gameDaySkipReasonCopy,
+  equipmentUnknownCopy,
+  templateGapCopy,
   PRE_SELECTION_VERSION,
   type EngineDomain,
 } from "../_shared/wic/legality/preSelection.ts";
@@ -664,6 +666,13 @@ const handler = async (req: Request): Promise<Response> => {
     const selectionSkips = createSkipLog();
     /** Required template categories with no legal candidate for this athlete today. */
     const unfillableCategories: { bat_speed: string[]; speed: string[] } = { bat_speed: [], speed: [] };
+    if (equipmentUnknown) {
+      selectionSkips.record({
+        domain: "session",
+        requirement: "equipment",
+        reason: equipmentUnknownCopy(),
+      });
+    }
     /** Canonical category a row would occupy inside a given engine's session. */
     const domainCategoryOf = (m: MovementRow, domain: EngineDomain): string | null => {
       switch (domain) {
@@ -1358,9 +1367,12 @@ const handler = async (req: Request): Promise<Response> => {
           selectionSkips.record({
             domain: "bat_speed",
             requirement: cat,
-            reason: isGameDay
-              ? gameDaySkipReasonCopy("bat_speed", cat)
-              : skipReasonCopy("bat_speed", cat),
+            reason:
+              batSpeedSelection.picks.length > 0
+                ? templateGapCopy("bat_speed", cat, { isGameDay, equipmentUnknown })
+                : isGameDay
+                  ? gameDaySkipReasonCopy("bat_speed", cat)
+                  : skipReasonCopy("bat_speed", cat),
           });
         }
       }
