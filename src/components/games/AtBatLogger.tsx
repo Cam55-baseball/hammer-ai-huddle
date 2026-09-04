@@ -257,6 +257,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
       <div className="space-y-2">
         {items.map((ab, idx) => {
           const isOpen = expanded.has(ab.id);
+          const status = detailStatus(ab);
           return (
             <RepCard
               key={ab.id}
@@ -274,25 +275,30 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
                   ) : (
                     <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                   )}
-                  <span>{ab.result ?? "in progress"}</span>
+                  <span>{describeAtBat(ab)}</span>
                 </button>
               }
               badges={[
-                { label: `Inn ${ab.inning ?? "?"}` },
-                ...(ab.batting_side ? [{ label: `${ab.batting_side}HB`, variant: "secondary" as const }] : []),
-                ...(ab.position_played ? [{ label: ab.position_played }] : []),
-                ...(ab.pitch_type ? [{ label: `vs ${ab.pitch_type}` }] : []),
-                ...(ab.is_pinch_hit ? [{ label: "PH", variant: "secondary" as const }] : []),
+                { label: `Inning ${ab.inning ?? "not set"}` },
+                ...(ab.result ? [{ label: ab.result, variant: "outline" as const }] : []),
+                ...(ab.batting_side
+                  ? [{ label: `Batted ${ab.batting_side === "L" ? "left" : "right"}-handed`, variant: "secondary" as const }]
+                  : []),
+                ...(ab.position_played ? [{ label: `Played ${ab.position_played}` }] : []),
+                ...(ab.is_pinch_hit ? [{ label: "Pinch hit (PH)", variant: "secondary" as const }] : []),
                 ...(ab.count_balls != null && ab.count_strikes != null
-                  ? [{ label: `${ab.count_balls}-${ab.count_strikes}`, variant: "outline" as const }]
+                  ? [{ label: `Count ${ab.count_balls}-${ab.count_strikes}`, variant: "outline" as const }]
                   : []),
               ]}
               meta={
                 <>
-                  {ab.contact_quality && <span>Contact: {ab.contact_quality}</span>}
-                  {ab.exit_direction && <span>Dir: {ab.exit_direction}</span>}
-                  {ab.pitch_velo != null && <span>Velo: {ab.pitch_velo}</span>}
-                  {ab.rbi ? <span>RBI: {ab.rbi}</span> : null}
+                  {ab.contact_quality && <span>How you hit it: {ab.contact_quality}</span>}
+                  {ab.exit_direction && <span>Ball went to: {directionPlain(ab.exit_direction)}</span>}
+                  {ab.pitch_velo != null && <span>Pitch speed: {ab.pitch_velo} mph</span>}
+                  {ab.rbi ? <span>Runs driven in: {ab.rbi}</span> : null}
+                  <span>
+                    Extra detail: {status.filled.length} of {status.total} filled in
+                  </span>
                 </>
               }
               notes={ab.notes}
@@ -300,10 +306,16 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
             >
               {isOpen && (
                 <>
+                  {status.empty.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Still empty (all optional): {status.empty.map((f) => f.label).join(", ")}.
+                    </p>
+                  )}
                   <AtBatPitchPanel
                     gameId={gameId}
                     atBatId={ab.id}
                     inning={ab.inning ?? null}
+                    sport={sport}
                     onTerminal={(t) => handleTerminal(ab.id, t)}
                   />
                   <AbSwingPanel
@@ -316,6 +328,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
             </RepCard>
           );
         })}
+
         {!list.isLoading && items.length === 0 && !showNew && (
           <Card className="p-5 text-center bg-muted/20 border-dashed">
             <p className="text-sm font-medium">No at-bats yet</p>
