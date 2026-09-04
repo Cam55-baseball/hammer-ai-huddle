@@ -32,6 +32,8 @@ export interface CertifySpeedInput {
   availableEquipment?: readonly string[];
   environment?: "indoor" | "outdoor" | string;
   trainingAgeClass?: string;
+  /** Categories with no legal candidate for this athlete today — warn, not fatal. */
+  unfillableRequiredCategories?: readonly string[];
 }
 
 export interface SpeedGovernanceStamp {
@@ -209,14 +211,23 @@ export function certifySpeed(input: CertifySpeedInput): CertifySpeedResult {
   }));
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
-  if (missing.length > 0) {
+  const unfillable = new Set((input.unfillableRequiredCategories ?? []).map(String));
+  const missingBug = missing.filter((c) => !unfillable.has(String(c)));
+  const missingHonest = missing.filter((c) => unfillable.has(String(c)));
+  if (missingBug.length > 0) {
     fatal.push({
       code: "speed_unresolved_template",
-      message: `Template ${template.id} requires categories: ${missing.join(", ")}.`,
+      message: `Template ${template.id} requires categories: ${missingBug.join(", ")}.`,
     });
-    if (missing.includes("acceleration")) {
+    if (missingBug.includes("acceleration")) {
       fatal.push({ code: "speed_missing_acceleration", message: `Template ${template.id} requires an acceleration slot.` });
     }
+  }
+  for (const c of missingHonest) {
+    warn.push({
+      code: "speed_template_gap",
+      message: `Template ${template.id} could not fill ${c} — no movement in this athlete's legal pool provides it today. Published without it.`,
+    });
   }
 
   // Duplicate categories — speed sessions may repeat mobility/pap but not the
