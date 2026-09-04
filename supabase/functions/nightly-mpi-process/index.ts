@@ -450,6 +450,17 @@ serve(async (req) => {
         integrityScore += verifiedSessionCount * 0.5;
         integrityScore = Math.max(0, Math.min(100, integrityScore));
 
+        // HONESTY GATE — integrity is a corroboration measure. With nothing to
+        // corroborate against (no coach-verified sessions, no governance flags,
+        // no logged game reps) a "100" is a fabricated perfect score. Store null
+        // instead and let the surface say "not scored yet".
+        const { count: gpRepCount } = await supabase
+          .from('gp_at_bats').select('id', { count: 'exact', head: true }).eq('user_id', uid);
+        const integrityEvidence =
+          verifiedSessionCount + (flags?.length ?? 0) + (gpRepCount ?? 0);
+        const integrityScoreReported: number | null =
+          integrityEvidence > 0 ? integrityScore : null;
+
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
         const { data: dailyLogs } = await supabase.from('athlete_daily_log')
           .select('entry_date, day_status, injury_mode, cns_load_actual')
