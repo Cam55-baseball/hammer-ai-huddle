@@ -345,6 +345,13 @@ const handler = async (req: Request): Promise<Response> => {
           .map((v) => String(v).trim().toLowerCase()),
       ),
     );
+    // Unknown training age is unknown, not zero. Defaulting to 0 excluded
+    // every movement with any `min_training_age_years`, which silently deleted
+    // most of the catalog for an athlete who simply had not answered.
+    const trainingAgeKnown =
+      p.years_lifting !== null && p.years_lifting !== undefined
+        ? true
+        : p.training_age_years !== null && p.training_age_years !== undefined;
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
@@ -701,7 +708,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
       if (m.wic_metadata_complete === false) return false;
-      if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       // Categorical training-age legality — the SAME field every certifier
       // reads. Never relaxable: a beginner-illegal movement is a safety call,
       // not a preference. Without this gate the selector proposed picks the
