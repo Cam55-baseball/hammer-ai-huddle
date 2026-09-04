@@ -20,6 +20,7 @@ import type { DayType } from "@/utils/tdeeCalculations";
 import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 import { AnthropometricsStep } from "@/components/onboarding/steps/AnthropometricsStep";
+import { EquipmentStep } from "@/components/onboarding/steps/EquipmentStep";
 import { FuelRecoveryStep } from "@/components/onboarding/steps/FuelRecoveryStep";
 import { MentalCareerStep } from "@/components/onboarding/steps/MentalCareerStep";
 import { ConnectionsStep } from "@/components/onboarding/steps/ConnectionsStep";
@@ -35,6 +36,7 @@ const STEPS = [
   "Welcome",
   "Profile",
   "Body",
+  "Equipment",
   "Rank goals",
   "Fuel & recovery",
   "Mental & career",
@@ -49,22 +51,24 @@ const STEPS = [
 const STEP_WELCOME = 0;
 const STEP_PROFILE = 1;
 const STEP_ANTHRO = 2;
-const STEP_GOALS = 3;
-const STEP_FUEL = 4;
-const STEP_MENTAL = 5;
-const STEP_CONNECTIONS = 6;
-const STEP_SCHEDULE = 7;
-const STEP_CONFIRM = 8;
-const STEP_INJURY = 9;
-const STEP_NOTIFICATIONS = 10;
-const STEP_REVIEW = 11;
-const STEP_DONE = 12;
+const STEP_EQUIPMENT = 3;
+const STEP_GOALS = 4;
+const STEP_FUEL = 5;
+const STEP_MENTAL = 6;
+const STEP_CONNECTIONS = 7;
+const STEP_SCHEDULE = 8;
+const STEP_CONFIRM = 9;
+const STEP_INJURY = 10;
+const STEP_NOTIFICATIONS = 11;
+const STEP_REVIEW = 12;
+const STEP_DONE = 13;
 
 /** Deep-link edit keys → owning step index. `constitution` is merged into
  *  the Fuel & Recovery step now that the standalone Constitution tab is gone. */
 const EDIT_TARGETS: Record<ReviewEditKey | "constitution", number> = {
   profile: STEP_PROFILE,
   anthropometrics: STEP_ANTHRO,
+  equipment: STEP_EQUIPMENT,
   goals: STEP_GOALS,
   fuel: STEP_FUEL,
   constitution: STEP_FUEL,
@@ -107,6 +111,7 @@ export default function AthleteOnboarding() {
       [STEP_DONE]: "neutral",
       [STEP_PROFILE]: answerStatus.byKey.profile,
       [STEP_ANTHRO]: answerStatus.byKey.anthropometrics,
+      [STEP_EQUIPMENT]: answerStatus.byKey.equipment,
       [STEP_GOALS]: answerStatus.byKey.goals,
       [STEP_FUEL]: answerStatus.byKey.fuel,
       [STEP_MENTAL]: answerStatus.byKey.mental,
@@ -531,6 +536,10 @@ export default function AthleteOnboarding() {
 
       {step === STEP_ANTHRO && (
         <AnthropometricsStep onContinue={goNext} onBack={goBack} />
+      )}
+
+      {step === STEP_EQUIPMENT && (
+        <EquipmentStep onContinue={goNext} onBack={goBack} />
       )}
 
       {step === STEP_GOALS && (

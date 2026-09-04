@@ -33,6 +33,7 @@ import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingS
 export type ReviewEditKey =
   | "profile"
   | "anthropometrics"
+  | "equipment"
   | "goals"
   | "fuel"
   | "mental"
@@ -218,6 +219,12 @@ export function ReviewAnswersStep({ onEdit, onFinish }: Props) {
       label: "Body measurements",
       value: "Edit to review height, weight, wingspan, foot length",
       editKey: "anthropometrics",
+      ok: true,
+    },
+    {
+      label: "Equipment",
+      value: "Edit to review what you can train with",
+      editKey: "equipment",
       ok: true,
     },
     {
