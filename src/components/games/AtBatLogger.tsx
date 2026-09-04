@@ -119,13 +119,14 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
       if (error) throw error;
       return data?.id as string | undefined;
     },
-    onSuccess: (id) => {
+    onSuccess: (id, row) => {
       invalidate();
       setShowNew(false);
       if (id) {
         setExpanded((prev) => new Set(prev).add(id));
       }
-      toast.success("At-bat saved", {
+      toast.success(`Saved: ${describeAtBat(row as any)}`, {
+        description: "You can add more detail to this at-bat any time — it's already recorded.",
         action: id
           ? {
               label: "Undo",
@@ -138,6 +139,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         duration: 10_000,
       });
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
