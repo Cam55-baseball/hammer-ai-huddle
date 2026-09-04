@@ -147,3 +147,43 @@ floor and an honest "not enough data yet"):
 2. `gp_game_rep_counts` — real game workload feeding the CNS cap.
 3. `gp_v_home_to_first` / `gp_v_baserunning` → speed emphasis.
 4. Hitting views → bat-speed emphasis.
+
+## Open for owner ruling — intensity on game day (do NOT auto-flip)
+
+These are currently `game_day_legal = true` and carry `intensity_class` of
+`high` or above. No flag was changed on any of them in either direction.
+
+| slug | name | intensity_class | cns_cost | game_day_legal | game_day_eligible |
+|---|---|---|---|---|---|
+| bs_speed_stick_dry_swings | Speed-Stick Dry Swings | supra_maximal | 1 | true | true |
+| bs_whiffle_bat_overspeed_tee | Whiffle-Bat Overspeed Tee | supra_maximal | 1 | true | true |
+| bs_mb_step_behind_side_toss | Med Ball Step-Behind Side Toss | maximal | 2 | true | true |
+| bs_mb_walking_windup_toss | Med Ball Walking Windup Toss | maximal | 2 | true | true |
+| lift_farmer_carry | Farmer's Carry | high | 2 | true | true |
+| lift_split_squat_iso | Iso Split-Squat Hold | high | 2 | true | true |
+| lift_suitcase_carry | Suitcase Carry | high | 2 | true | true |
+| lift_waiter_carry | Waiter's Overhead Carry | high | 2 | true | true |
+| lift_atg_lunge | ATG Zombie Lunge | high | 1 | true | true |
+| lift_band_pullapart | Band Pull-Apart | high | 1 | true | true |
+| lift_couch_stretch_loaded | Couch Stretch (Loaded) | high | 1 | true | true |
+| lift_deadbug_band_press | Dead-Bug + Band Press | high | 1 | true | true |
+| lift_elephant_walk | Elephant Walk | high | 1 | true | true |
+| lift_er_at_90 | External Rotation at 90 Cable | high | 1 | true | true |
+| lift_face_pull | Face Pull | high | 1 | true | true |
+| lift_hip_flexor_iso | Standing Hip-Flexor Iso | high | 1 | true | true |
+| lift_hk_pallof_iso | Half-Kneel Pallof Iso Hold | high | 1 | true | true |
+| lift_mcgill_big3 | McGill Big-3 Loaded | high | 1 | true | true |
+| lift_rfess_pallof | RFESS Pallof | high | 1 | true | true |
+| lift_side_plank_leg_lift | Side Plank + Leg Lift | high | 1 | true | true |
+| lift_sled_backward | Sled Backward Drag | high | 1 | true | true |
+| lift_tib_raise | Tibialis Raise | high | 1 | true | true |
+
+The single `cns_cost = 3` movement flagged earlier is no longer game-day-legal:
+it was inside the 63 reverted rows. No `cns_cost >= 3` movement is currently
+game-day-legal.
+
+## Module rule going forward
+
+When a legality rule can be resolved two ways, take the one that puts **less
+load on the athlete**, and surface the decision (in this doc and in the
+plain-language plan notice) rather than picking silently.
