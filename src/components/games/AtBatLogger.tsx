@@ -38,13 +38,24 @@ import { AbSwingPanel } from "./AbSwingPanel";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
 import { QuickAtBatBar } from "./QuickAtBatBar";
+import { FieldDirectionPicker } from "./FieldDirectionPicker";
+import { FieldHelp } from "./TabIntro";
+import {
+  AB_RESULTS,
+  CONTACT_QUALITY,
+  DIRECTIONS,
+  describeAtBat,
+  abResultPlain,
+  abResultHelp,
+  directionPlain,
+  detailStatus,
+} from "@/lib/games/glossary";
 
-const RESULTS = [
-  "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
-  "FO", "GO", "LO", "PO", "FC", "SAC", "SF", "E", "ROE",
-];
-const CONTACT = ["barrel", "solid", "flare", "topped", "weak", "popup", "whiff", "foul"];
-const DIRECTIONS = ["LF", "LCF", "CF", "RCF", "RF", "3B", "SS", "2B", "1B", "P", "C"];
+
+const RESULTS = AB_RESULTS;
+const CONTACT = CONTACT_QUALITY;
+const DIRECTION_CODES = DIRECTIONS;
+
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH"];
 
 /** Single-key shortcut → AB result code. */
@@ -108,13 +119,14 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
       if (error) throw error;
       return data?.id as string | undefined;
     },
-    onSuccess: (id) => {
+    onSuccess: (id, row) => {
       invalidate();
       setShowNew(false);
       if (id) {
         setExpanded((prev) => new Set(prev).add(id));
       }
-      toast.success("At-bat saved", {
+      toast.success(`Saved: ${describeAtBat(row as any)}`, {
+        description: "You can add more detail to this at-bat any time — it's already recorded.",
         action: id
           ? {
               label: "Undo",
@@ -127,6 +139,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         duration: 10_000,
       });
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
@@ -185,10 +198,14 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         count_strikes: tally.strikes,
       },
     });
-    toast.message(`AB auto-closed: ${tally.suggestedResult}`, {
-      description: "Tap to edit the result if needed.",
-      duration: 6_000,
-    });
+    toast.message(
+      `At-bat closed automatically: ${abResultPlain(tally.suggestedResult) ?? tally.suggestedResult}`,
+      {
+        description: abResultHelp(tally.suggestedResult) ?? "Tap the at-bat to change the result.",
+        duration: 6_000,
+      }
+    );
+
   };
 
   const items = list.data ?? [];
@@ -240,6 +257,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
       <div className="space-y-2">
         {items.map((ab, idx) => {
           const isOpen = expanded.has(ab.id);
+          const status = detailStatus(ab);
           return (
             <RepCard
               key={ab.id}
@@ -257,25 +275,30 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
                   ) : (
                     <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                   )}
-                  <span>{ab.result ?? "in progress"}</span>
+                  <span>{describeAtBat(ab)}</span>
                 </button>
               }
               badges={[
-                { label: `Inn ${ab.inning ?? "?"}` },
-                ...(ab.batting_side ? [{ label: `${ab.batting_side}HB`, variant: "secondary" as const }] : []),
-                ...(ab.position_played ? [{ label: ab.position_played }] : []),
-                ...(ab.pitch_type ? [{ label: `vs ${ab.pitch_type}` }] : []),
-                ...(ab.is_pinch_hit ? [{ label: "PH", variant: "secondary" as const }] : []),
+                { label: `Inning ${ab.inning ?? "not set"}` },
+                ...(ab.result ? [{ label: ab.result, variant: "outline" as const }] : []),
+                ...(ab.batting_side
+                  ? [{ label: `Batted ${ab.batting_side === "L" ? "left" : "right"}-handed`, variant: "secondary" as const }]
+                  : []),
+                ...(ab.position_played ? [{ label: `Played ${ab.position_played}` }] : []),
+                ...(ab.is_pinch_hit ? [{ label: "Pinch hit (PH)", variant: "secondary" as const }] : []),
                 ...(ab.count_balls != null && ab.count_strikes != null
-                  ? [{ label: `${ab.count_balls}-${ab.count_strikes}`, variant: "outline" as const }]
+                  ? [{ label: `Count ${ab.count_balls}-${ab.count_strikes}`, variant: "outline" as const }]
                   : []),
               ]}
               meta={
                 <>
-                  {ab.contact_quality && <span>Contact: {ab.contact_quality}</span>}
-                  {ab.exit_direction && <span>Dir: {ab.exit_direction}</span>}
-                  {ab.pitch_velo != null && <span>Velo: {ab.pitch_velo}</span>}
-                  {ab.rbi ? <span>RBI: {ab.rbi}</span> : null}
+                  {ab.contact_quality && <span>How you hit it: {ab.contact_quality}</span>}
+                  {ab.exit_direction && <span>Ball went to: {directionPlain(ab.exit_direction)}</span>}
+                  {ab.pitch_velo != null && <span>Pitch speed: {ab.pitch_velo} mph</span>}
+                  {ab.rbi ? <span>Runs driven in: {ab.rbi}</span> : null}
+                  <span>
+                    Extra detail: {status.filled.length} of {status.total} filled in
+                  </span>
                 </>
               }
               notes={ab.notes}
@@ -283,10 +306,16 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
             >
               {isOpen && (
                 <>
+                  {status.empty.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Still empty (all optional): {status.empty.map((f) => f.label).join(", ")}.
+                    </p>
+                  )}
                   <AtBatPitchPanel
                     gameId={gameId}
                     atBatId={ab.id}
                     inning={ab.inning ?? null}
+                    sport={sport}
                     onTerminal={(t) => handleTerminal(ab.id, t)}
                   />
                   <AbSwingPanel
@@ -299,6 +328,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
             </RepCard>
           );
         })}
+
         {!list.isLoading && items.length === 0 && !showNew && (
           <Card className="p-5 text-center bg-muted/20 border-dashed">
             <p className="text-sm font-medium">No at-bats yet</p>
@@ -404,14 +434,21 @@ function AtBatForm({
 
   return (
     <Card ref={containerRef} className="p-4 space-y-3 bg-muted/30">
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Full at-bat form — every field is optional except the result</p>
+        <FieldHelp>
+          Fill in as much or as little as you want. Anything you skip stays empty rather than
+          being guessed.
+        </FieldHelp>
+      </div>
       <p className="text-[11px] text-muted-foreground">
-        Shortcuts: <span className="font-mono">1·2·3·4</span> = 1B/2B/3B/HR ·{" "}
+        Shortcuts: <span className="font-mono">1·2·3·4</span> = single/double/triple/home run ·{" "}
         <span className="font-mono">K</span> = strikeout · <span className="font-mono">B</span> = walk ·{" "}
-        <span className="font-mono">H</span> = HBP · <span className="font-mono">Enter</span> to save ·{" "}
+        <span className="font-mono">H</span> = hit by pitch · <span className="font-mono">Enter</span> to save ·{" "}
         <span className="font-mono">Esc</span> to cancel
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Field label="Pitcher faced">
+        <Field label="Pitcher you faced" help="Only if you've saved a scouting profile for them.">
           <Select value={f.opponent_pitcher_id || "__none"} onValueChange={(v) => set("opponent_pitcher_id", v === "__none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder="Pick / none" /></SelectTrigger>
             <SelectContent>
@@ -424,22 +461,22 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Inning">
+        <Field label="Inning" help="Which inning you batted in.">
           <NumberField
             value={f.inning}
             onValueChange={(v) => set("inning", v ?? 0)}
           />
         </Field>
-        <Field label="Side">
+        <Field label="Which side of the plate you batted from" help="Left-handed or right-handed for this at-bat.">
           <Select value={f.batting_side} onValueChange={(v) => set("batting_side", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="L">L</SelectItem>
-              <SelectItem value="R">R</SelectItem>
+              <SelectItem value="L">L — batted left-handed</SelectItem>
+              <SelectItem value="R">R — batted right-handed</SelectItem>
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Position">
+        <Field label="Position you were playing" help="Where you were in the field this game.">
           <Select value={f.position_played} onValueChange={(v) => set("position_played", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
@@ -447,39 +484,43 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Result">
+        <Field
+          label="How the at-bat ended"
+          help={abResultHelp(f.result) ?? "Pick what happened — each option is spelled out."}
+        >
           <Select value={f.result} onValueChange={(v) => set("result", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
-              {RESULTS.map((r) => (<SelectItem key={r} value={r}>{r}</SelectItem>))}
+              {RESULTS.map((r) => (
+                <SelectItem key={r.code} value={r.code}>
+                  {r.code} — {r.plain}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Balls">
+        <Field label="Balls in the count" help="How many balls the pitcher threw you.">
           <NumberField min={0} max={4} value={f.count_balls}
             onValueChange={(v) => set("count_balls", v ?? 0)} />
         </Field>
-        <Field label="Strikes">
+        <Field label="Strikes in the count" help="How many strikes you had against you.">
           <NumberField min={0} max={3} value={f.count_strikes}
             onValueChange={(v) => set("count_strikes", v ?? 0)} />
         </Field>
-        <Field label="Contact">
+        <Field label="How well you hit it" help="Contact quality — how cleanly the ball came off the bat.">
           <Select value={f.contact_quality} onValueChange={(v) => set("contact_quality", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
-              {CONTACT.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+              {CONTACT.map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.plain}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Direction">
-          <Select value={f.exit_direction} onValueChange={(v) => set("exit_direction", v)}>
-            <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>
-              {DIRECTIONS.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Pitch type">
+
+        <Field label="Pitch type you hit (or last saw)" help="What the pitcher threw.">
           <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
@@ -487,31 +528,51 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Pitch velo">
+        <Field label="Pitch speed (mph)" help="How fast the pitch was, if you know it.">
           <NumberField value={f.pitch_velo}
             onChange={(e) => set("pitch_velo", e.target.value)} />
         </Field>
-        <Field label="Outs">
+        <Field label="Outs when you came up" help="How many outs the team already had (0, 1 or 2).">
           <NumberField min={0} max={2} value={f.outs}
             onValueChange={(v) => set("outs", v ?? 0)} />
         </Field>
-        <Field label="Runners on">
+        <Field
+          label="Which bases had runners on them"
+          help="Type the base numbers, e.g. 1,3 means a runner on first base and a runner on third base. Leave blank if the bases were empty."
+        >
           <Input placeholder="e.g. 1,3" value={f.runners_on}
             onChange={(e) => set("runners_on", e.target.value)} />
         </Field>
-        <Field label="RBI">
+        <Field label="Runs you drove in (RBI)" help="How many teammates scored because of your at-bat.">
           <NumberField min={0} value={f.rbi}
             onValueChange={(v) => set("rbi", v ?? 0)} />
         </Field>
-        <Field label="LOB">
+        <Field
+          label="Runners you left on base (LOB)"
+          help="Runners who were still standing on base when your at-bat ended without scoring."
+        >
           <NumberField min={0} value={f.lob}
             onValueChange={(v) => set("lob", v ?? 0)} />
         </Field>
-        <Field label="H1 time (sec)">
+        <Field
+          label="Home-to-first run time (seconds)"
+          help="How long it took you to run from home plate to first base, if someone timed it."
+        >
           <NumberField step="0.01" value={f.h1_time_sec}
             onChange={(e) => set("h1_time_sec", e.target.value)} />
         </Field>
       </div>
+
+      <div className="space-y-1">
+        <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          Where the ball went
+        </Label>
+        <FieldDirectionPicker
+          value={f.exit_direction || null}
+          onChange={(code) => set("exit_direction", code ?? "")}
+        />
+      </div>
+
       <div className="flex items-center gap-2">
         <input
           id="ph"
@@ -519,9 +580,11 @@ function AtBatForm({
           checked={f.is_pinch_hit}
           onChange={(e) => set("is_pinch_hit", e.target.checked)}
         />
-        <Label htmlFor="ph" className="text-xs">Pinch hit</Label>
+        <Label htmlFor="ph" className="text-xs">
+          Pinch hit (PH) — you batted in place of a teammate
+        </Label>
       </div>
-      <Field label="Notes (free text — describe it however you want)">
+      <Field label="Your own notes" help="Anything you want to remember, in your own words.">
         <Textarea
           rows={2}
           value={f.notes}
@@ -538,11 +601,21 @@ function AtBatForm({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</Label>
       {children}
+      {help && <FieldHelp>{help}</FieldHelp>}
     </div>
   );
 }
+

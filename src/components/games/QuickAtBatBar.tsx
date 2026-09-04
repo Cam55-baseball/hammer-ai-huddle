@@ -15,18 +15,18 @@ import { Card } from "@/components/ui/card";
 import { Minus, Plus, SlidersHorizontal } from "lucide-react";
 
 const QUICK_RESULTS: ReadonlyArray<{ code: string; label: string; tone: string }> = [
-  { code: "1B", label: "1B", tone: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" },
-  { code: "2B", label: "2B", tone: "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300" },
-  { code: "3B", label: "3B", tone: "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300" },
-  { code: "HR", label: "HR", tone: "bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-300" },
-  { code: "BB", label: "BB", tone: "bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300" },
-  { code: "HBP", label: "HBP", tone: "bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-700 dark:text-fuchsia-300" },
-  { code: "K_swinging", label: "K swing", tone: "bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300" },
-  { code: "K_looking", label: "K look", tone: "bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300" },
-  { code: "GO", label: "GO", tone: "bg-muted hover:bg-muted/70" },
-  { code: "FO", label: "FO", tone: "bg-muted hover:bg-muted/70" },
-  { code: "LO", label: "LO", tone: "bg-muted hover:bg-muted/70" },
-  { code: "E", label: "Error", tone: "bg-muted hover:bg-muted/70" },
+  { code: "1B", label: "1B · Single", tone: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" },
+  { code: "2B", label: "2B · Double", tone: "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300" },
+  { code: "3B", label: "3B · Triple", tone: "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300" },
+  { code: "HR", label: "HR · Home run", tone: "bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-300" },
+  { code: "BB", label: "BB · Walk", tone: "bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300" },
+  { code: "HBP", label: "HBP · Hit by pitch", tone: "bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-700 dark:text-fuchsia-300" },
+  { code: "K_swinging", label: "K · Struck out swinging", tone: "bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300" },
+  { code: "K_looking", label: "K · Struck out looking", tone: "bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300" },
+  { code: "GO", label: "GO · Ground out", tone: "bg-muted hover:bg-muted/70" },
+  { code: "FO", label: "FO · Fly out", tone: "bg-muted hover:bg-muted/70" },
+  { code: "LO", label: "LO · Line out", tone: "bg-muted hover:bg-muted/70" },
+  { code: "E", label: "E · Reached on an error", tone: "bg-muted hover:bg-muted/70" },
 ];
 
 export function QuickAtBatBar({
@@ -45,7 +45,7 @@ export function QuickAtBatBar({
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Quick log
+            Log an at-bat
           </span>
           <div className="flex items-center gap-1">
             <Button
@@ -58,8 +58,8 @@ export function QuickAtBatBar({
             >
               <Minus className="h-3.5 w-3.5" />
             </Button>
-            <span className="min-w-[3.5rem] text-center text-sm font-mono font-semibold">
-              Inn {inning}
+            <span className="min-w-[5.5rem] text-center text-sm font-mono font-semibold">
+              Inning {inning}
             </span>
             <Button
               type="button"
@@ -75,11 +75,11 @@ export function QuickAtBatBar({
         </div>
         <Button type="button" size="sm" variant="ghost" onClick={onOpenFullForm} className="gap-1.5">
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          Add detail
+          Open full form (optional)
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {QUICK_RESULTS.map((r) => (
           <Button
             key={r.code}
@@ -88,7 +88,7 @@ export function QuickAtBatBar({
             variant="ghost"
             disabled={submitting}
             onClick={() => onQuickSave({ inning, result: r.code })}
-            className={`h-10 text-xs font-semibold ${r.tone}`}
+            className={`h-auto min-h-[3rem] whitespace-normal py-1.5 text-[11px] font-semibold leading-tight ${r.tone}`}
           >
             {r.label}
           </Button>
@@ -96,8 +96,9 @@ export function QuickAtBatBar({
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        One tap logs the rep. Pitch type, contact quality and everything else can be
-        filled in later from the at-bat — or left out entirely.
+        Pick the inning, then tap what happened — that's a complete at-bat, saved. Pitch
+        type, how well you hit it and everything else are optional and can be added later
+        from the at-bat, or left out entirely.
       </p>
     </Card>
   );

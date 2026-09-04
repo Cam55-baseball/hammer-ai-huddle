@@ -16,6 +16,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { TabIntro } from "./TabIntro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -200,13 +201,18 @@ function GameSheetTabs({
         <TabsTrigger value="defense">Defense</TabsTrigger>
         <TabsTrigger value="baserun">Baserun</TabsTrigger>
         <TabsTrigger value="pitches">Pitching</TabsTrigger>
-        <TabsTrigger value="subs">Subs</TabsTrigger>
         <TabsTrigger value="import">Import</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
+        <TabsTrigger value="subs">In / out</TabsTrigger>
       </TabsList>
 
       {isToday && (
         <TabsContent value="live" className="pt-4 space-y-4">
+          <TabIntro
+            what="Your live game screen."
+            when="Use it while the game is happening."
+            why="Big buttons take you straight to whatever you need to log next, and show how much you've logged so far."
+          />
           <ActivePlanCard gameId={gameId} game={g} />
           <GameDayMode
             gameId={gameId}
@@ -217,36 +223,81 @@ function GameSheetTabs({
       )}
 
       <TabsContent value="overview" className="space-y-4 pt-4">
+        <TabIntro
+          what="The basics of this game: who you played, where, and the score."
+          when="Set it up before the game, and add the final score after."
+          why="It labels everything else you log so your history makes sense later."
+        />
         <ActivePlanCard gameId={gameId} game={g} />
         <OverviewPanel game={g} onPatch={onPatch} />
       </TabsContent>
 
 
-      <TabsContent value="atbats" className="pt-4">
+      <TabsContent value="atbats" className="pt-4 space-y-3">
+        <TabIntro
+          what="Every time you came up to bat."
+          when="Log each turn at the plate — during the game or afterwards."
+          why="This is the main record of your hitting. One tap is enough; detail is optional."
+        />
         <AtBatLogger gameId={gameId} sport={g.sport} />
       </TabsContent>
       <TabsContent value="pitches" className="pt-4 space-y-3">
+        <TabIntro
+          what="Every pitch you threw."
+          when="Only if you pitched in this game."
+          why="It builds your pitch-by-pitch record: what you threw, where it went, and what happened."
+        />
         <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
-          <strong>Hitters:</strong> log pitches inside each at-bat (under At-Bats).
-          This tab is for when <strong>you were pitching</strong> — log every pitch you threw, like a rep.
+          <strong>If you were batting, not pitching:</strong> log the pitches you saw inside
+          each at-bat over on the At-Bats tab instead. This tab is only for pitches
+          <strong> you threw</strong>.
         </div>
         <PitchLogger gameId={gameId} sport={g.sport} />
       </TabsContent>
-      <TabsContent value="defense" className="pt-4">
+      <TabsContent value="defense" className="pt-4 space-y-3">
+        <TabIntro
+          what="Plays you made in the field."
+          when="After a ball is hit to you, or after the game from memory."
+          why="It's how your fielding gets tracked — clean plays and mistakes both count."
+        />
         <DefenseLogger gameId={gameId} />
       </TabsContent>
-      <TabsContent value="baserun" className="pt-4">
+      <TabsContent value="baserun" className="pt-4 space-y-3">
+        <TabIntro
+          what="What you did once you were on base."
+          when="After you steal, get thrown out, or take an extra base."
+          why="Running decisions and speed show up here rather than in your hitting record."
+        />
         <BaserunLogger gameId={gameId} sport={g.sport} />
       </TabsContent>
-      <TabsContent value="subs" className="pt-4">
+      <TabsContent value="subs" className="pt-4 space-y-3">
+        <TabIntro
+          what="When you entered or left the game."
+          when="Only if you didn't play the whole game — you came in later, or came out early."
+          why="It explains gaps in your reps, so a short game doesn't look like a bad one."
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Advanced — most players can skip this tab entirely.
+        </p>
         <SubLogger gameId={gameId} />
       </TabsContent>
       <TabsContent value="import" className="pt-4 space-y-4">
+        <TabIntro
+          what="Bring in a scorebook, stat sheet or photo instead of typing."
+          when="After the game, when someone else kept the book."
+          why="It reads the file and fills in reps for you, so you don't log twice."
+        />
         <DataIngestPanel gameId={gameId} sport={g.sport} />
         <GameDocumentIngest gameId={gameId} sport={g.sport} />
       </TabsContent>
 
       <TabsContent value="notes" className="pt-4 space-y-3">
+        <TabIntro
+          what="Your own words about the game."
+          when="Before the game for your plan, after it for what you learned."
+          why="Nothing here is scored — it's your record of how you were thinking."
+        />
+
         <Label>Philosophy — pre-game</Label>
         <Textarea
           defaultValue={g.philosophy_pre ?? ""}
@@ -439,48 +490,58 @@ function OverviewPanel({
         dossier={editingPitcher}
       />
 
-      <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs uppercase tracking-wide">Opponent hitters — team pitching plan</Label>
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setNewHitterOpen(true)}>
-            + New
-          </Button>
-        </div>
-        {attachedHitters.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {attachedHitters.map((h) => (
-              <Badge
-                key={h.id}
-                variant="default"
-                onClick={() => toggleHitter(h.id)}
-                className="cursor-pointer"
-                title="Tap to remove"
-              >
-                {h.name}{h.bats ? ` · ${h.bats}HB` : ""} ×
-              </Badge>
-            ))}
+      <details className="rounded-md border bg-muted/20 p-2.5">
+        <summary className="cursor-pointer text-xs font-medium">
+          Advanced — coaching a whole team? Opponent hitters
+        </summary>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Only useful if you're planning how your team will pitch to the other side's
+          batters. Skip this if you're logging your own game.
+        </p>
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs uppercase tracking-wide">Opponent hitters — team pitching plan</Label>
+            <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setNewHitterOpen(true)}>
+              + New
+            </Button>
           </div>
-        ) : (
-          <div className="text-[11px] text-muted-foreground">Attach hitters below to unlock the team pitching plan for each one.</div>
-        )}
-        {availableHitters.length > 0 && (
-          <Select
-            value=""
-            onValueChange={(v) => { if (v) toggleHitter(v); }}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="+ Attach a hitter…" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableHitters.map((h) => (
-                <SelectItem key={h.id} value={h.id}>
-                  {h.name}{h.team ? ` · ${h.team}` : ""}{h.bats ? ` · ${h.bats}HB` : ""}
-                </SelectItem>
+          {attachedHitters.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {attachedHitters.map((h) => (
+                <Badge
+                  key={h.id}
+                  variant="default"
+                  onClick={() => toggleHitter(h.id)}
+                  className="cursor-pointer"
+                  title="Tap to remove"
+                >
+                  {h.name}{h.bats ? ` · ${h.bats}HB` : ""} ×
+                </Badge>
               ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="text-[11px] text-muted-foreground">Attach hitters below to unlock the team pitching plan for each one.</div>
+          )}
+          {availableHitters.length > 0 && (
+            <Select
+              value=""
+              onValueChange={(v) => { if (v) toggleHitter(v); }}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="+ Attach a hitter…" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableHitters.map((h) => (
+                  <SelectItem key={h.id} value={h.id}>
+                    {h.name}{h.team ? ` · ${h.team}` : ""}{h.bats ? ` · ${h.bats}HB` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      </details>
+
 
       <HitterDossierDrawer
         open={!!editingHitter || newHitterOpen}
