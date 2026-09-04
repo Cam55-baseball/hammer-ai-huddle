@@ -520,7 +520,7 @@ function AtBatForm({
           </Select>
         </Field>
 
-        <Field label="Pitch type">
+        <Field label="Pitch type you hit (or last saw)" help="What the pitcher threw.">
           <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
             <SelectContent>
@@ -528,31 +528,51 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Pitch velo">
+        <Field label="Pitch speed (mph)" help="How fast the pitch was, if you know it.">
           <NumberField value={f.pitch_velo}
             onChange={(e) => set("pitch_velo", e.target.value)} />
         </Field>
-        <Field label="Outs">
+        <Field label="Outs when you came up" help="How many outs the team already had (0, 1 or 2).">
           <NumberField min={0} max={2} value={f.outs}
             onValueChange={(v) => set("outs", v ?? 0)} />
         </Field>
-        <Field label="Runners on">
+        <Field
+          label="Which bases had runners on them"
+          help="Type the base numbers, e.g. 1,3 means a runner on first base and a runner on third base. Leave blank if the bases were empty."
+        >
           <Input placeholder="e.g. 1,3" value={f.runners_on}
             onChange={(e) => set("runners_on", e.target.value)} />
         </Field>
-        <Field label="RBI">
+        <Field label="Runs you drove in (RBI)" help="How many teammates scored because of your at-bat.">
           <NumberField min={0} value={f.rbi}
             onValueChange={(v) => set("rbi", v ?? 0)} />
         </Field>
-        <Field label="LOB">
+        <Field
+          label="Runners you left on base (LOB)"
+          help="Runners who were still standing on base when your at-bat ended without scoring."
+        >
           <NumberField min={0} value={f.lob}
             onValueChange={(v) => set("lob", v ?? 0)} />
         </Field>
-        <Field label="H1 time (sec)">
+        <Field
+          label="Home-to-first run time (seconds)"
+          help="How long it took you to run from home plate to first base, if someone timed it."
+        >
           <NumberField step="0.01" value={f.h1_time_sec}
             onChange={(e) => set("h1_time_sec", e.target.value)} />
         </Field>
       </div>
+
+      <div className="space-y-1">
+        <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          Where the ball went
+        </Label>
+        <FieldDirectionPicker
+          value={f.exit_direction || null}
+          onChange={(code) => set("exit_direction", code ?? "")}
+        />
+      </div>
+
       <div className="flex items-center gap-2">
         <input
           id="ph"
@@ -560,9 +580,11 @@ function AtBatForm({
           checked={f.is_pinch_hit}
           onChange={(e) => set("is_pinch_hit", e.target.checked)}
         />
-        <Label htmlFor="ph" className="text-xs">Pinch hit</Label>
+        <Label htmlFor="ph" className="text-xs">
+          Pinch hit (PH) — you batted in place of a teammate
+        </Label>
       </div>
-      <Field label="Notes (free text — describe it however you want)">
+      <Field label="Your own notes" help="Anything you want to remember, in your own words.">
         <Textarea
           rows={2}
           value={f.notes}
@@ -579,11 +601,21 @@ function AtBatForm({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</Label>
       {children}
+      {help && <FieldHelp>{help}</FieldHelp>}
     </div>
   );
 }
+
