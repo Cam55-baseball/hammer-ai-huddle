@@ -8,12 +8,13 @@
  * is a real declared answer and is stored as such.
  */
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { writePersistentEquipment } from "@/lib/hammer/context/equipment";
 
 interface Props {
