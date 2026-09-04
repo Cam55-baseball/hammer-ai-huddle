@@ -75,6 +75,43 @@ export function resolveEquipment(rows: EquipmentRow[], now = new Date()): Equipm
   };
 }
 
+/**
+ * Save an equipment row through the server-side helper.
+ *
+ * We cannot use PostgREST upsert here: the singleton uniqueness is enforced by
+ * a PARTIAL unique index (user_id, scope) WHERE scope IN ('persistent','session'),
+ * and ON CONFLICT inference cannot match a partial index without repeating its
+ * predicate — which PostgREST cannot express. That failed with 42P10 every time.
+ * `save_equipment_context` does the update-or-insert server-side instead.
+ */
+async function saveEquipmentContext(
+  scope: EquipmentScope,
+  equipment: string[],
+  venue: Venue | string | null,
+  source: string,
+  validUntil: string | null,
+): Promise<void> {
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ error: { message: string; details?: string; code?: string } | null }>)(
+    "save_equipment_context",
+    {
+      p_scope: scope,
+      p_equipment: equipment,
+      p_venue: venue,
+      p_source: source,
+      p_valid_until: validUntil,
+    },
+  );
+  if (error) {
+    const err = new Error(error.message) as Error & { code?: string; details?: string };
+    err.code = error.code;
+    err.details = error.details;
+    throw err;
+  }
+}
+
 /** Write a session-scoped equipment override (TTL: end of today UTC). */
 export async function writeSessionEquipment(
   userId: string,
@@ -84,22 +121,7 @@ export async function writeSessionEquipment(
 ): Promise<void> {
   const endOfDay = new Date();
   endOfDay.setUTCHours(23, 59, 59, 999);
-  // Upsert via unique (user_id, scope) for session.
-  const { error } = await (supabase.from("athlete_equipment_context") as unknown as {
-    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-  }).upsert(
-    {
-      user_id: userId,
-      scope: "session",
-      equipment,
-      venue,
-      valid_until: endOfDay.toISOString(),
-      source,
-      confidence: "self_report",
-    },
-    { onConflict: "user_id,scope" },
-  );
-  if (error) throw new Error(error.message);
+  await saveEquipmentContext("session", equipment, venue, source, endOfDay.toISOString());
 }
 
 /** Write or update the persistent equipment profile. */
@@ -109,19 +131,6 @@ export async function writePersistentEquipment(
   venue: Venue | string | null,
   source: string,
 ): Promise<void> {
-  const { error } = await (supabase.from("athlete_equipment_context") as unknown as {
-    upsert: (v: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-  }).upsert(
-    {
-      user_id: userId,
-      scope: "persistent",
-      equipment,
-      venue,
-      valid_until: null,
-      source,
-      confidence: "self_report",
-    },
-    { onConflict: "user_id,scope" },
-  );
-  if (error) throw new Error(error.message);
+  await saveEquipmentContext("persistent", equipment, venue, source, null);
 }
+
