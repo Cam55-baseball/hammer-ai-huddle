@@ -662,6 +662,8 @@ const handler = async (req: Request): Promise<Response> => {
       ((trainingAgeContext as any)?.classification ?? null) as string | null;
     const categoryBudget = createCategoryBudget();
     const selectionSkips = createSkipLog();
+    /** Required template categories with no legal candidate for this athlete today. */
+    const unfillableCategories: { bat_speed: string[]; speed: string[] } = { bat_speed: [], speed: [] };
     /** Canonical category a row would occupy inside a given engine's session. */
     const domainCategoryOf = (m: MovementRow, domain: EngineDomain): string | null => {
       switch (domain) {
@@ -1347,10 +1349,11 @@ const handler = async (req: Request): Promise<Response> => {
       // candidate for this athlete, the block is DROPPED with a reason rather
       // than published half-built and then failed by the certifier
       // (`bs_unresolved_template`), which used to kill the entire plan.
-      const bsMissingRequired = batSpeedSelection.warnings
+      const bsMissingRequired: string[] = batSpeedSelection.warnings
         .filter((w) => w.startsWith("bat_speed_missing_required:"))
         .map((w) => w.split(":")[1]);
       if (bsMissingRequired.length > 0) {
+        unfillableCategories.bat_speed.push(...bsMissingRequired);
         for (const cat of bsMissingRequired) {
           selectionSkips.record({
             domain: "bat_speed",
@@ -1436,9 +1439,10 @@ const handler = async (req: Request): Promise<Response> => {
       // Same graceful-degradation rule as bat speed: an unfillable required
       // category drops the sprint block with a reason instead of publishing a
       // session the certifier will reject.
-      const spMissingRequired = speedSelection.warnings
+      const spMissingRequired: string[] = speedSelection.warnings
         .filter((w) => w.startsWith("speed_missing_required:"))
         .map((w) => w.split(":")[1]);
+      unfillableCategories.speed.push(...spMissingRequired);
       for (const cat of spMissingRequired) {
         selectionSkips.record({
           domain: "speed",
@@ -1837,6 +1841,7 @@ const handler = async (req: Request): Promise<Response> => {
       availableEquipment: availableEquipmentCtx,
       environment: environmentCtx,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
+      unfillableRequiredCategories: unfillableCategories.speed,
     });
     const batSpeedCertification = certifyBatSpeed({
       prescriptions: finalRxs as any,
@@ -1853,6 +1858,7 @@ const handler = async (req: Request): Promise<Response> => {
       availableEquipment: availableEquipmentCtx,
       environment: environmentCtx,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
+      unfillableRequiredCategories: unfillableCategories.bat_speed,
     });
 
     // Stamp Speed / Bat-Speed governance onto matching rows.
