@@ -453,7 +453,28 @@ const handler = async (req: Request): Promise<Response> => {
     if (blocksErr) throw blocksErr;
     if (catErr) throw catErr;
     const block = blocks!;
-    const lib = catalog ?? [];
+    // ---- Unknown equipment is NOT "owns nothing" -------------------------
+    // An athlete who has never declared their gear must not silently lose the
+    // whole gear-requiring catalog. We record that the answer is UNKNOWN,
+    // keep every movement eligible, and merely PREFER gear-free / universal
+    // work so the plan is runnable without assuming anything.
+    const declaredEquipment: string[] = Array.isArray((athleteContext as any)?.environment?.equipment)
+      ? ((athleteContext as any).environment.equipment as unknown[]).map((e) => String(e)).filter(Boolean)
+      : [];
+    const equipmentUnknown = declaredEquipment.length === 0;
+    const UNIVERSAL_GEAR = new Set([
+      "bodyweight", "none", "floor", "ground", "wall", "space", "field",
+      "bat", "gamer_bat", "ball", "baseball", "softball", "glove", "chair", "towel",
+    ]);
+    const gearFreeFirst = (rows: MovementRow[]): MovementRow[] => {
+      const rank = (m: MovementRow) => {
+        const req = ((m as any).equipment_requirements ?? []) as string[];
+        if (!Array.isArray(req) || req.length === 0) return 0;
+        return req.every((r) => UNIVERSAL_GEAR.has(String(r).toLowerCase())) ? 1 : 2;
+      };
+      return [...rows].sort((a, b) => rank(a) - rank(b));
+    };
+    const lib = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
 
     // -------- Determine reductions --------
     const reductions: { reason: string; detail: string }[] = [];
@@ -635,6 +656,8 @@ const handler = async (req: Request): Promise<Response> => {
     // a duplicate single-slot category was noticed — by then the whole plan was
     // already dead. These two objects move those exact rules in FRONT of
     // selection, so an illegal candidate is never proposed in the first place.
+    const chronologicalAgeYears: number | null =
+      Number((athleteContext as any)?.development?.chronological_age ?? NaN) || null;
     const trainingAgeClassForSelection: string | null =
       ((trainingAgeContext as any)?.classification ?? null) as string | null;
     const categoryBudget = createCategoryBudget();
@@ -680,7 +703,17 @@ const handler = async (req: Request): Promise<Response> => {
       // Semantics match the certifier exactly: only an explicit `false` blocks;
       // NULL means untagged, not illegal. Never relaxable by override.
       if (isGameDay && (m as any).game_day_legal === false) return false;
-      if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
+      // Chronological-age gate. Only applies when we actually KNOW the
+      // athlete's age. The old rule inferred age as `training age + 6`, which
+      // is a fabricated number: a beginner with 1 training year "became" 7
+      // years old and lost every movement tagged min_age 8+ (including both
+      // game-day-legal rotational options). Unknown age is unknown.
+      if (
+        chronologicalAgeYears !== null &&
+        (m.min_age_years ?? 0) > 0 &&
+        (m.min_age_years ?? 0) > chronologicalAgeYears &&
+        !isProProspect
+      ) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
       // Single canonical seasonal legality gate — overrides may unlock.
       const legality = isMovementSeasonLegal(seasonCtx, m);
@@ -1744,7 +1777,7 @@ const handler = async (req: Request): Promise<Response> => {
         isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
         isReturnToPlay: false,
       },
-      availableEquipment: (athleteContext as any)?.environment?.equipment ?? undefined,
+      availableEquipment: equipmentUnknown ? undefined : declaredEquipment,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
     });
     // Attach governance stamp to each lift row's why_v2 + why_payload.
@@ -1785,7 +1818,8 @@ const handler = async (req: Request): Promise<Response> => {
     // rows, and blocks publication on fatal issues.
     const isPracticeDayCtx = String((trainingContext as any)?.day_type ?? "").startsWith("practice");
     const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
-    const availableEquipmentCtx = (athleteContext as any)?.environment?.equipment ?? undefined;
+    // Unknown gear is passed as `undefined` (unknown), never as `[]` (none).
+    const availableEquipmentCtx = equipmentUnknown ? undefined : declaredEquipment;
 
     const speedCertification = certifySpeed({
       prescriptions: finalRxs as any,
