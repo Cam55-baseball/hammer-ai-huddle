@@ -213,6 +213,10 @@ export function checkAthleteScope(
   const restrictedTo = (m.position_scope ?? []).filter(Boolean);
   if (restrictedTo.length > 0) {
     const held = normalizePositions(ctx.positions);
+    // Unknown position is NOT "no position". An athlete who has not told us
+    // where they play must not silently lose every position-scoped movement;
+    // relevance is a preference, not a safety gate.
+    if (held.size === 0) return { allowed: true };
     const wanted = normalizePositions(restrictedTo);
     let match = false;
     for (const w of wanted) {

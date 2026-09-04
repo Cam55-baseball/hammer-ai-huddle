@@ -128,6 +128,8 @@ import {
   isTrainingAgeLegal,
   skipReasonCopy,
   gameDaySkipReasonCopy,
+  equipmentUnknownCopy,
+  templateGapCopy,
   PRE_SELECTION_VERSION,
   type EngineDomain,
 } from "../_shared/wic/legality/preSelection.ts";
@@ -343,6 +345,13 @@ const handler = async (req: Request): Promise<Response> => {
           .map((v) => String(v).trim().toLowerCase()),
       ),
     );
+    // Unknown training age is unknown, not zero. Defaulting to 0 excluded
+    // every movement with any `min_training_age_years`, which silently deleted
+    // most of the catalog for an athlete who simply had not answered.
+    const trainingAgeKnown =
+      p.years_lifting !== null && p.years_lifting !== undefined
+        ? true
+        : p.training_age_years !== null && p.training_age_years !== undefined;
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
@@ -453,7 +462,28 @@ const handler = async (req: Request): Promise<Response> => {
     if (blocksErr) throw blocksErr;
     if (catErr) throw catErr;
     const block = blocks!;
-    const lib = catalog ?? [];
+    // ---- Unknown equipment is NOT "owns nothing" -------------------------
+    // An athlete who has never declared their gear must not silently lose the
+    // whole gear-requiring catalog. We record that the answer is UNKNOWN,
+    // keep every movement eligible, and merely PREFER gear-free / universal
+    // work so the plan is runnable without assuming anything.
+    const declaredEquipment: string[] = Array.isArray((athleteContext as any)?.environment?.equipment)
+      ? ((athleteContext as any).environment.equipment as unknown[]).map((e) => String(e)).filter(Boolean)
+      : [];
+    const equipmentUnknown = declaredEquipment.length === 0;
+    const UNIVERSAL_GEAR = new Set([
+      "bodyweight", "none", "floor", "ground", "wall", "space", "field",
+      "bat", "gamer_bat", "ball", "baseball", "softball", "glove", "chair", "towel",
+    ]);
+    const gearFreeFirst = (rows: MovementRow[]): MovementRow[] => {
+      const rank = (m: MovementRow) => {
+        const req = ((m as any).equipment_requirements ?? []) as string[];
+        if (!Array.isArray(req) || req.length === 0) return 0;
+        return req.every((r) => UNIVERSAL_GEAR.has(String(r).toLowerCase())) ? 1 : 2;
+      };
+      return [...rows].sort((a, b) => rank(a) - rank(b));
+    };
+    const lib = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
 
     // -------- Determine reductions --------
     const reductions: { reason: string; detail: string }[] = [];
@@ -635,10 +665,21 @@ const handler = async (req: Request): Promise<Response> => {
     // a duplicate single-slot category was noticed — by then the whole plan was
     // already dead. These two objects move those exact rules in FRONT of
     // selection, so an illegal candidate is never proposed in the first place.
+    const chronologicalAgeYears: number | null =
+      Number((athleteContext as any)?.development?.chronological_age ?? NaN) || null;
     const trainingAgeClassForSelection: string | null =
       ((trainingAgeContext as any)?.classification ?? null) as string | null;
     const categoryBudget = createCategoryBudget();
     const selectionSkips = createSkipLog();
+    /** Required template categories with no legal candidate for this athlete today. */
+    const unfillableCategories: { bat_speed: string[]; speed: string[] } = { bat_speed: [], speed: [] };
+    if (equipmentUnknown) {
+      selectionSkips.record({
+        domain: "session",
+        requirement: "equipment",
+        reason: equipmentUnknownCopy(),
+      });
+    }
     /** Canonical category a row would occupy inside a given engine's session. */
     const domainCategoryOf = (m: MovementRow, domain: EngineDomain): string | null => {
       switch (domain) {
@@ -667,7 +708,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
       if (m.wic_metadata_complete === false) return false;
-      if (m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       // Categorical training-age legality — the SAME field every certifier
       // reads. Never relaxable: a beginner-illegal movement is a safety call,
       // not a preference. Without this gate the selector proposed picks the
@@ -680,7 +721,17 @@ const handler = async (req: Request): Promise<Response> => {
       // Semantics match the certifier exactly: only an explicit `false` blocks;
       // NULL means untagged, not illegal. Never relaxable by override.
       if (isGameDay && (m as any).game_day_legal === false) return false;
-      if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
+      // Chronological-age gate. Only applies when we actually KNOW the
+      // athlete's age. The old rule inferred age as `training age + 6`, which
+      // is a fabricated number: a beginner with 1 training year "became" 7
+      // years old and lost every movement tagged min_age 8+ (including both
+      // game-day-legal rotational options). Unknown age is unknown.
+      if (
+        chronologicalAgeYears !== null &&
+        (m.min_age_years ?? 0) > 0 &&
+        (m.min_age_years ?? 0) > chronologicalAgeYears &&
+        !isProProspect
+      ) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
       // Single canonical seasonal legality gate — overrides may unlock.
       const legality = isMovementSeasonLegal(seasonCtx, m);
@@ -1314,17 +1365,21 @@ const handler = async (req: Request): Promise<Response> => {
       // candidate for this athlete, the block is DROPPED with a reason rather
       // than published half-built and then failed by the certifier
       // (`bs_unresolved_template`), which used to kill the entire plan.
-      const bsMissingRequired = batSpeedSelection.warnings
+      const bsMissingRequired: string[] = batSpeedSelection.warnings
         .filter((w) => w.startsWith("bat_speed_missing_required:"))
         .map((w) => w.split(":")[1]);
       if (bsMissingRequired.length > 0) {
+        unfillableCategories.bat_speed.push(...bsMissingRequired);
         for (const cat of bsMissingRequired) {
           selectionSkips.record({
             domain: "bat_speed",
             requirement: cat,
-            reason: isGameDay
-              ? gameDaySkipReasonCopy("bat_speed", cat)
-              : skipReasonCopy("bat_speed", cat),
+            reason:
+              batSpeedSelection.picks.length > 0
+                ? templateGapCopy("bat_speed", cat, { isGameDay, equipmentUnknown })
+                : isGameDay
+                  ? gameDaySkipReasonCopy("bat_speed", cat)
+                  : skipReasonCopy("bat_speed", cat),
           });
         }
       }
@@ -1403,9 +1458,10 @@ const handler = async (req: Request): Promise<Response> => {
       // Same graceful-degradation rule as bat speed: an unfillable required
       // category drops the sprint block with a reason instead of publishing a
       // session the certifier will reject.
-      const spMissingRequired = speedSelection.warnings
+      const spMissingRequired: string[] = speedSelection.warnings
         .filter((w) => w.startsWith("speed_missing_required:"))
         .map((w) => w.split(":")[1]);
+      unfillableCategories.speed.push(...spMissingRequired);
       for (const cat of spMissingRequired) {
         selectionSkips.record({
           domain: "speed",
@@ -1744,7 +1800,7 @@ const handler = async (req: Request): Promise<Response> => {
         isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
         isReturnToPlay: false,
       },
-      availableEquipment: (athleteContext as any)?.environment?.equipment ?? undefined,
+      availableEquipment: equipmentUnknown ? undefined : declaredEquipment,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
     });
     // Attach governance stamp to each lift row's why_v2 + why_payload.
@@ -1785,7 +1841,8 @@ const handler = async (req: Request): Promise<Response> => {
     // rows, and blocks publication on fatal issues.
     const isPracticeDayCtx = String((trainingContext as any)?.day_type ?? "").startsWith("practice");
     const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
-    const availableEquipmentCtx = (athleteContext as any)?.environment?.equipment ?? undefined;
+    // Unknown gear is passed as `undefined` (unknown), never as `[]` (none).
+    const availableEquipmentCtx = equipmentUnknown ? undefined : declaredEquipment;
 
     const speedCertification = certifySpeed({
       prescriptions: finalRxs as any,
@@ -1803,6 +1860,7 @@ const handler = async (req: Request): Promise<Response> => {
       availableEquipment: availableEquipmentCtx,
       environment: environmentCtx,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
+      unfillableRequiredCategories: unfillableCategories.speed,
     });
     const batSpeedCertification = certifyBatSpeed({
       prescriptions: finalRxs as any,
@@ -1819,6 +1877,7 @@ const handler = async (req: Request): Promise<Response> => {
       availableEquipment: availableEquipmentCtx,
       environment: environmentCtx,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
+      unfillableRequiredCategories: unfillableCategories.bat_speed,
     });
 
     // Stamp Speed / Bat-Speed governance onto matching rows.

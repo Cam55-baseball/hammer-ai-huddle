@@ -23,6 +23,7 @@ export type StepAnswerStatus = "answered" | "open" | "neutral";
 export type AnswerableStepKey =
   | "profile"
   | "anthropometrics"
+  | "equipment"
   | "goals"
   | "fuel"
   | "mental"
@@ -42,6 +43,7 @@ export interface OnboardingAnswerStatus {
 const EMPTY: Record<AnswerableStepKey, StepAnswerStatus> = {
   profile: "open",
   anthropometrics: "open",
+  equipment: "open",
   goals: "open",
   fuel: "open",
   mental: "open",
@@ -69,7 +71,7 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
     enabled: !!uid,
     staleTime: 10_000,
     queryFn: async () => {
-      const [profile, ctx] = await Promise.all([
+      const [profile, ctx, equip] = await Promise.all([
         supabase
           .from("profiles")
           .select("date_of_birth, throwing_hand")
@@ -79,6 +81,12 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
           .from("athlete_context")
           .select("anthropometrics, onboarding_draft")
           .eq("user_id", uid!)
+          .maybeSingle(),
+        supabase
+          .from("athlete_equipment_context")
+          .select("equipment")
+          .eq("user_id", uid!)
+          .eq("scope", "persistent")
           .maybeSingle(),
       ]);
       const p = (profile.data ?? null) as
@@ -92,6 +100,7 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
         throwingHand: p?.throwing_hand ?? null,
         anthropometrics: c?.anthropometrics ?? null,
         remoteDraft: (c?.onboarding_draft ?? {}) as Partial<Record<DraftSlot, unknown>>,
+        equipment: ((equip.data as { equipment?: string[] } | null)?.equipment ?? []) as string[],
       };
     },
   });
@@ -112,6 +121,7 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
       ? "answered"
       : "open";
 
+  byKey.equipment = (q.data?.equipment?.length ?? 0) > 0 ? "answered" : "open";
   byKey.goals = hasCategoryGoals ? "answered" : "open";
   byKey.fuel = hasAnyValue(slot("fuel-recovery")) ? "answered" : "open";
   byKey.mental = hasAnyValue(slot("mental-career")) ? "answered" : "open";

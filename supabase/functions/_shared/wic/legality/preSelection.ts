@@ -176,3 +176,39 @@ export function gameDaySkipReasonCopy(domain: EngineDomain, requirement: string)
   };
   return `Game day: ${label[domain]} is limited to activation only today — the ${requirement.replace(/_/g, " ")} work is not cleared to run before a game.`;
 }
+
+/**
+ * Unknown equipment is NOT "owns nothing". When an athlete has never declared
+ * their gear we say so plainly and bias selection toward gear-free work,
+ * instead of silently deleting most of the catalog.
+ */
+export function equipmentUnknownCopy(): string {
+  return "We don't know what equipment you have yet, so today's plan sticks to work that needs little or no gear. Add your equipment in setup and the plan gets sharper immediately.";
+}
+
+/**
+ * A template slot that genuinely cannot be filled for this athlete today.
+ * The block still publishes what is legal — the gap is stated, never hidden.
+ */
+export function templateGapCopy(
+  domain: EngineDomain,
+  requirement: string,
+  opts: { isGameDay: boolean; equipmentUnknown: boolean },
+): string {
+  const label: Record<EngineDomain, string> = {
+    lift: "lifting",
+    speed: "speed work",
+    bat_speed: "bat speed work",
+    conditioning: "conditioning",
+    cross_sport: "crossover work",
+    arm_care: "arm care",
+  };
+  const need = requirement.replace(/_/g, " ");
+  const why = opts.isGameDay
+    ? "today is a game day, so most of that work is not cleared to run"
+    : "nothing in your library is cleared for it today";
+  const gear = opts.equipmentUnknown
+    ? " We also don't have your equipment on file, which narrows the options further."
+    : "";
+  return `Published without the ${need} part of ${label[domain]} — ${why}.${gear}`;
+}

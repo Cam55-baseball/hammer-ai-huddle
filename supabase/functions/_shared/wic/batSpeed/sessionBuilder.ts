@@ -31,6 +31,14 @@ export interface CertifyBatSpeedInput {
   availableEquipment?: readonly string[];
   environment?: "indoor" | "outdoor" | string;
   trainingAgeClass?: string;
+  /**
+   * Categories the selector proved it could not legally fill for THIS athlete
+   * today (no eligible candidate exists in the pool). A gap the athlete's own
+   * legality state caused is a warn — the block publishes what it can and says
+   * what is missing. A gap with a legal candidate available is still fatal:
+   * that is a generator bug, not an athlete constraint.
+   */
+  unfillableRequiredCategories?: readonly string[];
 }
 
 export interface BatSpeedGovernanceStamp {
@@ -203,10 +211,19 @@ export function certifyBatSpeed(input: CertifyBatSpeedInput): CertifyBatSpeedRes
   }));
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
-  if (missing.length > 0) {
+  const unfillable = new Set((input.unfillableRequiredCategories ?? []).map(String));
+  const missingBug = missing.filter((c) => !unfillable.has(String(c)));
+  const missingHonest = missing.filter((c) => unfillable.has(String(c)));
+  if (missingBug.length > 0) {
     fatal.push({
       code: "bs_unresolved_template",
-      message: `Template ${template.id} requires categories: ${missing.join(", ")}.`,
+      message: `Template ${template.id} requires categories: ${missingBug.join(", ")}.`,
+    });
+  }
+  for (const c of missingHonest) {
+    warn.push({
+      code: "bs_template_gap",
+      message: `Template ${template.id} could not fill ${c} — no movement in this athlete's legal pool provides it today. Published without it.`,
     });
   }
 
@@ -222,10 +239,15 @@ export function certifyBatSpeed(input: CertifyBatSpeedInput): CertifyBatSpeedRes
     "light_implement",
   ]);
   const hasRotational = categorized.some((c) => ROTATIONAL.has(c.bat_speed_category as BatSpeedCategory));
-  if (template.rotationalDemand >= 0.5 && !hasRotational) {
+  if (template.rotationalDemand >= 0.5 && !hasRotational && missingHonest.length === 0) {
     fatal.push({
       code: "bs_missing_rotational_demand",
       message: `Template ${template.id} requires a rotational-demand movement.`,
+    });
+  } else if (template.rotationalDemand >= 0.5 && !hasRotational) {
+    warn.push({
+      code: "bs_template_gap",
+      message: `Template ${template.id} published without rotational work — nothing rotational is legal for this athlete today.`,
     });
   }
 
