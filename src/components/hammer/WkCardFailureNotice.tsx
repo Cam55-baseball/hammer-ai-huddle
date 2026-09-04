@@ -68,9 +68,16 @@ export function WkCardFailureNotice({
     [rawReasons, nameOf, isOwner],
   );
   const missing = failure?.missingFields ?? [];
-  const onboardingTarget = hasCompletedOnboarding
-    ? "/onboarding/athlete?step=review"
-    : "/onboarding/athlete";
+  // Equipment is the single most common missing answer, and it has its own
+  // step now — send the athlete straight there instead of the review list.
+  const equipmentMissing =
+    missing.includes("equipment") ||
+    engineReasons.some((r) => /equipment|gear/i.test(r));
+  const onboardingTarget = equipmentMissing
+    ? "/onboarding/athlete?edit=equipment"
+    : hasCompletedOnboarding
+      ? "/onboarding/athlete?step=review"
+      : "/onboarding/athlete";
 
   const primary =
     engineReasons[0] ??
@@ -98,14 +105,18 @@ export function WkCardFailureNotice({
               {retrying ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
               Retry
             </Button>
-            {missing.length > 0 && (
+            {(missing.length > 0 || equipmentMissing) && (
               <Button
                 size="sm"
                 variant="outline"
                 className="h-7"
                 onClick={() => navigate(onboardingTarget)}
               >
-                {hasCompletedOnboarding ? "Review missing setup" : "Finish onboarding"}
+                {equipmentMissing
+                  ? "Add your equipment"
+                  : hasCompletedOnboarding
+                    ? "Review missing setup"
+                    : "Finish onboarding"}
               </Button>
             )}
           </div>
