@@ -37,6 +37,7 @@ import { RepCard, RepKeyboardHints } from "./RepCard";
 import { AbSwingPanel } from "./AbSwingPanel";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
+import { QuickAtBatBar } from "./QuickAtBatBar";
 
 const RESULTS = [
   "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
