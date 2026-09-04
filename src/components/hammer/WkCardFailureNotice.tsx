@@ -5,9 +5,13 @@
  * exactly what to do next.
  */
 import { AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
+import { useWorkoutCatalog } from "@/hooks/useWorkoutCatalog";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { humanizeFailures } from "@/lib/hammer/failureCopy";
 
 export type WkCardFailure = {
   code?: string | null;
@@ -49,7 +53,20 @@ export function WkCardFailureNotice({
 }) {
   const navigate = useNavigate();
   const { hasCompletedOnboarding } = useAthleteOnboardingState();
-  const engineReasons = failure?.engineFailures?.[engine] ?? [];
+  const { isOwner } = useOwnerAccess();
+  const { data: catalog } = useWorkoutCatalog();
+  const nameOf = useMemo(() => {
+    const map = new Map((catalog ?? []).map((m) => [m.slug, m.name]));
+    return (slug: string) => map.get(slug) ?? null;
+  }, [catalog]);
+
+  const rawReasons = failure?.engineFailures?.[engine] ?? [];
+  // Plain language, real movement names, no duplicate sentences, slugs for
+  // admins only.
+  const engineReasons = useMemo(
+    () => humanizeFailures(rawReasons, nameOf, isOwner),
+    [rawReasons, nameOf, isOwner],
+  );
   const missing = failure?.missingFields ?? [];
   const onboardingTarget = hasCompletedOnboarding
     ? "/onboarding/athlete?step=review"
@@ -57,7 +74,7 @@ export function WkCardFailureNotice({
 
   const primary =
     engineReasons[0] ??
-    failure?.detail ??
+    (failure?.detail ? humanizeFailures([failure.detail], nameOf, isOwner)[0] : undefined) ??
     (missing.length
       ? `Finish onboarding — we need: ${missing.slice(0, 3).map(humanizeField).join(", ")}${missing.length > 3 ? "…" : ""}`
       : failure?.title ?? "Couldn't build this block. Tap retry.");

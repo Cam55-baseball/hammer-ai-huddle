@@ -127,6 +127,7 @@ import {
   createSkipLog,
   isTrainingAgeLegal,
   skipReasonCopy,
+  gameDaySkipReasonCopy,
   PRE_SELECTION_VERSION,
   type EngineDomain,
 } from "../_shared/wic/legality/preSelection.ts";
@@ -672,6 +673,13 @@ const handler = async (req: Request): Promise<Response> => {
       // not a preference. Without this gate the selector proposed picks the
       // certifier then killed with `*_illegal_training_age`.
       if (!isTrainingAgeLegal(m as any, trainingAgeClassForSelection)) return false;
+      // Game-day legality — the SAME `game_day_legal` field the bat-speed and
+      // speed certifiers enforce at publish time. Selection used to ignore it,
+      // so generation happily proposed movements its own validator then killed
+      // ("cable_chops is not game-day-legal"). Canonical column: game_day_legal.
+      // Semantics match the certifier exactly: only an explicit `false` blocks;
+      // NULL means untagged, not illegal. Never relaxable by override.
+      if (isGameDay && (m as any).game_day_legal === false) return false;
       if ((m.min_age_years ?? 0) > 0 && (m.min_age_years ?? 0) > Math.max(0, Math.floor(trainingAgeYears) + 6) && !isProProspect) return false;
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
       // Single canonical seasonal legality gate — overrides may unlock.
@@ -1314,11 +1322,20 @@ const handler = async (req: Request): Promise<Response> => {
           selectionSkips.record({
             domain: "bat_speed",
             requirement: cat,
-            reason: skipReasonCopy("bat_speed", cat),
+            reason: isGameDay
+              ? gameDaySkipReasonCopy("bat_speed", cat)
+              : skipReasonCopy("bat_speed", cat),
           });
         }
       }
-      for (const pick of bsMissingRequired.length > 0 ? [] : batSpeedSelection.picks) {
+      // On a game day a thin block is the CORRECT outcome, not a failure: most
+      // of the bat-speed catalog is legitimately game-day-illegal. Publish the
+      // legal picks we do have (activation only) instead of dropping the block.
+      const bsPublishable =
+        bsMissingRequired.length === 0 || (isGameDay && batSpeedSelection.picks.length > 0)
+          ? batSpeedSelection.picks
+          : [];
+      for (const pick of bsPublishable) {
 
         const m = pick.movement as unknown as MovementRow;
         const payload = buildProgressionPayload({
@@ -1393,10 +1410,17 @@ const handler = async (req: Request): Promise<Response> => {
         selectionSkips.record({
           domain: "speed",
           requirement: cat,
-          reason: skipReasonCopy("speed", cat),
+          reason: isGameDay
+            ? gameDaySkipReasonCopy("speed", cat)
+            : skipReasonCopy("speed", cat),
         });
       }
-      for (const pick of spMissingRequired.length > 0 ? [] : speedSelection.picks) {
+      // Game day: publish the legal primer rather than dropping the block.
+      const spPublishable =
+        spMissingRequired.length === 0 || (isGameDay && speedSelection.picks.length > 0)
+          ? speedSelection.picks
+          : [];
+      for (const pick of spPublishable) {
 
         const m = pick.movement as unknown as MovementRow;
         const metricKey =
