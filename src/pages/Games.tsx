@@ -69,7 +69,10 @@ export default function Games() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [openSheet, setOpenSheet] = useState<string | null>(null);
+  // Deep link: /games?game=<id> opens straight into that game's sheet, so the
+  // post-game log prompt can land the user on the logger in one tap.
+  const deepLinkGameId = new URLSearchParams(window.location.search).get("game");
+  const [openSheet, setOpenSheet] = useState<string | null>(deepLinkGameId);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   useGpRealtime(true);
   const gameDay = useGameDayContext();
