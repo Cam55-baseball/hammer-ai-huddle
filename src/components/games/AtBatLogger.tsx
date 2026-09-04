@@ -214,6 +214,16 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         </Button>
       </div>
 
+      {/* Quick mode is the default path: inning + result, one tap. Detail is
+          opt-in via "Add detail", never required to record the rep. */}
+      {!showNew && (
+        <QuickAtBatBar
+          onQuickSave={(row) => add.mutate(row)}
+          onOpenFullForm={() => setShowNew(true)}
+          submitting={add.isPending}
+        />
+      )}
+
       {showNew && (
         <AtBatForm
           sport={sport}
@@ -224,6 +234,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
           defaultPitcherId={probable.data ?? null}
         />
       )}
+
 
       <div className="space-y-2">
         {items.map((ab, idx) => {
