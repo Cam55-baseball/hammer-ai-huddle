@@ -495,17 +495,17 @@ function AtBatForm({
 
   const submit = () => {
     const payload: Record<string, any> = { ...f };
-    ["pitch_velo", "h1_time_sec"].forEach((k) => {
+    ["h1_time_sec"].forEach((k) => {
       payload[k] = payload[k] === "" ? null : Number(payload[k]);
     });
     if (!payload.result) payload.result = null;
     if (!payload.position_played) payload.position_played = null;
-    if (!payload.pitch_type) payload.pitch_type = null;
     if (!payload.contact_quality) payload.contact_quality = null;
     if (!payload.exit_direction) payload.exit_direction = null;
     if (!payload.opponent_pitcher_id) payload.opponent_pitcher_id = null;
     onSave(payload);
   };
+
 
   return (
     <Card ref={containerRef} className="p-4 space-y-3 bg-muted/30">
