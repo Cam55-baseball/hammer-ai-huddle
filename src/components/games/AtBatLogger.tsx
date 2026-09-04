@@ -426,6 +426,7 @@ function AtBatForm({
   submitting,
   pitcherOptions = [],
   defaultPitcherId = null,
+  defaultInning = 1,
 }: {
   sport: string;
   onSave: (row: Record<string, any>) => void;
@@ -433,10 +434,10 @@ function AtBatForm({
   submitting?: boolean;
   pitcherOptions?: any[];
   defaultPitcherId?: string | null;
+  defaultInning?: number;
 }) {
-  const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
-    inning: 1,
+    inning: defaultInning,
     batting_side: "R",
     position_played: "",
     result: "",
@@ -444,8 +445,6 @@ function AtBatForm({
     count_strikes: 0,
     contact_quality: "",
     exit_direction: "",
-    pitch_type: "",
-    pitch_velo: "",
     runners_on: "",
     outs: 0,
     rbi: 0,
@@ -455,6 +454,7 @@ function AtBatForm({
     notes: "",
     opponent_pitcher_id: defaultPitcherId ?? "",
   });
+
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const containerRef = useRef<HTMLDivElement>(null);
 
