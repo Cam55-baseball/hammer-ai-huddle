@@ -574,14 +574,21 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Balls in the count" help="How many balls the pitcher threw you.">
+        <Field
+          label="Balls in the count"
+          help="Only needed if you don't log the pitches — once you log pitches, the count is filled in from them."
+        >
           <NumberField min={0} max={4} value={f.count_balls}
             onValueChange={(v) => set("count_balls", v ?? 0)} />
         </Field>
-        <Field label="Strikes in the count" help="How many strikes you had against you.">
+        <Field
+          label="Strikes in the count"
+          help="Only needed if you don't log the pitches — once you log pitches, the count is filled in from them."
+        >
           <NumberField min={0} max={3} value={f.count_strikes}
             onValueChange={(v) => set("count_strikes", v ?? 0)} />
         </Field>
+
         <Field label="How well you hit it" help="Contact quality — how cleanly the ball came off the bat.">
           <Select value={f.contact_quality} onValueChange={(v) => set("contact_quality", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
