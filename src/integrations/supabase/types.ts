@@ -17377,6 +17377,32 @@ export type Database = {
         Args: { _athlete_id: string }
         Returns: boolean
       }
+      save_equipment_context: {
+        Args: {
+          p_equipment: string[]
+          p_scope: string
+          p_source?: string
+          p_valid_until?: string
+          p_venue?: string
+        }
+        Returns: {
+          confidence: string
+          created_at: string
+          equipment: string[]
+          id: string
+          scope: string
+          source: string
+          user_id: string
+          valid_until: string | null
+          venue: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "athlete_equipment_context"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       scout_calibration_summary: { Args: never; Returns: Json }
       shift_workouts_forward: {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
