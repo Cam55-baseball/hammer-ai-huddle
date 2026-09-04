@@ -158,3 +158,21 @@ export function skipReasonCopy(domain: EngineDomain, requirement: string): strin
   };
   return `${label[domain]} is paused today: no movement in your library is cleared for your training level and this session's required ${requirement.replace(/_/g, " ")} work. The rest of today's plan is unaffected.`;
 }
+
+/**
+ * Game-day variant. On a game day most of the catalog is legitimately
+ * suppressed (`game_day_legal = false`), so a thin block is the CORRECT
+ * outcome — not an error. We say so plainly and publish what is legal rather
+ * than dropping the block or relaxing the legality flag.
+ */
+export function gameDaySkipReasonCopy(domain: EngineDomain, requirement: string): string {
+  const label: Record<EngineDomain, string> = {
+    lift: "lifting",
+    speed: "speed work",
+    bat_speed: "bat speed work",
+    conditioning: "conditioning",
+    cross_sport: "crossover work",
+    arm_care: "arm care",
+  };
+  return `Game day: ${label[domain]} is limited to activation only today — the ${requirement.replace(/_/g, " ")} work is not cleared to run before a game.`;
+}

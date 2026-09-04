@@ -323,10 +323,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }
       setFailureReason(parsed);
       setFailed(true);
-      toast.error(
-        parsed?.detail ?? parsed?.title ?? "Today's plan couldn't publish — tap Retry.",
-        { id: "wk-generate-failed" },
-      );
+      // The toast never carries raw engine text (it contained catalog slugs
+      // repeated three times). The card explains the real reason in plain
+      // language via WkCardFailureNotice.
+      toast.error("Today's plan couldn't publish — see the card for why.", {
+        id: "wk-generate-failed",
+      });
     } finally {
       inFlightRef.current = false;
       setGenerating(false);
