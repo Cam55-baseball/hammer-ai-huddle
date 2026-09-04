@@ -17,7 +17,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
-import { pitchTypes } from "@/lib/games/sportRules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
