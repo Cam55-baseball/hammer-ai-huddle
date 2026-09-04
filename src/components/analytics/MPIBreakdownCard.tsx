@@ -68,9 +68,19 @@ export function MPIBreakdownCard() {
             <Divider />
 
             <Row label="Verified Stat Boost" value={`+${(mpi.verified_stat_boost ?? 0).toFixed(1)}`} />
-            {mpi.integrity_score != null && (
-              <Row label="Integrity Score" value={`${Math.round(mpi.integrity_score)}%`} />
-            )}
+            <Row
+              label="Integrity Score"
+              value={mpi.integrity_score != null ? `${Math.round(mpi.integrity_score)}%` : "Not scored yet"}
+            />
+            <Row
+              label="Game / practice ratio"
+              value={
+                mpi.game_practice_ratio != null
+                  ? mpi.game_practice_ratio.toFixed(2)
+                  : "Not enough data yet"
+              }
+            />
+              
             <Row label="Contract Modifier (×)" value={`${(mpi.contract_status_modifier ?? 1).toFixed(2)}`} />
 
             <Divider />

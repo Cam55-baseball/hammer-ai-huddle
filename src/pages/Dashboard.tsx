@@ -23,6 +23,7 @@ import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
+import { PostGameLogPrompt } from "@/components/games/PostGameLogPrompt";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
@@ -605,6 +606,13 @@ export default function Dashboard() {
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
 
+        {/* Recent game still unlogged — ask once, link straight to the logger. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <div className="pb-3">
+            <PostGameLogPrompt />
+          </div>
+        )}
+
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <>
             <div ref={setBeforeStartPortalTarget} className="pb-3 sm:pb-5" />
@@ -613,6 +621,7 @@ export default function Dashboard() {
             </section>
           </>
         )}
+
 
         {/* Hard visual break so the daily plan and the game plan read as two
             distinct sections instead of one crowded block. */}

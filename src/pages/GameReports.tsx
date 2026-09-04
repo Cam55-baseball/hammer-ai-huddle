@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/accordion";
 import { SavedReportsPanel } from "@/components/games/reports/SavedReportsPanel";
 import { ScoutingReportPanel } from "@/components/games/reports/ScoutingReportPanel";
+import { LedgerSplitsPanel } from "@/components/games/reports/LedgerSplitsPanel";
 
 
 type Side = "all" | "L" | "R" | "S";
@@ -247,6 +248,9 @@ export default function GameReports() {
           </Select>
         </div>
       </div>
+
+      {/* Deterministic ledger splits — computed in SQL, sample-size gated. */}
+      <LedgerSplitsPanel />
 
       <Accordion type="multiple" defaultValue={["heat", "hitting", "usage", "defense", "baserun"]}>
         <AccordionItem value="saved">

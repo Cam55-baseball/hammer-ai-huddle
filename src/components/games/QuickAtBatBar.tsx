@@ -1,0 +1,104 @@
+/**
+ * QuickAtBatBar — one-tap at-bat entry for live, in-dugout logging.
+ *
+ * Logging during a game has to survive one thumb and eight seconds. This bar
+ * captures the only two things that must be true at the moment of the rep:
+ * the inning and the result. Everything else (pitch type, contact quality,
+ * direction, velo, notes) is progressive disclosure — add it later from the
+ * at-bat row, or never.
+ *
+ * Detail is optional; the rep is not.
+ */
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Minus, Plus, SlidersHorizontal } from "lucide-react";
+
+const QUICK_RESULTS: ReadonlyArray<{ code: string; label: string; tone: string }> = [
+  { code: "1B", label: "1B", tone: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" },
+  { code: "2B", label: "2B", tone: "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300" },
+  { code: "3B", label: "3B", tone: "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300" },
+  { code: "HR", label: "HR", tone: "bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-300" },
+  { code: "BB", label: "BB", tone: "bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300" },
+  { code: "HBP", label: "HBP", tone: "bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-700 dark:text-fuchsia-300" },
+  { code: "K_swinging", label: "K swing", tone: "bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300" },
+  { code: "K_looking", label: "K look", tone: "bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300" },
+  { code: "GO", label: "GO", tone: "bg-muted hover:bg-muted/70" },
+  { code: "FO", label: "FO", tone: "bg-muted hover:bg-muted/70" },
+  { code: "LO", label: "LO", tone: "bg-muted hover:bg-muted/70" },
+  { code: "E", label: "Error", tone: "bg-muted hover:bg-muted/70" },
+];
+
+export function QuickAtBatBar({
+  onQuickSave,
+  onOpenFullForm,
+  submitting,
+}: {
+  onQuickSave: (row: Record<string, any>) => void;
+  onOpenFullForm: () => void;
+  submitting?: boolean;
+}) {
+  const [inning, setInning] = useState(1);
+
+  return (
+    <Card className="p-3 space-y-2.5 border-primary/30">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Quick log
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="h-7 w-7"
+              aria-label="Previous inning"
+              onClick={() => setInning((i) => Math.max(1, i - 1))}
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </Button>
+            <span className="min-w-[3.5rem] text-center text-sm font-mono font-semibold">
+              Inn {inning}
+            </span>
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="h-7 w-7"
+              aria-label="Next inning"
+              onClick={() => setInning((i) => Math.min(30, i + 1))}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+        <Button type="button" size="sm" variant="ghost" onClick={onOpenFullForm} className="gap-1.5">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Add detail
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {QUICK_RESULTS.map((r) => (
+          <Button
+            key={r.code}
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={submitting}
+            onClick={() => onQuickSave({ inning, result: r.code })}
+            className={`h-10 text-xs font-semibold ${r.tone}`}
+          >
+            {r.label}
+          </Button>
+        ))}
+      </div>
+
+      <p className="text-[11px] text-muted-foreground">
+        One tap logs the rep. Pitch type, contact quality and everything else can be
+        filled in later from the at-bat — or left out entirely.
+      </p>
+    </Card>
+  );
+}

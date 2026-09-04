@@ -216,7 +216,7 @@ serve(async (req) => {
 
       const scores: Array<{
         userId: string; score: number; sessionsCount: number; segment: string;
-        integrityScore: number; composites: Record<string, number>;
+        integrityScore: number; integrityScoreReported: number | null; composites: Record<string, number>;
         verifiedBoost: number; contractMod: number;
         gamePracticeRatio: number | null; deltaMaturity: number | null;
         fatigueCorrFlag: boolean; hofActive: boolean; hofProb: number | null;
@@ -323,7 +323,9 @@ serve(async (req) => {
             pro_probability: null, pro_probability_capped: false,
             trend_direction: 'stable', trend_delta_30d: 0,
             segment_pool: `${sport}_${tierToSegment(athlete.league_tier || '')}`,
-            integrity_score: 100,
+            // No corroborating evidence exists for a provisional athlete — an
+            // integrity score of 100 would be fabricated. Leave it unscored.
+            integrity_score: null,
             composite_bqi: 50, composite_fqi: 50, composite_pei: 50,
             composite_decision: 50, composite_competitive: 50,
             development_prompts: [{
@@ -450,6 +452,17 @@ serve(async (req) => {
         integrityScore += verifiedSessionCount * 0.5;
         integrityScore = Math.max(0, Math.min(100, integrityScore));
 
+        // HONESTY GATE — integrity is a corroboration measure. With nothing to
+        // corroborate against (no coach-verified sessions, no governance flags,
+        // no logged game reps) a "100" is a fabricated perfect score. Store null
+        // instead and let the surface say "not scored yet".
+        const { count: gpRepCount } = await supabase
+          .from('gp_at_bats').select('id', { count: 'exact', head: true }).eq('user_id', uid);
+        const integrityEvidence =
+          verifiedSessionCount + (flags?.length ?? 0) + (gpRepCount ?? 0);
+        const integrityScoreReported: number | null =
+          integrityEvidence > 0 ? integrityScore : null;
+
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
         const { data: dailyLogs } = await supabase.from('athlete_daily_log')
           .select('entry_date, day_status, injury_mode, cns_load_actual')
@@ -525,7 +538,15 @@ serve(async (req) => {
 
         const gameSessions = sessions.filter(s => ['game', 'live_scrimmage'].includes(s.session_type));
         const practiceSessions = sessions.filter(s => !['game', 'live_scrimmage'].includes(s.session_type));
-        const gamePracticeRatio = practiceSessions.length > 0 ? gameSessions.length / practiceSessions.length : null;
+        // Real games come from the game ledger, not only from self-logged
+        // performance_sessions. Count finalized gp_games alongside game sessions.
+        const { count: ledgerGameCount } = await supabase
+          .from('gp_games').select('id', { count: 'exact', head: true })
+          .eq('user_id', uid).eq('status', 'final');
+        const gameCount = gameSessions.length + (ledgerGameCount ?? 0);
+        // Missing beats fabricated: with no practice denominator the ratio is
+        // unknown, not zero.
+        const gamePracticeRatio = practiceSessions.length > 0 ? gameCount / practiceSessions.length : null;
 
         const deltas = sessions
           .filter(s => s.player_grade != null && s.coach_grade != null)
@@ -579,7 +600,7 @@ serve(async (req) => {
 
         const segment = tierToSegment(athlete.league_tier || '');
         scores.push({
-          userId: uid, score: finalScore, sessionsCount: count, segment, integrityScore, composites,
+          userId: uid, score: finalScore, sessionsCount: count, segment, integrityScore, integrityScoreReported, composites,
           verifiedBoost: verifiedBoostTotal, contractMod: contractMod,
           gamePracticeRatio, deltaMaturity, fatigueCorrFlag: fatigueCorr,
           hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
@@ -632,7 +653,7 @@ serve(async (req) => {
           global_percentile: percentile, total_athletes_in_pool: totalPool,
           pro_probability: s.proProbability, pro_probability_capped: s.proProbCapped,
           trend_direction: trendDirection, trend_delta_30d: trendDelta,
-          segment_pool: `${sport}_${s.segment}`, integrity_score: s.integrityScore,
+          segment_pool: `${sport}_${s.segment}`, integrity_score: s.integrityScoreReported,
           composite_bqi: s.composites.bqi, composite_fqi: s.composites.fqi,
           composite_pei: s.composites.pei, composite_decision: s.composites.decision,
           composite_competitive: s.composites.competitive,
@@ -655,7 +676,7 @@ serve(async (req) => {
             sessions_count: s.sessionsCount,
             ranking_min_sessions: RANKING_MIN,
             weights: { bqi: W_BQI, fqi: W_FQI, pei: W_PEI, decision: W_DECISION, competitive: W_COMPETITIVE },
-            integrity_score: s.integrityScore,
+            integrity_score: s.integrityScoreReported,
             verified_boost: s.verifiedBoost,
             contract_modifier: s.contractMod,
             tier_multiplier: s.tierMult,
