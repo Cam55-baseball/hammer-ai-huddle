@@ -8,12 +8,13 @@
  * is a real declared answer and is stored as such.
  */
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { writePersistentEquipment } from "@/lib/hammer/context/equipment";
 
 interface Props {
@@ -69,23 +70,62 @@ const GROUPS: { title: string; items: { token: string; label: string }[] }[] = [
   },
 ];
 
+type SaveError = { plain: string; technical?: string };
+
+/** Plain-language cause for a save failure — never a generic "try again". */
+function plainSaveError(err: Error & { code?: string; details?: string }): string {
+  const code = err.code ?? "";
+  const msg = (err.message ?? "").toLowerCase();
+  if (code === "42501" || msg.includes("row-level security") || msg.includes("permission")) {
+    return "Your account isn't allowed to save this equipment list. That usually means your sign-in expired — sign out and back in, then try again.";
+  }
+  if (code === "28000" || msg.includes("not authenticated") || msg.includes("jwt")) {
+    return "Your sign-in expired before the save went through. Sign back in and your selections will still be here.";
+  }
+  if (code === "23514" || msg.includes("violates check constraint")) {
+    return "The app sent an equipment list the database wouldn't accept. Nothing was saved — this is a bug on our side, not something you can fix by retrying.";
+  }
+  if (code === "42P10" || msg.includes("on conflict")) {
+    return "The app couldn't match your existing equipment entry, so nothing was saved. This is a bug on our side — retrying won't help.";
+  }
+  if (code === "PGRST202" || msg.includes("could not find the function")) {
+    return "The equipment save isn't available on the server yet. Nothing was saved — retrying won't help until it's deployed.";
+  }
+  if (msg.includes("failed to fetch") || msg.includes("network")) {
+    return "We couldn't reach the server, so nothing was saved. Check your connection and try again.";
+  }
+  return `The server refused to save your equipment: ${err.message}`;
+}
+
+function technicalDetail(err: Error & { code?: string; details?: string }): string {
+  return [err.code ? `code ${err.code}` : null, err.message, err.details]
+    .filter(Boolean)
+    .join(" — ");
+}
+
 export function EquipmentStep({ onContinue, onBack }: Props) {
   const { user } = useAuth();
+  const { isOwner } = useOwnerAccess();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<SaveError | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("athlete_equipment_context")
         .select("equipment")
         .eq("user_id", user.id)
         .eq("scope", "persistent")
         .maybeSingle();
       if (cancelled) return;
+      if (error) setLoadError(`We couldn't load your saved equipment: ${error.message}`);
+
       const eq = (data as { equipment?: string[] } | null)?.equipment ?? [];
       setSelected(new Set(eq));
       setLoaded(true);
@@ -112,19 +152,27 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
   };
 
   const save = async (tokens: string[]) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setSaveError({
+        plain: "You're signed out, so there's nothing to save this to. Sign back in and try again.",
+      });
+      return;
+    }
     setSaving(true);
+    setSaveError(null);
     try {
-      await writePersistentEquipment(user.id, tokens, null, "onboarding");
+      await writePersistentEquipment(user.id, tokens, null, "onboarding_self_report");
       toast.success("Equipment saved. Your plans will use it from the next one.");
       onContinue();
     } catch (e) {
-      console.error(e);
-      toast.error("Could not save your equipment. You can try again any time.");
+      const err = e as Error & { code?: string; details?: string };
+      console.error("[EquipmentStep] save failed", err);
+      setSaveError({ plain: plainSaveError(err), technical: technicalDetail(err) });
     } finally {
       setSaving(false);
     }
   };
+
 
   return (
     <section className="space-y-4">
@@ -135,6 +183,28 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
           setup changes, and you can skip it — we just won't guess.
         </p>
       </div>
+
+      {loadError && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-amber-900 dark:text-amber-100">
+          {loadError}
+        </div>
+      )}
+
+      {saveError && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <div className="space-y-1">
+              <p className="font-semibold text-destructive">Your equipment wasn't saved</p>
+              <p className="text-foreground/80">{saveError.plain}</p>
+              {isOwner && saveError.technical && (
+                <p className="font-mono text-xs text-muted-foreground">{saveError.technical}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {!loaded ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

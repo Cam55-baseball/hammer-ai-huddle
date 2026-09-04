@@ -324,7 +324,11 @@ const handler = async (req: Request): Promise<Response> => {
         .or(`scheduled_date.eq.${planDate},recurring_active.is.true`)
         .limit(50),
       admin.from("athlete_side_preferences").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).maybeSingle(),
+      // Precedence session > temporary > persistent > inferred; expired rows
+      // are dropped below. maybeSingle() would throw once an athlete has more
+      // than one scope row, so we take the ordered set and resolve in code.
+      admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).limit(10),
+
       admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("weight_entries").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }).limit(1).maybeSingle(),
       admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
@@ -436,7 +440,21 @@ const handler = async (req: Request): Promise<Response> => {
       profile,
       athleteContext: ctx,
       sidePreference: sidePref,
-      equipmentContext: equipmentCtx,
+      equipmentContext: (() => {
+        const rows = (equipmentCtx ?? []) as any[];
+        const nowMs = Date.now();
+        const live = rows.filter(
+          (r) => !r?.valid_until || new Date(r.valid_until).getTime() > nowMs,
+        );
+        for (const scope of ["session", "temporary", "persistent", "inferred"]) {
+          const hit = live
+            .filter((r) => r?.scope === scope)
+            .sort((a, b) => (String(a?.created_at) < String(b?.created_at) ? 1 : -1))[0];
+          if (hit) return hit;
+        }
+        return null;
+      })(),
+
       trainingPreferences: trainingPrefs,
       latestWeight,
       bodyGoals: bodyGoals ?? [],
