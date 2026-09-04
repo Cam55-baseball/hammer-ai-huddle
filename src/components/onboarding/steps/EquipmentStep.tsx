@@ -183,6 +183,28 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
         </p>
       </div>
 
+      {loadError && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-amber-900 dark:text-amber-100">
+          {loadError}
+        </div>
+      )}
+
+      {saveError && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <div className="space-y-1">
+              <p className="font-semibold text-destructive">Your equipment wasn't saved</p>
+              <p className="text-foreground/80">{saveError.plain}</p>
+              {isOwner && saveError.technical && (
+                <p className="font-mono text-xs text-muted-foreground">{saveError.technical}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {!loaded ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading…
