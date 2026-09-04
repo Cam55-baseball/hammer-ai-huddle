@@ -39,12 +39,10 @@ import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
 import { QuickAtBatBar } from "./QuickAtBatBar";
 
-const RESULTS = [
-  "1B", "2B", "3B", "HR", "BB", "HBP", "K_swinging", "K_looking",
-  "FO", "GO", "LO", "PO", "FC", "SAC", "SF", "E", "ROE",
-];
-const CONTACT = ["barrel", "solid", "flare", "topped", "weak", "popup", "whiff", "foul"];
-const DIRECTIONS = ["LF", "LCF", "CF", "RCF", "RF", "3B", "SS", "2B", "1B", "P", "C"];
+const RESULTS = AB_RESULTS;
+const CONTACT = CONTACT_QUALITY;
+const DIRECTION_CODES = DIRECTIONS;
+
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH"];
 
 /** Single-key shortcut → AB result code. */
