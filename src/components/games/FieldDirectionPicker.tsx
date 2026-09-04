@@ -15,7 +15,7 @@ interface Props {
   size?: number;
 }
 
-/** x / y in a 200x200 viewBox, home plate bottom-centre. */
+/** x / y in a 200x200 viewBox, home plate bottom-center. */
 const SPOTS: Record<string, { x: number; y: number }> = {
   LF: { x: 38, y: 52 },
   LCF: { x: 74, y: 33 },

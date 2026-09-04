@@ -53,9 +53,9 @@ export const CONTACT_QUALITY: ReadonlyArray<CodeMeaning> = [
 /** Where the ball went — positions on the field. */
 export const DIRECTIONS: ReadonlyArray<CodeMeaning> = [
   { code: "LF", plain: "Left field", help: "The outfield grass on the left side, past third base." },
-  { code: "LCF", plain: "Left-centre field", help: "The outfield gap between left field and centre field." },
-  { code: "CF", plain: "Centre field", help: "Straight out over second base, deepest part of the outfield." },
-  { code: "RCF", plain: "Right-centre field", help: "The outfield gap between centre field and right field." },
+  { code: "LCF", plain: "Left-center field", help: "The outfield gap between left field and center field." },
+  { code: "CF", plain: "Center field", help: "Straight out over second base, deepest part of the outfield." },
+  { code: "RCF", plain: "Right-center field", help: "The outfield gap between center field and right field." },
   { code: "RF", plain: "Right field", help: "The outfield grass on the right side, past first base." },
   { code: "3B", plain: "Third base", help: "The infielder standing near third base, on the left side." },
   { code: "SS", plain: "Shortstop", help: "The infielder between second and third base." },
