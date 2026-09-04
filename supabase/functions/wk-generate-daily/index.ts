@@ -440,7 +440,21 @@ const handler = async (req: Request): Promise<Response> => {
       profile,
       athleteContext: ctx,
       sidePreference: sidePref,
-      equipmentContext: equipmentCtx,
+      equipmentContext: (() => {
+        const rows = (equipmentCtx ?? []) as any[];
+        const nowMs = Date.now();
+        const live = rows.filter(
+          (r) => !r?.valid_until || new Date(r.valid_until).getTime() > nowMs,
+        );
+        for (const scope of ["session", "temporary", "persistent", "inferred"]) {
+          const hit = live
+            .filter((r) => r?.scope === scope)
+            .sort((a, b) => (String(a?.created_at) < String(b?.created_at) ? 1 : -1))[0];
+          if (hit) return hit;
+        }
+        return null;
+      })(),
+
       trainingPreferences: trainingPrefs,
       latestWeight,
       bodyGoals: bodyGoals ?? [],
