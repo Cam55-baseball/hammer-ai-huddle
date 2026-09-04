@@ -27,31 +27,30 @@ game_day_eligible boolean GENERATED ALWAYS AS (game_day_legal) STORED
 so the two can never diverge again. Nothing was loosened: no
 `game_day_legal = false` was flipped to `true`.
 
-## Why the disagreements were NOT merged conservatively
+## Resolution: conservative (owner directive, 2026-09-04)
 
-The instruction was: if either column says not legal, the movement is not legal.
-Applying that literally produces an impossible catalog:
+The first pass installed the generated mirror in the **permissive** direction:
+`game_day_eligible` was rebuilt from `game_day_legal`, which left 63 movements
+game-day-permitted that the stricter column had marked not-legal. That was the
+opposite of the instruction and has been **reversed**.
 
-| pool | game-day legal today | game-day legal after a conservative merge |
-|---|---|---|
-| speed — acceleration | 5 of 18 | **0** |
-| speed — reactive | 12 of 15 | **0** |
-| speed — top_speed | 5 of 15 | **0** |
-| speed — mobility | 4 of 9 | **0** |
-| **all speed categories** | 27 of 80 | **0 of 80** |
-| bat speed (all categories) | 6 of 85 | 6 of 85 (unchanged) |
+Applied: for every row where the two columns ever disagreed, the value is now
+`false`. Bucket A (63 rows, `legal = true` / `eligible = false`) was set to
+`game_day_legal = false`. Bucket B (79 rows) was already effectively excluded
+(`legal` untagged, `eligible` false) and stays excluded by the same rule.
 
-`game_day_eligible = false` on every warm-up row (`wu_*`: CARs, breathing
-resets, foam rolling, band face pulls) and on every sprint row is not a
-legality judgement — it is an unmaintained default. Merging it would have
-deleted game-day speed and warm-up work entirely, on noise rather than on a
-coaching decision.
+Counts after reversal: 101 legal, 376 explicitly not legal, 79 untagged.
+`game_day_eligible` remains a generated mirror of `game_day_legal`, so the two
+can never diverge again.
 
-**Open decision for the owner:** if any of the 142 rows below genuinely should
-be game-day-illegal, set `game_day_legal = false` on those rows explicitly and
-the generator will honour it immediately. Nothing else is required.
+Consequence, stated plainly rather than worked around: the game-day speed and
+warm-up pools are now very thin. That is handled by the honest empty-pool path
+below (publish what is legal, say what is limited) — **no flag is flipped to
+make a block fill**. If the owner judges specific warm-up or sprint rows safe on
+a game day, set `game_day_legal = true` on those rows explicitly and generation
+honours it immediately.
 
-## The 142 rows (values before the mirror was installed)
+## The 142 rows (values before any change) — all now resolved to NOT legal
 
 Legend: `game_day_legal` → `game_day_eligible`.
 
