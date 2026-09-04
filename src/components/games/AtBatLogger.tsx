@@ -39,7 +39,7 @@ import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
 import { QuickAtBatBar } from "./QuickAtBatBar";
 import { FieldDirectionPicker } from "./FieldDirectionPicker";
-import { TabIntro, FieldHelp } from "./TabIntro";
+import { FieldHelp } from "./TabIntro";
 import {
   AB_RESULTS,
   CONTACT_QUALITY,
