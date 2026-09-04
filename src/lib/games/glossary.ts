@@ -147,8 +147,6 @@ export interface DetailField {
 }
 
 export const AB_DETAIL_FIELDS: ReadonlyArray<DetailField> = [
-  { key: "pitch_type", label: "Pitch type you saw" },
-  { key: "pitch_velo", label: "How fast the pitch was" },
   { key: "contact_quality", label: "How well you hit it" },
   { key: "exit_direction", label: "Where the ball went" },
   { key: "runners_on", label: "Runners already on base" },

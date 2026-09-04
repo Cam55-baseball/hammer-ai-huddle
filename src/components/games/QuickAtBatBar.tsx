@@ -9,7 +9,7 @@
  *
  * Detail is optional; the rep is not.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Minus, Plus, SlidersHorizontal } from "lucide-react";
@@ -33,51 +33,75 @@ export function QuickAtBatBar({
   onQuickSave,
   onOpenFullForm,
   submitting,
+  defaultInning = 1,
 }: {
   onQuickSave: (row: Record<string, any>) => void;
   onOpenFullForm: () => void;
   submitting?: boolean;
+  /** Highest inning already used in this game — never a blind 1. */
+  defaultInning?: number;
 }) {
-  const [inning, setInning] = useState(1);
+  const [inning, setInning] = useState(defaultInning);
+  const [touched, setTouched] = useState(false);
+
+  // Follow the game forward until the user takes over the control.
+  useEffect(() => {
+    if (!touched) setInning(defaultInning);
+  }, [defaultInning, touched]);
+
 
   return (
     <Card className="p-3 space-y-2.5 border-primary/30">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Log an at-bat
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="h-7 w-7"
-              aria-label="Previous inning"
-              onClick={() => setInning((i) => Math.max(1, i - 1))}
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </Button>
-            <span className="min-w-[5.5rem] text-center text-sm font-mono font-semibold">
-              Inning {inning}
+      <div className="rounded-md bg-primary/5 border border-primary/25 p-2.5 space-y-1.5">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+              Inning you are batting in
             </span>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="h-7 w-7"
-              aria-label="Next inning"
-              onClick={() => setInning((i) => Math.min(30, i + 1))}
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="h-8 w-8"
+                aria-label="Previous inning"
+                onClick={() => {
+                  setTouched(true);
+                  setInning((i) => Math.max(1, i - 1));
+                }}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="min-w-[5.5rem] text-center text-lg font-mono font-bold">
+                Inning {inning}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1 px-2 text-[11px]"
+                aria-label="Next inning"
+                onClick={() => {
+                  setTouched(true);
+                  setInning((i) => Math.min(30, i + 1));
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Next inning
+              </Button>
+            </div>
           </div>
+          <Button type="button" size="sm" variant="ghost" onClick={onOpenFullForm} className="gap-1.5">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Open full form (optional)
+          </Button>
         </div>
-        <Button type="button" size="sm" variant="ghost" onClick={onOpenFullForm} className="gap-1.5">
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          Open full form (optional)
-        </Button>
+        <p className="text-[11px] text-muted-foreground">
+          Starts at the last inning you logged. Move it forward before your next at-bat so the
+          game reads correctly.
+        </p>
       </div>
+
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {QUICK_RESULTS.map((r) => (

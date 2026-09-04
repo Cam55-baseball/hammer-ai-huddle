@@ -17,7 +17,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { gp } from "@/lib/games/ledger";
 import { useAuth } from "@/hooks/useAuth";
-import { pitchTypes } from "@/lib/games/sportRules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -185,19 +184,28 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
     });
   };
 
+  /**
+   * The count always comes from the logged pitches — it is derived data, not
+   * a user opinion, so it syncs whether or not a result is already set. The
+   * result is the only thing we refuse to overwrite.
+   */
+  const syncCount = (abId: string, tally: AtBatPitchTally) => {
+    const row = (list.data ?? []).find((r) => r.id === abId);
+    if (!row) return;
+    if (row.count_balls === tally.balls && row.count_strikes === tally.strikes) return;
+    update.mutate({
+      id: abId,
+      patch: { count_balls: tally.balls, count_strikes: tally.strikes },
+    });
+  };
+
   const handleTerminal = (abId: string, tally: AtBatPitchTally) => {
+    syncCount(abId, tally);
     if (!tally.suggestedResult) return;
     const row = (list.data ?? []).find((r) => r.id === abId);
     if (!row) return;
     if (row.result) return; // never overwrite an existing AB result
-    update.mutate({
-      id: abId,
-      patch: {
-        result: tally.suggestedResult,
-        count_balls: tally.balls,
-        count_strikes: tally.strikes,
-      },
-    });
+    update.mutate({ id: abId, patch: { result: tally.suggestedResult } });
     toast.message(
       `At-bat closed automatically: ${abResultPlain(tally.suggestedResult) ?? tally.suggestedResult}`,
       {
@@ -209,6 +217,35 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
   };
 
   const items = list.data ?? [];
+
+  /** Highest inning already used in this game — the honest starting point. */
+  const latestInning = items.reduce(
+    (max, r) => (typeof r.inning === "number" && r.inning > max ? r.inning : max),
+    1
+  );
+
+  /** How many at-bats in a row are already saved to a given inning. */
+  const streakIn = (inning: number) => {
+    let n = 0;
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i].inning === inning) n++;
+      else break;
+    }
+    return n;
+  };
+
+  const saveAtBat = (row: Record<string, any>) => {
+    const inning = Number(row.inning);
+    if (Number.isFinite(inning) && streakIn(inning) >= 2) {
+      const ok = window.confirm(
+        `This would be at-bat ${streakIn(inning) + 1} in a row in inning ${inning}. ` +
+          `That is unusual — most hitters bat once per inning.\n\n` +
+          `OK to save it in inning ${inning} anyway, or Cancel to change the inning first.`
+      );
+      if (!ok) return;
+    }
+    add.mutate(row);
+  };
 
   return (
     <div className="space-y-3">
@@ -236,9 +273,10 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
           opt-in via "Add detail", never required to record the rep. */}
       {!showNew && (
         <QuickAtBatBar
-          onQuickSave={(row) => add.mutate(row)}
+          onQuickSave={saveAtBat}
           onOpenFullForm={() => setShowNew(true)}
           submitting={add.isPending}
+          defaultInning={latestInning}
         />
       )}
 
@@ -246,8 +284,10 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         <AtBatForm
           sport={sport}
           onCancel={() => setShowNew(false)}
-          onSave={(row) => add.mutate(row)}
+          onSave={saveAtBat}
           submitting={add.isPending}
+          defaultInning={latestInning}
+
           pitcherOptions={pitcherOptions as any[]}
           defaultPitcherId={probable.data ?? null}
         />
@@ -306,6 +346,38 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
             >
               {isOpen && (
                 <>
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="font-medium">Inning:</span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6"
+                      aria-label="Move this at-bat one inning earlier"
+                      disabled={(ab.inning ?? 1) <= 1}
+                      onClick={() =>
+                        update.mutate({ id: ab.id, patch: { inning: Math.max(1, (ab.inning ?? 1) - 1) } })
+                      }
+                    >
+                      –
+                    </Button>
+                    <span className="font-mono font-semibold">{ab.inning ?? "not set"}</span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6"
+                      aria-label="Move this at-bat one inning later"
+                      onClick={() =>
+                        update.mutate({ id: ab.id, patch: { inning: Math.min(30, (ab.inning ?? 0) + 1) } })
+                      }
+                    >
+                      +
+                    </Button>
+                    <span className="text-muted-foreground">
+                      Wrong inning? Fix it here — nothing else changes.
+                    </span>
+                  </div>
                   {status.empty.length > 0 && (
                     <p className="text-[11px] text-muted-foreground">
                       Still empty (all optional): {status.empty.map((f) => f.label).join(", ")}.
@@ -317,7 +389,9 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
                     inning={ab.inning ?? null}
                     sport={sport}
                     onTerminal={(t) => handleTerminal(ab.id, t)}
+                    onTally={(t) => syncCount(ab.id, t)}
                   />
+
                   <AbSwingPanel
                     abId={ab.id}
                     gameId={gameId}
@@ -351,6 +425,7 @@ function AtBatForm({
   submitting,
   pitcherOptions = [],
   defaultPitcherId = null,
+  defaultInning = 1,
 }: {
   sport: string;
   onSave: (row: Record<string, any>) => void;
@@ -358,10 +433,10 @@ function AtBatForm({
   submitting?: boolean;
   pitcherOptions?: any[];
   defaultPitcherId?: string | null;
+  defaultInning?: number;
 }) {
-  const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
-    inning: 1,
+    inning: defaultInning,
     batting_side: "R",
     position_played: "",
     result: "",
@@ -369,8 +444,6 @@ function AtBatForm({
     count_strikes: 0,
     contact_quality: "",
     exit_direction: "",
-    pitch_type: "",
-    pitch_velo: "",
     runners_on: "",
     outs: 0,
     rbi: 0,
@@ -380,6 +453,7 @@ function AtBatForm({
     notes: "",
     opponent_pitcher_id: defaultPitcherId ?? "",
   });
+
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -420,17 +494,17 @@ function AtBatForm({
 
   const submit = () => {
     const payload: Record<string, any> = { ...f };
-    ["pitch_velo", "h1_time_sec"].forEach((k) => {
+    ["h1_time_sec"].forEach((k) => {
       payload[k] = payload[k] === "" ? null : Number(payload[k]);
     });
     if (!payload.result) payload.result = null;
     if (!payload.position_played) payload.position_played = null;
-    if (!payload.pitch_type) payload.pitch_type = null;
     if (!payload.contact_quality) payload.contact_quality = null;
     if (!payload.exit_direction) payload.exit_direction = null;
     if (!payload.opponent_pitcher_id) payload.opponent_pitcher_id = null;
     onSave(payload);
   };
+
 
   return (
     <Card ref={containerRef} className="p-4 space-y-3 bg-muted/30">
@@ -499,14 +573,21 @@ function AtBatForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Balls in the count" help="How many balls the pitcher threw you.">
+        <Field
+          label="Balls in the count"
+          help="Only needed if you don't log the pitches — once you log pitches, the count is filled in from them."
+        >
           <NumberField min={0} max={4} value={f.count_balls}
             onValueChange={(v) => set("count_balls", v ?? 0)} />
         </Field>
-        <Field label="Strikes in the count" help="How many strikes you had against you.">
+        <Field
+          label="Strikes in the count"
+          help="Only needed if you don't log the pitches — once you log pitches, the count is filled in from them."
+        >
           <NumberField min={0} max={3} value={f.count_strikes}
             onValueChange={(v) => set("count_strikes", v ?? 0)} />
         </Field>
+
         <Field label="How well you hit it" help="Contact quality — how cleanly the ball came off the bat.">
           <Select value={f.contact_quality} onValueChange={(v) => set("contact_quality", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
@@ -520,18 +601,7 @@ function AtBatForm({
           </Select>
         </Field>
 
-        <Field label="Pitch type you hit (or last saw)" help="What the pitcher threw.">
-          <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
-            <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>
-              {PITCH_TYPES.map((p) => (<SelectItem key={p.value} value={p.value}>{p.full}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Pitch speed (mph)" help="How fast the pitch was, if you know it.">
-          <NumberField value={f.pitch_velo}
-            onChange={(e) => set("pitch_velo", e.target.value)} />
-        </Field>
+
         <Field label="Outs when you came up" help="How many outs the team already had (0, 1 or 2).">
           <NumberField min={0} max={2} value={f.outs}
             onValueChange={(v) => set("outs", v ?? 0)} />
