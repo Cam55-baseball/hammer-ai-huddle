@@ -112,19 +112,27 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
   };
 
   const save = async (tokens: string[]) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setSaveError({
+        plain: "You're signed out, so there's nothing to save this to. Sign back in and try again.",
+      });
+      return;
+    }
     setSaving(true);
+    setSaveError(null);
     try {
-      await writePersistentEquipment(user.id, tokens, null, "onboarding");
+      await writePersistentEquipment(user.id, tokens, null, "onboarding_self_report");
       toast.success("Equipment saved. Your plans will use it from the next one.");
       onContinue();
     } catch (e) {
-      console.error(e);
-      toast.error("Could not save your equipment. You can try again any time.");
+      const err = e as Error & { code?: string; details?: string };
+      console.error("[EquipmentStep] save failed", err);
+      setSaveError({ plain: plainSaveError(err), technical: technicalDetail(err) });
     } finally {
       setSaving(false);
     }
   };
+
 
   return (
     <section className="space-y-4">
