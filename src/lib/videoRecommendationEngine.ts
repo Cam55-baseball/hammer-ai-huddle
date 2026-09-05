@@ -255,6 +255,10 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
             : `Recommended correction: ${tag.label}`,
         );
       }
+      if (rootPatternTagIds.has(a.tag_id)) {
+        score += 60;
+        reasons.push('Works on the pattern showing up in more than one part of your game');
+      }
       if (movementTagIds.has(a.tag_id)) {
         score += 50 * w;
         const said = evidence[`movement_pattern:${tag.key}`];
