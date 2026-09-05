@@ -2688,29 +2688,36 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
     console.log(`Analysis complete for video ${videoId}`);
 
-    return new Response(
-      JSON.stringify({
-        efficiency_score,
-        summary,
-        feedback,
-        positives,
-        drills,
-        scorecard,
-        // The structured fault flags. The client matches library videos and
-        // prescriptions against these keys — omitting them left every fresh
-        // analysis looking like it had found nothing.
-        violations_detected: violations,
-        mocap_data,
+    const responsePayload: Record<string, unknown> = {
+      efficiency_score,
+      summary,
+      feedback,
+      positives,
+      drills,
+      scorecard,
+      // The structured fault flags. The client matches library videos and
+      // prescriptions against these keys — omitting them left every fresh
+      // analysis looking like it had found nothing.
+      violations_detected: violations,
+      mocap_data,
 
-        // Hammer Report Card — surface structured metrics to the client so the
-        // grade ribbon + tiles render without an extra round-trip.
-        metrics: metrics ?? null,
-        report_card_contract_id: reportCardContract?.id ?? null,
-        ball_tracking_eligible: ballGate.eligible,
-        capture_fps: ballGate.fps,
-        ball_flight_unavailable_reason: ballGate.reason,
-        ball_flight_suppressed_keys: ballFlightSuppressedKeys,
-      }),
+      // Hammer Report Card — surface structured metrics to the client so the
+      // grade ribbon + tiles render without an extra round-trip.
+      metrics: metrics ?? null,
+      report_card_contract_id: reportCardContract?.id ?? null,
+      ball_tracking_eligible: ballGate.eligible,
+      capture_fps: ballGate.fps,
+      ball_flight_unavailable_reason: ballGate.reason,
+      ball_flight_suppressed_keys: ballFlightSuppressedKeys,
+    };
+
+    // Release gate — owner/admin only. Coaching text, drills and fault flags
+    // stay; every number presented as a measurement is removed here so it
+    // never reaches the client at all.
+    const scoredAllowed = await canSeeScoredGrading(supabase, userId);
+
+    return new Response(
+      JSON.stringify(scoredAllowed ? responsePayload : stripScoredGrading(responsePayload)),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
