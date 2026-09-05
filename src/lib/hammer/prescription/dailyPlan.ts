@@ -1454,9 +1454,61 @@ function annotate(b: PrescribedBlock, rationale: string): PrescribedBlock {
   };
 }
 
+const PREGAME_PRIMER_FALLBACK: DrillStep[] = [
+  { name: "Ready position + first-step reads", dosage: "8 reps, easy", cue: "small hop as the ball is released" },
+  { name: "Short-hop glove work", dosage: "10 reps, easy", cue: "soft hands out front" },
+  { name: "Glove-to-hand exchange", dosage: "10 reps", cue: "four seams, hands to the middle of your chest" },
+];
+
+/**
+ * Game day defense: a short, position-specific pregame primer instead of a
+ * disappearing card. Full volume stays off so the athlete saves their legs
+ * for the game, and the card says exactly that.
+ */
+function gameDayDefensePrimer(
+  b: PrescribedBlock,
+  original: PrescribedBlock | undefined,
+  tournament: boolean,
+): PrescribedBlock {
+  const src = b.drills.length > 0 ? b : original;
+  const picked = (src?.drills ?? []).slice(0, tournament ? 2 : 3);
+  const drills: DrillStep[] = (picked.length > 0 ? picked : PREGAME_PRIMER_FALLBACK.slice(0, tournament ? 2 : 3)).map(
+    (d) => ({ ...d, dosage: `${d.dosage} — easy, pregame only` }),
+  );
+  const baseTitle = (original?.title ?? b.title).replace(/ — .*$/, "");
+  return {
+    ...b,
+    title: `${baseTitle} — pregame primer`,
+    why: tournament
+      ? "You're playing multiple games today. This wakes up your feet and hands and stops there — the rest is saved for the games."
+      : "You're playing today. This wakes up your feet, hands, and exchange, then stops — full defense work is off so you save your legs for the game.",
+    roadmapReason: tournament
+      ? "Tournament day — primer only, legs saved for the games."
+      : "Game day — primer only, legs saved for the game.",
+    assumption: undefined,
+    phase: "maintain",
+    steps: drillsToSteps(drills),
+    drills,
+    cues: original?.cues ?? b.cues,
+    stopRules: original?.stopRules ?? b.stopRules,
+    durationMin: tournament ? 6 : 10,
+    route: original?.route ?? "/practice?module=defense",
+    ctaLabel: "Open defense",
+    status: "ready",
+    gameDayPrimer: true,
+    gamePlanTemplate: null,
+  };
+}
+
+export function blockKey(b: PrescribedBlock): string {
+  return `${b.modality}:${b.side ?? ""}`;
+}
+
 function applyScheduleModulation(
   blocks: ReadonlyArray<PrescribedBlock>,
   signal: ScheduleSignal,
+  originals?: ReadonlyMap<string, PrescribedBlock>,
+  defenseFullOverride = false,
 ): ReadonlyArray<PrescribedBlock> {
   if (signal.postureToday === "normal") return blocks;
 
@@ -1478,9 +1530,18 @@ function applyScheduleModulation(
             return signal.postureToday === "tournament"
               ? suppressBlock(b, rationale)
               : suppressBlock(b, rationale, { keepActivation: true });
+          case "defense": {
+            const original = originals?.get(blockKey(b));
+            if (defenseFullOverride) {
+              return annotate(
+                original && original.drills.length > 0 ? original : b,
+                "You chose to run full defense anyway on a game day.",
+              );
+            }
+            return gameDayDefensePrimer(b, original, signal.postureToday === "tournament");
+          }
           case "speed":
           case "strength":
-          case "defense":
           case "baserunning":
             return suppressBlock(b, rationale);
           default:
