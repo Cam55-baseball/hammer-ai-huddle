@@ -252,6 +252,90 @@ function DrillRow({
   );
 }
 
+/**
+ * "Which position are you working today?" — multi-position athletes swap the
+ * defense block to any position on their list, and the choice is recorded so
+ * the plan can see how their reps are actually spread.
+ */
+function DefensePositionSwap() {
+  const api = usePlanAdjustApi();
+  const { positions, primary, loading } = useAthletePositions();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  if (loading || !api) return null;
+
+  if (positions.length === 0) {
+    return (
+      <div className="rounded-md border border-dashed border-border/70 p-2 text-[11px] text-muted-foreground">
+        I don't know which positions you play yet, so this is general defensive work.{" "}
+        <button type="button" className="underline" onClick={() => navigate("/profile")}>
+          Add your positions
+        </button>{" "}
+        and I'll make it specific.
+      </div>
+    );
+  }
+
+  const active = api.positionWorked ?? primary;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Working today at
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {positions.map((code) => (
+          <button
+            key={code}
+            type="button"
+            disabled={busy !== null}
+            onClick={async () => {
+              setBusy(code);
+              try {
+                await api.save({
+                  modality: "defense",
+                  action: "position_worked",
+                  scope: "today",
+                  original_key: null,
+                  original_name: null,
+                  replacement_name: null,
+                  replacement_dosage: null,
+                  reason: null,
+                  position_code: code,
+                });
+                toast.success(`Defense set to ${positionLabel(code)}`);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "That didn't save.");
+              } finally {
+                setBusy(null);
+              }
+            }}
+            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+              code === active
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {positionShort(code)}
+          </button>
+        ))}
+      </div>
+      {positions.length === 1 && (
+        <p className="text-[11px] text-muted-foreground">
+          Play more than one spot?{" "}
+          <button type="button" className="underline" onClick={() => navigate("/profile")}>
+            Add your other positions
+          </button>
+          .
+        </p>
+      )}
+    </div>
+  );
+}
+
+
+
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
   "awaiting-input": "border-amber-500/30 bg-amber-500/5",
