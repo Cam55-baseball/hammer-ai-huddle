@@ -714,13 +714,18 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
       // INPUT-INTEGRITY LAW: never withhold the hitting prescription waiting
       // on equipment. With nothing on file we assume the most common minimum
       // (a bat and somewhere to swing), say so, and let them correct it.
-      const equipmentUnknown = !equipment;
+      const ownedHitting = new Set(
+        (proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? [],
+      );
+      const equipmentUnknown = !equipment && ownedHitting.size === 0;
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
       // NOTE: switch-hitter split is handled downstream by splitLateralityBlocks,
       // which duplicates this block into two full-volume side-tagged blocks
       // (Left and Right). Do NOT halve volume or interleave sides here.
-      const drills: DrillStep[] = equipmentUnknown
+      // EQUIPMENT LAW: what the athlete declared actually changes the drills.
+      const declaredDrills = ownedHitting.size > 0 ? hittingDrillsForEquipment(ownedHitting, seasonPhase) : null;
+      const drills: DrillStep[] = declaredDrills ?? (equipmentUnknown
         ? [
             { name: "Dry swings — barrel path", dosage: "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
             { name: "Tee work (or a towel drill if you have no tee)", dosage: "20 swings", cue: "hit the back of the ball, finish balanced" },
