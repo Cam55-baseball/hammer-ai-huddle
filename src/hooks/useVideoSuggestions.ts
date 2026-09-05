@@ -24,6 +24,10 @@ interface UseSuggestionsParams {
   movementPatterns: string[];
   resultTags: string[];
   contextTags: string[];
+  /** Correction keys the analysis prescribed. Highest-weighted match layer. */
+  correctionTags?: string[];
+  /** `layer:key` → the feedback phrase behind it. Wording only, never ranking. */
+  feedbackEvidence?: Record<string, string>;
   enabled?: boolean;
   /** Overrides the active sport theme. Softball athletes never see baseball-only assets. */
   sport?: TagSport | null;
@@ -64,8 +68,8 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
   }, [qc]);
 
   return useQuery({
-    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, sport, (positions ?? []).join(','), user?.id],
-    enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length > 0),
+    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, params.correctionTags ?? [], sport, (positions ?? []).join(','), user?.id],
+    enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length + (params.correctionTags?.length ?? 0) > 0),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<RecommendResult[]> => {
@@ -137,6 +141,8 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         movementPatterns: params.movementPatterns,
         resultTags: params.resultTags,
         contextTags: params.contextTags,
+        correctionTags: params.correctionTags,
+        feedbackEvidence: params.feedbackEvidence,
         candidateVideos: candidates,
         taxonomy,
         rules,

@@ -42,6 +42,8 @@ import { useVault } from "@/hooks/useVault";
 import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
 import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
+import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
+import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
@@ -941,19 +943,17 @@ export default function AnalyzeVideo() {
   const fireAnalysisVideoMoment = (data: any) => {
     const skillDomain = moduleToSkillDomain(module || "");
     if (!skillDomain) return;
-    const movements = new Set<string>();
-    const areas: string[] = [
-      ...((data?.scorecard?.regressions || []).map((r: any) => r?.area)),
-      ...((data?.scorecard?.neutral || []).map((r: any) => r?.area)),
-    ].filter(Boolean);
-    for (const a of areas) {
-      const k = mapHIEAreaToMovement(String(a));
-      if (k) movements.add(k);
-    }
+    // Taxonomy keys derived from the structured feedback (fault flags +
+    // scorecard areas), including the corrections being prescribed.
+    const signals = analysisFeedbackToTaxonomy(
+      data,
+      skillDomain,
+      sport === "softball" ? "softball" : "baseball",
+    );
     emitVideoMoment({
       kind: "analysis_complete",
       skillDomain,
-      movementPatterns: Array.from(movements),
+      movementPatterns: signals.movementPatterns,
       sport: (sport === "softball" ? "softball" : "baseball"),
       side: requiresSideConfirmation ? (activeSide as any) : null,
       label: "Video analysis",
@@ -1478,6 +1478,12 @@ export default function AnalyzeVideo() {
                   module={module}
                   sport={sport}
                   violations={analysis.violations_detected ?? null}
+                />
+
+                <AnalysisVideoRecommendations
+                  analysis={analysis}
+                  module={module}
+                  sport={sport}
                 />
               </div>
             )}
