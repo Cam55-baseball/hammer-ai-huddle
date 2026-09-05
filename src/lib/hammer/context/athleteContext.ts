@@ -158,42 +158,12 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       : null;
 
     const vars: ContextVariable[] = [
+      // Spine variables (envelope) — shared with contextFromEnvelope() so tests
+      // exercise the same derivation the app uses.
       ...spineVariables(env),
-    ];
-    const LEGACY_INLINE_SPINE: ContextVariable[] = [
-
-      fromEnvelope(env, "sport_primary", "Sport", "identity"),
-      fromEnvelope(env, "goal_summary", "Primary goal", "goals"),
-      fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
-      fromEnvelope(env, "category_goals", "Ranked category goals", "goals"),
-      fromEnvelope(env, "weekly_availability_days", "Days per week", "schedule"),
-      fromEnvelope(env, "weekly_availability_hours", "Hours per week", "schedule"),
-      fromEnvelope(env, "typical_session_length_min", "Session length (min)", "schedule"),
-      fromEnvelope(env, "training_focus", "Training focus", "goals"),
-      fromEnvelope(env, "development_priorities", "Development priorities", "development"),
-      fromEnvelope(env, "lifting_age_years", "Lifting age", "development"),
-      fromEnvelope(env, "years_in_sport", "Years in sport", "development"),
-      fromEnvelope(env, "school_grade", "School year", "identity"),
-      fromEnvelope(env, "season_phase", "Season phase", "season"),
-      fromEnvelope(env, "injury_history", "Injury constraints", "injury"),
-      fromEnvelope(env, "equipment_effective", "Equipment (effective)", "equipment"),
-      fromEnvelope(env, "lifecycle_band", "Lifecycle band", "lifecycle"),
-      fromEnvelope(env, "safeguarding_minor", "Safeguarding (minor)", "identity"),
-      fromEnvelope(env, "anthropometrics", "Anthropometrics", "physiology"),
-      fromEnvelope(env, "position_primary", "Primary position", "identity"),
-      fromEnvelope(env, "position_secondary", "Secondary positions", "identity"),
-      fromEnvelope(env, "throws_hand", "Throws hand", "identity"),
-      fromEnvelope(env, "bats_hand", "Bats side", "identity"),
-      fromEnvelope(env, "competition_level", "Competition level", "identity"),
-      fromEnvelope(env, "competition_age_group", "Age group", "identity"),
-      fromEnvelope(env, "competition_home_state", "Home state", "identity"),
-      fromEnvelope(env, "competition_play_state", "Play state", "identity"),
-      fromEnvelope(env, "competition_events", "Notable events", "identity"),
-      fromEnvelope(env, "education_stage", "Education stage", "identity"),
-      fromEnvelope(env, "other_sports", "Other sports", "identity"),
-      fromEnvelope(env, "lifting_history", "Lifting history", "development"),
 
       // Live signals (existing)
+
       mkLive("season_phase_runtime", "Season phase (runtime)", "season", dayType ?? null, "useDayState.dayType"),
       mkLive(
         "readiness",
