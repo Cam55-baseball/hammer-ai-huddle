@@ -1498,6 +1498,15 @@ export default function AnalyzeVideo() {
                   />
                 )}
 
+
+                {/* Headline feature: sits directly under the detailed analysis,
+                    matched to the faults this run actually reported. */}
+                <AnalysisVideoRecommendations
+                  analysis={analysis}
+                  module={module}
+                  sport={sport}
+                />
+
                 <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
 
                 {/* One movement problem showing up in several skills outranks
@@ -1510,11 +1519,6 @@ export default function AnalyzeVideo() {
                   violations={analysis.violations_detected ?? null}
                 />
 
-                <AnalysisVideoRecommendations
-                  analysis={analysis}
-                  module={module}
-                  sport={sport}
-                />
               </div>
             )}
 
