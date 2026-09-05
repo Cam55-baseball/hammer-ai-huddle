@@ -14,7 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
@@ -143,6 +143,9 @@ const PRE_START_MODALITIES = new Set(["game_iq", "fueling"]);
 interface PlanAdjustApi {
   save: (adj: PlanAdjustment) => Promise<void>;
   positionWorked: string | null;
+  /** Athlete chose to run full defense work on a game day. */
+  defenseFullOverride: boolean;
+  setDefenseFullOverride: (v: boolean) => void;
 }
 const PlanAdjustContext = createContext<PlanAdjustApi | null>(null);
 export function usePlanAdjustApi(): PlanAdjustApi | null {
@@ -150,6 +153,33 @@ export function usePlanAdjustApi(): PlanAdjustApi | null {
 }
 
 
+
+/**
+ * Plain-English asks. Internal context keys (equipment_effective,
+ * lifting_history, …) must never reach an athlete's screen.
+ */
+const MISSING_CONTEXT_PROMPTS: Record<string, string> = {
+  equipment_effective: "what hitting and training gear you actually have",
+  equipment_access: "what training gear you actually have",
+  lifting_history: "how long you've been lifting consistently",
+  position_primary: "which position you play",
+  season_phase: "where you are in your season",
+  sport_primary: "which sport you play",
+  training_age: "how long you've been training",
+  injury_status: "anything that's hurting right now",
+};
+
+export function missingContextPrompt(keys: ReadonlyArray<string>): string {
+  const asks = keys
+    .map((k) => MISSING_CONTEXT_PROMPTS[k])
+    .filter((v): v is string => Boolean(v));
+  if (asks.length === 0) {
+    return "Tell Hammer more about your setup in the chat below and today's plan will adapt.";
+  }
+  const list =
+    asks.length === 1 ? asks[0] : `${asks.slice(0, -1).join(", ")} and ${asks[asks.length - 1]}`;
+  return `Tell Hammer ${list} in the chat below and today's plan will adapt.`;
+}
 
 function DrillRow({
   drill: d,
@@ -483,6 +513,28 @@ function HammerDailyPlanBody({
   const wkRx = useHammersToday();
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
+  // Game-day defense override — athlete-owned, one tap, resets each day.
+  const defenseOverrideKey = `hammer.defenseFull.${bodyPlanDate}`;
+  const [defenseFullOverride, setDefenseFullOverrideState] = useState(false);
+  useEffect(() => {
+    try {
+      setDefenseFullOverrideState(localStorage.getItem(defenseOverrideKey) === "1");
+    } catch {
+      setDefenseFullOverrideState(false);
+    }
+  }, [defenseOverrideKey]);
+  const setDefenseFullOverride = useCallback(
+    (v: boolean) => {
+      setDefenseFullOverrideState(v);
+      try {
+        if (v) localStorage.setItem(defenseOverrideKey, "1");
+        else localStorage.removeItem(defenseOverrideKey);
+      } catch {
+        /* storage unavailable — override stays in memory for this session */
+      }
+    },
+    [defenseOverrideKey],
+  );
   const rawPlan = useMemo(
     () =>
       buildHammerDailyPlan(
@@ -498,9 +550,10 @@ function HammerDailyPlanBody({
           resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
           positionOverride: planAdjust.positionWorked,
+          defenseFullOverride,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
@@ -529,8 +582,13 @@ function HammerDailyPlanBody({
     return { ...base, blocks: applyAdjustments(base.blocks, planAdjust.adjustments) };
   }, [rawPlan, cnsHigh, planAdjust.adjustments]);
   const adjustApi = useMemo<PlanAdjustApi>(
-    () => ({ save: planAdjust.save, positionWorked: planAdjust.positionWorked }),
-    [planAdjust.save, planAdjust.positionWorked],
+    () => ({
+      save: planAdjust.save,
+      positionWorked: planAdjust.positionWorked,
+      defenseFullOverride,
+      setDefenseFullOverride,
+    }),
+    [planAdjust.save, planAdjust.positionWorked, defenseFullOverride, setDefenseFullOverride],
   );
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
@@ -963,6 +1021,7 @@ function BlockCard({
   const [added, setAdded] = useState(false);
   const [warmupOpen, setWarmupOpen] = useState(false);
   const { user } = useAuth();
+  const adjustApiForCard = usePlanAdjustApi();
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -1127,6 +1186,11 @@ function BlockCard({
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{block.why}</p>
+            {block.assumption && (
+              <p className="text-[11px] mt-1 rounded-md border border-sky-500/30 bg-sky-500/5 px-2 py-1 text-sky-800 dark:text-sky-200">
+                {block.assumption}
+              </p>
+            )}
             {block.roadmapReason && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5 italic">
                 {block.roadmapReason}
@@ -1239,11 +1303,7 @@ function BlockCard({
                   ))}
                   {focusGaps.length === 0 && (
                     <div className="text-[11px] text-muted-foreground">
-                      Tell Hammer about{" "}
-                      <span className="font-medium text-foreground">
-                        {block.missingContextKeys.join(", ").replace(/_/g, " ")}
-                      </span>{" "}
-                      in chat below and your plan will adapt.
+                      {missingContextPrompt(block.missingContextKeys)}
                     </div>
                   )}
                 </div>
@@ -1290,10 +1350,32 @@ function BlockCard({
               <MessageCircle className="h-3 w-3" />
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
+            {block.modality === "defense" && (block.gameDayPrimer || adjustApiForCard?.defenseFullOverride) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  adjustApiForCard?.setDefenseFullOverride(!adjustApiForCard.defenseFullOverride)
+                }
+                className="text-xs"
+              >
+                {adjustApiForCard?.defenseFullOverride
+                  ? "Back to pregame primer"
+                  : "Do full defense anyway"}
+              </Button>
+            )}
             <div className="ml-auto">
               {block.status === "off-day" ? (
                 <span className="text-[11px] text-muted-foreground italic">
                   No log today — resting this modality.
+                </span>
+              ) : block.status === "awaiting-input" ? (
+                <span className="text-[11px] text-muted-foreground italic">
+                  Held for review — nothing to mark done yet.
+                </span>
+              ) : block.drills.length === 0 ? (
+                <span className="text-[11px] text-muted-foreground italic">
+                  Nothing to mark done — there's no work prescribed here yet.
                 </span>
               ) : (
                 <BlockCompletionControls

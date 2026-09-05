@@ -174,7 +174,11 @@ export function LiftSwapUndoChip({ rx }: { rx: WkRx }) {
         }
       : null);
 
-  const fromName = swapMeta?.from_name ?? catalogOriginal?.name ?? rx.substituted_from_slug;
+  // Never show a raw catalog identifier to an athlete — humanise the slug.
+  const humanisedSlug = String(rx.substituted_from_slug)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const fromName = swapMeta?.from_name ?? catalogOriginal?.name ?? humanisedSlug;
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">

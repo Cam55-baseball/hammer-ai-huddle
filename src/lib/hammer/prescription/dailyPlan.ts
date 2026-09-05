@@ -151,6 +151,17 @@ export interface PrescribedBlock {
   readonly missingContextKeys: ReadonlyArray<string>;
   readonly gamePlanTemplate: GamePlanTemplateSeed | null;
   /**
+   * One plain-English line stating what Hammer assumed when a piece of the
+   * athlete's context was missing. Cards must prescribe on an assumption
+   * rather than render as a request for information.
+   */
+  readonly assumption?: string;
+  /**
+   * Set on a defense block that is already the short pre-game primer — the
+   * schedule modulator must not suppress it a second time.
+   */
+  readonly gameDayPrimer?: boolean;
+  /**
    * Laterality tag for switch hitters / ambidextrous throwers — when set,
    * this block represents ONE side (L or R) and is expected to appear
    * alongside a mirror-side block. UI keys DOM ids + completion task ids
@@ -522,24 +533,46 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
     }
 
     case "strength": {
+      // INPUT-INTEGRITY LAW: a card may never render as a request for
+      // information. With no lifting history on file we prescribe the
+      // conservative entry-level session, say the assumption out loud, and
+      // let the athlete correct it.
       if (liftingAge === null) {
+        const drills: DrillStep[] = [
+          { name: "Goblet squat", dosage: "3 x 8, light — leave 4 reps in the tank", cue: "chest tall, knees track over toes", stopIf: "Knee or back pain" },
+          { name: "Push-up (or incline push-up)", dosage: "3 x 8", cue: "body in one line, elbows about 45 degrees" },
+          { name: "Split squat", dosage: "3 x 6 each leg", cue: "back knee straight down, front foot flat" },
+          { name: "Single-arm row", dosage: "3 x 8 each side", cue: "pull to the hip, no twisting" },
+          { name: "Dead bug", dosage: "3 x 6 each side", cue: "low back stays glued to the floor" },
+        ];
         return {
           modality,
-          title: "Strength — waiting on lifting history",
-          why: "I prescribe intensity from your training history. I won't guess.",
-          roadmapReason: "Missing input — strength block deferred until you tell me your lifting history.",
+          title: "Strength — conservative start",
+          why: "I don't have your lifting history yet, so I'm starting you light and safe rather than skipping the day.",
+          assumption:
+            "Assuming you're new to structured lifting. Tell Hammer how long you've been lifting and I'll load this properly.",
+          roadmapReason: "No lifting history on file — prescribing the entry-level session until you tell me otherwise.",
           phase: "build",
-          steps: ["Tell me how many years you've been lifting consistently."],
-          drills: [],
-          cues: [],
-          stopRules: [],
-          durationMin: null,
-          route: "#hammer-onboarding",
-          ctaLabel: "Answer Hammer",
-          status: "awaiting-input",
+          steps: drillsToSteps(drills),
+          drills,
+          cues: ["Technique before load. Every rep looks the same."],
+          stopRules: ["Any sharp pain — stop the exercise.", "If a set gets ugly, end it there."],
+          durationMin: 30,
+          route: "/training-block",
+          ctaLabel: "Open lift",
+          status: "ready",
           missing: ["lifting_history"],
           missingContextKeys: ["lifting_history"],
-          gamePlanTemplate: null,
+          gamePlanTemplate: {
+            title: "Hammer strength — conservative start",
+            activityType: "workout",
+            icon: "dumbbell",
+            color: "#dc2626",
+            durationMinutes: 30,
+            description: "Entry-level strength session.",
+            checklist: drillsToChecklist(drills),
+            source: "hammer.daily.strength.conservative",
+          },
         };
       }
 
@@ -678,32 +711,23 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
     }
 
     case "hitting": {
-      if (!equipment) {
-        return {
-          modality,
-          title: "Hitting — waiting on equipment",
-          why: "I prescribe drills from what you can actually use.",
-          roadmapReason: "Missing input — tell me your hitting equipment and I'll prescribe today.",
-          phase: "skill",
-          steps: ["Tell me what hitting equipment you have today (tee, net, machine, BP, cage)."],
-          drills: [],
-          cues: [],
-          stopRules: [],
-          durationMin: null,
-          route: "#hammer-onboarding",
-          ctaLabel: "Answer Hammer",
-          status: "awaiting-input",
-          missing: ["equipment_access"],
-          missingContextKeys: ["equipment_effective"],
-          gamePlanTemplate: null,
-        };
-      }
+      // INPUT-INTEGRITY LAW: never withhold the hitting prescription waiting
+      // on equipment. With nothing on file we assume the most common minimum
+      // (a bat and somewhere to swing), say so, and let them correct it.
+      const equipmentUnknown = !equipment;
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
       // NOTE: switch-hitter split is handled downstream by splitLateralityBlocks,
       // which duplicates this block into two full-volume side-tagged blocks
       // (Left and Right). Do NOT halve volume or interleave sides here.
-      const drills: DrillStep[] = inSeason
+      const drills: DrillStep[] = equipmentUnknown
+        ? [
+            { name: "Dry swings — barrel path", dosage: "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
+            { name: "Tee work (or a towel drill if you have no tee)", dosage: "20 swings", cue: "hit the back of the ball, finish balanced" },
+            { name: "Self-toss or front toss if someone can throw", dosage: "15 swings", cue: "see it deep, hands stay back" },
+            { name: "Film 5 swings on your phone and tag them", dosage: "best 5 swings" },
+          ]
+        : inSeason
         ? [
             { name: "Tee work — barrel path", dosage: "10 quality swings", cue: "stay through the ball, do not pull off" },
             { name: "Front toss — pitch recognition", dosage: "10 swings", cue: "see ball deep, hands stay back" },
@@ -724,7 +748,12 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
             ];
       return {
         modality,
-        title: inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
+        title: equipmentUnknown
+          ? "Hitting — bat-and-space session"
+          : inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
+        assumption: equipmentUnknown
+          ? "Assuming you have a bat and somewhere safe to swing. Tell Hammer what you actually have and I'll upgrade this."
+          : undefined,
         why: (inSeason ? "Sharpen timing without spending." : offSeason ? "Volume + mechanical rebuild." : "Quality reps targeting your weakness pattern.") + (goal ? ` ${goal}` : ""),
         roadmapReason: inSeason
           ? "In-season — focus on timing and feel, not volume."
@@ -743,8 +772,8 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
         route: "/practice?module=hitting",
         ctaLabel: "Open hitting",
         status: "ready",
-        missing: [],
-        missingContextKeys: [],
+        missing: equipmentUnknown ? ["equipment_access"] : [],
+        missingContextKeys: equipmentUnknown ? ["equipment_effective"] : [],
         gamePlanTemplate: {
           title: `Hammer hitting — ${inSeason ? "in-season" : offSeason ? "off-season" : "standard"}`,
           activityType: "practice",
@@ -1425,9 +1454,61 @@ function annotate(b: PrescribedBlock, rationale: string): PrescribedBlock {
   };
 }
 
+const PREGAME_PRIMER_FALLBACK: DrillStep[] = [
+  { name: "Ready position + first-step reads", dosage: "8 reps, easy", cue: "small hop as the ball is released" },
+  { name: "Short-hop glove work", dosage: "10 reps, easy", cue: "soft hands out front" },
+  { name: "Glove-to-hand exchange", dosage: "10 reps", cue: "four seams, hands to the middle of your chest" },
+];
+
+/**
+ * Game day defense: a short, position-specific pregame primer instead of a
+ * disappearing card. Full volume stays off so the athlete saves their legs
+ * for the game, and the card says exactly that.
+ */
+function gameDayDefensePrimer(
+  b: PrescribedBlock,
+  original: PrescribedBlock | undefined,
+  tournament: boolean,
+): PrescribedBlock {
+  const src = b.drills.length > 0 ? b : original;
+  const picked = (src?.drills ?? []).slice(0, tournament ? 2 : 3);
+  const drills: DrillStep[] = (picked.length > 0 ? picked : PREGAME_PRIMER_FALLBACK.slice(0, tournament ? 2 : 3)).map(
+    (d) => ({ ...d, dosage: `${d.dosage} — easy, pregame only` }),
+  );
+  const baseTitle = (original?.title ?? b.title).replace(/ — .*$/, "");
+  return {
+    ...b,
+    title: `${baseTitle} — pregame primer`,
+    why: tournament
+      ? "You're playing multiple games today. This wakes up your feet and hands and stops there — the rest is saved for the games."
+      : "You're playing today. This wakes up your feet, hands, and exchange, then stops — full defense work is off so you save your legs for the game.",
+    roadmapReason: tournament
+      ? "Tournament day — primer only, legs saved for the games."
+      : "Game day — primer only, legs saved for the game.",
+    assumption: undefined,
+    phase: "maintain",
+    steps: drillsToSteps(drills),
+    drills,
+    cues: original?.cues ?? b.cues,
+    stopRules: original?.stopRules ?? b.stopRules,
+    durationMin: tournament ? 6 : 10,
+    route: original?.route ?? "/practice?module=defense",
+    ctaLabel: "Open defense",
+    status: "ready",
+    gameDayPrimer: true,
+    gamePlanTemplate: null,
+  };
+}
+
+export function blockKey(b: PrescribedBlock): string {
+  return `${b.modality}:${b.side ?? ""}`;
+}
+
 function applyScheduleModulation(
   blocks: ReadonlyArray<PrescribedBlock>,
   signal: ScheduleSignal,
+  originals?: ReadonlyMap<string, PrescribedBlock>,
+  defenseFullOverride = false,
 ): ReadonlyArray<PrescribedBlock> {
   if (signal.postureToday === "normal") return blocks;
 
@@ -1449,9 +1530,18 @@ function applyScheduleModulation(
             return signal.postureToday === "tournament"
               ? suppressBlock(b, rationale)
               : suppressBlock(b, rationale, { keepActivation: true });
+          case "defense": {
+            const original = originals?.get(blockKey(b));
+            if (defenseFullOverride) {
+              return annotate(
+                original && original.drills.length > 0 ? original : b,
+                "You chose to run full defense anyway on a game day.",
+              );
+            }
+            return gameDayDefensePrimer(b, original, signal.postureToday === "tournament");
+          }
           case "speed":
           case "strength":
-          case "defense":
           case "baserunning":
             return suppressBlock(b, rationale);
           default:
@@ -1840,6 +1930,8 @@ export interface RoadmapInputs {
   readonly seasonPhaseSource?: "date_window" | "stored" | "default" | null;
   /** Position the athlete says they are actually working today. */
   readonly positionOverride?: string | null;
+  /** Athlete tapped "run full defense anyway" on a game day. */
+  readonly defenseFullOverride?: boolean;
 }
 
 export function buildHammerDailyPlan(
@@ -1929,7 +2021,13 @@ export function buildHammerDailyPlan(
     };
   });
 
-  const modulated = applyScheduleModulation(withThrowingLadder, scheduleSignal);
+  const preModulationOriginals = new Map(rawBlocks.map((b) => [blockKey(b), b]));
+  const modulated = applyScheduleModulation(
+    withThrowingLadder,
+    scheduleSignal,
+    preModulationOriginals,
+    roadmapInputs.defenseFullOverride === true,
+  );
   const sided = applySideBias(modulated, sideBias);
   const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
 

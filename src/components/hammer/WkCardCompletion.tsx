@@ -65,6 +65,10 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
 
   async function mark(status: "done" | "skipped") {
     if (busy) return;
+    if (items.length === 0) {
+      toast("Nothing is prescribed here yet, so there's nothing to mark done.");
+      return;
+    }
     setBusy(true);
     try {
       // 1) local engagement — drives Daily Intent header + healing narrative
