@@ -93,6 +93,8 @@ const DEFAULT_GOAL = 100; // oz
 
 export function useHydration() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
   const [todayLogs, setTodayLogs] = useState<HydrationLog[]>([]);
   const [todayTotal, setTodayTotal] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(DEFAULT_GOAL);
