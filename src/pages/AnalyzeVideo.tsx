@@ -43,6 +43,8 @@ import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescr
 import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
+import { RootPatternCallout } from "@/components/analyze/RootPatternCallout";
+import { useScoredGradingAccess } from "@/hooks/useScoredGradingAccess";
 import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
@@ -84,6 +86,9 @@ export default function AnalyzeVideo() {
   // measurement-backed tiles; every unvalidated tile stays behind its
   // existing kill switch in src/lib/reportCard/release1.ts.
   const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+  // Scored grading (report card, score dial, 20–80 band) is owner/admin only
+  // until the measurement engine is real. Server strips the numbers too.
+  const { allowed: scoresAllowed } = useScoredGradingAccess();
 
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -1462,9 +1467,11 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
-                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                {scoresAllowed && (
+                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                )}
 
-                {analysisView === "report_card" ? (
+                {scoresAllowed && analysisView === "report_card" ? (
                   <HammerReportCard
                     sport={sport}
                     module={module}
@@ -1487,10 +1494,15 @@ export default function AnalyzeVideo() {
                     onSaveDrill={handleSaveDrill}
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
+                    showScore={scoresAllowed}
                   />
                 )}
 
                 <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
+
+                {/* One movement problem showing up in several skills outranks
+                    anything single-discipline, so it sits above the drills. */}
+                <RootPatternCallout />
 
                 <AnalysisPrescriptionSection
                   module={module}

@@ -16,6 +16,8 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
+import { buildFaultFindings } from "../_shared/faultFindings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1905,14 +1907,18 @@ Deno.serve(async (req) => {
           outcome_reason: `served_from:${prior.id}`,
         });
         console.log(`[ANALYZE-VIDEO] cache HIT for ${videoId}`);
+        const cachedPayload: Record<string, unknown> = {
+          success: true,
+          replay_cache: true,
+          cache_fingerprint_hex: cacheFingerprintHex,
+          ai_analysis: cachedAi,
+          efficiency_score: videoRow.efficiency_score,
+        };
+        // Release gate: a hidden number that still returns from an endpoint is
+        // not gated. Owner/admin only until real measurement exists.
+        const cacheScored = await canSeeScoredGrading(supabase, userId);
         return new Response(
-          JSON.stringify({
-            success: true,
-            replay_cache: true,
-            cache_fingerprint_hex: cacheFingerprintHex,
-            ai_analysis: cachedAi,
-            efficiency_score: videoRow.efficiency_score,
-          }),
+          JSON.stringify(cacheScored ? cachedPayload : stripScoredGrading(cachedPayload)),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
@@ -2600,6 +2606,38 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       }
     }
 
+    // ===== COACHING STAGE =====
+    // Turn the boolean fault flags into durable taxonomy rows, one per fault,
+    // tagged with the root movement pattern behind them. This is what lets the
+    // app notice the SAME pattern across hitting, pitching and throwing.
+    try {
+      const findings = buildFaultFindings({
+        userId,
+        videoId,
+        runId: okAudit.id ?? null,
+        module,
+        sport,
+        violations,
+        engineVersion: ENGINE_VERSION,
+      });
+      if (findings.length > 0) {
+        const { error: findingsError } = await supabase
+          .from("analysis_fault_findings")
+          .insert(findings);
+        if (findingsError) {
+          console.error("[ANALYZE-VIDEO] fault findings insert failed:", findingsError.message);
+        } else {
+          console.log(`[ANALYZE-VIDEO] persisted ${findings.length} analysis_fault_findings`);
+        }
+      } else {
+        console.log("[ANALYZE-VIDEO] no mapped faults for this run — nothing persisted");
+      }
+    } catch (e) {
+      console.error("[ANALYZE-VIDEO] coaching stage failed:", (e as Error)?.message);
+    }
+
+
+
     // Update user progress
     const { data: progressData, error: progressFetchError } = await supabase
       .from("user_progress")
@@ -2650,29 +2688,36 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
     console.log(`Analysis complete for video ${videoId}`);
 
-    return new Response(
-      JSON.stringify({
-        efficiency_score,
-        summary,
-        feedback,
-        positives,
-        drills,
-        scorecard,
-        // The structured fault flags. The client matches library videos and
-        // prescriptions against these keys — omitting them left every fresh
-        // analysis looking like it had found nothing.
-        violations_detected: violations,
-        mocap_data,
+    const responsePayload: Record<string, unknown> = {
+      efficiency_score,
+      summary,
+      feedback,
+      positives,
+      drills,
+      scorecard,
+      // The structured fault flags. The client matches library videos and
+      // prescriptions against these keys — omitting them left every fresh
+      // analysis looking like it had found nothing.
+      violations_detected: violations,
+      mocap_data,
 
-        // Hammer Report Card — surface structured metrics to the client so the
-        // grade ribbon + tiles render without an extra round-trip.
-        metrics: metrics ?? null,
-        report_card_contract_id: reportCardContract?.id ?? null,
-        ball_tracking_eligible: ballGate.eligible,
-        capture_fps: ballGate.fps,
-        ball_flight_unavailable_reason: ballGate.reason,
-        ball_flight_suppressed_keys: ballFlightSuppressedKeys,
-      }),
+      // Hammer Report Card — surface structured metrics to the client so the
+      // grade ribbon + tiles render without an extra round-trip.
+      metrics: metrics ?? null,
+      report_card_contract_id: reportCardContract?.id ?? null,
+      ball_tracking_eligible: ballGate.eligible,
+      capture_fps: ballGate.fps,
+      ball_flight_unavailable_reason: ballGate.reason,
+      ball_flight_suppressed_keys: ballFlightSuppressedKeys,
+    };
+
+    // Release gate — owner/admin only. Coaching text, drills and fault flags
+    // stay; every number presented as a measurement is removed here so it
+    // never reaches the client at all.
+    const scoredAllowed = await canSeeScoredGrading(supabase, userId);
+
+    return new Response(
+      JSON.stringify(scoredAllowed ? responsePayload : stripScoredGrading(responsePayload)),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }

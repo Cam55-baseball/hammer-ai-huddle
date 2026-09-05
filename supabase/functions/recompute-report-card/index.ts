@@ -8,6 +8,7 @@ import {
   type DisciplineContract,
   type MetricSpec,
 } from "../_shared/reportCardContracts.ts";
+import { canSeeScoredGrading, SCORED_GRADING_MESSAGE } from "../_shared/scoredGradingGate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,6 +95,22 @@ Deno.serve(async (req) => {
     const { video_id } = parsed.data;
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    // Release gate — this endpoint produces graded report-card metrics, which
+    // are owner/admin only until the measurement engine is real.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const { data: authData } = token
+      ? await supabase.auth.getUser(token)
+      : { data: { user: null } as { user: null } };
+    const callerId = authData?.user?.id ?? null;
+
+    if (!(await canSeeScoredGrading(supabase, callerId))) {
+      return new Response(
+        JSON.stringify({ error: "scored_grading_gated", message: SCORED_GRADING_MESSAGE }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const { data: video, error: vErr } = await supabase
       .from("videos")
