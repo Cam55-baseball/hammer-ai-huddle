@@ -117,6 +117,8 @@ import { useAthletePositions } from "@/hooks/useAthletePositions";
 import { applyAdjustments, type PlanAdjustment } from "@/lib/hammer/prescription/drillSwap";
 import { DrillAdjustDialog } from "@/components/hammer/DrillAdjustDialog";
 import { positionLabel, positionShort } from "@/lib/drills/positionLabels";
+import { PositionPickerDialog } from "@/components/hammer/PositionPickerDialog";
+import { announceAthleteContextChanged } from "@/lib/hammer/context/contextRefresh";
 import { Repeat } from "lucide-react";
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
