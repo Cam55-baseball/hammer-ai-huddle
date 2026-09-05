@@ -144,6 +144,14 @@ describe("every card renders for every day type and context state", () => {
             );
           }
         }
+        if (dayName === "off day") {
+          // Guard the guard: if the pinned rest date ever stops being a rest
+          // day, this row would silently retest a training day instead.
+          expect(
+            plan.blocks.some((b) => b.status === "off-day"),
+            "off-day row is no longer landing on a microcycle rest day",
+          ).toBe(true);
+        }
       });
     }
   }
