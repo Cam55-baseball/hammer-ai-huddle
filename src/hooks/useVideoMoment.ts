@@ -85,7 +85,11 @@ export function useVideoMoment(event: VideoMomentEvent | null, enabled = true): 
     [tagged.data, user?.id],
   );
 
-  const needsDomainTier = active && !tagged.isLoading && taggedItems.length === 0;
+  // Analysis moments never pad. A video that was not tagged for the fault the
+  // analysis reported is not an answer to it, so the moment stays empty and the
+  // UI says so rather than falling back to popular or domain-generic picks.
+  const noFallback = event?.kind === 'analysis_complete';
+  const needsDomainTier = active && !noFallback && !tagged.isLoading && taggedItems.length === 0;
 
   const domainQuery = useQuery({
     queryKey: ['video-moment-domain', event?.skillDomain, sport, (positions ?? []).join(','), user?.id],

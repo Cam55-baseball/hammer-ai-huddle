@@ -95,6 +95,16 @@ export interface RecommendInput {
   movementPatterns: string[];
   resultTags: string[];
   contextTags: string[];
+  /**
+   * Correction keys the analysis itself prescribed (not inferred from rules).
+   * These are the highest-weighted signal: they are the fix being asked for.
+   */
+  correctionTags?: string[];
+  /**
+   * `layer:key` → the athlete-readable piece of feedback that produced the key.
+   * Used only to word the "why" line. Never affects ranking.
+   */
+  feedbackEvidence?: Record<string, string>;
   candidateVideos: VideoWithTags[];
   taxonomy: TaxonomyTag[];
   rules: VideoTagRule[];
@@ -107,6 +117,7 @@ export interface RecommendInput {
   /** HARD GATE for rules/tags scoped to position groups (catcher, middle_infield, …). */
   positions?: string[] | null;
 }
+
 
 
 export interface RecommendResult {
@@ -129,10 +140,13 @@ function clamp(n: number, min: number, max: number): number {
 export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
+    correctionTags, feedbackEvidence,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics,
     activePhases, sport, positions,
   } = input;
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
+  const evidence = feedbackEvidence ?? {};
+
 
   // Build key→tagId lookup scoped to this skill domain + sport + position group.
   const keyToTagId = new Map<string, string>();
@@ -166,6 +180,11 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     }
   }
 
+  // Corrections named by the analysis itself outrank rule-inferred ones:
+  // they ARE the fix the athlete was just given.
+  for (const key of correctionTags ?? []) {
+    triggeredCorrections.set(key, { strength: 12, reason: `Fixes: ${key.replace(/_/g, ' ')}` });
+  }
 
   const movementTagIds = new Set(movementPatterns.map(k => keyToTagId.get(`movement_pattern:${k}`)).filter(Boolean) as string[]);
   const resultTagIds = new Set(resultTags.map(k => keyToTagId.get(`result:${k}`)).filter(Boolean) as string[]);
@@ -175,6 +194,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     const id = keyToTagId.get(`correction:${key}`);
     if (id) correctionTagIds.set(id, val.strength);
   }
+
 
   const now = Date.now();
   const scored: RecommendResult[] = [];
@@ -203,9 +223,26 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       if (!tag) continue;
       const w = a.weight || 1;
 
+      // Layer weights, highest first: correction (the prescribed fix) →
+      // movement pattern → result → context.
+      if (correctionTagIds.has(a.tag_id)) {
+        const ruleStrength = correctionTagIds.get(a.tag_id) || 5;
+        score += 90 + ruleStrength;
+        const said = evidence[`correction:${tag.key}`];
+        reasons.push(
+          said
+            ? `Works on ${tag.label.toLowerCase()} — your analysis said ${said}`
+            : `Recommended correction: ${tag.label}`,
+        );
+      }
       if (movementTagIds.has(a.tag_id)) {
         score += 50 * w;
-        reasons.push(`Matches your movement pattern: ${tag.label}`);
+        const said = evidence[`movement_pattern:${tag.key}`];
+        reasons.push(
+          said
+            ? `Same pattern as your clip — ${said}`
+            : `Matches your movement pattern: ${tag.label}`,
+        );
       }
       if (resultTagIds.has(a.tag_id)) {
         score += 25 * w;
@@ -215,12 +252,8 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
         score += 15 * w;
         reasons.push(`Fits context: ${tag.label}`);
       }
-      if (correctionTagIds.has(a.tag_id)) {
-        const ruleStrength = correctionTagIds.get(a.tag_id) || 5;
-        score += 40 + ruleStrength;
-        reasons.push(`Recommended correction: ${tag.label}`);
-      }
     }
+
 
     // User-specific success
     const uo = userOutcomes?.get(v.id);
