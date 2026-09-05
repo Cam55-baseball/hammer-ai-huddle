@@ -1252,6 +1252,12 @@ export default function Profile() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      <div className="rounded-md border border-border/60 p-3">
+                        <PositionListEditor />
+                      </div>
+
+
                       
                       <div className="space-y-2">
                         <Label htmlFor="team_affiliation">{t('profile.teamAffiliation')}</Label>
