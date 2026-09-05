@@ -66,6 +66,12 @@ export function BlockCompletionControls({
   }, []);
 
   function mark(status: CompletionState) {
+    // A card with nothing prescribed can't be completed — marking it done
+    // would record work that never existed.
+    if (drills && drills.length === 0) {
+      toast("Nothing is prescribed here yet, so there's nothing to mark done.");
+      return;
+    }
     recordCompletion(user?.id, modality, status, side);
     setCurrent(status);
     onChanged();
