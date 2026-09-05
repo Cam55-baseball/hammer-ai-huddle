@@ -1154,6 +1154,11 @@ function BlockCard({
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{block.why}</p>
+            {block.assumption && (
+              <p className="text-[11px] mt-1 rounded-md border border-sky-500/30 bg-sky-500/5 px-2 py-1 text-sky-800 dark:text-sky-200">
+                {block.assumption}
+              </p>
+            )}
             {block.roadmapReason && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5 italic">
                 {block.roadmapReason}
