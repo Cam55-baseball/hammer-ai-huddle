@@ -417,8 +417,10 @@ const CATALOG: Partial<Record<CatalogKey, DrillStep[]>> = {
 function catalogFor(pos: DefensePosition, sport: DefenseSport, phase: DefensePhase): DrillStep[] {
   const key = `${pos}:${sport}:${phase}` as CatalogKey;
   if (CATALOG[key]) return [...(CATALOG[key] as DrillStep[])];
-  // OF corner fallback → OF catalog
-  if (pos === "LF" || pos === "RF") {
+  // Outfield fallback → OF catalog. CF has its own off-season entry but not
+  // every phase, so it falls back here too rather than dropping to a generic
+  // "field the ball" block.
+  if (pos === "LF" || pos === "RF" || pos === "CF") {
     const of = CATALOG[`OF:${sport}:${phase}` as CatalogKey];
     if (of) return [...of];
   }
