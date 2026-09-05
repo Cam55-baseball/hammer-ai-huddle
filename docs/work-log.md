@@ -61,3 +61,25 @@ Newest first. Each entry: what changed, what I verified myself, what remains unv
 **Verified myself:** typecheck clean; suite at the same level as the prior run.
 
 **Unverified:** no live analysis has been run since, so the gateway fixes and the recommendation loop are untested against real traffic.
+
+## 2026-09-?? — Nutrition: one favorites list, drinks everywhere
+
+**Changed**
+- New `src/hooks/useUnifiedFavorites.ts` — merges `vault_favorite_meals` and starred
+  `user_food_history` foods into one list. Nothing migrated; both sources still read.
+  New favorites always save to `vault_favorite_meals` (only table holding food + fluid).
+- New `src/components/nutrition-hub/FavoritesPicker.tsx` — the single "Favorites" UI.
+  Deleted `FavoriteMealsPicker.tsx` and `FavoriteFoodsWidget.tsx` (two competing lists).
+- New `src/hooks/useMealHydrationBridge.ts` — meal surfaces wrote fluid to
+  `vault_nutrition_logs.hydration_oz`, but the day's drink counter reads `hydration_logs`.
+  Every meal save with ounces now also writes a hydration log so the counter moves.
+- `LogMealCard` now has one Favorites drawer instead of two.
+- `MealLoggingDialog`: unified favorites; the hydration field is now actually saved with
+  the meal (it was previously only used for favorites) and bridged to the drink counter.
+- `QuickNutritionLogDialog`: favorites picker, "Save as favorite", full drink logger, and
+  choosing "Hydration only" now hides the macro fields and shows the drink logger.
+- `VaultNutritionLogCard`: full drink logger added; typed ounces bridged to the counter.
+
+**Verified myself**: type check clean; `src/test` suite 182 passed / 1 failed
+(`engine-invariants`, pre-existing).
+**Unverified**: not clicked through as a signed-in athlete.
