@@ -143,6 +143,9 @@ const PRE_START_MODALITIES = new Set(["game_iq", "fueling"]);
 interface PlanAdjustApi {
   save: (adj: PlanAdjustment) => Promise<void>;
   positionWorked: string | null;
+  /** Athlete chose to run full defense work on a game day. */
+  defenseFullOverride: boolean;
+  setDefenseFullOverride: (v: boolean) => void;
 }
 const PlanAdjustContext = createContext<PlanAdjustApi | null>(null);
 export function usePlanAdjustApi(): PlanAdjustApi | null {
@@ -510,6 +513,28 @@ function HammerDailyPlanBody({
   const wkRx = useHammersToday();
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
+  // Game-day defense override — athlete-owned, one tap, resets each day.
+  const defenseOverrideKey = `hammer.defenseFull.${bodyPlanDate}`;
+  const [defenseFullOverride, setDefenseFullOverrideState] = useState(false);
+  useEffect(() => {
+    try {
+      setDefenseFullOverrideState(localStorage.getItem(defenseOverrideKey) === "1");
+    } catch {
+      setDefenseFullOverrideState(false);
+    }
+  }, [defenseOverrideKey]);
+  const setDefenseFullOverride = useCallback(
+    (v: boolean) => {
+      setDefenseFullOverrideState(v);
+      try {
+        if (v) localStorage.setItem(defenseOverrideKey, "1");
+        else localStorage.removeItem(defenseOverrideKey);
+      } catch {
+        /* storage unavailable — override stays in memory for this session */
+      }
+    },
+    [defenseOverrideKey],
+  );
   const rawPlan = useMemo(
     () =>
       buildHammerDailyPlan(
@@ -525,9 +550,10 @@ function HammerDailyPlanBody({
           resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
           positionOverride: planAdjust.positionWorked,
+          defenseFullOverride,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
@@ -556,8 +582,13 @@ function HammerDailyPlanBody({
     return { ...base, blocks: applyAdjustments(base.blocks, planAdjust.adjustments) };
   }, [rawPlan, cnsHigh, planAdjust.adjustments]);
   const adjustApi = useMemo<PlanAdjustApi>(
-    () => ({ save: planAdjust.save, positionWorked: planAdjust.positionWorked }),
-    [planAdjust.save, planAdjust.positionWorked],
+    () => ({
+      save: planAdjust.save,
+      positionWorked: planAdjust.positionWorked,
+      defenseFullOverride,
+      setDefenseFullOverride,
+    }),
+    [planAdjust.save, planAdjust.positionWorked, defenseFullOverride, setDefenseFullOverride],
   );
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
@@ -1318,6 +1349,20 @@ function BlockCard({
               <MessageCircle className="h-3 w-3" />
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
+            {block.modality === "defense" && (block.gameDayPrimer || adjustApiForCard?.defenseFullOverride) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  adjustApiForCard?.setDefenseFullOverride(!adjustApiForCard.defenseFullOverride)
+                }
+                className="text-xs"
+              >
+                {adjustApiForCard?.defenseFullOverride
+                  ? "Back to pregame primer"
+                  : "Do full defense anyway"}
+              </Button>
+            )}
             <div className="ml-auto">
               {block.status === "off-day" ? (
                 <span className="text-[11px] text-muted-foreground italic">
