@@ -1369,6 +1369,10 @@ function BlockCard({
                 <span className="text-[11px] text-muted-foreground italic">
                   No log today — resting this modality.
                 </span>
+              ) : block.status === "awaiting-input" ? (
+                <span className="text-[11px] text-muted-foreground italic">
+                  Held for review — nothing to mark done yet.
+                </span>
               ) : block.drills.length === 0 ? (
                 <span className="text-[11px] text-muted-foreground italic">
                   Nothing to mark done — there's no work prescribed here yet.
