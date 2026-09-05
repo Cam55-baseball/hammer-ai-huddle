@@ -535,8 +535,23 @@ export function MealLoggingDialog({
           </TabsContent>
         </Tabs>
 
+        {/* Favorites — reachable from every meal logging surface */}
+        <div className="space-y-2 pt-3 border-t">
+          <Label className="text-xs flex items-center gap-2">
+            <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+            Favorite meals
+          </Label>
+          <FavoriteMealsPicker onPick={handlePickFavorite} />
+        </div>
+
+        {/* Full hydration logging, right where the meal is logged */}
+        <div className="pt-3 border-t">
+          <HydrationLogger dense />
+        </div>
+
         {/* Meal Time + Digestion Notes shared fields */}
         <div className="space-y-3 pt-3 border-t">
+
           {/* Meal Time */}
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
