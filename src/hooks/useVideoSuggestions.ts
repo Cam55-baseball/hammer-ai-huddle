@@ -33,6 +33,8 @@ interface UseSuggestionsParams {
   sport?: TagSport | null;
   /** Position groups from `resolvePositionGroups()`. Gates position-scoped tags/rules. */
   positions?: string[] | null;
+  /** Correction keys tied to a cross-skill root pattern. Lifted in ranking. */
+  rootPatternCorrectionKeys?: string[];
 }
 
 export function useVideoSuggestions(params: UseSuggestionsParams) {
@@ -68,7 +70,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
   }, [qc]);
 
   return useQuery({
-    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, params.correctionTags ?? [], sport, (positions ?? []).join(','), user?.id],
+    queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, params.correctionTags ?? [], params.rootPatternCorrectionKeys ?? [], sport, (positions ?? []).join(','), user?.id],
     enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length + (params.correctionTags?.length ?? 0) > 0),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
@@ -169,6 +171,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         faultEndorsements,
         sport,
         positions,
+        rootPatternCorrectionKeys: params.rootPatternCorrectionKeys,
       });
 
     },
