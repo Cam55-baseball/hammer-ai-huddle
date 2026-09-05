@@ -1198,6 +1198,18 @@ function BlockCard({
             )}
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
+            {block.modality === "defense" &&
+              block.status === "off-day" &&
+              block.offDayOverridable && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => adjustApiForCard?.setDefenseFullOverride(true)}
+                  className="text-xs"
+                >
+                  Do a light block anyway
+                </Button>
+              )}
             {block.status !== "off-day" && (
               <Button
                 size="sm"
@@ -1353,7 +1365,8 @@ function BlockCard({
             {block.modality === "defense" &&
               (block.gameDayPrimer ||
                 block.offDayOverridable ||
-                adjustApiForCard?.defenseFullOverride) && (
+                adjustApiForCard?.defenseFullOverride) &&
+              block.status !== "off-day" && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1366,9 +1379,7 @@ function BlockCard({
                   ? block.gameDayPrimer
                     ? "Back to pregame primer"
                     : "Back to rest"
-                  : block.status === "off-day"
-                    ? "Do a light block anyway"
-                    : "Do full defense anyway"}
+                  : "Do full defense anyway"}
               </Button>
             )}
             <div className="ml-auto">

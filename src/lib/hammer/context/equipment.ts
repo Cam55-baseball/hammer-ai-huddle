@@ -12,6 +12,14 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
+export const EQUIPMENT_CONTEXT_CHANGED_EVENT = "hammer:equipment-context-changed";
+
+function announceEquipmentContextChanged(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(EQUIPMENT_CONTEXT_CHANGED_EVENT));
+  }
+}
+
 export type EquipmentScope = "persistent" | "session" | "temporary" | "inferred";
 
 export type Venue =
@@ -110,6 +118,10 @@ async function saveEquipmentContext(
     err.details = error.details;
     throw err;
   }
+  // The context envelope is a derived RPC result, so a successful equipment
+  // write cannot update it through table-query cache matching. Tell every live
+  // plan consumer to invalidate and re-read the envelope immediately.
+  announceEquipmentContextChanged();
 }
 
 /** Write a session-scoped equipment override (TTL: end of today UTC). */

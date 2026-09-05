@@ -12,13 +12,14 @@
  * Pure read layer — does not author organism truth. Missingness is preserved,
  * never imputed. Phase 60–61 confidence / missingness continuity applies.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { useDayState } from "@/hooks/useDayState";
 import { useMPIScores } from "@/hooks/useMPIScores";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { EQUIPMENT_CONTEXT_CHANGED_EVENT } from "@/lib/hammer/context/equipment";
 import {
   fetchAthleteContextEnvelope,
   type AthleteContextEnvelope,
@@ -199,6 +200,7 @@ function mkLive<T>(
 
 export function useHammerAthleteContext(): HammerAthleteContext {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { snapshot } = useHIESnapshot();
   const { data: rows } = useAthleteCommandRows({ days: 30, limit: 500 });
   const { dayType } = useDayState();
@@ -208,8 +210,25 @@ export function useHammerAthleteContext(): HammerAthleteContext {
     queryKey: ["hammer-context-envelope", user?.id],
     enabled: !!user,
     staleTime: 60 * 1000,
+    // Returning to Today's Plan must never reuse an envelope from before an
+    // equipment/profile edit, even when that edit happened on another screen.
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: () => fetchAthleteContextEnvelope(user!.id),
   });
+
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined") return;
+    const refresh = () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["hammer-context-envelope", user.id],
+        exact: true,
+        refetchType: "active",
+      });
+    };
+    window.addEventListener(EQUIPMENT_CONTEXT_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(EQUIPMENT_CONTEXT_CHANGED_EVENT, refresh);
+  }, [queryClient, user?.id]);
 
   return useMemo<HammerAthleteContext>(() => {
     const env = envelope ?? null;
