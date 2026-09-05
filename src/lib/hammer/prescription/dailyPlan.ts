@@ -162,6 +162,11 @@ export interface PrescribedBlock {
    */
   readonly gameDayPrimer?: boolean;
   /**
+   * Card is intentionally off today (rest / schedule) but the athlete may
+   * opt into a short light version. Drives the one-tap override control.
+   */
+  readonly offDayOverridable?: boolean;
+  /**
    * Laterality tag for switch hitters / ambidextrous throwers — when set,
    * this block represents ONE side (L or R) and is expected to appear
    * alongside a mirror-side block. UI keys DOM ids + completion task ids
