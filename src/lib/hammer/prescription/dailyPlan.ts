@@ -151,6 +151,17 @@ export interface PrescribedBlock {
   readonly missingContextKeys: ReadonlyArray<string>;
   readonly gamePlanTemplate: GamePlanTemplateSeed | null;
   /**
+   * One plain-English line stating what Hammer assumed when a piece of the
+   * athlete's context was missing. Cards must prescribe on an assumption
+   * rather than render as a request for information.
+   */
+  readonly assumption?: string;
+  /**
+   * Set on a defense block that is already the short pre-game primer — the
+   * schedule modulator must not suppress it a second time.
+   */
+  readonly gameDayPrimer?: boolean;
+  /**
    * Laterality tag for switch hitters / ambidextrous throwers — when set,
    * this block represents ONE side (L or R) and is expected to appear
    * alongside a mirror-side block. UI keys DOM ids + completion task ids
