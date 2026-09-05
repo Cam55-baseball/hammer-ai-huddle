@@ -2305,6 +2305,14 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Parse tool calls for structured output
     const toolCalls = data.choices?.[0]?.message?.tool_calls;
     let violations: any = {};
+    // Coaching-stage write result — reported to the client so a failed fault
+    // write is visible on the surface instead of dying in a log line.
+    let faultPersistence: { persisted: number; attempted: number; error: string | null } = {
+      persisted: 0,
+      attempted: 0,
+      error: null,
+    };
+
     let originalAiScore = 75;
     let scoreWasAdjusted = false;
     
