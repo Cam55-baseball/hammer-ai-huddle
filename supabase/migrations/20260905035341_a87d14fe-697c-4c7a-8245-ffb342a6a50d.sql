@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.get_athlete_context_envelope(uuid) TO authenticated;
