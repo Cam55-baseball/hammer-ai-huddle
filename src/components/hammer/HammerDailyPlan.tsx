@@ -93,6 +93,7 @@ import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
