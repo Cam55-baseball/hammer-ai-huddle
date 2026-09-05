@@ -163,6 +163,8 @@ function DrillRow({
   side?: "L" | "R" | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const adjustApi = usePlanAdjustApi();
   const tasks = useHammerDailyTasks(planDate);
   const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
   const checked = tasks.isDone(taskId, side);
@@ -188,16 +190,38 @@ function DrillRow({
             <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          aria-label={`How to do ${d.name}`}
-        >
-          <BookOpen className="h-3 w-3" />
-          <span>How?</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {adjustApi && (
+            <button
+              type="button"
+              onClick={() => setAdjustOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              aria-label={`Swap or skip ${d.name}`}
+            >
+              <Repeat className="h-3 w-3" />
+              <span>Can't do it</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label={`How to do ${d.name}`}
+          >
+            <BookOpen className="h-3 w-3" />
+            <span>How?</span>
+          </button>
+        </div>
       </div>
+      {adjustApi && (
+        <DrillAdjustDialog
+          open={adjustOpen}
+          onOpenChange={setAdjustOpen}
+          modality={modality}
+          drill={d}
+          onSave={adjustApi.save}
+        />
+      )}
       {d.equipmentNote && (
         <div className="text-[11px] text-muted-foreground mt-1">You need: {d.equipmentNote}</div>
       )}
