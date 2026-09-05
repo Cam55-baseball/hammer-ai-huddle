@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Utensils, ChevronDown, Star, Zap, Pill } from 'lucide-react';
+import { Utensils, ChevronDown, Star, Zap, Pill, Droplets } from 'lucide-react';
 import { MEAL_TYPES } from './MealTypeSelector';
 import { CommonFoodsGallery } from './CommonFoodsGallery';
 import { cn } from '@/lib/utils';
