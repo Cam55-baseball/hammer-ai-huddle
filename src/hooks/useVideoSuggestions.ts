@@ -84,12 +84,30 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
       if (!ids.length) return [];
 
       // Extra columns + assignments fetched separately to avoid TS strictness on new cols
-      const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }] = await Promise.all([
+      const faultKeys = [...(params.correctionTags ?? []), ...params.movementPatterns];
+      const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }, { data: likeRows }, { data: saveRows }] = await Promise.all([
         (supabase as any).from('library_videos').select('id, video_format, skill_domains, sport, ai_description, confidence_score, distribution_tier').in('id', ids),
         (supabase as any).from('video_tag_assignments').select('video_id, tag_id, weight').in('video_id', ids),
         (supabase as any).from('video_performance_metrics').select('video_id, post_view_improvement_sum, post_view_improvement_n').in('video_id', ids),
         user ? (supabase as any).from('video_user_outcomes').select('video_id, post_score_delta').eq('user_id', user.id).in('video_id', ids) : Promise.resolve({ data: [] }),
+        faultKeys.length
+          ? (supabase as any).from('library_video_likes').select('video_id, user_id, fault_tag_key').in('video_id', ids).in('fault_tag_key', faultKeys)
+          : Promise.resolve({ data: [] }),
+        faultKeys.length
+          ? (supabase as any).from('library_video_saves').select('video_id, user_id, fault_tag_key').in('video_id', ids).in('fault_tag_key', faultKeys)
+          : Promise.resolve({ data: [] }),
       ]);
+
+      // One athlete counts once per video, whether they liked it, saved it or both.
+      const endorsers = new Map<string, Set<string>>();
+      [...(likeRows || []), ...(saveRows || [])].forEach((r: any) => {
+        if (!r?.video_id || !r?.user_id) return;
+        const set = endorsers.get(r.video_id) ?? new Set<string>();
+        set.add(r.user_id);
+        endorsers.set(r.video_id, set);
+      });
+      const faultEndorsements = new Map<string, number>();
+      endorsers.forEach((set, videoId) => faultEndorsements.set(videoId, set.size));
 
       const metaMap = new Map<string, any>();
       (meta || []).forEach((m: any) => metaMap.set(m.id, m));
@@ -148,6 +166,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         rules,
         userOutcomes,
         globalMetrics,
+        faultEndorsements,
         sport,
         positions,
       });

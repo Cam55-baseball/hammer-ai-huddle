@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
 import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctrine.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { humanLabel } from "../_shared/humanLabel.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -194,7 +195,7 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[], batterSide: s
           patterns.push({
             category: "hitting", metric: "pitch_type_decision", value: Math.round(errRate),
             threshold: 40, severity: errRate > 55 ? "high" : "medium",
-            description: `${Math.round(errRate)}% incorrect decisions vs ${type}`,
+            description: `${Math.round(errRate)}% incorrect decisions vs the ${humanLabel(type, "pitch")}`,
             data_points: { pitch_type: type },
           });
         }
@@ -309,7 +310,7 @@ function analyzePitchingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
         patterns.push({
           category: "pitching", metric: `${type}_command`, value: Math.round(avg),
           threshold: 45, severity: avg < 30 ? "high" : "medium",
-          description: `${type} command grade ${Math.round(avg)}/80 — poor control`,
+          description: `${humanLabel(type, "pitch")} command grade ${Math.round(avg)}/80 — poor control`,
         });
       }
     }
@@ -445,7 +446,7 @@ function analyzeVisionMicro(visionDrills: any[]): MicroPattern[] {
         patterns.push({
           category: "vision", metric: "vision_accuracy_low", value: Math.round(avgAcc),
           threshold: 70, severity: avgAcc < 50 ? "high" : "medium",
-          description: `Recognition accuracy ${Math.round(avgAcc)}% on ${type} drills — below 70% target`,
+          description: `Recognition accuracy ${Math.round(avgAcc)}% on ${humanLabel(type, "vision")} drills — below 70% target`,
           data_points: { drill_type: type, avg_accuracy: avgAcc },
         });
       }
@@ -824,7 +825,7 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
     case "vision_accuracy_low": {
       const drillType = pattern.data_points?.drill_type || "recognition";
       rotations.push({
-        primary: { name: `${drillType} Focused Training`, description: `Targeted accuracy improvement on ${drillType} drills`, module: "tex-vision", constraints: "0.4s window, 30 pitches", drill_type: "recognition" },
+        primary: { name: `${humanLabel(drillType, "Pitch Recognition")} Focused Training`, description: `Targeted accuracy improvement on ${humanLabel(drillType, "pitch recognition")} drills`, module: "tex-vision", constraints: "0.4s window, 30 pitches", drill_type: "recognition" },
         alternatives: [
           { name: "Progressive Difficulty Vision", description: "Start easy, ramp to hard difficulty", module: "tex-vision", constraints: "10 easy → 10 medium → 10 hard", drill_type: "vision" },
         ],

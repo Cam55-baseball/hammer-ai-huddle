@@ -1665,14 +1665,54 @@ Deno.serve(async (req) => {
   try {
     // Validate input
     const body = await req.json();
-    const { videoId, module, sport, userId, frames, landingFrameIndex, frameExtractions, captureFps, ballTrackingEligible } = requestSchema.parse(body);
+    const { videoId, module, sport, userId, frames: rawFrames, landingFrameIndex: rawLandingFrameIndex, frameExtractions, captureFps, ballTrackingEligible } = requestSchema.parse(body);
     auditCtx.videoId = videoId;
     auditCtx.userId = userId;
 
+    /**
+     * Frame payload hygiene — two upstream failures came from here:
+     *  - `Invalid URL format: AAA`: a frame string that is not a real data URL
+     *    (placeholder / truncated capture) reached the gateway verbatim.
+     *  - `Downloaded image content cannot exceed 30MB`: the frame payload was
+     *    sent whole, above the provider ceiling.
+     * We drop malformed frames and cap the payload deliberately instead of
+     * letting the provider reject the whole analysis.
+     */
+    const DATA_URL_RE = /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]{512,}$/;
+    const MAX_FRAME_PAYLOAD_BYTES = 18 * 1024 * 1024; // well under the 30MB provider ceiling
+    const validFrames: string[] = [];
+    const validIndexes: number[] = [];
+    rawFrames.forEach((f, i) => {
+      if (typeof f === "string" && DATA_URL_RE.test(f)) {
+        validFrames.push(f);
+        validIndexes.push(i);
+      }
+    });
+    const malformedCount = rawFrames.length - validFrames.length;
+    if (malformedCount > 0) {
+      console.warn(`[ANALYZE-VIDEO] dropped ${malformedCount} malformed frame(s) before AI call`);
+    }
+
+    // Keep the landing frame; thin the rest evenly until the payload fits.
+    let landingPos = rawLandingFrameIndex == null ? -1 : validIndexes.indexOf(rawLandingFrameIndex);
+    let keptFrames = validFrames;
+    const payloadBytes = (arr: string[]) => arr.reduce((n, s) => n + s.length, 0);
+    while (payloadBytes(keptFrames) > MAX_FRAME_PAYLOAD_BYTES && keptFrames.length > 3) {
+      const dropAt = keptFrames.length - 1 === landingPos ? keptFrames.length - 2 : keptFrames.length - 1;
+      keptFrames = keptFrames.filter((_, i) => i !== dropAt);
+      if (landingPos > dropAt) landingPos -= 1;
+    }
+    if (keptFrames.length !== validFrames.length) {
+      console.warn(`[ANALYZE-VIDEO] trimmed frame payload to ${keptFrames.length} frames (size cap)`);
+    }
+    const frames = keptFrames;
+    const landingFrameIndex = landingPos >= 0 && landingPos < frames.length ? landingPos : null;
+
     console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
-    console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
+    console.log(`[ANALYZE-VIDEO] Received ${rawFrames.length} frames, using ${frames.length} for visual analysis`);
     console.log(`[ANALYZE-VIDEO] Landing frame index: ${landingFrameIndex ?? 'auto-detect'}`);
     console.log(`[ANALYZE-VIDEO] frameExtractions: ${frameExtractions?.length ?? 0}`);
+
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -1819,6 +1859,13 @@ Deno.serve(async (req) => {
         return await writeReject("reject_excessive_dropped_frames", `dropped=${requestedCount - frames.length}/${requestedCount} (${droppedRatio.toFixed(3)} > ${PHASE1_MAX_DROPPED_RATIO})`);
       }
     }
+    if (frames.length < 3) {
+      return await writeReject(
+        "reject_unreadable_frames",
+        `usable_frames=${frames.length} of ${rawFrames.length} (malformed=${malformedCount})`,
+      );
+    }
+
 
     const cacheFingerprintHex = await buildCacheFingerprint({
       videoSha256Hex,
@@ -2611,7 +2658,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         positives,
         drills,
         scorecard,
+        // The structured fault flags. The client matches library videos and
+        // prescriptions against these keys — omitting them left every fresh
+        // analysis looking like it had found nothing.
+        violations_detected: violations,
         mocap_data,
+
         // Hammer Report Card — surface structured metrics to the client so the
         // grade ribbon + tiles render without an extra round-trip.
         metrics: metrics ?? null,
