@@ -21,6 +21,8 @@ import { format } from 'date-fns';
 import { VaultFavoriteMeal } from '@/hooks/useVault';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
 import { DIGESTION_TAGS, convertMealTime, toggleDigestionTagInNotes } from '@/constants/nutritionLogging';
+import { HydrationLogger } from '@/components/nutrition-hub/HydrationLogger';
+import { useMealHydrationBridge } from '@/hooks/useMealHydrationBridge';
 
 interface NutritionLog {
   id: string;
@@ -127,6 +129,7 @@ export function VaultNutritionLogCard({
   const [carbs, setCarbs] = useState<string>('');
   const [fats, setFats] = useState<string>('');
   const [hydration, setHydration] = useState<string>('');
+  const { logMealHydration } = useMealHydrationBridge();
   const [energyLevel, setEnergyLevel] = useState<number[]>([5]);
   const [digestionNotes, setDigestionNotes] = useState('');
   const [supplements, setSupplements] = useState<string[]>([]);
@@ -317,6 +320,8 @@ export function VaultNutritionLogCard({
     });
     setSaving(false);
     if (result.success) {
+      // Fluid typed against a meal has to reach the drinks counter too.
+      await logMealHydration(hydration ? parseFloat(hydration) : 0);
       // Invalidate all nutrition-related queries for E2E sync to Nutrition Hub
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
@@ -801,6 +806,15 @@ export function VaultNutritionLogCard({
                   className="h-9"
                 />
               </div>
+            </div>
+
+            {/* Drinks — the same logger the nutrition hub uses */}
+            <div className="space-y-2 pt-2 border-t">
+              <Label className="text-xs flex items-center gap-2">
+                <Droplets className="h-3.5 w-3.5 text-blue-500" />
+                Log drinks
+              </Label>
+              <HydrationLogger dense />
             </div>
 
             {/* Energy Level with number labels */}
