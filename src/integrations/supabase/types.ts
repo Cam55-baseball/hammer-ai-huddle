@@ -320,6 +320,57 @@ export type Database = {
           },
         ]
       }
+      analysis_fault_findings: {
+        Row: {
+          correction_key: string | null
+          created_at: string
+          engine_version: string | null
+          evidence: string | null
+          fault_key: string
+          id: string
+          movement_key: string | null
+          root_pattern_key: string | null
+          skill_domain: string
+          sport: string | null
+          updated_at: string
+          user_id: string
+          video_analysis_run_id: string | null
+          video_id: string | null
+        }
+        Insert: {
+          correction_key?: string | null
+          created_at?: string
+          engine_version?: string | null
+          evidence?: string | null
+          fault_key: string
+          id?: string
+          movement_key?: string | null
+          root_pattern_key?: string | null
+          skill_domain: string
+          sport?: string | null
+          updated_at?: string
+          user_id: string
+          video_analysis_run_id?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          correction_key?: string | null
+          created_at?: string
+          engine_version?: string | null
+          evidence?: string | null
+          fault_key?: string
+          id?: string
+          movement_key?: string | null
+          root_pattern_key?: string | null
+          skill_domain?: string
+          sport?: string | null
+          updated_at?: string
+          user_id?: string
+          video_analysis_run_id?: string | null
+          video_id?: string | null
+        }
+        Relationships: []
+      }
       anonymized_pattern_library: {
         Row: {
           confidence: number | null
