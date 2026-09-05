@@ -77,43 +77,53 @@ function normalizeInjuryToText(raw: unknown): string | null {
   return txt === "" ? null : txt;
 }
 
+/**
+ * Venue-ish equipment tokens. The stored profile is an inventory ARRAY
+ * (["gamer_bat","tee","pitching_machine"]); only these tokens describe the
+ * training environment, so an inventory entry may never masquerade as one.
+ */
+const VENUE_EQUIPMENT_TOKENS = new Set([
+  "full_gym", "commercial_gym", "home_gym", "bodyweight", "bands",
+  "hotel", "field", "open_space", "cage", "garage", "school_gym",
+]);
+
 export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjection {
-  const eq = ctx.get<unknown>("equipment_effective")?.value as
-    | { equipment?: string; scope?: string }
-    | string
+  // The canonical envelope entry is
+  //   { value: string[] | string | null, venue, scope, source, … }
+  // Older/synthetic shapes nest the inventory under `.equipment`. Handle all
+  // three — reading only `.value.equipment` is what previously dropped a fully
+  // declared inventory on the floor and left hitting on its no-gear fallback.
+  const entry = (ctx.envelope?.equipment_effective ?? null) as
+    | { value?: unknown; venue?: unknown; scope?: unknown }
     | null;
-  const equipmentRaw =
-    typeof eq === "string"
+  const eq = ctx.get<unknown>("equipment_effective")?.value ?? entry?.value ?? null;
+
+  const inventoryRaw =
+    Array.isArray(eq) || typeof eq === "string"
       ? eq
-      : (eq as { equipment?: unknown } | null)?.equipment ?? null;
-  // `equipment` is the single venue-ish token; the stored profile is an array,
-  // so collapse it to its first entry rather than leaking an array downstream.
-  const equipment: string | null = Array.isArray(equipmentRaw)
-    ? (equipmentRaw.length > 0 ? String(equipmentRaw[0]) : null)
-    : typeof equipmentRaw === "string"
-      ? equipmentRaw
-      : null;
-  const equipmentScope =
-    typeof eq === "object" && eq !== null
-      ? ((eq as { scope?: string }).scope ?? null)
-      : null;
-  // Full declared inventory (array form) + venue — used by the warm-up engine
-  // so no drill is prescribed for gear the athlete does not have.
-  const equipmentListRaw =
-    typeof eq === "object" && eq !== null
-      ? (eq as { equipment?: unknown }).equipment
-      : null;
-  const equipmentList: string[] = Array.isArray(equipmentListRaw)
-    ? equipmentListRaw.map((e) => String(e))
-    : typeof equipmentListRaw === "string"
-      ? [equipmentListRaw]
-      : equipment
-        ? [equipment]
-        : [];
-  const equipmentVenue =
-    typeof eq === "object" && eq !== null
-      ? ((eq as { venue?: string }).venue ?? null)
-      : null;
+      : typeof eq === "object" && eq !== null
+        ? ((eq as { equipment?: unknown }).equipment ?? null)
+        : null;
+  const equipmentList: string[] = Array.isArray(inventoryRaw)
+    ? inventoryRaw.map((e) => String(e))
+    : typeof inventoryRaw === "string" && inventoryRaw !== ""
+      ? [inventoryRaw]
+      : [];
+
+  const venueFromEntry =
+    (typeof eq === "object" && eq !== null && !Array.isArray(eq)
+      ? ((eq as { venue?: unknown }).venue ?? null)
+      : null) ?? (entry?.venue ?? null);
+  const equipmentVenue = typeof venueFromEntry === "string" ? venueFromEntry : null;
+
+  const equipment: string | null =
+    equipmentVenue ?? equipmentList.find((t) => VENUE_EQUIPMENT_TOKENS.has(t)) ?? null;
+
+  const scopeRaw =
+    (typeof eq === "object" && eq !== null && !Array.isArray(eq)
+      ? ((eq as { scope?: unknown }).scope ?? null)
+      : null) ?? (entry?.scope ?? null);
+  const equipmentScope = typeof scopeRaw === "string" ? scopeRaw : null;
 
 
   // RFL: spine `injury_history` is heterogeneous across producers:
