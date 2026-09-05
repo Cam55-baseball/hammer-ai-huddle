@@ -116,6 +116,13 @@ export interface RecommendInput {
    * can never out-rank an actual tag match.
    */
   faultEndorsements?: Map<string, number>;
+  /**
+   * Correction keys belonging to a ROOT movement pattern the athlete shows in
+   * more than one skill domain. These are lifted above single-domain matches
+   * because fixing the pattern once helps every discipline it appears in. Only
+   * videos that already match the key are affected — nothing is padded in.
+   */
+  rootPatternCorrectionKeys?: string[];
   /** Active teaching-phase ids (e.g. ['p1_hip_load','p4_hitters_move']). Soft boost only. */
   activePhases?: string[];
   /** HARD GATE — athlete sport. Softball athletes never receive baseball-only tags/videos. */
