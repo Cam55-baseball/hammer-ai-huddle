@@ -83,3 +83,48 @@ Newest first. Each entry: what changed, what I verified myself, what remains unv
 **Verified myself**: type check clean; `src/test` suite 182 passed / 1 failed
 (`engine-invariants`, pre-existing).
 **Unverified**: not clicked through as a signed-in athlete.
+
+## 2026-09-05 — Watch this next, role gating, nutrition totals
+
+### Item 3 — "Watch this next" showed no videos
+- `supabase/functions/analyze-video/index.ts`: coaching-stage fault write now records
+  `faultPersistence { persisted, attempted, error }`. On failure the audit run's
+  `outcome_reason` is set to `coaching_stage_write_failed: <error>` and the same object is
+  returned to the client as `fault_persistence`. The write keeps using the service-role
+  client — chosen deliberately over adding an INSERT policy, since an athlete should be able
+  to read and delete their own findings but never author them.
+- `src/pages/AnalyzeVideo.tsx`: "Watch this next" moved directly beneath the detailed
+  analysis panel, above ball flight, root pattern and drills.
+- In-memory matching from the current run was already in place via
+  `src/lib/analysisFeedbackToTaxonomy.ts` (structured `violations_detected` + scorecard areas
+  only, never prose), so a first-ever analysis can match without persisted history.
+- NOT VERIFIED: no live hitting analysis was run this round, so the row count in
+  `analysis_fault_findings` and the returned video titles remain unconfirmed.
+
+### Item 2 — Scouts and coaches must not receive Today plans
+- `src/components/hammer/HammerDailyPlan.tsx`: role gate added inside the component (not only
+  at call sites). Scout/coach accounts (non-owner) get an honest card explaining plans are for
+  athletes, with a link to their own board. Subscription gate unchanged for athletes.
+- `supabase/functions/wk-generate-daily/index.ts`: server-side enforcement — scout/coach
+  callers get 403 `not_an_athlete_account`; any non-owner/admin without an active
+  subscription with modules gets 403 `no_active_prescription`.
+- NOT VERIFIED: no live scout/coach session was exercised against the function.
+
+### Item 1 — Nutrition logging reaching the hub
+- `src/hooks/useHydration.ts`: every drink write (the single funnel for all hydration paths)
+  now invalidates `['macroProgress']` and `['nutritionLogs']`, so hub totals move immediately.
+- `src/components/nutrition-hub/NutritionHubContent.tsx`: daily totals now include drinks —
+  `hydration_logs.total_carbs_g` is added to carbohydrate and converted at 4 kcal/g for
+  calories. `hydration_logs` stores no calorie column, so that derivation is the only honest
+  one available. Micros and electrolytes were already written per beverage from
+  `hydration_beverage_database`.
+- Removed the duplicate `HydrationTrackerWidget` from the Nutrition Hub Today tab.
+- `src/hooks/useMealVaultSync.ts`: the real Postgres/RLS message is now surfaced
+  ("Meal not saved: <reason>") instead of a generic toast, so a failed Save Meal names itself.
+- NOT VERIFIED: before/after hub totals from a live meal + drink log were not captured.
+
+### Suite
+- `npx vitest run`: 1135 passed, 10 failed across 7 files — engine fuzz/stress timing,
+  drill-recommendation perf, RecruitingStandards, ScoutEvaluation toggles, tempo pipeline,
+  PIE V2 scoring, UHRC buildReport. None are in the surfaces touched this round; the perf
+  ones vary run to run (6 vs 7 files across two runs).

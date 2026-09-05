@@ -284,8 +284,10 @@ export function useMealVaultSync() {
 
       return { success: true };
     } catch (error) {
+      // Never swallow the real reason — a rejected write has to name itself.
       console.error('Error syncing meal to vault:', error);
-      return { success: false, error: 'Failed to sync meal' };
+      const detail = (error as { message?: string } | null)?.message;
+      return { success: false, error: detail ? `Meal not saved: ${detail}` : 'Meal not saved (unknown error)' };
     }
   }, [user, queryClient]);
 

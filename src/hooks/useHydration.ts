@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
@@ -92,6 +93,8 @@ const DEFAULT_GOAL = 100; // oz
 
 export function useHydration() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
   const [todayLogs, setTodayLogs] = useState<HydrationLog[]>([]);
   const [todayTotal, setTodayTotal] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(DEFAULT_GOAL);
@@ -496,6 +499,11 @@ export function useHydration() {
       }
 
       fetchTodayLogs();
+      // Drinks carry carbohydrate and micronutrients, so the hub's daily
+      // totals are stale the moment one is logged. Refresh them here — this
+      // is the single funnel every drink write passes through.
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       try {
         const ch = new BroadcastChannel('data-sync');
         ch.postMessage({ type: HYDRATION_CHANGED_EVENT, userId: user.id, tabId: TAB_ID });
@@ -507,7 +515,7 @@ export function useHydration() {
       toast.error('Failed to log water');
       return false;
     }
-  }, [user, today, todayTotal, dailyGoal, fetchTodayLogs, buildLogPayload]);
+  }, [user, today, todayTotal, dailyGoal, fetchTodayLogs, buildLogPayload, queryClient]);
 
   // Delete log entry
   const deleteLog = useCallback(async (logId: string): Promise<boolean> => {

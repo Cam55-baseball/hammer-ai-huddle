@@ -2305,6 +2305,14 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Parse tool calls for structured output
     const toolCalls = data.choices?.[0]?.message?.tool_calls;
     let violations: any = {};
+    // Coaching-stage write result — reported to the client so a failed fault
+    // write is visible on the surface instead of dying in a log line.
+    let faultPersistence: { persisted: number; attempted: number; error: string | null } = {
+      persisted: 0,
+      attempted: 0,
+      error: null,
+    };
+
     let originalAiScore = 75;
     let scoreWasAdjusted = false;
     
@@ -2610,6 +2618,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Turn the boolean fault flags into durable taxonomy rows, one per fault,
     // tagged with the root movement pattern behind them. This is what lets the
     // app notice the SAME pattern across hitting, pitching and throwing.
+    //
+    // AUTHORITY: this write uses the service-role client (`supabase`), which
+    // bypasses RLS by design. The table intentionally has NO insert policy —
+    // an athlete may read and delete their own findings, never author one.
+    // A failure here is never swallowed: it is logged, stamped on the audit
+    // run, and returned to the client so the surface can say so out loud.
     try {
       const findings = buildFaultFindings({
         userId,
@@ -2626,15 +2640,33 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           .insert(findings);
         if (findingsError) {
           console.error("[ANALYZE-VIDEO] fault findings insert failed:", findingsError.message);
+          faultPersistence = {
+            persisted: 0,
+            attempted: findings.length,
+            error: findingsError.message,
+          };
         } else {
           console.log(`[ANALYZE-VIDEO] persisted ${findings.length} analysis_fault_findings`);
+          faultPersistence = { persisted: findings.length, attempted: findings.length, error: null };
         }
       } else {
         console.log("[ANALYZE-VIDEO] no mapped faults for this run — nothing persisted");
+        faultPersistence = { persisted: 0, attempted: 0, error: null };
       }
     } catch (e) {
-      console.error("[ANALYZE-VIDEO] coaching stage failed:", (e as Error)?.message);
+      const message = (e as Error)?.message ?? "unknown coaching-stage failure";
+      console.error("[ANALYZE-VIDEO] coaching stage failed:", message);
+      faultPersistence = { persisted: 0, attempted: -1, error: message };
     }
+
+    // Make a failed fault write visible on the audit trail, not just in logs.
+    if (faultPersistence.error && okAudit.id) {
+      await supabase
+        .from("video_analysis_runs")
+        .update({ outcome_reason: `coaching_stage_write_failed: ${faultPersistence.error}` })
+        .eq("id", okAudit.id);
+    }
+
 
 
 
@@ -2709,7 +2741,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       capture_fps: ballGate.fps,
       ball_flight_unavailable_reason: ballGate.reason,
       ball_flight_suppressed_keys: ballFlightSuppressedKeys,
+      // Coaching-stage persistence result. `error` non-null means the durable
+      // fault rows did NOT land — the surface says so rather than pretending.
+      fault_persistence: faultPersistence,
     };
+
 
     // Release gate — owner/admin only. Coaching text, drills and fault flags
     // stay; every number presented as a measurement is removed here so it

@@ -93,6 +93,7 @@ import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
@@ -467,9 +468,13 @@ export function HammerDailyPlan({
 } = {}) {
   const { modules, loading, initialized } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
   const navigate = useNavigate();
 
-  const gateResolved = initialized && !loading && !ownerLoading;
+  const gateResolved = initialized && !loading && !ownerLoading && !roleLoading;
+  // A training plan belongs to the athlete doing the training. Scouts and
+  // coaches never receive one, whatever their subscription says.
+  const isStaffOnlyRole = (isScout || isCoach) && !isOwner;
   const hasAccess = isOwner || modules.length > 0;
 
   if (!gateResolved) {
@@ -480,6 +485,26 @@ export function HammerDailyPlan({
         </CardHeader>
         <CardContent>
           <Skeleton className="h-24 w-full rounded" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isStaffOnlyRole) {
+    return (
+      <Card id="hammer-plan" className="scroll-mt-24 border-dashed">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Your daily work</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Daily training plans are written for the athlete doing the training, so there isn't one
+            on your account. Your work lives on your own board — the athletes you follow, their
+            latest video and their reports.
+          </p>
+          <Button size="sm" onClick={() => navigate(isCoach ? "/coach-dashboard" : "/scout-dashboard")}>
+            {isCoach ? "Go to coach board" : "Go to scout board"}
+          </Button>
         </CardContent>
       </Card>
     );
@@ -506,6 +531,7 @@ export function HammerDailyPlan({
       </Card>
     );
   }
+
 
   return (
     <HammersTodayProvider>
