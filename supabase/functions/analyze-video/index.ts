@@ -2606,6 +2606,38 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       }
     }
 
+    // ===== COACHING STAGE =====
+    // Turn the boolean fault flags into durable taxonomy rows, one per fault,
+    // tagged with the root movement pattern behind them. This is what lets the
+    // app notice the SAME pattern across hitting, pitching and throwing.
+    try {
+      const findings = buildFaultFindings({
+        userId,
+        videoId,
+        runId: okAudit.id ?? null,
+        module,
+        sport,
+        violations,
+        engineVersion: ENGINE_VERSION,
+      });
+      if (findings.length > 0) {
+        const { error: findingsError } = await supabase
+          .from("analysis_fault_findings")
+          .insert(findings);
+        if (findingsError) {
+          console.error("[ANALYZE-VIDEO] fault findings insert failed:", findingsError.message);
+        } else {
+          console.log(`[ANALYZE-VIDEO] persisted ${findings.length} analysis_fault_findings`);
+        }
+      } else {
+        console.log("[ANALYZE-VIDEO] no mapped faults for this run — nothing persisted");
+      }
+    } catch (e) {
+      console.error("[ANALYZE-VIDEO] coaching stage failed:", (e as Error)?.message);
+    }
+
+
+
     // Update user progress
     const { data: progressData, error: progressFetchError } = await supabase
       .from("user_progress")
