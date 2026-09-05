@@ -67,14 +67,25 @@ const CONTEXTS: ReadonlyArray<[string, HammerAthleteContext]> = [
 const posture = (p: ScheduleSignal["postureToday"]): ScheduleSignal =>
   ({ ...NORMAL_SIGNAL, postureToday: p, rationale: `posture ${p}` }) as ScheduleSignal;
 
-const DAY_TYPES: ReadonlyArray<[string, ScheduleSignal]> = [
-  ["training day", NORMAL_SIGNAL],
-  ["game day", posture("game")],
-  ["tournament day", posture("tournament")],
-  ["travel day", posture("travel")],
-  ["camp day", posture("camp")],
-  ["team practice day", posture("team_practice")],
-  ["taper day", posture("taper")],
+/**
+ * Fixed dates keep the matrix deterministic: the weekly microcycle schedules
+ * modalities by weekday, so "today" must be pinned rather than inherited from
+ * the clock. 2026-06-03 is a Wednesday (a training weekday); 2026-06-07 is a
+ * Sunday, the microcycle's rest day — that is the off-day state, the one the
+ * owner hit when defense vanished from his phone.
+ */
+const TRAINING_WEEKDAY = new Date(2026, 5, 3);
+const REST_WEEKDAY = new Date(2026, 5, 7);
+
+const DAY_TYPES: ReadonlyArray<[string, ScheduleSignal, Date]> = [
+  ["training day", NORMAL_SIGNAL, TRAINING_WEEKDAY],
+  ["game day", posture("game"), TRAINING_WEEKDAY],
+  ["tournament day", posture("tournament"), TRAINING_WEEKDAY],
+  ["travel day", posture("travel"), TRAINING_WEEKDAY],
+  ["camp day", posture("camp"), TRAINING_WEEKDAY],
+  ["team practice day", posture("team_practice"), TRAINING_WEEKDAY],
+  ["taper day", posture("taper"), TRAINING_WEEKDAY],
+  ["off day", NORMAL_SIGNAL, REST_WEEKDAY],
 ];
 
 const ALL: ReadonlyArray<ModalityKey> = [
