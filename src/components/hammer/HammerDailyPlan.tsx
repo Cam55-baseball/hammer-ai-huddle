@@ -14,7 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
