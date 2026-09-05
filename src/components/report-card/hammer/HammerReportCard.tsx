@@ -8,6 +8,7 @@ import { ShareCardExport } from "./visuals/ShareCardExport";
 import { getReportCardSpec, type AnalysisLike, type ReportCardTileSpec } from "@/lib/reportCard";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useScoredGradingAccess, SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
 
 interface Props {
   sport: string | undefined;
