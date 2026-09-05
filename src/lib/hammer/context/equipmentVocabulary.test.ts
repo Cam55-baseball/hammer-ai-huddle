@@ -61,3 +61,23 @@ describe("parseEquipmentStatement", () => {
     expect(isAffirmation("nope")).toBe(false);
   });
 });
+
+describe("honest reporting of unrecognised items", () => {
+  it("saves the machine and never drops it", () => {
+    const p = parseEquipmentStatement("I have a machine, regular bat, heavy bat, light bat, and tee");
+    expect([...p.have].sort()).toEqual(
+      ["gamer_bat", "overload_bat", "pitching_machine", "tee", "underload_bat"],
+    );
+    expect(p.unrecognized).toEqual([]);
+  });
+
+  it("reports an item the vocabulary does not know", () => {
+    const p = parseEquipmentStatement("I have a tee and a zorbtronic thing");
+    expect(p.have).toContain("tee");
+    expect(p.unrecognized.join(" ")).toContain("zorbtronic");
+  });
+
+  it("does not treat ordinary conversation as unrecognised gear", () => {
+    expect(parseEquipmentStatement("how is my swing looking?").unrecognized).toEqual([]);
+  });
+});

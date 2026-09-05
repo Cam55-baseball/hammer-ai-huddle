@@ -49,6 +49,14 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "ball", label: "balls", phrases: ["baseballs", "softballs", "wiffle balls", "balls"] },
   { token: "net", label: "net or cage", phrases: ["batting cage", "hitting net", "cage", "net"] },
   { token: "screen", label: "front toss screen", phrases: ["front toss screen", "l-screen", "l screen", "toss screen", "screen"] },
+  { token: "pitching_machine", label: "pitching machine", phrases: ["pitching machine", "hitting machine", "jugs machine", "hack attack", "iron mike", "spinball", "machine"] },
+  { token: "weighted_ball", label: "weighted balls", phrases: ["weighted baseballs", "weighted balls", "weighted ball", "overload balls"] },
+  { token: "glove", label: "glove or mitt", phrases: ["fielding glove", "first base mitt", "catchers mitt", "catcher's mitt", "glove", "mitt"] },
+  { token: "catchers_gear", label: "catcher's gear", phrases: ["catchers gear", "catcher's gear", "catching gear", "chest protector", "shin guards", "catchers mask"] },
+  { token: "radar", label: "radar gun", phrases: ["radar gun", "pocket radar", "stalker gun", "radar"] },
+  { token: "bat_sensor", label: "bat sensor", phrases: ["blast motion", "bat sensor", "diamond kinetics", "swing sensor"] },
+  { token: "mound", label: "a pitching mound", phrases: ["pitching mound", "portable mound", "bullpen mound", "mound"] },
+  { token: "turf", label: "turf or hitting mat", phrases: ["turf mat", "hitting mat", "artificial turf", "turf"] },
   { token: "wall", label: "a throwing wall", phrases: ["throwing wall", "brick wall", "wall"] },
   { token: "field", label: "a field", phrases: ["a field", "the field", "diamond", "field"] },
   { token: "open_space", label: "open running space", phrases: ["open space", "open field", "running space", "yard", "park"] },
@@ -82,6 +90,12 @@ export interface ParsedEquipmentStatement {
   readonly confidence: ParseConfidence;
   /** Phrase → token evidence, for the "here's what I understood" prompt. */
   readonly matches: ReadonlyArray<{ phrase: string; token: string; negated: boolean }>;
+  /**
+   * Things the athlete plainly named that the vocabulary could not map.
+   * HONESTY LAW: these are never silently dropped — the caller must say
+   * out loud that they were not understood and were not saved.
+   */
+  readonly unrecognized: ReadonlyArray<string>;
 }
 
 const HEDGE = /\b(maybe|not sure|might|i think|used to|probably|sometimes|if i|when i|kind of|sort of)\b/;
@@ -93,7 +107,7 @@ const TEMPORARY = /\b(today|tonight|this week|right now|for now|hotel|travel(?:l
 function clauses(text: string): string[] {
   return text
     .toLowerCase()
-    .split(/[.;!?\n]|,| but | and then | however | although /)
+    .split(/[.;!?\n]|,| but | and then | and | plus | however | although /)
     .map((c) => c.trim())
     .filter(Boolean);
 }
@@ -110,6 +124,7 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
   const have = new Set<string>();
   const lacks = new Set<string>();
   const matches: Array<{ phrase: string; token: string; negated: boolean }> = [];
+  const unmatchedClauses: string[] = [];
 
   for (const clause of clauses(text)) {
     const negated = NEGATION.test(clause);
@@ -126,6 +141,10 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
         else have.add(def.token);
         break;
       }
+    }
+    if (claimed.size === 0) {
+      const residual = stripFiller(clause);
+      if (residual) unmatchedClauses.push(residual);
     }
   }
 
@@ -146,7 +165,37 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
     scope: TEMPORARY.test(text) ? "session" : "persistent",
     confidence,
     matches,
+    // Only meaningful once we know the athlete was listing equipment at all.
+    unrecognized: anything ? dedupe(unmatchedClauses) : [],
   };
+}
+
+const FILLER =
+  /\b(i|we|my|our|a|an|the|and|also|plus|too|have|has|got|gotten|own|use|using|can|access|to|there|is|are|s|do|does|just|only|some|any|of|with|at|home|please|thanks|ok|okay|then|thing|stuff|gear|equipment|setup)\b/g;
+
+/** Strip conversational filler; returns "" when nothing nameable is left. */
+function stripFiller(clause: string): string {
+  const cleaned = clause
+    .replace(FILLER, " ")
+    .replace(/[^a-z0-9\s'-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length < 3) return "";
+  if (!/[a-z]/.test(cleaned)) return "";
+  // Long free-form sentences are conversation, not an equipment item.
+  if (cleaned.split(" ").length > 4) return "";
+  return cleaned;
+}
+
+function dedupe(items: ReadonlyArray<string>): string[] {
+  return [...new Set(items)];
+}
+
+/** "a machine and a radar gun" — for the "did not recognise" line. */
+export function plainList(items: ReadonlyArray<string>): string {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
 /** Merge a parsed statement into the athlete's existing stored equipment. */

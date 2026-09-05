@@ -32,6 +32,7 @@ import {
   isRejection,
   mergeEquipment,
   parseEquipmentStatement,
+  plainList,
   type ParsedEquipmentStatement,
 } from "@/lib/hammer/context/equipmentVocabulary";
 
@@ -135,7 +136,13 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
 
       const dropped = parsed.lacks.length > 0 ? ` I took ${equipmentList(parsed.lacks)} off the list.` : "";
       const when = parsed.scope === "session" ? " for today" : "";
-      say(`Got it${when} — ${equipmentList(stored)}.${dropped} Your plan is updated to use it.`);
+      // HONESTY LAW: anything the athlete named that we could not map is
+      // reported as NOT saved. Never let a confirmation imply full coverage.
+      const missed =
+        parsed.unrecognized.length > 0
+          ? ` I did not recognise ${plainList(parsed.unrecognized.map((u) => `"${u}"`))}, so that is not saved — tell me more about it and I'll add it.`
+          : "";
+      say(`Saved${when} — ${equipmentList(stored)}.${dropped}${missed} Your hitting and training plans now use this list.`);
     },
     [queryClient, say],
   );
@@ -174,7 +181,8 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
           const haveLine = parsed.have.length > 0 ? `you have ${equipmentList(parsed.have)}` : "";
           const lackLine = parsed.lacks.length > 0 ? `you don't have ${equipmentList(parsed.lacks)}` : "";
           const understood = [haveLine, lackLine].filter(Boolean).join(", and ");
-          say(`I want to get this right before I save anything. I understood: ${understood}. Is that correct? Reply yes, or just list what you've got.`);
+          const missedLine = parsed.unrecognized.length > 0 ? ` I did not recognise ${plainList(parsed.unrecognized.map((u) => `"${u}"`))}.` : "";
+          say(`I want to get this right before I save anything. I understood: ${understood}.${missedLine} Is that correct? Reply yes, or just list what you've got.`);
           return;
         }
 

@@ -154,3 +154,48 @@ describe("game-day defense", () => {
     expect(defense!.why).toMatch(/full defense anyway/i);
   });
 });
+
+describe("declared equipment changes the hitting drills", () => {
+  const withGear = (gear: string[]) =>
+    ctx({
+      sport_primary: "baseball",
+      position_primary: "SS",
+      equipment_effective: { equipment: gear, scope: "persistent" },
+      lifecycle_band: "u18",
+      season_phase: "in",
+      lifting_age_years: 2,
+      weekly_availability_days: 6,
+      development_priorities: ["hitting"],
+      injury_history: [],
+    });
+
+  const hittingNames = (gear: string[]) => {
+    // Walk forward to the first day the microcycle actually schedules hitting.
+    for (let i = 0; i < 14; i += 1) {
+      const day = new Date(Date.UTC(2026, 5, 1 + i, 12));
+      const plan = buildHammerDailyPlan(withGear(gear), undefined, null, null, undefined, day);
+      const hitting = plan.blocks.find((b) => b.modality === "hitting");
+      if (hitting && hitting.status === "ready") {
+        expect(hitting.drills.length).toBeGreaterThan(0);
+        return hitting.drills.map((d) => d.name).join(" | ").toLowerCase();
+      }
+    }
+    throw new Error("no scheduled hitting day found");
+  };
+
+  it("a machine owner gets machine work", () => {
+    expect(hittingNames(["gamer_bat", "tee", "pitching_machine"])).toContain("machine");
+  });
+
+  it("a tee-only athlete gets tee work and no machine work", () => {
+    const names = hittingNames(["gamer_bat", "tee"]);
+    expect(names).toContain("tee work");
+    expect(names).not.toContain("machine");
+  });
+
+  it("a bat-only athlete still gets real swings", () => {
+    const names = hittingNames(["gamer_bat"]);
+    expect(names).toContain("dry swings");
+    expect(names).not.toContain("machine");
+  });
+});

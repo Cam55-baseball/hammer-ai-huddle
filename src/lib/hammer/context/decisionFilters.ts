@@ -82,10 +82,17 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
     | { equipment?: string; scope?: string }
     | string
     | null;
-  const equipment =
+  const equipmentRaw =
     typeof eq === "string"
       ? eq
-      : (eq as { equipment?: string } | null)?.equipment ?? null;
+      : (eq as { equipment?: unknown } | null)?.equipment ?? null;
+  // `equipment` is the single venue-ish token; the stored profile is an array,
+  // so collapse it to its first entry rather than leaking an array downstream.
+  const equipment: string | null = Array.isArray(equipmentRaw)
+    ? (equipmentRaw.length > 0 ? String(equipmentRaw[0]) : null)
+    : typeof equipmentRaw === "string"
+      ? equipmentRaw
+      : null;
   const equipmentScope =
     typeof eq === "object" && eq !== null
       ? ((eq as { scope?: string }).scope ?? null)

@@ -3393,6 +3393,44 @@ export type Database = {
           },
         ]
       }
+      drill_equipment: {
+        Row: {
+          created_at: string
+          drill_id: string
+          equipment: string
+          id: string
+          required: boolean
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          drill_id: string
+          equipment: string
+          id?: string
+          required?: boolean
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          drill_id?: string
+          equipment?: string
+          id?: string
+          required?: boolean
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_equipment_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drill_positions: {
         Row: {
           drill_id: string
