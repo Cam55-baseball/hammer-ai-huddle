@@ -1,13 +1,21 @@
 /**
  * ALWAYS-RENDERABLE MATRIX.
  *
- * Structural guarantee, not a per-bug patch: every Today-plan modality must
- * return something an athlete can read for EVERY day type (training, game,
- * tournament, travel, camp, team practice, taper, off day) and every state of
- * athlete context (nothing known, equipment known, position unknown).
+ * Structural guarantee, not a per-bug patch: all ten Today-plan modalities
+ * (warm-up, speed, strength, hitting, throwing, defense, baserunning, game IQ,
+ * fueling, recovery) must return something an athlete can read for every day
+ * type in DAY_TYPES — training, game, tournament, travel, camp, team practice,
+ * taper, and off day — crossed with every context state in CONTEXTS: nothing
+ * known, equipment known, and position unknown with equipment known.
+ *
+ * Day types are pinned to fixed dates because the weekly microcycle schedules
+ * by weekday; the off-day row is a real microcycle rest day, not a posture.
  *
  * Also asserts the equipment read path: a declared inventory must actually
  * reach hitting drill selection and must remove the "assuming" line.
+ *
+ * Not covered here: injury restrictions, switch-hitter side splits, and
+ * off-season / pre-season phases — those live in their own suites.
  */
 import { describe, expect, it } from "vitest";
 import { buildHammerDailyPlan, type ModalityKey } from "./dailyPlan";
