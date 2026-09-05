@@ -118,9 +118,9 @@ function findDayWith(
 
 describe("every card renders for every day type and context state", () => {
   for (const [ctxName, context] of CONTEXTS) {
-    for (const [dayName, signal] of DAY_TYPES) {
+    for (const [dayName, signal, day] of DAY_TYPES) {
       it(`${dayName} / ${ctxName}`, () => {
-        const plan = buildHammerDailyPlan(context, signal);
+        const plan = buildHammerDailyPlan(context, signal, null, null, undefined, day);
         for (const modality of ALL) {
           const found = plan.blocks.filter((b) => b.modality === modality);
           expect(found.length, `${modality} missing on ${dayName}`).toBeGreaterThan(0);
