@@ -12,6 +12,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoSuggestions, trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSuggestions';
+import { useCrossDomainFaults } from '@/hooks/useCrossDomainFaults';
+import { crossDomainCorrectionKeys } from '@/lib/analysis/crossDomainFaults';
 import { analysisFeedbackToTaxonomy, type AnalysisLike } from '@/lib/analysisFeedbackToTaxonomy';
 import { useVideoFaultFeedback } from '@/hooks/useVideoFaultFeedback';
 import { cn } from '@/lib/utils';
@@ -39,6 +41,10 @@ export function AnalysisVideoRecommendations({ analysis, module, sport }: Props)
     [analysis, skillDomain, tagSport],
   );
 
+  // Cross-skill root patterns rank above single-discipline faults.
+  const { data: rootGroups = [] } = useCrossDomainFaults();
+  const rootKeys = useMemo(() => crossDomainCorrectionKeys(rootGroups), [rootGroups]);
+
   const { data: suggestions = [], isLoading } = useVideoSuggestions({
     skillDomain: skillDomain ?? 'hitting',
     mode: 'session',
@@ -48,6 +54,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport }: Props)
     correctionTags: signals?.correctionTags ?? [],
     feedbackEvidence: signals?.evidence,
     sport: tagSport,
+    rootPatternCorrectionKeys: rootKeys,
     enabled: Boolean(signals),
   });
 
