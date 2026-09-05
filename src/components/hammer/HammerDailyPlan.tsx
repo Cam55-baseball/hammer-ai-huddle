@@ -1350,7 +1350,10 @@ function BlockCard({
               <MessageCircle className="h-3 w-3" />
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
-            {block.modality === "defense" && (block.gameDayPrimer || adjustApiForCard?.defenseFullOverride) && (
+            {block.modality === "defense" &&
+              (block.gameDayPrimer ||
+                block.offDayOverridable ||
+                adjustApiForCard?.defenseFullOverride) && (
               <Button
                 size="sm"
                 variant="ghost"
