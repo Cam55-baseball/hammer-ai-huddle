@@ -19,9 +19,12 @@ interface LogMealCardProps {
     servingSize: string;
   }) => void;
   favoritesSlot?: ReactNode;
+  favoriteMealsSlot?: ReactNode;
+  hydrationSlot?: ReactNode;
   quickActionsSlot?: ReactNode;
   supplementsSlot?: ReactNode;
 }
+
 
 interface SectionProps {
   open: boolean;
