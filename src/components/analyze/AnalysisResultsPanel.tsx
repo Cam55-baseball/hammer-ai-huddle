@@ -66,6 +66,12 @@ interface Props {
   onSaveDrill: (drill: AnalysisDrill) => void;
   onSaveToLibrary: () => void;
   onReturnToDashboard: () => void;
+  /**
+   * Release gate. When false the score dial, the 20–80 scout-grade band and
+   * every grade colour are replaced by an honest line. Coaching text is
+   * untouched — words stay, scores go.
+   */
+  showScore?: boolean;
 }
 
 function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNode }) {
