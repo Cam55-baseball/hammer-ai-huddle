@@ -16,6 +16,7 @@ import { contextFromEnvelope } from "./athleteContext";
 import type { AthleteContextEnvelope } from "./envelope";
 import { projectEnvelope } from "./decisionFilters";
 import { buildHammerDailyPlan } from "@/lib/hammer/prescription/dailyPlan";
+import { NORMAL_SIGNAL } from "@/lib/hammer/prescription/scheduleContext";
 
 /**
  * The RPC payload the database returns for the owner's persistent equipment row
@@ -31,14 +32,28 @@ const OWNER_EQUIPMENT: ReadonlyArray<string> = [
 
 function envelopeFromEquipmentRow(equipment: ReadonlyArray<string>): AthleteContextEnvelope {
   return {
-    sport_primary: {
-      value: "baseball",
-      source: "athlete_context.sport_primary",
-      confidence: "high",
-      missing: false,
-      last_updated: "2026-09-05T01:32:00Z",
-      owner: "athlete",
-    },
+    ...Object.fromEntries(
+      Object.entries({
+        sport_primary: "baseball",
+        position_primary: "SS",
+        lifecycle_band: "u18",
+        season_phase: "in",
+        lifting_age_years: 2,
+        weekly_availability_days: 6,
+        development_priorities: ["hitting", "defense"],
+        injury_history: [],
+      }).map(([k, v]) => [
+        k,
+        {
+          value: v,
+          source: `athlete_context.${k}`,
+          confidence: "high",
+          missing: false,
+          last_updated: "2026-09-05T01:32:00Z",
+          owner: "athlete",
+        },
+      ]),
+    ),
     equipment_effective: {
       // Shape emitted by get_athlete_context_envelope for a persistent row.
       value: { equipment, venue: null },
@@ -75,7 +90,7 @@ describe("equipment derivation — database row → context envelope → plan", 
 
   it("the hitting card stops guessing once equipment is on file", () => {
     const ctx = contextFromEnvelope(envelopeFromEquipmentRow(OWNER_EQUIPMENT));
-    const plan = buildHammerDailyPlan(ctx, null, null, null, null, new Date("2026-06-10T12:00:00Z"));
+    const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, null, new Date("2026-06-10T12:00:00Z"));
     const hitting = plan.blocks.find((b) => b.modality === "hitting");
     expect(hitting).toBeTruthy();
     expect(hitting?.assumption ?? "").not.toMatch(/assuming you have a bat/i);
