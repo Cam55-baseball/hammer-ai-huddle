@@ -33,6 +33,7 @@ import {
   gradeToSurface,
 } from "@/lib/gradeEngine";
 import { branding } from "@/branding";
+import { SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
 
 export interface AnalysisDrill {
   title: string;
