@@ -1363,8 +1363,12 @@ function BlockCard({
                 className="text-xs"
               >
                 {adjustApiForCard?.defenseFullOverride
-                  ? "Back to pregame primer"
-                  : "Do full defense anyway"}
+                  ? block.gameDayPrimer
+                    ? "Back to pregame primer"
+                    : "Back to rest"
+                  : block.status === "off-day"
+                    ? "Do a light block anyway"
+                    : "Do full defense anyway"}
               </Button>
             )}
             <div className="ml-auto">
