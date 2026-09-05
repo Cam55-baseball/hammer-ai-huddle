@@ -277,6 +277,38 @@ const handler = async (req: Request): Promise<Response> => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // A training plan belongs to the athlete doing the training, and only to an
+    // account that actually holds a prescription. Enforced here, not just in the
+    // interface, so no caller can generate one by asking directly.
+    const { data: callerRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("status", "active");
+    const roleNames = (callerRoles ?? []).map((r: { role: string }) => r.role);
+    const isPrivileged = roleNames.includes("owner") || roleNames.includes("admin");
+    if (!isPrivileged && (roleNames.includes("scout") || roleNames.includes("coach"))) {
+      return json(
+        { error: "not_an_athlete_account", message: "Daily training plans are issued to athlete accounts only." },
+        403,
+      );
+    }
+    if (!isPrivileged) {
+      const { data: sub } = await admin
+        .from("subscriptions")
+        .select("status, subscribed_modules")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const activeModules = sub?.status === "active" ? (sub.subscribed_modules ?? []) : [];
+      if (activeModules.length === 0) {
+        return json(
+          { error: "no_active_prescription", message: "No active Hammers Modality prescription on this account." },
+          403,
+        );
+      }
+    }
+
+
     const body = (await req.json().catch(() => ({}))) as {
       plan_date?: string;
       side_hit?: "L" | "R" | null;
