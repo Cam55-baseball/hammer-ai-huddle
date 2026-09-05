@@ -15,7 +15,6 @@ import { QuickLogActions } from './QuickLogActions';
 import { NutritionDailyLog } from './NutritionDailyLog';
 import { NutritionWeeklySummary } from './NutritionWeeklySummary';
 import { MealLoggingDialog, PrefilledItem } from './MealLoggingDialog';
-import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { VitaminSupplementTracker } from '@/components/vault/VitaminSupplementTracker';
 import { WeightTrackingSection } from './WeightTrackingSection';
 import { MealPlanningTab } from './MealPlanningTab';
@@ -126,13 +125,36 @@ export function NutritionHubContent() {
 
       if (error) throw error;
 
-      return (data || []).reduce((acc, log) => ({
+      const totals = (data || []).reduce((acc, log) => ({
         calories: acc.calories + (log.calories || 0),
         protein: acc.protein + (log.protein_g || 0),
         carbs: acc.carbs + (log.carbs_g || 0),
         fats: acc.fats + (log.fats_g || 0),
         fiber: acc.fiber,
       }), { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
+
+      // Drinks are food too. A sports drink or juice carries carbohydrate that
+      // belongs in the day's totals; hydration_logs stores the grams but no
+      // calorie figure, so calories are derived at 4 kcal per carb gram — the
+      // only honest conversion available from what is actually stored.
+      const { data: drinks, error: drinkError } = await supabase
+        .from('hydration_logs')
+        .select('total_carbs_g')
+        .eq('user_id', user.id)
+        .eq('log_date', today);
+
+      if (drinkError) throw drinkError;
+
+      const drinkCarbs = (drinks || []).reduce(
+        (sum, d: { total_carbs_g: number | null }) => sum + (Number(d.total_carbs_g) || 0),
+        0,
+      );
+
+      return {
+        ...totals,
+        carbs: totals.carbs + drinkCarbs,
+        calories: totals.calories + drinkCarbs * 4,
+      };
     },
     enabled: !!user,
   });
@@ -544,10 +566,6 @@ export function NutritionHubContent() {
             }}
             onAddFood={handleAddAISuggestion}
           />
-          
-          <div className="flex justify-center">
-            <HydrationTrackerWidget />
-          </div>
         </TabsContent>
         
         <TabsContent value="weekly" className="mt-4">
