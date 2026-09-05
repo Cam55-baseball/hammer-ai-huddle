@@ -106,16 +106,39 @@ export function LogMealCard({
           <CommonFoodsGallery onSelectFood={onSelectFood} />
         </CollapsibleSection>
 
+        {favoriteMealsSlot && (
+          <CollapsibleSection
+            open={favoriteMealsOpen}
+            onOpenChange={setFavoriteMealsOpen}
+            icon={<Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
+            label={t('nutrition.favoriteMeals', 'Favorite meals')}
+          >
+            {favoriteMealsSlot}
+          </CollapsibleSection>
+        )}
+
+        {hydrationSlot && (
+          <CollapsibleSection
+            open={hydrationOpen}
+            onOpenChange={setHydrationOpen}
+            icon={<Droplets className="h-4 w-4 text-blue-500" />}
+            label={t('nutrition.logDrinks', 'Log drinks')}
+          >
+            {hydrationSlot}
+          </CollapsibleSection>
+        )}
+
         {favoritesSlot && (
           <CollapsibleSection
             open={favoritesOpen}
             onOpenChange={setFavoritesOpen}
             icon={<Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
-            label={t('nutrition.favorites', 'Favorites')}
+            label={t('nutrition.favorites', 'Favorite foods')}
           >
             {favoritesSlot}
           </CollapsibleSection>
         )}
+
 
         {quickActionsSlot && (
           <CollapsibleSection
