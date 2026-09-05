@@ -1907,14 +1907,18 @@ Deno.serve(async (req) => {
           outcome_reason: `served_from:${prior.id}`,
         });
         console.log(`[ANALYZE-VIDEO] cache HIT for ${videoId}`);
+        const cachedPayload: Record<string, unknown> = {
+          success: true,
+          replay_cache: true,
+          cache_fingerprint_hex: cacheFingerprintHex,
+          ai_analysis: cachedAi,
+          efficiency_score: videoRow.efficiency_score,
+        };
+        // Release gate: a hidden number that still returns from an endpoint is
+        // not gated. Owner/admin only until real measurement exists.
+        const cacheScored = await canSeeScoredGrading(supabase, userId);
         return new Response(
-          JSON.stringify({
-            success: true,
-            replay_cache: true,
-            cache_fingerprint_hex: cacheFingerprintHex,
-            ai_analysis: cachedAi,
-            efficiency_score: videoRow.efficiency_score,
-          }),
+          JSON.stringify(cacheScored ? cachedPayload : stripScoredGrading(cachedPayload)),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
