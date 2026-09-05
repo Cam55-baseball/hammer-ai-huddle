@@ -124,6 +124,7 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
   const have = new Set<string>();
   const lacks = new Set<string>();
   const matches: Array<{ phrase: string; token: string; negated: boolean }> = [];
+  const unmatchedClauses: string[] = [];
 
   for (const clause of clauses(text)) {
     const negated = NEGATION.test(clause);
@@ -140,6 +141,10 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
         else have.add(def.token);
         break;
       }
+    }
+    if (claimed.size === 0) {
+      const residual = stripFiller(clause);
+      if (residual) unmatchedClauses.push(residual);
     }
   }
 
@@ -160,7 +165,37 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
     scope: TEMPORARY.test(text) ? "session" : "persistent",
     confidence,
     matches,
+    // Only meaningful once we know the athlete was listing equipment at all.
+    unrecognized: anything ? dedupe(unmatchedClauses) : [],
   };
+}
+
+const FILLER =
+  /\b(i|we|my|our|a|an|the|and|also|plus|too|have|has|got|gotten|own|use|using|can|access|to|there|is|are|s|do|does|just|only|some|any|of|with|at|home|please|thanks|ok|okay|okay|and)\b/g;
+
+/** Strip conversational filler; returns "" when nothing nameable is left. */
+function stripFiller(clause: string): string {
+  const cleaned = clause
+    .replace(FILLER, " ")
+    .replace(/[^a-z0-9\s'-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length < 3) return "";
+  if (!/[a-z]/.test(cleaned)) return "";
+  // Long free-form sentences are conversation, not an equipment item.
+  if (cleaned.split(" ").length > 4) return "";
+  return cleaned;
+}
+
+function dedupe(items: ReadonlyArray<string>): string[] {
+  return [...new Set(items)];
+}
+
+/** "a machine and a radar gun" — for the "did not recognise" line. */
+export function plainList(items: ReadonlyArray<string>): string {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
 /** Merge a parsed statement into the athlete's existing stored equipment. */
