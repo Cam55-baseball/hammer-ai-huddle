@@ -62,9 +62,14 @@ describe("no card renders as a request for information", () => {
     const plan = buildHammerDailyPlan(NO_EQUIPMENT_NO_HISTORY);
     const hitting = plan.blocks.find((b) => b.modality === "hitting");
     expect(hitting).toBeTruthy();
+    // Never a request for information...
     expect(hitting!.status).not.toBe("awaiting-input");
-    expect(hitting!.drills.length).toBeGreaterThan(0);
-    expect(hitting!.assumption).toMatch(/assuming/i);
+    // ...and never blank: either prescribed work, or an explained rest day.
+    expect(hitting!.drills.length + hitting!.steps.length).toBeGreaterThan(0);
+    if (hitting!.status === "ready") {
+      expect(hitting!.drills.length).toBeGreaterThan(0);
+      expect(hitting!.assumption).toMatch(/assuming/i);
+    }
   });
 
   it("strength prescribes a conservative session when lifting history is unknown", () => {
@@ -72,8 +77,11 @@ describe("no card renders as a request for information", () => {
     const strength = plan.blocks.find((b) => b.modality === "strength");
     expect(strength).toBeTruthy();
     expect(strength!.status).not.toBe("awaiting-input");
-    expect(strength!.drills.length).toBeGreaterThan(0);
-    expect(strength!.assumption).toMatch(/assuming/i);
+    expect(strength!.drills.length + strength!.steps.length).toBeGreaterThan(0);
+    if (strength!.status === "ready") {
+      expect(strength!.drills.length).toBeGreaterThan(0);
+      expect(strength!.assumption).toMatch(/assuming/i);
+    }
   });
 
   it("never leaks a raw context identifier into athlete-facing copy", () => {
@@ -82,6 +90,34 @@ describe("no card renders as a request for information", () => {
       const copy = `${b.title} ${b.why} ${b.roadmapReason} ${b.assumption ?? ""}`;
       expect(copy).not.toMatch(/equipment_effective|lifting_history|position_primary|_effective\b/);
     }
+  });
+});
+
+describe("training-day cards (microcycle scheduled)", () => {
+  // Pick dates until we hit a day the microcycle schedules hitting + strength,
+  // so we assert the real prescription rather than the explained rest day.
+  function firstScheduled(modality: "hitting" | "strength") {
+    for (let i = 0; i < 14; i += 1) {
+      const day = new Date(Date.UTC(2026, 5, 1 + i, 12));
+      const plan = buildHammerDailyPlan(NO_EQUIPMENT_NO_HISTORY, undefined, null, null, undefined, day);
+      const block = plan.blocks.find((b) => b.modality === modality);
+      if (block && block.status === "ready") return block;
+    }
+    return null;
+  }
+
+  it("hitting prescribes on a stated assumption on a scheduled day", () => {
+    const hitting = firstScheduled("hitting");
+    expect(hitting).toBeTruthy();
+    expect(hitting!.drills.length).toBeGreaterThan(0);
+    expect(hitting!.assumption).toMatch(/assuming/i);
+  });
+
+  it("strength prescribes a conservative session on a scheduled day", () => {
+    const strength = firstScheduled("strength");
+    expect(strength).toBeTruthy();
+    expect(strength!.drills.length).toBeGreaterThan(0);
+    expect(strength!.assumption).toMatch(/assuming/i);
   });
 });
 
