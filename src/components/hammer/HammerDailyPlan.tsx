@@ -1096,6 +1096,8 @@ function BlockCard({
             </div>
           )}
 
+          {block.modality === "defense" && <DefensePositionSwap />}
+
           {block.drills.length > 0 && (
             <div className="space-y-1.5">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
