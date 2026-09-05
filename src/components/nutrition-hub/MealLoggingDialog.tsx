@@ -14,7 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown, Clock } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown, Clock, Star } from 'lucide-react';
+import { FavoriteMealsPicker } from './FavoriteMealsPicker';
+import { HydrationLogger } from './HydrationLogger';
+import { useFavoriteMeals, type FavoriteMeal } from '@/hooks/useFavoriteMeals';
+
 import { MealBuilder } from '@/components/custom-activities/MealBuilder';
 import { useMealVaultSync } from '@/hooks/useMealVaultSync';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
@@ -83,6 +88,10 @@ export function MealLoggingDialog({
   const [mealTime, setMealTime] = useState<string>(() => format(new Date(), 'HH:mm'));
   const [digestionNotes, setDigestionNotes] = useState('');
   const [digestionOpen, setDigestionOpen] = useState(false);
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+  const { saveFavorite } = useFavoriteMeals();
+  
+
   
   const toggleDigestionTag = (value: string) => {
     setDigestionNotes(prev => toggleDigestionTagInNotes(prev, value));
