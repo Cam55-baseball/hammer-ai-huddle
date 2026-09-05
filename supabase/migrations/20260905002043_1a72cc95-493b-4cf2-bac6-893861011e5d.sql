@@ -1,0 +1,1 @@
+ALTER VIEW public.gp_v_at_bat_facts SET (security_invoker = true);
