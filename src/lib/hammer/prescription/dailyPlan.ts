@@ -750,12 +750,14 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
               { name: "Front toss — sequence drill", dosage: "15 swings" },
               { name: "Live BP or machine", dosage: "25 swings" },
               { name: "Video + tag in PIE", dosage: "best 5 swings flagged" },
-            ];
+            ]);
       return {
         modality,
         title: equipmentUnknown
           ? "Hitting — bat-and-space session"
-          : inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
+          : declaredDrills
+            ? `Hitting — built from your gear${inSeason ? " (in-season)" : offSeason ? " (off-season)" : ""}`
+            : inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
         assumption: equipmentUnknown
           ? "Assuming you have a bat and somewhere safe to swing. Tell Hammer what you actually have and I'll upgrade this."
           : undefined,
