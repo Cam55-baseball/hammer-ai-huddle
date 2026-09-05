@@ -582,7 +582,9 @@ export function NutritionHubContent() {
         mealType={selectedMealType}
         onMealSaved={handleMealSaved}
         prefilledItems={prefilledItems}
+        prefillFavorite={prefillFavorite}
       />
+
     </div>
   );
 }
