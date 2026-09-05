@@ -194,6 +194,69 @@ interface BuilderArgs {
 
 const BODYWEIGHT_EQUIPMENT = new Set(["bodyweight", "bands", "hotel"]);
 
+/**
+ * EQUIPMENT LAW: declared equipment must actually change the hitting drills.
+ * Built from the same vocabulary tokens the athlete's equipment profile and
+ * the `drill_equipment` tags use, so both sides speak one language.
+ * Every branch still returns real work — never an empty card.
+ */
+function hittingDrillsForEquipment(
+  owned: ReadonlySet<string>,
+  seasonPhase: string | null,
+): DrillStep[] {
+  const inSeason = seasonPhase === "in";
+  const heavy = seasonPhase === "off";
+  const has = (t: string) => owned.has(t);
+  const drills: DrillStep[] = [
+    { name: "Dry swings — barrel path", dosage: inSeason ? "2 rounds of 8" : "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
+  ];
+  if (has("tee")) {
+    drills.push({
+      name: "Tee work — barrel path",
+      dosage: inSeason ? "10 quality swings" : heavy ? "30 swings (3 rounds of 10)" : "20 swings",
+      cue: "hit the back of the ball, finish balanced",
+    });
+  }
+  if (has("screen") || (has("ball") && has("net"))) {
+    drills.push({
+      name: "Front toss — sequence drill",
+      dosage: inSeason ? "10 swings" : heavy ? "25 swings" : "15 swings",
+      cue: "land, see, then swing",
+    });
+  }
+  if (has("pitching_machine")) {
+    drills.push({
+      name: "Machine round — timing and pitch recognition",
+      dosage: inSeason ? "15 swings" : heavy ? "40 swings" : "25 swings",
+      cue: "set the machine to game speed, track every pitch — even no-swings",
+      equipmentNote: "Pitching machine",
+    });
+  } else if (has("net")) {
+    drills.push({
+      name: "Cage round — game-quality swings",
+      dosage: inSeason ? "10 swings (quality > volume)" : heavy ? "40 swings" : "25 swings",
+      cue: "compete on every pitch",
+    });
+  }
+  if (has("overload_bat") || has("underload_bat")) {
+    drills.push({
+      name: "Heavy / light bat contrast",
+      dosage: "3 heavy, 3 light, 3 game bat × 3 rounds",
+      cue: "same intent every swing, do not muscle the heavy bat",
+      equipmentNote: has("overload_bat") && has("underload_bat") ? "Heavy bat and light bat" : has("overload_bat") ? "Heavy bat" : "Light bat",
+    });
+  }
+  if (drills.length === 1) {
+    // Bat only, or gear we can't build a ball round from — still real work.
+    drills.push({ name: "Mirror or shadow swings — path check", dosage: "3 rounds of 8", cue: "watch the barrel enter the zone, not your hands" });
+  }
+  if (has("bat_sensor")) {
+    drills.push({ name: "Log bat speed on your best round", dosage: "1 round", equipmentNote: "Bat sensor" });
+  }
+  drills.push({ name: "Film 5 swings and tag them", dosage: "best 5 swings" });
+  return drills;
+}
+
 function goalLine(proj: AthleteContextProjection): string | null {
   if (!proj.goalSummary) return null;
   return proj.goalHorizon
