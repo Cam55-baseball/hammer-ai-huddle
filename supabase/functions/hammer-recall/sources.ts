@@ -264,7 +264,7 @@ export const RECALL_SOURCES: RecallSourceDef[] = [
   {
     key: "at_bat",
     label: "At-bat",
-    table: "gp_at_bats",
+    table: "gp_v_at_bat_facts",
     userColumn: "user_id",
     dateColumn: "created_at",
     timestamp: true,

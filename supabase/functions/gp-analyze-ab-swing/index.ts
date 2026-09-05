@@ -63,9 +63,10 @@ serve(async (req) => {
         .eq("id", dossierId).maybeSingle();
       pitcher_context = d ?? {};
     }
-    const { data: ab } = await admin.from("gp_at_bats")
+    const { data: ab } = await admin.from("gp_v_at_bat_facts")
       .select("inning,result,count_balls,count_strikes,pitch_type,contact_quality,notes")
       .eq("id", abId).maybeSingle();
+
 
     // download video
     const dl = await admin.storage.from(bucket).download(path);

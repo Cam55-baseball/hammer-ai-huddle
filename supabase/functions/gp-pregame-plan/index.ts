@@ -155,10 +155,12 @@ serve(async (req) => {
     }
     const archetype = dossier.archetype ?? null;
 
-    // 2. direct history vs this pitcher (at-bats)
+    // 2. direct history vs this pitcher (at-bats) — read the canonical view so
+    //    counts/pitch type come from the logged pitch sequence, not deprecated
+    //    at-bat-level columns.
     const historyVsThis = role === "pitcher"
-      ? await admin.from("gp_at_bats")
-          .select("inning,outs,base_state,result,contact_quality,exit_velo,pitch_type,balls,strikes,notes,created_at")
+      ? await admin.from("gp_v_at_bat_facts")
+          .select("id,inning,outs,runners_on,result,contact_quality,exit_velo,pitch_type,count_balls,count_strikes,notes,created_at")
           .eq("user_id", user.id)
           .eq("opponent_pitcher_id", dossierId)
           .order("created_at", { ascending: false })
@@ -168,16 +170,16 @@ serve(async (req) => {
     // 3. direct pitches vs this pitcher (zone heatmap input)
     const abIds = (historyVsThis.data ?? []).map((a: any) => a.id).filter(Boolean);
     const pitchesVsThis = abIds.length > 0
-      ? await admin.from("gp_pitches")
-          .select("zone,pitch_type,result,contact_quality,balls,strikes,velo")
+      ? await admin.from("gp_v_pitch_facts")
+          .select("zone,pitch_type,result,contact_quality,count_balls,count_strikes,pitch_velo")
           .in("at_bat_id", abIds)
           .limit(800)
       : { data: [] };
 
     // 4. archetype history (cold-start fallback)
     const historyVsArchetype = archetype
-      ? await admin.from("gp_at_bats")
-          .select("inning,outs,base_state,result,contact_quality,exit_velo,pitch_type,balls,strikes,created_at")
+      ? await admin.from("gp_v_at_bat_facts")
+          .select("inning,outs,runners_on,result,contact_quality,exit_velo,pitch_type,count_balls,count_strikes,created_at")
           .eq("user_id", user.id)
           .eq("pitcher_archetype_snapshot", archetype)
           .order("created_at", { ascending: false })
@@ -185,8 +187,9 @@ serve(async (req) => {
       : { data: [] };
 
     // 5. global zone tendencies — all user's recent pitches as hitter
-    const globalRecentPitches = await admin.from("gp_pitches")
-      .select("zone,pitch_type,result,contact_quality,velo")
+    const globalRecentPitches = await admin.from("gp_v_pitch_facts")
+      .select("zone,pitch_type,result,contact_quality,pitch_velo")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(600);
 
@@ -202,11 +205,12 @@ serve(async (req) => {
       : { data: null };
 
     // 7. recent form
-    const recent = await admin.from("gp_at_bats")
+    const recent = await admin.from("gp_v_at_bat_facts")
       .select("result,contact_quality,exit_velo,created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(25);
+
 
     // ---- Aggregations (numerical inputs to the AI) ----
     const zoneAggDirect = aggregateZones(pitchesVsThis.data ?? []);
@@ -284,7 +288,7 @@ function aggregateZones(pitches: any[]) {
     if (!/^[1-9]$/.test(key)) continue;
     z[key] ??= { n: 0, ok: 0, miss: 0, barrel: 0 };
     z[key].n += 1;
-    if (p.result === "swing_miss") z[key].miss += 1;
+    if (p.result === "swinging_strike") z[key].miss += 1;
     if (p.result === "in_play") {
       if (p.contact_quality === "barrel") { z[key].barrel += 1; z[key].ok += 1; }
       else if (p.contact_quality === "solid") z[key].ok += 1;
@@ -296,8 +300,9 @@ function aggregateZones(pitches: any[]) {
 function aggregateSituational(atBats: any[]) {
   const tally: Record<string, { n: number; on_base: number; hard_contact: number }> = {};
   for (const ab of atBats) {
-    const k = ab.base_state ? `${ab.base_state}_${ab.outs ?? 0}out` : null;
-    if (!k) continue;
+    const runners = String(ab.runners_on ?? "").trim();
+    if (!runners) continue;
+    const k = `${runners}_${ab.outs ?? 0}out`;
     tally[k] ??= { n: 0, on_base: 0, hard_contact: 0 };
     tally[k].n += 1;
     if (["1B","2B","3B","HR","BB","HBP"].includes(ab.result)) tally[k].on_base += 1;
@@ -310,15 +315,16 @@ function aggregateVeloBands(pitches: any[]) {
   const bands = { "<85": init(), "85-89": init(), "90-93": init(), "94+": init() };
   function init() { return { n: 0, whiff: 0, hard: 0 }; }
   for (const p of pitches) {
-    const v = Number(p.velo);
+    const v = Number(p.pitch_velo);
     if (!Number.isFinite(v)) continue;
     const b = v < 85 ? "<85" : v < 90 ? "85-89" : v < 94 ? "90-93" : "94+";
     bands[b].n += 1;
-    if (p.result === "swing_miss") bands[b].whiff += 1;
+    if (p.result === "swinging_strike") bands[b].whiff += 1;
     if (p.contact_quality === "barrel" || p.contact_quality === "solid") bands[b].hard += 1;
   }
   return bands;
 }
+
 
 function renderMarkdown(p: any): string {
   try {

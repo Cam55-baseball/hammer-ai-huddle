@@ -1,0 +1,11 @@
+ALTER VIEW public.gp_v_at_bat_facts SET (security_invoker = true);
+ALTER VIEW public.gp_v_pitch_facts SET (security_invoker = true);
+ALTER VIEW public.gp_v_plate_discipline SET (security_invoker = true);
+ALTER VIEW public.gp_v_hitting_by_zone SET (security_invoker = true);
+ALTER VIEW public.gp_v_hitting_by_pitch_type SET (security_invoker = true);
+ALTER VIEW public.gp_v_hitting_by_count SET (security_invoker = true);
+ALTER VIEW public.gp_v_hitting_by_velo_band SET (security_invoker = true);
+ALTER VIEW public.gp_v_hitting_by_pitcher_hand SET (security_invoker = true);
+ALTER VIEW public.gp_v_contact_quality SET (security_invoker = true);
+ALTER VIEW public.gp_v_hitting_risp SET (security_invoker = true);
+ALTER VIEW public.gp_v_home_to_first SET (security_invoker = true);
