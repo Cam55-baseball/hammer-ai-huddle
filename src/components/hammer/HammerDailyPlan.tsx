@@ -151,6 +151,33 @@ export function usePlanAdjustApi(): PlanAdjustApi | null {
 
 
 
+/**
+ * Plain-English asks. Internal context keys (equipment_effective,
+ * lifting_history, …) must never reach an athlete's screen.
+ */
+const MISSING_CONTEXT_PROMPTS: Record<string, string> = {
+  equipment_effective: "what hitting and training gear you actually have",
+  equipment_access: "what training gear you actually have",
+  lifting_history: "how long you've been lifting consistently",
+  position_primary: "which position you play",
+  season_phase: "where you are in your season",
+  sport_primary: "which sport you play",
+  training_age: "how long you've been training",
+  injury_status: "anything that's hurting right now",
+};
+
+export function missingContextPrompt(keys: ReadonlyArray<string>): string {
+  const asks = keys
+    .map((k) => MISSING_CONTEXT_PROMPTS[k])
+    .filter((v): v is string => Boolean(v));
+  if (asks.length === 0) {
+    return "Tell Hammer more about your setup in the chat below and today's plan will adapt.";
+  }
+  const list =
+    asks.length === 1 ? asks[0] : `${asks.slice(0, -1).join(", ")} and ${asks[asks.length - 1]}`;
+  return `Tell Hammer ${list} in the chat below and today's plan will adapt.`;
+}
+
 function DrillRow({
   drill: d,
   modality,
@@ -1290,6 +1317,10 @@ function BlockCard({
               {block.status === "off-day" ? (
                 <span className="text-[11px] text-muted-foreground italic">
                   No log today — resting this modality.
+                </span>
+              ) : block.drills.length === 0 ? (
+                <span className="text-[11px] text-muted-foreground italic">
+                  Nothing to mark done — there's no work prescribed here yet.
                 </span>
               ) : (
                 <BlockCompletionControls
