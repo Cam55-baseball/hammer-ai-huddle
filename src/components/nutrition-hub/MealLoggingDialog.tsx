@@ -603,7 +603,14 @@ export function MealLoggingDialog({
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex flex-col gap-3 pt-4 border-t sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+            <Checkbox
+              checked={saveAsFavorite}
+              onCheckedChange={(v) => setSaveAsFavorite(Boolean(v))}
+            />
+            Save as favorite
+          </label>
           <Button
             onClick={handleSave}
             disabled={saving}
@@ -613,6 +620,7 @@ export function MealLoggingDialog({
             Save Meal
           </Button>
         </div>
+
       </DialogContent>
     </Dialog>
   );
