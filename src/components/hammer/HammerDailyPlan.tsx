@@ -1239,11 +1239,7 @@ function BlockCard({
                   ))}
                   {focusGaps.length === 0 && (
                     <div className="text-[11px] text-muted-foreground">
-                      Tell Hammer about{" "}
-                      <span className="font-medium text-foreground">
-                        {block.missingContextKeys.join(", ").replace(/_/g, " ")}
-                      </span>{" "}
-                      in chat below and your plan will adapt.
+                      {missingContextPrompt(block.missingContextKeys)}
                     </div>
                   )}
                 </div>
