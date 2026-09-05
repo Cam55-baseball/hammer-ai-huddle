@@ -289,9 +289,50 @@ function DrillRow({
  */
 function DefensePositionSwap() {
   const api = usePlanAdjustApi();
-  const { positions, primary, loading } = useAthletePositions();
+  const { user } = useAuth();
+  const { positions, primary, loading, savePositions, reload } = useAthletePositions();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const secondaries = positions.slice(1);
+  const hasDh = secondaries.some((c) => c.toUpperCase() === "DH");
+  // DH is not a defensive spot and has no drills tagged to it, so it never
+  // appears as something to "work" today — it stays saved on the profile.
+  const fieldable = positions.filter((c) => c.toUpperCase() !== "DH");
+
+  const savePicked = async (next: string[]) => {
+    try {
+      const ordered = primary ? [primary, ...next.filter((c) => c !== primary)] : next;
+      await savePositions(ordered);
+      if (user) {
+        await persistContextAnswer(
+          user.id,
+          "position_secondary",
+          next.filter((c) => c !== primary),
+          "defense_card_position_picker",
+        );
+      }
+      // Same refresh mechanism as an equipment save — the envelope is derived,
+      // so the plan must be told to re-read it or the card stays stale.
+      announceAthleteContextChanged();
+      await reload();
+      toast.success("Positions saved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "That didn't save.");
+      throw e;
+    }
+  };
+
+  const picker = (
+    <PositionPickerDialog
+      open={pickerOpen}
+      onOpenChange={setPickerOpen}
+      primary={primary}
+      selected={secondaries}
+      onSave={savePicked}
+    />
+  );
 
   if (loading || !api) return null;
 
@@ -307,7 +348,7 @@ function DefensePositionSwap() {
     );
   }
 
-  const active = api.positionWorked ?? primary;
+  const active = api.positionWorked ?? fieldable[0] ?? primary;
 
   return (
     <div className="space-y-1.5">
@@ -315,7 +356,7 @@ function DefensePositionSwap() {
         Working today at
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {positions.map((code) => (
+        {fieldable.map((code) => (
           <button
             key={code}
             type="button"
@@ -351,15 +392,20 @@ function DefensePositionSwap() {
           </button>
         ))}
       </div>
-      {positions.length === 1 && (
+      {hasDh && (
         <p className="text-[11px] text-muted-foreground">
-          Play more than one spot?{" "}
-          <button type="button" className="underline" onClick={() => navigate("/profile")}>
-            Add your other positions
-          </button>
-          .
+          DH is saved on your profile, but it isn't a fielding spot — there's no defensive block
+          for it, so pick one of the positions above.
         </p>
       )}
+      <p className="text-[11px] text-muted-foreground">
+        <button type="button" className="underline" onClick={() => setPickerOpen(true)}>
+          Add your other positions
+        </button>
+        .
+      </p>
+      {picker}
+
     </div>
   );
 }
