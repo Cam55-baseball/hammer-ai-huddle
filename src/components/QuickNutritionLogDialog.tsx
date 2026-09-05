@@ -17,6 +17,12 @@ import { useVitaminLogs, type VitaminTiming } from '@/hooks/useVitaminLogs';
 import { toast } from 'sonner';
 import { DIGESTION_TAGS, convertMealTime, toggleDigestionTagInNotes } from '@/constants/nutritionLogging';
 import { SUPPLEMENT_REFERENCE, SUPPLEMENT_NAMES } from '@/constants/supplements';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Star } from 'lucide-react';
+import { HydrationLogger } from '@/components/nutrition-hub/HydrationLogger';
+import { FavoritesPicker } from '@/components/nutrition-hub/FavoritesPicker';
+import { useUnifiedFavorites, type UnifiedFavorite } from '@/hooks/useUnifiedFavorites';
+import { useMealHydrationBridge } from '@/hooks/useMealHydrationBridge';
 
 interface QuickNutritionLogDialogProps {
   open: boolean;
@@ -64,6 +70,22 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
   const [energyLevel, setEnergyLevel] = useState<number>(5);
   const [digestionNotes, setDigestionNotes] = useState<string>('');
   const [digestionOpen, setDigestionOpen] = useState(false);
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+  const { saveFavorite } = useUnifiedFavorites();
+  const { logMealHydration } = useMealHydrationBridge();
+  const drinksOnly = mealType === 'hydration';
+
+  /** Prefill every field from a favorite; the athlete can still change them. */
+  const handlePickFavorite = (fav: UnifiedFavorite) => {
+    setMealTitle(fav.name);
+    setCalories(fav.calories != null ? String(fav.calories) : '');
+    setProtein(fav.protein_g != null ? String(fav.protein_g) : '');
+    setCarbs(fav.carbs_g != null ? String(fav.carbs_g) : '');
+    setFats(fav.fats_g != null ? String(fav.fats_g) : '');
+    setHydration(fav.hydration_oz != null ? String(fav.hydration_oz) : '');
+    ['calories', 'protein', 'carbs', 'fats', 'hydration'].forEach((f) => touchedFields.current.add(f));
+    toast.success(`Loaded "${fav.name}" — adjust anything, then save.`);
+  };
 
   const toggleDigestionTag = (value: string) => {
     setDigestionNotes(prev => toggleDigestionTagInNotes(prev, value));
@@ -244,7 +266,26 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
         queryClient.invalidateQueries({ queryKey: ['vitaminAdherence'] });
       }
 
+      // Fluid logged with a meal has to reach the drinks counter too.
+      await logMealHydration(hydration ? parseFloat(hydration) : 0);
+
+      if (saveAsFavorite) {
+        const name = (mealTitle || mealType || 'Saved meal').trim();
+        const fav = await saveFavorite({
+          meal_name: name,
+          calories: calories ? parseInt(calories) : null,
+          protein_g: protein ? parseFloat(protein) : null,
+          carbs_g: carbs ? parseFloat(carbs) : null,
+          fats_g: fats ? parseFloat(fats) : null,
+          hydration_oz: hydration ? parseFloat(hydration) : null,
+          meal_type: mealType || null,
+        });
+        if (fav.success) toast.success(`Saved "${name}" to your favorites`);
+        else toast.error(fav.error || "Couldn't save that favorite.");
+      }
+
       toast.success(t('vault.nutrition.mealLogged'));
+      setSaveAsFavorite(false);
       resetForm();
       onOpenChange(false);
       onSuccess?.();
@@ -442,7 +483,8 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             </div>
           </div>
 
-          {/* Hydration */}
+          {/* Hydration — the number here rides along with the meal, and the
+              logger below records the drink itself against the day's total. */}
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">{t('vault.nutrition.hydration')}</Label>
             <Input
@@ -614,6 +656,29 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               )}
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Favorites — the same list everywhere */}
+          <div className="space-y-2 pt-3 border-t">
+            <Label className="text-xs flex items-center gap-2">
+              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+              Favorites
+            </Label>
+            <FavoritesPicker onPick={handlePickFavorite} />
+          </div>
+
+          {/* Drinks — full logger, same as the nutrition hub */}
+          <div className="space-y-2 pt-3 border-t">
+            <Label className="text-xs flex items-center gap-2">
+              <Droplets className="h-3.5 w-3.5 text-blue-500" />
+              {drinksOnly ? 'Log your drink' : 'Log drinks'}
+            </Label>
+            <HydrationLogger dense onLogged={(oz) => setHydration(String((parseFloat(hydration) || 0) + oz))} />
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer pt-2">
+            <Checkbox checked={saveAsFavorite} onCheckedChange={(v) => setSaveAsFavorite(Boolean(v))} />
+            Save as favorite
+          </label>
 
           {/* Save Button */}
           <Button 
