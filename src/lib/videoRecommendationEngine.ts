@@ -207,6 +207,13 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     const id = keyToTagId.get(`correction:${key}`);
     if (id) correctionTagIds.set(id, val.strength);
   }
+  // Root-pattern lift: same correction, but the pattern behind it is costing
+  // the athlete in more than one skill.
+  const rootPatternTagIds = new Set(
+    (rootPatternCorrectionKeys ?? [])
+      .map(k => keyToTagId.get(`correction:${k}`))
+      .filter(Boolean) as string[],
+  );
 
 
   const now = Date.now();
