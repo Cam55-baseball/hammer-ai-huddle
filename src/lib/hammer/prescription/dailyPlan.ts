@@ -162,6 +162,11 @@ export interface PrescribedBlock {
    */
   readonly gameDayPrimer?: boolean;
   /**
+   * Card is intentionally off today (rest / schedule) but the athlete may
+   * opt into a short light version. Drives the one-tap override control.
+   */
+  readonly offDayOverridable?: boolean;
+  /**
    * Laterality tag for switch hitters / ambidextrous throwers — when set,
    * this block represents ONE side (L or R) and is expected to appear
    * alongside a mirror-side block. UI keys DOM ids + completion task ids
@@ -1979,6 +1984,94 @@ function labelForModality(m: ModalityKey): string {
 }
 
 /**
+ * ALWAYS-VISIBLE LAW (defense).
+ *
+ * Defense must render on every day type: training day, game day (pregame
+ * primer), and off day. On an off day it says plainly that it is off and why,
+ * and stays overridable so the athlete can opt into a short light block.
+ */
+function applyDefenseAlwaysVisible(
+  blocks: ReadonlyArray<PrescribedBlock>,
+  originals: ReadonlyMap<string, PrescribedBlock>,
+  defenseFullOverride: boolean,
+): ReadonlyArray<PrescribedBlock> {
+  return blocks.map((b) => {
+    if (b.modality !== "defense") return b;
+    if (b.gameDayPrimer) return b;
+    const original = originals.get(blockKey(b));
+    const restingToday = b.status === "off-day" || b.status === "suppressed" || b.drills.length === 0;
+    if (!restingToday) return b;
+
+    if (defenseFullOverride) {
+      const src = original && original.drills.length > 0 ? original : b;
+      const drills = src.drills.slice(0, 3).map((d) => ({
+        ...d,
+        dosage: `${d.dosage} — light, your call`,
+      }));
+      return {
+        ...b,
+        status: "ready",
+        title: "Defense — light block (your call)",
+        why: "You asked for defense on a day it was scheduled off. This is kept short and light so it does not cost you tomorrow.",
+        roadmapReason: "Athlete override — light defense on a rest day.",
+        phase: "maintain",
+        drills,
+        steps: drillsToSteps(drills),
+        durationMin: 10,
+        assumption: undefined,
+        route: "/practice?module=defense",
+        ctaLabel: "Open defense",
+        offDayOverridable: true,
+        gamePlanTemplate: null,
+      };
+    }
+
+    return {
+      ...b,
+      status: "off-day",
+      title: b.title.includes("off today") ? b.title : "Defense — off today",
+      why:
+        b.status === "suppressed" && b.why
+          ? b.why
+          : "Defense is off today on purpose so your legs, hands, and arm come back fresh for the next session.",
+      steps:
+        b.steps.length > 0
+          ? b.steps
+          : ["Optional: 5 minutes of glove work or film study if you want to touch it."],
+      offDayOverridable: true,
+    };
+  });
+}
+
+/**
+ * NO-BLANK-CARD LAW. Structural backstop: every block leaves the generator
+ * with something an athlete can read, whatever the day type or how sparse
+ * their context is. Never promotes status, never invents prescribed work —
+ * it only guarantees the card says something.
+ */
+function ensureRenderable(
+  blocks: ReadonlyArray<PrescribedBlock>,
+): ReadonlyArray<PrescribedBlock> {
+  return blocks.map((b) => {
+    const hasBody = b.drills.length > 0 || b.steps.length > 0;
+    if (hasBody && b.title.trim() !== "" && b.why.trim() !== "") return b;
+    const label = labelForModality(b.modality);
+    return {
+      ...b,
+      title: b.title.trim() === "" ? `${label} — nothing scheduled today` : b.title,
+      why:
+        b.why.trim() === ""
+          ? `${label} is not scheduled today. Hammer will bring it back when it fits the week.`
+          : b.why,
+      steps: hasBody
+        ? b.steps
+        : [`${label} is off today — nothing to do here. Ask Hammer if you want work anyway.`],
+    };
+  });
+}
+
+
+/**
  * Very light dosage scaler: multiplies the leading integer of "N x M …"
  * dosage strings by `scale`, floor 1.  If we can't parse the string we
  * return it untouched — never fabricate.
@@ -2099,7 +2192,15 @@ export function buildHammerDailyPlan(
     roadmapInputs.defenseFullOverride === true,
   );
   const sided = applySideBias(modulated, sideBias);
-  const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
+  const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
+  // Defense renders on every day type; then the structural no-blank-card backstop.
+  const blocks = ensureRenderable(
+    applyDefenseAlwaysVisible(
+      biasedBlocks,
+      preModulationOriginals,
+      roadmapInputs.defenseFullOverride === true,
+    ),
+  );
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console

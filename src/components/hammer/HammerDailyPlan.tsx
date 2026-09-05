@@ -1350,7 +1350,10 @@ function BlockCard({
               <MessageCircle className="h-3 w-3" />
               {chatOpen ? "Close chat" : "Ask Hammer"}
             </Button>
-            {block.modality === "defense" && (block.gameDayPrimer || adjustApiForCard?.defenseFullOverride) && (
+            {block.modality === "defense" &&
+              (block.gameDayPrimer ||
+                block.offDayOverridable ||
+                adjustApiForCard?.defenseFullOverride) && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1360,8 +1363,12 @@ function BlockCard({
                 className="text-xs"
               >
                 {adjustApiForCard?.defenseFullOverride
-                  ? "Back to pregame primer"
-                  : "Do full defense anyway"}
+                  ? block.gameDayPrimer
+                    ? "Back to pregame primer"
+                    : "Back to rest"
+                  : block.status === "off-day"
+                    ? "Do a light block anyway"
+                    : "Do full defense anyway"}
               </Button>
             )}
             <div className="ml-auto">
