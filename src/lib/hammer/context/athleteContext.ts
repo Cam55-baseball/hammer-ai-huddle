@@ -158,7 +158,10 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       : null;
 
     const vars: ContextVariable[] = [
-      // Spine variables (envelope)
+      ...spineVariables(env),
+    ];
+    const LEGACY_INLINE_SPINE: ContextVariable[] = [
+
       fromEnvelope(env, "sport_primary", "Sport", "identity"),
       fromEnvelope(env, "goal_summary", "Primary goal", "goals"),
       fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
