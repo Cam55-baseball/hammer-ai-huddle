@@ -8,6 +8,7 @@ import {
   type DisciplineContract,
   type MetricSpec,
 } from "../_shared/reportCardContracts.ts";
+import { canSeeScoredGrading, SCORED_GRADING_MESSAGE } from "../_shared/scoredGradingGate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
