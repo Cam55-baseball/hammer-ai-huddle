@@ -1930,6 +1930,8 @@ export interface RoadmapInputs {
   readonly seasonPhaseSource?: "date_window" | "stored" | "default" | null;
   /** Position the athlete says they are actually working today. */
   readonly positionOverride?: string | null;
+  /** Athlete tapped "run full defense anyway" on a game day. */
+  readonly defenseFullOverride?: boolean;
 }
 
 export function buildHammerDailyPlan(
@@ -2019,7 +2021,13 @@ export function buildHammerDailyPlan(
     };
   });
 
-  const modulated = applyScheduleModulation(withThrowingLadder, scheduleSignal);
+  const preModulationOriginals = new Map(rawBlocks.map((b) => [blockKey(b), b]));
+  const modulated = applyScheduleModulation(
+    withThrowingLadder,
+    scheduleSignal,
+    preModulationOriginals,
+    roadmapInputs.defenseFullOverride === true,
+  );
   const sided = applySideBias(modulated, sideBias);
   const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
 
