@@ -16662,7 +16662,10 @@ export type Database = {
           is_on_base_walk: boolean | null
           is_strikeout: boolean | null
           launch_angle: number | null
+          notes: string | null
+          opponent_pitcher_id: string | null
           opponent_team: string | null
+          outs: number | null
           pitch_type: string | null
           pitch_velo: number | null
           pitcher_archetype_snapshot: string | null
@@ -16684,6 +16687,13 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_at_bats_opponent_pitcher_id_fkey"
+            columns: ["opponent_pitcher_id"]
+            isOneToOne: false
+            referencedRelation: "gp_pitcher_dossiers"
             referencedColumns: ["id"]
           },
         ]
@@ -16824,6 +16834,7 @@ export type Database = {
       gp_v_pitch_facts: {
         Row: {
           at_bat_id: string | null
+          contact_quality: string | null
           count_balls: number | null
           count_strikes: number | null
           created_at: string | null
