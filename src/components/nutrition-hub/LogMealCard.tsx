@@ -57,14 +57,19 @@ export function LogMealCard({
   onLogMeal,
   onSelectFood,
   favoritesSlot,
+  favoriteMealsSlot,
+  hydrationSlot,
   quickActionsSlot,
   supplementsSlot,
 }: LogMealCardProps) {
   const { t } = useTranslation();
   const [quickPickOpen, setQuickPickOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [favoriteMealsOpen, setFavoriteMealsOpen] = useState(false);
+  const [hydrationOpen, setHydrationOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [supplementsOpen, setSupplementsOpen] = useState(false);
+
 
   return (
     <Card>
