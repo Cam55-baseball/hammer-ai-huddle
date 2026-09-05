@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, Check, X, UserPlus, Clock } from "lucide-react";
 import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
+import { PositionListEditor } from "@/components/profile/PositionListEditor";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
