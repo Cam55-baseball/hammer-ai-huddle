@@ -10,14 +10,14 @@ describe("parseEquipmentStatement", () => {
   it("parses a confident possession statement", () => {
     const p = parseEquipmentStatement("I have a tee, a net and a front toss screen");
     expect(p.confidence).toBe("high");
-    expect(p.have.sort()).toEqual(["net", "screen", "tee"]);
+    expect([...p.have].sort()).toEqual(["net", "screen", "tee"]);
     expect(p.scope).toBe("persistent");
   });
 
   it("parses a bare list", () => {
     const p = parseEquipmentStatement("tee, net, dumbbells");
     expect(p.confidence).toBe("high");
-    expect(p.have.sort()).toEqual(["dumbbell", "net", "tee"]);
+    expect([...p.have].sort()).toEqual(["dumbbell", "net", "tee"]);
   });
 
   it("handles negation per clause", () => {
