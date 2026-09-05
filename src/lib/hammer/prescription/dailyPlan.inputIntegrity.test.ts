@@ -170,11 +170,17 @@ describe("declared equipment changes the hitting drills", () => {
     });
 
   const hittingNames = (gear: string[]) => {
-    const plan = buildHammerDailyPlan(withGear(gear));
-    const hitting = plan.blocks.find((b) => b.modality === "hitting");
-    expect(hitting).toBeTruthy();
-    expect(hitting!.drills.length).toBeGreaterThan(0);
-    return hitting!.drills.map((d) => d.name).join(" | ").toLowerCase();
+    // Walk forward to the first day the microcycle actually schedules hitting.
+    for (let i = 0; i < 14; i += 1) {
+      const day = new Date(Date.UTC(2026, 5, 1 + i, 12));
+      const plan = buildHammerDailyPlan(withGear(gear), undefined, null, null, undefined, day);
+      const hitting = plan.blocks.find((b) => b.modality === "hitting");
+      if (hitting && hitting.status === "ready") {
+        expect(hitting.drills.length).toBeGreaterThan(0);
+        return hitting.drills.map((d) => d.name).join(" | ").toLowerCase();
+      }
+    }
+    throw new Error("no scheduled hitting day found");
   };
 
   it("a machine owner gets machine work", () => {
