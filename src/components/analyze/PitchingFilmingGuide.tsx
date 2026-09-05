@@ -25,7 +25,13 @@ const ITEMS = [
     title: "Frame wide & stay continuous",
     body: "Keep the whole athlete in frame, wind-up through release. Tiles need to locate specific phase moments and fail if the camera cuts away or crops too tight.",
   },
+  {
+    icon: Smartphone,
+    title: "Film with your phone's normal camera",
+    body: "Upright (portrait) is fine. What we can't read is a clip that's been shrunk by a text or social app — send the original from your camera roll, at 24 frames a second or faster.",
+  },
 ] as const;
+
 
 export function PitchingFilmingGuide() {
   return (
