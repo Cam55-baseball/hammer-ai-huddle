@@ -332,8 +332,16 @@ export function MealLoggingDialog({
         // Invalidate all nutrition-related queries for E2E sync
         queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
         queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-        
+
+        await persistFavoriteIfRequested({
+          calories: caloriesNum,
+          protein: proteinNum,
+          carbs: carbsNum,
+          fats: fatsNum,
+        });
+
         toast.success('Meal logged successfully');
+
         resetForm();
         onOpenChange(false);
         onMealSaved?.();
@@ -368,8 +376,21 @@ export function MealLoggingDialog({
         // Invalidate all nutrition-related queries for E2E sync
         queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
         queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-        
+
+        await persistFavoriteIfRequested(
+          mealData.items.reduce(
+            (acc, i) => ({
+              calories: acc.calories + (Number(i.calories) || 0),
+              protein: acc.protein + (Number(i.protein) || 0),
+              carbs: acc.carbs + (Number(i.carbs) || 0),
+              fats: acc.fats + (Number(i.fats) || 0),
+            }),
+            { calories: 0, protein: 0, carbs: 0, fats: 0 },
+          ),
+        );
+
         toast.success('Meal logged successfully');
+
         resetForm();
         onOpenChange(false);
         onMealSaved?.();
