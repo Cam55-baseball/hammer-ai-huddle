@@ -43,6 +43,8 @@ import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescr
 import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
+import { RootPatternCallout } from "@/components/analyze/RootPatternCallout";
+import { useScoredGradingAccess } from "@/hooks/useScoredGradingAccess";
 import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
