@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, Check, X, UserPlus, Clock } from "lucide-react";
 import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
+import { PositionListEditor } from "@/components/profile/PositionListEditor";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
@@ -1252,6 +1253,12 @@ export default function Profile() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      <div className="rounded-md border border-border/60 p-3">
+                        <PositionListEditor />
+                      </div>
+
+
                       
                       <div className="space-y-2">
                         <Label htmlFor="team_affiliation">{t('profile.teamAffiliation')}</Label>

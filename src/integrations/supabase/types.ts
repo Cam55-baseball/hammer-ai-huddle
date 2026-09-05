@@ -1275,6 +1275,57 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_plan_adjustments: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          modality: string
+          original_key: string | null
+          original_name: string | null
+          plan_date: string
+          position_code: string | null
+          reason: string | null
+          replacement_dosage: string | null
+          replacement_name: string | null
+          scope: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          modality: string
+          original_key?: string | null
+          original_name?: string | null
+          plan_date?: string
+          position_code?: string | null
+          reason?: string | null
+          replacement_dosage?: string | null
+          replacement_name?: string | null
+          scope?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          modality?: string
+          original_key?: string | null
+          original_name?: string | null
+          plan_date?: string
+          position_code?: string | null
+          reason?: string | null
+          replacement_dosage?: string | null
+          replacement_name?: string | null
+          scope?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_professional_status: {
         Row: {
           ausl_seasons_completed: number | null
@@ -9702,6 +9753,7 @@ export type Database = {
           ncaa_id: string | null
           one_rm: Json | null
           position: string | null
+          positions: string[]
           preferred_language: string | null
           primary_batting_side: string | null
           primary_throwing_hand: string | null
@@ -9769,6 +9821,7 @@ export type Database = {
           ncaa_id?: string | null
           one_rm?: Json | null
           position?: string | null
+          positions?: string[]
           preferred_language?: string | null
           primary_batting_side?: string | null
           primary_throwing_hand?: string | null
@@ -9836,6 +9889,7 @@ export type Database = {
           ncaa_id?: string | null
           one_rm?: Json | null
           position?: string | null
+          positions?: string[]
           preferred_language?: string | null
           primary_batting_side?: string | null
           primary_throwing_hand?: string | null

@@ -111,6 +111,13 @@ import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTask
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
 import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
+import { createContext, useContext } from "react";
+import { usePlanAdjustments } from "@/hooks/usePlanAdjustments";
+import { useAthletePositions } from "@/hooks/useAthletePositions";
+import { applyAdjustments, type PlanAdjustment } from "@/lib/hammer/prescription/drillSwap";
+import { DrillAdjustDialog } from "@/components/hammer/DrillAdjustDialog";
+import { positionLabel, positionShort } from "@/lib/drills/positionLabels";
+import { Repeat } from "lucide-react";
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
   if (!p) return null;
@@ -129,6 +136,19 @@ import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection
  */
 const PRE_START_MODALITIES = new Set(["game_iq", "fueling"]);
 
+/**
+ * Lets any drill row record an athlete-authored change (swap / can't do it)
+ * without every row opening its own database subscription.
+ */
+interface PlanAdjustApi {
+  save: (adj: PlanAdjustment) => Promise<void>;
+  positionWorked: string | null;
+}
+const PlanAdjustContext = createContext<PlanAdjustApi | null>(null);
+export function usePlanAdjustApi(): PlanAdjustApi | null {
+  return useContext(PlanAdjustContext);
+}
+
 
 
 function DrillRow({
@@ -143,6 +163,8 @@ function DrillRow({
   side?: "L" | "R" | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const adjustApi = usePlanAdjustApi();
   const tasks = useHammerDailyTasks(planDate);
   const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
   const checked = tasks.isDone(taskId, side);
@@ -168,16 +190,38 @@ function DrillRow({
             <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          aria-label={`How to do ${d.name}`}
-        >
-          <BookOpen className="h-3 w-3" />
-          <span>How?</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {adjustApi && (
+            <button
+              type="button"
+              onClick={() => setAdjustOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              aria-label={`Swap or skip ${d.name}`}
+            >
+              <Repeat className="h-3 w-3" />
+              <span>Can't do it</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label={`How to do ${d.name}`}
+          >
+            <BookOpen className="h-3 w-3" />
+            <span>How?</span>
+          </button>
+        </div>
       </div>
+      {adjustApi && (
+        <DrillAdjustDialog
+          open={adjustOpen}
+          onOpenChange={setAdjustOpen}
+          modality={modality}
+          drill={d}
+          onSave={adjustApi.save}
+        />
+      )}
       {d.equipmentNote && (
         <div className="text-[11px] text-muted-foreground mt-1">You need: {d.equipmentNote}</div>
       )}
@@ -207,6 +251,90 @@ function DrillRow({
     </li>
   );
 }
+
+/**
+ * "Which position are you working today?" — multi-position athletes swap the
+ * defense block to any position on their list, and the choice is recorded so
+ * the plan can see how their reps are actually spread.
+ */
+function DefensePositionSwap() {
+  const api = usePlanAdjustApi();
+  const { positions, primary, loading } = useAthletePositions();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  if (loading || !api) return null;
+
+  if (positions.length === 0) {
+    return (
+      <div className="rounded-md border border-dashed border-border/70 p-2 text-[11px] text-muted-foreground">
+        I don't know which positions you play yet, so this is general defensive work.{" "}
+        <button type="button" className="underline" onClick={() => navigate("/profile")}>
+          Add your positions
+        </button>{" "}
+        and I'll make it specific.
+      </div>
+    );
+  }
+
+  const active = api.positionWorked ?? primary;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Working today at
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {positions.map((code) => (
+          <button
+            key={code}
+            type="button"
+            disabled={busy !== null}
+            onClick={async () => {
+              setBusy(code);
+              try {
+                await api.save({
+                  modality: "defense",
+                  action: "position_worked",
+                  scope: "today",
+                  original_key: null,
+                  original_name: null,
+                  replacement_name: null,
+                  replacement_dosage: null,
+                  reason: null,
+                  position_code: code,
+                });
+                toast.success(`Defense set to ${positionLabel(code)}`);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "That didn't save.");
+              } finally {
+                setBusy(null);
+              }
+            }}
+            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+              code === active
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {positionShort(code)}
+          </button>
+        ))}
+      </div>
+      {positions.length === 1 && (
+        <p className="text-[11px] text-muted-foreground">
+          Play more than one spot?{" "}
+          <button type="button" className="underline" onClick={() => navigate("/profile")}>
+            Add your other positions
+          </button>
+          .
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 
 const STATUS_TONE: Record<BlockStatus, string> = {
   ready: "border-primary/20",
@@ -352,6 +480,9 @@ function HammerDailyPlanBody({
   );
   const { phaseStartedAt, resolvedPhase, phaseSource } = useSeasonStatus();
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
+  const wkRx = useHammersToday();
+  const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const planAdjust = usePlanAdjustments(bodyPlanDate);
   const rawPlan = useMemo(
     () =>
       buildHammerDailyPlan(
@@ -366,31 +497,41 @@ function HammerDailyPlanBody({
           phaseStartedAt: phaseStartedAt ?? null,
           resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
+          positionOverride: planAdjust.positionWorked,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
   // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
   // hitting/throwing volume doesn't compound the neural cost.
-  const wkRx = useHammersToday();
   // Prefer actuals over prescribed so the clamp reflects what the athlete did.
   const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;
   const plan = useMemo(() => {
-    if (!cnsHigh) return rawPlan;
-    const clampedBlocks = rawPlan.blocks.map((b) => {
-      if (b.modality !== "hitting" && b.modality !== "throwing" && b.modality !== "defense") return b;
-      if (b.phase !== "build" && b.phase !== "sharpen") return b;
-      return {
-        ...b,
-        phase: "maintain" as const,
-        roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
-      };
-    });
-    return { ...rawPlan, blocks: clampedBlocks };
-  }, [rawPlan, cnsHigh]);
+    const base = cnsHigh
+      ? {
+          ...rawPlan,
+          blocks: rawPlan.blocks.map((b) => {
+            if (b.modality !== "hitting" && b.modality !== "throwing" && b.modality !== "defense") return b;
+            if (b.phase !== "build" && b.phase !== "sharpen") return b;
+            return {
+              ...b,
+              phase: "maintain" as const,
+              roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
+            };
+          }),
+        }
+      : rawPlan;
+    // Athlete-authored swaps / "can't do it" choices, including the ones they
+    // asked to stick from now on.
+    return { ...base, blocks: applyAdjustments(base.blocks, planAdjust.adjustments) };
+  }, [rawPlan, cnsHigh, planAdjust.adjustments]);
+  const adjustApi = useMemo<PlanAdjustApi>(
+    () => ({ save: planAdjust.save, positionWorked: planAdjust.positionWorked }),
+    [planAdjust.save, planAdjust.positionWorked],
+  );
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
@@ -419,6 +560,7 @@ function HammerDailyPlanBody({
   );
 
   return (
+    <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
@@ -679,6 +821,7 @@ function HammerDailyPlanBody({
       )}
     </Card>
     </div>
+    </PlanAdjustContext.Provider>
   );
 }
 
@@ -1036,6 +1179,8 @@ function BlockCard({
               <WkProgressionNote progression={blockProgression} />
             </div>
           )}
+
+          {block.modality === "defense" && <DefensePositionSwap />}
 
           {block.drills.length > 0 && (
             <div className="space-y-1.5">

@@ -177,6 +177,8 @@ interface BuilderArgs {
   readonly ctx: HammerAthleteContext;
   readonly proj: AthleteContextProjection;
   readonly speed: SpeedFocusDecision;
+  /** Athlete-chosen position for today (defense swap control). */
+  readonly positionOverride?: string | null;
 }
 
 const BODYWEIGHT_EQUIPMENT = new Set(["bodyweight", "bands", "hotel"]);
@@ -198,11 +200,12 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
-  const pos =
+function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs): PrescribedBlock {
+  const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
     null;
+  const pos = firstPositionToken(positionOverride) ?? declaredPos;
   const liftingAge = proj.liftingAgeYears;
   const seasonPhase = proj.seasonPhase;
   const injury = proj.injury;
@@ -877,20 +880,30 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
     case "defense": {
       if (!pos) {
+        // Fallback plan — never a blank card. Every position needs first-step
+        // reads, glove work, a clean exchange, and an accurate throw, so we
+        // prescribe those and invite the athlete to make it specific.
+        const generalDrills: DrillStep[] = [
+          { name: "Ready position + first-step reads", dosage: "3 x 8 reps", cue: "weight on the balls of your feet, small hop as the ball is released" },
+          { name: "Short-hop glove work", dosage: "3 x 10 reps", cue: "field through the ball, soft hands out front" },
+          { name: "Glove-to-hand exchange", dosage: "3 x 10 reps", cue: "four seams, hands to the center of your chest" },
+          { name: "Accuracy throws to a target", dosage: "2 x 10 throws", cue: "throw through the target, not at it" },
+        ];
         return {
           modality,
-          title: "Defense — waiting on position",
-          why: "Defensive drills depend on your position.",
-          roadmapReason: "Missing input — tell me your primary position and I'll prescribe.",
+          title: "Defense — general fundamentals",
+          why: "Footwork, hands, exchange, and throw accuracy carry over to every position.",
+          roadmapReason:
+            "Fallback plan — I don't know which position you play yet, so this is the defensive work every position needs. Tell me your position and I'll make it specific.",
           phase: "skill",
-          steps: ["Tell me your primary position."],
-          drills: [],
-          cues: [],
-          stopRules: [],
-          durationMin: null,
+          steps: drillsToSteps(generalDrills),
+          drills: generalDrills,
+          cues: ["Field through the ball.", "Footwork before glove."],
+          stopRules: ["Knee, ankle, hip, or shoulder pain — stop and tell Hammer."],
+          durationMin: 20,
           route: "#hammer-onboarding",
-          ctaLabel: "Answer Hammer",
-          status: "awaiting-input",
+          ctaLabel: "Set my position",
+          status: "ready",
           missing: ["position_primary"],
           missingContextKeys: ["position_primary"],
           gamePlanTemplate: null,
@@ -1825,6 +1838,8 @@ export interface RoadmapInputs {
   readonly resolvedSeasonPhase?: "off" | "pre" | "in" | "post" | null;
   /** Provenance of that phase; 'default' means no real season signal. */
   readonly seasonPhaseSource?: "date_window" | "stored" | "default" | null;
+  /** Position the athlete says they are actually working today. */
+  readonly positionOverride?: string | null;
 }
 
 export function buildHammerDailyPlan(
@@ -1879,7 +1894,9 @@ export function buildHammerDailyPlan(
   const microcycle = applyMicrocycle(weeklyTemplate, today, skillTargets);
   const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, skillTargets);
 
-  const rawBlocks = ALL_MODALITIES.map((m) => builder({ modality: m, ctx, proj, speed }));
+  const rawBlocks = ALL_MODALITIES.map((m) =>
+    builder({ modality: m, ctx, proj, speed, positionOverride: roadmapInputs.positionOverride ?? null }),
+  );
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
   const guarded = applyMinorParentSupremacy(lateralized, proj);
   const ordered = applyCategoryGoalOrdering(guarded, proj);
