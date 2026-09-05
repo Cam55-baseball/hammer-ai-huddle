@@ -16,6 +16,8 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
+import { buildFaultFindings } from "../_shared/faultFindings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
