@@ -2741,7 +2741,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       capture_fps: ballGate.fps,
       ball_flight_unavailable_reason: ballGate.reason,
       ball_flight_suppressed_keys: ballFlightSuppressedKeys,
+      // Coaching-stage persistence result. `error` non-null means the durable
+      // fault rows did NOT land — the surface says so rather than pretending.
+      fault_persistence: faultPersistence,
     };
+
 
     // Release gate — owner/admin only. Coaching text, drills and fault flags
     // stay; every number presented as a measurement is removed here so it
