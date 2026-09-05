@@ -1462,9 +1462,11 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
-                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                {scoresAllowed && (
+                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                )}
 
-                {analysisView === "report_card" ? (
+                {scoresAllowed && analysisView === "report_card" ? (
                   <HammerReportCard
                     sport={sport}
                     module={module}
@@ -1487,10 +1489,15 @@ export default function AnalyzeVideo() {
                     onSaveDrill={handleSaveDrill}
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
+                    showScore={scoresAllowed}
                   />
                 )}
 
                 <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
+
+                {/* One movement problem showing up in several skills outranks
+                    anything single-discipline, so it sits above the drills. */}
+                <RootPatternCallout />
 
                 <AnalysisPrescriptionSection
                   module={module}
