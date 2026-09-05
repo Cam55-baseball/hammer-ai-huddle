@@ -110,19 +110,18 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
       ? [inventoryRaw]
       : [];
 
-  const venueFromEntry =
-    (typeof eq === "object" && eq !== null && !Array.isArray(eq)
-      ? ((eq as { venue?: unknown }).venue ?? null)
-      : null) ?? (entry?.venue ?? null);
+  const eqObj: Record<string, unknown> | null =
+    typeof eq === "object" && eq !== null && !Array.isArray(eq)
+      ? (eq as Record<string, unknown>)
+      : null;
+
+  const venueFromEntry = eqObj?.venue ?? entry?.venue ?? null;
   const equipmentVenue = typeof venueFromEntry === "string" ? venueFromEntry : null;
 
   const equipment: string | null =
     equipmentVenue ?? equipmentList.find((t) => VENUE_EQUIPMENT_TOKENS.has(t)) ?? null;
 
-  const scopeRaw =
-    (typeof eq === "object" && eq !== null && !Array.isArray(eq)
-      ? ((eq as { scope?: unknown }).scope ?? null)
-      : null) ?? (entry?.scope ?? null);
+  const scopeRaw = eqObj?.scope ?? entry?.scope ?? null;
   const equipmentScope = typeof scopeRaw === "string" ? scopeRaw : null;
 
 
