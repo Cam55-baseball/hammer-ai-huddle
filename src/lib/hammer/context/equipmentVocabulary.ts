@@ -107,7 +107,7 @@ const TEMPORARY = /\b(today|tonight|this week|right now|for now|hotel|travel(?:l
 function clauses(text: string): string[] {
   return text
     .toLowerCase()
-    .split(/[.;!?\n]|,| but | and then | however | although /)
+    .split(/[.;!?\n]|,| but | and then | and | plus | however | although /)
     .map((c) => c.trim())
     .filter(Boolean);
 }
@@ -171,7 +171,7 @@ export function parseEquipmentStatement(raw: string): ParsedEquipmentStatement {
 }
 
 const FILLER =
-  /\b(i|we|my|our|a|an|the|and|also|plus|too|have|has|got|gotten|own|use|using|can|access|to|there|is|are|s|do|does|just|only|some|any|of|with|at|home|please|thanks|ok|okay|okay|and)\b/g;
+  /\b(i|we|my|our|a|an|the|and|also|plus|too|have|has|got|gotten|own|use|using|can|access|to|there|is|are|s|do|does|just|only|some|any|of|with|at|home|please|thanks|ok|okay|then|thing|stuff|gear|equipment|setup)\b/g;
 
 /** Strip conversational filler; returns "" when nothing nameable is left. */
 function stripFiller(clause: string): string {
