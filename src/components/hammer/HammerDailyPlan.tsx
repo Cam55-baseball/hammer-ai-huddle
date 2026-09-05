@@ -476,6 +476,7 @@ function HammerDailyPlanBody({
   );
 
   return (
+    <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
@@ -736,6 +737,7 @@ function HammerDailyPlanBody({
       )}
     </Card>
     </div>
+    </PlanAdjustContext.Provider>
   );
 }
 
