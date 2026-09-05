@@ -155,7 +155,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     correctionTags, feedbackEvidence,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics, faultEndorsements,
-    activePhases, sport, positions,
+    activePhases, sport, positions, rootPatternCorrectionKeys,
   } = input;
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
   const evidence = feedbackEvidence ?? {};
