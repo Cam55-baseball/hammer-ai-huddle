@@ -177,6 +177,8 @@ interface BuilderArgs {
   readonly ctx: HammerAthleteContext;
   readonly proj: AthleteContextProjection;
   readonly speed: SpeedFocusDecision;
+  /** Athlete-chosen position for today (defense swap control). */
+  readonly positionOverride?: string | null;
 }
 
 const BODYWEIGHT_EQUIPMENT = new Set(["bodyweight", "bands", "hotel"]);
@@ -198,11 +200,12 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
-  const pos =
+function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs): PrescribedBlock {
+  const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
     null;
+  const pos = firstPositionToken(positionOverride) ?? declaredPos;
   const liftingAge = proj.liftingAgeYears;
   const seasonPhase = proj.seasonPhase;
   const injury = proj.injury;
