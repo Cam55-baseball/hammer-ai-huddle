@@ -103,6 +103,7 @@ export function AnalysisResultsPanel({
   onSaveDrill,
   onSaveToLibrary,
   onReturnToDashboard,
+  showScore = true,
 }: Props) {
   const { t } = useTranslation();
 
@@ -124,34 +125,50 @@ export function AnalysisResultsPanel({
     <div className="space-y-5">
       {/* ── 1 · SCORE ANCHOR ─────────────────────────────────────────── */}
       <RevealSection order={0}>
-        <Card className={cn("overflow-hidden border-2", gradeSurface)}>
-          <div className="flex items-center gap-5 p-5 sm:gap-8 sm:p-7">
-            <div className="shrink-0">
-              <RadialDial value={score} size={132} color={gradeHex} label={t('videoAnalysis.scoreDialLabel', 'score')} />
+        {showScore ? (
+          <Card className={cn("overflow-hidden border-2", gradeSurface)}>
+            <div className="flex items-center gap-5 p-5 sm:gap-8 sm:p-7">
+              <div className="shrink-0">
+                <RadialDial value={score} size={132} color={gradeHex} label={t('videoAnalysis.scoreDialLabel', 'score')} />
+              </div>
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t('videoAnalysis.analysisResults')}
+                </p>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className={cn("text-3xl font-black leading-none sm:text-4xl", gradeColor)}>
+                    {gradeLabel}
+                  </span>
+                  <span className={cn("rounded-full border px-2.5 py-1 text-xs font-bold tabular-nums", gradeColor, gradeSurface)}>
+                    {t('videoAnalysis.scoutGradeChip', 'Scout grade')} {grade}
+                    <span className="font-normal text-muted-foreground"> / 80</span>
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {t(
+                    'videoAnalysis.scoreContext',
+                    "Model read of this clip on the 20–80 scouting scale — a coaching signal from this video, not a measurement of game performance."
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1 space-y-2">
+          </Card>
+        ) : (
+          <Card className="overflow-hidden border-2 border-dashed">
+            <div className="space-y-1.5 p-5 sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {t('videoAnalysis.analysisResults')}
               </p>
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className={cn("text-3xl font-black leading-none sm:text-4xl", gradeColor)}>
-                  {gradeLabel}
-                </span>
-                <span className={cn("rounded-full border px-2.5 py-1 text-xs font-bold tabular-nums", gradeColor, gradeSurface)}>
-                  {t('videoAnalysis.scoutGradeChip', 'Scout grade')} {grade}
-                  <span className="font-normal text-muted-foreground"> / 80</span>
-                </span>
-              </div>
+              <p className="text-sm font-semibold">{SCORED_GRADING_NOTICE}</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                {t(
-                  'videoAnalysis.scoreContext',
-                  "Model read of this clip on the 20–80 scouting scale — a coaching signal from this video, not a measurement of game performance."
-                )}
+                Everything below — what the clip showed, what to change and the drills for
+                it — is unaffected.
               </p>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </RevealSection>
+
 
       {/* ── 2 · KEY FINDINGS ─────────────────────────────────────────── */}
       {summary.length > 0 && (
