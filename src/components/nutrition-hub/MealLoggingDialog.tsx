@@ -43,6 +43,8 @@ interface MealLoggingDialogProps {
   mealType: string;
   onMealSaved?: () => void;
   prefilledItems?: PrefilledItem[];
+  /** Favorite chosen on another surface — prefills the quick fields on open. */
+  prefillFavorite?: FavoriteMeal | null;
 }
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
@@ -72,6 +74,7 @@ export function MealLoggingDialog({
   mealType,
   onMealSaved,
   prefilledItems,
+  prefillFavorite,
 }: MealLoggingDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
