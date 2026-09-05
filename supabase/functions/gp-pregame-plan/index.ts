@@ -288,7 +288,7 @@ function aggregateZones(pitches: any[]) {
     if (!/^[1-9]$/.test(key)) continue;
     z[key] ??= { n: 0, ok: 0, miss: 0, barrel: 0 };
     z[key].n += 1;
-    if (p.result === "swing_miss") z[key].miss += 1;
+    if (p.result === "swinging_strike") z[key].miss += 1;
     if (p.result === "in_play") {
       if (p.contact_quality === "barrel") { z[key].barrel += 1; z[key].ok += 1; }
       else if (p.contact_quality === "solid") z[key].ok += 1;
@@ -300,8 +300,9 @@ function aggregateZones(pitches: any[]) {
 function aggregateSituational(atBats: any[]) {
   const tally: Record<string, { n: number; on_base: number; hard_contact: number }> = {};
   for (const ab of atBats) {
-    const k = ab.base_state ? `${ab.base_state}_${ab.outs ?? 0}out` : null;
-    if (!k) continue;
+    const runners = String(ab.runners_on ?? "").trim();
+    if (!runners) continue;
+    const k = `${runners}_${ab.outs ?? 0}out`;
     tally[k] ??= { n: 0, on_base: 0, hard_contact: 0 };
     tally[k].n += 1;
     if (["1B","2B","3B","HR","BB","HBP"].includes(ab.result)) tally[k].on_base += 1;
@@ -314,15 +315,16 @@ function aggregateVeloBands(pitches: any[]) {
   const bands = { "<85": init(), "85-89": init(), "90-93": init(), "94+": init() };
   function init() { return { n: 0, whiff: 0, hard: 0 }; }
   for (const p of pitches) {
-    const v = Number(p.velo);
+    const v = Number(p.pitch_velo);
     if (!Number.isFinite(v)) continue;
     const b = v < 85 ? "<85" : v < 90 ? "85-89" : v < 94 ? "90-93" : "94+";
     bands[b].n += 1;
-    if (p.result === "swing_miss") bands[b].whiff += 1;
+    if (p.result === "swinging_strike") bands[b].whiff += 1;
     if (p.contact_quality === "barrel" || p.contact_quality === "solid") bands[b].hard += 1;
   }
   return bands;
 }
+
 
 function renderMarkdown(p: any): string {
   try {
