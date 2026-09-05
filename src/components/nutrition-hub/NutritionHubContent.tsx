@@ -474,6 +474,15 @@ export function NutritionHubContent() {
         <LogMealCard
           onLogMeal={(mealType) => handleLogMeal(mealType)}
           onSelectFood={handleGalleryFoodSelect}
+          favoriteMealsSlot={
+            <FavoriteMealsPicker
+              onPick={(fav) => {
+                setPrefillFavorite(fav);
+                handleLogMeal(fav.meal_type || 'snack');
+              }}
+            />
+          }
+          hydrationSlot={<HydrationLogger />}
           favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
           quickActionsSlot={
             <QuickLogActions
@@ -486,6 +495,7 @@ export function NutritionHubContent() {
           }
           supplementsSlot={<VitaminSupplementTracker />}
         />
+
       </div>
 
       {/* Physio Nutrition Suggestions */}
