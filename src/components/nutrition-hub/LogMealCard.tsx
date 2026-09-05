@@ -19,7 +19,6 @@ interface LogMealCardProps {
     servingSize: string;
   }) => void;
   favoritesSlot?: ReactNode;
-  favoriteMealsSlot?: ReactNode;
   hydrationSlot?: ReactNode;
   quickActionsSlot?: ReactNode;
   supplementsSlot?: ReactNode;
@@ -57,7 +56,6 @@ export function LogMealCard({
   onLogMeal,
   onSelectFood,
   favoritesSlot,
-  favoriteMealsSlot,
   hydrationSlot,
   quickActionsSlot,
   supplementsSlot,
@@ -65,7 +63,6 @@ export function LogMealCard({
   const { t } = useTranslation();
   const [quickPickOpen, setQuickPickOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
-  const [favoriteMealsOpen, setFavoriteMealsOpen] = useState(false);
   const [hydrationOpen, setHydrationOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [supplementsOpen, setSupplementsOpen] = useState(false);
@@ -106,16 +103,6 @@ export function LogMealCard({
           <CommonFoodsGallery onSelectFood={onSelectFood} />
         </CollapsibleSection>
 
-        {favoriteMealsSlot && (
-          <CollapsibleSection
-            open={favoriteMealsOpen}
-            onOpenChange={setFavoriteMealsOpen}
-            icon={<Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
-            label={t('nutrition.favoriteMeals', 'Favorite meals')}
-          >
-            {favoriteMealsSlot}
-          </CollapsibleSection>
-        )}
 
         {hydrationSlot && (
           <CollapsibleSection
@@ -133,7 +120,7 @@ export function LogMealCard({
             open={favoritesOpen}
             onOpenChange={setFavoritesOpen}
             icon={<Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
-            label={t('nutrition.favorites', 'Favorite foods')}
+            label={t('nutrition.favorites', 'Favorites')}
           >
             {favoritesSlot}
           </CollapsibleSection>

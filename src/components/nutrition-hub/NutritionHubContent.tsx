@@ -22,8 +22,7 @@ import { MealPlanningTab } from './MealPlanningTab';
 import { ShoppingListTab } from './ShoppingListTab';
 import { RecipeImportDialog } from './RecipeImportDialog';
 import { AIMealSuggestions } from './AIMealSuggestions';
-import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
-import { FavoriteMealsPicker } from './FavoriteMealsPicker';
+import { FavoritesPicker } from './FavoritesPicker';
 import { HydrationLogger } from './HydrationLogger';
 import type { FavoriteMeal } from '@/hooks/useFavoriteMeals';
 
@@ -480,16 +479,25 @@ export function NutritionHubContent() {
         <LogMealCard
           onLogMeal={(mealType) => handleLogMeal(mealType)}
           onSelectFood={handleGalleryFoodSelect}
-          favoriteMealsSlot={
-            <FavoriteMealsPicker
+          hydrationSlot={<HydrationLogger />}
+          favoritesSlot={
+            <FavoritesPicker
               onPick={(fav) => {
-                setPrefillFavorite(fav);
+                setPrefillFavorite({
+                  id: fav.id,
+                  meal_name: fav.name,
+                  calories: fav.calories,
+                  protein_g: fav.protein_g,
+                  carbs_g: fav.carbs_g,
+                  fats_g: fav.fats_g,
+                  hydration_oz: fav.hydration_oz,
+                  meal_type: fav.meal_type,
+                  usage_count: null,
+                });
                 handleLogMeal(fav.meal_type || 'snack');
               }}
             />
           }
-          hydrationSlot={<HydrationLogger />}
-          favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
           quickActionsSlot={
             <QuickLogActions
               onLogMeal={handleLogMeal}

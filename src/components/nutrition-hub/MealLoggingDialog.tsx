@@ -16,9 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown, Clock, Star } from 'lucide-react';
-import { FavoriteMealsPicker } from './FavoriteMealsPicker';
+import { FavoritesPicker } from './FavoritesPicker';
 import { HydrationLogger } from './HydrationLogger';
 import { useFavoriteMeals, type FavoriteMeal } from '@/hooks/useFavoriteMeals';
+import { useMealHydrationBridge } from '@/hooks/useMealHydrationBridge';
+import type { UnifiedFavorite } from '@/hooks/useUnifiedFavorites';
 
 import { MealBuilder } from '@/components/custom-activities/MealBuilder';
 import { useMealVaultSync } from '@/hooks/useMealVaultSync';
@@ -78,6 +80,7 @@ export function MealLoggingDialog({
 }: MealLoggingDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { logMealHydration } = useMealHydrationBridge();
   const { syncMealToVault } = useMealVaultSync();
   
   // Smart food lookup
@@ -227,9 +230,9 @@ export function MealLoggingDialog({
   };
 
   /** Prefill the quick-entry fields from a saved favorite. */
-  const handlePickFavorite = (fav: FavoriteMeal) => {
+  const handlePickFavorite = (fav: UnifiedFavorite) => {
     setMode('quick');
-    setMealTitle(fav.meal_name);
+    setMealTitle(fav.name);
     setCalories(fav.calories != null ? String(fav.calories) : '');
     setProtein(fav.protein_g != null ? String(fav.protein_g) : '');
     setCarbs(fav.carbs_g != null ? String(fav.carbs_g) : '');
@@ -237,7 +240,7 @@ export function MealLoggingDialog({
     setHydration(fav.hydration_oz != null ? String(fav.hydration_oz) : '');
     ['calories', 'protein', 'carbs', 'fats', 'hydration'].forEach((f) => touchedFields.current.add(f));
     clearLookup();
-    toast.success(`Loaded "${fav.meal_name}" — adjust anything, then save.`);
+    toast.success(`Loaded "${fav.name}" — adjust anything, then save.`);
   };
 
   /** Persist the just-logged meal as a favorite when the athlete asked for it. */
@@ -336,7 +339,7 @@ export function MealLoggingDialog({
         }],
         vitamins: [],
         supplements: [],
-        hydration: { amount: 0, unit: 'oz', goal: 100, entries: [] },
+        hydration: { amount: parseFloat(hydration) || 0, unit: 'oz', goal: 100, entries: [] },
       };
 
       const result = await syncMealToVault(quickMealData, {
@@ -351,6 +354,8 @@ export function MealLoggingDialog({
         // Invalidate all nutrition-related queries for E2E sync
         queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
         queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+
+        await logMealHydration(parseFloat(hydration) || 0);
 
         await persistFavoriteIfRequested({
           calories: caloriesNum,
@@ -383,18 +388,29 @@ export function MealLoggingDialog({
 
     setSaving(true);
     try {
-      const result = await syncMealToVault(mealData, {
+      const result = await syncMealToVault(
+        {
+          ...mealData,
+          hydration: {
+            ...mealData.hydration,
+            amount: (mealData.hydration?.amount || 0) + (parseFloat(hydration) || 0),
+            unit: 'oz',
+          },
+        },
+        {
         syncToVault: true,
         mealType,
         mealTitle: mealTitle || undefined,
         mealTime: mealTime ? convertMealTime(mealTime) : undefined,
         digestionNotes: digestionNotes || undefined,
-      });
+      },
+      );
 
       if (result.success) {
         // Invalidate all nutrition-related queries for E2E sync
         queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
         queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+        await logMealHydration(parseFloat(hydration) || 0);
 
         await persistFavoriteIfRequested(
           mealData.items.reduce(
@@ -626,9 +642,9 @@ export function MealLoggingDialog({
         <div className="space-y-2 pt-3 border-t">
           <Label className="text-xs flex items-center gap-2">
             <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-            Favorite meals
+            Favorites
           </Label>
-          <FavoriteMealsPicker onPick={handlePickFavorite} />
+          <FavoritesPicker onPick={handlePickFavorite} />
         </div>
 
         {/* Full hydration logging, right where the meal is logged */}
