@@ -396,6 +396,9 @@ function HammerDailyPlanBody({
   );
   const { phaseStartedAt, resolvedPhase, phaseSource } = useSeasonStatus();
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
+  const wkRx = useHammersToday();
+  const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const planAdjust = usePlanAdjustments(bodyPlanDate);
   const rawPlan = useMemo(
     () =>
       buildHammerDailyPlan(
@@ -410,31 +413,41 @@ function HammerDailyPlanBody({
           phaseStartedAt: phaseStartedAt ?? null,
           resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
+          positionOverride: planAdjust.positionWorked,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
   // heavy CNS load (Σ ≥ 7), downgrade skill block intensity to "maintain" so
   // hitting/throwing volume doesn't compound the neural cost.
-  const wkRx = useHammersToday();
   // Prefer actuals over prescribed so the clamp reflects what the athlete did.
   const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;
   const plan = useMemo(() => {
-    if (!cnsHigh) return rawPlan;
-    const clampedBlocks = rawPlan.blocks.map((b) => {
-      if (b.modality !== "hitting" && b.modality !== "throwing" && b.modality !== "defense") return b;
-      if (b.phase !== "build" && b.phase !== "sharpen") return b;
-      return {
-        ...b,
-        phase: "maintain" as const,
-        roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
-      };
-    });
-    return { ...rawPlan, blocks: clampedBlocks };
-  }, [rawPlan, cnsHigh]);
+    const base = cnsHigh
+      ? {
+          ...rawPlan,
+          blocks: rawPlan.blocks.map((b) => {
+            if (b.modality !== "hitting" && b.modality !== "throwing" && b.modality !== "defense") return b;
+            if (b.phase !== "build" && b.phase !== "sharpen") return b;
+            return {
+              ...b,
+              phase: "maintain" as const,
+              roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
+            };
+          }),
+        }
+      : rawPlan;
+    // Athlete-authored swaps / "can't do it" choices, including the ones they
+    // asked to stick from now on.
+    return { ...base, blocks: applyAdjustments(base.blocks, planAdjust.adjustments) };
+  }, [rawPlan, cnsHigh, planAdjust.adjustments]);
+  const adjustApi = useMemo<PlanAdjustApi>(
+    () => ({ save: planAdjust.save, positionWorked: planAdjust.positionWorked }),
+    [planAdjust.save, planAdjust.positionWorked],
+  );
   const { isOwner } = useOwnerAccess();
   const schedMsg = scheduleLine(sched);
   const [injuryOpen, setInjuryOpen] = useState(false);
