@@ -84,6 +84,9 @@ export default function AnalyzeVideo() {
   // measurement-backed tiles; every unvalidated tile stays behind its
   // existing kill switch in src/lib/reportCard/release1.ts.
   const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+  // Scored grading (report card, score dial, 20–80 band) is owner/admin only
+  // until the measurement engine is real. Server strips the numbers too.
+  const { allowed: scoresAllowed } = useScoredGradingAccess();
 
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
