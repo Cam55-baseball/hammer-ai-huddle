@@ -415,6 +415,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
           </div>
 
           {/* Quick Presets */}
+          {!drinksOnly && (
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('vault.nutrition.quickPresets')}
@@ -439,7 +440,10 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             </div>
           </div>
 
+          )}
+
           {/* Macros Grid */}
+          {!drinksOnly && (
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">{t('vault.nutrition.calories')}</Label>
@@ -482,6 +486,8 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               />
             </div>
           </div>
+
+          )}
 
           {/* Hydration — the number here rides along with the meal, and the
               logger below records the drink itself against the day's total. */}
@@ -672,7 +678,11 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               <Droplets className="h-3.5 w-3.5 text-blue-500" />
               {drinksOnly ? 'Log your drink' : 'Log drinks'}
             </Label>
-            <HydrationLogger dense onLogged={(oz) => setHydration(String((parseFloat(hydration) || 0) + oz))} />
+            <HydrationLogger dense />
+            <p className="text-[11px] text-muted-foreground">
+              Drinks logged here go straight to today's drink total. The ounces box above is
+              only for fluid you want attached to this meal entry.
+            </p>
           </div>
 
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer pt-2">
