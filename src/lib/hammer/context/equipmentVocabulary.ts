@@ -90,6 +90,12 @@ export interface ParsedEquipmentStatement {
   readonly confidence: ParseConfidence;
   /** Phrase → token evidence, for the "here's what I understood" prompt. */
   readonly matches: ReadonlyArray<{ phrase: string; token: string; negated: boolean }>;
+  /**
+   * Things the athlete plainly named that the vocabulary could not map.
+   * HONESTY LAW: these are never silently dropped — the caller must say
+   * out loud that they were not understood and were not saved.
+   */
+  readonly unrecognized: ReadonlyArray<string>;
 }
 
 const HEDGE = /\b(maybe|not sure|might|i think|used to|probably|sometimes|if i|when i|kind of|sort of)\b/;
