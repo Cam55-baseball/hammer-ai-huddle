@@ -202,9 +202,47 @@ export function MealLoggingDialog({
     setMealTime(format(new Date(), 'HH:mm'));
     setDigestionNotes('');
     setDigestionOpen(false);
+    setSaveAsFavorite(false);
     touchedFields.current.clear();
     clearLookup();
   };
+
+  /** Prefill the quick-entry fields from a saved favorite. */
+  const handlePickFavorite = (fav: FavoriteMeal) => {
+    setMode('quick');
+    setMealTitle(fav.meal_name);
+    setCalories(fav.calories != null ? String(fav.calories) : '');
+    setProtein(fav.protein_g != null ? String(fav.protein_g) : '');
+    setCarbs(fav.carbs_g != null ? String(fav.carbs_g) : '');
+    setFats(fav.fats_g != null ? String(fav.fats_g) : '');
+    setHydration(fav.hydration_oz != null ? String(fav.hydration_oz) : '');
+    ['calories', 'protein', 'carbs', 'fats', 'hydration'].forEach((f) => touchedFields.current.add(f));
+    clearLookup();
+    toast.success(`Loaded "${fav.meal_name}" — adjust anything, then save.`);
+  };
+
+  /** Persist the just-logged meal as a favorite when the athlete asked for it. */
+  const persistFavoriteIfRequested = async (totals: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+  }) => {
+    if (!saveAsFavorite) return;
+    const name = (mealTitle || mealTypeLabel).trim();
+    const res = await saveFavorite({
+      meal_name: name,
+      calories: Math.round(totals.calories),
+      protein_g: totals.protein,
+      carbs_g: totals.carbs,
+      fats_g: totals.fats,
+      hydration_oz: parseFloat(hydration) || 0,
+      meal_type: mealType,
+    });
+    if (res.success) toast.success(`Saved "${name}" to your favorites`);
+    else toast.error(res.error || "Couldn't save that favorite.");
+  };
+
 
   const handleMacroChange = (field: string, value: string, setter: (v: string) => void) => {
     setter(value);
