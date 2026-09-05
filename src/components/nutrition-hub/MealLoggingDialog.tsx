@@ -151,6 +151,22 @@ export function MealLoggingDialog({
     }
   }, [prefilledItems]);
 
+  // A favorite chosen elsewhere prefills the quick fields when the dialog opens.
+  useEffect(() => {
+    if (!open || !prefillFavorite) return;
+    setMode('quick');
+    setMealTitle(prefillFavorite.meal_name);
+    setCalories(prefillFavorite.calories != null ? String(prefillFavorite.calories) : '');
+    setProtein(prefillFavorite.protein_g != null ? String(prefillFavorite.protein_g) : '');
+    setCarbs(prefillFavorite.carbs_g != null ? String(prefillFavorite.carbs_g) : '');
+    setFats(prefillFavorite.fats_g != null ? String(prefillFavorite.fats_g) : '');
+    setHydration(prefillFavorite.hydration_oz != null ? String(prefillFavorite.hydration_oz) : '');
+    ['calories', 'protein', 'carbs', 'fats', 'hydration'].forEach((f) => touchedFields.current.add(f));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefillFavorite]);
+
+
+
   // Trigger smart lookup when meal title changes (only in quick mode)
   useEffect(() => {
     if (mode === 'quick' && mealTitle.length >= 3) {
