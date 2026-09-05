@@ -2192,7 +2192,15 @@ export function buildHammerDailyPlan(
     roadmapInputs.defenseFullOverride === true,
   );
   const sided = applySideBias(modulated, sideBias);
-  const { blocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
+  const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
+  // Defense renders on every day type; then the structural no-blank-card backstop.
+  const blocks = ensureRenderable(
+    applyDefenseAlwaysVisible(
+      biasedBlocks,
+      preModulationOriginals,
+      roadmapInputs.defenseFullOverride === true,
+    ),
+  );
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
