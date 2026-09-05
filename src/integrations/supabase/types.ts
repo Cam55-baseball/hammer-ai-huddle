@@ -16643,6 +16643,7 @@ export type Database = {
       }
       gp_v_at_bat_facts: {
         Row: {
+          ai_summary: string | null
           batting_side: string | null
           contact_quality: string | null
           count_balls: number | null
