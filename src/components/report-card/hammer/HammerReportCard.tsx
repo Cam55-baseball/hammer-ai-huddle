@@ -34,6 +34,20 @@ export function HammerReportCard({
   const [tilesOpen, setTilesOpen] = useState(!compact);
   const cardRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  // Release gate — scored grading is owner/admin only until the measurement
+  // engine is real. Enforced again server-side; this is the UI half.
+  const { allowed: scoresAllowed, loading: gateLoading } = useScoredGradingAccess();
+
+  if (gateLoading) return null;
+  if (!scoresAllowed) {
+    return (
+      <div className="space-y-2 rounded-2xl border border-dashed bg-muted/30 p-6 text-center">
+        <p className="text-sm font-semibold text-foreground">Grades are off for now</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{SCORED_GRADING_NOTICE}</p>
+      </div>
+    );
+  }
+
 
   if (!spec) {
     return (
