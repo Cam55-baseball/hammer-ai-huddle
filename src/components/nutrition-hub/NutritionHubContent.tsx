@@ -23,6 +23,10 @@ import { ShoppingListTab } from './ShoppingListTab';
 import { RecipeImportDialog } from './RecipeImportDialog';
 import { AIMealSuggestions } from './AIMealSuggestions';
 import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
+import { FavoriteMealsPicker } from './FavoriteMealsPicker';
+import { HydrationLogger } from './HydrationLogger';
+import type { FavoriteMeal } from '@/hooks/useFavoriteMeals';
+
 
 import { LogMealCard } from './LogMealCard';
 import { RecipeBuilder } from './RecipeBuilder';
@@ -81,6 +85,8 @@ export function NutritionHubContent() {
   
   // Meal logging dialog state
   const [mealLoggingOpen, setMealLoggingOpen] = useState(false);
+  const [prefillFavorite, setPrefillFavorite] = useState<FavoriteMeal | null>(null);
+
   const [selectedMealType, setSelectedMealType] = useState('');
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
@@ -474,6 +480,15 @@ export function NutritionHubContent() {
         <LogMealCard
           onLogMeal={(mealType) => handleLogMeal(mealType)}
           onSelectFood={handleGalleryFoodSelect}
+          favoriteMealsSlot={
+            <FavoriteMealsPicker
+              onPick={(fav) => {
+                setPrefillFavorite(fav);
+                handleLogMeal(fav.meal_type || 'snack');
+              }}
+            />
+          }
+          hydrationSlot={<HydrationLogger />}
           favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
           quickActionsSlot={
             <QuickLogActions
@@ -486,6 +501,7 @@ export function NutritionHubContent() {
           }
           supplementsSlot={<VitaminSupplementTracker />}
         />
+
       </div>
 
       {/* Physio Nutrition Suggestions */}
@@ -572,7 +588,9 @@ export function NutritionHubContent() {
         mealType={selectedMealType}
         onMealSaved={handleMealSaved}
         prefilledItems={prefilledItems}
+        prefillFavorite={prefillFavorite}
       />
+
     </div>
   );
 }

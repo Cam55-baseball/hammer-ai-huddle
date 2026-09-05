@@ -14,7 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown, Clock } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown, Clock, Star } from 'lucide-react';
+import { FavoriteMealsPicker } from './FavoriteMealsPicker';
+import { HydrationLogger } from './HydrationLogger';
+import { useFavoriteMeals, type FavoriteMeal } from '@/hooks/useFavoriteMeals';
+
 import { MealBuilder } from '@/components/custom-activities/MealBuilder';
 import { useMealVaultSync } from '@/hooks/useMealVaultSync';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
@@ -38,6 +43,8 @@ interface MealLoggingDialogProps {
   mealType: string;
   onMealSaved?: () => void;
   prefilledItems?: PrefilledItem[];
+  /** Favorite chosen on another surface — prefills the quick fields on open. */
+  prefillFavorite?: FavoriteMeal | null;
 }
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
@@ -67,6 +74,7 @@ export function MealLoggingDialog({
   mealType,
   onMealSaved,
   prefilledItems,
+  prefillFavorite,
 }: MealLoggingDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -83,6 +91,10 @@ export function MealLoggingDialog({
   const [mealTime, setMealTime] = useState<string>(() => format(new Date(), 'HH:mm'));
   const [digestionNotes, setDigestionNotes] = useState('');
   const [digestionOpen, setDigestionOpen] = useState(false);
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+  const { saveFavorite } = useFavoriteMeals();
+  
+
   
   const toggleDigestionTag = (value: string) => {
     setDigestionNotes(prev => toggleDigestionTagInNotes(prev, value));
@@ -139,6 +151,22 @@ export function MealLoggingDialog({
     }
   }, [prefilledItems]);
 
+  // A favorite chosen elsewhere prefills the quick fields when the dialog opens.
+  useEffect(() => {
+    if (!open || !prefillFavorite) return;
+    setMode('quick');
+    setMealTitle(prefillFavorite.meal_name);
+    setCalories(prefillFavorite.calories != null ? String(prefillFavorite.calories) : '');
+    setProtein(prefillFavorite.protein_g != null ? String(prefillFavorite.protein_g) : '');
+    setCarbs(prefillFavorite.carbs_g != null ? String(prefillFavorite.carbs_g) : '');
+    setFats(prefillFavorite.fats_g != null ? String(prefillFavorite.fats_g) : '');
+    setHydration(prefillFavorite.hydration_oz != null ? String(prefillFavorite.hydration_oz) : '');
+    ['calories', 'protein', 'carbs', 'fats', 'hydration'].forEach((f) => touchedFields.current.add(f));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefillFavorite]);
+
+
+
   // Trigger smart lookup when meal title changes (only in quick mode)
   useEffect(() => {
     if (mode === 'quick' && mealTitle.length >= 3) {
@@ -193,9 +221,47 @@ export function MealLoggingDialog({
     setMealTime(format(new Date(), 'HH:mm'));
     setDigestionNotes('');
     setDigestionOpen(false);
+    setSaveAsFavorite(false);
     touchedFields.current.clear();
     clearLookup();
   };
+
+  /** Prefill the quick-entry fields from a saved favorite. */
+  const handlePickFavorite = (fav: FavoriteMeal) => {
+    setMode('quick');
+    setMealTitle(fav.meal_name);
+    setCalories(fav.calories != null ? String(fav.calories) : '');
+    setProtein(fav.protein_g != null ? String(fav.protein_g) : '');
+    setCarbs(fav.carbs_g != null ? String(fav.carbs_g) : '');
+    setFats(fav.fats_g != null ? String(fav.fats_g) : '');
+    setHydration(fav.hydration_oz != null ? String(fav.hydration_oz) : '');
+    ['calories', 'protein', 'carbs', 'fats', 'hydration'].forEach((f) => touchedFields.current.add(f));
+    clearLookup();
+    toast.success(`Loaded "${fav.meal_name}" — adjust anything, then save.`);
+  };
+
+  /** Persist the just-logged meal as a favorite when the athlete asked for it. */
+  const persistFavoriteIfRequested = async (totals: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+  }) => {
+    if (!saveAsFavorite) return;
+    const name = (mealTitle || mealTypeLabel).trim();
+    const res = await saveFavorite({
+      meal_name: name,
+      calories: Math.round(totals.calories),
+      protein_g: totals.protein,
+      carbs_g: totals.carbs,
+      fats_g: totals.fats,
+      hydration_oz: parseFloat(hydration) || 0,
+      meal_type: mealType,
+    });
+    if (res.success) toast.success(`Saved "${name}" to your favorites`);
+    else toast.error(res.error || "Couldn't save that favorite.");
+  };
+
 
   const handleMacroChange = (field: string, value: string, setter: (v: string) => void) => {
     setter(value);
@@ -285,8 +351,16 @@ export function MealLoggingDialog({
         // Invalidate all nutrition-related queries for E2E sync
         queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
         queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-        
+
+        await persistFavoriteIfRequested({
+          calories: caloriesNum,
+          protein: proteinNum,
+          carbs: carbsNum,
+          fats: fatsNum,
+        });
+
         toast.success('Meal logged successfully');
+
         resetForm();
         onOpenChange(false);
         onMealSaved?.();
@@ -321,8 +395,21 @@ export function MealLoggingDialog({
         // Invalidate all nutrition-related queries for E2E sync
         queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
         queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-        
+
+        await persistFavoriteIfRequested(
+          mealData.items.reduce(
+            (acc, i) => ({
+              calories: acc.calories + (Number(i.calories) || 0),
+              protein: acc.protein + (Number(i.protein) || 0),
+              carbs: acc.carbs + (Number(i.carbs) || 0),
+              fats: acc.fats + (Number(i.fats) || 0),
+            }),
+            { calories: 0, protein: 0, carbs: 0, fats: 0 },
+          ),
+        );
+
         toast.success('Meal logged successfully');
+
         resetForm();
         onOpenChange(false);
         onMealSaved?.();
@@ -535,8 +622,23 @@ export function MealLoggingDialog({
           </TabsContent>
         </Tabs>
 
+        {/* Favorites — reachable from every meal logging surface */}
+        <div className="space-y-2 pt-3 border-t">
+          <Label className="text-xs flex items-center gap-2">
+            <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+            Favorite meals
+          </Label>
+          <FavoriteMealsPicker onPick={handlePickFavorite} />
+        </div>
+
+        {/* Full hydration logging, right where the meal is logged */}
+        <div className="pt-3 border-t">
+          <HydrationLogger dense />
+        </div>
+
         {/* Meal Time + Digestion Notes shared fields */}
         <div className="space-y-3 pt-3 border-t">
+
           {/* Meal Time */}
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -588,7 +690,14 @@ export function MealLoggingDialog({
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex flex-col gap-3 pt-4 border-t sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+            <Checkbox
+              checked={saveAsFavorite}
+              onCheckedChange={(v) => setSaveAsFavorite(Boolean(v))}
+            />
+            Save as favorite
+          </label>
           <Button
             onClick={handleSave}
             disabled={saving}
@@ -598,6 +707,7 @@ export function MealLoggingDialog({
             Save Meal
           </Button>
         </div>
+
       </DialogContent>
     </Dialog>
   );

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Utensils, ChevronDown, Star, Zap, Pill } from 'lucide-react';
+import { Utensils, ChevronDown, Star, Zap, Pill, Droplets } from 'lucide-react';
 import { MEAL_TYPES } from './MealTypeSelector';
 import { CommonFoodsGallery } from './CommonFoodsGallery';
 import { cn } from '@/lib/utils';
@@ -19,9 +19,12 @@ interface LogMealCardProps {
     servingSize: string;
   }) => void;
   favoritesSlot?: ReactNode;
+  favoriteMealsSlot?: ReactNode;
+  hydrationSlot?: ReactNode;
   quickActionsSlot?: ReactNode;
   supplementsSlot?: ReactNode;
 }
+
 
 interface SectionProps {
   open: boolean;
@@ -54,14 +57,19 @@ export function LogMealCard({
   onLogMeal,
   onSelectFood,
   favoritesSlot,
+  favoriteMealsSlot,
+  hydrationSlot,
   quickActionsSlot,
   supplementsSlot,
 }: LogMealCardProps) {
   const { t } = useTranslation();
   const [quickPickOpen, setQuickPickOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [favoriteMealsOpen, setFavoriteMealsOpen] = useState(false);
+  const [hydrationOpen, setHydrationOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [supplementsOpen, setSupplementsOpen] = useState(false);
+
 
   return (
     <Card>
@@ -98,16 +106,39 @@ export function LogMealCard({
           <CommonFoodsGallery onSelectFood={onSelectFood} />
         </CollapsibleSection>
 
+        {favoriteMealsSlot && (
+          <CollapsibleSection
+            open={favoriteMealsOpen}
+            onOpenChange={setFavoriteMealsOpen}
+            icon={<Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
+            label={t('nutrition.favoriteMeals', 'Favorite meals')}
+          >
+            {favoriteMealsSlot}
+          </CollapsibleSection>
+        )}
+
+        {hydrationSlot && (
+          <CollapsibleSection
+            open={hydrationOpen}
+            onOpenChange={setHydrationOpen}
+            icon={<Droplets className="h-4 w-4 text-blue-500" />}
+            label={t('nutrition.logDrinks', 'Log drinks')}
+          >
+            {hydrationSlot}
+          </CollapsibleSection>
+        )}
+
         {favoritesSlot && (
           <CollapsibleSection
             open={favoritesOpen}
             onOpenChange={setFavoritesOpen}
             icon={<Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
-            label={t('nutrition.favorites', 'Favorites')}
+            label={t('nutrition.favorites', 'Favorite foods')}
           >
             {favoritesSlot}
           </CollapsibleSection>
         )}
+
 
         {quickActionsSlot && (
           <CollapsibleSection

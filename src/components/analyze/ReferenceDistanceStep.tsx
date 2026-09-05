@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Ruler } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,13 @@ interface ReferenceDistanceStepProps {
  * Fully skippable: mechanics feedback works without it.
  */
 export function ReferenceDistanceStep({ sport, value, onChange, className }: ReferenceDistanceStepProps) {
+  // Pre-release lockdown: ball-speed measurement spends real inference credits
+  // and is unvalidated, so only owner/admin may switch it on.
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
+  const staffOnly = isOwner || isAdmin;
+  const gateLoading = ownerLoading || adminLoading;
+
   const presets = useMemo(() => referenceDistancePresets(sport), [sport]);
   const [enabled, setEnabled] = useState(value != null);
   const [selection, setSelection] = useState<string>(() => {
@@ -79,6 +88,17 @@ export function ReferenceDistanceStep({ sport, value, onChange, className }: Ref
     const parsed = Number(raw);
     onChange(isValidDistance(parsed) ? parsed : null);
   };
+
+  // Never leave a stale distance armed for a non-staff athlete.
+  useEffect(() => {
+    if (!gateLoading && !staffOnly && value != null) {
+      setEnabled(false);
+      onChange(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gateLoading, staffOnly, value]);
+
+  if (gateLoading || !staffOnly) return null;
 
   const manualInvalid = selection === MANUAL && manual.trim() !== "" && !isValidDistance(Number(manual));
 
