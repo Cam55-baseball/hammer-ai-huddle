@@ -1021,6 +1021,7 @@ function BlockCard({
   const [added, setAdded] = useState(false);
   const [warmupOpen, setWarmupOpen] = useState(false);
   const { user } = useAuth();
+  const adjustApiForCard = usePlanAdjustApi();
   const ctx = useHammerAthleteContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
