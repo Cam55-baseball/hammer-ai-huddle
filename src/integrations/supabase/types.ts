@@ -7792,22 +7792,34 @@ export type Database = {
       library_video_likes: {
         Row: {
           created_at: string
+          fault_tag_key: string | null
+          fault_tag_layer: string | null
           id: string
           side: string | null
+          skill_domain: string | null
+          source: string | null
           user_id: string
           video_id: string
         }
         Insert: {
           created_at?: string
+          fault_tag_key?: string | null
+          fault_tag_layer?: string | null
           id?: string
           side?: string | null
+          skill_domain?: string | null
+          source?: string | null
           user_id: string
           video_id: string
         }
         Update: {
           created_at?: string
+          fault_tag_key?: string | null
+          fault_tag_layer?: string | null
           id?: string
           side?: string | null
+          skill_domain?: string | null
+          source?: string | null
           user_id?: string
           video_id?: string
         }
@@ -7882,6 +7894,61 @@ export type Database = {
             foreignKeyName: "library_video_monetization_video_id_fkey"
             columns: ["video_id"]
             isOneToOne: true
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_video_saves: {
+        Row: {
+          created_at: string
+          fault_tag_key: string | null
+          fault_tag_layer: string | null
+          id: string
+          skill_domain: string | null
+          source: string | null
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          fault_tag_key?: string | null
+          fault_tag_layer?: string | null
+          id?: string
+          skill_domain?: string | null
+          source?: string | null
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          fault_tag_key?: string | null
+          fault_tag_layer?: string | null
+          id?: string
+          skill_domain?: string | null
+          source?: string | null
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_video_saves_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_video_saves_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
+          {
+            foreignKeyName: "library_video_saves_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
             referencedRelation: "public_library_videos"
             referencedColumns: ["id"]
           },

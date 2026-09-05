@@ -7,12 +7,14 @@
  * to a fault it was never tagged for.
  */
 import { useEffect, useMemo } from 'react';
-import { Play, Sparkles } from 'lucide-react';
+import { Bookmark, Heart, Play, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoSuggestions, trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSuggestions';
 import { analysisFeedbackToTaxonomy, type AnalysisLike } from '@/lib/analysisFeedbackToTaxonomy';
+import { useVideoFaultFeedback } from '@/hooks/useVideoFaultFeedback';
+import { cn } from '@/lib/utils';
 import { moduleToSkillDomain } from '@/lib/videoMoments/registry';
 import type { SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
 
@@ -48,6 +50,11 @@ export function AnalysisVideoRecommendations({ analysis, module, sport }: Props)
     sport: tagSport,
     enabled: Boolean(signals),
   });
+
+  const feedback = useVideoFaultFeedback(suggestions.map(s => s.video.id));
+  const primaryFault = signals?.correctionTags[0] ?? signals?.movementPatterns[0] ?? null;
+  const faultLayer: 'correction' | 'movement_pattern' | null =
+    signals?.correctionTags.length ? 'correction' : signals?.movementPatterns.length ? 'movement_pattern' : null;
 
   useEffect(() => {
     if (!user || !skillDomain || !suggestions.length) return;
@@ -97,16 +104,53 @@ export function AnalysisVideoRecommendations({ analysis, module, sport }: Props)
                   ))}
                 </ul>
               </div>
-              <Button
-                size="sm"
-                className="self-center shrink-0"
-                onClick={() => {
-                  if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
-                  window.open(video.video_url, '_blank');
-                }}
-              >
-                <Play className="h-3 w-3 mr-1" /> Watch
-              </Button>
+              <div className="flex flex-col gap-1 self-center shrink-0">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
+                    window.open(video.video_url, '_blank');
+                  }}
+                >
+                  <Play className="h-3 w-3 mr-1" /> Watch
+                </Button>
+                {feedback.canRecord && (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2"
+                      aria-label="This helped"
+                      onClick={() =>
+                        feedback.toggleLike(video.id, {
+                          skillDomain: skillDomain ?? 'hitting',
+                          faultTagKey: primaryFault,
+                          faultTagLayer: faultLayer,
+                          source: 'analysis_recommendation',
+                        })
+                      }
+                    >
+                      <Heart className={cn('h-3.5 w-3.5', feedback.isLiked(video.id) && 'fill-destructive text-destructive')} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2"
+                      aria-label="Save for later"
+                      onClick={() =>
+                        feedback.toggleSave(video.id, {
+                          skillDomain: skillDomain ?? 'hitting',
+                          faultTagKey: primaryFault,
+                          faultTagLayer: faultLayer,
+                          source: 'analysis_recommendation',
+                        })
+                      }
+                    >
+                      <Bookmark className={cn('h-3.5 w-3.5', feedback.isSaved(video.id) && 'fill-primary text-primary')} />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
           <p className="text-[10px] text-muted-foreground">

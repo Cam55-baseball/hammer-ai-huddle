@@ -110,6 +110,12 @@ export interface RecommendInput {
   rules: VideoTagRule[];
   userOutcomes?: Map<string, { watchCount: number; avgPostDelta: number }>;
   globalMetrics?: Map<string, { improvementScore: number }>;
+  /**
+   * How many other athletes liked or saved this video FOR one of the faults in
+   * this request. Measured only — never invented, and capped so a popular clip
+   * can never out-rank an actual tag match.
+   */
+  faultEndorsements?: Map<string, number>;
   /** Active teaching-phase ids (e.g. ['p1_hip_load','p4_hitters_move']). Soft boost only. */
   activePhases?: string[];
   /** HARD GATE — athlete sport. Softball athletes never receive baseball-only tags/videos. */
@@ -141,7 +147,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     correctionTags, feedbackEvidence,
-    candidateVideos, taxonomy, rules, userOutcomes, globalMetrics,
+    candidateVideos, taxonomy, rules, userOutcomes, globalMetrics, faultEndorsements,
     activePhases, sport, positions,
   } = input;
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
@@ -265,6 +271,18 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     // Global improvement
     const gm = globalMetrics?.get(v.id);
     if (gm) score += clamp(gm.improvementScore * 5, -10, 10);
+
+    // Peer endorsement for THIS fault. Small, capped, and only counted when
+    // the like/save was recorded against a fault in this request.
+    const endorsements = faultEndorsements?.get(v.id) ?? 0;
+    if (endorsements > 0) {
+      score += Math.min(10, 3 + endorsements);
+      reasons.push(
+        endorsements === 1
+          ? 'Another athlete found this helped the same fault'
+          : `${endorsements} athletes found this helped the same fault`,
+      );
+    }
 
     // Recency
     if (v.created_at) {

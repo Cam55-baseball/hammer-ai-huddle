@@ -7,7 +7,7 @@
  * directly prevents one of those gaps so the analysis can actually measure.
  */
 import { Card } from "@/components/ui/card";
-import { Ruler, Maximize2, Clapperboard } from "lucide-react";
+import { Ruler, Maximize2, Clapperboard, Smartphone } from "lucide-react";
 
 const ITEMS = [
   {
@@ -25,14 +25,20 @@ const ITEMS = [
     title: "Frame wide & stay continuous",
     body: "Keep the whole athlete in frame, wind-up through release. Tiles need to locate specific phase moments and fail if the camera cuts away or crops too tight.",
   },
+  {
+    icon: Smartphone,
+    title: "Film with your phone's normal camera",
+    body: "Upright (portrait) is fine. What we can't read is a clip that's been shrunk by a text or social app — send the original from your camera roll, at 24 frames a second or faster.",
+  },
 ] as const;
+
 
 export function PitchingFilmingGuide() {
   return (
     <Card className="border-amber-500/30 bg-amber-500/5 p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-          Before you film — 3 things to get right
+          Before you film — 4 things to get right
         </span>
       </div>
       <ul className="space-y-2">

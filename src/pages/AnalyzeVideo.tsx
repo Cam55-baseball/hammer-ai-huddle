@@ -54,6 +54,20 @@ import { DEFAULT_DISTANCE_FT } from "@/lib/capture/referenceDistance";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 
+/**
+ * A replayed (cached) analysis comes back wrapped as `{ replay_cache, ai_analysis }`,
+ * while a fresh one is returned flat. Unwrap it so the fault flags, scorecard and
+ * metrics are in the same place either way — video suggestions and prescriptions
+ * read those keys directly.
+ */
+function normalizeAnalysisResponse(data: any) {
+  if (data && data.replay_cache && data.ai_analysis) {
+    return { ...data.ai_analysis, efficiency_score: data.efficiency_score ?? data.ai_analysis.efficiency_score };
+  }
+  return data;
+}
+
+
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
   const { module } = useParams<{ module: string }>();
@@ -905,9 +919,11 @@ export default function AnalyzeVideo() {
         return;
       }
 
-      setAnalysis(analysisData);
+      const normalized = normalizeAnalysisResponse(analysisData);
+      setAnalysis(normalized);
       setAnalysisError(null);
-      fireAnalysisVideoMoment(analysisData);
+      fireAnalysisVideoMoment(normalized);
+
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
 
@@ -1056,9 +1072,11 @@ export default function AnalyzeVideo() {
         return;
       }
 
-      setAnalysis(analysisData);
+      const normalizedRetry = normalizeAnalysisResponse(analysisData);
+      setAnalysis(normalizedRetry);
       setAnalysisError(null);
-      fireAnalysisVideoMoment(analysisData);
+      fireAnalysisVideoMoment(normalizedRetry);
+
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
