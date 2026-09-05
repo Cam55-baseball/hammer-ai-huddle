@@ -111,6 +111,13 @@ import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTask
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
 import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
+import { createContext, useContext } from "react";
+import { usePlanAdjustments } from "@/hooks/usePlanAdjustments";
+import { useAthletePositions } from "@/hooks/useAthletePositions";
+import { applyAdjustments, type PlanAdjustment } from "@/lib/hammer/prescription/drillSwap";
+import { DrillAdjustDialog } from "@/components/hammer/DrillAdjustDialog";
+import { positionLabel, positionShort } from "@/lib/drills/positionLabels";
+import { Repeat } from "lucide-react";
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
   if (!p) return null;
@@ -128,6 +135,19 @@ import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection
  * (Game IQ micro-reps) and the eating plan (fueling).
  */
 const PRE_START_MODALITIES = new Set(["game_iq", "fueling"]);
+
+/**
+ * Lets any drill row record an athlete-authored change (swap / can't do it)
+ * without every row opening its own database subscription.
+ */
+interface PlanAdjustApi {
+  save: (adj: PlanAdjustment) => Promise<void>;
+  positionWorked: string | null;
+}
+const PlanAdjustContext = createContext<PlanAdjustApi | null>(null);
+export function usePlanAdjustApi(): PlanAdjustApi | null {
+  return useContext(PlanAdjustContext);
+}
 
 
 
