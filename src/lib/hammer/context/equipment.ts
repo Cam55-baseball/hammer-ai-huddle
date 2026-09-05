@@ -11,14 +11,17 @@
  * row; tomorrow the persistent profile is unchanged.
  */
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ATHLETE_CONTEXT_CHANGED_EVENT,
+  announceAthleteContextChanged,
+} from "@/lib/hammer/context/contextRefresh";
 
-export const EQUIPMENT_CONTEXT_CHANGED_EVENT = "hammer:equipment-context-changed";
+export const EQUIPMENT_CONTEXT_CHANGED_EVENT = ATHLETE_CONTEXT_CHANGED_EVENT;
 
 function announceEquipmentContextChanged(): void {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event(EQUIPMENT_CONTEXT_CHANGED_EVENT));
-  }
+  announceAthleteContextChanged();
 }
+
 
 export type EquipmentScope = "persistent" | "session" | "temporary" | "inferred";
 
