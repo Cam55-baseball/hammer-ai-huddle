@@ -92,6 +92,7 @@ import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
+import { WkSafePlanNotice } from "@/components/hammer/WkSafePlanNotice";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
@@ -873,6 +874,8 @@ function HammerDailyPlanBody({
             throwingBlock && throwingBlock.status !== "suppressed" ? "throwing" : "lift";
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
+
+              <WkSafePlanNotice />
 
               <HammerCheckInCard
                 quizType="morning"

@@ -12,10 +12,10 @@ import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { supabase } from "@/integrations/supabase/client";
 
 export function WkSafePlanNotice() {
-  const { prescriptions } = useHammersToday() as { prescriptions?: Array<Record<string, any>> };
+  const { data } = useHammersToday() as { data?: Array<Record<string, any>> };
   const [reported, setReported] = useState(false);
 
-  const safeRow = (prescriptions ?? []).find((rx) => rx?.why_payload?.safe_plan === true);
+  const safeRow = (data ?? []).find((rx) => rx?.why_payload?.safe_plan === true);
   if (!safeRow) return null;
 
   const tier = String(safeRow.why_payload?.safe_plan_tier ?? "");
