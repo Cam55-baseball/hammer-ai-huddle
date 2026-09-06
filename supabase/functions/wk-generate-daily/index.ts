@@ -549,13 +549,18 @@ const handler = async (req: Request): Promise<Response> => {
       trainingAgeContext,
     });
 
-    // -------- Load phase block + catalog --------
-    const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }] = await Promise.all([
+    // -------- Load phase block + catalog + feature flags --------
+    const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }, { data: liftingFlagRow }] = await Promise.all([
       admin.from("wk_periodization_blocks").select("*").eq("phase", phaseRes.phase).maybeSingle() as unknown as Promise<{ data: BlockRow | null; error: any }>,
       admin.from("wk_movement_catalog").select("*").or(`sport_scope.eq.both,sport_scope.eq.${sport}`) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
+      admin.from("app_settings").select("setting_value").eq("setting_key", "lifting_v2_enabled").maybeSingle(),
     ]);
     if (blocksErr) throw blocksErr;
     if (catErr) throw catErr;
+    // Wave rebuild gate. Anything other than a literal `true` reads as off, so
+    // a missing row, a null or a malformed value can never turn a dose change on.
+    const liftingV2Enabled = (liftingFlagRow as any)?.setting_value === true
+      || String((liftingFlagRow as any)?.setting_value ?? "") === "true";
     const block = blocks!;
     // ---- Unknown equipment is NOT "owns nothing" -------------------------
     // An athlete who has never declared their gear must not silently lose the
