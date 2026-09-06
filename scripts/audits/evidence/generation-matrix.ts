@@ -2,7 +2,7 @@
  * Stage 1 acceptance evidence #1 — Generation matrix.
  *
  * Spec (docs/wic/lifting-enhancement-plan-v4.md §6.1):
- *   6 phases × 5 training-age bands × 3 equipment levels × 3 ages × 4 day types
+ *   6 phases × 6 training-age bands × 3 equipment levels × 3 ages × 4 day types
  *   = 1,080 runs. A card must be produced in 100% of cells.
  *
  * Pure / in-process, following the house pattern of
@@ -98,7 +98,7 @@ async function loadCatalog(): Promise<Cat[]> {
     const { data, error } = await db
       .from("wk_movement_catalog")
       .select(
-        "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years,min_training_age_years,season_eligibility,game_day_legal,deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet,default_total_reps,category",
+        "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years,min_training_age_years,season_eligibility,season_legality,training_age_legality,game_day_legal,deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet,default_total_reps,category",
       )
       .eq("is_active", true)
       .range(from, from + PAGE - 1);
@@ -111,7 +111,9 @@ async function loadCatalog(): Promise<Cat[]> {
 
 const equipOf = (c: Cat) => (c.equipment_requirements ?? c.equipment ?? []).map((e) => String(e).toLowerCase());
 
-function eligible(c: Cat, cell: { phase: string; age: number; taYears: number; available: string[]; isGameDay: boolean }) {
+function eligible(c: Cat, cell: { phase: string; age: number; taYears: number; band: string; available: string[]; isGameDay: boolean }) {
+  // Real gate, not a copy of it — the same code the generator runs.
+  if (!checkSafetyGate(c as never, { ageYears: cell.age, trainingAgeClass: cell.band, seasonPhase: cell.phase }).allowed) return false;
   if (cell.available.length > 0) {
     const need = equipOf(c).filter((e) => e && e !== "none" && e !== "bodyweight");
     if (!need.every((e) => cell.available.includes(e))) return false;
@@ -153,7 +155,7 @@ for (const phase of PHASES) {
         for (const dayType of DAY_TYPES) {
           const isGameDay = dayType === "game";
           const isRecoveryDay = dayType === "recovery";
-          const cell = { phase, age, taYears: ta.years, available: eq.available, isGameDay };
+          const cell = { phase, age, taYears: ta.years, band: ta.band, available: eq.available, isGameDay };
 
           const template = resolveLiftTemplate({
             seasonPhase: phase,
@@ -237,11 +239,11 @@ writeFileSync(
   ),
 );
 
-console.log(`[matrix] cells: ${results.length} (expected 1080)`);
+console.log(`[matrix] cells: ${results.length} (expected 1296)`);
 console.log(`[matrix] tiers:`, byTier);
 console.log(`[matrix] cells with no card: ${empty.length}`);
 console.log(`[matrix] evidence → ${outPath}`);
-if (results.length !== 1080 || empty.length > 0) {
+if (results.length !== 1296 || empty.length > 0) {
   console.error("[matrix] ❌ FAILED — a cell produced no card, or the axis count is wrong.");
   process.exit(1);
 }
