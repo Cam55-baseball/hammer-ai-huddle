@@ -161,7 +161,49 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   sb_brush_contact_missed: 'sb_finish_brush_contact',
 };
 
-function violationBucket(skillDomain: SkillDomain, sport: TagSport | null | undefined): string {
+/**
+ * Movement key → the outcome that pattern is known to produce. Only pairs a
+ * coach would state without hedging are listed, so the result layer becomes
+ * matchable from an analysis instead of sitting unreachable.
+ */
+const MOVEMENT_TO_RESULT: Record<string, string[]> = {
+  // hitting
+  shoulders_turning_early: ['roll_over_contact', 'weak_contact'],
+  hands_forward_early: ['roll_over_contact'],
+  early_extension: ['pop_up', 'weak_contact'],
+  head_pull_off: ['swing_and_miss_underneath_ball', 'chasing_pitches'],
+  late_barrel: ['jam_shot', 'opposite_field_flare'],
+  flat_path: ['ground_ball_middle', 'top_spun_balls'],
+  steep_attack_angle: ['swing_and_miss_underneath_ball'],
+  over_rotation: ['roll_over_contact'],
+  under_rotation: ['weak_contact'],
+  weight_stuck_back: ['weak_contact'],
+  weight_leak_forward: ['top_spun_balls'],
+  landing_unbalanced: ['weak_contact'],
+  // throwing
+  th_across_body: ['th_offline_arm_side'],
+  th_feet_misaligned: ['th_offline_glove_side', 'th_offline_arm_side'],
+  th_long_arm_action: ['th_slow_pop_time'],
+  th_slow_transfer: ['th_slow_pop_time', 'th_late_to_bag'],
+  th_no_crow_hop: ['th_short_hopped'],
+  // pitching (baseball)
+  bb_trunk_rotation_early: ['bb_arm_side_miss', 'bb_flat_fastball_plane'],
+  bb_front_side_flyout: ['bb_arm_side_miss'],
+  bb_stride_direction_off: ['bb_glove_side_miss', 'bb_arm_side_miss'],
+  bb_front_leg_collapse: ['bb_miss_high'],
+  bb_release_point_drift: ['bb_noncompetitive_strike'],
+  bb_hip_shoulder_sep_loss: ['bb_flat_fastball_plane'],
+  // pitching (softball)
+  sb_shoulders_open_early: ['sb_arm_side_miss'],
+  sb_snap_late: ['sb_rise_flattens', 'sb_drop_hangs'],
+  sb_k_position_late: ['sb_spin_inconsistent'],
+  sb_replant_drift: ['sb_arm_side_miss'],
+  sb_weak_drive_push: ['sb_bounced_pitch'],
+  sb_brush_contact_missed: ['sb_spin_inconsistent'],
+  sb_plant_leg_collapse: ['sb_bounced_pitch'],
+};
+
+
   if (skillDomain !== 'pitching') return skillDomain;
   return sport === 'softball' ? 'pitching_softball' : 'pitching_baseball';
 }
