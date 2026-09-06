@@ -16,6 +16,7 @@ import { useVideoSuggestions, trackVideoWatched } from "@/hooks/useVideoSuggesti
 import { aggregateWeaknessClustersToTaxonomy } from "@/lib/analysisToTaxonomy";
 import type { SkillDomain } from "@/lib/videoRecommendationEngine";
 import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
 
 const MODALITY_TO_DOMAIN: Partial<Record<ModalityKey, SkillDomain>> = {
   hitting: "hitting",
@@ -48,6 +49,7 @@ function dismiss(videoId: string) {
 }
 
 export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
   const skillDomain = MODALITY_TO_DOMAIN[modality];
   const [tick, setTick] = useState(0);

@@ -8,6 +8,7 @@ import { useVideoMoment } from '@/hooks/useVideoMoment';
 import { trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSuggestions';
 import { dismissMomentVideo } from '@/lib/videoMoments/cooldown';
 import type { VideoMomentEvent } from '@/lib/videoMoments/types';
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
 
 interface Props {
   event: VideoMomentEvent;
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function VideoMoment({ event, variant = 'inline', className, showEmptyState, onDismissed }: Props) {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
   const { items, tier, loading, allowed, config } = useVideoMoment(event);
 

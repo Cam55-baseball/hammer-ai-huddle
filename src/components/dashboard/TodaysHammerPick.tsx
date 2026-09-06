@@ -16,6 +16,7 @@ import {
 } from "@/lib/analysisToTaxonomy";
 import type { SkillDomain } from "@/lib/videoRecommendationEngine";
 import {
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
   useVideoSuggestions,
   trackVideoWatched,
 } from "@/hooks/useVideoSuggestions";
@@ -23,6 +24,7 @@ import {
 const SCORE_FLOOR = 0.65;
 
 export function TodaysHammerPick() {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
 
   const { data } = useQuery({

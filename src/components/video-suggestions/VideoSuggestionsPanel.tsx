@@ -10,6 +10,7 @@ import {
   trackVideoWatched,
 } from '@/hooks/useVideoSuggestions';
 import type { SuggestionMode, SkillDomain } from '@/lib/videoRecommendationEngine';
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
 
 interface Props {
   skillDomain: SkillDomain;
@@ -26,6 +27,7 @@ export function VideoSuggestionsPanel({
   movementPatterns = [], resultTags = [], contextTags = [],
   title, className,
 }: Props) {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
   const { data: suggestions = [], isLoading } = useVideoSuggestions({
     skillDomain, mode, movementPatterns, resultTags, contextTags,
