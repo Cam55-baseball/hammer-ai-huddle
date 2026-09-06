@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { detectRequiredGear, drillKey, suggestAlternatives } from "@/lib/hammer/prescription/drillSwap";
 import type { PlanAdjustment } from "@/lib/hammer/prescription/drillSwap";
-import { useFamilyAlternatives } from "@/hooks/useFaultLedger";
+import { useAthleteEquipmentTier, useFamilyAlternatives } from "@/hooks/useFaultLedger";
 import { familyForSlug } from "@/lib/wic/faultLedger/families";
 
 interface Props {
@@ -34,8 +34,10 @@ export function DrillAdjustDialog({ open, onOpenChange, modality, drill, onSave 
   const gear = useMemo(() => detectRequiredGear(drill), [drill]);
   const family = useMemo(() => (drill.slug ? familyForSlug(drill.slug) : null), [drill.slug]);
   // Same-problem ladder first: if this movement belongs to a fault family, the
-  // swap must still fix the same thing. Gear-free options lead.
-  const { data: ladder = [] } = useFamilyAlternatives(drill.slug, gear ? 1 : 2);
+  // swap must still fix the same thing. The ceiling is the athlete's OWN
+  // equipment profile — never a guess, and never rounded up.
+  const { data: equip } = useAthleteEquipmentTier();
+  const { data: ladder = [] } = useFamilyAlternatives(drill.slug, equip?.tier ?? 0);
 
   const alternatives = useMemo(() => {
     const fromFamily = ladder.map((a) => ({
