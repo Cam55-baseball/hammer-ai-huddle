@@ -1505,7 +1505,12 @@ export default function AnalyzeVideo() {
                   analysis={analysis}
                   module={module}
                   sport={sport}
+                  persistenceError={
+                    (analysis as { fault_persistence?: { error?: string | null } } | null)
+                      ?.fault_persistence?.error ?? null
+                  }
                 />
+
 
                 <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
 
