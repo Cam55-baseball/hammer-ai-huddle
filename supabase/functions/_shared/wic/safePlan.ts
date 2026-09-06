@@ -115,6 +115,13 @@ export function buildSafePlan<T extends Rx>(opts: {
     return r;
   };
 
+  // An empty session validates clean but shows the athlete nothing — L0.1 treats
+  // "no rows" as a failure, not a pass.
+  if (rxs.length === 0) {
+    const safe = safeSessionRows() as unknown as T[];
+    return { tier: "safe_session", rows: safe, report: run(safe), droppedSlugs: [], fatals: [], copy: SAFE_PLAN_COPY };
+  }
+
   const first = opts.firstReport ?? run(rxs);
   collect(first);
   if (first.ok) {
