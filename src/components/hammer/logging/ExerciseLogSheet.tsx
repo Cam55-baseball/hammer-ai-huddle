@@ -17,7 +17,7 @@ import {
   usePreviousMovementLog,
   useSaveExerciseLog,
 } from "@/hooks/useExerciseLog";
-import { useStandards, useRecordAward } from "@/hooks/useStandards";
+import { useStandards, useRecordAward, useRecordStandardAttempts } from "@/hooks/useStandards";
 import { standardsForSlug } from "@/lib/hammer/standards/evaluate";
 import { buildBestIndex, evaluateStandard, newlyEarned, mergeIndexes } from "@/lib/hammer/standards/evaluate";
 import { TIER_LABEL } from "@/lib/hammer/standards/catalog";
@@ -55,6 +55,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   // detection only — never an input to the prescribed dose.
   const { progress: allProgress, measures, index: bestIndex } = useStandards();
   const recordAward = useRecordAward();
+  const recordAttempts = useRecordStandardAttempts();
   const standardRows = useMemo(() => {
     const defs = standardsForSlug(rx.movement_slug);
     if (!defs.length) return [];
@@ -193,6 +194,20 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
       });
       setSavedAt(new Date().toISOString());
       toast.success("Saved to your log");
+
+      // Raw research collection: bank this set's numbers against any standard
+      // the movement belongs to. Never rendered, never graded, never a dose.
+      if (measures) {
+        try {
+          recordAttempts.mutate({
+            set: { movement_slug: rx.movement_slug, plan_date: rx.plan_date, rounds: roundsToPayload() as any },
+            measures,
+            planDate: rx.plan_date,
+          });
+        } catch {
+          /* collection never blocks a save */
+        }
+      }
 
       // Did this set clear a standard? Compare the athlete's history against
       // history-plus-this-set. Self-logged, additive, never dose-changing.

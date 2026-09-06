@@ -19,6 +19,8 @@ import {
   type StandardProgress,
 } from "@/lib/hammer/standards/evaluate";
 import type { StandardDef, StandardTier } from "@/lib/hammer/standards/catalog";
+import { collectAttempts } from "@/lib/hammer/standards/attempts";
+import type { LoggedSet } from "@/lib/hammer/standards/evaluate";
 
 export interface StandardAward {
   id: string;
@@ -164,6 +166,35 @@ export function useRecordAward() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["standard-awards", user?.id] });
+    },
+  });
+}
+
+/**
+ * Record the raw observations a logged set contributes to any standard.
+ *
+ * Research collection only: nothing here grades, awards, or renders. It exists
+ * so that in a year we can set our marks from what Hammers athletes actually
+ * do, instead of from benchmarks published elsewhere without a source.
+ */
+export function useRecordStandardAttempts() {
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (input: {
+      set: LoggedSet;
+      measures: AthleteMeasures;
+      planDate: string;
+    }) => {
+      if (!user) return;
+      const rows = collectAttempts(input.set, input.measures, input.planDate);
+      if (!rows.length) return;
+      const { error } = await (supabase as any)
+        .from("wk_standard_attempts")
+        .upsert(
+          rows.map((r) => ({ ...r, user_id: user.id })),
+          { onConflict: "user_id,standard_id,movement_slug,plan_date,observed_value", ignoreDuplicates: true },
+        );
+      if (error) throw error;
     },
   });
 }

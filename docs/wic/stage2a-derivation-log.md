@@ -788,3 +788,28 @@ Three inputs the lifting system reads but nothing reliably fills:
 3. **Swap control.** Already shipped in Pass B (`LiftSwapSheet`, driven by
    `useFaultLedger` + the equipment tier). No change needed; confirmed wired
    into `WkPrescriptionCard`.
+
+## Standards attempt collection (Pass C close-out)
+
+`public.wk_standard_attempts` records the raw observation from every logged set
+at a movement that belongs to a standard: the number, its unit and metric, the
+movement, the standard id, the date, the capped bodyweight, the athlete's
+training-age band, and a `sample_size` that is NOT NULL and never below 1. No
+existing table captured this — `wk_session_logs` holds the log without a
+standard mapping and `wk_standard_awards` holds only banked tiers — so this is
+the single home for the data, not a second one.
+
+Purpose: every mark in the catalog is seeded from outside field benchmarks and
+carries `STANDARDS_TARGET_DISCLAIMER`. Collection begins now so that the marks
+can eventually be recalculated from the Hammers distribution.
+
+Usable when: a standard holds enough attempts across enough distinct athletes
+and training-age bands to read a distribution — the working floor is 100+
+attempts from 30+ athletes per standard per band. Until then the disclaimer
+stands and nothing is recalculated.
+
+Write path: `collectAttempts()` (pure) → `useRecordStandardAttempts()` fired
+after a successful save in `ExerciseLogSheet`, inside try/catch. Read path:
+none. Zero athlete-facing surface, zero dose authority — proven by
+`src/test/standardsAttempts.test.ts`, which evaluates the full standards set
+before and after collection and asserts byte-identical output.
