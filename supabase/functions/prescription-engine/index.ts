@@ -308,7 +308,59 @@ serve(async (req) => {
   }
 
   try {
+    // A prescription is written for one athlete. The caller must prove who
+    // they are, and the athlete in the request body must be that same person
+    // (owners and admins excepted). Enforced here, not just in the interface.
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing Authorization" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthenticated" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const input: PrescriptionInput = await req.json();
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: callerRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("status", "active");
+    const roleNames = (callerRoles ?? []).map((r: { role: string }) => r.role);
+    const isPrivileged = roleNames.includes("owner") || roleNames.includes("admin");
+
+    if (!isPrivileged && input.user_id && input.user_id !== user.id) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!isPrivileged && (roleNames.includes("scout") || roleNames.includes("coach"))) {
+      return new Response(
+        JSON.stringify({
+          error: "not_an_athlete_account",
+          message: "Training prescriptions are issued to athlete accounts only.",
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    input.user_id = isPrivileged ? (input.user_id || user.id) : user.id;
+
 
     // Step 1: Rank patterns
     const ranked = rankPatterns(input.patterns);

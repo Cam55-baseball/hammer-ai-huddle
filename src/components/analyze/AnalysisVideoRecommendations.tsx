@@ -24,7 +24,13 @@ interface Props {
   analysis: AnalysisLike | null | undefined;
   module: string | null | undefined;
   sport?: string | null;
+  /**
+   * Set when this run failed to save its coaching findings. A failed write is
+   * never swallowed — the athlete is told the history is incomplete.
+   */
+  persistenceError?: string | null;
 }
+
 
 const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing'];
 
