@@ -34,7 +34,7 @@ interface Props {
 
 const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing'];
 
-export function AnalysisVideoRecommendations({ analysis, module, sport }: Props) {
+export function AnalysisVideoRecommendations({ analysis, module, sport, persistenceError }: Props) {
   const { user } = useAuth();
   const skillDomain = moduleToSkillDomain(module || '');
   const tagSport: TagSport = sport === 'softball' ? 'softball' : 'baseball';
