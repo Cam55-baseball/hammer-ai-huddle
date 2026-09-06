@@ -16129,6 +16129,7 @@ export type Database = {
           created_at: string
           cross_sport_category: string | null
           cue: string
+          deep_flexion: boolean
           default_distance_feet: number | null
           default_duration_seconds: number | null
           default_load_pct: number | null
@@ -16139,6 +16140,7 @@ export type Database = {
           demo_video_url: string | null
           dosage_unit: string | null
           duplicate_group: string | null
+          eccentric_overload: boolean
           eccentric_profile: string | null
           elastic_emphasis: boolean | null
           elastic_profile: string | null
@@ -16220,6 +16222,7 @@ export type Database = {
           created_at?: string
           cross_sport_category?: string | null
           cue: string
+          deep_flexion?: boolean
           default_distance_feet?: number | null
           default_duration_seconds?: number | null
           default_load_pct?: number | null
@@ -16230,6 +16233,7 @@ export type Database = {
           demo_video_url?: string | null
           dosage_unit?: string | null
           duplicate_group?: string | null
+          eccentric_overload?: boolean
           eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
           elastic_profile?: string | null
@@ -16311,6 +16315,7 @@ export type Database = {
           created_at?: string
           cross_sport_category?: string | null
           cue?: string
+          deep_flexion?: boolean
           default_distance_feet?: number | null
           default_duration_seconds?: number | null
           default_load_pct?: number | null
@@ -16321,6 +16326,7 @@ export type Database = {
           demo_video_url?: string | null
           dosage_unit?: string | null
           duplicate_group?: string | null
+          eccentric_overload?: boolean
           eccentric_profile?: string | null
           elastic_emphasis?: boolean | null
           elastic_profile?: string | null

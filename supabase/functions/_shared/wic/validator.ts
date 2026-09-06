@@ -225,6 +225,17 @@ export function validate(input: ValidatorInput): ValidatorReport {
   return { ok, issues, buckets };
 }
 
-function normalizeName(n: string): string {
-  return n.toLowerCase().replace(/[—–-].*$/g, "").replace(/\([^)]*\)/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+/**
+ * BUG-1 (Stage 1) — only a dash with whitespace on BOTH sides separates a
+ * qualifier from a movement name. A hyphen inside a word ("Single-Leg",
+ * "Half-Kneeling", "J-Band") is part of the name. Parentheses are kept for the
+ * same reason: "Weighted Pull-Up (Full ROM)" is not "Weighted Pull-Up".
+ */
+export function normalizeName(n: string): string {
+  return n
+    .toLowerCase()
+    .replace(/\s[—–-]\s.*$/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
+

@@ -1,11 +1,19 @@
 /**
- * Drift guard — fails CI if any OS-only / eccentric-dominant movement was
- * ever prescribed in an in-season phase. Enforces the elite in-season Nordic
- * / Copenhagen / depth-drop / heavy-eccentric block for eternity.
+ * Drift guard — flag-driven (Stage 1, BUG-5).
  *
- * Usage (CI):
- *   PGURL=... deno run --allow-net --allow-env scripts/check-no-inseason-eccentric.ts
- * or with tsx locally against a project pg url.
+ * Previously this script matched the strings "ATG", "Nordic", "Copenhagen" and
+ * "depth drop" against a hardcoded slug list. Every new movement had to be
+ * remembered by hand, and a rename silently disarmed the guard. It now reads
+ * the catalog's `deep_flexion` / `eccentric_overload` columns, so a movement is
+ * governed the moment it is labelled.
+ *
+ * Guard 1 — no deep-flexion or eccentric-overload movement may ever be
+ *           prescribed in an in-season / pre-season / post-season phase, unless
+ *           the catalog row explicitly marks that phase legal (the ROM-limited
+ *           maintenance slug).
+ * Guard 2 — no deep-flexion movement may sit in a warm-up or speed slot.
+ *
+ * Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/check-no-inseason-eccentric.ts
  */
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,76 +25,76 @@ if (!url || !key) {
 }
 const supabase = createClient(url, key);
 
-const { data: violations, error } = await supabase
-  .from("wk_prescriptions")
-  .select("user_id, plan_date, movement_slug, phase")
-  .in("phase", ["in_season", "pre_season", "post_season"])
-  .in(
-    "movement_slug",
-    [
-      "back_squat_double_ecc",
-      "front_squat_double_ecc",
-      "bench_press_double_ecc",
-      "incline_bench_double_ecc",
-      "hip_thrust_double_ecc",
-      "rdl_double_ecc",
-      "trap_bar_dl_double_ecc",
-      "weighted_pullup_double_ecc",
-      "atg_split_squat",
-      // Family siblings — same exercise under different slugs. Only the
-      // ROM-limited maintenance slug `kot_atg_split_squat` is in-season legal.
-      "lift_atg_split_squat",
-      "lift_atg_lunge",
-      "sp_atg_split_squat",
-      "sissy_squat",
-      "slide_lunge",
-      "plyo_depth_jump",
-      "reverse_nordic",
-      "nordic_curl",
-      "copenhagen_adduction_ecc",
-    ],
-  );
+const IN_SEASON_PHASES = ["in_season", "pre_season", "post_season"] as const;
 
+const { data: flagged, error: catErr } = await supabase
+  .from("wk_movement_catalog")
+  .select("slug, name, deep_flexion, eccentric_overload, season_legality")
+  .or("deep_flexion.eq.true,eccentric_overload.eq.true");
 
-if (error) {
-  console.error("[drift-guard] query failed", error);
+if (catErr) {
+  console.error("[drift-guard] catalog query failed", catErr);
   process.exit(2);
 }
-if (violations && violations.length > 0) {
-  console.error(
-    `[drift-guard] ❌ ${violations.length} in-season eccentric violations`,
-    violations.slice(0, 10),
-  );
-  process.exit(1);
-}
-console.log("[drift-guard] ✅ no in-season eccentric violations");
 
-// ─── Guard 2: deep-ROM knee flexion may never sit in a warm-up / prep slot ───
-const ATG_FAMILY_SLUGS = [
-  "atg_split_squat",
-  "lift_atg_split_squat",
-  "kot_atg_split_squat",
-  "sp_atg_split_squat",
-  "lift_atg_lunge",
-  "sissy_squat",
-  "lift_kot_sissy_squat",
-];
+const rows = flagged ?? [];
+const deepFlexion = rows.filter((r) => r.deep_flexion).map((r) => r.slug);
+// A flagged movement is barred in-season, period. `season_legality` does NOT
+// grant an exemption — a catalog edit must never be able to disarm the guard.
+// The single documented exception is the ROM-limited maintenance slug.
+const IN_SEASON_ALLOWLIST = new Set(["kot_atg_split_squat"]);
+const restricted = rows.filter((r) => !IN_SEASON_ALLOWLIST.has(r.slug)).map((r) => r.slug);
 
-const { data: warmupViolations, error: warmupErr } = await supabase
-  .from("wk_prescriptions")
-  .select("user_id, plan_date, movement_slug, slot")
-  .in("slot", ["warmup", "speed"])
-  .in("movement_slug", ATG_FAMILY_SLUGS);
+console.log(
+  `[drift-guard] catalog: ${rows.length} flagged movements ` +
+    `(${deepFlexion.length} deep_flexion, ${rows.filter((r) => r.eccentric_overload).length} eccentric_overload)`,
+);
 
-if (warmupErr) {
-  console.error("[drift-guard] warmup query failed", warmupErr);
-  process.exit(2);
+let failed = false;
+
+// ─── Guard 1: no flagged movement inside a competitive phase ────────────────
+for (const phase of IN_SEASON_PHASES) {
+  const slugs = restricted;
+  if (slugs.length === 0) continue;
+  const { data: violations, error } = await supabase
+    .from("wk_prescriptions")
+    .select("user_id, plan_date, movement_slug, phase")
+    .eq("phase", phase)
+    .in("movement_slug", slugs);
+  if (error) {
+    console.error("[drift-guard] query failed", error);
+    process.exit(2);
+  }
+  if (violations && violations.length > 0) {
+    failed = true;
+    console.error(
+      `[drift-guard] ❌ ${violations.length} ${phase} deep-flexion / eccentric-overload violations`,
+      violations.slice(0, 10),
+    );
+  }
 }
-if (warmupViolations && warmupViolations.length > 0) {
-  console.error(
-    `[drift-guard] ❌ ${warmupViolations.length} deep-knee-flexion movements in warm-up / speed slots`,
-    warmupViolations.slice(0, 10),
-  );
-  process.exit(1);
+if (!failed) console.log("[drift-guard] ✅ no in-season deep-flexion / eccentric-overload violations");
+
+// ─── Guard 2: deep flexion may never sit in a warm-up / prep slot ───────────
+if (deepFlexion.length > 0) {
+  const { data: warmupViolations, error: warmupErr } = await supabase
+    .from("wk_prescriptions")
+    .select("user_id, plan_date, movement_slug, slot")
+    .in("slot", ["warmup", "movement_prep", "speed"])
+    .in("movement_slug", deepFlexion);
+  if (warmupErr) {
+    console.error("[drift-guard] warmup query failed", warmupErr);
+    process.exit(2);
+  }
+  if (warmupViolations && warmupViolations.length > 0) {
+    failed = true;
+    console.error(
+      `[drift-guard] ❌ ${warmupViolations.length} deep-flexion movements in warm-up / speed slots`,
+      warmupViolations.slice(0, 10),
+    );
+  } else {
+    console.log("[drift-guard] ✅ no deep-flexion movements in warm-up / speed slots");
+  }
 }
-console.log("[drift-guard] ✅ no deep-knee-flexion movements in warm-up / speed slots");
+
+process.exit(failed ? 1 : 0);

@@ -2,6 +2,7 @@
 // Single canonical ordering authority. No component-level ordering elsewhere.
 
 export type CanonicalSlot =
+  | "movement_prep"
   | "warmup"
   | "cross_sport"
   | "speed"
@@ -14,6 +15,10 @@ export type CanonicalSlot =
 export type CanonicalRole =
   | "arm_care"
   | "trunk_primer"
+  // BUG-3 (Stage 1) — `rotation` is a live sequence_role in the catalog. It
+  // sits after the trunk primer: rotational output is primed, then expressed,
+  // before the day's compound work.
+  | "rotation"
   | "compound_lower"
   | "unilateral_lower"
   | "upper_push"
@@ -27,20 +32,22 @@ export type CanonicalRole =
   | "cross_sport";
 
 // Phase 3 — SLOT_ORDER derived from canonical card registry.
-// Constitutional day order — Warm-up → Cross activation (game-day only) →
-// Speed → Bat Speed → Lift (full-body sequence) → Practice/Game → Conditioning →
-// Cross-sport (offseason back-end only) → Recovery.
+// Constitutional day order — Movement prep → Warm-up → Cross activation
+// (game-day only) → Speed → Bat Speed → Lift (full-body sequence) →
+// Practice/Game → Conditioning → Cross-sport (offseason back-end only) →
+// Recovery.
 import { CARD_REGISTRY } from "./cardRegistry.ts";
 
 const SLOT_ORDER: readonly CanonicalSlot[] = CARD_REGISTRY
   .flatMap((c) => c.slots as readonly string[])
   .filter((s): s is CanonicalSlot =>
-    ["warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
+    ["movement_prep", "warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
   );
 
 const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
   "arm_care",
   "trunk_primer",
+  "rotation",
   "compound_lower",
   "unilateral_lower",
   "upper_push",
@@ -49,6 +56,7 @@ const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
   "trunk_finisher",
   "supplemental",
 ];
+
 
 export interface OrderableRx {
   slot: string;

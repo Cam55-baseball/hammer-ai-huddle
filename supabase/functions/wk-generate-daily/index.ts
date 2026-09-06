@@ -20,6 +20,7 @@ import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
+import { buildSafePlan } from "../_shared/wic/safePlan.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
@@ -2743,18 +2744,106 @@ const handler = async (req: Request): Promise<Response> => {
         (primaryEngine && engineFailures[primaryEngine]?.[0]) ??
         validatorReport.issues.find((i: any) => i.severity === "fatal")?.message ??
         "Publication blocked by WIC validator.";
+      // ── Safe Plan ladder (Stage 1, BUG-2 / L0.1) ──────────────────────────
+      // The fatals above are already logged in full. The athlete still gets a
+      // card: drop the offending rows → legal core → hardcoded Safe Session.
+      const safePlan = buildSafePlan({
+        rxs: finalRxs as any[],
+        phase: phaseRes.phase,
+        isGameDay: !!isGameDay,
+        validate: wicValidate,
+        firstReport: validatorReport as any,
+      });
+
+      const safeRows = (safePlan.rows as any[]).map((r, i) => ({
+        slot: r.slot,
+        sequence_order: typeof r.sequence_order === "number" ? r.sequence_order : i,
+        sequence_role: r.sequence_role ?? null,
+        movement_slug: r.movement_slug,
+        movement_name: r.movement_name,
+        phase: phaseRes.phase,
+        sets: r.sets ?? null,
+        reps: r.reps ?? null,
+        tempo: r.tempo ?? null,
+        load_pct: r.load_pct ?? null,
+        duration_seconds: r.duration_seconds ?? null,
+        distance_feet: r.distance_feet ?? null,
+        total_reps: r.total_reps ?? null,
+        dosage_unit: r.dosage_unit ?? null,
+        cns_cost: r.cns_cost ?? 0,
+        cns_clamped: r.cns_clamped ?? false,
+        substituted_from_slug: r.substituted_from_slug ?? null,
+        substitution_reason: r.substitution_reason ?? null,
+        why_payload: {
+          ...((r.why_payload ?? {}) as Record<string, unknown>),
+          safe_plan: true,
+          safe_plan_tier: safePlan.tier,
+          safe_plan_copy: safePlan.copy,
+          safe_plan_dropped: safePlan.droppedSlugs,
+        },
+        rationale: r.rationale ?? null,
+        adaptation: r.adaptation ?? adaptationDecision.primary,
+        engine: r.engine ?? null,
+        why_v2: r.why_v2 ?? null,
+        validator_report: safePlan.report,
+        generator_version: r.generator_version ?? WIC_VERSION,
+        status: "planned",
+      }));
+
+      try {
+        await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+          p_user: user.id,
+          p_date: planDate,
+          p_rows: safeRows,
+          p_diag: {
+            generator_version: WIC_VERSION,
+            season_phase: phaseRes.phase,
+            adaptation: adaptationDecision.primary,
+            generation_ms: Date.now() - generationStartedAt,
+            validation_status: "degraded",
+            exercise_count: safeRows.length,
+            duplicate_count: duplicateCount,
+            ordering_ok: orderingOk,
+            metadata_complete: metadataComplete,
+            cards_produced: safeRows.reduce((acc: Record<string, number>, r: any) => {
+              acc[r.slot] = (acc[r.slot] ?? 0) + 1;
+              return acc;
+            }, {}),
+            warnings: safePlan.report.issues.filter((i: any) => i.severity === "warn"),
+            errors: safePlan.fatals,
+            resolved_season_phase: trainingContext.season_phase,
+            resolved_day_type: trainingContext.day_type,
+            context_version: trainingContext.context_version,
+          },
+        });
+      } catch (safeErr) {
+        console.error("[wk-generate-daily] safe-plan persist failed", safeErr);
+      }
+
+      console.warn("[wk-generate-daily] safe plan shipped", {
+        user_id: user.id,
+        plan_date: planDate,
+        tier: safePlan.tier,
+        dropped: safePlan.droppedSlugs.length,
+      });
+
       return json({
-        error: "wic_validation_failed",
-        title: primaryEngine ? `${primaryEngine} block couldn't publish` : "Plan couldn't publish",
-        detail: primaryDetail,
+        ok: true,
+        degraded: true,
+        safe_plan_tier: safePlan.tier,
+        safe_plan_copy: safePlan.copy,
+        safe_plan_dropped: safePlan.droppedSlugs,
+        title: "Reduced session today",
+        detail: safePlan.copy,
         adaptation: adaptationDecision.primary,
         phase: phaseRes.phase,
         engine_failures: engineFailures,
         missing_context_fields: missingContextFields,
         context_completeness_score: (athleteContext as any)?.completeness_score ?? null,
         validator_report: validatorReport,
-      }, 422);
+      }, 200);
     }
+
 
     // -------- Persist — Phase 2 Fix 2 & Fix 8 — atomic RPC with full metadata --------
     // Explicit column mapping (no spread) so every WIC column is populated on every row.
