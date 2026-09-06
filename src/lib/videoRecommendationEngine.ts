@@ -10,7 +10,7 @@
  */
 import { normalizeTier, TIER_BOOST } from './videoTier';
 
-export type SuggestionMode = 'session' | 'long_term';
+export type SuggestionMode = 'session' | 'long_term' | 'general';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
 export type TagLayer = 'movement_pattern' | 'result' | 'context' | 'correction';
 /** Sport scope of a tag / rule. 'both' = sport-agnostic. */
