@@ -20,6 +20,7 @@ import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
+import { buildSafePlan } from "../_shared/wic/safePlan.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
