@@ -5,7 +5,7 @@
  * and chooses whether it's just today or every day from now on. The choice is
  * recorded so future plans stop prescribing the drill they can't do.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
