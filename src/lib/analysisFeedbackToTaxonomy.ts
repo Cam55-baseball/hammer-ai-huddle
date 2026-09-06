@@ -203,7 +203,7 @@ const MOVEMENT_TO_RESULT: Record<string, string[]> = {
   sb_plant_leg_collapse: ['sb_bounced_pitch'],
 };
 
-
+function violationBucket(skillDomain: SkillDomain, sport: TagSport | null | undefined): string {
   if (skillDomain !== 'pitching') return skillDomain;
   return sport === 'softball' ? 'pitching_softball' : 'pitching_baseball';
 }
