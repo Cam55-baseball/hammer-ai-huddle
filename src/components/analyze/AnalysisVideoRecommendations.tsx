@@ -6,18 +6,24 @@
  * the athlete's feedback, we say so. A popular or recent video is not an answer
  * to a fault it was never tagged for.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bookmark, Heart, Play, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoSuggestions, trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSuggestions';
 import { useCrossDomainFaults } from '@/hooks/useCrossDomainFaults';
+import { useRecentFaultKeys } from '@/hooks/useRecentFaultKeys';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
+import { seasonContextTags, phaseLabel, type RelevancePhase } from '@/lib/videoRelevanceContext';
 import { crossDomainCorrectionKeys } from '@/lib/analysis/crossDomainFaults';
 import { analysisFeedbackToTaxonomy, type AnalysisLike } from '@/lib/analysisFeedbackToTaxonomy';
 import { useVideoFaultFeedback } from '@/hooks/useVideoFaultFeedback';
 import { cn } from '@/lib/utils';
 import { moduleToSkillDomain } from '@/lib/videoMoments/registry';
+import { VideoThumb } from '@/components/video/VideoThumb';
+import { VideoLightbox, type LightboxVideo } from '@/components/video/VideoLightbox';
 import type { SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
 
 interface Props {
