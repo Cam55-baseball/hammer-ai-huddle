@@ -280,6 +280,9 @@ const App = () => {
               <DemoGate>
               <Routes>
               <Route path="/" element={<Index />} />
+              {import.meta.env.DEV && (
+                <Route path="/__evidence/safe-session" element={<EvidenceSafeSession />} />
+              )}
               <Route path="/auth" element={<Auth />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/reset-password" element={<ResetPassword />} />
