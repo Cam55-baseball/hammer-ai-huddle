@@ -242,3 +242,33 @@ badge and say so in words.
   than swallowed.
 - The game-data recommendation panel has no logged game with defensive errors in
   the database yet, so it has not been seen with real rows.
+
+## 2026-09-06 — Scout/coach setup loop + player-plan leak
+
+**Bug 2 — scout/coach setup re-prompted every login (fixed)**
+- Migration: `completed_at timestamptz` added to `scout_context` and `coach_context`; existing rows backfilled from `updated_at`/`created_at`.
+- `useStaffOnboardingState` and the post-login gate in `Auth.tsx` now read ONLY `completed_at` — no more inferring completion from `org_name`.
+- Scout and coach flows save each step as it is completed (`goNext` persists, never blocks), so a dropped session resumes in place.
+- Every field is optional. Each step shows a banner saying so, with **Skip setup**; **Finish setup** and **Skip setup** both stamp `completed_at`. Organization labels now read "(optional)".
+- Backfill verified in the database:
+  - scout_context: user 8171e031… roles {admin,scout}, org_name NULL, `completed_at 2026-09-06 03:19:14Z`.
+  - coach_context: user 00d8be78… org_name NULL, `completed_at 2026-09-05 23:13:52Z`.
+
+**Bug 1 — scouts/coaches saw the player Game Plan (fixed)**
+- New `public.has_player_module(uuid)` SECURITY DEFINER function: true only when the account has an active subscription with at least one purchased module. Purchase, not role, is the test, and it is evaluated server-side.
+- New `usePlayerModuleAccess()` hook wraps that RPC.
+- Surfaces switched from role checks to purchase checks:
+  - `Dashboard.tsx` — all player-only blocks (player Game Plan, self-grading, photo logging, player prescriptions, Today cards).
+  - `HammerDailyPlan.tsx` — staff without a purchased module get the honest "no plan on your account" card; staff WITH a purchase now get the plan in addition to their own board (previously blocked for all staff).
+  - `AppSidebar.tsx` — My Followers, nutrition items and notification settings.
+- Scout/coach boards are untouched — the blue scout plan still renders from `CoachScoutGamePlanCard`.
+
+**Verified myself**
+- Database rows above, read directly.
+- `has_player_module` returns false for the owner's admin+scout account (no purchased module) → the red player plan is gated off for it.
+- Typecheck clean. `appSidebarPitchTipping` suite fixed (it needed the new hook mocked) — 5/5 pass. Build OK.
+
+**Not verified (blocked)**
+- End-to-end sign-in as the scout account: minting a session for a specific user needs approval that isn't available here, so the three-login "prompt does not reappear" walkthrough was not run in a browser. The logic path (`completed_at` → `hasStaffContext` → no onboarding redirect) was verified by reading the row and the gate code, not by clicking through.
+
+**Suite:** 1135 pass / 10 fail. The 10 are in engine-invariants, drill-scoring stress/perf, pose-stub and ambidextrous-pitching tests, all untouched by this work.
