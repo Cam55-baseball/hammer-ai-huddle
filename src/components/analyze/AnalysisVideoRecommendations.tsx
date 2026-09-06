@@ -169,7 +169,14 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                   size="sm"
                   onClick={() => {
                     if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
-                    window.open(video.video_url, '_blank');
+                    // Plays in an overlay. Nothing leaves the app, so closing
+                    // returns to this analysis, same scroll, still signed in.
+                    setPlaying({
+                      id: video.id,
+                      title: video.title,
+                      video_url: video.video_url,
+                      thumbnail_url: video.thumbnail_url,
+                    });
                   }}
                 >
                   <Play className="h-3 w-3 mr-1" /> Watch
