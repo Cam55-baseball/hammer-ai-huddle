@@ -33,7 +33,7 @@ async function main() {
   const { data: diag } = await db
     .from("wk_generation_diagnostics")
     .select(
-      "id,plan_date,user_id,validation_status,lift_template_id,lift_full_body_ok,lift_duplicate_check_ok,lift_substitution_completeness,exercise_governance_version,athlete_context_version,personalization_version,training_age_version,context_version",
+      "id,plan_date,user_id,validation_status,day_type,is_game_day,lift_category_coverage,lift_template_id,lift_full_body_ok,lift_duplicate_check_ok,lift_substitution_completeness,exercise_governance_version,athlete_context_version,personalization_version,training_age_version,context_version",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -41,7 +41,24 @@ async function main() {
   const rows = diag ?? [];
   const published = rows.filter((r) => r.validation_status === "published");
   const dupOk = published.filter((r) => r.lift_duplicate_check_ok !== false).length;
-  const fullBody = published.filter((r) => r.lift_full_body_ok === true).length;
+  // A plan with NO lift block is only exempt when the day genuinely has no
+  // lift slot scheduled (game day / travel). An empty lift block on a day that
+  // should have had one still fails — otherwise this audit goes blind to the
+  // regression where the lift block silently vanishes.
+  const NO_LIFT_DAYS = new Set(["game", "travel"]);
+  const coverageEmpty = (r: Record<string, unknown>) => {
+    const c = r.lift_category_coverage;
+    if (c == null) return true;
+    if (Array.isArray(c)) return c.length === 0;
+    if (typeof c === "object") return Object.keys(c as object).length === 0;
+    return false;
+  };
+  const exempt = published.filter(
+    (r) => coverageEmpty(r as never) && (r.is_game_day === true || NO_LIFT_DAYS.has(String(r.day_type ?? ""))),
+  );
+  const exemptIds = new Set(exempt.map((r) => r.id));
+  const fullBodyScope = published.filter((r) => !exemptIds.has(r.id));
+  const fullBody = fullBodyScope.filter((r) => r.lift_full_body_ok === true).length;
   const govStamped = published.filter((r) => r.exercise_governance_version === "gov_v1").length;
   const traceable = published.filter(
     (r) => r.athlete_context_version && r.personalization_version && r.training_age_version && r.context_version,
@@ -51,7 +68,8 @@ async function main() {
     "metric,pass_count,total,pct",
     `catalog_governance_v1,${catalogGov ?? 0},${catalogTotal ?? 0},${govPct}`,
     `published_no_duplicates,${dupOk},${published.length},${pct(dupOk, published.length)}`,
-    `published_full_body,${fullBody},${published.length},${pct(fullBody, published.length)}`,
+    `published_full_body,${fullBody},${fullBodyScope.length},${pct(fullBody, fullBodyScope.length)}`,
+    `full_body_exempt_no_lift_day,${exempt.length},${published.length},${pct(exempt.length, published.length)}`,
     `published_gov_stamped,${govStamped},${published.length},${pct(govStamped, published.length)}`,
     `published_context_traceable,${traceable},${published.length},${pct(traceable, published.length)}`,
   ];
@@ -70,7 +88,7 @@ async function main() {
   const fatal = [
     govPct < 95 && `catalog governance coverage ${govPct}% < 95%`,
     dupOk !== published.length && `duplicate check failed on ${published.length - dupOk} rows`,
-    fullBody !== published.length && published.length > 0 && `full-body failed on ${published.length - fullBody} rows`,
+    fullBody !== fullBodyScope.length && fullBodyScope.length > 0 && `full-body failed on ${fullBodyScope.length - fullBody} rows`,
   ].filter(Boolean);
 
   if (fatal.length) {
