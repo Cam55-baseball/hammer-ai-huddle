@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { FAMILIES, TIER_LABEL, type StandardFamily, type StandardTier } from "@/lib/hammer/standards/catalog";
+import { FAMILIES, STANDARDS_BW_CAP_LBS, STANDARDS_TARGET_DISCLAIMER, TIER_LABEL, type StandardFamily, type StandardTier } from "@/lib/hammer/standards/catalog";
 import { useStandards } from "@/hooks/useStandards";
 import type { StandardProgress } from "@/lib/hammer/standards/evaluate";
 
