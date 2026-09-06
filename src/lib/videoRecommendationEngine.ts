@@ -137,6 +137,14 @@ export interface RecommendResult {
   video: VideoWithTags;
   score: number;
   reasons: string[];
+  /** Which taxonomy layers actually matched. Drives honest labelling. */
+  matchedLayers: TagLayer[];
+  /**
+   * `targeted` — matched the athlete's own fault (correction / movement).
+   * `general` — matched only their situation or the result they're chasing, so
+   * it is presented as general work, never as the fix for their fault.
+   */
+  relevance: 'targeted' | 'general';
   /** Phase 7: derived monetization overlay — never feeds back into ranking. */
   conversionScore?: number;
 }
@@ -144,6 +152,10 @@ export interface RecommendResult {
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
   session: { max: 4, minScore: 40 },
   long_term: { max: 4, minScore: 30 },
+  // Situation-driven surfaces (season phase, a Game Hub outcome) match on the
+  // lower-weighted context/result layers, so they need their own floor.
+  general: { max: 3, minScore: 12 },
+
 };
 
 function clamp(n: number, min: number, max: number): number {
