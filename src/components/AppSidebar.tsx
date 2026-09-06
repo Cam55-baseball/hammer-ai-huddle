@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useRankingsVisibility } from "@/hooks/useRankingsVisibility";
+import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -93,6 +94,8 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach } = useScoutAccess();
+  // Player-only navigation follows the purchase, not the role.
+  const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
   const { modules } = useSubscription();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
@@ -178,7 +181,7 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     { title: 'The General', url: '/progress', icon: BarChart3 },
-    ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
+    ...(hasPlayerAccess ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
     { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
@@ -190,7 +193,7 @@ export function AppSidebar() {
 
   // Nutrition lives under a single collapsible group so users pick Hub vs. Tips
   // from one entry instead of two competing top-level items.
-  const nutritionItems = (!isScout && !isCoach)
+  const nutritionItems = hasPlayerAccess
     ? [
         { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
         { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },
@@ -330,7 +333,7 @@ export function AppSidebar() {
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
     { title: t('navigation.profile'), url: "/profile", icon: Settings },
-    ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
+    ...(hasPlayerAccess ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.myCustomActivities'), url: "/my-custom-activities", icon: LayoutGrid },
     ...(isOwner ? [
       { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
