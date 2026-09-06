@@ -7,6 +7,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
+import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { getActiveTier } from "@/utils/tierAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +116,9 @@ export default function Dashboard() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
+  // Player surfaces are gated on a PURCHASED player module (server-verified),
+  // never on role. Staff who buy one get the player plan in addition to theirs.
+  const { hasPlayerAccess } = usePlayerModuleAccess();
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
@@ -597,8 +601,8 @@ export default function Dashboard() {
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
         {/* Coach Hammer Next Best Step — surfaced above the Identity card. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
+        {hasPlayerAccess && <CommunicationAI />}
+        {hasPlayerAccess && <IdentityCommandCard />}
 
         {/* Exact athlete order: Identity → standalone Before You Start →
             Hammers Today Plan. The ref-backed host prevents portal timing races. */}
@@ -607,13 +611,13 @@ export default function Dashboard() {
         )}
 
         {/* Recent game still unlogged — ask once, link straight to the logger. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+        {hasPlayerAccess && (
           <div className="pb-3">
             <PostGameLogPrompt />
           </div>
         )}
 
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+        {hasPlayerAccess && (
           <>
             <div ref={setBeforeStartPortalTarget} className="pb-3 sm:pb-5" />
             <section className="pb-2">
@@ -625,11 +629,11 @@ export default function Dashboard() {
 
         {/* Hard visual break so the daily plan and the game plan read as two
             distinct sections instead of one crowded block. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+        {hasPlayerAccess && (
           <div aria-hidden className="my-8 sm:my-10 border-t-2 border-border/70" />
         )}
 
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+        {hasPlayerAccess && (
           <section className="pt-1">
             <GamePlanCard selectedSport={selectedSport} />
           </section>
@@ -637,7 +641,7 @@ export default function Dashboard() {
 
 
         {/* Long-term Hammer video picks — athletes only */}
-        {(!isScout && !isCoach) && <LongTermVideoSuggestions />}
+        {hasPlayerAccess && <LongTermVideoSuggestions />}
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>
