@@ -195,6 +195,11 @@ interface BuilderArgs {
   readonly speed: SpeedFocusDecision;
   /** Athlete-chosen position for today (defense swap control). */
   readonly positionOverride?: string | null;
+  /**
+   * Warm-up only. Derived from the slots that actually landed in today's
+   * plan, so the prep matches the work. `null` keeps prior behaviour.
+   */
+  readonly modalityBiasOverride?: "speed" | "lift" | "throwing" | "hitting" | null;
 }
 
 const BODYWEIGHT_EQUIPMENT = new Set(["bodyweight", "bands", "hotel"]);
@@ -279,7 +284,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -325,14 +330,23 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
       // Day-of-year seed so drills rotate day-to-day but stay stable within a day.
       const now = new Date();
       const daySeed = (now.getUTCFullYear() * 366) + (now.getUTCMonth() * 31) + now.getUTCDate();
-      const context = resolveWarmupContext({
+      const contextArgs = {
         seasonPhase: seasonPhase as "off" | "pre" | "in" | "post" | null,
         isGameDay,
         isPracticeDay,
         isTravelDay,
         isRecoveryDay,
-        modalityBias: null,
+      };
+      const biasedContext = resolveWarmupContext({
+        ...contextArgs,
+        modalityBias: modalityBiasOverride ?? null,
       });
+      const unbiasedContext = resolveWarmupContext({ ...contextArgs, modalityBias: null });
+      // Minimum-drill fallback: a bias may only ever ADD specificity. If the
+      // biased template resolves thinner than the unbiased one, the athlete
+      // keeps the unbiased warm-up.
+      const MIN_WARMUP_DRILLS = 4;
+      let context = biasedContext;
       // Arm care is ALWAYS owned by the throwing block (EASS band prep / cooldown / arm-protected mode).
       // Strip arm_care from the warmup so arm care is never duplicated.
       // Equipment is honest: only drills the athlete can actually run ship,
@@ -341,7 +355,7 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
         equipmentList?: ReadonlyArray<string>;
         equipmentVenue?: string | null;
       };
-      const built = buildWarmup({
+      const warmupArgs = {
         context,
         lifecycle,
         gameDay: isGameDay,
@@ -351,7 +365,18 @@ function builder({ modality, ctx, proj, speed, positionOverride }: BuilderArgs):
         venue: projAny.equipmentVenue ?? equipment ?? null,
         injuryRegions: injuryRegions ?? [],
         suppressTwitch: isRecoveryDay || recoverDay || isTravelDay,
-      });
+      };
+      let built = buildWarmup(warmupArgs);
+      if (
+        biasedContext !== unbiasedContext &&
+        built.drills.length < MIN_WARMUP_DRILLS
+      ) {
+        const fallback = buildWarmup({ ...warmupArgs, context: unbiasedContext });
+        if (fallback.drills.length > built.drills.length) {
+          context = unbiasedContext;
+          built = fallback;
+        }
+      }
       const drills: DrillStep[] = built.drills.map((d) => ({
         name: d.name,
         slug: d.slug,
@@ -2149,9 +2174,31 @@ export function buildHammerDailyPlan(
   const microcycle = applyMicrocycle(weeklyTemplate, today, skillTargets);
   const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, skillTargets);
 
-  const rawBlocks = ALL_MODALITIES.map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: roadmapInputs.positionOverride ?? null }),
+  const positionOverrideArg = roadmapInputs.positionOverride ?? null;
+  const firstPass = ALL_MODALITIES.map((m) =>
+    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg }),
   );
+  // Warm-up bias is derived from the slots that actually landed in today's
+  // plan — a lift day gets lift prep, a speed day gets speed prep. Priority
+  // mirrors CNS cost: speed > lift > throwing > hitting. When nothing
+  // trainable landed the bias stays null and the resolver behaves exactly as
+  // it did before (season / schedule context only).
+  const activeToday = new Set(
+    firstPass.filter((b) => b.status === "ready" || b.status === "awaiting-input").map((b) => b.modality),
+  );
+  const derivedBias: "speed" | "lift" | "throwing" | "hitting" | null =
+    activeToday.has("speed") ? "speed"
+    : activeToday.has("strength") ? "lift"
+    : activeToday.has("throwing") ? "throwing"
+    : activeToday.has("hitting") ? "hitting"
+    : null;
+  const rawBlocks = derivedBias === null
+    ? firstPass
+    : firstPass.map((b) =>
+        b.modality === "warmup"
+          ? builder({ modality: "warmup", ctx, proj, speed, positionOverride: positionOverrideArg, modalityBiasOverride: derivedBias })
+          : b,
+      );
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
   const guarded = applyMinorParentSupremacy(lateralized, proj);
   const ordered = applyCategoryGoalOrdering(guarded, proj);

@@ -9,18 +9,34 @@
  */
 import type { EquipmentTier } from "./families";
 
+/**
+ * Ambient surroundings. A wall is not equipment — neither is a floor, and
+ * neither is somewhere to sit. Nobody is blocked from a drill because they
+ * lack a wall, so these prove tier 0 and are never listed as a requirement.
+ */
+export const AMBIENT_EQUIPMENT: ReadonlySet<string> = new Set([
+  "wall", "floor", "ground", "mat", "chair", "bodyweight", "none", "step", "stairs", "curb",
+]);
+
 /** Everything we recognise, and the tier it proves. */
 const TIER_BY_VALUE: Readonly<Record<string, EquipmentTier>> = {
-  // tier 1 — a band, a wall, a floor, a step
+  // tier 0 — ambient. Present everywhere; proves nothing about the athlete's kit.
+  wall: 0,
+  floor: 0,
+  ground: 0,
+  mat: 0,
+  chair: 0,
+  step: 0,
+  stairs: 0,
+  curb: 0,
+  bodyweight: 0,
+  none: 0,
+  // tier 1 — a band, a pull-up bar, a plate
   bands: 1,
   band: 1,
   resistance_bands: 1,
   xband: 1,
   mini_band: 1,
-  wall: 1,
-  floor: 1,
-  mat: 1,
-  step: 1,
   pull_up_bar: 1,
   plate: 1,
   // tier 2 — hand weights and basic gear

@@ -1,0 +1,161 @@
+{
+  "generated_at": "2026-09-06T21:55:42.632Z",
+  "report": {
+    "tables": [
+      {
+        "table": "gp_games",
+        "role": "Game Plan games — the athlete's own logged/scheduled games.",
+        "date_column": "game_date",
+        "time_column": "scheduled_time",
+        "starting_pitcher_column": "is_starting_pitcher (added this pass)",
+        "rows_sampled": 3,
+        "total_rows": 3,
+        "distinct_users": 2,
+        "rows_with_a_time": 0,
+        "server_readable": true
+      },
+      {
+        "table": "calendar_events (event_type = 'game')",
+        "role": "Calendar game entries — what most athletes actually fill in.",
+        "date_column": "event_date",
+        "time_column": "start_time",
+        "starting_pitcher_column": "is_starting_pitcher (added this pass)",
+        "rows_sampled": 0,
+        "total_rows": 0,
+        "distinct_users": 0,
+        "rows_with_a_time": 0,
+        "server_readable": true
+      }
+    ],
+    "server_side_query": {
+      "answer": "Yes.",
+      "detail": "wk-generate-daily runs with the service role, so both tables are readable without RLS friction. The generator reads a ±2 day window around the plan date, which is the widest span the 48-hour rule can reach."
+    },
+    "users_with_a_schedule": 2,
+    "version": "game_proximity_v1"
+  },
+  "cases": [
+    {
+      "name": "no schedule → identical to NO_SCHEDULE (pre-Pass-B behaviour)",
+      "got": {
+        "hasSchedule": false,
+        "hoursToNearestGame": null,
+        "within48h": false,
+        "gamesToday": 0,
+        "isDoubleheaderToday": false,
+        "isDayAfterDoubleheader": false,
+        "cnsCapDelta": 0,
+        "primerOnly": false,
+        "removeLift": false,
+        "reasons": []
+      },
+      "expect": "deep-equal NO_SCHEDULE",
+      "pass": true
+    },
+    {
+      "name": "game 10 days out → no restriction",
+      "got": {
+        "primerOnly": false,
+        "cnsCapDelta": 0
+      },
+      "expect": "primerOnly false, delta 0",
+      "pass": true
+    },
+    {
+      "name": "game tomorrow 19:00 → primer only",
+      "got": {
+        "hours": 31,
+        "primerOnly": true
+      },
+      "expect": "primerOnly true",
+      "pass": true
+    },
+    {
+      "name": "game tomorrow, no time given → assumed 18:00, still primer only",
+      "got": {
+        "hours": 30,
+        "primerOnly": true
+      },
+      "expect": "primerOnly true",
+      "pass": true
+    },
+    {
+      "name": "two games today → CNS cap −1",
+      "got": {
+        "gamesToday": 2,
+        "delta": -1
+      },
+      "expect": "gamesToday 2, delta −1",
+      "pass": true
+    },
+    {
+      "name": "day after a doubleheader → CNS cap still −1",
+      "got": {
+        "isDayAfter": true,
+        "delta": -1
+      },
+      "expect": "delta −1",
+      "pass": true
+    },
+    {
+      "name": "pitcher adjacent to a team game, no declaration → primer level only",
+      "got": {
+        "primerOnly": true,
+        "removeLift": false,
+        "reasons": [
+          "Game within 48 hours (29h) — nothing above a primer today.",
+          "Pitcher next to a team game and no start declared — defaulting to primer level."
+        ]
+      },
+      "expect": "primerOnly true, removeLift false",
+      "pass": true
+    },
+    {
+      "name": "athlete marks the start → lift removed",
+      "got": {
+        "removeLift": true,
+        "reasons": [
+          "Game within 48 hours (6h) — nothing above a primer today.",
+          "You marked yourself the starting pitcher today — the lift comes off."
+        ]
+      },
+      "expect": "removeLift true",
+      "pass": true
+    },
+    {
+      "name": "pitcher with no games at all → no restriction",
+      "got": {
+        "hasSchedule": false,
+        "hoursToNearestGame": null,
+        "within48h": false,
+        "gamesToday": 0,
+        "isDoubleheaderToday": false,
+        "isDayAfterDoubleheader": false,
+        "cnsCapDelta": 0,
+        "primerOnly": false,
+        "removeLift": false,
+        "reasons": []
+      },
+      "expect": "deep-equal NO_SCHEDULE",
+      "pass": true
+    },
+    {
+      "name": "primer survivor set",
+      "got": {
+        "low": true,
+        "supplemental": true,
+        "arm_care": true,
+        "elastic": true,
+        "moderate": false,
+        "unilateral": false,
+        "high": false,
+        "maximal": false,
+        "compound": false,
+        "null": false
+      },
+      "expect": "low/supplemental/arm_care/elastic survive; everything else, including unclassified, does not",
+      "pass": true
+    }
+  ],
+  "failed": 0
+}

@@ -120,6 +120,12 @@ export interface WkRx {
   status: "planned" | "completed" | "skipped";
 }
 
+/**
+ * Canonical lift role order. Retained for reference and for any consumer that
+ * needs the doctrine sequence; it is deliberately NOT used to sort rendered
+ * prescriptions — persisted `sequence_order` is the only render order.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LIFT_ROLE_ORDER: WkSequenceRole[] = [
   "arm_care",
   "trunk_primer",
@@ -382,12 +388,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   const grouped = useMemo(() => {
     const rxs = query.data ?? [];
-    const byRoleOrder = (a: WkRx, b: WkRx) => {
-      const ai = a.sequence_role ? LIFT_ROLE_ORDER.indexOf(a.sequence_role) : 999;
-      const bi = b.sequence_role ? LIFT_ROLE_ORDER.indexOf(b.sequence_role) : 999;
-      if (ai !== bi) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      return a.sequence_order - b.sequence_order;
-    };
+    // Persisted order wins. The server orders lifts once, and a coach pin
+    // moves a movement by rewriting `sequence_order` — a client-side re-sort
+    // by `sequence_role` silently undid the pin, which is why a pinned lift
+    // snapped back on the athlete's screen. Never re-sort here.
+    const byRoleOrder = (a: WkRx, b: WkRx) => a.sequence_order - b.sequence_order;
     return {
       // Legacy buckets (kept for anything still importing them)
       lift: rxs.filter((r) => r.slot === "lift").sort(byRoleOrder),
