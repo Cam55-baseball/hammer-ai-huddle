@@ -1762,7 +1762,7 @@ const handler = async (req: Request): Promise<Response> => {
         // so a deload can never drop a row below its envelope floor.
         const dd = wp.dose_doctrine as any;
         if (dd && typeof rx.sets === "number" && typeof rx.reps === "number") {
-          const rewaved = resolveDose({
+          const rewaved = resolveWaveDose({
             phase: phaseRes.phase,
             role: dd.role ?? rx.sequence_role,
             category: dd.category,
@@ -1772,14 +1772,19 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: !!rx.cns_clamped,
             capSets: dd.cap_sets ?? null,
             capReps: dd.cap_reps ?? null,
-          });
+          }, liftingV2Enabled);
           const before = { sets: rx.sets, reps: rx.reps };
           rx.sets = rewaved.sets;
           rx.reps = rewaved.reps;
           dd.notes = rewaved.notes;
           dd.week_in_block = progression.weekInBlock;
+          // Attribution — every row the wave could have touched carries the
+          // version that produced it, so a regression is traceable to the flip
+          // rather than guessed at.
+          dd.dose_authority = liftingV2Enabled ? WAVE_VERSION : DOSAGE_DOCTRINE_VERSION;
+          dd.lifting_v2_enabled = liftingV2Enabled;
           if (before.sets !== rx.sets || before.reps !== rx.reps) {
-            dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}` };
+            dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}`, version: dd.dose_authority };
           }
           if (progression.isDeloadWeek) {
             wp.deload_applied = {
