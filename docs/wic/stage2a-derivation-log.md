@@ -768,3 +768,23 @@ owner sign-off.
 (13) — 35 passing. `dosage-doctrine-audit`, `check-no-inseason-eccentric` and
 `check-family-coverage` clean, with the single allowlisted legacy row
 (`sp_atg_split_squat @ 2026-08-12`) still the only exception.
+
+## Pass C — starving inputs (2026-09-07)
+
+Three inputs the lifting system reads but nothing reliably fills:
+
+1. **Game start time.** `gameProximity.ts` measures the 48-hour window from the
+   game's clock time and silently assumes 18:00 when there isn't one. That
+   assumption now travels: `GameProximity.assumedGameTime` is true when the
+   nearest game inside the window had no time, and the athlete reads the reason
+   line on the card ("no start time on it, so we assumed 6pm"). The add-event
+   form labels the field **First pitch** on game days and explains, before the
+   athlete leaves it blank, what leaving it blank costs.
+2. **Equipment.** Capture already existed (`EquipmentStep`, 29 tokens) but the
+   tier resolver understood only some of them, and an unrecognised token raises
+   nothing — so an athlete with a barbell and plates could be read as tier 0 and
+   offered bodyweight work. All 29 onboarding tokens now resolve; verified 0
+   unrecognised.
+3. **Swap control.** Already shipped in Pass B (`LiftSwapSheet`, driven by
+   `useFaultLedger` + the equipment tier). No change needed; confirmed wired
+   into `WkPrescriptionCard`.
