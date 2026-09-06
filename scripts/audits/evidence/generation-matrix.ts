@@ -37,13 +37,18 @@ const db = createClient(url, key);
 
 // ─── Matrix axes ────────────────────────────────────────────────────────────
 const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "in_season", "post_season"] as const;
+// The six bands `trainingAge.ts` actually emits. The earlier five-band list
+// included `novice` / `trained`, which the classifier never produces, and
+// omitted `professional` entirely — so that axis was testing fiction.
 const TRAINING_AGE_BANDS: Array<{ band: string; years: number }> = [
   { band: "beginner", years: 0.5 },
-  { band: "developing", years: 2 },
-  { band: "intermediate", years: 4 },
-  { band: "advanced", years: 8 },
-  { band: "elite", years: 12 },
+  { band: "developing", years: 1.5 },
+  { band: "intermediate", years: 2.5 },
+  { band: "advanced", years: 4 },
+  { band: "elite", years: 8 },
+  { band: "professional", years: 12 },
 ];
+
 const EQUIPMENT_LEVELS: Array<{ level: string; available: string[] }> = [
   { level: "bodyweight", available: ["bodyweight", "none"] },
   { level: "minimal", available: ["bodyweight", "none", "band", "bands", "dumbbell", "dumbbells", "kettlebell", "mat", "wall", "bench"] },
