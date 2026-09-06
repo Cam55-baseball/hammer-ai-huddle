@@ -480,7 +480,7 @@ A `fatal` blocks publication of the whole plan.
 | session_shape_below_floor | warn | validator.ts:214-221 |
 | re_exposure_window_violation | warn | validator.ts:197-204 |
 | progression_lineage_missing | warn | validator.ts:206-212 |
-| lift_governance_missing (no `movement_category` / `gov_v1`) | fatal | sessionBuilder.ts:132-146 |
+| ~~lift_governance_missing~~ — **CORRECTED 2026-09-07: this code does not exist.** No fatal is raised for a row missing `movement_category` / `governance_version`. The real risk is the reverse: an ungoverned row is drawn and prescribed with **no age gate and no season gate**, because both gates read fields that are absent. Silent permissiveness, not a fatal. | *(none)* | — |
 | lift_illegal_season (`season_legality[phase] === false`) | fatal | sessionBuilder.ts:151-158 |
 | lift_illegal_training_age | fatal | sessionBuilder.ts:159-166 |
 | lift_illegal_equipment | warn | sessionBuilder.ts:168-181 |
@@ -584,7 +584,7 @@ training age; bodyweight ladders open to everyone at 14+.
 
 | to add… | edit | notes |
 |---|---|---|
-| a new movement | `wk_movement_catalog` row | must carry `movement_category`, `governance_version = "gov_v1"`, `season_legality`, `training_age_legality`, `equipment_requirements`, `sport_scope`, `position_scope`, `game_day_legal`, `min_age_years`, `dosage_unit`, `substitution_family`, `cns_cost` — or `lift_governance_missing` is fatal |
+| a new movement | `wk_movement_catalog` row | must carry `movement_category`, `governance_version = "gov_v1"`, `season_legality`, `training_age_legality`, `equipment_requirements`, `sport_scope`, `position_scope`, `game_day_legal`, `min_age_years`, `dosage_unit`, `substitution_family`, `cns_cost` — **not** because a fatal catches it (none does), but because a row missing them is prescribed ungoverned: no age gate, no season gate |
 | a new movement **category** | `_shared/wic/lift/movementCategories.ts` (`MovementCategory` union) + `_shared/wic/domainGate.ts` `CATEGORY_TO_DOMAIN` | per-engine equivalents exist under `armCare/`, `batSpeed/`, `conditioning/`, `crossSport/`, `recovery/`, `speed/` |
 | a new **rep scheme / envelope** | `_shared/wic/dosage/doctrine.ts` `DOSE_MATRIX` (`:66-121`) | `isWithinEnvelope` is what the validator calls, so the gate follows automatically |
 | a new **dose group** | same file: `DoseGroup` (`:24-31`), `ROLE_GROUP` (`:123-141`), `doseGroupFor` (`:143-153`) | |
