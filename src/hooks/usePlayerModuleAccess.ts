@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 
 export interface PlayerModuleAccess {
@@ -27,11 +28,8 @@ export interface PlayerModuleAccess {
 
 export function usePlayerModuleAccess(): PlayerModuleAccess {
   const { user } = useAuth();
-  const { isOwner, isAdmin, loading: ownerLoading } = useOwnerAccess() as {
-    isOwner: boolean;
-    isAdmin?: boolean;
-    loading: boolean;
-  };
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
 
   const { data, isLoading } = useQuery({
@@ -49,11 +47,11 @@ export function usePlayerModuleAccess(): PlayerModuleAccess {
 
   const hasPurchasedModule = !!data;
   const staff = isScout || isCoach;
-  const hasPlayerAccess = hasPurchasedModule || ((isOwner || !!isAdmin) && !staff);
+  const hasPlayerAccess = hasPurchasedModule || ((isOwner || isAdmin) && !staff);
 
   return {
     hasPlayerAccess,
     hasPurchasedModule,
-    loading: ownerLoading || roleLoading || (!!user?.id && isLoading),
+    loading: ownerLoading || adminLoading || roleLoading || (!!user?.id && isLoading),
   };
 }
