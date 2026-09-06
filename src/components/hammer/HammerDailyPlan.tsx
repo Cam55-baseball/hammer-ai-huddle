@@ -93,6 +93,7 @@ import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
@@ -471,11 +472,16 @@ export function HammerDailyPlan({
   const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
   const navigate = useNavigate();
 
-  const gateResolved = initialized && !loading && !ownerLoading && !roleLoading;
-  // A training plan belongs to the athlete doing the training. Scouts and
-  // coaches never receive one, whatever their subscription says.
-  const isStaffOnlyRole = (isScout || isCoach) && !isOwner;
-  const hasAccess = isOwner || modules.length > 0;
+  const { hasPlayerAccess, hasPurchasedModule, loading: playerAccessLoading } =
+    usePlayerModuleAccess();
+
+  const gateResolved =
+    initialized && !loading && !ownerLoading && !roleLoading && !playerAccessLoading;
+  // A training plan belongs to whoever bought the player product. Staff without
+  // a purchased module never receive one; staff WITH one get it in addition to
+  // their own board. Purchase is verified server-side (has_player_module).
+  const isStaffOnlyRole = (isScout || isCoach) && !hasPurchasedModule;
+  const hasAccess = hasPlayerAccess || modules.length > 0;
 
   if (!gateResolved) {
     return (

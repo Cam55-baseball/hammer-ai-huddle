@@ -57,10 +57,21 @@ export interface ScoutContextDraft {
   evaluation_focus?: string[];
 }
 
-export async function saveScoutContext(userId: string, draft: ScoutContextDraft) {
+/**
+ * Persist scout setup. `complete` stamps the explicit completion flag —
+ * once set, first-run setup never auto-prompts again (they can still reopen
+ * it from Settings). Partial saves (complete: false) keep progress without
+ * ending the flow.
+ */
+export async function saveScoutContext(
+  userId: string,
+  draft: ScoutContextDraft,
+  opts: { complete?: boolean } = {},
+) {
   const { error } = await supabase.from("scout_context").upsert(
     {
       user_id: userId,
+      ...(opts.complete ? { completed_at: new Date().toISOString() } : {}),
       org_name: draft.org_name?.trim() || null,
       athlete_pool_size: draft.athlete_pool_size ?? null,
       sports: draft.sports?.length ? draft.sports : null,
@@ -108,10 +119,16 @@ export interface CoachContextDraft {
   coaching_philosophy?: string | null;
 }
 
-export async function saveCoachContext(userId: string, draft: CoachContextDraft) {
+/** See saveScoutContext — `complete` stamps the explicit completion flag. */
+export async function saveCoachContext(
+  userId: string,
+  draft: CoachContextDraft,
+  opts: { complete?: boolean } = {},
+) {
   const { error } = await supabase.from("coach_context").upsert(
     {
       user_id: userId,
+      ...(opts.complete ? { completed_at: new Date().toISOString() } : {}),
       org_name: draft.org_name?.trim() || null,
       program_name: draft.program_name?.trim() || null,
       seasons_run: draft.seasons_run ?? null,

@@ -149,14 +149,33 @@ export default function ScoutOnboarding() {
     await saveScoutContext(user.id, currentDraft());
   }, [user?.id, currentDraft]);
 
-  const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
-  const finish = async () => {
-    setSaving(true);
+  /**
+   * Every step saves as it is completed, so a dropped session resumes where
+   * it left off instead of restarting. A failed save is surfaced, never
+   * swallowed, but never blocks moving on either.
+   */
+  const goNext = async () => {
     try {
       await persistToBackend();
-      if (user?.id) clearDraftSlot(user.id, DRAFT_SLOT);
+    } catch (e) {
+      toast.error(`Couldn't save that step — ${e instanceof Error ? e.message : String(e)}`);
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  /**
+   * Finish (and Skip) both stamp the explicit completion flag. Nothing here is
+   * required — a scout who skips still escapes the loop and can reopen setup
+   * from Settings whenever they want.
+   */
+  const complete = async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    try {
+      await saveScoutContext(user.id, currentDraft(), { complete: true });
+      clearDraftSlot(user.id, DRAFT_SLOT);
       setStep(S_DONE);
     } catch (e) {
       toast.error(`Couldn't save your scout profile — ${e instanceof Error ? e.message : String(e)}`);
@@ -179,6 +198,14 @@ export default function ScoutOnboarding() {
       totalAnswerable={3}
       onSaveAndExit={persistToBackend}
     >
+      {step > S_WELCOME && step < S_DONE && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <span>Every answer here is optional — skip anything you'd rather not narrow.</span>
+          <Button variant="ghost" size="sm" onClick={complete} disabled={saving}>
+            Skip setup
+          </Button>
+        </div>
+      )}
       {step === S_WELCOME && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
@@ -217,7 +244,7 @@ export default function ScoutOnboarding() {
             know exactly who graded them.
           </p>
           <div className="space-y-1">
-            <Label htmlFor="scout-org" className="text-xs">Organization</Label>
+            <Label htmlFor="scout-org" className="text-xs">Organization (optional)</Label>
             <Input
               id="scout-org"
               value={orgName}
@@ -297,7 +324,7 @@ export default function ScoutOnboarding() {
           <NotificationsPreferencesPanel />
           <div className="flex justify-between">
             <Button variant="ghost" onClick={goBack}>Back</Button>
-            <Button onClick={finish} disabled={saving}>
+            <Button onClick={complete} disabled={saving}>
               {saving ? "Saving…" : "Finish setup"} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

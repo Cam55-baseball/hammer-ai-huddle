@@ -150,14 +150,25 @@ export default function CoachOnboarding() {
     await saveCoachContext(user.id, currentDraft());
   }, [user?.id, currentDraft]);
 
-  const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
-  const finish = async () => {
-    setSaving(true);
+  /** Each step saves as it completes so a dropped session resumes in place. */
+  const goNext = async () => {
     try {
       await persistToBackend();
-      if (user?.id) clearDraftSlot(user.id, DRAFT_SLOT);
+    } catch (e) {
+      toast.error(`Couldn't save that step — ${e instanceof Error ? e.message : String(e)}`);
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  /** Finish and Skip both stamp the explicit completion flag. */
+  const complete = async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    try {
+      await saveCoachContext(user.id, currentDraft(), { complete: true });
+      clearDraftSlot(user.id, DRAFT_SLOT);
       setStep(S_DONE);
     } catch (e) {
       toast.error(`Couldn't save your program — ${e instanceof Error ? e.message : String(e)}`);
@@ -180,6 +191,14 @@ export default function CoachOnboarding() {
       totalAnswerable={3}
       onSaveAndExit={persistToBackend}
     >
+      {step > S_WELCOME && step < S_DONE && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <span>Every answer here is optional — skip anything that doesn't apply.</span>
+          <Button variant="ghost" size="sm" onClick={complete} disabled={saving}>
+            Skip setup
+          </Button>
+        </div>
+      )}
       {step === S_WELCOME && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
@@ -218,7 +237,7 @@ export default function CoachOnboarding() {
             the guidance came from.
           </p>
           <div className="space-y-1">
-            <Label htmlFor="coach-org" className="text-xs">Organization or club</Label>
+            <Label htmlFor="coach-org" className="text-xs">Organization or club (optional)</Label>
             <Input
               id="coach-org"
               value={orgName}
@@ -334,7 +353,7 @@ export default function CoachOnboarding() {
           <NotificationsPreferencesPanel />
           <div className="flex justify-between">
             <Button variant="ghost" onClick={goBack}>Back</Button>
-            <Button onClick={finish} disabled={saving}>
+            <Button onClick={complete} disabled={saving}>
               {saving ? "Saving…" : "Finish setup"} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

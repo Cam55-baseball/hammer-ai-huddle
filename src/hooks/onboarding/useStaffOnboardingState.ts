@@ -38,25 +38,16 @@ export function useStaffOnboardingState(): StaffOnboardingState {
     queryFn: async () => {
       if (!user?.id || !role) return { hasContextRow: false, complete: false };
 
-      if (role === "scout") {
-        const { data: row } = await supabase
-          .from("scout_context")
-          .select("org_name, sports, evaluation_focus")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        const complete =
-          !!row?.org_name && !!row?.sports?.length && !!row?.evaluation_focus?.length;
-        return { hasContextRow: !!row, complete };
-      }
-
+      // Completion is an EXPLICIT flag now. Inferring it from filled fields
+      // trapped staff who deliberately skipped optional answers in a loop of
+      // re-prompts on every login.
+      const table = role === "scout" ? "scout_context" : "coach_context";
       const { data: row } = await supabase
-        .from("coach_context")
-        .select("org_name, age_groups, primary_disciplines")
+        .from(table)
+        .select("completed_at")
         .eq("user_id", user.id)
         .maybeSingle();
-      const complete =
-        !!row?.org_name && !!row?.age_groups?.length && !!row?.primary_disciplines?.length;
-      return { hasContextRow: !!row, complete };
+      return { hasContextRow: !!row, complete: !!row?.completed_at };
     },
   });
 
