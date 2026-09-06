@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-09-06T18:24:19.002Z",
+  "base_commit": "7a4665a82fe8398c2d3feb200fdd065c548e7fd6",
+  "head_commit": "a7b9c3093e51eff2af17e8ec5397451a9e4ae1a5",
+  "doctrine_sha256_before": "3b77cea0d0aff8c3f52ea965400992c54b1809be96f2c25061a20db6c1ae330a",
+  "doctrine_sha256_after": "3b77cea0d0aff8c3f52ea965400992c54b1809be96f2c25061a20db6c1ae330a",
+  "textually_identical": true,
+  "combinations_compared": 774400,
+  "diff_count": 0,
+  "diffs": []
+}

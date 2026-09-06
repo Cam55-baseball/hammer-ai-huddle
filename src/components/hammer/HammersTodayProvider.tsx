@@ -12,7 +12,9 @@ import { useWkDailyPrescriptions } from "@/hooks/useWkDailyPrescriptions";
 
 type HammersTodaySnapshot = ReturnType<typeof useWkDailyPrescriptions>;
 
-const HammersTodayContext = createContext<HammersTodaySnapshot | null>(null);
+// Exported ONLY so the DEV-only Stage 1 evidence page can render real cards
+// against a fixed snapshot. Application code must use the provider below.
+export const HammersTodayContext = createContext<HammersTodaySnapshot | null>(null);
 
 export function HammersTodayProvider({ children, planDate }: { children: ReactNode; planDate?: string }) {
   // Single canonical generation entrypoint for the entire Hammers Today subtree.

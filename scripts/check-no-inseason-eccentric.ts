@@ -16,6 +16,38 @@
  * Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/check-no-inseason-eccentric.ts
  */
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+/**
+ * Known, owner-approved exceptions. These rows are LEFT IN THE DATABASE on
+ * purpose — they are history, and they are the proof that this guard fires.
+ * They are excused here by explicit identifier, never by deletion and never by
+ * a catalog edit.
+ */
+type KnownException = {
+  user_id: string;
+  plan_date: string;
+  movement_slug: string;
+  reason: string;
+  guards: string[];
+};
+const exceptionsPath = join(dirname(fileURLToPath(import.meta.url)), "known-exceptions.json");
+const knownExceptions: KnownException[] = (() => {
+  try {
+    return JSON.parse(readFileSync(exceptionsPath, "utf8")).inseason_eccentric ?? [];
+  } catch {
+    return [];
+  }
+})();
+const exceptionKey = (r: { user_id: string; plan_date: string; movement_slug: string }, guard: string) =>
+  `${r.user_id}|${r.plan_date}|${r.movement_slug}|${guard}`;
+const exceptionKeys = new Set(
+  knownExceptions.flatMap((e) => e.guards.map((g) => exceptionKey(e, g))),
+);
+const isExcused = (r: { user_id: string; plan_date: string; movement_slug: string }, guard: string) =>
+  exceptionKeys.has(exceptionKey(r, guard));
 
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -65,11 +97,20 @@ for (const phase of IN_SEASON_PHASES) {
     console.error("[drift-guard] query failed", error);
     process.exit(2);
   }
-  if (violations && violations.length > 0) {
+  const excused1 = (violations ?? []).filter((v) => isExcused(v, "in_season_phase"));
+  const real1 = (violations ?? []).filter((v) => !isExcused(v, "in_season_phase"));
+  if (excused1.length > 0) {
+    console.log(
+      `[drift-guard] \u2139 ${excused1.length} ${phase} row(s) excused by scripts/known-exceptions.json`,
+      excused1.map((v) => v.movement_slug + " @ " + v.plan_date),
+    );
+  }
+  const violationsOut = real1;
+  if (violationsOut.length > 0) {
     failed = true;
     console.error(
-      `[drift-guard] ❌ ${violations.length} ${phase} deep-flexion / eccentric-overload violations`,
-      violations.slice(0, 10),
+      `[drift-guard] ❌ ${violationsOut.length} ${phase} deep-flexion / eccentric-overload violations`,
+      violationsOut.slice(0, 10),
     );
   }
 }
@@ -86,11 +127,19 @@ if (deepFlexion.length > 0) {
     console.error("[drift-guard] warmup query failed", warmupErr);
     process.exit(2);
   }
-  if (warmupViolations && warmupViolations.length > 0) {
+  const excused2 = (warmupViolations ?? []).filter((v) => isExcused(v, "warmup_speed_slot"));
+  const real2 = (warmupViolations ?? []).filter((v) => !isExcused(v, "warmup_speed_slot"));
+  if (excused2.length > 0) {
+    console.log(
+      `[drift-guard] \u2139 ${excused2.length} warm-up/speed row(s) excused by scripts/known-exceptions.json`,
+      excused2.map((v) => v.movement_slug + " @ " + v.plan_date),
+    );
+  }
+  if (real2.length > 0) {
     failed = true;
     console.error(
-      `[drift-guard] ❌ ${warmupViolations.length} deep-flexion movements in warm-up / speed slots`,
-      warmupViolations.slice(0, 10),
+      `[drift-guard] ❌ ${real2.length} deep-flexion movements in warm-up / speed slots`,
+      real2.slice(0, 10),
     );
   } else {
     console.log("[drift-guard] ✅ no deep-flexion movements in warm-up / speed slots");

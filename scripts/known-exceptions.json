@@ -1,0 +1,12 @@
+{
+  "$comment": "Explicit, auditable exceptions to the drift guard (scripts/check-no-inseason-eccentric.ts). A guard we satisfy by deleting evidence is not a guard: these rows stay in the database as history and are named here instead. Every entry must carry a reason and a decision date. Adding an entry is an owner decision, not a maintenance step.",
+  "inseason_eccentric": [
+    {
+      "user_id": "95de827d-7418-460b-8b79-267bf79bdca4",
+      "plan_date": "2026-08-12",
+      "movement_slug": "sp_atg_split_squat",
+      "reason": "pre-existing, retained as history, owner decision 2026-09-06",
+      "guards": ["in_season_phase", "warmup_speed_slot"]
+    }
+  ]
+}
