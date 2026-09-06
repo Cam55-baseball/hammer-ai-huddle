@@ -166,18 +166,19 @@ const Auth = () => {
             const isScout = roles.includes('scout');
             const isCoach = roles.includes('coach');
 
-            // Staff first-run gate: a scout/coach who has never filled in their
-            // canonical role context row lands in their own onboarding flow —
-            // never the athlete flow. Completion is derived, never a stored flag.
+            // Staff first-run gate: a scout/coach lands in their own onboarding
+            // flow — never the athlete flow — until they explicitly finish (or
+            // skip) it. Completion is an explicit completed_at stamp so nobody
+            // is re-prompted forever for an optional field they left blank.
             let hasStaffContext = true;
             if (isScout || isCoach) {
               const table = isScout ? 'scout_context' : 'coach_context';
               const { data: ctx } = await supabase
                 .from(table)
-                .select('org_name')
+                .select('completed_at')
                 .eq('user_id', userId)
                 .maybeSingle();
-              hasStaffContext = !!ctx?.org_name;
+              hasStaffContext = !!ctx?.completed_at;
             }
 
             return {
