@@ -58,13 +58,12 @@ export function VideoSuggestionsPanel({
       <div className="space-y-2">
         {suggestions.map(({ video, reasons, score }) => (
           <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
-            {video.thumbnail_url ? (
-              <img src={video.thumbnail_url} alt="" className="h-16 w-24 rounded object-cover shrink-0" />
-            ) : (
-              <div className="h-16 w-24 rounded bg-muted shrink-0 flex items-center justify-center">
-                <Play className="h-5 w-5 text-muted-foreground" />
-              </div>
-            )}
+            <VideoThumb
+              videoUrl={video.video_url}
+              thumbnailUrl={video.thumbnail_url}
+              title={video.title}
+              className="h-16 w-24"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{video.title}</p>
               <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
