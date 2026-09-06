@@ -140,6 +140,12 @@ export interface StandardDef {
   reps?: number;
   /** Canonical metric key on the log row (mph marks only). */
   metricKey?: "throw_velo_mph" | "bat_speed_mph";
+  /**
+   * Med-ball marks are entered per implement weight. When set, only throws
+   * logged with that implement count toward the mark. Entry stays optional and
+   * the mark stays visible — but no award is possible without a number.
+   */
+  implementLbs?: number;
   /** Loaded marks require a training-age floor. */
   minTrainingAge: TrainingAgeClass;
   /** Chronological floor. Bodyweight ladders sit at 14, loaded ones higher. */
@@ -147,6 +153,30 @@ export interface StandardDef {
   /** Tier targets in the metric's unit. */
   targets: Record<StandardTier, number>;
   unit: string;
+  /** Internal-only provenance. Never rendered to athletes. */
+  internalProvenance: string;
+}
+
+/**
+ * Every loaded mark is a percentage of bodyweight, and bodyweight is capped at
+ * 265 lb for the calculation. Above that the ladder would start rewarding mass
+ * for its own sake, which is the opposite of what these marks are for.
+ */
+export const STANDARDS_BW_CAP_LBS = 265;
+
+export function effectiveBodyweight(bw: number | null | undefined): number | null {
+  if (typeof bw !== "number" || !Number.isFinite(bw) || bw <= 0) return null;
+  return Math.min(bw, STANDARDS_BW_CAP_LBS);
+}
+
+/**
+ * Athlete-facing framing required on every standards surface: these are
+ * targets seeded from widely used field benchmarks, not marks validated on
+ * Hammers athletes.
+ */
+export const STANDARDS_TARGET_DISCLAIMER =
+  "A target seeded from field benchmarks — not yet validated on Hammers athletes.";
+
   /** Internal-only provenance. Never rendered to athletes. */
   internalProvenance: string;
 }
