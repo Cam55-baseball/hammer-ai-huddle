@@ -172,6 +172,7 @@ export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
       <Badge variant="outline" className="text-[9px]">
         Long-term · 24h dismiss
       </Badge>
+      {videoLightbox}
     </div>
   );
 }

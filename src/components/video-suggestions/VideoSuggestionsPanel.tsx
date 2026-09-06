@@ -91,6 +91,7 @@ export function VideoSuggestionsPanel({
       <p className="text-[10px] text-muted-foreground">
         Why these? {mode === 'session' ? 'Based on patterns across this session.' : 'Based on your long-term weakness profile.'}
       </p>
+      {videoLightbox}
     </Card>
   );
 }

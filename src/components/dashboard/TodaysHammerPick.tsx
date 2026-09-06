@@ -123,6 +123,7 @@ export function TodaysHammerPick() {
       >
         <Play className="h-3 w-3 mr-1" /> Watch
       </Button>
+      {videoLightbox}
     </Card>
   );
 }

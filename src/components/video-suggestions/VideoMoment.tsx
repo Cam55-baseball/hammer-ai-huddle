@@ -108,6 +108,7 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
         ) : null}
       </div>
       {body}
+      {videoLightbox}
     </Card>
   );
 }
