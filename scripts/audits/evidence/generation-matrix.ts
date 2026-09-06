@@ -26,6 +26,7 @@ import { resolveLiftTemplate } from "../../../supabase/functions/_shared/wic/lif
 import { resolveDose, isRepDosed } from "../../../supabase/functions/_shared/wic/dosage/doctrine.ts";
 import { validate } from "../../../supabase/functions/_shared/wic/validator.ts";
 import { buildSafePlan } from "../../../supabase/functions/_shared/wic/safePlan.ts";
+import { checkSafetyGate } from "../../../supabase/functions/_shared/wic/domainGate.ts";
 
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
