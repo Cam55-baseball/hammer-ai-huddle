@@ -357,7 +357,16 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     const conversionScore = score * monetizationBoost;
 
     if (score > 0) {
-      scored.push({ video: v, score, conversionScore, reasons: dedupe(reasons).slice(0, 4) });
+      const matchedLayers = Array.from(matched);
+      const targeted = matched.has('correction') || matched.has('movement_pattern');
+      scored.push({
+        video: v,
+        score,
+        conversionScore,
+        matchedLayers,
+        relevance: targeted ? 'targeted' : 'general',
+        reasons: dedupe(reasons).slice(0, 4),
+      });
     }
   }
 
