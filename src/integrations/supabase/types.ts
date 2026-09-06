@@ -15858,6 +15858,57 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_fault_signals: {
+        Row: {
+          confidence: number
+          created_at: string
+          discipline: string
+          engine_version: string | null
+          evidence: string
+          fault_key: string
+          id: string
+          observed_at: string
+          root_pattern_id: string
+          sample_size: number
+          severity: number
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          discipline: string
+          engine_version?: string | null
+          evidence: string
+          fault_key: string
+          id?: string
+          observed_at?: string
+          root_pattern_id: string
+          sample_size: number
+          severity?: number
+          source: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          discipline?: string
+          engine_version?: string | null
+          evidence?: string
+          fault_key?: string
+          id?: string
+          observed_at?: string
+          root_pattern_id?: string
+          sample_size?: number
+          severity?: number
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wk_generation_diagnostics: {
         Row: {
           adaptation: string | null
@@ -16200,6 +16251,7 @@ export type Database = {
           training_age_legality: Json | null
           transfer_group: string | null
           travel_friendly: boolean | null
+          troubleshooting_tags: string[]
           unilateral: boolean | null
           updated_at: string
           variant: string | null
@@ -16293,6 +16345,7 @@ export type Database = {
           training_age_legality?: Json | null
           transfer_group?: string | null
           travel_friendly?: boolean | null
+          troubleshooting_tags?: string[]
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
@@ -16386,6 +16439,7 @@ export type Database = {
           training_age_legality?: Json | null
           transfer_group?: string | null
           travel_friendly?: boolean | null
+          troubleshooting_tags?: string[]
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
