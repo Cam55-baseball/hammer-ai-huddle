@@ -24,11 +24,17 @@ interface Props {
   analysis: AnalysisLike | null | undefined;
   module: string | null | undefined;
   sport?: string | null;
+  /**
+   * Set when this run failed to save its coaching findings. A failed write is
+   * never swallowed — the athlete is told the history is incomplete.
+   */
+  persistenceError?: string | null;
 }
+
 
 const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing'];
 
-export function AnalysisVideoRecommendations({ analysis, module, sport }: Props) {
+export function AnalysisVideoRecommendations({ analysis, module, sport, persistenceError }: Props) {
   const { user } = useAuth();
   const skillDomain = moduleToSkillDomain(module || '');
   const tagSport: TagSport = sport === 'softball' ? 'softball' : 'baseball';
@@ -80,6 +86,15 @@ export function AnalysisVideoRecommendations({ analysis, module, sport }: Props)
         <Sparkles className="h-4 w-4 text-primary" />
         <h3 className="font-semibold text-sm">Watch this next</h3>
       </div>
+
+      {persistenceError && (
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          We couldn't save what this analysis found, so it won't count toward your history or
+          cross-skill patterns. The picks below still come from this run. ({persistenceError})
+        </p>
+      )}
+
+
 
       {!hasFeedbackKeys ? (
         <p className="text-sm text-muted-foreground">
