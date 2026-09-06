@@ -2383,6 +2383,7 @@ export type Database = {
           age_groups: string[] | null
           athlete_count: number | null
           coaching_philosophy: string | null
+          completed_at: string | null
           created_at: string
           org_name: string | null
           primary_disciplines: string[] | null
@@ -2395,6 +2396,7 @@ export type Database = {
           age_groups?: string[] | null
           athlete_count?: number | null
           coaching_philosophy?: string | null
+          completed_at?: string | null
           created_at?: string
           org_name?: string | null
           primary_disciplines?: string[] | null
@@ -2407,6 +2409,7 @@ export type Database = {
           age_groups?: string[] | null
           athlete_count?: number | null
           coaching_philosophy?: string | null
+          completed_at?: string | null
           created_at?: string
           org_name?: string | null
           primary_disciplines?: string[] | null
@@ -10910,6 +10913,7 @@ export type Database = {
       scout_context: {
         Row: {
           athlete_pool_size: number | null
+          completed_at: string | null
           created_at: string
           evaluation_focus: string[] | null
           level_focus: string[] | null
@@ -10921,6 +10925,7 @@ export type Database = {
         }
         Insert: {
           athlete_pool_size?: number | null
+          completed_at?: string | null
           created_at?: string
           evaluation_focus?: string[] | null
           level_focus?: string[] | null
@@ -10932,6 +10937,7 @@ export type Database = {
         }
         Update: {
           athlete_pool_size?: number | null
+          completed_at?: string | null
           created_at?: string
           evaluation_focus?: string[] | null
           level_focus?: string[] | null
@@ -17491,6 +17497,7 @@ export type Database = {
         Returns: boolean
       }
       has_any_checked: { Args: { cb: Json }; Returns: boolean }
+      has_player_module: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
