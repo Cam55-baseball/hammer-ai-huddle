@@ -139,7 +139,9 @@ export function StandardsBoard({ className }: { className?: string }) {
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Marks you can earn from sets you already log. They never change your sets, reps or load —
-          your plan still owns those. This is the ceiling we are building toward.
+          your plan still owns those. This is the ceiling we are building toward.{" "}
+          {STANDARDS_TARGET_DISCLAIMER} Loaded marks are calculated at a bodyweight of{" "}
+          {STANDARDS_BW_CAP_LBS} lb or your own, whichever is lower.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">

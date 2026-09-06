@@ -8,6 +8,7 @@
 import { Target, Trophy } from "lucide-react";
 import { TIER_LABEL } from "@/lib/hammer/standards/catalog";
 import { targetLoadLbs, type StandardProgress } from "@/lib/hammer/standards/evaluate";
+import { STANDARDS_TARGET_DISCLAIMER } from "@/lib/hammer/standards/catalog";
 
 export function StandardTargetLine({
   rows,
@@ -56,7 +57,8 @@ export function StandardTargetLine({
         );
       })}
       <p className="text-[10px] text-muted-foreground">
-        Targets are marks to chase, not today's dose. Your prescribed sets and reps don't change.
+        Targets are marks to chase, not today's dose. Your prescribed sets and reps don't change.{" "}
+        {STANDARDS_TARGET_DISCLAIMER}
       </p>
     </div>
   );
