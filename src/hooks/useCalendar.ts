@@ -72,6 +72,8 @@ export interface CreateCalendarEvent {
   reminder_enabled?: boolean;
   reminder_minutes?: number;
   sport?: string;
+  /** Game days only: athlete is the starting pitcher. Removes the day's lift. */
+  is_starting_pitcher?: boolean;
 }
 
 interface UseCalendarResult {

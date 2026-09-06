@@ -227,7 +227,15 @@ export function isSeasonLegal(m: GateableMovement, phase: string | null | undefi
  */
 export function checkSafetyGate(
   m: GateableMovement,
-  ctx: { ageYears?: number | null; trainingAgeClass?: string | null; seasonPhase?: string | null },
+  ctx: {
+    ageYears?: number | null;
+    trainingAgeClass?: string | null;
+    seasonPhase?: string | null;
+    /** Omit or leave undefined to fail safe (treated as a throwing athlete). */
+    isThrowingAthlete?: boolean;
+    /** Sequence role of the slot being filled, e.g. "warmup". */
+    slotRole?: string | null;
+  },
 ): DomainGateResult {
   const floor = resolveSafetyFloor(m);
 
@@ -256,7 +264,39 @@ export function checkSafetyGate(
     return { allowed: false, reason: `season_legality:${ctx.seasonPhase}` };
   }
 
+  // ---- Shoulder end range under load (Pass B, item 3) --------------------
+  // Definition: the shoulder is driven to its END RANGE while loaded — a deep
+  // dip bottom, a loaded overhead lockout or catch, a straight-arm overhead
+  // pullover. It is NOT shoulder work in general, and it is NOT eccentric
+  // control. Arm care carries none of these and is untouched by design.
+  //
+  // Two consequences, and only two:
+  //   1. off the plan in-season for a throwing athlete (arm health), and
+  //   2. never in the warm-up slot, at any time of year.
+  if ((m as Record<string, unknown>).shoulder_end_range === true) {
+    const inSeasonish = ctx.seasonPhase === "in_season" || ctx.seasonPhase === "post_season";
+    if (inSeasonish && ctx.isThrowingAthlete !== false) {
+      return { allowed: false, reason: `shoulder_end_range:in_season` };
+    }
+    if (owningDomain(m) === "warmup" || ctx.slotRole === "warmup") {
+      return { allowed: false, reason: `shoulder_end_range:warmup_slot` };
+    }
+  }
+
   return { allowed: true };
+}
+
+/**
+ * Throwing athlete = everyone who takes the field. Fail-safe: unknown or empty
+ * positions count as throwing, so the shoulder rule restricts rather than
+ * permits when we don't know.
+ */
+export function isThrowingAthlete(positions: readonly string[] | null | undefined): boolean {
+  const set = normalizePositions(positions);
+  if (set.size === 0) return true;
+  const nonThrowing = new Set(["dh", "designated_hitter", "eh", "ph", "pinch_hitter"]);
+  for (const p of set) if (!nonThrowing.has(p)) return true;
+  return false;
 }
 
 
@@ -349,7 +389,10 @@ export function checkAthleteScope(
 
   // Fail-closed safety floor — applied last so its reason is never masked by a
   // relevance gate. Unknown age / training age / season is skipped, not guessed.
-  return checkSafetyGate(m, ctx);
+  return checkSafetyGate(m, {
+    ...ctx,
+    isThrowingAthlete: isThrowingAthlete(ctx.positions),
+  });
 }
 
 

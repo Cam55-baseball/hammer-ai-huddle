@@ -74,6 +74,7 @@ export function AddCalendarEventDialog({
   const [color, setColor] = useState('#3b82f6');
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderMinutes, setReminderMinutes] = useState(15);
+  const [isStartingPitcher, setIsStartingPitcher] = useState(false);
 
   const resetForm = () => {
     setTitle('');
@@ -85,6 +86,7 @@ export function AddCalendarEventDialog({
     setColor('#3b82f6');
     setReminderEnabled(false);
     setReminderMinutes(15);
+    setIsStartingPitcher(false);
   };
 
   const handleSubmit = async () => {
@@ -107,6 +109,7 @@ export function AddCalendarEventDialog({
         reminder_enabled: reminderEnabled,
         reminder_minutes: reminderEnabled ? reminderMinutes : undefined,
         sport,
+        is_starting_pitcher: eventType === 'game' ? isStartingPitcher : false,
       };
 
       const success = await onAdd(event);
@@ -185,6 +188,28 @@ export function AddCalendarEventDialog({
                 rows={2}
               />
             </div>
+
+            {/* Starting pitcher — game days only. Removes the day's lift. */}
+            {eventType === 'game' && (
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
+                <div className="pr-3">
+                  <Label htmlFor="isStartingPitcher">
+                    {t('calendar.form.startingPitcher', "I'm starting this game")}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      'calendar.form.startingPitcherHelp',
+                      'Takes the lift off your plan for the day.',
+                    )}
+                  </p>
+                </div>
+                <Switch
+                  id="isStartingPitcher"
+                  checked={isStartingPitcher}
+                  onCheckedChange={setIsStartingPitcher}
+                />
+              </div>
+            )}
 
             {/* All Day Toggle */}
             <div className="flex items-center justify-between">

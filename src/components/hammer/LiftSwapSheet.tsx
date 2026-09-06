@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AMBIENT_EQUIPMENT } from "@/lib/wic/faultLedger/equipmentTier";
 import { matchesUnilateralSlug } from "@/components/hammer/logging/logTemplates";
 import { Loader2, Repeat2 } from "lucide-react";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
@@ -107,7 +108,12 @@ function SwapRow({
   onPick: () => void;
 }) {
   const dose = describeDose(projectedDose(rx, candidate, reason));
-  const equipment = (candidate.equipment_requirements ?? []).filter(Boolean);
+  // A wall is not equipment. Ambient surroundings (wall, floor, a chair, a
+  // step) exist wherever the athlete is, so they never turn a tier-0 option
+  // into one that reads as "Needs: wall".
+  const equipment = (candidate.equipment_requirements ?? [])
+    .filter(Boolean)
+    .filter((e) => !AMBIENT_EQUIPMENT.has(String(e).trim().toLowerCase().replace(/[\s-]+/g, "_")));
   const perSide = matchesUnilateralSlug(candidate.slug);
   return (
     <button

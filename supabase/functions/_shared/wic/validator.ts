@@ -82,9 +82,15 @@ export function validate(input: ValidatorInput): ValidatorReport {
     seenName.add(nameKey);
 
     if (rx.slot === "lift" && rx.sets != null && rx.reps != null) {
-      const key = `${rx.sequence_role}|${rx.sets}x${rx.reps}`;
+      // Scoped to the DOSE GROUP, not the sequence role. Two accessories
+      // landing on 3x10 is the doctrine working as designed — the envelope
+      // for that group says 3x10. Repetition only means something inside one
+      // dose group, where a genuine duplicate prescription would show up.
+      const doseGroup =
+        ((rx.why_payload as any)?.dose_doctrine?.group as string | undefined) ?? rx.sequence_role;
+      const key = `${doseGroup}|${rx.sets}x${rx.reps}`;
       if (seenSetsReps.has(key)) {
-        issues.push({ code: "duplicate_sets_reps", severity: "warn", message: `Same sets×reps repeated in role ${rx.sequence_role}` });
+        issues.push({ code: "duplicate_sets_reps", severity: "warn", message: `Same sets×reps repeated in dose group ${doseGroup}` });
       }
       seenSetsReps.add(key);
     }

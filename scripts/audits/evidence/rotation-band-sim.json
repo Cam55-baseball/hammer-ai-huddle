@@ -1,0 +1,932 @@
+{
+  "generated_at": "2026-09-06T21:55:51.399Z",
+  "deterministic": true,
+  "rollup": {
+    "always_best": {
+      "mean_distinct_per_category": 5.97,
+      "mean_band_width": 1,
+      "mean_score_cost": 0,
+      "max_longest_run": 2,
+      "mean_longest_run": 1.03
+    },
+    "band_0.95": {
+      "mean_distinct_per_category": 10.83,
+      "mean_band_width": 6.2,
+      "mean_score_cost": 0.0044,
+      "max_longest_run": 2,
+      "mean_longest_run": 1.03
+    },
+    "band_0.9": {
+      "mean_distinct_per_category": 10.87,
+      "mean_band_width": 6.61,
+      "mean_score_cost": 0.0047,
+      "max_longest_run": 2,
+      "mean_longest_run": 1.03
+    },
+    "band_0.85": {
+      "mean_distinct_per_category": 10.87,
+      "mean_band_width": 6.62,
+      "mean_score_cost": 0.0047,
+      "max_longest_run": 2,
+      "mean_longest_run": 1.03
+    }
+  },
+  "summary": {
+    "always_best": {
+      "os_q1": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        }
+      },
+      "os_q2": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        }
+      },
+      "os_q3": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        }
+      },
+      "os_q4": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        }
+      },
+      "in_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        }
+      },
+      "post_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 5,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 2
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1,
+          "mean_score_cost": 0,
+          "longest_run": 1
+        }
+      }
+    },
+    "band_0.95": {
+      "os_q1": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 4.21,
+          "mean_score_cost": 0.0015,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 6.79,
+          "mean_score_cost": 0.006,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 8.83,
+          "mean_score_cost": 0.0057,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 9.13,
+          "mean_score_cost": 0.0069,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 7.83,
+          "mean_score_cost": 0.0046,
+          "longest_run": 1
+        }
+      },
+      "os_q2": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 4.25,
+          "mean_score_cost": 0.0023,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.75,
+          "mean_score_cost": 0.0052,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 9.08,
+          "mean_score_cost": 0.0058,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 8.63,
+          "mean_score_cost": 0.0057,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 7.88,
+          "mean_score_cost": 0.0056,
+          "longest_run": 1
+        }
+      },
+      "os_q3": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 3.83,
+          "mean_score_cost": 0.0019,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.92,
+          "mean_score_cost": 0.0043,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 8.63,
+          "mean_score_cost": 0.0045,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 8.96,
+          "mean_score_cost": 0.0062,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 8,
+          "mean_score_cost": 0.0061,
+          "longest_run": 1
+        }
+      },
+      "os_q4": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 3.71,
+          "mean_score_cost": 0.0013,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.88,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 15,
+          "mean_band_width": 9.21,
+          "mean_score_cost": 0.0063,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 8.75,
+          "mean_score_cost": 0.0054,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 7.88,
+          "mean_score_cost": 0.0065,
+          "longest_run": 1
+        }
+      },
+      "in_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.38,
+          "mean_score_cost": 0.0012,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.75,
+          "mean_score_cost": 0.0022,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.88,
+          "mean_score_cost": 0.0022,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 8,
+          "mean_band_width": 4,
+          "mean_score_cost": 0.0039,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1.92,
+          "mean_score_cost": 0.0008,
+          "longest_run": 1
+        }
+      },
+      "post_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 5,
+          "mean_band_width": 1.25,
+          "mean_score_cost": 0.0002,
+          "longest_run": 2
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.79,
+          "mean_score_cost": 0.0045,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 4.96,
+          "mean_score_cost": 0.0063,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 7.21,
+          "mean_score_cost": 0.007,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 5.79,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        }
+      }
+    },
+    "band_0.9": {
+      "os_q1": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 4.21,
+          "mean_score_cost": 0.0015,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 7,
+          "mean_score_cost": 0.0055,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 10.83,
+          "mean_score_cost": 0.008,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 9.79,
+          "mean_score_cost": 0.0067,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 7.88,
+          "mean_score_cost": 0.0046,
+          "longest_run": 1
+        }
+      },
+      "os_q2": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 4.25,
+          "mean_score_cost": 0.0023,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 6.83,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 10.88,
+          "mean_score_cost": 0.0081,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 9.88,
+          "mean_score_cost": 0.0063,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 7.92,
+          "mean_score_cost": 0.0056,
+          "longest_run": 1
+        }
+      },
+      "os_q3": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 3.83,
+          "mean_score_cost": 0.0019,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.96,
+          "mean_score_cost": 0.0043,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 10.46,
+          "mean_score_cost": 0.0079,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 9.75,
+          "mean_score_cost": 0.0067,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 8.04,
+          "mean_score_cost": 0.0062,
+          "longest_run": 1
+        }
+      },
+      "os_q4": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 3.75,
+          "mean_score_cost": 0.0014,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.92,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 10.5,
+          "mean_score_cost": 0.0063,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 9.75,
+          "mean_score_cost": 0.0068,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 7.92,
+          "mean_score_cost": 0.0066,
+          "longest_run": 1
+        }
+      },
+      "in_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.38,
+          "mean_score_cost": 0.0012,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.75,
+          "mean_score_cost": 0.0022,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.88,
+          "mean_score_cost": 0.0022,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 8,
+          "mean_band_width": 4,
+          "mean_score_cost": 0.0039,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1.92,
+          "mean_score_cost": 0.0008,
+          "longest_run": 1
+        }
+      },
+      "post_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 5,
+          "mean_band_width": 1.25,
+          "mean_score_cost": 0.0002,
+          "longest_run": 2
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 6.83,
+          "mean_score_cost": 0.0038,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 5.42,
+          "mean_score_cost": 0.0059,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 7.67,
+          "mean_score_cost": 0.0074,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 5.83,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        }
+      }
+    },
+    "band_0.85": {
+      "os_q1": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 4.21,
+          "mean_score_cost": 0.0015,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 7,
+          "mean_score_cost": 0.0055,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 10.83,
+          "mean_score_cost": 0.0077,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 9.83,
+          "mean_score_cost": 0.0073,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 7.88,
+          "mean_score_cost": 0.0046,
+          "longest_run": 1
+        }
+      },
+      "os_q2": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 4.25,
+          "mean_score_cost": 0.0023,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 6.83,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 15,
+          "mean_band_width": 10.92,
+          "mean_score_cost": 0.0078,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 9.92,
+          "mean_score_cost": 0.0063,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 7.92,
+          "mean_score_cost": 0.0056,
+          "longest_run": 1
+        }
+      },
+      "os_q3": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 12,
+          "mean_band_width": 3.83,
+          "mean_score_cost": 0.0019,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.96,
+          "mean_score_cost": 0.0043,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 10.5,
+          "mean_score_cost": 0.0079,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 9.79,
+          "mean_score_cost": 0.0066,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 8.04,
+          "mean_score_cost": 0.0062,
+          "longest_run": 1
+        }
+      },
+      "os_q4": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 3.71,
+          "mean_score_cost": 0.0013,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 6.92,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 14,
+          "mean_band_width": 10.58,
+          "mean_score_cost": 0.0067,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 13,
+          "mean_band_width": 9.79,
+          "mean_score_cost": 0.0068,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 11,
+          "mean_band_width": 7.92,
+          "mean_score_cost": 0.0066,
+          "longest_run": 1
+        }
+      },
+      "in_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.42,
+          "mean_score_cost": 0.0012,
+          "longest_run": 1
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.79,
+          "mean_score_cost": 0.0021,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 7,
+          "mean_band_width": 2.88,
+          "mean_score_cost": 0.0021,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 8,
+          "mean_band_width": 4.04,
+          "mean_score_cost": 0.0039,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 6,
+          "mean_band_width": 1.92,
+          "mean_score_cost": 0.0008,
+          "longest_run": 1
+        }
+      },
+      "post_season": {
+        "compound_lower": {
+          "days": 24,
+          "distinct": 5,
+          "mean_band_width": 1.25,
+          "mean_score_cost": 0.0002,
+          "longest_run": 2
+        },
+        "unilateral_lower": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 6.83,
+          "mean_score_cost": 0.0038,
+          "longest_run": 1
+        },
+        "upper_push": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 5.46,
+          "mean_score_cost": 0.0058,
+          "longest_run": 1
+        },
+        "upper_pull": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 7.67,
+          "mean_score_cost": 0.0077,
+          "longest_run": 1
+        },
+        "carry_antirotation": {
+          "days": 24,
+          "distinct": 10,
+          "mean_band_width": 5.83,
+          "mean_score_cost": 0.0053,
+          "longest_run": 1
+        }
+      }
+    }
+  }
+}

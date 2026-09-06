@@ -92,6 +92,8 @@ import {
   fnv1a64Hex,
   canonicalJson,
 } from "../_shared/wic/determinism/globalDeterminismLock.ts";
+import { selectFromBand, DEFAULT_ROTATION_BAND, ROTATION_BAND_VERSION } from "../_shared/wic/lift/rotationBand.ts";
+import { resolveGameProximity, survivesPrimerOnly, NO_SCHEDULE, GAME_PROXIMITY_VERSION, type ScheduledGame } from "../_shared/wic/schedule/gameProximity.ts";
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
 import { aggregateValidatorReports, type EngineReport } from "../_shared/wic/validation/globalValidatorRegistry.ts";
 import { resolveCrossEngineConflicts } from "../_shared/wic/conflictResolver/crossEngineConflictResolver.ts";
@@ -323,6 +325,10 @@ const handler = async (req: Request): Promise<Response> => {
         ? { hit: (body.side_hit as any) ?? null, throw: (body.side_throw as any) ?? null }
         : null;
 
+    /** Shift an ISO date by whole days, UTC. */
+    const isoShift = (iso: string, n: number) =>
+      new Date(new Date(`${iso}T00:00:00Z`).getTime() + n * 86400000).toISOString().slice(0, 10);
+
     // -------- Load athlete context --------
     const [
       { data: profile },
@@ -337,18 +343,22 @@ const handler = async (req: Request): Promise<Response> => {
       { data: trainingPrefs },
       { data: latestWeight },
       { data: bodyGoals },
+      { data: calendarGames },
     ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("athlete_mpi_settings").select("season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
+      // Window, not a single day: the 48-hour rule needs yesterday and the
+      // next two days, and a doubleheader needs every row for a date.
       admin.from("gp_games")
-        .select("id, game_date, status, game_type")
+        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher")
         .eq("user_id", user.id)
-        .eq("game_date", planDate)
+        .gte("game_date", isoShift(planDate, -2))
+        .lte("game_date", isoShift(planDate, 2))
         .not("status", "in", "(canceled,cancelled,rescheduled)")
-        .limit(1),
+        .limit(40),
       // Practices: exact-date rows plus recurring weekly rows (filtered below).
       admin.from("scheduled_practice_sessions")
         .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, title, start_time, status")
@@ -365,6 +375,14 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("weight_entries").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }).limit(1).maybeSingle(),
       admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
+      // Calendar games — the surface most athletes actually use.
+      admin.from("calendar_events")
+        .select("event_date, event_type, start_time, is_starting_pitcher")
+        .eq("user_id", user.id)
+        .in("event_type", ["game", "tournament", "scrimmage"])
+        .gte("event_date", isoShift(planDate, -2))
+        .lte("event_date", isoShift(planDate, 2))
+        .limit(40),
     ]);
 
     const p: any = profile ?? {};
@@ -392,7 +410,31 @@ const handler = async (req: Request): Promise<Response> => {
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
-    const isGameDay = (gamesToday ?? []).length > 0;
+    const gameWindowRows: any[] = (gamesToday ?? []) as any[];
+    const gamesOnPlanDate = gameWindowRows.filter((g: any) => String(g.game_date) === planDate);
+    const isGameDay = gamesOnPlanDate.length > 0;
+
+    // -------- Schedule enforcement (Pass B) --------
+    // Two sources, one list. An athlete with neither gets NO_SCHEDULE and the
+    // session is generated exactly as it was before this rule existed.
+    const scheduledGames: ScheduledGame[] = [
+      ...gameWindowRows.map((g: any) => ({
+        date: String(g.game_date),
+        time: g.scheduled_time ?? null,
+        isStartingPitcher: g.is_starting_pitcher === true,
+        source: "gp_games" as const,
+      })),
+      ...((calendarGames ?? []) as any[]).map((e: any) => ({
+        date: String(e.event_date),
+        time: e.start_time ?? null,
+        isStartingPitcher: e.is_starting_pitcher === true,
+        source: "calendar_events" as const,
+      })),
+    ];
+    const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
+    const gameProximity = scheduledGames.length
+      ? resolveGameProximity(scheduledGames, planDate, { isPitcher: isPitcherAthlete })
+      : NO_SCHEDULE;
 
     // -------- Practice resolution (exact-date + recurring weekly) --------
     const planDow = new Date(`${planDate}T12:00:00Z`).getUTCDay();
@@ -452,7 +494,7 @@ const handler = async (req: Request): Promise<Response> => {
       legacyPhase: phaseRes.phase,
       isGameDay,
       isPracticeDay,
-      isTournamentDay: (gamesToday ?? []).some((g: any) => g.game_type === "tournament"),
+      isTournamentDay: gamesOnPlanDate.some((g: any) => g.game_type === "tournament"),
       isTravelDay,
       isRecoveryDay: false,
       isOffDay: false,
@@ -493,7 +535,7 @@ const handler = async (req: Request): Promise<Response> => {
       bodyGoals: bodyGoals ?? [],
       dailyLog,
       injuries: injuries ?? [],
-      gamesToday: gamesToday ?? [],
+      gamesToday: gamesOnPlanDate,
       practicesToday: practiceRows,
       trainingAgeCtx: trainingAgeContext,
       sideOverride,
@@ -580,6 +622,14 @@ const handler = async (req: Request): Promise<Response> => {
         reason: "practice_load",
         detail: "Practice scheduled today — skill volume trimmed to avoid duplicating what practice already covers.",
       });
+    }
+    // Schedule enforcement — game proximity. Neutral when the athlete has no
+    // schedule, so an empty calendar generates exactly as it did before.
+    if (gameProximity.cnsCapDelta < 0) {
+      cnsCap = Math.max(1, cnsCap + gameProximity.cnsCapDelta);
+    }
+    for (const r of gameProximity.reasons) {
+      reductions.push({ reason: "game_proximity", detail: r });
     }
     if (isTravelDay && !isGameDay) {
       cnsCap = Math.max(1, cnsCap - 1);
@@ -759,6 +809,14 @@ const handler = async (req: Request): Promise<Response> => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
       if (m.wic_metadata_complete === false) return false;
+      // Schedule enforcement: within 48 hours of a game nothing above a primer
+      // survives in the lift slot. Arm care runs under its own domain and is
+      // deliberately untouched — it exists FOR the season.
+      if (
+        gameProximity.primerOnly &&
+        opts?.domain === "lift" &&
+        !survivesPrimerOnly((m as any).intensity_class as string | null)
+      ) return false;
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       // Categorical training-age legality — the SAME field every certifier
       // reads. Never relaxable: a beginner-illegal movement is a safety call,
@@ -883,24 +941,49 @@ const handler = async (req: Request): Promise<Response> => {
         poolIndex * 0.001; // stable pool-order tie-break
       return Math.round(score * 1e6) / 1e6;
     };
-    const pickBest = (slugs: string[], domain?: EngineDomain): MovementRow | undefined => {
-      let best: MovementRow | undefined;
-      let bestScore = -Infinity;
+    /**
+     * Deterministic day seed for lift rotation. Same athlete + same UTC plan
+     * date => same value forever, so a replay reproduces the identical draw.
+     * Gates run BEFORE this: only already-legal candidates ever reach the band.
+     */
+    const liftRotationSeed = stableSeed(null, user.id, utcPlanDate(planDate));
+    const rotationBandTrace: Array<Record<string, unknown>> = [];
+    const pickBest = (
+      slugs: string[],
+      domain?: EngineDomain,
+      rotateKey?: string,
+    ): MovementRow | undefined => {
+      const cands: Array<{ item: MovementRow; score: number }> = [];
       slugs.forEach((slug, i) => {
         const m = lib.find((x) => x.slug === slug);
         if (!eligibleWith(m, domain ? { domain } : undefined)) return;
-        const sc = scoreCandidate(m, i);
-        if (sc > bestScore) { bestScore = sc; best = m; }
+        cands.push({ item: m as MovementRow, score: scoreCandidate(m, i) });
       });
-      return best;
+      if (!cands.length) return undefined;
+      // Non-lift slots keep strict rank-1 behaviour — this pass changes lifts only.
+      if (!rotateKey) {
+        return cands.reduce((a, b) => (b.score > a.score ? b : a), cands[0]).item;
+      }
+      const r = selectFromBand(cands, `${liftRotationSeed}|${rotateKey}`, DEFAULT_ROTATION_BAND);
+      rotationBandTrace.push({
+        slot: rotateKey,
+        band_width: r.band.length,
+        candidates: cands.length,
+        picked: r.picked?.slug ?? null,
+        score_cost: Number(r.scoreCost.toFixed(6)),
+        band_version: ROTATION_BAND_VERSION,
+        fraction: DEFAULT_ROTATION_BAND,
+      });
+      return r.picked;
     };
     /** Lift-slot variant of `pickBest` — respects the single-slot budget. */
-    const pickBestLift = (slugs: string[]): MovementRow | undefined => pickBest(slugs, "lift");
+    const pickBestLift = (slugs: string[], rotateKey?: string): MovementRow | undefined =>
+      pickBest(slugs, "lift", rotateKey);
     const pickBestByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined =>
       pickBest(slugs.filter((slug) => {
         const m = lib.find((x) => x.slug === slug);
         return !!m && coerceCanonicalCategory(m as any) === category;
-      }), "lift");
+      }), "lift", category);
 
 
     /** One athlete-legible line tying a pick to their own stated goals. */
@@ -1261,7 +1344,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
-    if (!isGameDay) {
+    // `gameProximity.removeLift` is the athlete's own "I'm starting this game"
+    // mark. Today's game already closes this block; the explicit term is here
+    // so the rule is readable rather than implied.
+    if (!isGameDay && !gameProximity.removeLift) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
@@ -1294,7 +1380,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // 2) Trunk primer — every session
-      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS) ?? pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
+      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ?? pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
       // 3) Compound A — lower strength primer, phase legal
@@ -1314,7 +1400,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // 4) Unilateral lower — rotate across the week to build all planes
       const uniLowerPool = StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek);
-      const uniLower = pickBestLift(uniLowerPool) ?? pickFirstLift(uniLowerPool);
+      const uniLower = pickBestLift(uniLowerPool, "unilateral_lower") ?? pickFirstLift(uniLowerPool);
       if (uniLower) {
         // Safety ceiling only: deep-flexion (ATG family) in-season stays a
         // ROM-limited durability dose. Everything else is doctrine-dosed.
@@ -1329,14 +1415,14 @@ const handler = async (req: Request): Promise<Response> => {
 
       // 5) Upper push — unilateral / integrated
       const upperPushPool = StrengthEngine.upperPushSlugs(isInSeason, dayOfWeek);
-      const upperPush = pickBestLift(upperPushPool) ?? pickFirstLift(upperPushPool);
+      const upperPush = pickBestLift(upperPushPool, "upper_push") ?? pickFirstLift(upperPushPool);
       if (upperPush) {
         push("lift", "upper_push", upperPush, {}, `Upper push — enough strength signal to maintain full-body balance without chasing soreness.${goalWhy(upperPush)}`);
       }
 
       // 6) Upper pull — unilateral / weighted
       const upperPullPool = StrengthEngine.upperPullSlugs(isInSeason, dayOfWeek);
-      const upperPull = pickBestLift(upperPullPool) ?? pickFirstLift(upperPullPool);
+      const upperPull = pickBestLift(upperPullPool, "upper_pull") ?? pickFirstLift(upperPullPool);
       if (upperPull) {
         push("lift", "upper_pull", upperPull, {}, `Upper pull — decel chain, posture, and shoulder balance stay in the plan.${goalWhy(upperPull)}`);
       }
@@ -1344,13 +1430,13 @@ const handler = async (req: Request): Promise<Response> => {
       // 7) Carry / anti-rotation — phase legal, not a junk-volume finisher
       if (isInSeason || isDeep || phaseRes.phase === "os_q3") {
         const carryPool = StrengthEngine.carrySlugs(isInSeason, dayOfWeek);
-        const carry = pickBestLift(carryPool) ?? pickFirstLift(carryPool);
+        const carry = pickBestLift(carryPool, "carry_antirotation") ?? pickFirstLift(carryPool);
         if (carry) push("lift", "carry_antirotation", carry, {}, `Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.${goalWhy(carry)}`);
       }
 
       // 8) Trunk finisher — offseason only (in-season stays fresh)
       if (isOffseason) {
-        const finisher = pickBestLift(StrengthEngine.TRUNK_FINISHER_SLUGS) ?? pickFirstLift(StrengthEngine.TRUNK_FINISHER_SLUGS);
+        const finisher = pickBestLift(StrengthEngine.TRUNK_FINISHER_SLUGS, "trunk_finisher") ?? pickFirstLift(StrengthEngine.TRUNK_FINISHER_SLUGS);
         if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 

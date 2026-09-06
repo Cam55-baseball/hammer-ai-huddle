@@ -2205,6 +2205,7 @@ export type Database = {
           event_date: string
           event_type: string
           id: string
+          is_starting_pitcher: boolean
           related_id: string | null
           reminder_enabled: boolean | null
           reminder_minutes: number | null
@@ -2224,6 +2225,7 @@ export type Database = {
           event_date: string
           event_type?: string
           id?: string
+          is_starting_pitcher?: boolean
           related_id?: string | null
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
@@ -2243,6 +2245,7 @@ export type Database = {
           event_date?: string
           event_type?: string
           id?: string
+          is_starting_pitcher?: boolean
           related_id?: string | null
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
@@ -5659,6 +5662,7 @@ export type Database = {
           general_notes: string | null
           home_away: string | null
           id: string
+          is_starting_pitcher: boolean
           lineup_slot: number | null
           my_positions: string[] | null
           my_score: number | null
@@ -5686,6 +5690,7 @@ export type Database = {
           general_notes?: string | null
           home_away?: string | null
           id?: string
+          is_starting_pitcher?: boolean
           lineup_slot?: number | null
           my_positions?: string[] | null
           my_score?: number | null
@@ -5713,6 +5718,7 @@ export type Database = {
           general_notes?: string | null
           home_away?: string | null
           id?: string
+          is_starting_pitcher?: boolean
           lineup_slot?: number | null
           my_positions?: string[] | null
           my_score?: number | null
@@ -16236,6 +16242,7 @@ export type Database = {
           season_eligibility: string[] | null
           season_legality: Json | null
           secondary_adaptation: string | null
+          shoulder_end_range: boolean
           slug: string
           source_philosophy: string | null
           speed_adaptation: string | null
@@ -16330,6 +16337,7 @@ export type Database = {
           season_eligibility?: string[] | null
           season_legality?: Json | null
           secondary_adaptation?: string | null
+          shoulder_end_range?: boolean
           slug: string
           source_philosophy?: string | null
           speed_adaptation?: string | null
@@ -16424,6 +16432,7 @@ export type Database = {
           season_eligibility?: string[] | null
           season_legality?: Json | null
           secondary_adaptation?: string | null
+          shoulder_end_range?: boolean
           slug?: string
           source_philosophy?: string | null
           speed_adaptation?: string | null
