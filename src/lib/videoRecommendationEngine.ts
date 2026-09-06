@@ -249,6 +249,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
 
     let score = 0;
     const reasons: string[] = [];
+    const matched = new Set<TagLayer>();
 
     for (const a of v.assignments) {
       const tag = tagIdToTag.get(a.tag_id);
@@ -260,6 +261,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       if (correctionTagIds.has(a.tag_id)) {
         const ruleStrength = correctionTagIds.get(a.tag_id) || 5;
         score += 90 + ruleStrength;
+        matched.add('correction');
         const said = evidence[`correction:${tag.key}`];
         reasons.push(
           said
@@ -269,10 +271,12 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       }
       if (rootPatternTagIds.has(a.tag_id)) {
         score += 60;
+        matched.add('correction');
         reasons.push('Works on the pattern showing up in more than one part of your game');
       }
       if (movementTagIds.has(a.tag_id)) {
         score += 50 * w;
+        matched.add('movement_pattern');
         const said = evidence[`movement_pattern:${tag.key}`];
         reasons.push(
           said
@@ -282,13 +286,16 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       }
       if (resultTagIds.has(a.tag_id)) {
         score += 25 * w;
+        matched.add('result');
         reasons.push(`Targets result: ${tag.label}`);
       }
       if (contextTagIds.has(a.tag_id)) {
         score += 15 * w;
+        matched.add('context');
         reasons.push(`Fits context: ${tag.label}`);
       }
     }
+
 
 
     // User-specific success
