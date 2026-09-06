@@ -284,6 +284,10 @@ export function analysisFeedbackToTaxonomy(
       correction.add(corr);
       evidence[`correction:${corr}`] ??= evidence[`movement_pattern:${m}`] ?? 'your analysis flagged this pattern';
     }
+    for (const extra of MOVEMENT_TO_EXTRA_CORRECTIONS[m] ?? []) {
+      correction.add(extra);
+      evidence[`correction:${extra}`] ??= evidence[`movement_pattern:${m}`] ?? 'your analysis flagged this pattern';
+    }
   }
 
   // …and the outcomes that pattern produces, so result-layer tags are matchable.

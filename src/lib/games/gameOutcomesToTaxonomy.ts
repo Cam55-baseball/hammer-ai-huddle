@@ -59,12 +59,12 @@ const POSITION_FAMILY = (pos: string | null | undefined): "c" | "fb" | "mi" | "t
 /** A fielding miss implies a result key, and each result key implies work. */
 const FIELDING_RESULT_CHAIN: Record<string, { movement: string[]; correction: string[] }> = {
   c_passed_ball: { movement: ["c_late_block_drop"], correction: ["c_block_angle_to_plate"] },
-  c_missed_block_away: { movement: ["c_wide_secondary", "c_slow_block_recovery"], correction: ["c_beat_ball_with_hips"] },
+  c_missed_block_away: { movement: ["c_wide_secondary", "c_slow_block_recovery", "c_block_chest_up"], correction: ["c_beat_ball_with_hips", "c_replace_feet_on_throw"] },
   c_bottom_strike_lost: { movement: ["c_stabs_at_receiving"], correction: ["c_quiet_receiving"] },
   fb_missed_pick: { movement: ["fb_late_scoop_glove"], correction: ["fb_work_through_short_hop"] },
   fb_pulled_off_bag: { movement: ["fb_early_stretch"], correction: ["fb_stretch_after_read"] },
   mi_dp_turn_late: { movement: ["mi_late_pivot_at_bag"], correction: ["mi_feed_from_glove_side"] },
-  mi_feed_offline: { movement: ["mi_feed_from_wrong_hip", "mi_flat_glove_approach"], correction: ["mi_field_through_the_ball", "mi_underhand_inside_range"] },
+  mi_feed_offline: { movement: ["mi_feed_from_wrong_hip", "mi_flat_glove_approach", "mi_slap_charge_late", "fd_backhand_reach_late"], correction: ["mi_field_through_the_ball", "mi_underhand_inside_range"] },
   tb_slow_roller_late_throw: { movement: ["tb_no_charge_slow_roller"], correction: ["tb_attack_slow_roller"] },
   tb_eaten_by_hop: { movement: ["tb_backs_up_in_between_hop"], correction: ["tb_work_through_the_hop"] },
   of_ball_over_head: { movement: ["of_first_step_drift_in", "of_late_drop_step"], correction: ["of_drop_step_on_read"] },
@@ -74,7 +74,14 @@ const FIELDING_RESULT_CHAIN: Record<string, { movement: string[]; correction: st
 
 /** Generic fielding faults that apply whatever the spot on the field. */
 const GENERIC_FIELDING = {
-  movement: ["poor_footwork_angle", "late_exchange", "fd_no_pre_pitch_hop", "fd_head_lifts_early"],
+  movement: [
+    "poor_footwork_angle",
+    "late_exchange",
+    "fd_no_pre_pitch_hop",
+    "fd_head_lifts_early",
+    "fd_high_hands_setup",
+    "fd_stiff_lower_half",
+  ],
   correction: ["first_step_quickness", "clean_glove_path", "quick_exchange", "reaction_drills"],
 };
 
