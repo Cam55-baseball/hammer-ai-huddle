@@ -80,7 +80,10 @@ export const CARD_REGISTRY: readonly CardRegistryEntry[] = [
     recoveryDemand: "low",
     location: "any",
     substitutionAvailable: true,
-    slots: ["warmup"],
+    // BUG-4 (Stage 1) — `movement_prep` is emitted and is game-day legal, so it
+    // must resolve to an owning card or every row using it raises
+    // `unregistered_slot`. The warm-up card owns it.
+    slots: ["movement_prep", "warmup"],
     enabledWhen: () => true,
     contextMessageFields: MESSAGE_FIELDS,
   },
@@ -178,7 +181,9 @@ export const CARD_REGISTRY: readonly CardRegistryEntry[] = [
     recoveryDemand: "low",
     location: "any",
     substitutionAvailable: true,
-    slots: [],
+    // BUG-4 (Stage 1) — the `recovery` slot is game-day legal and is emitted by
+    // the recovery engine; the recovery card owns it.
+    slots: ["recovery"],
     enabledWhen: () => true,
     contextMessageFields: MESSAGE_FIELDS,
   },
