@@ -16194,6 +16194,7 @@ export type Database = {
           sport_transfer: Json | null
           sprint_compatible: boolean | null
           substitution_family: string | null
+          superseded_by: string | null
           throw_compatible: boolean | null
           throwing_phase: string | null
           training_age_legality: Json | null
@@ -16286,6 +16287,7 @@ export type Database = {
           sport_transfer?: Json | null
           sprint_compatible?: boolean | null
           substitution_family?: string | null
+          superseded_by?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
           training_age_legality?: Json | null
@@ -16378,6 +16380,7 @@ export type Database = {
           sport_transfer?: Json | null
           sprint_compatible?: boolean | null
           substitution_family?: string | null
+          superseded_by?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
           training_age_legality?: Json | null
