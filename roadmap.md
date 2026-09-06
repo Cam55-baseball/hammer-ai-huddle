@@ -14,3 +14,10 @@
 - [ ] Dose diff: one athlete, one date, before/after — `sets`/`reps` diff must be empty.
 - [ ] Phone-width screenshot of the Safe Session card.
 - [ ] Legacy violation to clear: `sp_atg_split_squat`, 2026-08-12, in_season, `speed` slot (deep_flexion) — pre-existing row, caught by the new flag-driven guard.
+
+## Lifting Pass C — status
+- [x] Section 1 — execution layer: 12 display-only columns, defensive derivation, RPC pure passthrough (proved live), phone screenshot at `scripts/audits/evidence/execution-layer-phone.png`.
+- [x] Section 2 — standards: 265 lb bodyweight cap, per-implement med-ball marks (4/6/10 lb), target disclaimer on every surface.
+- [x] Section 3 — quality tracks: emphasis ordering, never filters, weak-track weekly exposure floor.
+- [x] Section 4 — reload detector: hard/soft signals, guardrails, cold-start wave, plain-English reason.
+- [ ] Section 5 — wave: built but NOT wired, `lifting_v2_enabled` false. Full diff by group in `scripts/audits/evidence/wave-diff.json` — sets never move, only reps in main_compound / unilateral / upper. Awaiting owner sign-off before wiring.

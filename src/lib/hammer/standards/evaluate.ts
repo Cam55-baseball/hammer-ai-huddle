@@ -11,6 +11,7 @@
 import {
   STANDARDS,
   TIER_ORDER,
+  effectiveBodyweight,
   trainingAgeMeets,
   type StandardDef,
   type StandardTier,
@@ -79,6 +80,8 @@ interface SlugBest {
   maxReps: number;
   maxDistance: number;
   maxSeconds: number;
+  /** Best distance keyed by the implement weight it was thrown with. */
+  maxDistanceByImplement: Record<number, number>;
 }
 
 export interface BestIndex {
@@ -87,7 +90,7 @@ export interface BestIndex {
 }
 
 function emptyBest(): SlugBest {
-  return { loadPairs: [], maxReps: 0, maxDistance: 0, maxSeconds: 0 };
+  return { loadPairs: [], maxReps: 0, maxDistance: 0, maxSeconds: 0, maxDistanceByImplement: {} };
 }
 
 export function buildBestIndex(sets: LoggedSet[]): BestIndex {
@@ -103,7 +106,14 @@ export function buildBestIndex(sets: LoggedSet[]): BestIndex {
       if (w !== null && w > 0 && reps !== null && reps > 0) b.loadPairs.push({ weight: w, reps });
       if (reps !== null) b.maxReps = Math.max(b.maxReps, reps);
       const d = num(r.distance);
-      if (d !== null) b.maxDistance = Math.max(b.maxDistance, d);
+      if (d !== null) {
+        b.maxDistance = Math.max(b.maxDistance, d);
+        // A throw logged with an implement weight also banks against that
+        // implement, so per-ball marks never mix 4 lb and 10 lb throws.
+        if (w !== null && w > 0) {
+          b.maxDistanceByImplement[w] = Math.max(b.maxDistanceByImplement[w] ?? 0, d);
+        }
+      }
       const t = num(r.duration) ?? num(r.time);
       if (t !== null) b.maxSeconds = Math.max(b.maxSeconds, t);
       // Bodyweight-only sets still count for a rep ladder.
@@ -143,7 +153,9 @@ export interface StandardProgress {
   bestSlug: string | null;
 }
 
-function bestValueFor(def: StandardDef, idx: BestIndex, bw: number | null): { value: number | null; slug: string | null } {
+function bestValueFor(def: StandardDef, idx: BestIndex, rawBw: number | null): { value: number | null; slug: string | null } {
+  // % BW marks are calculated against a bodyweight capped at 265 lb.
+  const bw = effectiveBodyweight(rawBw);
   switch (def.metric) {
     case "mph": {
       const v = def.metricKey ? idx.canonical[def.metricKey] : undefined;
@@ -178,8 +190,14 @@ function bestValueFor(def: StandardDef, idx: BestIndex, bw: number | null): { va
       let slug: string | null = null;
       for (const s of def.slugs) {
         const b = idx.bySlug[s];
-        if (b && b.maxDistance > best) {
-          best = b.maxDistance;
+        if (!b) continue;
+        // Per-implement marks read only throws logged with that ball. No
+        // logged throw with that implement means no value, so no award.
+        const v = def.implementLbs
+          ? (b.maxDistanceByImplement[def.implementLbs] ?? 0)
+          : b.maxDistance;
+        if (v > best) {
+          best = v;
           slug = s;
         }
       }
@@ -278,8 +296,9 @@ export function standardsForSlug(slug: string): StandardDef[] {
 
 /** Target load in lbs for a % BW mark — used for the on-card target line. */
 export function targetLoadLbs(def: StandardDef, tier: StandardTier, bw: number | null): number | null {
-  if (def.metric !== "load_pct_bw_at_reps" || !bw || bw <= 0) return null;
-  return Math.round((def.targets[tier] / 100) * bw);
+  const capped = effectiveBodyweight(bw);
+  if (def.metric !== "load_pct_bw_at_reps" || !capped) return null;
+  return Math.round((def.targets[tier] / 100) * capped);
 }
 
 /** Tiers newly cleared by `after` that were not cleared by `before`. */

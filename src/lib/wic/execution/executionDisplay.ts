@@ -157,13 +157,17 @@ export function deriveExecutionDisplay(
     // ── set_range_max → "3–5 sets" ────────────────────────────────────────
     // The doctrine's count is ALWAYS the minimum. A max at or below it is a
     // no-op, not a reduction — this layer can never lower a set count.
+    // Banned in-season for the same reason as open_ended: "up to five sets" is
+    // open-ended volume on a day the ceiling says 6 movements in 30 minutes.
     let setsLabel: string | null = null;
     const rangeMax = positiveInt(src.set_range_max);
     const doctrineSets = positiveInt(src.sets);
     if (rangeMax !== null && doctrineSets !== null) {
-      if (!eligible) suppressed.push("set_range_max:slot_not_eligible");
+      if (inSeason) suppressed.push("set_range_max:in_season");
+      else if (!eligible) suppressed.push("set_range_max:slot_not_eligible");
       else if (rangeMax > doctrineSets) setsLabel = `${doctrineSets}–${rangeMax} sets`;
     }
+
 
     // ── density_target_seconds ────────────────────────────────────────────
     let densityLabel: string | null = null;

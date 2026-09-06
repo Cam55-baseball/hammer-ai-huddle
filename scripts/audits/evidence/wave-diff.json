@@ -1,0 +1,7893 @@
+{
+  "generated_at": "2026-09-06T22:47:32.991Z",
+  "note": "wave.ts is not wired into the generator and lifting_v2_enabled is false. This is a preview diff only.",
+  "sets_changed": 0,
+  "combinations_compared": 1920,
+  "changed": 784,
+  "by_group": {
+    "main_compound": {
+      "compared": 240,
+      "changed": 212,
+      "rep_delta_min": -3,
+      "rep_delta_max": 3
+    },
+    "unilateral": {
+      "compared": 240,
+      "changed": 196,
+      "rep_delta_min": -3,
+      "rep_delta_max": 3
+    },
+    "upper": {
+      "compared": 480,
+      "changed": 376,
+      "rep_delta_min": -2,
+      "rep_delta_max": 2
+    },
+    "trunk": {
+      "compared": 240,
+      "changed": 0,
+      "rep_delta_min": 0,
+      "rep_delta_max": 0
+    },
+    "carry": {
+      "compared": 240,
+      "changed": 0,
+      "rep_delta_min": 0,
+      "rep_delta_max": 0
+    },
+    "arm_care": {
+      "compared": 240,
+      "changed": 0,
+      "rep_delta_min": 0,
+      "rep_delta_max": 0
+    },
+    "accessory": {
+      "compared": 240,
+      "changed": 0,
+      "rep_delta_min": 0,
+      "rep_delta_max": 0
+    }
+  },
+  "rows": [
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x6",
+      "after": "5x5"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x6",
+      "after": "4x5"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x6",
+      "after": "5x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "5x6",
+      "after": "5x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x6",
+      "after": "5x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x6",
+      "after": "5x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x4",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x7",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x7",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x7"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x7"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x7",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x7",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x7"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x7"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x7",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x7",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x7"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x7"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x8",
+      "after": "4x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q1",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x8"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x2",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x2",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "5x2",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "6x3",
+      "after": "6x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "6x3",
+      "after": "6x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "6x3",
+      "after": "6x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "6x3",
+      "after": "6x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "6x3",
+      "after": "6x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x6",
+      "after": "4x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x6",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x6",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x6"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x4",
+      "after": "4x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x5",
+      "after": "5x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q2",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x2",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "5x3",
+      "after": "5x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x5",
+      "after": "4x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q3",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x2",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x2"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "4x3",
+      "after": "4x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x1"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x1",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x4",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x4",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x5",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "3x4",
+      "after": "3x3"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "os_q4",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "3x3",
+      "after": "3x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x3",
+      "after": "3x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x2"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x2",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "1x4",
+      "after": "1x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "1x4",
+      "after": "1x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "1x4",
+      "after": "1x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "1x4",
+      "after": "1x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "1x4",
+      "after": "1x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "1x4",
+      "after": "1x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "1x5",
+      "after": "1x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "1x5",
+      "after": "1x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "1x5",
+      "after": "1x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "1x6",
+      "after": "1x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "1x6",
+      "after": "1x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "1x6",
+      "after": "1x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "1x6",
+      "after": "1x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "1x3",
+      "after": "1x6"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x4",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x4",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x4",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x4",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x4"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x3"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "in_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x3",
+      "after": "2x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x7",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x7",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x7",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x7",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x7",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x7",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x5"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "compound_lower",
+      "group": "main_compound",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x5",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x7",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x7",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x8",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "unilateral_lower",
+      "group": "unilateral",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x7",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x7",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_push",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 0,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "2x7",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x7",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 2,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 4,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x7"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 7,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 1,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 2,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": false,
+      "before": "3x8",
+      "after": "3x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 3,
+      "cnsClamped": true,
+      "before": "2x8",
+      "after": "2x6"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": false,
+      "before": "2x6",
+      "after": "2x8"
+    },
+    {
+      "phase": "post_season",
+      "role": "upper_pull",
+      "group": "upper",
+      "trainingAgeYears": 12,
+      "weekInBlock": 4,
+      "cnsClamped": true,
+      "before": "2x6",
+      "after": "2x8"
+    }
+  ]
+}

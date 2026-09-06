@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { FAMILIES, TIER_LABEL, type StandardFamily, type StandardTier } from "@/lib/hammer/standards/catalog";
+import { FAMILIES, STANDARDS_BW_CAP_LBS, STANDARDS_TARGET_DISCLAIMER, TIER_LABEL, type StandardFamily, type StandardTier } from "@/lib/hammer/standards/catalog";
 import { useStandards } from "@/hooks/useStandards";
 import type { StandardProgress } from "@/lib/hammer/standards/evaluate";
 
@@ -139,7 +139,9 @@ export function StandardsBoard({ className }: { className?: string }) {
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Marks you can earn from sets you already log. They never change your sets, reps or load —
-          your plan still owns those. This is the ceiling we are building toward.
+          your plan still owns those. This is the ceiling we are building toward.{" "}
+          {STANDARDS_TARGET_DISCLAIMER} Loaded marks are calculated at a bodyweight of{" "}
+          {STANDARDS_BW_CAP_LBS} lb or your own, whichever is lower.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
