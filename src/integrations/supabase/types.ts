@@ -16784,6 +16784,63 @@ export type Database = {
           },
         ]
       }
+      wk_standard_attempts: {
+        Row: {
+          bodyweight_lbs: number | null
+          chronological_age: number | null
+          created_at: string
+          family: string
+          id: string
+          metric: string
+          movement_slug: string
+          observed_value: number
+          plan_date: string
+          reps_at_value: number | null
+          sample_size: number
+          source: string
+          standard_id: string
+          training_age_band: string
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          bodyweight_lbs?: number | null
+          chronological_age?: number | null
+          created_at?: string
+          family: string
+          id?: string
+          metric: string
+          movement_slug: string
+          observed_value: number
+          plan_date: string
+          reps_at_value?: number | null
+          sample_size?: number
+          source?: string
+          standard_id: string
+          training_age_band: string
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          bodyweight_lbs?: number | null
+          chronological_age?: number | null
+          created_at?: string
+          family?: string
+          id?: string
+          metric?: string
+          movement_slug?: string
+          observed_value?: number
+          plan_date?: string
+          reps_at_value?: number | null
+          sample_size?: number
+          source?: string
+          standard_id?: string
+          training_age_band?: string
+          unit?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       wk_standard_awards: {
         Row: {
           bodyweight_lbs: number | null
