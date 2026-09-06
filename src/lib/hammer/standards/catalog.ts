@@ -177,9 +177,7 @@ export function effectiveBodyweight(bw: number | null | undefined): number | nul
 export const STANDARDS_TARGET_DISCLAIMER =
   "A target seeded from field benchmarks — not yet validated on Hammers athletes.";
 
-  /** Internal-only provenance. Never rendered to athletes. */
-  internalProvenance: string;
-}
+
 
 /**
  * Loaded marks are expressed as % of bodyweight so that the ladder scales with
