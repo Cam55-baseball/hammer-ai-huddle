@@ -515,3 +515,189 @@ compound path. Not changed here, as instructed.
    spine under load). `full_range_dip` is currently handled by season legality.
 2. Compound-lift rotation has no day seed (§3.11).
 3. Tier-0 copy should not list `wall` as equipment (§3.8).
+
+---
+
+## 4. Pass B — the performance pass
+
+Scope: selection only. Execution-layer and quality-track work is deliberately
+out of this pass so that if the matrix moves, exactly one change moved it.
+
+**Framing change carried into this pass.** Earlier passes required an empty
+dose diff. That requirement no longer applies to rotation: a different movement
+can carry a different `cns_cost`, so doses may legitimately differ. The
+replacement test is `doctrine.ts` byte-identical, every dose inside its
+envelope, zero new fatals. (In the event, the diff came out empty anyway —
+§4.7 — because rotation moved which movement was picked without moving any
+resolved dose in the enumerated space.)
+
+### 4.1 Compound rotation — near-best band
+
+`pickBestByCanonicalCategory` consumed no day seed, so the ranking picked the
+same winner every day. Every gate is untouched. Only the final selection among
+already-legal candidates changed:
+
+```
+score as before  →  band = candidates within `fraction` of the top score
+                 →  pick seed % band.length
+```
+
+`supabase/functions/_shared/wic/lift/rotationBand.ts`, `rotation_band_v1`.
+
+The band is defined against the observed spread, `threshold = lo + fraction ×
+(top − lo)`, not as a literal `≥ 0.9 × top`. `varietyPenalty` can drive scores
+negative, and a literal fraction of a negative number inverts the comparison.
+The spread form reduces to `≥ fraction × top` for a non-negative range anchored
+at zero, behaves correctly for negatives, and **always contains the top
+candidate**, so the band can never be empty. A one-member band is byte-identical
+to the old behaviour.
+
+**28-day sweep** (`scripts/audits/evidence/rotation-band-sim.ts`):
+
+| setting | distinct compounds / category | mean band width | mean score cost | longest same-movement run |
+|---|---|---|---|---|
+| always best | 5.97 | 1 | 0 | 2 |
+| 0.95 | 10.83 | 6.20 | 0.0044 | 2 |
+| 0.90 | 10.87 | 6.61 | 0.0047 | 2 |
+| 0.85 | 10.87 | 6.62 | 0.0047 | 2 |
+
+**0.95 is the setting.** It captures essentially all of the available variety —
+10.83 of the 10.87 that the loosest band reaches — for 0.44% mean score cost.
+Going to 0.90 buys 0.04 additional distinct movements and widens the band by
+0.4 candidates. The goal is maximum development, not maximum variety, so the
+tightest band that gets the variety wins. Longest run is 2 at every setting,
+including always-best, so nothing here is being driven by run length.
+
+Determinism is proved by generating the same athlete and date twice and
+diffing: identical across both runs.
+
+### 4.2 Schedule enforcement
+
+Two tables hold games, and both are readable server-side by the generator's
+service role:
+
+| table | date | time | rows | users |
+|---|---|---|---|---|
+| `gp_games` | `game_date` | `scheduled_time` | 3 | 2 |
+| `calendar_events` (`event_type = 'game'`) | `event_date` | `start_time` | 0 | 0 |
+
+**Two users have a schedule, three games total, and not one of them has a
+time.** That is the honest state of the data, and it means the 18:00 default
+is currently doing all of the work. The rule engine is correct; the input is
+nearly empty. Rules are pure and live in
+`supabase/functions/_shared/wic/schedule/gameProximity.ts` (`game_proximity_v1`):
+
+1. **48 hours.** Nothing above primer intensity within 48 real hours of a game.
+   A game with no time is read as 18:00 — the conservative choice, because an
+   evening game keeps the whole preceding day inside the window.
+2. **Doubleheader.** Two or more games on one date drops the CNS cap by one for
+   that day and the next.
+3. **Pitchers.** No roster carries a starting-pitcher field, so a pitcher
+   adjacent to a team game defaults to primer-level only. The athlete's own
+   "I'm starting this game" toggle on the calendar game entry removes the lift.
+
+**An empty schedule returns `NO_SCHEDULE`** — every field neutral, deep-equal
+to the constant, so the generator behaves exactly as it did before this module
+existed. A pitcher with no games at all also returns `NO_SCHEDULE`: the pitcher
+default must not leak into a week with no baseball in it.
+
+**Primer survivors** are `low`, `supplemental`, `arm_care`, `elastic`.
+Deliberately excluded: `moderate`, because by name it is above a primer; and
+`unilateral`, because that describes a limb pattern, not an intensity — a
+single-leg squat under load is still load. An unclassified movement (460 active
+rows) does not survive either: unknown is not safe.
+
+Arm care runs under its own domain and is untouched by the primer filter, for
+the same reason it was untouched by `eccentric_overload` — arm care exists
+*for* the season.
+
+### 4.3 Shoulder end-range flag
+
+**Definition, for the record: shoulder end range under load.** Not shoulder
+work generally, and not eccentric control. Same shape as the
+overload-not-control line from Stage 3.
+
+Backfilled by reading cues rather than names — the Stage 1 lesson was that a
+name-pattern backfill misses precisely the movements that do the dangerous
+thing under a name that does not say so. Nine rows carry
+`shoulder_end_range = true`: `full_range_dip`, `ring_dip`,
+`dumbbell_pullover_hold`, `straight_arm_dumbbell_pullover`, `lift_db_snatch`,
+`lift_hang_power_snatch`, `lift_push_jerk`, `lift_split_jerk`,
+`block_power_snatch` — bottom-of-dip shoulder extension, overhead catch
+positions, and end-range lay-back under a load behind the head.
+
+**Considered and left false.** Overhead press variants that stop at lockout:
+lockout is end of *range of motion*, not end of *joint range* — the shoulder is
+stacked, not stretched. Behind-the-neck work would qualify, but no active row
+prescribes it. Bench press was considered for the deep-bench case; the catalog
+does not distinguish depth on a bench row, so flagging every bench press would
+cost the pressing pool to catch a variant we cannot currently identify. Left
+false and recorded rather than guessed.
+
+Wiring: `shoulder_end_range = true` → `in_season = false` for **throwing
+athletes**, and out of the warm-up slot for everyone. The one-off
+`full_range_dip` season override from Stage 3 is removed; the flag now carries
+that decision, which is the point of having a flag.
+
+### 4.4 Warm-ups
+
+`modalityBias` was hard-coded `null` in `dailyPlan.ts`. It is now derived from
+the slots that actually landed in today's plan, priority ordered by CNS cost:
+speed → lift → throwing → hitting. Nothing trainable today leaves the bias
+`null` and the resolver behaves exactly as before.
+
+**Minimum-drill fallback:** a bias may only ever *add* specificity. If the
+biased template resolves thinner than the unbiased one (fewer than four
+drills), the athlete keeps the unbiased warm-up.
+
+**One authority.** `warmupLibrary.ts` now chooses every warm-up. The LLM path
+(`useWarmupGenerator` → the `generate-warmup` edge function) selected its own
+competing list with no shared legality, dose, equipment honesty or single-leg
+law. Its selection is retired: the hook composes from the library and the only
+thing left to prose is the reasoning line, which is copy. The AI-credit gate
+went with it — there is no longer any credit to spend on this path.
+
+The ≥60% single-leg share and the existing deterministic warm-up rotation are
+unchanged.
+
+### 4.5 Small fixes
+
+- **A wall is not equipment.** `wall`, `floor`, `ground`, `mat`, `chair`,
+  `step`, `stairs`, `curb` now resolve to tier 0 and are filtered out of the
+  "Needs:" line on the swap sheet. Nobody is blocked from a drill for lack of a
+  wall, so a wall must never make a tier-0 option read as gear.
+- **Persisted order wins.** The client sorted lifts by `sequence_role` before
+  rendering, which silently undid a coach pin — the pin rewrites
+  `sequence_order`, and the re-sort threw it away, so a pinned lift snapped
+  back on the athlete's screen. The client now renders in persisted
+  `sequence_order` and never re-sorts.
+- **`duplicate_sets_reps` scoped to the dose group.** Two accessories landing
+  on 3×10 is the doctrine working as designed — the envelope for that group
+  *is* 3×10. Keyed on dose group, the warning now only fires where a genuine
+  duplicate prescription would show.
+
+### 4.6 Stage 4 items — status
+
+1. Shoulder end-range flag — **closed** (§4.3).
+2. Compound rotation had no day seed — **closed** (§4.1).
+3. Tier-0 copy listing `wall` as equipment — **closed** (§4.5).
+
+### 4.7 Evidence
+
+| check | result |
+|---|---|
+| rotation band widths | 6.2 mean at 0.95, table in §4.1 |
+| determinism | identical across two runs of the same athlete + date |
+| schedule report | 2 tables, 2 users, 3 games, 0 with a time |
+| no-schedule behaviour | deep-equal `NO_SCHEDULE`, 10/10 rule cases pass |
+| pitcher default | primer-only when adjacent; lift removed on self-declared start |
+| shoulder flag | 9 rows true, borderline calls recorded, `full_range_dip` override removed |
+| generation matrix | 1,296 / 1,296 cells, tier `full` × 1,296, 0 empty |
+| fatals | 0 across all 1,296 cells |
+| `doctrine.ts` | sha256 `3b77cea0…` before and after — byte-identical |
+| dose diff | 774,400 combinations, 0 differences |
+| family coverage | all 10 families reachable with no equipment |
+| drift guard | 55 flagged movements, 0 in-season violations, 0 in warm-up / speed |
+| dosage units | 808 movements, 0 violations |
+| domain integrity | 808 movements, 0 violations |
+| fault-ledger tests | 8 / 8 pass |
