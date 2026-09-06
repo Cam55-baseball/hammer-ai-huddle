@@ -144,6 +144,7 @@ import {
   isRepDosed as doctrineIsRepDosed,
   isWithinEnvelope,
 } from "../_shared/wic/dosage/doctrine.ts";
+import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 
 
 
