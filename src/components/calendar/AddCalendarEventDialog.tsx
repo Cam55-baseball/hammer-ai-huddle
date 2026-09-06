@@ -221,32 +221,48 @@ export function AddCalendarEventDialog({
               />
             </div>
 
-            {/* Time Selection */}
+            {/* Time Selection. For a game the start time is not cosmetic: the
+                48-hour rule that protects the day before and the day after a
+                game is measured from it. Without one we assume 6pm, which is
+                the conservative read but often the wrong one. */}
             {!allDay && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="startTime" className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    {t('calendar.form.startTime', 'Start')}
-                  </Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                  />
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="startTime" className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {eventType === 'game'
+                        ? t('calendar.form.firstPitch', 'First pitch')
+                        : t('calendar.form.startTime', 'Start')}
+                    </Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="endTime">{t('calendar.form.endTime', 'End')}</Label>
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endTime">{t('calendar.form.endTime', 'End')}</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                  />
-                </div>
+                {eventType === 'game' && !startTime && (
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      'calendar.form.gameTimeHelp',
+                      'No time yet? We\u2019ll assume 6pm when protecting the days either side of this game. Add the real time and your plan shifts with it.',
+                    )}
+                  </p>
+                )}
               </div>
             )}
+
 
             {/* Color */}
             <div className="space-y-2">
