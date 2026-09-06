@@ -128,3 +128,58 @@ Newest first. Each entry: what changed, what I verified myself, what remains unv
   drill-recommendation perf, RecruitingStandards, ScoutEvaluation toggles, tempo pipeline,
   PIE V2 scoring, UHRC buildReport. None are in the surfaces touched this round; the perf
   ones vary run to run (6 vs 7 files across two runs).
+
+## 2026-09-06 — Coaching-stage write, role gating, nutrition audit
+
+### Item 3 — "Watch this next" showed no videos
+- **Correction to an earlier claim in this session.** I first reported that `analysis_fault_findings`
+  had no table grants. That was wrong — `information_schema.role_table_grants` simply returns nothing
+  for the read role. `pg_class.relacl` shows `anon/authenticated/service_role` were granted by the
+  original creating migration (`20260905220444_...sql` lines 21–22). The re-issued GRANT was a no-op.
+- **Verified:** the service role CAN insert into `analysis_fault_findings` (probe insert under
+  `SET LOCAL ROLE service_role`, then deleted). The write path is not permission-blocked.
+- **Verified:** the table was empty despite 6 recent runs; edge-function logs for `analyze-video`
+  have aged out, so the exact reason the live write produced nothing is **not proven**. The write is
+  now fully instrumented (below) so the next real run names its own failure.
+- **Backfilled** every historical finding deterministically from `videos.ai_analysis ->
+  violations_detected`, using the same map as `_shared/faultFindings.ts`. Nothing was invented.
+  Result: **483 rows** — hitting 293, pitching 160, throwing 30.
+- Library coverage for those correction keys (verified by query):
+  `hands_forward_early` 11 videos, `keep_hands_back` 8, `shoulders_turning_early` 7,
+  `staying_inside_the_ball` 2, `barrel_stays_behind_hands` 1. Sample titles: "Barry Bonds & Alex
+  Rodriguez Talk Hitting", "Executing Elite Contact with Manny", "Getting to contact like an Elite Pro".
+  **No library video carries any pitching or throwing correction key** — those domains will still say
+  so out loud rather than pad. Not retagged.
+- (b) Failure no longer swallowed: `analyze-video` returns `fault_persistence {persisted, attempted,
+  error}`, stamps `video_analysis_runs.outcome_reason = coaching_stage_write_failed: <msg>`, and
+  `AnalysisVideoRecommendations` now renders a red banner naming the error.
+- (c) Already satisfied: the card matches on the CURRENT run's in-memory violations via
+  `analysisFeedbackToTaxonomy`, plus stored cross-domain root keys. No padding, no lowered bar.
+- (d) "Watch this next" sits directly under the detailed analysis panel, above ball flight and drills.
+- **Untested:** a live end-to-end analysis run. Requires a real upload + OpenAI call; not run here.
+
+### Item 2 — scouts/coaches must not receive Today plans
+- `HammerDailyPlan` now resolves role itself and renders an honest "your work lives on your own board"
+  card with a link to the coach/scout board — no plan, no player logging controls, never blank.
+- Server-side: `wk-generate-daily` rejects scout/coach accounts (403 `not_an_athlete_account`) and
+  requires an active subscription. `prescription-engine` had **no auth at all** — it now requires a
+  bearer token, forbids acting on another user's id, and rejects scout/coach accounts.
+- **Untested:** live 403 responses from the deployed functions.
+
+### Item 1 — nutrition logging
+- Audited every write path. All meal surfaces (Log Meal quick + detailed, Quick Nutrition Log,
+  Vault card, favourites, photo, barcode) funnel into `vault_nutrition_logs`; all drinks funnel
+  through `useHydration.addWater` into `hydration_logs`. Both invalidate `['macroProgress']` and
+  `['nutritionLogs']`, which is what the hub reads.
+- Drink carbohydrate now folds into the hub's daily carbs and calories (4 kcal/g — the only honest
+  conversion, since `hydration_logs` stores grams and no calorie figure). Electrolytes and micros are
+  read per-ounce from `hydration_beverage_database`, not treated as water.
+- `useMealVaultSync` no longer hides the real Postgres/RLS message behind a generic toast.
+- **The hydration button in the top header does not exist.** Searched every header/nav component;
+  hydration logging only appears inside the Nutrition Hub (Log Meal card's "Log drinks" and Quick
+  Actions). Nothing to remove — flagging rather than inventing a change.
+- **Untested:** a live meal save and drink save with before/after hub numbers.
+
+### Suite
+`vitest run`: **1141 passed, 4 failed** (134 files). The 4 failures are pre-existing and in untouched
+areas (UHRC `buildReport`, tempo pipeline, PIE V2 scoring, engine fuzz timing).
