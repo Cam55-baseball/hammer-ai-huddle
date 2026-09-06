@@ -104,7 +104,7 @@ const rows: WkRx[] = [
   {
     ...base,
     id: "exec-4",
-    slot: "explosive",
+    slot: "speed",
     sequence_order: 4,
     sequence_role: "primer",
     phase: "off_season",

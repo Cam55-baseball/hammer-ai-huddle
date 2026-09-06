@@ -282,9 +282,11 @@ export function WkPrescriptionCard({
             stageLabel={(why as any)?.bat_speed_stage_label ?? null}
           />
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
+            {SLOT_LABEL[rx.slot] && (
+              <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
               {SLOT_LABEL[rx.slot]}
             </Badge>
+            )}
             {rx.substituted_from_slug && !allowSwap && (
               <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/50 text-rose-700 dark:text-rose-300">
                 <ShieldCheck className="h-3 w-3" /> Injury-swap
