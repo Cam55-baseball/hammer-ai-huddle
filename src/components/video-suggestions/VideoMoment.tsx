@@ -9,6 +9,7 @@ import { trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSu
 import { dismissMomentVideo } from '@/lib/videoMoments/cooldown';
 import type { VideoMomentEvent } from '@/lib/videoMoments/types';
 import { useVideoLightbox } from "@/components/video/useVideoLightbox";
+import { VideoThumb } from "@/components/video/VideoThumb";
 
 interface Props {
   event: VideoMomentEvent;
@@ -47,9 +48,12 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
     <div className="space-y-2">
       {items.map(item => (
         <div key={item.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
-          {item.thumbnailUrl ? (
-            <img src={item.thumbnailUrl} alt="" className="h-16 w-24 rounded object-cover shrink-0" />
-PLACEHOLDER_VM
+          <VideoThumb
+            videoUrl={item.videoUrl}
+            thumbnailUrl={item.thumbnailUrl}
+            title={item.title}
+            className="h-16 w-24"
+          />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate">{item.title}</p>
             <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">

@@ -11,6 +11,7 @@ import {
 } from '@/hooks/useVideoSuggestions';
 import type { SuggestionMode, SkillDomain } from '@/lib/videoRecommendationEngine';
 import { useVideoLightbox } from "@/components/video/useVideoLightbox";
+import { VideoThumb } from "@/components/video/VideoThumb";
 
 interface Props {
   skillDomain: SkillDomain;
