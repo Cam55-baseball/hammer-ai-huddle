@@ -1152,7 +1152,7 @@ const handler = async (req: Request): Promise<Response> => {
       const repDosed = !isTotalDose && doctrineIsRepDosed(dosageUnitRaw);
       const doseCap = (overrides as any).dose_cap as { sets?: number; reps?: number } | undefined;
       const resolvedDose = repDosed
-        ? resolveDose({
+        ? resolveWaveDose({
             phase: phaseRes.phase,
             role,
             category: s.movement.movement_category ?? s.movement.category,
@@ -1162,7 +1162,7 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: clamped,
             capSets: doseCap?.sets ?? null,
             capReps: doseCap?.reps ?? null,
-          })
+          }, liftingV2Enabled)
         : null;
       const finalSets = resolvedDose
         ? resolvedDose.sets
