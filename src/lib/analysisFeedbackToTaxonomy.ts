@@ -204,6 +204,9 @@ const MOVEMENT_TO_RESULT: Record<string, string[]> = {
   th_long_arm_action: ['th_slow_pop_time'],
   th_slow_transfer: ['th_slow_pop_time', 'th_late_to_bag'],
   th_no_crow_hop: ['th_short_hopped'],
+  th_low_elbow_slot: ['th_sailed_high'],
+  short_arm: ['th_sailed_high'],
+  th_late_glove_break: ['th_slow_pop_time'],
   // pitching (baseball)
   bb_trunk_rotation_early: ['bb_arm_side_miss', 'bb_flat_fastball_plane'],
   bb_front_side_flyout: ['bb_arm_side_miss'],
