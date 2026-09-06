@@ -16,10 +16,10 @@ import {
 } from "@/lib/analysisToTaxonomy";
 import type { SkillDomain } from "@/lib/videoRecommendationEngine";
 import {
-import { useVideoLightbox } from "@/components/video/useVideoLightbox";
   useVideoSuggestions,
   trackVideoWatched,
 } from "@/hooks/useVideoSuggestions";
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
 
 const SCORE_FLOOR = 0.65;
 
