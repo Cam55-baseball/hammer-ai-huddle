@@ -87,6 +87,15 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
         <h3 className="font-semibold text-sm">Watch this next</h3>
       </div>
 
+      {persistenceError && (
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          We couldn't save what this analysis found, so it won't count toward your history or
+          cross-skill patterns. The picks below still come from this run. ({persistenceError})
+        </p>
+      )}
+
+
+
       {!hasFeedbackKeys ? (
         <p className="text-sm text-muted-foreground">
           This analysis didn't flag a fault we can match a video to.
