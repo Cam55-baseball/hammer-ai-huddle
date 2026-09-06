@@ -39,14 +39,11 @@ if (catErr) {
 
 const rows = flagged ?? [];
 const deepFlexion = rows.filter((r) => r.deep_flexion).map((r) => r.slug);
-// A row may declare a phase legal on purpose (ROM-limited maintenance work).
-// The guard respects that declaration and only polices the rest.
-const restrictedByPhase: Record<string, string[]> = {};
-for (const phase of IN_SEASON_PHASES) {
-  restrictedByPhase[phase] = rows
-    .filter((r) => (r.season_legality as Record<string, unknown> | null)?.[phase] !== true)
-    .map((r) => r.slug);
-}
+// A flagged movement is barred in-season, period. `season_legality` does NOT
+// grant an exemption — a catalog edit must never be able to disarm the guard.
+// The single documented exception is the ROM-limited maintenance slug.
+const IN_SEASON_ALLOWLIST = new Set(["kot_atg_split_squat"]);
+const restricted = rows.filter((r) => !IN_SEASON_ALLOWLIST.has(r.slug)).map((r) => r.slug);
 
 console.log(
   `[drift-guard] catalog: ${rows.length} flagged movements ` +
@@ -57,7 +54,7 @@ let failed = false;
 
 // ─── Guard 1: no flagged movement inside a competitive phase ────────────────
 for (const phase of IN_SEASON_PHASES) {
-  const slugs = restrictedByPhase[phase];
+  const slugs = restricted;
   if (slugs.length === 0) continue;
   const { data: violations, error } = await supabase
     .from("wk_prescriptions")
