@@ -143,6 +143,9 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   th_long_arm_action: 'th_shorten_arm_circle',
   th_slow_transfer: 'th_glove_to_chest_transfer',
   th_no_crow_hop: 'th_crow_hop_through_target',
+  short_arm: 'clean_arm_path',
+  th_low_elbow_slot: 'clean_arm_path',
+  th_late_glove_break: 'th_four_seam_exchange',
   // pitching (baseball)
   bb_trunk_rotation_early: 'bb_delay_trunk_rotation',
   bb_front_side_flyout: 'bb_stay_closed_longer',
@@ -151,6 +154,8 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   bb_release_point_drift: 'bb_repeat_release_point',
   bb_poor_deceleration: 'bb_decelerate_through_finish',
   bb_hip_shoulder_sep_loss: 'bb_stay_closed_longer',
+  bb_leg_lift_unbalanced: 'bb_stride_to_power_line',
+  bb_arm_path_late: 'bb_finish_out_front',
   // pitching (softball)
   sb_shoulders_open_early: 'sb_stay_closed_through_whip',
   sb_plant_leg_collapse: 'sb_block_with_plant_leg',
@@ -159,6 +164,19 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   sb_replant_drift: 'sb_drive_down_power_line',
   sb_weak_drive_push: 'sb_drive_down_power_line',
   sb_brush_contact_missed: 'sb_finish_brush_contact',
+  sb_whip_arm_early: 'sb_repeat_release_window',
+  sb_short_stride: 'sb_drive_down_power_line',
+};
+
+/**
+ * A movement can have more than one honest answer. These are the additional
+ * corrections a coach would give alongside the primary one above.
+ */
+const MOVEMENT_TO_EXTRA_CORRECTIONS: Record<string, string[]> = {
+  flat_path: ['stay_through_ball'],
+  steep_attack_angle: ['stay_through_ball'],
+  head_pull_off: ['improve_adjustability'],
+  th_low_elbow_slot: ['th_four_seam_exchange'],
 };
 
 /**
