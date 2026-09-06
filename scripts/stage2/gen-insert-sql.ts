@@ -23,6 +23,18 @@ function norm(n: string): string {
   return n.toLowerCase().replace(/\s[—–-]\s.*$/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+// Map Appendix A vocabularies onto the catalog's existing values — Stage 2 adds
+// no new category, no new dosage unit and no new intensity class.
+const CATEGORY_MAP: Record<string, string> = {
+  joint_armor: "kot",
+  plyometrics: "speed_lab",
+  power: "compound",
+  core: "trunk",
+  mobility: "warmup",
+};
+const UNIT_MAP: Record<string, string> = { distance_feet: "feet" };
+const INTENSITY_MAP: Record<string, string> = { intensive: "high" };
+
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const arr = (a: string[]) => `'{${a.join(",")}}'`;
 const ageCode = (t: MovementRow["training_age_legality"]) =>
@@ -48,7 +60,7 @@ function sqlFor(rows: MovementRow[]): string {
   const values = rows
     .map(
       (m) =>
-        `(${q(m.name)},${q(m.slug)},${q(m.dosage_unit)},${q(m.substitution_family)},${arr(m.equipment_requirements)},${m.cns_cost},${m.min_age_years},${m.min_training_age_years},${q(ageCode(m.training_age_legality))},${m.season_legality.in_season},${m.recovery_window_hours},${m.deep_flexion},${m.eccentric_overload},${m.game_day_legal},${m.intensity_mode ? q(m.intensity_mode) : "null"})`,
+        `(${q(m.name)},${q(m.slug)},${q(UNIT_MAP[m.dosage_unit] ?? m.dosage_unit)},${q(m.substitution_family)},${arr(m.equipment_requirements)},${m.cns_cost},${m.min_age_years},${m.min_training_age_years},${q(ageCode(m.training_age_legality))},${m.season_legality.in_season},${m.recovery_window_hours},${m.deep_flexion},${m.eccentric_overload},${m.game_day_legal},${m.intensity_mode ? q(INTENSITY_MAP[m.intensity_mode] ?? m.intensity_mode) : "null"})`,
     )
     .join(",\n  ");
   return `insert into wk_movement_catalog
@@ -56,7 +68,7 @@ function sqlFor(rows: MovementRow[]): string {
   cns_cost,min_age_years,min_training_age_years,training_age_legality,season_legality,recovery_window_hours,
   deep_flexion,eccentric_overload,game_day_legal,practice_day_legal,sport_scope,governance_version,
   cue,why_prescribed,is_active,phase_allow,season_eligibility,intensity_class)
-select v.name,v.slug,${q(g.category)},${q(g.movement_category)},v.unit,v.fam,v.equip,v.equip,
+select v.name,v.slug,${q(CATEGORY_MAP[g.category] ?? g.category)},${q(g.movement_category)},v.unit,v.fam,v.equip,v.equip,
   v.cns,v.min_age,v.min_ta,
   case v.age_code when 'all' then '{"beginner":true,"intermediate":true,"advanced":true}'::jsonb
                   when 'int' then '{"beginner":false,"intermediate":true,"advanced":true}'::jsonb
