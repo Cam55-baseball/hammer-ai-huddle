@@ -126,3 +126,18 @@ describe("execution layer — copy", () => {
     expect(d.intentLabel).toBe("Max strength");
   });
 });
+
+describe("in-season bans open-ended volume", () => {
+  it("suppresses a set range in-season and keeps the doctrine's count", () => {
+    const d = deriveExecutionDisplay({
+      slot: "supplemental",
+      phase: "in_season",
+      sets: 3,
+      set_range_max: 5,
+      open_ended: true,
+    } as never);
+    expect(d.setsLabel).toBeNull();
+    expect(d.repsSuffix).toBe("");
+    expect(d.suppressed).toContain("set_range_max:in_season");
+  });
+});
