@@ -119,10 +119,16 @@ export interface CoachContextDraft {
   coaching_philosophy?: string | null;
 }
 
-export async function saveCoachContext(userId: string, draft: CoachContextDraft) {
+/** See saveScoutContext — `complete` stamps the explicit completion flag. */
+export async function saveCoachContext(
+  userId: string,
+  draft: CoachContextDraft,
+  opts: { complete?: boolean } = {},
+) {
   const { error } = await supabase.from("coach_context").upsert(
     {
       user_id: userId,
+      ...(opts.complete ? { completed_at: new Date().toISOString() } : {}),
       org_name: draft.org_name?.trim() || null,
       program_name: draft.program_name?.trim() || null,
       seasons_run: draft.seasons_run ?? null,
