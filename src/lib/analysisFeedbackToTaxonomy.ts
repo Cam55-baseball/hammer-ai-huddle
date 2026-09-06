@@ -268,10 +268,20 @@ export function analysisFeedbackToTaxonomy(
     }
   }
 
+  // …and the outcomes that pattern produces, so result-layer tags are matchable.
+  const result = new Set<string>();
+  for (const m of movement) {
+    for (const r of MOVEMENT_TO_RESULT[m] ?? []) {
+      result.add(r);
+      evidence[`result:${r}`] ??= evidence[`movement_pattern:${m}`] ?? 'your analysis flagged this pattern';
+    }
+  }
+
   return {
     skillDomain,
     movementPatterns: [...movement],
     correctionTags: [...correction],
+    resultTags: [...result],
     evidence,
   };
 }
