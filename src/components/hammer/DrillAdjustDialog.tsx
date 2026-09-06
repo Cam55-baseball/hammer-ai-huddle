@@ -55,6 +55,14 @@ export function DrillAdjustDialog({ open, onOpenChange, modality, drill, onSave 
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Alternatives arrive asynchronously; preselect the least gear-dependent one
+  // as soon as we have it, without stomping a choice the athlete already made.
+  useEffect(() => {
+    if (choice === "__skip__" && alternatives.length > 0) setChoice(alternatives[0].name);
+  }, [alternatives, choice]);
+
+
+
 
   const submit = async () => {
     setSaving(true);
