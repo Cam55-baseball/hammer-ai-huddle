@@ -23,7 +23,11 @@ import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 
 import { resolveLiftTemplate } from "../../../supabase/functions/_shared/wic/lift/templates.ts";
-import { resolveDose, isRepDosed } from "../../../supabase/functions/_shared/wic/dosage/doctrine.ts";
+import { isRepDosed } from "../../../supabase/functions/_shared/wic/dosage/doctrine.ts";
+import { resolveWaveDose } from "../../../supabase/functions/_shared/wic/dosage/wave.ts";
+
+/** Matrix honours the live flag; override with LIFTING_V2=1/0 for A/B runs. */
+const LIFTING_V2 = process.env.LIFTING_V2 === "1";
 import { validate } from "../../../supabase/functions/_shared/wic/validator.ts";
 import { buildSafePlan } from "../../../supabase/functions/_shared/wic/safePlan.ts";
 import { checkSafetyGate } from "../../../supabase/functions/_shared/wic/domainGate.ts";
@@ -182,14 +186,14 @@ for (const phase of PHASES) {
             const unit = c.dosage_unit ?? "reps";
             const repDosed = isRepDosed(unit);
             const dose = repDosed
-              ? resolveDose({
+              ? resolveWaveDose({
                   phase,
                   role,
                   category: c.category,
                   dosageUnit: unit,
                   trainingAgeYears: ta.years,
                   weekInBlock: 2,
-                })
+                }, LIFTING_V2)
               : null;
             return {
               engine: "lift",
