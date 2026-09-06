@@ -24,6 +24,13 @@ vi.mock("@/hooks/useScoutAccess", () => ({ useScoutAccess: () => ({ isScout: fal
 vi.mock("@/hooks/useRankingsVisibility", () => ({
   useRankingsVisibility: () => ({ visible: false, loading: false }),
 }));
+vi.mock("@/hooks/usePlayerModuleAccess", () => ({
+  usePlayerModuleAccess: () => ({
+    hasPlayerAccess: true,
+    hasPurchasedModule: true,
+    loading: false,
+  }),
+}));
 vi.mock("@/hooks/useLanguage", () => ({ useLanguage: () => ({ currentLanguage: "en" }) }));
 vi.mock("@/hooks/useSubscription", () => ({
   useSubscription: () => ({ modules: subscriptionState.modules }),
