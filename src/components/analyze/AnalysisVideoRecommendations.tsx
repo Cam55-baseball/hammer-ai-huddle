@@ -135,17 +135,29 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
         </p>
       ) : (
         <div className="space-y-2">
-          {suggestions.map(({ video, reasons }) => (
+          {suggestions.map(({ video, reasons, relevance }) => (
             <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
-              {video.thumbnail_url ? (
-                <img src={video.thumbnail_url} alt="" className="h-16 w-24 rounded object-cover shrink-0" />
-              ) : (
-                <div className="h-16 w-24 rounded bg-muted shrink-0 flex items-center justify-center">
-                  <Play className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
+              <VideoThumb
+                videoUrl={video.video_url}
+                thumbnailUrl={video.thumbnail_url}
+                title={video.title}
+                className="h-16 w-24"
+              />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{video.title}</p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-sm font-medium truncate">{video.title}</p>
+                  {relevance === 'general' && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
+                      General
+                    </Badge>
+                  )}
+                </div>
+                {relevance === 'general' && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    General work for {phase ? `where you are ${phase}` : 'your situation'} — not a fix for a fault
+                    in this clip.
+                  </p>
+                )}
                 <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
                   {reasons.slice(0, 2).map((r, i) => (
                     <li key={i} className="line-clamp-2">• {r}</li>
