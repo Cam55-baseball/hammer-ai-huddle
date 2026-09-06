@@ -21,14 +21,13 @@ const REQUIRED_META = [
   "season_eligibility",
   "equipment",
   "joint_stress",
-  "recovery_cost",
   "volume_cost",
   "bias",
   "duplicate_group",
   "recovery_window_hours",
 ] as const;
 
-const { data: catalog, error: catErr } = await db.from("wk_movement_catalog").select("slug,name,movement_pattern,primary_adaptation,season_eligibility,equipment,joint_stress,recovery_cost,volume_cost,bias,duplicate_group,recovery_window_hours");
+const { data: catalog, error: catErr } = await db.from("wk_movement_catalog").select("slug,name,movement_pattern,primary_adaptation,season_eligibility,equipment,joint_stress,volume_cost,bias,duplicate_group,recovery_window_hours");
 if (catErr) throw catErr;
 
 let missingCount = 0;
