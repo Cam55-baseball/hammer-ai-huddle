@@ -23,6 +23,8 @@ export interface FeedbackSignals {
   movementPatterns: string[];
   /** Correction-layer keys the analysis is effectively prescribing. */
   correctionTags: string[];
+  /** Ball-flight / outcome keys the flagged pattern is known to produce. */
+  resultTags: string[];
   /** `layer:key` → the plain-language piece of feedback that produced it. */
   evidence: Record<string, string>;
 }
