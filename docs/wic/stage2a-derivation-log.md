@@ -347,3 +347,171 @@ Active catalog: 538 → **790**. Total rows 808 (18 retired, held inactive).
 | catalog governance (`gov_v1`) | 808 / 808 = 100% |
 | dosage units / domain integrity | 808 movements, 0 violations each |
 | dose diff | **0 differences across 774,400 combinations**, `doctrine.ts` byte-identical |
+
+---
+
+## Stage 3 — Fault Ledger, family ladders, swap wiring (evidence pass)
+
+### 3.1 What I did NOT run before claiming it
+Two items in my previous summary were asserted without being executed in that
+turn: the 1,296-cell matrix and this log's Stage 3 section. Both are now run and
+written. Recorded here because verify-don't-trust only works if the record of
+what was skipped is as durable as the record of what passed.
+
+### 3.2 Ledger schema and access rules
+`public.wk_fault_signals` — one row per observed signal, never per conclusion.
+
+| column | notes |
+|---|---|
+| `source` | CHECK: complaint, report_card, video_analysis, standards_gap, grade_low, log_trend, daily_checkin, coach_note, game_hub |
+| `discipline` | CHECK: hitting, throwing, fielding, running, lifting |
+| `fault_key` | the observation as named by the source |
+| `root_pattern_id` | the shared cause — the collapse key |
+| `confidence` | 0–1, default 0.5 |
+| `sample_size` | integer ≥ 0 — one observation is never a trend |
+| `severity` | 0–1, default 0.5 |
+| `evidence` | the plain sentence the athlete reads |
+| `observed_at` | when it was seen, not when it was written |
+| `engine_version` | pinned for replay |
+
+Indexes: `(user_id, observed_at DESC)`, `(user_id, root_pattern_id)`.
+
+RLS — the athlete owns the row for all four operations. A coach reads via
+`public.is_coach_of(auth.uid(), user_id)`. A scout reads only with the scout
+role AND `athlete_recruiting_consent.visibility_enabled` AND, for a minor,
+`parent_authorized`. Scouts and coaches never write. No policy grants anon.
+
+### 3.3 The ten families and their full ladders
+Every ladder is ordered by equipment tier: 0 = nothing at all, 1 = a band or a
+wall, 2 = hand weights, 3 = barbell or a real gym. **Every family has a tier-0
+rung, and that is the rule that matters.** An athlete with no equipment, in a
+hotel room, at 10pm, still gets the same job done. A ladder whose bottom rung
+needs a squat rack is a ladder that quits on the athlete who needs it most —
+so `check-family-coverage.ts` fails the build if any family loses its tier-0
+rung, if a rung is retired or superseded, if tier 0 is not legal in all four
+season phases or gated above age 14, or if fewer than three rungs are usable.
+
+Coverage run: all 10 families pass — rungs 6–7 of 6–7 usable, tier0 = 1 each.
+
+| family | tier-0 rung |
+|---|---|
+| hip flexor capacity | split-stance iso hold |
+| deceleration base (shin/calf) | tibialis raise (wall) |
+| posterior chain eccentric | reverse Nordic |
+| ankle dorsiflexion | kneeling ankle rocks |
+| adductor / groin | Copenhagen, short lever |
+| shoulder health | scapular CARs |
+| rotational output | deep hip load |
+| landing / elastic | double pogo |
+| trunk anti-extension | Pallof iso |
+| grip / forearm | forearm pump |
+
+### 3.4 Ranking formula
+Per signal: `confidence × severity × sampleWeight × recencyWeight`, where
+`sampleWeight = log10` scaled so ten observations ≈ 1.0, and `recencyWeight`
+has a 21-day half-life with a 0.05 floor — old evidence fades, it never
+vanishes. Signals sharing a `root_pattern_id` are summed, then multiplied by an
+agreement factor: `1 + 0.35 × (sources − 1) + 0.25 × (disciplines − 1)`.
+
+### 3.5 Root-pattern collapse, proven
+Two synthetic signals, same `root_pattern_id`, different disciplines and
+different sources:
+
+```
+hitting alone : 1 entry  score 0.3117
+throwing alone: 1 entry  score 0.3117
+both together : 1 entry  score 0.9975
+family: rotational_output | hitting+throwing | video_analysis+report_card | n = 8
+athlete reads: "Your hips and chest turn together. It shows up in your
+                hitting and throwing. Seen 8 times."
+```
+
+One entry, not two, and 0.9975 > 0.3117 — and above the plain sum, 0.6234,
+because two independent parts of the game agreeing is stronger evidence than
+either twice. Genuinely different patterns stay separate (verified). Empty
+ledger returns `[]` — it invents nothing. 8/8 tests pass in
+`src/test/faultLedger.test.ts`.
+
+### 3.6 Cold start — Stage 3 changed no plan
+Baseline built from commit `7795d0c4`, the last commit before
+`src/lib/wic/faultLedger/` existed, in a separate worktree. Both the baseline
+and HEAD generated the full 1,296-cell matrix; the two JSON outputs were
+normalised only for timestamps and diffed: **0 lines of difference**. An athlete
+with an empty ledger gets the byte-identical card they got before Stage 3.
+
+(My first attempt at this diff was wrong twice over: the worktree was at a
+commit that already contained the new code, and the normaliser threw on both
+sides, so an "empty diff" was two errors cancelling. Redone against the correct
+commit with a normaliser that runs. Stated because a passing check that never
+ran is worse than a failing one.)
+
+### 3.7 Matrix and dose diff
+- Matrix: 790 active rows, **1,296 / 1,296 cells `full`**, 0 empty, 0 missing cards.
+- Dose diff: `doctrine.ts` sha256 identical before and after (`3b77ce…`),
+  774,400 combinations compared, **0 differences**. Stage 3 did not move a set
+  or a rep.
+
+### 3.8 Swap walked end to end (deceleration base)
+Athlete taps "I can't do this one" on Tibialis Raise, Loaded:
+
+| athlete's profile | tier | offered |
+|---|---|---|
+| Full gym | 3 | all 6 rungs, tier-0 first |
+| Barbell at home | 3 | all 6 rungs |
+| Dumbbells only | 2 | 6 rungs (nothing above tier 2 in this family) |
+| A band and a wall | 1 | 3 rungs |
+| Nothing at all | 0 | tier-0 rung |
+| Unreadable profile | 0 | tier-0 rung, unrecognised value raised nothing |
+
+Each rung shows "Same job: stopping and changing direction" plus what it needs.
+Open point for Stage 4: this family's tier-0 rung lists `wall` as equipment, so
+the athlete with nothing reads "You'd need: wall". True but graceless — a wall
+is not equipment and the copy should not pretend otherwise.
+
+### 3.9 Equipment wiring — the heuristic is gone
+`DrillAdjustDialog` previously passed `gear ? 1 : 2` — a guess, and a guess that
+could round an athlete **up** into equipment they don't own. It now reads
+`athlete_equipment_context` through `useAthleteEquipmentTier` and passes the
+real tier.
+
+Distinct values live in that table today: `overload_bat`, `underload_bat`,
+`gamer_bat`, `pitching_machine`, `tee` (one row, one user). **None of these are
+lifting equipment, so all five map to tier 0** — correctly. An expired
+`valid_until` also maps to tier 0.
+
+The asymmetry is deliberate and written into the module: an unrecognised value
+raises nothing. Offering a barbell to an athlete who has none fails them worse
+than offering a bodyweight option to an athlete who had more.
+
+### 3.10 Troubleshooting tags seeded
+`troubleshooting_tags` populated on **61 ladder movements** from each family's
+own vocabulary — the athlete's words, not ours: "burning in the front of the
+shin", "lower back takes over", "can't control the way down", "loud landings".
+
+### 3.11 Rotation investigation (evidence only — nothing changed)
+The question was whether `daySeed` collapses. It does not — and that is not
+where the 77 repeats come from.
+
+- `daySeed` in `dailyPlan.ts` is `year*366 + month*31 + date`. Over Aug–Sep
+  2026: **62 distinct values for 62 days**, consecutive gaps of 1 or 2, and
+  even reduced mod 5 / 7 / 11 it hits every residue. The seed is healthy.
+- It reaches **warm-ups and arm care only**. `pickForRole` scans from
+  `seed % pool.length`, so rotation is real wherever the pool has depth.
+- **Compound lifts consume no day seed at all.** The pick is
+  `StrengthEngine.compoundSlugsFor(phase, dayOfWeek)` → `pickBestByCanonicalCategory`,
+  a deterministic ranking with no jitter input. Same phase, same pool, same
+  winner.
+- Plan history confirms it, and worse than "same weekday repeats":
+  `goblet_squat` appears 14 times across **7 distinct weekdays** and 12 distinct
+  dates; `back_squat_concentric` 10 times across 6 weekdays. Even `dayOfWeek`
+  does not change the outcome, because the ranking picks the same top movement
+  regardless.
+
+Diagnosis: the repeats are not a broken seed, they are a **missing** one on the
+compound path. Not changed here, as instructed.
+
+### 3.12 Stage 4 items opened
+1. No flag exists for shoulder end-range risk (`deep_flexion` is knee, hip and
+   spine under load). `full_range_dip` is currently handled by season legality.
+2. Compound-lift rotation has no day seed (§3.11).
+3. Tier-0 copy should not list `wall` as equipment (§3.8).

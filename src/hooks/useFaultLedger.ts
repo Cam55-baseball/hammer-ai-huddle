@@ -15,6 +15,10 @@ import {
   laddersAtOrBelow,
   type EquipmentTier,
 } from "@/lib/wic/faultLedger/families";
+import {
+  resolveEquipmentTier,
+  type EquipmentTierResult,
+} from "@/lib/wic/faultLedger/equipmentTier";
 
 export function useFaultLedger(days = 120) {
   const { user } = useAuth();
@@ -79,6 +83,32 @@ export function useFamilyAlternatives(slug: string | undefined, tier: EquipmentT
           } satisfies FamilyAlternative;
         })
         .filter((x): x is FamilyAlternative => x !== null);
+    },
+  });
+}
+
+/**
+ * The athlete's real equipment tier, read from their own profile.
+ * Falls back to tier 0 (nothing at all) whenever the profile is missing,
+ * expired, or says nothing we recognise — never upward.
+ */
+export function useAthleteEquipmentTier() {
+  const { user } = useAuth();
+  return useQuery<EquipmentTierResult>({
+    queryKey: ["athlete-equipment-tier", user?.id],
+    enabled: !!user?.id,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("athlete_equipment_context")
+        .select("equipment,valid_until,confidence")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      const expired = data?.valid_until ? new Date(data.valid_until).getTime() < Date.now() : false;
+      if (!data || expired) return resolveEquipmentTier([]);
+      return resolveEquipmentTier((data.equipment as string[] | null) ?? []);
     },
   });
 }
