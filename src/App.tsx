@@ -116,6 +116,8 @@ const CoachDigest = lazyWithRetry(() => import("./pages/CoachDigest"));
 const ForecastSurface = lazyWithRetry(() => import("./pages/ForecastSurface"));
 const Today = lazyWithRetry(() => import("./pages/Today"));
 const TodaySession = lazyWithRetry(() => import("./pages/TodaySession"));
+// DEV-only Stage 1 evidence surface. Never routed in a production build.
+const EvidenceSafeSession = lazyWithRetry(() => import("./pages/EvidenceSafeSession"));
 const OpsHealth = lazyWithRetry(() => import("./pages/ops/OpsHealth"));
 const OpsReplay = lazyWithRetry(() => import("./pages/ops/OpsReplay"));
 const OpsDrift = lazyWithRetry(() => import("./pages/ops/OpsDrift"));
