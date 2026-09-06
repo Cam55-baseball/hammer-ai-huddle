@@ -1,0 +1,6 @@
+metric,pass_count,total,pct
+catalog_governance_v1,344,812,42
+published_no_duplicates,308,308,100
+published_full_body,289,308,94
+published_gov_stamped,308,308,100
+published_context_traceable,308,308,100
