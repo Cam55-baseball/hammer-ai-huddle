@@ -33,7 +33,7 @@ async function main() {
   const { data: diag } = await db
     .from("wk_generation_diagnostics")
     .select(
-      "id,plan_date,user_id,validation_status,day_type,is_game_day,lift_category_coverage,lift_template_id,lift_full_body_ok,lift_duplicate_check_ok,lift_substitution_completeness,exercise_governance_version,athlete_context_version,personalization_version,training_age_version,context_version",
+      "id,plan_date,user_id,validation_status,resolved_day_type,lift_category_coverage,lift_template_id,lift_full_body_ok,lift_duplicate_check_ok,lift_substitution_completeness,exercise_governance_version,athlete_context_version,personalization_version,training_age_version,context_version",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -45,7 +45,7 @@ async function main() {
   // lift slot scheduled (game day / travel). An empty lift block on a day that
   // should have had one still fails — otherwise this audit goes blind to the
   // regression where the lift block silently vanishes.
-  const NO_LIFT_DAYS = new Set(["game", "travel"]);
+  const NO_LIFT_DAYS = new Set(["game", "game_day", "travel", "travel_day"]);
   const coverageEmpty = (r: Record<string, unknown>) => {
     const c = r.lift_category_coverage;
     if (c == null) return true;
@@ -54,7 +54,7 @@ async function main() {
     return false;
   };
   const exempt = published.filter(
-    (r) => coverageEmpty(r as never) && (r.is_game_day === true || NO_LIFT_DAYS.has(String(r.day_type ?? ""))),
+    (r) => coverageEmpty(r as never) && NO_LIFT_DAYS.has(String(r.resolved_day_type ?? "").toLowerCase()),
   );
   const exemptIds = new Set(exempt.map((r) => r.id));
   const fullBodyScope = published.filter((r) => !exemptIds.has(r.id));
