@@ -8,3 +8,9 @@
 
 ## Deferred (per product reframe)
 - Record Now → multi-rep session metrics surface (per-pitch / per-swing), separate from Upload's mechanics report card.
+
+## Lifting Stage 1 — outstanding evidence (owner-required)
+- [ ] Generation matrix: 6 phases × 5 training-age bands × 3 equipment levels × 3 ages × 4 day types, card produced in 100% of cells.
+- [ ] Dose diff: one athlete, one date, before/after — `sets`/`reps` diff must be empty.
+- [ ] Phone-width screenshot of the Safe Session card.
+- [ ] Legacy violation to clear: `sp_atg_split_squat`, 2026-08-12, in_season, `speed` slot (deep_flexion) — pre-existing row, caught by the new flag-driven guard.
