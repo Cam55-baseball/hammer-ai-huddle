@@ -68,7 +68,7 @@ function sqlFor(rows: MovementRow[]): string {
   cns_cost,min_age_years,min_training_age_years,training_age_legality,season_legality,recovery_window_hours,
   deep_flexion,eccentric_overload,game_day_legal,practice_day_legal,sport_scope,governance_version,
   cue,why_prescribed,is_active,phase_allow,season_eligibility,intensity_class)
-select v.name,v.slug,${q(CATEGORY_MAP[g.category] ?? g.category)},${q(g.movement_category)},v.unit,v.fam,v.equip,v.equip,
+select v.name,v.slug,${q(CATEGORY_MAP[g.category] ?? g.category)},${q(g.movement_category)},v.unit,v.fam,v.equip::text[],v.equip::text[],
   v.cns,v.min_age,v.min_ta,
   case v.age_code when 'all' then '{"beginner":true,"intermediate":true,"advanced":true}'::jsonb
                   when 'int' then '{"beginner":false,"intermediate":true,"advanced":true}'::jsonb
