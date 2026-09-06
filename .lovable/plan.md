@@ -1,37 +1,27 @@
-# Close Today-plan input and fallback failures
+# Close out Lifting Stage 1
 
-## What will change
+Stage 1 code work is done (spec committed, name-collision fix, Safe Plan ladder, ordering gaps, safety flags + flag-driven guard, feature flag, data report). Four items are still open — three are evidence, one is a legacy data row.
 
-1. **Make equipment chat save real data**
-   - Detect equipment statements in the Hammer chat path using a deterministic equipment vocabulary.
-   - Save confirmed items through the existing authenticated equipment writer as a persistent equipment profile with a chat-specific source.
-   - Return a plain confirmation listing exactly what was saved; when wording is ambiguous, show the interpreted list and ask for correction without claiming a save.
-   - Refresh the athlete context and Today plan immediately after a successful save, and expose save failures plainly.
+## What's still missing
 
-2. **Never replace a prescription with a question**
-   - Replace the hitting “waiting on equipment” card with a useful equipment-free/default hitting prescription and a one-line assumption that can be corrected.
-   - Replace the strength “waiting on lifting history” state with a conservative beginner-safe prescription plus an explicit assumption.
-   - Audit every Today-plan modality and post-processor so missing context can narrow or soften a plan, but cannot leave a request-only or blank card.
-   - Prevent completion controls when a card has no actual prescribed work; failed information saves remain visibly incomplete.
+1. **Generation matrix** — 6 season phases x 5 training-age bands x 3 equipment levels x 3 ages x 4 day types (1,080 cells), confirming a card is produced in every cell.
+2. **Dose diff** — one athlete, one date, generated before vs after Stage 1; the `sets`/`reps` diff must be empty (proof no dose moved).
+3. **Phone-width screenshot** of the reduced/Safe Session card as an athlete actually sees it.
+4. **One legacy violation** flagged by the new guard: a deep-flexion movement sitting in a speed slot on an in-season date (Aug 12). Pre-existing, not caused by Stage 1.
 
-3. **Repair athlete-facing copy**
-   - Replace raw context keys such as `equipment_effective` with curated labels and complete sentences.
-   - Sweep Today-plan titles, reasons, steps, and missing-context prompts for slugs, internal identifiers, and half-interpolated text.
+## How each gets closed
 
-4. **Make game-day defense deliberate and visible**
-   - Keep Defense visible on game days as a short, position-specific pregame primer with reduced volume and an explicit “save your legs” explanation.
-   - Preserve the general-fundamentals fallback when position is unknown, with the same light game-day treatment.
-   - Ensure schedule and weekly-rest processing cannot erase this game-day primer.
-
-5. **Regression and end-to-end verification**
-   - Add focused tests for equipment parsing, no-empty-card behavior, clean copy, and game-day defense.
-   - Deploy and invoke the updated Hammer chat function.
-   - In an authenticated preview session, submit equipment through the same card chat, verify the saved database row (`user_id`, persistent scope, equipment, chat source), refresh/regenerate Today, and record the rendered hitting and defense card text.
-   - Run the relevant tests and confirm the preview build and runtime logs are clean.
+- Matrix and dose diff run as a headless harness against the generator with synthetic athlete contexts, writing a CSV of every cell plus a pass/fail summary. No writes to real athlete plans.
+- Screenshot captured from the running preview at phone width with the reduced-session state forced on.
+- The legacy row is reported, not silently deleted — you decide whether to purge it or leave it as history.
 
 ## Technical notes
 
-- Reuse `save_equipment_context`; no new table or parallel storage path.
-- The signed-in account remains the only authority for the saved `user_id`.
-- Equipment parsing will be deterministic and testable; the language model will not be trusted to claim persistence.
-- Existing injury, safeguarding, and parent-authority restrictions continue to outrank fallback prescriptions.
+- Harness lives under `scripts/audits/`, invoked with a service-role key; it calls the generator's session builder directly rather than the deployed function, so no prescriptions are persisted.
+- The dose diff compares the pre-Stage-1 `wk_prescriptions` snapshot for the chosen athlete/date against a fresh dry-run generation, diffing only `movement_slug`, `sets`, `reps`, `duration_seconds`.
+- The five audit scripts still cannot run here without a service-role key; the harness surfaces the same fatal/warn counts once the key is available.
+- Nothing in `dosage/doctrine.ts`, `wk_persist_prescriptions_atomic`, slots, movement categories, or the constitution priority order is touched.
+
+## Blocker
+
+The matrix, dose diff and screenshot all need a service-role key or an authorized owner session in this environment. Without one, they cannot be produced — confirm you can supply access, or these stay open.
