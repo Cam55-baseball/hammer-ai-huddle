@@ -162,7 +162,7 @@ Loaded barbell spinal work (back squat, deadlift, good morning, loaded Jefferson
 
 ## 6. Acceptance evidence — required every stage
 
-1. Generation matrix: 6 phases × 5 training-age bands × 3 equipment levels × 3 ages × 4 day types = 1,080 runs. A card produced in 100% of cells.
+1. Generation matrix: 6 phases × 6 training-age bands (C2) × 3 equipment levels × 3 ages × 4 day types = 1,296 runs. A card produced in 100% of cells.
 2. Zero fatals from `lift-governance-audit`, `dosage-doctrine-audit`, `check-no-inseason-eccentric`, `check-dosage-units`, `check-domain-integrity`, `check-family-coverage`.
 3. Dose diff, same athlete and date, flag off, before vs after — empty for Stages 1–5. Stage 6 ships a full diff for owner sign-off.
 4. A real phone-width screenshot of a generated card.
