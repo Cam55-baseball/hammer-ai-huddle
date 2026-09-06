@@ -42,7 +42,7 @@ export interface FamilyAlternative {
   readonly slug: string;
   readonly name: string;
   readonly tier: EquipmentTier;
-  readonly equipment: readonly string[];
+  readonly equipment: string[];
 }
 
 /** Same-purpose swaps for a movement, least gear first. Empty when unmapped. */
