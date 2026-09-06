@@ -3,6 +3,7 @@
 // Keep this file in shape-parity with supabase/functions/_shared/wic/ordering.ts.
 
 export type CanonicalSlot =
+  | "movement_prep"
   | "warmup"
   | "cross_sport"
   | "speed"
@@ -15,6 +16,8 @@ export type CanonicalSlot =
 export type CanonicalRole =
   | "arm_care"
   | "trunk_primer"
+  // BUG-3 (Stage 1) — mirrors _shared/wic/ordering.ts. Keep in lockstep.
+  | "rotation"
   | "compound_lower"
   | "unilateral_lower"
   | "upper_push"
@@ -35,7 +38,7 @@ import { CARD_REGISTRY } from "./cardRegistry";
 const REGISTRY_SLOTS: readonly CanonicalSlot[] = CARD_REGISTRY
   .flatMap((c) => c.slots as readonly string[])
   .filter((s): s is CanonicalSlot =>
-    ["warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
+    ["movement_prep", "warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
   );
 
 const SLOT_ORDER: readonly CanonicalSlot[] = REGISTRY_SLOTS;
@@ -43,6 +46,7 @@ const SLOT_ORDER: readonly CanonicalSlot[] = REGISTRY_SLOTS;
 const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
   "arm_care",
   "trunk_primer",
+  "rotation",
   "compound_lower",
   "unilateral_lower",
   "upper_push",
@@ -51,6 +55,7 @@ const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
   "trunk_finisher",
   "supplemental",
 ];
+
 
 export interface OrderableRx {
   slot: string;
