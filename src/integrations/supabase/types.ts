@@ -16155,6 +16155,7 @@ export type Database = {
           id: string
           indoor_legal: boolean | null
           intensity_class: string | null
+          is_active: boolean
           is_eccentric_dominant: boolean
           joint_stress: number | null
           min_age_years: number | null
@@ -16177,8 +16178,6 @@ export type Database = {
           progression_slug: string | null
           recovery_category: string | null
           recovery_class: string | null
-          recovery_cost: number | null
-          recovery_demand: number | null
           recovery_window_hours: number | null
           regression_slug: string | null
           replacement_pool: string[] | null
@@ -16248,6 +16247,7 @@ export type Database = {
           id?: string
           indoor_legal?: boolean | null
           intensity_class?: string | null
+          is_active?: boolean
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
           min_age_years?: number | null
@@ -16270,8 +16270,6 @@ export type Database = {
           progression_slug?: string | null
           recovery_category?: string | null
           recovery_class?: string | null
-          recovery_cost?: number | null
-          recovery_demand?: number | null
           recovery_window_hours?: number | null
           regression_slug?: string | null
           replacement_pool?: string[] | null
@@ -16341,6 +16339,7 @@ export type Database = {
           id?: string
           indoor_legal?: boolean | null
           intensity_class?: string | null
+          is_active?: boolean
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
           min_age_years?: number | null
@@ -16363,8 +16362,6 @@ export type Database = {
           progression_slug?: string | null
           recovery_category?: string | null
           recovery_class?: string | null
-          recovery_cost?: number | null
-          recovery_demand?: number | null
           recovery_window_hours?: number | null
           regression_slug?: string | null
           replacement_pool?: string[] | null
@@ -16489,7 +16486,7 @@ export type Database = {
           cns_cost: number
           created_at: string
           distance_feet: number | null
-          dosage_unit: string | null
+          dosage_unit: string
           duration_seconds: number | null
           engine: string | null
           generator_version: string | null
@@ -16502,7 +16499,7 @@ export type Database = {
           rationale: string | null
           reps: number | null
           sequence_order: number
-          sequence_role: string | null
+          sequence_role: string
           sets: number | null
           slot: string
           status: string
@@ -16522,7 +16519,7 @@ export type Database = {
           cns_cost?: number
           created_at?: string
           distance_feet?: number | null
-          dosage_unit?: string | null
+          dosage_unit: string
           duration_seconds?: number | null
           engine?: string | null
           generator_version?: string | null
@@ -16535,7 +16532,7 @@ export type Database = {
           rationale?: string | null
           reps?: number | null
           sequence_order?: number
-          sequence_role?: string | null
+          sequence_role: string
           sets?: number | null
           slot: string
           status?: string
@@ -16555,7 +16552,7 @@ export type Database = {
           cns_cost?: number
           created_at?: string
           distance_feet?: number | null
-          dosage_unit?: string | null
+          dosage_unit?: string
           duration_seconds?: number | null
           engine?: string | null
           generator_version?: string | null
@@ -16568,7 +16565,7 @@ export type Database = {
           rationale?: string | null
           reps?: number | null
           sequence_order?: number
-          sequence_role?: string | null
+          sequence_role?: string
           sets?: number | null
           slot?: string
           status?: string
