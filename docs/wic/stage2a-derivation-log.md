@@ -701,3 +701,70 @@ unchanged.
 | dosage units | 808 movements, 0 violations |
 | domain integrity | 808 movements, 0 violations |
 | fault-ledger tests | 8 / 8 pass |
+
+---
+
+## Pass C sections 2–5 — standards, quality tracks, reload detector, wave
+
+**Persistence boundary.** `wk_persist_prescriptions_atomic` now carries all
+twelve execution columns as **pure passthrough** — no default, no `COALESCE`,
+no conditional, no derivation. An absent key lands as `NULL`, exactly as before.
+Proved against the live function on a throw-away date: a row supplying all
+twelve came back with all twelve intact (`cue_ids` as an array,
+`troubleshoot_video_id` as a uuid); a row supplying none came back all `NULL`
+with its `4 × 3` dose untouched. Probe rows deleted.
+
+**Section 2 — Standards.** Loaded marks are computed against a bodyweight
+capped at **265 lb** (`effectiveBodyweight()` in `catalog.ts`), applied to both
+`load_pct_bw_at_reps` and `combined_pct_bw` and to the rendered target pounds.
+Med-ball marks are now **per implement**: 4 lb, 6 lb and 10 lb rotational
+throws are three separate marks reading only throws logged with that ball. All
+three stay visible whether or not the athlete has thrown one; without a number
+there is no value and therefore no award. Every standards surface now carries
+the required framing — a target seeded from field benchmarks, not validated on
+Hammers athletes. Zero dose authority is unchanged.
+
+**Section 3 — Quality tracks.** `_shared/wic/quality/tracks.ts`. Every athlete
+owns Power, Velocity and Work Rate at once. Gap = future − current on the 20–80
+scale; emphasis weights are the normalised gaps and sum to 1 (equal thirds when
+no gap exists). `orderByEmphasis()` is a **stable sort that never filters** — it
+returns the pool whole, and falls back to canonical order if the result is not
+the same length. Floor (a) is enforced by giving any track with zero exposure
+this week a bonus that outranks every emphasis weight; the proving test is the
+20-in-one-track / 60-in-another athlete, who still gets the weak track first.
+
+**Section 4 — Reload detector.** `_shared/wic/reload/detector.ts`. One hard
+signal (pain, illness, three nights under six hours) or two soft signals inside
+seven days (readiness ≤4 on 3 of 5, completion <70%, RIR drift up, output down
+>5%, CNS cap five days running). Guardrails: two-week minimum, fourteen-day
+cooldown, forced reload at six weeks. Cold start (<10 sessions and <7 check-ins)
+falls back to a four-week wave anchored to the athlete's own start date. Every
+reload writes a plain-English `reason`; the week after a reload returns
+`rampWeek: 1`.
+
+**Section 5 — Wave.** `resolveDose()` is untouched — verified with a clean
+`git diff` on `dosage/doctrine.ts`. The rebuild lives in a separate module,
+`_shared/wic/dosage/wave.ts`, which **nothing imports** and which returns
+`resolveDose()` verbatim when the flag is off (asserted inside the diff run).
+`lifting_v2_enabled` remains `false`. Full preview diff by group, 1,920
+combinations (`scripts/audits/evidence/wave-diff.json`):
+
+| group | compared | changed | rep delta |
+| --- | --- | --- | --- |
+| main_compound | 240 | 212 | −3 … +3 |
+| unilateral | 240 | 196 | −3 … +3 |
+| upper | 480 | 376 | −2 … +2 |
+| trunk | 240 | 0 | 0 |
+| carry | 240 | 0 | 0 |
+| arm_care | 240 | 0 | 0 |
+| accessory | 240 | 0 | 0 |
+
+**Sets never move** — every change is a rep change inside the published
+envelope, and the four volume groups are byte-identical. Stopping here for
+owner sign-off.
+
+**Tests.** `src/test/standardsCap.test.ts` (5), `src/test/qualityTracks.test.ts`
+(8), `src/test/reloadDetector.test.ts` (9), `src/test/executionDisplay.test.ts`
+(13) — 35 passing. `dosage-doctrine-audit`, `check-no-inseason-eccentric` and
+`check-family-coverage` clean, with the single allowlisted legacy row
+(`sp_atg_split_squat @ 2026-08-12`) still the only exception.
