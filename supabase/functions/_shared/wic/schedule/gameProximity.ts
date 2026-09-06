@@ -42,6 +42,12 @@ export interface GameProximity {
   primerOnly: boolean;
   /** Drop the lift entirely. */
   removeLift: boolean;
+  /**
+   * True when the game that drove this decision had no time on it, so 18:00
+   * was assumed. The athlete should be told, because a noon game and a 7pm
+   * game protect different days.
+   */
+  assumedGameTime: boolean;
   reasons: string[];
 }
 
@@ -55,10 +61,15 @@ export const NO_SCHEDULE: GameProximity = {
   cnsCapDelta: 0,
   primerOnly: false,
   removeLift: false,
+  assumedGameTime: false,
   reasons: [],
 };
 
 const DEFAULT_GAME_HOUR = 18;
+
+export function hasExplicitTime(g: ScheduledGame): boolean {
+  return /^(\d{1,2}):(\d{2})/.test(String(g.time ?? "").trim());
+}
 
 function gameInstant(g: ScheduledGame): number {
   const t = String(g.time ?? "").trim();
@@ -84,9 +95,13 @@ export function resolveGameProximity(
   const sessionInstant = new Date(`${planDate}T12:00:00Z`).getTime();
 
   let nearest: number | null = null;
+  let nearestAssumed = false;
   for (const g of games) {
     const h = Math.abs(gameInstant(g) - sessionInstant) / 3600000;
-    if (nearest === null || h < nearest) nearest = h;
+    if (nearest === null || h < nearest) {
+      nearest = h;
+      nearestAssumed = !hasExplicitTime(g);
+    }
   }
 
   const today = games.filter((g) => g.date === planDate);
@@ -96,9 +111,15 @@ export function resolveGameProximity(
   const isDayAfterDoubleheader = yesterday.length >= 2;
 
   const within48h = nearest !== null && nearest <= 48;
+  const assumedGameTime = within48h && nearestAssumed;
   if (within48h) {
     reasons.push(
       `Game within 48 hours (${Math.round(nearest as number)}h) — nothing above a primer today.`,
+    );
+  }
+  if (assumedGameTime) {
+    reasons.push(
+      "That game has no start time on it, so we assumed 6pm. Add the real time and this adjusts.",
     );
   }
 
@@ -138,6 +159,7 @@ export function resolveGameProximity(
     cnsCapDelta,
     primerOnly,
     removeLift,
+    assumedGameTime,
     reasons,
   };
 }
