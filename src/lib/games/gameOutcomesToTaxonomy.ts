@@ -206,6 +206,8 @@ export function atBatsToSignals(rows: GameAtBatRow[]): GameSignals | null {
     const cq = (r.contact_quality || "").toLowerCase();
     if (/end|cap|off_the_end/.test(cq)) result.add("end_cap_hit");
     if (/barrel|square|hard/.test(cq)) result.add("perfect_backspin_batted_ball");
+    // Extra-base damage is the outcome the "hit it farther" work aims at.
+    if (/double|triple|home_run|hr|2b|3b/i.test(r.result ?? "")) result.add("hitting_ball_farther");
   }
 
   if (context.size + result.size === 0) return null;
