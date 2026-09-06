@@ -151,3 +151,199 @@ is scheduled (game / travel). An empty lift block on a lifting day still fails.
 | domain integrity | 808 movements, 0 violations |
 | duplicate names | 0 collisions |
 | full-body | 286 / 286 in scope, 24 exempt as no-lift days |
+
+---
+
+# Stage 2b — Safety-Flag Sweep, Collision Resolution & Activation
+
+## 10. Why the Stage 1 backfill missed these (mechanism)
+
+Stage 1's flag backfill was **name-pattern based**, by specification. Every
+`deep_flexion = true` row carried ATG / KOT / sissy / slant-board in its name;
+every `eccentric_overload = true` row carried "double eccentric", "nordic",
+"depth drop" or "altitude". Nothing read a coaching cue and nothing reasoned
+about the movement.
+
+> **The false negatives are precisely the movements that do the dangerous thing
+> under a name that doesn't say so.**
+
+A five-second loaded barbell eccentric (`lift_tempo_back_squat`) read as
+in-season legal. That is the shape of the failure, and it is why the sweep was
+cue-based rather than name-based.
+
+## 11. Governing definitions (rules, not judgement calls)
+
+**`eccentric_overload` means eccentric _overload_, not eccentric _control_.**
+A light band cued "resist the eccentric" is technique. A five-second barbell
+descent is a method. Only the method earns the flag. This is the reason arm-care
+band work stays `false`: the flag bans a movement in-season, and arm care exists
+*for* the season — flagging it would delete arm care from the phase it was built
+for.
+
+**`deep_flexion` means knee, hip or spine end range under external load.**
+Bodyweight end range is not deep flexion. Shoulder end range is not deep flexion
+(see §15).
+
+**Loaded jumps are governed by `season_legality`, not by the eccentric flag.**
+Appendix A already says jumps are bodyweight-only in-season. Use the gate that
+exists rather than stretching a flag past its definition.
+
+## 12. Flag changes written (15 across 14 rows)
+
+`deep_flexion → true` (10): `lift_jefferson_curl`, `kot_jefferson_curl`,
+`kot_seated_good_morning`, `ws_seated_band_good_morning`,
+`lift_paused_front_squat`, `paused_deep_squat`, `heel_elevated_front_squat`,
+`hack_squat`, `lift_deficit_deadlift`, `summers_zercher_squat`.
+
+`eccentric_overload → true` (5): `lift_tempo_back_squat` (the worst single
+miss), `kot_seated_good_morning`, `lift_ghr`, `plyo_low_box`,
+`mar_plyo_scaffold`.
+
+| flag | before | after |
+|---|---|---|
+| `deep_flexion` | 14 | **24** |
+| `eccentric_overload` | 27 | **32** |
+
+`kot_seated_good_morning` takes **both** flags — loaded end-range spinal flexion
+*and* a slow loaded eccentric. One movement earning two different restrictions
+for two different reasons is the system working, not a double-count.
+
+## 13. Considered and deliberately left `false` — REJECTED ON PURPOSE
+
+**Do not "fix" these. Each was examined against the definitions in §11 and left
+false for a stated reason. This list exists to stop a future maintainer from
+undoing it.**
+
+- **Split squats, lunges, step-ups** (`bulgarian_split_squat`,
+  `cressey_bulgarian_ss`, `walking_lunge`, `reverse_lunge`, `petersen_step_up`,
+  and the rest of the single-leg base) — all cue a vertical shin, which is not
+  end range under load. Someone will one day read "deep knee flexion" and think
+  they spotted a miss here. **Flagging these would push the entire single-leg
+  base to 16+/advanced and gut the movement pool for every young athlete in the
+  system.** That is the whole reason this entry is written out in full.
+- **Standing good mornings** (`barbell_good_morning`, `lift_ssb_good_morning`) —
+  hinge to parallel with a hard-braced spine. Hip hinge, not spinal flexion. The
+  *seated* versions are a different movement and are flagged in §12.
+- **`lift_box_squat_wide`** — sits back to a box just below parallel; the knee
+  stays behind the toes.
+- **Bodyweight end-range mobility** (`cossack_squat`, `deep_squat_breathing`,
+  `ido_lizard_crawl`, pike and couch stretches) — end range, no external load.
+- **Calf and tibialis work** (`full_rom_calf`, `lift_kot_calf_raise`,
+  slant-board raises) — ankle end range at bodyweight. Flagging them would
+  age-gate routine ankle-health work.
+- **Arm-care band work** (`ac_crossover_iron_scap`, `ac_crossover_plyo`,
+  `ac_jband_stop_signs`, `wu_er_at_90`, `wu_jband_full_warmup`) — cues say
+  eccentric; these are light bands. Control, not overload (§11).
+- **`lift_trap_bar_jump`, `lift_band_deadlift`** — "controlled negative" and
+  "land soft" are technique cues. A loaded jump *does* land under load, and the
+  correct lever for that is `season_legality`, applied in §14.
+- **`lift_weighted_pullup_full`** — same reasoning.
+- **`full_range_dip`** — shoulder end range, outside the three joints
+  `deep_flexion` names. Handled by season legality instead (§15).
+
+## 14. Loaded jumps — season legality confirmed
+
+All 11 loaded-jump rows (`lift_trap_bar_jump`, `pap_trap_dl_to_broad_jump`,
+`bs_trapbar_jump_to_swing`, `bs_trapbar_to_mb_toss_complex`, `lift_jump_shrug`,
+`hang_jump_shrug`, `weighted_squat_jump`, `loaded_countermovement_jump`,
+`loaded_broad_jump`, `pap_rfess_to_sl_bound`, `pap_med_ball_split_squat`)
+already carry `in_season = false`. **Zero needed fixing.**
+
+## 15. `full_range_dip` — in-season false, reason: arm health
+
+`full_range_dip.season_legality.in_season` set to **false**. The reason logged
+is **arm health for a throwing athlete**, *not* deep flexion. The flag
+definition was not stretched to reach it.
+
+### STAGE 4 ITEM — no flag exists for shoulder end-range risk
+
+`deep_flexion` covers the lower body, `eccentric_overload` covers the posterior
+chain and loaded descents. **Nothing covers the shoulder — the joint this entire
+sport is built around.** Full-range dips, deep bench, behind-the-neck work and
+overhead end-range loading are currently governed one row at a time via
+`season_legality`, which does not generalise. Stage 4 should introduce an
+explicit shoulder end-range flag rather than continuing to bend the two flags
+that exist.
+
+## 16. Collision resolution
+
+**Kind A (8 groups)** — spaced-dash qualifier variants (concentric /
+double-eccentric pairs, the Oates tube trio, the inning-restart sim pair).
+Recorded as **expected behaviour**: the qualifiers are mutually exclusive and
+the resolver never sees both. No action taken.
+
+**Kind B — 18 rows retired** with `superseded_by` set to the surviving row and
+`is_active = false`. The rows stay in the database as history.
+
+| retired | superseded by |
+|---|---|
+| `cressey_bowler_squat` | `bowler_squat` |
+| `ws_dynamic_effort_squat` | `lift_dynamic_effort_squat` |
+| `ws_glute_ham_raise` | `lift_ghr` |
+| `cressey_landmine_press` | `lift_hk_landmine_press` |
+| `kot_hip_airplane` | `lift_hip_airplane` |
+| `kot_jefferson_curl` | `lift_jefferson_curl` |
+| `wu_med_ball_shot_put` | `med_ball_shot_put` |
+| `overload_bat_swings` | `bs_overload_bat_swings_v2` (Ruling 1) |
+| `underload_bat_swings` | `bs_underload_bat_swings_v2` (Ruling 1) |
+| `lift_reverse_hyper` | `ws_reverse_hyper` |
+| `kot_reverse_nordic` | `reverse_nordic` |
+| `lift_reverse_nordic` | `reverse_nordic` |
+| `cressey_1leg_hip_thrust` | `lift_sl_hip_thrust` |
+| `sissy_squat` | `lift_kot_sissy_squat` |
+| `summers_snatch_grip_rdl` | `lift_snatch_grip_rdl` |
+| `lift_tib_raise` | `tibialis_raise` (Ruling 3) |
+| `weighted_pullup_full` | `lift_weighted_pullup_full` (Ruling 2) |
+| `kot_sled_drag` | `kot_backward_sled_drag` |
+
+**Zero prescription rewrites.** The 15 historical prescriptions still attached to
+retired slugs (`overload_bat_swings` 6, `underload_bat_swings` 8,
+`weighted_pullup_full` 1) were left exactly where they were. `superseded_by` is
+a rendering and substitution pointer, never a history rewrite.
+
+### Renames (display names only, every slug frozen)
+
+- `ac_softball_windmill_hip_shoulder` → Hip-Shoulder Separation Drill, Softball Windmill
+- `heenan_hip_shoulder_sep_drill` → Hip-Shoulder Separation Drill, Standing
+- `kot_nordic_hamstring` → Nordic Hamstring Curl, Partner-Anchored
+- `nordic_curl` → Nordic Hamstring Curl, Bar-Anchored
+- `kot_tibialis_raise` → Tibialis Raise, Loaded
+
+### Tibialis merge — corrected per ruling
+
+`lift_tib_raise` retired into `tibialis_raise`. **Only
+`equipment_requirements = {wall}` was carried across.** The retiring row's
+`intensity_class = high` was **not** copied: the canonical row already carries
+`supplemental`, which is correct for a `cns_cost` 0–1 ankle movement.
+A merge that inherits the worse value is a merge that makes things worse.
+
+**Duplicate-name collisions on the active catalog: 0.**
+
+## 17. Stage 2 / 2b activation
+
+252 inactive, non-superseded rows activated in **13 batches of 20** (final batch
+12), via `scripts/stage2/activate-batches.ts`. Full smoke test between every
+batch: 1,296-cell matrix, in-season drift guard, collision count. **All 13
+batches passed**; no batch moved a fatal off zero and no cell dropped below
+`full`, so no rollback was triggered.
+
+Active catalog: 538 → **790**. Total rows 808 (18 retired, held inactive).
+
+## 18. Results
+
+| check | result |
+|---|---|
+| flag changes written | **15 across 14 rows** (`deep_flexion` 14→24, `eccentric_overload` 27→32) |
+| loaded jumps `in_season = false` | 11 / 11 already correct, 0 fixed |
+| `full_range_dip` in-season | **false**, reason: arm health |
+| shoulder end-range flag | **logged as a Stage 4 gap** (§15) |
+| retirements | 18 with `superseded_by`, **0 prescription rewrites** |
+| renames | 5 display names, 0 slugs touched |
+| duplicate-name collisions | **0** |
+| generation matrix | **1,296 / 1,296 cells, tier `full` in all**, 0 empty |
+| movements removed by tightened gates | **none** — no cell lost its card |
+| activation batches | 13 / 13 passed, 0 rollbacks |
+| in-season eccentric guard | 0 fatal (Aug 12 legacy row excused by allowlist) |
+| catalog governance (`gov_v1`) | 808 / 808 = 100% |
+| dosage units / domain integrity | 808 movements, 0 violations each |
+| dose diff | **0 differences across 774,400 combinations**, `doctrine.ts` byte-identical |
