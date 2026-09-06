@@ -133,12 +133,132 @@ export interface DomainGateContext {
   modules?: readonly string[] | null;
   /** Athlete's positions, lowercased, e.g. ["p","c"] or ["pitcher"]. */
   positions?: readonly string[] | null;
+  /** Chronological age in years. Omit when unknown — the gate then skips age. */
+  ageYears?: number | null;
+  /** Resolved training-age class from `trainingAge.ts`. */
+  trainingAgeClass?: string | null;
+  /** Resolved season phase, one of the six canonical keys. */
+  seasonPhase?: string | null;
 }
 
 export interface DomainGateResult {
   allowed: boolean;
   reason?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Fail-closed safety floor (owner ruling, 2026-09-06).
+//
+// An ungoverned row used to mean "no restriction", which is the wrong default
+// for the two gates that can hurt someone. Unknown now means *unknown*, and we
+// derive a conservative floor from fields the row already carries. This is a
+// GATE rule, not a data rule — nothing is written to the catalog.
+// ---------------------------------------------------------------------------
+
+/** Equipment that implies external load, and therefore an age floor. */
+const LOADED_EQUIPMENT = new Set([
+  "dumbbell", "kettlebell", "cable", "sled", "machine", "smith",
+  "trap_bar", "plate", "medicine_ball", "landmine",
+]);
+
+export interface SafetyFloor {
+  minAgeYears: number | null;
+  minTrainingAgeClass: string | null;
+  derived: boolean;
+  rule: string;
+}
+
+/**
+ * The age / training-age floor a movement must clear. When the catalog states
+ * a floor we use it verbatim; when it does not, we derive one from equipment
+ * and the eccentric / deep-flexion safety flags.
+ */
+export function resolveSafetyFloor(m: GateableMovement): SafetyFloor {
+  const stated = Number((m as Record<string, unknown>).min_age_years ?? 0);
+  if (Number.isFinite(stated) && stated > 0) {
+    return { minAgeYears: stated, minTrainingAgeClass: null, derived: false, rule: "catalog_min_age_years" };
+  }
+
+  const equipment = ([
+    ...(((m as Record<string, unknown>).equipment_requirements as string[] | null) ?? []),
+    ...(((m as Record<string, unknown>).equipment as string[] | null) ?? []),
+  ]).map((e) => String(e ?? "").trim().toLowerCase());
+
+  const deepFlexion = (m as Record<string, unknown>).deep_flexion === true;
+  const eccentric = (m as Record<string, unknown>).eccentric_overload === true;
+
+  if (equipment.includes("barbell") || deepFlexion || eccentric) {
+    return {
+      minAgeYears: 16,
+      minTrainingAgeClass: "advanced",
+      derived: true,
+      rule: "fail_closed:barbell_or_deep_flexion_or_eccentric->16+/advanced",
+    };
+  }
+  if (equipment.some((e) => LOADED_EQUIPMENT.has(e))) {
+    return { minAgeYears: 14, minTrainingAgeClass: null, derived: true, rule: "fail_closed:loaded_equipment->14+" };
+  }
+  return { minAgeYears: null, minTrainingAgeClass: null, derived: true, rule: "fail_closed:bodyweight->no_minimum" };
+}
+
+/** Canonical training-age ladder, in the order `trainingAge.ts` emits them. */
+export const TRAINING_AGE_LADDER = [
+  "beginner", "developing", "intermediate", "advanced", "elite", "professional",
+] as const;
+
+/**
+ * Season legality with a fail-closed default: an absent map, or an absent
+ * key, means in-season is NOT permitted. Offseason stays permitted, because a
+ * missing offseason key has never been able to hurt anyone.
+ */
+export function isSeasonLegal(m: GateableMovement, phase: string | null | undefined): boolean {
+  if (!phase) return true;
+  const map = (m as Record<string, unknown>).season_legality as Record<string, boolean> | null | undefined;
+  const inSeasonish = phase === "in_season" || phase === "post_season";
+  if (!map) return !inSeasonish;
+  const v = map[phase];
+  if (typeof v === "boolean") return v;
+  return !inSeasonish;
+}
+
+/**
+ * The safety gate. Separate from the domain gate so it can be audited on its
+ * own, but applied by `checkAthleteScope` so no caller can forget it.
+ */
+export function checkSafetyGate(
+  m: GateableMovement,
+  ctx: { ageYears?: number | null; trainingAgeClass?: string | null; seasonPhase?: string | null },
+): DomainGateResult {
+  const floor = resolveSafetyFloor(m);
+
+  if (floor.minAgeYears != null && ctx.ageYears != null && ctx.ageYears < floor.minAgeYears) {
+    return {
+      allowed: false,
+      reason: `age_floor:${floor.minAgeYears}${floor.derived ? "(derived)" : ""}>${ctx.ageYears}`,
+    };
+  }
+
+  if (floor.minTrainingAgeClass && ctx.trainingAgeClass) {
+    const need = TRAINING_AGE_LADDER.indexOf(floor.minTrainingAgeClass as typeof TRAINING_AGE_LADDER[number]);
+    const have = TRAINING_AGE_LADDER.indexOf(ctx.trainingAgeClass as typeof TRAINING_AGE_LADDER[number]);
+    if (need >= 0 && have >= 0 && have < need) {
+      return { allowed: false, reason: `training_age_floor:${floor.minTrainingAgeClass}(derived)>${ctx.trainingAgeClass}` };
+    }
+  }
+
+  // Explicit catalog training-age legality still wins where it is stated.
+  const taMap = (m as Record<string, unknown>).training_age_legality as Record<string, boolean> | null | undefined;
+  if (taMap && ctx.trainingAgeClass && taMap[ctx.trainingAgeClass] === false) {
+    return { allowed: false, reason: `training_age_legality:${ctx.trainingAgeClass}` };
+  }
+
+  if (!isSeasonLegal(m, ctx.seasonPhase)) {
+    return { allowed: false, reason: `season_legality:${ctx.seasonPhase}` };
+  }
+
+  return { allowed: true };
+}
+
 
 function normalizePositions(list: readonly string[] | null | undefined): Set<string> {
   const out = new Set<string>();
@@ -227,8 +347,11 @@ export function checkAthleteScope(
     }
   }
 
-  return { allowed: true };
+  // Fail-closed safety floor — applied last so its reason is never masked by a
+  // relevance gate. Unknown age / training age / season is skipped, not guessed.
+  return checkSafetyGate(m, ctx);
 }
+
 
 /** Convenience wrapper for pool filtering. */
 export function passesDomainGate(m: GateableMovement, ctx: DomainGateContext): boolean {

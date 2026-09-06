@@ -1,6 +1,7 @@
 metric,pass_count,total,pct
-catalog_governance_v1,344,812,42
+catalog_governance_v1,808,808,100
 published_no_duplicates,310,310,100
-published_full_body,287,310,93
+published_full_body,286,286,100
+full_body_exempt_no_lift_day,24,310,8
 published_gov_stamped,310,310,100
 published_context_traceable,310,310,100

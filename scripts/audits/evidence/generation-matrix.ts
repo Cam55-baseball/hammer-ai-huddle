@@ -2,7 +2,7 @@
  * Stage 1 acceptance evidence #1 — Generation matrix.
  *
  * Spec (docs/wic/lifting-enhancement-plan-v4.md §6.1):
- *   6 phases × 5 training-age bands × 3 equipment levels × 3 ages × 4 day types
+ *   6 phases × 6 training-age bands × 3 equipment levels × 3 ages × 4 day types
  *   = 1,080 runs. A card must be produced in 100% of cells.
  *
  * Pure / in-process, following the house pattern of
@@ -26,6 +26,7 @@ import { resolveLiftTemplate } from "../../../supabase/functions/_shared/wic/lif
 import { resolveDose, isRepDosed } from "../../../supabase/functions/_shared/wic/dosage/doctrine.ts";
 import { validate } from "../../../supabase/functions/_shared/wic/validator.ts";
 import { buildSafePlan } from "../../../supabase/functions/_shared/wic/safePlan.ts";
+import { checkSafetyGate } from "../../../supabase/functions/_shared/wic/domainGate.ts";
 
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -37,13 +38,18 @@ const db = createClient(url, key);
 
 // ─── Matrix axes ────────────────────────────────────────────────────────────
 const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "in_season", "post_season"] as const;
+// The six bands `trainingAge.ts` actually emits. The earlier five-band list
+// included `novice` / `trained`, which the classifier never produces, and
+// omitted `professional` entirely — so that axis was testing fiction.
 const TRAINING_AGE_BANDS: Array<{ band: string; years: number }> = [
   { band: "beginner", years: 0.5 },
-  { band: "developing", years: 2 },
-  { band: "intermediate", years: 4 },
-  { band: "advanced", years: 8 },
-  { band: "elite", years: 12 },
+  { band: "developing", years: 1.5 },
+  { band: "intermediate", years: 2.5 },
+  { band: "advanced", years: 4 },
+  { band: "elite", years: 8 },
+  { band: "professional", years: 12 },
 ];
+
 const EQUIPMENT_LEVELS: Array<{ level: string; available: string[] }> = [
   { level: "bodyweight", available: ["bodyweight", "none"] },
   { level: "minimal", available: ["bodyweight", "none", "band", "bands", "dumbbell", "dumbbells", "kettlebell", "mat", "wall", "bench"] },
@@ -93,7 +99,7 @@ async function loadCatalog(): Promise<Cat[]> {
     const { data, error } = await db
       .from("wk_movement_catalog")
       .select(
-        "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years,min_training_age_years,season_eligibility,game_day_legal,deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet,default_total_reps,category",
+        "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years,min_training_age_years,season_eligibility,season_legality,training_age_legality,game_day_legal,deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet,default_total_reps,category",
       )
       .eq("is_active", true)
       .range(from, from + PAGE - 1);
@@ -106,7 +112,9 @@ async function loadCatalog(): Promise<Cat[]> {
 
 const equipOf = (c: Cat) => (c.equipment_requirements ?? c.equipment ?? []).map((e) => String(e).toLowerCase());
 
-function eligible(c: Cat, cell: { phase: string; age: number; taYears: number; available: string[]; isGameDay: boolean }) {
+function eligible(c: Cat, cell: { phase: string; age: number; taYears: number; band: string; available: string[]; isGameDay: boolean }) {
+  // Real gate, not a copy of it — the same code the generator runs.
+  if (!checkSafetyGate(c as never, { ageYears: cell.age, trainingAgeClass: cell.band, seasonPhase: cell.phase }).allowed) return false;
   if (cell.available.length > 0) {
     const need = equipOf(c).filter((e) => e && e !== "none" && e !== "bodyweight");
     if (!need.every((e) => cell.available.includes(e))) return false;
@@ -148,7 +156,7 @@ for (const phase of PHASES) {
         for (const dayType of DAY_TYPES) {
           const isGameDay = dayType === "game";
           const isRecoveryDay = dayType === "recovery";
-          const cell = { phase, age, taYears: ta.years, available: eq.available, isGameDay };
+          const cell = { phase, age, taYears: ta.years, band: ta.band, available: eq.available, isGameDay };
 
           const template = resolveLiftTemplate({
             seasonPhase: phase,
@@ -232,11 +240,11 @@ writeFileSync(
   ),
 );
 
-console.log(`[matrix] cells: ${results.length} (expected 1080)`);
+console.log(`[matrix] cells: ${results.length} (expected 1296)`);
 console.log(`[matrix] tiers:`, byTier);
 console.log(`[matrix] cells with no card: ${empty.length}`);
 console.log(`[matrix] evidence → ${outPath}`);
-if (results.length !== 1080 || empty.length > 0) {
+if (results.length !== 1296 || empty.length > 0) {
   console.error("[matrix] ❌ FAILED — a cell produced no card, or the axis count is wrong.");
   process.exit(1);
 }
