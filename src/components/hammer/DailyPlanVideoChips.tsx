@@ -16,6 +16,7 @@ import { useVideoSuggestions, trackVideoWatched } from "@/hooks/useVideoSuggesti
 import { aggregateWeaknessClustersToTaxonomy } from "@/lib/analysisToTaxonomy";
 import type { SkillDomain } from "@/lib/videoRecommendationEngine";
 import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
 
 const MODALITY_TO_DOMAIN: Partial<Record<ModalityKey, SkillDomain>> = {
   hitting: "hitting",
@@ -48,6 +49,7 @@ function dismiss(videoId: string) {
 }
 
 export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
   const skillDomain = MODALITY_TO_DOMAIN[modality];
   const [tick, setTick] = useState(0);
@@ -147,7 +149,7 @@ export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
               className="h-7 px-2 text-[10px] shrink-0"
               onClick={() => {
                 if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
-                window.open(video.video_url, "_blank");
+                openVideo({ id: video.id, title: video.title, video_url: video.video_url, thumbnail_url: video.thumbnail_url });
               }}
             >
               Watch
@@ -170,6 +172,7 @@ export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
       <Badge variant="outline" className="text-[9px]">
         Long-term · 24h dismiss
       </Badge>
+      {videoLightbox}
     </div>
   );
 }

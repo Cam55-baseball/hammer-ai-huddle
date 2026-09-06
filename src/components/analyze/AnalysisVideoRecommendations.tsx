@@ -6,18 +6,24 @@
  * the athlete's feedback, we say so. A popular or recent video is not an answer
  * to a fault it was never tagged for.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bookmark, Heart, Play, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoSuggestions, trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSuggestions';
 import { useCrossDomainFaults } from '@/hooks/useCrossDomainFaults';
+import { useRecentFaultKeys } from '@/hooks/useRecentFaultKeys';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
+import { seasonContextTags, phaseLabel, type RelevancePhase } from '@/lib/videoRelevanceContext';
 import { crossDomainCorrectionKeys } from '@/lib/analysis/crossDomainFaults';
 import { analysisFeedbackToTaxonomy, type AnalysisLike } from '@/lib/analysisFeedbackToTaxonomy';
 import { useVideoFaultFeedback } from '@/hooks/useVideoFaultFeedback';
 import { cn } from '@/lib/utils';
 import { moduleToSkillDomain } from '@/lib/videoMoments/registry';
+import { VideoThumb } from '@/components/video/VideoThumb';
+import { VideoLightbox, type LightboxVideo } from '@/components/video/VideoLightbox';
 import type { SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
 
 interface Props {
@@ -32,12 +38,15 @@ interface Props {
 }
 
 
-const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing'];
+// Every domain the analyser can report on. Fielding and base running have no
+// analyser faults yet, but the surface no longer refuses them by name.
+const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing', 'fielding', 'base_running'];
 
 export function AnalysisVideoRecommendations({ analysis, module, sport, persistenceError }: Props) {
   const { user } = useAuth();
   const skillDomain = moduleToSkillDomain(module || '');
   const tagSport: TagSport = sport === 'softball' ? 'softball' : 'baseball';
+  const [playing, setPlaying] = useState<LightboxVideo | null>(null);
 
   const signals = useMemo(
     () =>
@@ -51,13 +60,28 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   const { data: rootGroups = [] } = useCrossDomainFaults();
   const rootKeys = useMemo(() => crossDomainCorrectionKeys(rootGroups), [rootGroups]);
 
+  // What the plan is already working on in this domain.
+  const { data: openFaultKeys = [] } = useRecentFaultKeys(skillDomain);
+
+  // Where the athlete is in their year — decides which situations are relevant.
+  const { resolvedPhase } = useSeasonStatus();
+  const contextTags = useMemo(
+    () => seasonContextTags(skillDomain, resolvedPhase as RelevancePhase, tagSport),
+    [skillDomain, resolvedPhase, tagSport],
+  );
+
+  const correctionTags = useMemo(
+    () => Array.from(new Set([...(signals?.correctionTags ?? []), ...openFaultKeys])),
+    [signals?.correctionTags, openFaultKeys],
+  );
+
   const { data: suggestions = [], isLoading } = useVideoSuggestions({
     skillDomain: skillDomain ?? 'hitting',
     mode: 'session',
     movementPatterns: signals?.movementPatterns ?? [],
-    resultTags: [],
-    contextTags: [],
-    correctionTags: signals?.correctionTags ?? [],
+    resultTags: signals?.resultTags ?? [],
+    contextTags,
+    correctionTags,
     feedbackEvidence: signals?.evidence,
     sport: tagSport,
     rootPatternCorrectionKeys: rootKeys,
@@ -78,7 +102,9 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
 
   if (!signals) return null;
 
-  const hasFeedbackKeys = signals.movementPatterns.length + signals.correctionTags.length > 0;
+  const hasFeedbackKeys =
+    signals.movementPatterns.length + signals.correctionTags.length + contextTags.length > 0;
+  const phase = phaseLabel(resolvedPhase as RelevancePhase);
 
   return (
     <Card className="p-4 space-y-3 border-primary/20">
@@ -109,17 +135,29 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
         </p>
       ) : (
         <div className="space-y-2">
-          {suggestions.map(({ video, reasons }) => (
+          {suggestions.map(({ video, reasons, relevance }) => (
             <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
-              {video.thumbnail_url ? (
-                <img src={video.thumbnail_url} alt="" className="h-16 w-24 rounded object-cover shrink-0" />
-              ) : (
-                <div className="h-16 w-24 rounded bg-muted shrink-0 flex items-center justify-center">
-                  <Play className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
+              <VideoThumb
+                videoUrl={video.video_url}
+                thumbnailUrl={video.thumbnail_url}
+                title={video.title}
+                className="h-16 w-24"
+              />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{video.title}</p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-sm font-medium truncate">{video.title}</p>
+                  {relevance === 'general' && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
+                      General
+                    </Badge>
+                  )}
+                </div>
+                {relevance === 'general' && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    General work for {phase ? `where you are ${phase}` : 'your situation'} — not a fix for a fault
+                    in this clip.
+                  </p>
+                )}
                 <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
                   {reasons.slice(0, 2).map((r, i) => (
                     <li key={i} className="line-clamp-2">• {r}</li>
@@ -131,7 +169,14 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                   size="sm"
                   onClick={() => {
                     if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
-                    window.open(video.video_url, '_blank');
+                    // Plays in an overlay. Nothing leaves the app, so closing
+                    // returns to this analysis, same scroll, still signed in.
+                    setPlaying({
+                      id: video.id,
+                      title: video.title,
+                      video_url: video.video_url,
+                      thumbnail_url: video.thumbnail_url,
+                    });
                   }}
                 >
                   <Play className="h-3 w-3 mr-1" /> Watch
@@ -176,10 +221,13 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
             </div>
           ))}
           <p className="text-[10px] text-muted-foreground">
-            Matched to the faults this analysis reported — nothing else.
+            Matched to the faults this analysis reported, what your plan is already working on,
+            and {phase ? `where you are ${phase}` : 'your season'} — nothing else.
           </p>
         </div>
       )}
+
+      <VideoLightbox video={playing} onOpenChange={(open) => !open && setPlaying(null)} />
     </Card>
   );
 }

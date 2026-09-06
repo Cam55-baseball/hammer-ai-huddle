@@ -8,6 +8,8 @@ import { useVideoMoment } from '@/hooks/useVideoMoment';
 import { trackVideoSuggestionShown, trackVideoWatched } from '@/hooks/useVideoSuggestions';
 import { dismissMomentVideo } from '@/lib/videoMoments/cooldown';
 import type { VideoMomentEvent } from '@/lib/videoMoments/types';
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
+import { VideoThumb } from "@/components/video/VideoThumb";
 
 interface Props {
   event: VideoMomentEvent;
@@ -20,6 +22,7 @@ interface Props {
 }
 
 export function VideoMoment({ event, variant = 'inline', className, showEmptyState, onDismissed }: Props) {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
   const { items, tier, loading, allowed, config } = useVideoMoment(event);
 
@@ -45,13 +48,12 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
     <div className="space-y-2">
       {items.map(item => (
         <div key={item.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
-          {item.thumbnailUrl ? (
-            <img src={item.thumbnailUrl} alt="" className="h-16 w-24 rounded object-cover shrink-0" />
-          ) : (
-            <div className="h-16 w-24 rounded bg-muted shrink-0 flex items-center justify-center">
-              <Play className="h-5 w-5 text-muted-foreground" />
-            </div>
-          )}
+          <VideoThumb
+            videoUrl={item.videoUrl}
+            thumbnailUrl={item.thumbnailUrl}
+            title={item.title}
+            className="h-16 w-24"
+          />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate">{item.title}</p>
             <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
@@ -65,7 +67,7 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
               size="sm"
               onClick={() => {
                 if (user) trackVideoWatched(user.id, item.id, 0).catch(() => {});
-                window.open(item.videoUrl, '_blank');
+                openVideo({ id: item.id, title: item.title, video_url: item.videoUrl, thumbnail_url: item.thumbnailUrl });
               }}
             >
               <Play className="h-3 w-3 mr-1" /> Watch
@@ -106,6 +108,7 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
         ) : null}
       </div>
       {body}
+      {videoLightbox}
     </Card>
   );
 }

@@ -13,6 +13,7 @@ import { VideoAnalytics } from "./VideoAnalytics";
 import { TaxonomyManager } from "./TaxonomyManager";
 import { RuleEngineManager } from "./RuleEngineManager";
 import { LibraryHealthStrip } from "./LibraryHealthStrip";
+import { ThumbnailBackfillCard } from "./ThumbnailBackfillCard";
 import { VideoLibraryHelpSheet } from "./VideoLibraryHelpSheet";
 import { BackfillQueueDialog } from "./BackfillQueueDialog";
 import { OwnerTaggingPerformancePanel } from "./OwnerTaggingPerformancePanel";
@@ -235,6 +236,8 @@ export function VideoLibraryManager() {
       <OwnerCoachingNudge throttledCount={throttledCount} blockedCount={blockedCount} onFixThrottled={filterThrottled} onFixBlocked={filterThrottled} />
 
       <OwnerTaggingPerformancePanel />
+
+      <ThumbnailBackfillCard />
 
       <LibraryHealthStrip
         onBackfill={() => setBackfillOpen(true)}

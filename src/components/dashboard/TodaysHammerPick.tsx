@@ -19,10 +19,12 @@ import {
   useVideoSuggestions,
   trackVideoWatched,
 } from "@/hooks/useVideoSuggestions";
+import { useVideoLightbox } from "@/components/video/useVideoLightbox";
 
 const SCORE_FLOOR = 0.65;
 
 export function TodaysHammerPick() {
+  const { open: openVideo, element: videoLightbox } = useVideoLightbox();
   const { user } = useAuth();
 
   const { data } = useQuery({
@@ -116,11 +118,12 @@ export function TodaysHammerPick() {
         className="shrink-0"
         onClick={() => {
           if (user) trackVideoWatched(user.id, top.video.id, 0).catch(() => {});
-          window.open(top.video.video_url, "_blank");
+          openVideo({ id: top.video.id, title: top.video.title, video_url: top.video.video_url, thumbnail_url: top.video.thumbnail_url });
         }}
       >
         <Play className="h-3 w-3 mr-1" /> Watch
       </Button>
+      {videoLightbox}
     </Card>
   );
 }

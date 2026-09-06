@@ -71,7 +71,10 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
 
   return useQuery({
     queryKey: ['video-suggestions', params.skillDomain, params.mode, params.movementPatterns, params.resultTags, params.contextTags, params.correctionTags ?? [], params.rootPatternCorrectionKeys ?? [], sport, (positions ?? []).join(','), user?.id],
-    enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length + (params.correctionTags?.length ?? 0) > 0),
+    // Any populated layer is a real signal. Context-only callers (season phase,
+    // a Game Hub situation) used to be blocked here, which made every
+    // context-layer tag unmatchable by code.
+    enabled: (params.enabled ?? true) && taxonomy.length > 0 && (params.movementPatterns.length + params.resultTags.length + params.contextTags.length + (params.correctionTags?.length ?? 0) > 0),
     staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<RecommendResult[]> => {

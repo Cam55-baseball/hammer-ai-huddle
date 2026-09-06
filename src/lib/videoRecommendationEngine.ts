@@ -10,7 +10,7 @@
  */
 import { normalizeTier, TIER_BOOST } from './videoTier';
 
-export type SuggestionMode = 'session' | 'long_term';
+export type SuggestionMode = 'session' | 'long_term' | 'general';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
 export type TagLayer = 'movement_pattern' | 'result' | 'context' | 'correction';
 /** Sport scope of a tag / rule. 'both' = sport-agnostic. */
@@ -137,6 +137,14 @@ export interface RecommendResult {
   video: VideoWithTags;
   score: number;
   reasons: string[];
+  /** Which taxonomy layers actually matched. Drives honest labelling. */
+  matchedLayers: TagLayer[];
+  /**
+   * `targeted` — matched the athlete's own fault (correction / movement).
+   * `general` — matched only their situation or the result they're chasing, so
+   * it is presented as general work, never as the fix for their fault.
+   */
+  relevance: 'targeted' | 'general';
   /** Phase 7: derived monetization overlay — never feeds back into ranking. */
   conversionScore?: number;
 }
@@ -144,6 +152,10 @@ export interface RecommendResult {
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
   session: { max: 4, minScore: 40 },
   long_term: { max: 4, minScore: 30 },
+  // Situation-driven surfaces (season phase, a Game Hub outcome) match on the
+  // lower-weighted context/result layers, so they need their own floor.
+  general: { max: 3, minScore: 12 },
+
 };
 
 function clamp(n: number, min: number, max: number): number {
@@ -237,6 +249,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
 
     let score = 0;
     const reasons: string[] = [];
+    const matched = new Set<TagLayer>();
 
     for (const a of v.assignments) {
       const tag = tagIdToTag.get(a.tag_id);
@@ -248,6 +261,7 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       if (correctionTagIds.has(a.tag_id)) {
         const ruleStrength = correctionTagIds.get(a.tag_id) || 5;
         score += 90 + ruleStrength;
+        matched.add('correction');
         const said = evidence[`correction:${tag.key}`];
         reasons.push(
           said
@@ -257,10 +271,12 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       }
       if (rootPatternTagIds.has(a.tag_id)) {
         score += 60;
+        matched.add('correction');
         reasons.push('Works on the pattern showing up in more than one part of your game');
       }
       if (movementTagIds.has(a.tag_id)) {
         score += 50 * w;
+        matched.add('movement_pattern');
         const said = evidence[`movement_pattern:${tag.key}`];
         reasons.push(
           said
@@ -270,13 +286,16 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       }
       if (resultTagIds.has(a.tag_id)) {
         score += 25 * w;
+        matched.add('result');
         reasons.push(`Targets result: ${tag.label}`);
       }
       if (contextTagIds.has(a.tag_id)) {
         score += 15 * w;
+        matched.add('context');
         reasons.push(`Fits context: ${tag.label}`);
       }
     }
+
 
 
     // User-specific success
@@ -338,7 +357,16 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     const conversionScore = score * monetizationBoost;
 
     if (score > 0) {
-      scored.push({ video: v, score, conversionScore, reasons: dedupe(reasons).slice(0, 4) });
+      const matchedLayers = Array.from(matched);
+      const targeted = matched.has('correction') || matched.has('movement_pattern');
+      scored.push({
+        video: v,
+        score,
+        conversionScore,
+        matchedLayers,
+        relevance: targeted ? 'targeted' : 'general',
+        reasons: dedupe(reasons).slice(0, 4),
+      });
     }
   }
 

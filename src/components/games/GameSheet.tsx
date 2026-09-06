@@ -51,6 +51,7 @@ import { PitcherDossierDrawer } from "./PitcherDossierDrawer";
 import { HitterDossierDrawer } from "./HitterDossierDrawer";
 import { NumberField } from "@/components/games/NumberField";
 import { fireGameVideoMoment } from "@/lib/videoMoments/gameMoment";
+import { GameVideoRecommendations } from "./GameVideoRecommendations";
 
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH", "PH", "PR"];
@@ -230,6 +231,7 @@ function GameSheetTabs({
         />
         <ActivePlanCard gameId={gameId} game={g} />
         <OverviewPanel game={g} onPatch={onPatch} />
+        <GameVideoRecommendations gameId={gameId} />
       </TabsContent>
 
 

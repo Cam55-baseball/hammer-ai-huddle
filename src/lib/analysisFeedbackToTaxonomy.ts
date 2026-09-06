@@ -23,6 +23,8 @@ export interface FeedbackSignals {
   movementPatterns: string[];
   /** Correction-layer keys the analysis is effectively prescribing. */
   correctionTags: string[];
+  /** Ball-flight / outcome keys the flagged pattern is known to produce. */
+  resultTags: string[];
   /** `layer:key` → the plain-language piece of feedback that produced it. */
   evidence: Record<string, string>;
 }
@@ -141,6 +143,9 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   th_long_arm_action: 'th_shorten_arm_circle',
   th_slow_transfer: 'th_glove_to_chest_transfer',
   th_no_crow_hop: 'th_crow_hop_through_target',
+  short_arm: 'clean_arm_path',
+  th_low_elbow_slot: 'clean_arm_path',
+  th_late_glove_break: 'th_four_seam_exchange',
   // pitching (baseball)
   bb_trunk_rotation_early: 'bb_delay_trunk_rotation',
   bb_front_side_flyout: 'bb_stay_closed_longer',
@@ -149,6 +154,8 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   bb_release_point_drift: 'bb_repeat_release_point',
   bb_poor_deceleration: 'bb_decelerate_through_finish',
   bb_hip_shoulder_sep_loss: 'bb_stay_closed_longer',
+  bb_leg_lift_unbalanced: 'bb_stride_to_power_line',
+  bb_arm_path_late: 'bb_finish_out_front',
   // pitching (softball)
   sb_shoulders_open_early: 'sb_stay_closed_through_whip',
   sb_plant_leg_collapse: 'sb_block_with_plant_leg',
@@ -157,6 +164,64 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   sb_replant_drift: 'sb_drive_down_power_line',
   sb_weak_drive_push: 'sb_drive_down_power_line',
   sb_brush_contact_missed: 'sb_finish_brush_contact',
+  sb_whip_arm_early: 'sb_repeat_release_window',
+  sb_short_stride: 'sb_drive_down_power_line',
+};
+
+/**
+ * A movement can have more than one honest answer. These are the additional
+ * corrections a coach would give alongside the primary one above.
+ */
+const MOVEMENT_TO_EXTRA_CORRECTIONS: Record<string, string[]> = {
+  flat_path: ['stay_through_ball'],
+  steep_attack_angle: ['stay_through_ball'],
+  head_pull_off: ['improve_adjustability'],
+  th_low_elbow_slot: ['th_four_seam_exchange'],
+};
+
+/**
+ * Movement key → the outcome that pattern is known to produce. Only pairs a
+ * coach would state without hedging are listed, so the result layer becomes
+ * matchable from an analysis instead of sitting unreachable.
+ */
+const MOVEMENT_TO_RESULT: Record<string, string[]> = {
+  // hitting
+  shoulders_turning_early: ['roll_over_contact', 'weak_contact'],
+  hands_forward_early: ['roll_over_contact'],
+  early_extension: ['pop_up', 'weak_contact'],
+  head_pull_off: ['swing_and_miss_underneath_ball', 'chasing_pitches'],
+  late_barrel: ['jam_shot', 'opposite_field_flare'],
+  flat_path: ['ground_ball_middle', 'top_spun_balls'],
+  steep_attack_angle: ['swing_and_miss_underneath_ball'],
+  over_rotation: ['roll_over_contact'],
+  under_rotation: ['weak_contact'],
+  weight_stuck_back: ['weak_contact'],
+  weight_leak_forward: ['top_spun_balls'],
+  landing_unbalanced: ['weak_contact'],
+  // throwing
+  th_across_body: ['th_offline_arm_side'],
+  th_feet_misaligned: ['th_offline_glove_side', 'th_offline_arm_side'],
+  th_long_arm_action: ['th_slow_pop_time'],
+  th_slow_transfer: ['th_slow_pop_time', 'th_late_to_bag'],
+  th_no_crow_hop: ['th_short_hopped'],
+  th_low_elbow_slot: ['th_sailed_high'],
+  short_arm: ['th_sailed_high'],
+  th_late_glove_break: ['th_slow_pop_time'],
+  // pitching (baseball)
+  bb_trunk_rotation_early: ['bb_arm_side_miss', 'bb_flat_fastball_plane'],
+  bb_front_side_flyout: ['bb_arm_side_miss'],
+  bb_stride_direction_off: ['bb_glove_side_miss', 'bb_arm_side_miss'],
+  bb_front_leg_collapse: ['bb_miss_high'],
+  bb_release_point_drift: ['bb_noncompetitive_strike'],
+  bb_hip_shoulder_sep_loss: ['bb_flat_fastball_plane'],
+  // pitching (softball)
+  sb_shoulders_open_early: ['sb_arm_side_miss'],
+  sb_snap_late: ['sb_rise_flattens', 'sb_drop_hangs'],
+  sb_k_position_late: ['sb_spin_inconsistent'],
+  sb_replant_drift: ['sb_arm_side_miss'],
+  sb_weak_drive_push: ['sb_bounced_pitch'],
+  sb_brush_contact_missed: ['sb_spin_inconsistent'],
+  sb_plant_leg_collapse: ['sb_bounced_pitch'],
 };
 
 function violationBucket(skillDomain: SkillDomain, sport: TagSport | null | undefined): string {
@@ -222,12 +287,26 @@ export function analysisFeedbackToTaxonomy(
       correction.add(corr);
       evidence[`correction:${corr}`] ??= evidence[`movement_pattern:${m}`] ?? 'your analysis flagged this pattern';
     }
+    for (const extra of MOVEMENT_TO_EXTRA_CORRECTIONS[m] ?? []) {
+      correction.add(extra);
+      evidence[`correction:${extra}`] ??= evidence[`movement_pattern:${m}`] ?? 'your analysis flagged this pattern';
+    }
+  }
+
+  // …and the outcomes that pattern produces, so result-layer tags are matchable.
+  const result = new Set<string>();
+  for (const m of movement) {
+    for (const r of MOVEMENT_TO_RESULT[m] ?? []) {
+      result.add(r);
+      evidence[`result:${r}`] ??= evidence[`movement_pattern:${m}`] ?? 'your analysis flagged this pattern';
+    }
   }
 
   return {
     skillDomain,
     movementPatterns: [...movement],
     correctionTags: [...correction],
+    resultTags: [...result],
     evidence,
   };
 }
