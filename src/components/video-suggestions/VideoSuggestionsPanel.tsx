@@ -77,7 +77,7 @@ export function VideoSuggestionsPanel({
               className="self-center shrink-0"
               onClick={() => {
                 if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
-                window.open(video.video_url, '_blank');
+                openVideo({ id: video.id, title: video.title, video_url: video.video_url, thumbnail_url: video.thumbnail_url });
               }}
             >
               <Play className="h-3 w-3 mr-1" /> Watch

@@ -147,7 +147,7 @@ export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
               className="h-7 px-2 text-[10px] shrink-0"
               onClick={() => {
                 if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
-                window.open(video.video_url, "_blank");
+                openVideo({ id: video.id, title: video.title, video_url: video.video_url, thumbnail_url: video.thumbnail_url });
               }}
             >
               Watch

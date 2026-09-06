@@ -65,7 +65,7 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
               size="sm"
               onClick={() => {
                 if (user) trackVideoWatched(user.id, item.id, 0).catch(() => {});
-                window.open(item.videoUrl, '_blank');
+                openVideo({ id: item.id, title: item.title, video_url: item.videoUrl, thumbnail_url: item.thumbnailUrl });
               }}
             >
               <Play className="h-3 w-3 mr-1" /> Watch
