@@ -36,8 +36,8 @@ describe("root-pattern collapse", () => {
     const ranked = rankFaults([hitting, throwing], NOW);
     expect(ranked).toHaveLength(1);
     expect(ranked[0].rootPatternId).toBe("poor_hip_shoulder_separation");
-    expect(ranked[0].disciplines.sort()).toEqual(["hitting", "throwing"]);
-    expect(ranked[0].sources.sort()).toEqual(["report_card", "video_analysis"]);
+    expect([...ranked[0].disciplines].sort()).toEqual(["hitting", "throwing"]);
+    expect([...ranked[0].sources].sort()).toEqual(["report_card", "video_analysis"]);
     expect(ranked[0].signals).toHaveLength(2);
   });
 
