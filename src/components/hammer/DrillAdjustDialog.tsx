@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { detectRequiredGear, drillKey, suggestAlternatives } from "@/lib/hammer/prescription/drillSwap";
 import type { PlanAdjustment } from "@/lib/hammer/prescription/drillSwap";
+import { useFamilyAlternatives } from "@/hooks/useFaultLedger";
+import { familyForSlug } from "@/lib/wic/faultLedger/families";
 
 interface Props {
   open: boolean;
@@ -29,12 +31,30 @@ interface Props {
 }
 
 export function DrillAdjustDialog({ open, onOpenChange, modality, drill, onSave }: Props) {
-  const alternatives = useMemo(() => suggestAlternatives(drill), [drill]);
   const gear = useMemo(() => detectRequiredGear(drill), [drill]);
-  const [choice, setChoice] = useState<string>(alternatives[0]?.name ?? "__skip__");
+  const family = useMemo(() => (drill.slug ? familyForSlug(drill.slug) : null), [drill.slug]);
+  // Same-problem ladder first: if this movement belongs to a fault family, the
+  // swap must still fix the same thing. Gear-free options lead.
+  const { data: ladder = [] } = useFamilyAlternatives(drill.slug, gear ? 1 : 2);
+
+  const alternatives = useMemo(() => {
+    const fromFamily = ladder.map((a) => ({
+      name: a.name,
+      dosage: drill.dosage,
+      why: family ? `Same job: ${family.label.toLowerCase()}.` : "Same job.",
+      equipmentNote: a.equipment.length ? a.equipment.join(", ") : undefined,
+    }));
+    const generic = suggestAlternatives(drill).filter(
+      (g) => !fromFamily.some((f) => f.name === g.name),
+    );
+    return [...fromFamily, ...generic];
+  }, [ladder, family, drill]);
+
+  const [choice, setChoice] = useState<string>("__skip__");
   const [scope, setScope] = useState<"today" | "always">("today");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
 
   const submit = async () => {
     setSaving(true);
