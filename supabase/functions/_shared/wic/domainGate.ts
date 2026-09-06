@@ -347,8 +347,11 @@ export function checkAthleteScope(
     }
   }
 
-  return { allowed: true };
+  // Fail-closed safety floor — applied last so its reason is never masked by a
+  // relevance gate. Unknown age / training age / season is skipped, not guessed.
+  return checkSafetyGate(m, ctx);
 }
+
 
 /** Convenience wrapper for pool filtering. */
 export function passesDomainGate(m: GateableMovement, ctx: DomainGateContext): boolean {
