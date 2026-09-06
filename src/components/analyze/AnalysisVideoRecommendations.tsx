@@ -38,12 +38,15 @@ interface Props {
 }
 
 
-const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing'];
+// Every domain the analyser can report on. Fielding and base running have no
+// analyser faults yet, but the surface no longer refuses them by name.
+const SUPPORTED: SkillDomain[] = ['hitting', 'pitching', 'throwing', 'fielding', 'base_running'];
 
 export function AnalysisVideoRecommendations({ analysis, module, sport, persistenceError }: Props) {
   const { user } = useAuth();
   const skillDomain = moduleToSkillDomain(module || '');
   const tagSport: TagSport = sport === 'softball' ? 'softball' : 'baseball';
+  const [playing, setPlaying] = useState<LightboxVideo | null>(null);
 
   const signals = useMemo(
     () =>
@@ -57,13 +60,28 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   const { data: rootGroups = [] } = useCrossDomainFaults();
   const rootKeys = useMemo(() => crossDomainCorrectionKeys(rootGroups), [rootGroups]);
 
+  // What the plan is already working on in this domain.
+  const { data: openFaultKeys = [] } = useRecentFaultKeys(skillDomain);
+
+  // Where the athlete is in their year — decides which situations are relevant.
+  const { resolvedPhase } = useSeasonStatus();
+  const contextTags = useMemo(
+    () => seasonContextTags(skillDomain, resolvedPhase as RelevancePhase, tagSport),
+    [skillDomain, resolvedPhase, tagSport],
+  );
+
+  const correctionTags = useMemo(
+    () => Array.from(new Set([...(signals?.correctionTags ?? []), ...openFaultKeys])),
+    [signals?.correctionTags, openFaultKeys],
+  );
+
   const { data: suggestions = [], isLoading } = useVideoSuggestions({
     skillDomain: skillDomain ?? 'hitting',
     mode: 'session',
     movementPatterns: signals?.movementPatterns ?? [],
-    resultTags: [],
-    contextTags: [],
-    correctionTags: signals?.correctionTags ?? [],
+    resultTags: signals?.resultTags ?? [],
+    contextTags,
+    correctionTags,
     feedbackEvidence: signals?.evidence,
     sport: tagSport,
     rootPatternCorrectionKeys: rootKeys,
@@ -84,7 +102,9 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
 
   if (!signals) return null;
 
-  const hasFeedbackKeys = signals.movementPatterns.length + signals.correctionTags.length > 0;
+  const hasFeedbackKeys =
+    signals.movementPatterns.length + signals.correctionTags.length + contextTags.length > 0;
+  const phase = phaseLabel(resolvedPhase as RelevancePhase);
 
   return (
     <Card className="p-4 space-y-3 border-primary/20">
