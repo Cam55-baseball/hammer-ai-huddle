@@ -21,6 +21,7 @@ import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adapta
 import { buildWhy, whyIsComplete, type WhyV2 } from "../_shared/wic/rationale.ts";
 import { validate as wicValidate } from "../_shared/wic/validator.ts";
 import { buildSafePlan } from "../_shared/wic/safePlan.ts";
+import { resolveExtensiveDose, resolveIntensityMode } from "../_shared/wic/execution/intensityMode.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
@@ -1223,17 +1224,22 @@ const handler = async (req: Request): Promise<Response> => {
           dosageUnit = dosageUnit === "reps" ? "reps" : dosageUnit;
         }
       }
+      // Extensive med-ball sessions ship total-dosed (exempt from envelope
+      // math, same as innings/contacts/feet). Unmarked rows are unaffected.
+      const extensive = resolveExtensiveDose(s.movement as any);
+      const emittedIntensityMode = resolveIntensityMode(s.movement as any);
       rxs.push({
         slot, sequence_order: seq++, sequence_role: role,
         movement_slug: s.movement.slug, movement_name: s.movement.name,
         sets: finalSets,
         reps: emittedReps,
+        intensity_mode: emittedIntensityMode,
         tempo: overrides.tempo ?? s.movement.default_tempo,
         load_pct: overrides.load_pct ?? s.movement.default_load_pct,
         duration_seconds: durationSeconds,
         distance_feet: distanceFeet,
-        total_reps: totalReps,
-        dosage_unit: dosageUnit,
+        total_reps: extensive?.total_reps ?? totalReps,
+        dosage_unit: extensive?.dosage_unit ?? dosageUnit,
         cns_cost: s.movement.cns_cost,
         cns_clamped: clamped,
         substituted_from_slug: s.substitutedFrom,

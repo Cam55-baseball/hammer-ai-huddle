@@ -16548,24 +16548,35 @@ export type Database = {
       wk_prescriptions: {
         Row: {
           adaptation: string | null
+          asymmetry_rule: string | null
           cns_clamped: boolean
           cns_cost: number
           created_at: string
+          cue_ids: string[] | null
+          density_target_seconds: number | null
           distance_feet: number | null
           dosage_unit: string
           duration_seconds: number | null
           engine: string | null
+          execution_note: string | null
           generator_version: string | null
           id: string
+          intensity_mode: string | null
+          intent_tag: string | null
           load_pct: number | null
           movement_name: string
           movement_slug: string
+          open_ended: boolean | null
+          per_side: boolean | null
           phase: string
           plan_date: string
           rationale: string | null
           reps: number | null
+          rir_high: number | null
+          rir_low: number | null
           sequence_order: number
           sequence_role: string
+          set_range_max: number | null
           sets: number | null
           slot: string
           status: string
@@ -16573,6 +16584,7 @@ export type Database = {
           substitution_reason: string | null
           tempo: string | null
           total_reps: number | null
+          troubleshoot_video_id: string | null
           updated_at: string
           user_id: string
           validator_report: Json | null
@@ -16581,24 +16593,35 @@ export type Database = {
         }
         Insert: {
           adaptation?: string | null
+          asymmetry_rule?: string | null
           cns_clamped?: boolean
           cns_cost?: number
           created_at?: string
+          cue_ids?: string[] | null
+          density_target_seconds?: number | null
           distance_feet?: number | null
           dosage_unit: string
           duration_seconds?: number | null
           engine?: string | null
+          execution_note?: string | null
           generator_version?: string | null
           id?: string
+          intensity_mode?: string | null
+          intent_tag?: string | null
           load_pct?: number | null
           movement_name: string
           movement_slug: string
+          open_ended?: boolean | null
+          per_side?: boolean | null
           phase: string
           plan_date: string
           rationale?: string | null
           reps?: number | null
+          rir_high?: number | null
+          rir_low?: number | null
           sequence_order?: number
           sequence_role: string
+          set_range_max?: number | null
           sets?: number | null
           slot: string
           status?: string
@@ -16606,6 +16629,7 @@ export type Database = {
           substitution_reason?: string | null
           tempo?: string | null
           total_reps?: number | null
+          troubleshoot_video_id?: string | null
           updated_at?: string
           user_id: string
           validator_report?: Json | null
@@ -16614,24 +16638,35 @@ export type Database = {
         }
         Update: {
           adaptation?: string | null
+          asymmetry_rule?: string | null
           cns_clamped?: boolean
           cns_cost?: number
           created_at?: string
+          cue_ids?: string[] | null
+          density_target_seconds?: number | null
           distance_feet?: number | null
           dosage_unit?: string
           duration_seconds?: number | null
           engine?: string | null
+          execution_note?: string | null
           generator_version?: string | null
           id?: string
+          intensity_mode?: string | null
+          intent_tag?: string | null
           load_pct?: number | null
           movement_name?: string
           movement_slug?: string
+          open_ended?: boolean | null
+          per_side?: boolean | null
           phase?: string
           plan_date?: string
           rationale?: string | null
           reps?: number | null
+          rir_high?: number | null
+          rir_low?: number | null
           sequence_order?: number
           sequence_role?: string
+          set_range_max?: number | null
           sets?: number | null
           slot?: string
           status?: string
@@ -16639,6 +16674,7 @@ export type Database = {
           substitution_reason?: string | null
           tempo?: string | null
           total_reps?: number | null
+          troubleshoot_video_id?: string | null
           updated_at?: string
           user_id?: string
           validator_report?: Json | null

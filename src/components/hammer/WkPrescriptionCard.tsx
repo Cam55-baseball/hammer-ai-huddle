@@ -21,6 +21,7 @@ import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
 import { MethodBadge, MethodPanel } from "@/components/hammer/MethodPanel";
 import { readTrainingMethod } from "@/lib/wic/methods";
+import { deriveExecutionDisplay, type ExecutionSource } from "@/lib/wic/execution/executionDisplay";
 import {
   WkProgressionBadge,
   WkProgressionNote,
@@ -174,7 +175,11 @@ export function WkPrescriptionCard({
   // concrete number (sets/reps, seconds, feet, or total contacts) so athletes
   // know exactly what to execute — no more vague "1 × 1" placeholders.
   const unit = (rx.dosage_unit ?? "reps").toLowerCase();
+  // Execution layer — Pass C section 1. Display only: this never returns a
+  // set, a rep or a load, and a null/unknown field renders nothing.
+  const exec = deriveExecutionDisplay(rx as unknown as ExecutionSource);
   const dosageParts: string[] = [];
+
   // For total-dose movements (innings, contacts, seconds, feet) the primary
   // number is `total_reps` — do NOT render "X sets × 1 reps" alongside it.
   const isTotalDoseUnit =
@@ -200,6 +205,9 @@ export function WkPrescriptionCard({
     const setsRepsMeaningful =
       !!rx.sets && !!rx.reps && !(rx.sets === 1 && rx.reps === 1) &&
       !(isTotalDoseUnit && hasTotalDose);
+    // Execution layer (display only). `exec.repsSuffix` is a "+" on the way to
+    // the screen; `rx.reps` below is still the doctrine's number, untouched.
+    const setsText = exec.setsLabel ?? `${rx.sets} sets`;
     if (setsRepsMeaningful) {
       const repsLabel =
         unit === "seconds" ? `${rx.reps} sec` :
@@ -207,13 +215,14 @@ export function WkPrescriptionCard({
         unit === "contacts" ? `${rx.reps} contacts` :
         unit === "throws" ? `${rx.reps} throws` :
         unit === "each" ? `${rx.reps} each side` :
-        `${rx.reps} reps`;
-      dosageParts.push(`${rx.sets} sets × ${repsLabel}`);
+        `${rx.reps}${exec.repsSuffix} reps`;
+      dosageParts.push(`${setsText} × ${repsLabel}`);
     } else if (rx.sets && rx.sets > 1 && !(isTotalDoseUnit && hasTotalDose)) {
-      dosageParts.push(`${rx.sets} sets`);
+      dosageParts.push(setsText);
     } else if (rx.reps && rx.reps > 1 && !(isTotalDoseUnit && hasTotalDose)) {
-      dosageParts.push(`${rx.reps} reps`);
+      dosageParts.push(`${rx.reps}${exec.repsSuffix} reps`);
     }
+
     if (rx.duration_seconds) {
       dosageParts.push(
         rx.duration_seconds >= 60
@@ -230,6 +239,8 @@ export function WkPrescriptionCard({
         `${rx.total_reps} total`;
       dosageParts.push(totalLabel);
     }
+    if (exec.densityLabel) dosageParts.push(exec.densityLabel);
+    if (exec.rirLabel) dosageParts.push(exec.rirLabel);
     if (rx.tempo) dosageParts.push(`tempo ${rx.tempo}`);
     if (rx.load_pct) dosageParts.push(`${rx.load_pct}% 1RM`);
   }
@@ -288,7 +299,28 @@ export function WkPrescriptionCard({
           </div>
           {trainingMethod && <MethodPanel method={trainingMethod} />}
           <div className="flex items-start justify-between gap-2">
-            <div className="text-xs text-muted-foreground break-words flex-1 min-w-0">{dosage}</div>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="text-xs text-muted-foreground break-words">{dosage}</div>
+              {(exec.intentLabel || exec.perSideLabel || exec.asymmetryLabel) && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {exec.intentLabel && (
+                    <Badge variant="outline" className="text-[10px]">{exec.intentLabel}</Badge>
+                  )}
+                  {exec.perSideLabel && (
+                    <Badge variant="outline" className="text-[10px]">{exec.perSideLabel}</Badge>
+                  )}
+                  {exec.asymmetryLabel && (
+                    <span className="text-[11px] text-muted-foreground">{exec.asymmetryLabel}</span>
+                  )}
+                </div>
+              )}
+              {exec.executionNote && (
+                <div className="text-[11px] text-muted-foreground break-words">{exec.executionNote}</div>
+              )}
+              {exec.intensityModeLabel && (
+                <div className="text-[11px] text-muted-foreground break-words">{exec.intensityModeLabel}</div>
+              )}
+            </div>
             <div className="flex items-center gap-1 shrink-0">
               {allowSwap && (
                 <Button
