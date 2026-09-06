@@ -221,10 +221,13 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
             </div>
           ))}
           <p className="text-[10px] text-muted-foreground">
-            Matched to the faults this analysis reported — nothing else.
+            Matched to the faults this analysis reported, what your plan is already working on,
+            and {phase ? `where you are ${phase}` : 'your season'} — nothing else.
           </p>
         </div>
       )}
+
+      <VideoLightbox video={playing} onOpenChange={(open) => !open && setPlaying(null)} />
     </Card>
   );
 }
