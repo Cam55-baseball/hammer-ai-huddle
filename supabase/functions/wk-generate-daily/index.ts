@@ -144,6 +144,7 @@ import {
   isRepDosed as doctrineIsRepDosed,
   isWithinEnvelope,
 } from "../_shared/wic/dosage/doctrine.ts";
+import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 
 
 
@@ -548,13 +549,18 @@ const handler = async (req: Request): Promise<Response> => {
       trainingAgeContext,
     });
 
-    // -------- Load phase block + catalog --------
-    const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }] = await Promise.all([
+    // -------- Load phase block + catalog + feature flags --------
+    const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }, { data: liftingFlagRow }] = await Promise.all([
       admin.from("wk_periodization_blocks").select("*").eq("phase", phaseRes.phase).maybeSingle() as unknown as Promise<{ data: BlockRow | null; error: any }>,
       admin.from("wk_movement_catalog").select("*").or(`sport_scope.eq.both,sport_scope.eq.${sport}`) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
+      admin.from("app_settings").select("setting_value").eq("setting_key", "lifting_v2_enabled").maybeSingle(),
     ]);
     if (blocksErr) throw blocksErr;
     if (catErr) throw catErr;
+    // Wave rebuild gate. Anything other than a literal `true` reads as off, so
+    // a missing row, a null or a malformed value can never turn a dose change on.
+    const liftingV2Enabled = (liftingFlagRow as any)?.setting_value === true
+      || String((liftingFlagRow as any)?.setting_value ?? "") === "true";
     const block = blocks!;
     // ---- Unknown equipment is NOT "owns nothing" -------------------------
     // An athlete who has never declared their gear must not silently lose the
@@ -1146,7 +1152,7 @@ const handler = async (req: Request): Promise<Response> => {
       const repDosed = !isTotalDose && doctrineIsRepDosed(dosageUnitRaw);
       const doseCap = (overrides as any).dose_cap as { sets?: number; reps?: number } | undefined;
       const resolvedDose = repDosed
-        ? resolveDose({
+        ? resolveWaveDose({
             phase: phaseRes.phase,
             role,
             category: s.movement.movement_category ?? s.movement.category,
@@ -1156,7 +1162,7 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: clamped,
             capSets: doseCap?.sets ?? null,
             capReps: doseCap?.reps ?? null,
-          })
+          }, liftingV2Enabled)
         : null;
       const finalSets = resolvedDose
         ? resolvedDose.sets
@@ -1756,7 +1762,7 @@ const handler = async (req: Request): Promise<Response> => {
         // so a deload can never drop a row below its envelope floor.
         const dd = wp.dose_doctrine as any;
         if (dd && typeof rx.sets === "number" && typeof rx.reps === "number") {
-          const rewaved = resolveDose({
+          const rewaved = resolveWaveDose({
             phase: phaseRes.phase,
             role: dd.role ?? rx.sequence_role,
             category: dd.category,
@@ -1766,14 +1772,19 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: !!rx.cns_clamped,
             capSets: dd.cap_sets ?? null,
             capReps: dd.cap_reps ?? null,
-          });
+          }, liftingV2Enabled);
           const before = { sets: rx.sets, reps: rx.reps };
           rx.sets = rewaved.sets;
           rx.reps = rewaved.reps;
           dd.notes = rewaved.notes;
           dd.week_in_block = progression.weekInBlock;
+          // Attribution — every row the wave could have touched carries the
+          // version that produced it, so a regression is traceable to the flip
+          // rather than guessed at.
+          dd.dose_authority = liftingV2Enabled ? WAVE_VERSION : DOSAGE_DOCTRINE_VERSION;
+          dd.lifting_v2_enabled = liftingV2Enabled;
           if (before.sets !== rx.sets || before.reps !== rx.reps) {
-            dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}` };
+            dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}`, version: dd.dose_authority };
           }
           if (progression.isDeloadWeek) {
             wp.deload_applied = {

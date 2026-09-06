@@ -43,7 +43,7 @@ The certifier runs **after** existing lift rows are built and:
 
 ## Fatal Codes Added
 
-`lift_governance_missing`, `lift_illegal_season`, `lift_illegal_training_age`, `lift_not_full_body`, `lift_missing_compound_lower`, `lift_missing_upper_push`, `lift_missing_upper_pull`, `lift_missing_core`, `lift_missing_rotational_demand`, `lift_duplicate_category`, `lift_unresolved_substitution`. Warn: `lift_illegal_equipment`.
+~~`lift_governance_missing`~~ (**corrected 2026-09-07: no such code exists — an ungoverned row is prescribed silently, with no age or season gate**), `lift_illegal_season`, `lift_illegal_training_age`, `lift_not_full_body`, `lift_missing_compound_lower`, `lift_missing_upper_push`, `lift_missing_upper_pull`, `lift_missing_core`, `lift_missing_rotational_demand`, `lift_duplicate_category`, `lift_unresolved_substitution`. Warn: `lift_illegal_equipment`.
 
 ## Before / After
 

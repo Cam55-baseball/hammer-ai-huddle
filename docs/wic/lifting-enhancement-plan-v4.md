@@ -1,5 +1,47 @@
 # Hammers Today — Lifting Enhancement Spec v4 (APPROVED)
 
+## Corrections — 2026-09-07
+
+Four statements carried in this spec (and in `lifting-system-extraction.md`,
+where three of them originated) were wrong. They are corrected here so that no
+future session re-inherits them as fact. A spec that carries a known error is
+worse than no spec.
+
+**C1 — `lift_governance_missing` is not a fatal code. It does not exist.**
+`sessionBuilder.ts` emits no such code, and nothing in the validator rejects a
+row for missing governance. The real risk was the opposite of a fatal: **silent
+permissiveness.** A catalog row with no `movement_category` and no
+`governance_version` is drawn and prescribed with **no age gate and no season
+gate applied**, because both gates read fields that are absent. Ungoverned rows
+do not fail loudly — they pass quietly. That is why Stage 2 required
+`governance_version = "gov_v1"` on every insert and why the governance audit
+counts stamped rows rather than trusting a fatal to catch them.
+
+**C2 — the training-age vocabulary is six values, not five.**
+The classifier emits `beginner, developing, intermediate, advanced, elite,
+professional`. This spec previously listed `novice / developing / trained /
+advanced / elite`. `novice` and `trained` are not produced by anything;
+`intermediate` and `professional` were missing. The consequence is concrete:
+the generation matrix was for a period testing **bands nothing produces**,
+which is why it could report full coverage while real bands went unexercised.
+The matrix now runs the six real bands.
+
+**C3 — "most prescriptions wins" is a tiebreak, never a justification.**
+When two catalog rows describe the same movement, prescription count picks the
+canonical row **only between rows that are otherwise equally correct.** It is
+never a reason to keep a factually wrong row. The proving case: the med-ball
+row tagged as an overload bat implement had the higher prescription count and
+was still the wrong row — a medicine ball is not a bat. Correctness first,
+count only to break a tie.
+
+**C4 — the constraint on `wk_persist_prescriptions_atomic` is "computation-free",
+not "do not modify".** Adding columns to the persistence function is fine and
+was done. What the function must never contain is a decision: no derivation,
+no defaults, no coalesce, no conditionals. It writes what it is handed and
+nothing else. An absent key lands as `NULL`.
+
+
+
 ## 0. Governing law — performance first
 
 The weight room is a tool to raise on-field performance. It is not the product. We are not building weight-room monsters. Every rule below is downstream of that sentence.
@@ -120,7 +162,7 @@ Loaded barbell spinal work (back squat, deadlift, good morning, loaded Jefferson
 
 ## 6. Acceptance evidence — required every stage
 
-1. Generation matrix: 6 phases × 5 training-age bands × 3 equipment levels × 3 ages × 4 day types = 1,080 runs. A card produced in 100% of cells.
+1. Generation matrix: 6 phases × 6 training-age bands (C2) × 3 equipment levels × 3 ages × 4 day types = 1,296 runs. A card produced in 100% of cells.
 2. Zero fatals from `lift-governance-audit`, `dosage-doctrine-audit`, `check-no-inseason-eccentric`, `check-dosage-units`, `check-domain-integrity`, `check-family-coverage`.
 3. Dose diff, same athlete and date, flag off, before vs after — empty for Stages 1–5. Stage 6 ships a full diff for owner sign-off.
 4. A real phone-width screenshot of a generated card.
