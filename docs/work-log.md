@@ -183,3 +183,62 @@ Newest first. Each entry: what changed, what I verified myself, what remains unv
 ### Suite
 `vitest run`: **1141 passed, 4 failed** (134 files). The 4 failures are pre-existing and in untouched
 areas (UHRC `buildReport`, tempo pipeline, PIE V2 scoring, engine fuzz timing).
+
+## 2026-09-02 — In-app video playback, cover images, tag reachability
+
+**Bug 1 — leaving a video signed the athlete out.**
+Every "Watch" button used to hand the browser to YouTube/Vimeo/X/TikTok. All of
+them now open a player inside the app:
+- New `src/components/video/useVideoLightbox.tsx` — one-line overlay player for any surface.
+- Converted: `TodaysHammerPick`, `DailyPlanVideoChips`, `VideoSuggestionsPanel`,
+  `VideoMoment`, plus the analysis "Watch this next" list (done earlier this turn).
+- Platform clips play in an embedded frame, our own uploads in a normal player.
+  Closing returns to the same screen and scroll position; nothing navigates away,
+  so the session is never re-entered.
+- The only remaining external links are the deliberate "Open original" escape
+  hatches inside the player itself, which open a separate tab (`noopener`) and
+  leave the app page intact.
+
+**Bug 2 — no cover images.**
+- 7 platform clips backfilled from their host (verified in the database).
+- New owner tool `ThumbnailBackfillCard` (top of the Video Library manager)
+  renders a real frame for our own uploads in the browser and stores it; it
+  reports how many succeeded and names every one that failed.
+- X and TikTok clips keep a clean labelled placeholder — those hosts do not give
+  us a picture. Never a broken image.
+
+**Tag coverage — see `docs/video-tag-coverage.md`.** Both lists are there, kept apart:
+- (a) Unreachable by code: was 87 of 217 active tags, now **0**. Causes and fixes
+  are tabulated in that file (context-only callers were blocked; fielding and base
+  running had no surface at all; nothing produced result-layer keys; game data was
+  never read).
+- (b) No video: **163 of 217**, listed per domain and layer as a filming list.
+  Nothing was retagged and no tag was created.
+
+**New: recommendations from game data.** `src/lib/games/gameOutcomesToTaxonomy.ts`
+turns logged at-bats, pitches, defensive plays and base-running into the same tag
+keys, surfaced by `GameVideoRecommendations` on the game overview tab.
+
+**Relevance.** Ranking uses current faults, cross-domain root patterns, what the
+current plan is working on, and season phase. Tier-3 picks carry a "General"
+badge and say so in words.
+
+### Verified myself
+- Real hitting match run against the live library: 4 videos returned —
+  "Getting to contact like an Elite Pro" (movement + context + correction + result),
+  "Hank Aaron on Getting to the inside pitch" (result + movement + correction + context),
+  "Executing Elite Contact with Manny" (result + movement + correction),
+  "Getting to power launch spot with Manny" (movement + result + correction + context).
+  One of the four has a cover image; the other three are self-hosted uploads awaiting
+  the owner's one-click cover backfill.
+- Every active tag key now appears in at least one code path (scripted check, 0 left).
+- Typecheck clean. Test suite: 1141 passed, 4 failed — all four in
+  `src/lib/uhrc/__tests__/buildReport.test.ts`, untouched by this work and failing
+  before it.
+
+### Untested
+- Cover-image generation for the 7 self-hosted `.mov` files: it runs in the owner's
+  browser, so it cannot be proven from here. Failures are named on screen rather
+  than swallowed.
+- The game-data recommendation panel has no logged game with defensive errors in
+  the database yet, so it has not been seen with real rows.
