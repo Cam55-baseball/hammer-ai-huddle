@@ -72,20 +72,36 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
       clearCompletion(user?.id, modality, side);
       setCurrent(null);
       if (user?.id && items.length > 0) {
+        const ids = items.map((r) => r.id);
         if (!side) {
-          const ids = items.map((r) => r.id);
           const { error } = await supabase
             .from("wk_prescriptions" as any)
             .update({ status: "pending" })
             .in("id", ids);
           if (error) console.warn("wk_prescriptions status undo failed", error);
-          // Remove the session-log rows this card wrote, so an accidental
-          // "done" doesn't teach tomorrow's plan the wrong thing.
-          const { error: logErr } = await supabase
-            .from("wk_session_logs" as any)
+        }
+        // Remove the session-log rows this card wrote, so an accidental
+        // "done" doesn't teach tomorrow's plan the wrong thing. Side-split
+        // cards write logs too, so this runs for them as well.
+        const { error: logErr } = await supabase
+          .from("wk_session_logs" as any)
+          .delete()
+          .in("prescription_id", ids);
+        if (logErr) console.warn("wk_session_logs undo failed", logErr);
+        // Undo must void everything the mark triggered. Standard attempts are
+        // banked off the logged set; a mis-tap must not leave an attempt at a
+        // standard the athlete never made.
+        const slugs = Array.from(
+          new Set(items.map((r) => r.movement_slug).filter((x): x is string => !!x)),
+        );
+        if (slugs.length > 0) {
+          const { error: attErr } = await supabase
+            .from("wk_standard_attempts" as any)
             .delete()
-            .in("prescription_id", ids);
-          if (logErr) console.warn("wk_session_logs undo failed", logErr);
+            .eq("user_id", user.id)
+            .eq("plan_date", planDate)
+            .in("movement_slug", slugs);
+          if (attErr) console.warn("wk_standard_attempts undo failed", attErr);
         }
         const seeds: TaskSeed[] = items.map((r) => ({
           taskId: r.id,
