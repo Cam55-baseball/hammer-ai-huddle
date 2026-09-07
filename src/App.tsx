@@ -119,6 +119,7 @@ const TodaySession = lazyWithRetry(() => import("./pages/TodaySession"));
 // DEV-only Stage 1 evidence surface. Never routed in a production build.
 const EvidenceSafeSession = lazyWithRetry(() => import("./pages/EvidenceSafeSession"));
 const EvidenceExecution = lazyWithRetry(() => import("./pages/EvidenceExecution"));
+const EvidenceScheduleNotice = lazyWithRetry(() => import("./pages/EvidenceScheduleNotice"));
 const OpsHealth = lazyWithRetry(() => import("./pages/ops/OpsHealth"));
 const OpsReplay = lazyWithRetry(() => import("./pages/ops/OpsReplay"));
 const OpsDrift = lazyWithRetry(() => import("./pages/ops/OpsDrift"));
@@ -285,6 +286,7 @@ const App = () => {
                 <>
                 <Route path="/__evidence/safe-session" element={<EvidenceSafeSession />} />
                 <Route path="/__evidence/execution" element={<EvidenceExecution />} />
+                <Route path="/__evidence/schedule-notice" element={<EvidenceScheduleNotice />} />
                 </>
               )}
 

@@ -74,6 +74,7 @@ export async function buildNowBlock(db: Db, userId: string, now: Date): Promise<
         db
           .from("calendar_events")
           .select("event_date,event_type,title,start_time")
+          .is("deleted_at", null)
           .eq("user_id", userId)
           .gte("event_date", today)
           .lte("event_date", in30)
@@ -87,6 +88,7 @@ export async function buildNowBlock(db: Db, userId: string, now: Date): Promise<
         db
           .from("gp_games")
           .select("id,game_date,opponent_team,status,my_score,opp_score")
+          .is("deleted_at", null)
           .eq("user_id", userId)
           .gte("game_date", weekAgo)
           .order("game_date", { ascending: true })

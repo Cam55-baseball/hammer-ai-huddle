@@ -31,6 +31,7 @@ function usePriorWindowSignal(): GpSignal | null {
     queryFn: async () => {
       const { data } = await gp("gp_games")
         .select("id")
+        .is("deleted_at", null)
         .eq("user_id", user!.id)
         .gte("game_date", sinceDate)
         .lt("game_date", untilDate);

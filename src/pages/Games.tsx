@@ -87,6 +87,7 @@ export default function Games() {
         .select(
           "id, game_date, sport, opponent_team, status, game_type, my_positions, my_score, opp_score, philosophy_verdict",
         )
+        .is("deleted_at", null)
         .eq("user_id", user!.id)
         .order("game_date", { ascending: false })
         .limit(200);

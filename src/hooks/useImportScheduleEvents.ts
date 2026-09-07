@@ -101,6 +101,7 @@ export function useImportScheduleEvents() {
             .from("gp_games")
             .select("game_date,opponent_team")
             .eq("user_id", uid)
+            .is("deleted_at", null)
             .in("game_date", dates),
           (supabase as any)
             .from("scheduled_practice_sessions")

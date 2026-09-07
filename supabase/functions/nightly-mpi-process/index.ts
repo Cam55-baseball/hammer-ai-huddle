@@ -542,6 +542,7 @@ serve(async (req) => {
         // performance_sessions. Count finalized gp_games alongside game sessions.
         const { count: ledgerGameCount } = await supabase
           .from('gp_games').select('id', { count: 'exact', head: true })
+          .is('deleted_at', null)
           .eq('user_id', uid).eq('status', 'final');
         const gameCount = gameSessions.length + (ledgerGameCount ?? 0);
         // Missing beats fabricated: with no practice denominator the ratio is

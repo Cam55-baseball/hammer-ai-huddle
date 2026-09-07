@@ -42,7 +42,8 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
         .from('calendar_events')
         .select('id')
         .eq('user_id', user!.id)
-        .eq('event_date', nextDate);
+        .eq('event_date', nextDate)
+        .is('deleted_at', null);
       if (!data || data.length === 0) return nextDate;
     }
     // Fallback: tomorrow
@@ -77,6 +78,7 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
         .from('calendar_events')
         .select('id, event_date, event_type')
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .gte('event_date', date)
         .order('event_date', { ascending: false });
 

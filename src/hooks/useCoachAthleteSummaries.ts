@@ -96,6 +96,7 @@ export function useCoachAthleteSummaries(athleteIds: string[]) {
         supabase
           .from('gp_games')
           .select('user_id, game_date, opponent_team, my_score, opp_score')
+          .is('deleted_at', null)
           .in('user_id', ids)
           .gte('game_date', since30.slice(0, 10))
           .order('game_date', { ascending: false })

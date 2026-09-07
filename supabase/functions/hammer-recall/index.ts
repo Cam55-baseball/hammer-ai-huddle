@@ -47,6 +47,8 @@ async function retrieveContext(
     RECALL_SOURCES.map(async (def) => {
       const base = () => {
         let b: any = db.from(def.table).select(def.select).eq(def.userColumn, userId);
+        // Soft-deleted schedule rows are gone everywhere, recall included.
+        if (def.table === "gp_games" || def.table === "calendar_events") b = b.is("deleted_at", null);
         for (const [col, val] of Object.entries(def.eq ?? {})) b = b.eq(col, val);
         for (const col of def.isNull ?? []) b = b.is(col, null);
         if (from) b = b.gte(def.dateColumn, from);
