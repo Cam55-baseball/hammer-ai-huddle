@@ -91,6 +91,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   });
 
   const feedback = useVideoFaultFeedback(suggestions.map(s => s.video.id));
+  const navigate = useNavigate();
   const primaryFault = signals?.correctionTags[0] ?? signals?.movementPatterns[0] ?? null;
   const faultLayer: 'correction' | 'movement_pattern' | null =
     signals?.correctionTags.length ? 'correction' : signals?.movementPatterns.length ? 'movement_pattern' : null;
