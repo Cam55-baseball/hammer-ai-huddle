@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { History, RotateCcw, Loader2, User, GraduationCap } from 'lucide-react';
@@ -106,7 +105,7 @@ export function CardVersionHistory({ open, onOpenChange, folderItemId, itemTitle
             <p className="text-xs">Versions are created each time the card is edited.</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="space-y-2 pr-2">
               {versions.map((v, idx) => (
                 <div key={v.id} className="p-3 rounded-lg border space-y-1">
@@ -170,7 +169,7 @@ export function CardVersionHistory({ open, onOpenChange, folderItemId, itemTitle
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </DialogContent>
     </Dialog>

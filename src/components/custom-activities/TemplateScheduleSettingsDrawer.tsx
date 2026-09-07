@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { RefreshCw, Bell } from 'lucide-react';
 import { CustomActivityTemplate } from '@/types/customActivity';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
@@ -140,7 +139,7 @@ export function TemplateScheduleSettingsDrawer({
           <DrawerDescription>{template?.title}</DrawerDescription>
         </DrawerHeader>
 
-        <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="space-y-6 py-4">
             {/* Show on Game Plan Toggle */}
             <div className="flex items-center justify-between gap-4">
@@ -246,7 +245,7 @@ export function TemplateScheduleSettingsDrawer({
               </>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Action Buttons - Large touch targets */}
         <div className="flex gap-3 pt-4 border-t">

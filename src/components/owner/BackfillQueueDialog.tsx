@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoEditForm } from "./VideoEditForm";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
 import { useVideoReadiness, MISSING_LABEL } from "@/hooks/useVideoReadiness";
@@ -118,7 +117,7 @@ export function BackfillQueueDialog({ open, onOpenChange }: Props) {
         ) : (
           <div className="flex-1 grid grid-cols-1 md:grid-cols-[280px_1fr] min-h-0">
             {/* Left rail — queue */}
-            <ScrollArea className="border-r min-h-0">
+            <div className="border-r min-h-0 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
               <div className="p-2 space-y-1">
                 {queue.map(v => {
                   const r = readiness?.find(x => x.video_id === v.id);
@@ -143,7 +142,7 @@ export function BackfillQueueDialog({ open, onOpenChange }: Props) {
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Right pane — editor */}
             <div className="flex flex-col min-h-0">
@@ -166,7 +165,7 @@ export function BackfillQueueDialog({ open, onOpenChange }: Props) {
                       <ChevronRight className="h-3 w-3 text-muted-foreground" />
                     </div>
                   </div>
-                  <ScrollArea className="flex-1 min-h-0">
+                  <div className="flex-1 min-h-0 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
                     <div className="p-4">
                       <VideoEditForm
                         key={activeVideo.id}
@@ -176,7 +175,7 @@ export function BackfillQueueDialog({ open, onOpenChange }: Props) {
                         onCancel={handleSkip}
                       />
                     </div>
-                  </ScrollArea>
+                  </div>
                 </>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
