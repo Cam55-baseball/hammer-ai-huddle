@@ -40,7 +40,9 @@ export function SoftballLock({
 
   if (isOwner || isAdmin) return <>{children}</>;
 
-  return <SoftballComingSoon label={SOFTBALL_LOCKED_FEATURES[feature].label} />;
+  return (
+    <SoftballComingSoon featureName={SOFTBALL_LOCKED_FEATURES[feature].label} />
+  );
 }
 
 /** Hook form for hiding nav entries and in-page panels. */
