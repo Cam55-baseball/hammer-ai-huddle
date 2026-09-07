@@ -188,14 +188,26 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                       size="sm"
                       className="h-7 px-2"
                       aria-label="This helped"
-                      onClick={() =>
-                        feedback.toggleLike(video.id, {
+                      onClick={async () => {
+                        const wasLiked = feedback.isLiked(video.id);
+                        await feedback.toggleLike(video.id, {
                           skillDomain: skillDomain ?? 'hitting',
                           faultTagKey: primaryFault,
                           faultTagLayer: faultLayer,
                           source: 'analysis_recommendation',
-                        })
-                      }
+                        });
+                        toast(
+                          wasLiked ? 'Removed from your video library' : 'Saved to your video library',
+                          {
+                            description: wasLiked
+                              ? `"${video.title}" is no longer in your saved videos.`
+                              : `"${video.title}" is in Saved videos whenever you want it.`,
+                            action: wasLiked
+                              ? undefined
+                              : { label: 'View', onClick: () => navigate('/video-library') },
+                          },
+                        );
+                      }}
                     >
                       <Heart className={cn('h-3.5 w-3.5', feedback.isLiked(video.id) && 'fill-destructive text-destructive')} />
                     </Button>
