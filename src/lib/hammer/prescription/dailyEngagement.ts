@@ -132,6 +132,26 @@ export function recordCompletion(
   return next;
 }
 
+/**
+ * Clear today's done/skipped mark for one modality, so a mistap can be taken
+ * back rather than living in the streak history for the rest of the day.
+ */
+export function clearCompletion(
+  userId: string | null | undefined,
+  modality: EngagementKey,
+  side?: "L" | "R" | null,
+): EngagementState {
+  const state = loadEngagement(userId);
+  const key = completionKey(modality, side);
+  const next = upsertToday(state, (d) => {
+    const completions = { ...d.completions };
+    delete completions[key];
+    return { ...d, completions };
+  });
+  saveEngagement(next);
+  return next;
+}
+
 export function recordPhaseSignature(
   userId: string | null | undefined,
   blocks: ReadonlyArray<PrescribedBlock>,
