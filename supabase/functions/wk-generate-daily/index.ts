@@ -3290,6 +3290,9 @@ const handler = async (req: Request): Promise<Response> => {
                 hours_to_game: gameProximity.hoursToNearestGame,
               }
             : null,
+          // Recorded, never acted on: whether today's recovery ack was applied
+          // or found spent, and which test retired it.
+          recovery_ack: ackDecision,
         } as any)
         .eq("id", diagId as any);
     }
