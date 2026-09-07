@@ -190,26 +190,44 @@ export function ScheduleAdjustmentNotice({
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
+        {/* Flex column + scrolling body: the reason can be long, but Cancel and
+            "Lift anyway" stay pinned and reachable without scrolling. */}
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] max-w-sm flex-col gap-0 p-0">
+          <DialogHeader className="shrink-0 p-6 pb-3 pr-12">
             <DialogTitle>Lift anyway?</DialogTitle>
-            <DialogDescription asChild>
-              <div className="space-y-2 text-left">
-                <p>
-                  {game
-                    ? `You have a game ${game.whenLabel}. Lifting today anyway means a full session instead of a primer.`
-                    : "Lifting today anyway means a full session instead of a primer."}{" "}
-                  Your safety limits don't change. Just today.
-                </p>
-                <p className="text-xs">
-                  Anything held back for your age, your training age, or because the movement itself
-                  isn't safe for you right now stays held back. If you're the starting pitcher, the
-                  lift still comes off — un-mark the start instead.
-                </p>
-              </div>
-            </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-4 text-left text-sm text-muted-foreground">
+            <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                Why we hold this back
+              </p>
+              <p className="text-[13px] leading-relaxed text-foreground/90">
+                The game is the point. Heavy lifting inside 48 hours of first pitch usually costs you
+                a step in the field and some bat speed at the plate, and the soreness tends to land
+                the next day rather than tonight. A primer keeps you sharp without spending anything
+                you need for the game.
+              </p>
+              <p className="text-[13px] leading-relaxed text-foreground/90">
+                If you'd still rather lift, that's your call — this is one day, and your safety
+                limits don't change either way.
+              </p>
+            </div>
+
+            <p>
+              {game
+                ? `You have a game ${game.whenLabel}. Lifting today anyway means a full session instead of a primer.`
+                : "Lifting today anyway means a full session instead of a primer."}{" "}
+              Your safety limits don't change. Just today.
+            </p>
+            <p className="text-xs">
+              Anything held back for your age, your training age, or because the movement itself
+              isn't safe for you right now stays held back. If you're the starting pitcher, the lift
+              still comes off — un-mark the start instead.
+            </p>
+          </div>
+
+          <DialogFooter className="shrink-0 border-t border-border bg-background p-4">
             <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={busy}>
               Cancel
             </Button>
@@ -217,6 +235,7 @@ export function ScheduleAdjustmentNotice({
               {busy ? "Applying…" : "Lift anyway"}
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
     </div>
