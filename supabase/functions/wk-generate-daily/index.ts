@@ -469,12 +469,24 @@ const handler = async (req: Request): Promise<Response> => {
     const liftExposureDatesLast7 = Array.from(
       new Set(((recentLiftRows ?? []) as any[]).map((r: any) => String(r.plan_date))),
     );
+    // The athlete's own one-day "Lift anyway" call. Scoped to this plan date
+    // and this plan date only — there is no carry-over by construction.
+    const { data: overrideRow } = await admin
+      .from("wk_schedule_overrides")
+      .select("id, reason, created_at")
+      .eq("user_id", user.id)
+      .eq("plan_date", planDate)
+      .eq("kind", "lift_anyway")
+      .maybeSingle();
+    const athleteScheduleOverride = !!overrideRow;
     const gameProximity = scheduledGames.length
       ? resolveGameProximity(scheduledGames, planDate, {
           isPitcher: isPitcherAthlete,
           liftExposureDatesLast7,
+          athleteOverride: athleteScheduleOverride,
         })
       : NO_SCHEDULE;
+
 
     // -------- Competition level --------
     // `min_competition_level` has been on every catalog row since the catalog
