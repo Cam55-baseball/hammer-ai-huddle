@@ -12,10 +12,15 @@ import { recommendDrills } from "@/lib/pieV2/recommendDrills";
 import { deriveInjuryCaution } from "@/lib/pieV2/injuryDetection";
 import { PIE_V2_SIGNALS } from "@/data/baseball/pieV2Signals";
 import { useSportConfig } from "@/hooks/useSportConfig";
+import { useSoftballLocked } from "@/components/softball/SoftballLock";
 
 interface Props { athleteId: string }
 
 export function PieV2CoachPanel({ athleteId }: Props) {
+  // Pre-launch: PIE v2 catalogs are baseball-only — a windmill delivery would
+  // get overhand recommendations, so softball athletes see nothing here.
+  const softballLocked = useSoftballLocked("pie_v2_pitching");
+  if (softballLocked) return null;
   const { sport } = useSportConfig();
   const { data, isLoading } = usePitchingV2Trends(athleteId);
   if (sport !== "baseball") return null;

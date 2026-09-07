@@ -12,6 +12,7 @@ import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 import type { PieV2SessionAggregate } from "@/lib/pieV2/types";
 import type { PieV2Trajectory } from "@/lib/pieV2/longitudinal";
 import { PIE_V2_SIGNALS } from "@/data/baseball/pieV2Signals";
+import { useSoftballLocked } from "@/components/softball/SoftballLock";
 
 interface Props {
   aggregate: PieV2SessionAggregate;
@@ -20,6 +21,10 @@ interface Props {
 }
 
 export function PieV2RecruitingCard({ aggregate, trajectories, optIn }: Props) {
+  // Pre-launch: PIE v2 catalogs are baseball-only — a windmill delivery would
+  // get overhand recommendations, so softball athletes see nothing here.
+  const softballLocked = useSoftballLocked("pie_v2_pitching");
+  if (softballLocked) return null;
   if (!optIn) return null;
   return (
     <Card>

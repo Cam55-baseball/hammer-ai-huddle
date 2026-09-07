@@ -21,6 +21,7 @@ import { generateHammerBrief } from "@/lib/uhrc/generateHammerBrief";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmitOnce, emitObservability } from "@/hooks/useEmitObservability";
 import type { PieV2SessionAggregate } from "@/lib/pieV2/types";
+import { useSoftballLocked } from "@/components/softball/SoftballLock";
 
 
 interface Props {
@@ -28,6 +29,10 @@ interface Props {
 }
 
 export function PieV2HammerBriefPanel({ aggregate }: Props) {
+  // Pre-launch: PIE v2 catalogs are baseball-only — a windmill delivery would
+  // get overhand recommendations, so softball athletes see nothing here.
+  const softballLocked = useSoftballLocked("pie_v2_pitching");
+  if (softballLocked) return null;
   const { user } = useAuth();
   const [acked, setAcked] = useState(false);
   const isSelf = user?.id && aggregate.athlete_id === user.id;
