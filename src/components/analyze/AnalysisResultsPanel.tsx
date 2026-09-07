@@ -417,6 +417,9 @@ export function AnalysisResultsPanel({
                 );
               })}
             </div>
+            )}
+
+            {prescriptionExtra}
           </Card>
         </RevealSection>
       )}
