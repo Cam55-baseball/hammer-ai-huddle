@@ -288,6 +288,7 @@ const App = () => {
                 <Route path="/__evidence/safe-session" element={<EvidenceSafeSession />} />
                 <Route path="/__evidence/execution" element={<EvidenceExecution />} />
                 <Route path="/__evidence/schedule-notice" element={<EvidenceScheduleNotice />} />
+                <Route path="/__evidence/arm-care" element={<EvidenceArmCare />} />
                 </>
               )}
 
