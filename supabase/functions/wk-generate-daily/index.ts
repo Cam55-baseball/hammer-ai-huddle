@@ -352,15 +352,18 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("athlete_mpi_settings").select("season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
-      // Window, not a single day: the 48-hour rule needs yesterday and the
-      // next two days, and a doubleheader needs every row for a date.
+      // Window, not a single day: the 48-hour rule needs the next two days,
+      // a doubleheader needs every row for a date, and the density model needs
+      // the rolling seven days centred on today. Deleted rows never load.
       admin.from("gp_games")
-        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher")
+        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher, is_doubleheader, ignored_for_training, opponent_name")
         .eq("user_id", user.id)
-        .gte("game_date", isoShift(planDate, -2))
-        .lte("game_date", isoShift(planDate, 2))
+        .is("deleted_at", null)
+        .gte("game_date", isoShift(planDate, -3))
+        .lte("game_date", isoShift(planDate, 3))
         .not("status", "in", "(canceled,cancelled,rescheduled)")
-        .limit(40),
+        .limit(60),
+
       // Practices: exact-date rows plus recurring weekly rows (filtered below).
       admin.from("scheduled_practice_sessions")
         .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, title, start_time, status")
