@@ -2115,7 +2115,7 @@ export interface RoadmapInputs {
   /** Canonical phase from resolveSeasonPhase (short form: off/pre/in/post). */
   readonly resolvedSeasonPhase?: "off" | "pre" | "in" | "post" | null;
   /** Provenance of that phase; 'default' means no real season signal. */
-  readonly seasonPhaseSource?: "date_window" | "stored" | "default" | null;
+  readonly seasonPhaseSource?: "date_window" | "stored" | "manual" | "default" | null;
   /** Position the athlete says they are actually working today. */
   readonly positionOverride?: string | null;
   /** Athlete tapped "run full defense anyway" on a game day. */
