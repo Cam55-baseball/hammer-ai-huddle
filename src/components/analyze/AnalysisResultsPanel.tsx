@@ -73,6 +73,11 @@ interface Props {
    * untouched — words stay, scores go.
    */
   showScore?: boolean;
+  /**
+   * Extra prescription content folded into the single "Your prescription"
+   * card, so an athlete never sees two competing prescription boxes.
+   */
+  prescriptionExtra?: ReactNode;
 }
 
 function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNode }) {
