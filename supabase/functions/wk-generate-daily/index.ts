@@ -356,7 +356,7 @@ const handler = async (req: Request): Promise<Response> => {
       // a doubleheader needs every row for a date, and the density model needs
       // the rolling seven days centred on today. Deleted rows never load.
       admin.from("gp_games")
-        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher, is_doubleheader, ignored_for_training, opponent_name")
+        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher, is_doubleheader, ignored_for_training, opponent_team")
         .eq("user_id", user.id)
         .is("deleted_at", null)
         .gte("game_date", isoShift(planDate, -3))
