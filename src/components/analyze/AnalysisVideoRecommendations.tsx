@@ -7,6 +7,8 @@
  * to a fault it was never tagged for.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Bookmark, Heart, Play, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -89,6 +91,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   });
 
   const feedback = useVideoFaultFeedback(suggestions.map(s => s.video.id));
+  const navigate = useNavigate();
   const primaryFault = signals?.correctionTags[0] ?? signals?.movementPatterns[0] ?? null;
   const faultLayer: 'correction' | 'movement_pattern' | null =
     signals?.correctionTags.length ? 'correction' : signals?.movementPatterns.length ? 'movement_pattern' : null;
@@ -188,14 +191,26 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                       size="sm"
                       className="h-7 px-2"
                       aria-label="This helped"
-                      onClick={() =>
-                        feedback.toggleLike(video.id, {
+                      onClick={async () => {
+                        const wasLiked = feedback.isLiked(video.id);
+                        await feedback.toggleLike(video.id, {
                           skillDomain: skillDomain ?? 'hitting',
                           faultTagKey: primaryFault,
                           faultTagLayer: faultLayer,
                           source: 'analysis_recommendation',
-                        })
-                      }
+                        });
+                        toast(
+                          wasLiked ? 'Removed from your video library' : 'Saved to your video library',
+                          {
+                            description: wasLiked
+                              ? `"${video.title}" is no longer in your saved videos.`
+                              : `"${video.title}" is in Saved videos whenever you want it.`,
+                            action: wasLiked
+                              ? undefined
+                              : { label: 'View', onClick: () => navigate('/video-library') },
+                          },
+                        );
+                      }}
                     >
                       <Heart className={cn('h-3.5 w-3.5', feedback.isLiked(video.id) && 'fill-destructive text-destructive')} />
                     </Button>

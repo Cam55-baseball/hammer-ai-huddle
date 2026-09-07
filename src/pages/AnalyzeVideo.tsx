@@ -1472,6 +1472,7 @@ export default function AnalyzeVideo() {
                 )}
 
                 {scoresAllowed && analysisView === "report_card" ? (
+                  <>
                   <HammerReportCard
                     sport={sport}
                     module={module}
@@ -1485,6 +1486,12 @@ export default function AnalyzeVideo() {
                     } as never}
                     showShare={false}
                   />
+                  <AnalysisPrescriptionSection
+                    module={module}
+                    sport={sport}
+                    violations={analysis.violations_detected ?? null}
+                  />
+                  </>
                 ) : (
                   <AnalysisResultsPanel
                     analysis={analysis}
@@ -1495,6 +1502,14 @@ export default function AnalyzeVideo() {
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
                     showScore={scoresAllowed}
+                    prescriptionExtra={
+                      <AnalysisPrescriptionSection
+                        embedded
+                        module={module}
+                        sport={sport}
+                        violations={analysis.violations_detected ?? null}
+                      />
+                    }
                   />
                 )}
 
@@ -1518,11 +1533,6 @@ export default function AnalyzeVideo() {
                     anything single-discipline, so it sits above the drills. */}
                 <RootPatternCallout />
 
-                <AnalysisPrescriptionSection
-                  module={module}
-                  sport={sport}
-                  violations={analysis.violations_detected ?? null}
-                />
 
               </div>
             )}

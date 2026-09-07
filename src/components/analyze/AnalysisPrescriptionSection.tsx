@@ -24,6 +24,12 @@ interface Props {
   sport?: string | null;
   violations?: Record<string, boolean> | null;
   pieV2Signals?: string[];
+  /**
+   * When true, drop the card shell and the duplicate "Your prescription"
+   * heading — the section is being folded into the report's single
+   * prescription card rather than standing on its own.
+   */
+  embedded?: boolean;
 }
 
 function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] }) {
@@ -82,7 +88,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
   );
 }
 
-export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Signals }: Props) {
+export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Signals, embedded }: Props) {
   const navigate = useNavigate();
   const { snapshot } = useHIESnapshot();
 
@@ -119,18 +125,9 @@ export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Si
     navigate(drillModule === "tex-vision" ? `/tex-vision?${params}` : `/practice?${params}`);
   };
 
-  return (
-    <Card className="border-primary/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Zap className="h-5 w-5 text-primary" />
-          Your prescription
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          What to work on next, based on this analysis. Suggested — not mandatory.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-5">
+  const body = (
+    <>
+      <div className="space-y-5">
         <section className="space-y-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {matches.length > 0 ? "From this clip" : "Maintenance work"}
@@ -191,7 +188,24 @@ export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Si
             ))}
           </section>
         )}
-      </CardContent>
+      </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <Card className="border-primary/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Zap className="h-5 w-5 text-primary" />
+          Your prescription
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          What to work on next, based on this analysis. Suggested — not mandatory.
+        </p>
+      </CardHeader>
+      <CardContent>{body}</CardContent>
     </Card>
   );
 }
