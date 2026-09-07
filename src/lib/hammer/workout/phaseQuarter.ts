@@ -22,7 +22,7 @@ export type WkPhase =
 export interface WkPhaseResolution {
   phase: WkPhase;
   displayName: string;
-  source: 'date_window' | 'stored' | 'default';
+  source: 'date_window' | 'stored' | 'manual' | 'default';
   daysIntoQuarter: number | null;
   daysUntilNextQuarter: number | null;
 }

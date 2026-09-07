@@ -87,7 +87,6 @@ export function useGameDayContext(): GameDayContext {
       })
         .from("gp_games")
         .select("game_date")
-        .is("deleted_at", null)
         .eq("user_id", user!.id)
         .gte("game_date", start7dAgo)
         .lte("game_date", startToday)
