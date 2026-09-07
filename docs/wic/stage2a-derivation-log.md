@@ -813,3 +813,7 @@ after a successful save in `ExerciseLogSheet`, inside try/catch. Read path:
 none. Zero athlete-facing surface, zero dose authority — proven by
 `src/test/standardsAttempts.test.ts`, which evaluates the full standards set
 before and after collection and asserts byte-identical output.
+
+## Naming vocabulary
+
+Qualifiers use the catalog's existing vocabulary where one exists. "Deep Range Split Squat, Limited Range" was renamed to "Split Squat, Short Range" to match the already-shipped "Short Range Knee Step Down" — display name only, slug and substitution family untouched, and the pain-free constraint stays in the cue on the card.
