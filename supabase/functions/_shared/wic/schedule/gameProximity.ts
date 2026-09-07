@@ -86,6 +86,14 @@ export interface GameProximity {
   highDensity: boolean;
   /** The zero-exposure invariant fired and relaxed a removal to a primer. */
   zeroExposureRelief: boolean;
+  /**
+   * A schedule-derived restriction exists that the athlete's own "Lift anyway"
+   * override is allowed to relax. False when the only restriction left is a
+   * starting-pitcher rule, which an override never touches.
+   */
+  overrideAvailable: boolean;
+  /** The athlete's one-day override was applied to this plan date. */
+  overrideApplied: boolean;
   /** Rows dropped by de-duplication, for the derivation log. */
   duplicatesCollapsed: number;
   /** Rows dropped because they were already played. */
@@ -94,6 +102,7 @@ export interface GameProximity {
   headline: string | null;
   reasons: string[];
 }
+
 
 export const NO_SCHEDULE: GameProximity = {
   hasSchedule: false,
