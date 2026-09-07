@@ -1486,6 +1486,9 @@ export default function AnalyzeVideo() {
                     } as never}
                     showShare={false}
                   />
+                  {/* Report-card view has no findings card, so the cross-skill
+                      pattern gets its one home directly under the report. */}
+                  <RootPatternCallout />
                   <AnalysisPrescriptionSection
                     module={module}
                     sport={sport}
@@ -1502,6 +1505,7 @@ export default function AnalyzeVideo() {
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
                     showScore={scoresAllowed}
+                    crossDomainSlot={<RootPatternCallout inline />}
                     prescriptionExtra={
                       <AnalysisPrescriptionSection
                         embedded
@@ -1529,9 +1533,6 @@ export default function AnalyzeVideo() {
 
                 <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
 
-                {/* One movement problem showing up in several skills outranks
-                    anything single-discipline, so it sits above the drills. */}
-                <RootPatternCallout />
 
 
               </div>
