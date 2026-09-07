@@ -15997,6 +15997,7 @@ export type Database = {
           performance_support_governance_version: string | null
           personalization_version: string | null
           plan_date: string
+          recovery_ack: Json | null
           recovery_category_coverage: Json | null
           recovery_governance_version: string | null
           recovery_profile_id: string | null
@@ -16082,6 +16083,7 @@ export type Database = {
           performance_support_governance_version?: string | null
           personalization_version?: string | null
           plan_date: string
+          recovery_ack?: Json | null
           recovery_category_coverage?: Json | null
           recovery_governance_version?: string | null
           recovery_profile_id?: string | null
@@ -16167,6 +16169,7 @@ export type Database = {
           performance_support_governance_version?: string | null
           personalization_version?: string | null
           plan_date?: string
+          recovery_ack?: Json | null
           recovery_category_coverage?: Json | null
           recovery_governance_version?: string | null
           recovery_profile_id?: string | null
