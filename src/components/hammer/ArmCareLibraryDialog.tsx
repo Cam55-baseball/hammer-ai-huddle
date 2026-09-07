@@ -77,15 +77,15 @@ export function ArmCareLibraryDialog({ open, onOpenChange, sport }: ArmCareLibra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90dvh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0 pr-10 text-left">
           <DialogTitle>Arm Care Library</DialogTitle>
           <DialogDescription>
             Elite arm care built from Jaeger, XBand, Jobes, Crossover Symmetry, Cressey, Driveline, and windmill-specific work.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
           <Input
             placeholder="Search movement or cue…"
             value={query}
@@ -105,7 +105,7 @@ export function ArmCareLibraryDialog({ open, onOpenChange, sport }: ArmCareLibra
             ))}
           </div>
 
-          <ScrollArea className="h-[420px] pr-2">
+          <ScrollArea className="min-h-0 flex-1 pr-2">
             {isLoading ? (
               <p className="text-sm text-muted-foreground p-4">Loading movements…</p>
             ) : filtered.length === 0 ? (

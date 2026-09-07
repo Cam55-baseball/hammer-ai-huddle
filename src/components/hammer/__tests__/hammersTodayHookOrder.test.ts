@@ -27,7 +27,7 @@ describe("Hammers Today card hook order", () => {
     const source = readHammerCard("WkLiftsCard.tsx");
     const budgetHook = source.indexOf("const budget = useArmCareBudget();");
     const openHook = source.indexOf("const [open, setOpen] = useState<boolean>(false);");
-    const gameDayReturn = source.indexOf("if (gp.gameToday) {");
+    const gameDayReturn = source.indexOf("if (gp.gameToday && !schedule?.override_applied) {");
 
     expect(budgetHook).toBeGreaterThan(-1);
     expect(openHook).toBeGreaterThan(-1);

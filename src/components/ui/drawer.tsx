@@ -1,4 +1,5 @@
 import * as React from "react";
+import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
@@ -37,6 +38,13 @@ const DrawerContent = React.forwardRef<
       {...props}
     >
       <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted shrink-0" />
+      <DrawerPrimitive.Close
+        aria-label="Close"
+        className="absolute right-3 top-3 z-10 rounded-full border border-border bg-secondary p-2 text-secondary-foreground shadow-md transition-all hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring active:scale-95"
+      >
+        <X className="h-5 w-5" strokeWidth={2.5} />
+        <span className="sr-only">Close</span>
+      </DrawerPrimitive.Close>
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>

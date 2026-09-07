@@ -86,6 +86,14 @@ export interface GameProximity {
   highDensity: boolean;
   /** The zero-exposure invariant fired and relaxed a removal to a primer. */
   zeroExposureRelief: boolean;
+  /**
+   * A schedule-derived restriction exists that the athlete's own "Lift anyway"
+   * override is allowed to relax. False when the only restriction left is a
+   * starting-pitcher rule, which an override never touches.
+   */
+  overrideAvailable: boolean;
+  /** The athlete's one-day override was applied to this plan date. */
+  overrideApplied: boolean;
   /** Rows dropped by de-duplication, for the derivation log. */
   duplicatesCollapsed: number;
   /** Rows dropped because they were already played. */
@@ -94,6 +102,7 @@ export interface GameProximity {
   headline: string | null;
   reasons: string[];
 }
+
 
 export const NO_SCHEDULE: GameProximity = {
   hasSchedule: false,
@@ -110,6 +119,9 @@ export const NO_SCHEDULE: GameProximity = {
   gamesPerRollingWeek: 0,
   highDensity: false,
   zeroExposureRelief: false,
+  overrideAvailable: false,
+  overrideApplied: false,
+
   duplicatesCollapsed: 0,
   finishedExcluded: 0,
   headline: null,
@@ -269,6 +281,15 @@ function mergeRows(a: ScheduledGame, b: ScheduledGame): ScheduledGame {
 export interface ProximityOptions {
   isPitcher?: boolean;
   /**
+   * The athlete tapped "Lift anyway" for this plan date. It may relax ONLY the
+   * schedule-derived caps computed in this file — the 48-hour primer cap, the
+   * density game-day primer and the pitcher-near-a-team-game default. It never
+   * touches a declared start, the CNS cap, season legality, age gates or any
+   * movement safety flag; those live outside this function entirely.
+   */
+  athleteOverride?: boolean;
+
+  /**
    * Dates in the six days before the plan date on which the athlete actually
    * received lift exposure. Used only by the zero-exposure invariant.
    */
@@ -334,6 +355,10 @@ export function resolveGameProximity(
   const isGameToday = gamesToday > 0;
   let primerOnly = false;
   let headline: string | null = null;
+  /** Primer caused purely by the schedule — the only thing an override may lift. */
+  let primerFromSchedule = false;
+  /** Primer caused by a declared start. An override never touches this. */
+  let primerFromStart = false;
 
   if (highDensity) {
     reasons.push(
@@ -341,12 +366,14 @@ export function resolveGameProximity(
     );
     if (isGameToday) {
       primerOnly = true;
+      primerFromSchedule = true;
       headline = drivingGame
         ? `Primer only — you play ${drivingGame.whenLabel}.`
         : "Primer only — you play today.";
     }
   } else if (within48hRaw) {
     primerOnly = true;
+    primerFromSchedule = true;
     headline = drivingGame
       ? `Lighter today — you have a game ${drivingGame.whenLabel}.`
       : "Lighter today — you have a game coming up.";
@@ -370,7 +397,7 @@ export function resolveGameProximity(
     reasons.push("Doubleheader yesterday — CNS cap still pulled back one unit.");
   }
 
-  // ---- Starting pitcher. Protection survives every density. ----
+  // ---- Starting pitcher. Protection survives every density, and an override. ----
   const startingToday = today.some((g) => g.isStartingPitcher === true);
   const tomorrow = clean.filter((g) => g.date === isoAddDays(planDate, 1));
   const startingTomorrow = tomorrow.some((g) => g.isStartingPitcher === true);
@@ -382,14 +409,32 @@ export function resolveGameProximity(
   }
   if (startingTomorrow) {
     primerOnly = true;
+    primerFromStart = true;
     const when = describeWhen(isoAddDays(planDate, 1), hhmm(tomorrow[0]), planDate);
     headline = headline ?? `Primer only — you start ${when}.`;
     reasons.push(`You start ${when} — day-before protection holds regardless of schedule density.`);
   }
   if (opts.isPitcher && !startingToday && !startingTomorrow && within48hRaw && !highDensity) {
     primerOnly = true;
+    primerFromSchedule = true;
     reasons.push(
       "Pitcher next to a team game and no start declared — defaulting to primer level.",
+    );
+  }
+
+  // ---- The athlete's own call: "the game is real, I want to lift anyway". ----
+  // This relaxes schedule-derived caps and nothing else. A declared start keeps
+  // the lift off (arm health, not scheduling); the fix there is to un-mark the
+  // start, not to override it. Safety flags, age gates, the CNS cap and season
+  // legality are all evaluated elsewhere and are untouched by this branch.
+  const overrideAvailable = (primerFromSchedule && !primerFromStart && !startingToday);
+  let overrideApplied = false;
+  if (opts.athleteOverride === true && overrideAvailable) {
+    primerOnly = false;
+    overrideApplied = true;
+    headline = "You chose to lift through today's game day.";
+    reasons.push(
+      "You chose to lift through today's game day — the schedule cap is off for today only. Your safety limits are unchanged.",
     );
   }
 
@@ -411,6 +456,7 @@ export function resolveGameProximity(
     );
   }
 
+
   return {
     hasSchedule: true,
     hoursToNearestGame: nearest,
@@ -426,6 +472,9 @@ export function resolveGameProximity(
     gamesPerRollingWeek,
     highDensity,
     zeroExposureRelief,
+    overrideAvailable,
+    overrideApplied,
+
     duplicatesCollapsed,
     finishedExcluded,
     headline,

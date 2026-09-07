@@ -101,6 +101,8 @@ export interface WkRx {
       games_per_rolling_week?: number;
       high_density?: boolean;
       zero_exposure_relief?: boolean;
+      override_available?: boolean;
+      override_applied?: boolean;
       duplicates_collapsed?: number;
       finished_excluded?: number;
       reasons?: string[];
@@ -593,6 +595,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   return {
     ...query,
+    planDate,
     grouped,
     reductions,
     schedule,

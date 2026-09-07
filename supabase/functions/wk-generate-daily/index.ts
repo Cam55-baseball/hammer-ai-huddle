@@ -469,12 +469,24 @@ const handler = async (req: Request): Promise<Response> => {
     const liftExposureDatesLast7 = Array.from(
       new Set(((recentLiftRows ?? []) as any[]).map((r: any) => String(r.plan_date))),
     );
+    // The athlete's own one-day "Lift anyway" call. Scoped to this plan date
+    // and this plan date only — there is no carry-over by construction.
+    const { data: overrideRow } = await admin
+      .from("wk_schedule_overrides")
+      .select("id, reason, created_at")
+      .eq("user_id", user.id)
+      .eq("plan_date", planDate)
+      .eq("kind", "lift_anyway")
+      .maybeSingle();
+    const athleteScheduleOverride = !!overrideRow;
     const gameProximity = scheduledGames.length
       ? resolveGameProximity(scheduledGames, planDate, {
           isPitcher: isPitcherAthlete,
           liftExposureDatesLast7,
+          athleteOverride: athleteScheduleOverride,
         })
       : NO_SCHEDULE;
+
 
     // -------- Competition level --------
     // `min_competition_level` has been on every catalog row since the catalog
@@ -1355,6 +1367,9 @@ const handler = async (req: Request): Promise<Response> => {
             games_per_rolling_week: gameProximity.gamesPerRollingWeek,
             high_density: gameProximity.highDensity,
             zero_exposure_relief: gameProximity.zeroExposureRelief,
+            override_available: gameProximity.overrideAvailable,
+            override_applied: gameProximity.overrideApplied,
+
             duplicates_collapsed: gameProximity.duplicatesCollapsed,
             finished_excluded: gameProximity.finishedExcluded,
             reasons: gameProximity.reasons,
@@ -1440,7 +1455,7 @@ const handler = async (req: Request): Promise<Response> => {
     // At four or more games in a rolling seven days the 48-hour rule cannot be
     // satisfied, so a game day still earns a primer rather than nothing at all
     // — `primerOnly` above has already capped what can appear.
-    if ((!isGameDay || gameProximity.highDensity) && !gameProximity.removeLift) {
+    if ((!isGameDay || gameProximity.highDensity || gameProximity.overrideApplied) && !gameProximity.removeLift) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
@@ -3173,9 +3188,27 @@ const handler = async (req: Request): Promise<Response> => {
     if (diagId) {
       await admin
         .from("wk_generation_diagnostics")
-        .update({ training_methods: methodDiagnostics } as any)
+        .update({
+          training_methods: methodDiagnostics,
+          // Recorded, never acted on: which schedule cap the athlete's own
+          // "Lift anyway" call relaxed, and why it was there in the first place.
+          schedule_override: athleteScheduleOverride
+            ? {
+                kind: "lift_anyway",
+                applied: gameProximity.overrideApplied,
+                available: gameProximity.overrideAvailable,
+                reason: (overrideRow as any)?.reason ?? null,
+                driving_game: gameProximity.drivingGame,
+                overriding: gameProximity.reasons,
+                games_per_rolling_week: gameProximity.gamesPerRollingWeek,
+                high_density: gameProximity.highDensity,
+                hours_to_game: gameProximity.hoursToNearestGame,
+              }
+            : null,
+        } as any)
         .eq("id", diagId as any);
     }
+
 
     await admin.from("wk_cns_ledger").upsert({
       user_id: user.id, ledger_date: planDate,

@@ -16005,6 +16005,7 @@ export type Database = {
           recovery_validation_status: string | null
           resolved_day_type: string | null
           resolved_season_phase: string | null
+          schedule_override: Json | null
           season_phase: string | null
           snapshot_hash: string | null
           snapshot_integrity_status: string | null
@@ -16089,6 +16090,7 @@ export type Database = {
           recovery_validation_status?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
+          schedule_override?: Json | null
           season_phase?: string | null
           snapshot_hash?: string | null
           snapshot_integrity_status?: string | null
@@ -16173,6 +16175,7 @@ export type Database = {
           recovery_validation_status?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
+          schedule_override?: Json | null
           season_phase?: string | null
           snapshot_hash?: string | null
           snapshot_integrity_status?: string | null
@@ -16733,6 +16736,36 @@ export type Database = {
           id?: string
           reduction_payload?: Json
           reduction_reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wk_schedule_overrides: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          plan_date: string
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          plan_date: string
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          plan_date?: string
+          reason?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
