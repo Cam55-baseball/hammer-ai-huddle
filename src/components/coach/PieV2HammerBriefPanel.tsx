@@ -32,7 +32,6 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
   // Pre-launch: PIE v2 catalogs are baseball-only — a windmill delivery would
   // get overhand recommendations, so softball athletes see nothing here.
   const softballLocked = useSoftballLocked("pie_v2_pitching");
-  if (softballLocked) return null;
   const { user } = useAuth();
   const [acked, setAcked] = useState(false);
   const isSelf = user?.id && aggregate.athlete_id === user.id;
@@ -56,6 +55,8 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
       : null,
   );
 
+
+  if (softballLocked) return null;
 
   const uhrc = buildUhrcReport({
     athlete_id: aggregate.athlete_id,
