@@ -382,12 +382,14 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
       // Calendar games — the surface most athletes actually use.
       admin.from("calendar_events")
-        .select("event_date, event_type, start_time, is_starting_pitcher")
+        .select("id, title, event_date, event_type, start_time, is_starting_pitcher, is_doubleheader, ignored_for_training")
         .eq("user_id", user.id)
+        .is("deleted_at", null)
         .in("event_type", ["game", "tournament", "scrimmage"])
-        .gte("event_date", isoShift(planDate, -2))
-        .lte("event_date", isoShift(planDate, 2))
-        .limit(40),
+        .gte("event_date", isoShift(planDate, -3))
+        .lte("event_date", isoShift(planDate, 3))
+        .limit(60),
+
     ]);
 
     const p: any = profile ?? {};
