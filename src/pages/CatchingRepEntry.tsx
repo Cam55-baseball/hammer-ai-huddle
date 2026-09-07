@@ -32,6 +32,7 @@ import {
   type CatchingMetric,
 } from '@/lib/catching/reps';
 import { Loader2, ShieldAlert, Hand } from 'lucide-react';
+import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 
 export default function CatchingRepEntry() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -105,6 +106,7 @@ export default function CatchingRepEntry() {
             Pop time, exchange, throw velocity, framing and blocking — recorded by hand, marked
             evaluator-entered.
           </p>
+          <SoftballBenchmarkNote />
         </header>
 
         <Card>

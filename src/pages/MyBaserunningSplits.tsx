@@ -11,6 +11,7 @@ import {
 } from '@/hooks/useBaserunningSplits';
 import { BaserunningSplitList } from '@/components/baserunning/BaserunningSplitList';
 import { Timer } from 'lucide-react';
+import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 
 export default function MyBaserunningSplits() {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ export default function MyBaserunningSplits() {
             equivalent; the other splits are timed but not yet scale-anchored, so they show the
             raw number only.
           </p>
+          <SoftballBenchmarkNote />
         </header>
 
         <Card>

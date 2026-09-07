@@ -9,6 +9,7 @@ import { useAthleteDefensivePlays } from '@/hooks/useDefensivePlays';
 import { DefensivePlayList } from '@/components/defense/DefensivePlayList';
 import { DefenseGradeCard } from '@/components/defense/DefenseGradeCard';
 import { Shield } from 'lucide-react';
+import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 
 export default function MyDefensivePlays() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function MyDefensivePlays() {
             Every play logged about your defense, with the inputs it was judged on and the runner
             grade the play would have beaten.
           </p>
+          <SoftballBenchmarkNote />
         </header>
 
         <DefenseGradeCard rows={rows} loading={loading} />

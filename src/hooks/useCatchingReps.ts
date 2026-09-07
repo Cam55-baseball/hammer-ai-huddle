@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isSoftballSelected } from '@/lib/softball/lockedFeatures';
 import { useAuth } from '@/hooks/useAuth';
 import {
   defaultUnitFor,
@@ -38,6 +39,17 @@ export function usePopTimeScaleRows() {
 
   useEffect(() => {
     let cancelled = false;
+    // Softball has no seeded scouting anchors — grading against the baseball
+    // rows would score an athlete on the wrong sport. Load nothing; every
+    // grade helper already returns null on empty rows, so the raw measurement
+    // still shows and still saves.
+    if (isSoftballSelected()) {
+      setRows([]);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
     void (async () => {
       const { data } = await (supabase as any)
         .from('scale_reference')
