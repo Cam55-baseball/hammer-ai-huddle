@@ -66,6 +66,7 @@ export function useGpSignal(windowDays = 7): GpSignal {
     queryFn: async () => {
       const { data } = await gp("gp_games")
         .select("id,game_date,status")
+        .is("deleted_at", null)
         .eq("user_id", user!.id)
         .gte("game_date", sinceDate)
         .not("status", "in", "(canceled,cancelled,rescheduled)");

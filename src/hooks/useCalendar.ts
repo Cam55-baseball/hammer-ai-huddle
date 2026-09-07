@@ -313,6 +313,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         (supabase
           .from('gp_games' as any)
           .select('id, game_date, opponent_team, venue, status, game_type, sport, game_summary')
+          .is('deleted_at', null)
           .eq('user_id', user.id)
           .gte('game_date', startStr)
           .lte('game_date', endStr) as any),
