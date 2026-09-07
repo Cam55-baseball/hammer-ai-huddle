@@ -453,7 +453,7 @@ const App = () => {
               <Route path="/production-lab" element={<ProductionLab />} />
               <Route path="/production-studio" element={<ProductionStudio />} />
               <Route path="/vault" element={<Vault />} />
-              <Route path="/tex-vision" element={<TexVision />} />
+              <Route path="/tex-vision" element={<SoftballLock feature="tex_vision"><TexVision /></SoftballLock>} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="/my-custom-activities" element={<MyCustomActivities />} />
               <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
@@ -477,9 +477,9 @@ const App = () => {
               <Route path="/r/:token" element={<SharedReport />} />
               <Route path="/admin/periodization" element={<AdminPeriodization />} />
               <Route path="/game-scoring" element={<Navigate to="/games" replace />} />
-              <Route path="/base-stealing" element={<BaseStealingTrainer />} />
+              <Route path="/base-stealing" element={<SoftballLock feature="base_stealing_baseball"><BaseStealingTrainer /></SoftballLock>} />
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
-              <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
+              <Route path="/pickoff-trainer" element={<SoftballLock feature="pickoff_trainer"><PickoffTrainer /></SoftballLock>} />
               <Route path="/baserunning-iq" element={<BaserunningIQ />} />
               <Route path="/iq" element={<GameIqLock><GameIq /></GameIqLock>} />
               <Route path="/iq/review" element={<GameIqLock><GameIqReview /></GameIqLock>} />
@@ -489,7 +489,7 @@ const App = () => {
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/admin/engine-health" element={<EngineHealthDashboard />} />
               <Route path="/coach-compliance" element={<Navigate to="/coach-dashboard" replace />} />
-              <Route path="/drill-library" element={<DrillLibraryPlayer />} />
+              <Route path="/drill-library" element={<SoftballLock feature="drill_library"><DrillLibraryPlayer /></SoftballLock>} />
               <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="/program/:id" element={<BuildAccessGate buildType="program" />} />
