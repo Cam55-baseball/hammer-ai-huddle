@@ -1367,6 +1367,9 @@ const handler = async (req: Request): Promise<Response> => {
             games_per_rolling_week: gameProximity.gamesPerRollingWeek,
             high_density: gameProximity.highDensity,
             zero_exposure_relief: gameProximity.zeroExposureRelief,
+            override_available: gameProximity.overrideAvailable,
+            override_applied: gameProximity.overrideApplied,
+
             duplicates_collapsed: gameProximity.duplicatesCollapsed,
             finished_excluded: gameProximity.finishedExcluded,
             reasons: gameProximity.reasons,
