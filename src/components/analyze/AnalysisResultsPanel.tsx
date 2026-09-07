@@ -117,6 +117,8 @@ export function AnalysisResultsPanel({
   onReturnToDashboard,
   showScore = true,
   prescriptionExtra,
+  crossDomainSlot,
+
 }: Props) {
   const { t } = useTranslation();
 
