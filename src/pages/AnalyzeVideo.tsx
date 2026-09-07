@@ -1486,6 +1486,12 @@ export default function AnalyzeVideo() {
                     } as never}
                     showShare={false}
                   />
+                  <AnalysisPrescriptionSection
+                    module={module}
+                    sport={sport}
+                    violations={analysis.violations_detected ?? null}
+                  />
+                  </>
                 ) : (
                   <AnalysisResultsPanel
                     analysis={analysis}
