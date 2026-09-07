@@ -332,7 +332,7 @@ export function AnalysisResultsPanel({
       )}
 
       {/* ── 6 · YOUR PRESCRIPTION (drills) ───────────────────────────── */}
-      {analysis.drills && analysis.drills.length > 0 && (
+      {((analysis.drills && analysis.drills.length > 0) || prescriptionExtra) && (
         <RevealSection order={5}>
           <Card className="space-y-5 p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -345,6 +345,7 @@ export function AnalysisResultsPanel({
               </p>
             </div>
 
+            {analysis.drills && analysis.drills.length > 0 && (
             <div className="space-y-4">
               {analysis.drills.map((drill, index) => {
                 const isSaved = savedDrillIds.has(drill.title);
