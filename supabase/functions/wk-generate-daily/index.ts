@@ -3188,9 +3188,27 @@ const handler = async (req: Request): Promise<Response> => {
     if (diagId) {
       await admin
         .from("wk_generation_diagnostics")
-        .update({ training_methods: methodDiagnostics } as any)
+        .update({
+          training_methods: methodDiagnostics,
+          // Recorded, never acted on: which schedule cap the athlete's own
+          // "Lift anyway" call relaxed, and why it was there in the first place.
+          schedule_override: athleteScheduleOverride
+            ? {
+                kind: "lift_anyway",
+                applied: gameProximity.overrideApplied,
+                available: gameProximity.overrideAvailable,
+                reason: (overrideRow as any)?.reason ?? null,
+                driving_game: gameProximity.drivingGame,
+                overriding: gameProximity.reasons,
+                games_per_rolling_week: gameProximity.gamesPerRollingWeek,
+                high_density: gameProximity.highDensity,
+                hours_to_game: gameProximity.hoursToNearestGame,
+              }
+            : null,
+        } as any)
         .eq("id", diagId as any);
     }
+
 
     await admin.from("wk_cns_ledger").upsert({
       user_id: user.id, ledger_date: planDate,
