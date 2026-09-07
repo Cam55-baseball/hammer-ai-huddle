@@ -16005,6 +16005,7 @@ export type Database = {
           recovery_validation_status: string | null
           resolved_day_type: string | null
           resolved_season_phase: string | null
+          schedule_override: Json | null
           season_phase: string | null
           snapshot_hash: string | null
           snapshot_integrity_status: string | null
@@ -16089,6 +16090,7 @@ export type Database = {
           recovery_validation_status?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
+          schedule_override?: Json | null
           season_phase?: string | null
           snapshot_hash?: string | null
           snapshot_integrity_status?: string | null
@@ -16173,6 +16175,7 @@ export type Database = {
           recovery_validation_status?: string | null
           resolved_day_type?: string | null
           resolved_season_phase?: string | null
+          schedule_override?: Json | null
           season_phase?: string | null
           snapshot_hash?: string | null
           snapshot_integrity_status?: string | null
