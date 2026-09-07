@@ -350,7 +350,7 @@ const handler = async (req: Request): Promise<Response> => {
     ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("athlete_mpi_settings").select("season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
       // Window, not a single day: the 48-hour rule needs the next two days,
@@ -526,6 +526,9 @@ const handler = async (req: Request): Promise<Response> => {
     const ctxAny: any = ctx ?? {};
     const seasonSettings = {
       season_status: mpi.season_status ?? ctxAny.season_phase ?? null,
+      // The athlete's hand-set phase outranks the date windows, here as well
+      // as in the app, so the plan and the profile always say the same thing.
+      season_status_manual: mpi.season_status_manual === true,
       preseason_start_date: mpi.preseason_start_date ?? null,
       preseason_end_date: mpi.preseason_end_date ?? null,
       in_season_start_date: mpi.in_season_start_date ?? null,
@@ -533,7 +536,8 @@ const handler = async (req: Request): Promise<Response> => {
       post_season_start_date: mpi.post_season_start_date ?? null,
       post_season_end_date: mpi.post_season_end_date ?? null,
     };
-    const phaseRes = resolveWkPhase(seasonSettings);
+    // `planDate` is the athlete's own day — never the server's UTC day.
+    const phaseRes = resolveWkPhase(seasonSettings, new Date(`${planDate}T12:00:00Z`), planDate);
     const isOffseason = phaseRes.phase.startsWith("os_");
     const isDeep = phaseRes.phase === "os_q1" || phaseRes.phase === "os_q2";
     const isInSeason = phaseRes.phase === "in_season";
