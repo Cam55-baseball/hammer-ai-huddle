@@ -472,6 +472,9 @@ export function resolveGameProximity(
     gamesPerRollingWeek,
     highDensity,
     zeroExposureRelief,
+    overrideAvailable,
+    overrideApplied,
+
     duplicatesCollapsed,
     finishedExcluded,
     headline,
