@@ -48,6 +48,7 @@ export function useRescheduleEngine() {
     const { data: futureEvents } = await supabase
       .from('calendar_events')
       .select('id, event_date, event_type')
+      .is("deleted_at", null)
       .eq('user_id', user.id)
       .gte('event_date', fromDate)
       .order('event_date', { ascending: false });
@@ -94,6 +95,7 @@ export function useRescheduleEngine() {
     const { data: futureEvents } = await supabase
       .from('calendar_events')
       .select('id, event_date, event_type')
+      .is("deleted_at", null)
       .eq('user_id', user.id)
       .gte('event_date', fromDate)
       .order('event_date', { ascending: false });
@@ -120,6 +122,7 @@ export function useRescheduleEngine() {
     const { data: sourceEvents } = await supabase
       .from('calendar_events')
       .select('*')
+      .is("deleted_at", null)
       .eq('user_id', user.id)
       .eq('event_date', sourceDate);
 
@@ -133,6 +136,7 @@ export function useRescheduleEngine() {
     const { data: targetEvents } = await supabase
       .from('calendar_events')
       .select('id, event_type')
+      .is("deleted_at", null)
       .eq('user_id', user.id)
       .eq('event_date', targetDate);
 

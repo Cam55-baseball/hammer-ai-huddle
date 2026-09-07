@@ -115,6 +115,7 @@ export function useNightCheckInStats(): NightCheckInStats {
         supabase
           .from('calendar_events')
           .select('title, event_type')
+          .is("deleted_at", null)
           .eq('user_id', user.id)
           .eq('event_date', tomorrow)
           .in('event_type', ['workout', 'training', 'practice']),

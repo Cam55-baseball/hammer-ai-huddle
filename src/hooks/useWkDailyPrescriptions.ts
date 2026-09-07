@@ -239,6 +239,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       const { data, error } = await (supabase as any)
         .from("gp_games")
         .select("id")
+        .is("deleted_at", null)
         .eq("user_id", user!.id)
         .eq("game_date", planDate)
         .not("status", "in", "(canceled,cancelled,rescheduled)")

@@ -77,6 +77,7 @@ export function GameSheet({
       const { data, error } = await (supabase as any)
         .from("gp_games")
         .select("*")
+        .is("deleted_at", null)
         .eq("id", gameId)
         .single();
       if (error) throw error;

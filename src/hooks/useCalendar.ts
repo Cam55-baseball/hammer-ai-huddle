@@ -252,6 +252,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         supabase
           .from('calendar_events')
           .select('*')
+          .is("deleted_at", null)
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
