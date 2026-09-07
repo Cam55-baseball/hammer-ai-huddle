@@ -66,28 +66,14 @@ export function useGameDayContext(): GameDayContext {
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data } = await (supabase as unknown as {
-        from: (t: string) => {
-          select: (c: string) => {
-            eq: (k: string, v: string) => {
-              gte: (k: string, v: string) => {
-                lte: (
-                  k: string,
-                  v: string,
-                ) => {
-                  order: (
-                    k: string,
-                    o: { ascending: boolean },
-                  ) => Promise<{ data: Array<{ game_date: string }> | null }>;
-                };
-              };
-            };
-          };
-        };
-      })
+      // Soft-deleted or explicitly ignored games must not register as game
+      // days — removing a game removes it from everywhere at once.
+      const { data } = await (supabase as any)
         .from("gp_games")
         .select("game_date")
         .eq("user_id", user!.id)
+        .is("deleted_at", null)
+        .not("ignored_for_training", "is", true)
         .gte("game_date", start7dAgo)
         .lte("game_date", startToday)
         .order("game_date", { ascending: false });
