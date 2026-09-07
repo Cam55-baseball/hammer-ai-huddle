@@ -417,31 +417,74 @@ const handler = async (req: Request): Promise<Response> => {
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
-    const gameWindowRows: any[] = (gamesToday ?? []) as any[];
+    const gameWindowRows: any[] = ((gamesToday ?? []) as any[]).filter(
+      (g: any) => g.ignored_for_training !== true,
+    );
     const gamesOnPlanDate = gameWindowRows.filter((g: any) => String(g.game_date) === planDate);
     const isGameDay = gamesOnPlanDate.length > 0;
 
-    // -------- Schedule enforcement (Pass B) --------
-    // Two sources, one list. An athlete with neither gets NO_SCHEDULE and the
-    // session is generated exactly as it was before this rule existed.
+    // -------- Schedule enforcement (Pass B, revised) --------
+    // Two sources, one list, de-duplicated inside `resolveGameProximity`: the
+    // same real game entered in Game Plan and on the calendar is one game.
+    // An athlete with neither surface gets NO_SCHEDULE and the session is
+    // generated exactly as it was before this rule existed.
     const scheduledGames: ScheduledGame[] = [
       ...gameWindowRows.map((g: any) => ({
+        id: g.id ?? null,
         date: String(g.game_date),
         time: g.scheduled_time ?? null,
         isStartingPitcher: g.is_starting_pitcher === true,
+        status: g.status ?? null,
+        declaredDoubleheader: g.is_doubleheader === true,
+        ignored: g.ignored_for_training === true,
+        label: g.opponent_team ?? null,
         source: "gp_games" as const,
       })),
       ...((calendarGames ?? []) as any[]).map((e: any) => ({
+        id: e.id ?? null,
         date: String(e.event_date),
         time: e.start_time ?? null,
         isStartingPitcher: e.is_starting_pitcher === true,
+        status: null,
+        declaredDoubleheader: e.is_doubleheader === true,
+        ignored: e.ignored_for_training === true,
+        label: e.title ?? null,
         source: "calendar_events" as const,
       })),
     ];
     const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
+    // Zero-exposure invariant input: the days in the last week on which the
+    // athlete actually received a lift. Read-only, best-effort — a failure
+    // here degrades to "no exposure known", which can only relax a removal to
+    // a primer, never tighten anything.
+    const { data: recentLiftRows } = await admin
+      .from("wk_prescriptions")
+      .select("plan_date")
+      .eq("user_id", user.id)
+      .eq("slot", "lift")
+      .gte("plan_date", isoShift(planDate, -6))
+      .lt("plan_date", planDate)
+      .limit(60);
+    const liftExposureDatesLast7 = Array.from(
+      new Set(((recentLiftRows ?? []) as any[]).map((r: any) => String(r.plan_date))),
+    );
     const gameProximity = scheduledGames.length
-      ? resolveGameProximity(scheduledGames, planDate, { isPitcher: isPitcherAthlete })
+      ? resolveGameProximity(scheduledGames, planDate, {
+          isPitcher: isPitcherAthlete,
+          liftExposureDatesLast7,
+        })
       : NO_SCHEDULE;
+
+    // -------- Competition level --------
+    // `min_competition_level` has been on every catalog row since the catalog
+    // was built and was never read. A professional was therefore filtered by
+    // the same ceilings as a fourteen-year-old. It is a real gate now.
+    const athleteCompetitionRank = resolveAthleteRank({
+      competition_level: (ctx as any)?.competition_level ?? null,
+      competition_last_level: (ctx as any)?.competition_last_level ?? null,
+      is_professional: p.is_professional === true,
+    });
+
 
     // -------- Practice resolution (exact-date + recurring weekly) --------
     const planDow = new Date(`${planDate}T12:00:00Z`).getUTCDay();
