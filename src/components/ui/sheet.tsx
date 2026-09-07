@@ -4,8 +4,17 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { useCloseOnBack } from "@/hooks/useCloseOnBack";
 
-const Sheet = SheetPrimitive.Root;
+const Sheet = ({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>) => {
+  useCloseOnBack(open, onOpenChange);
+  return <SheetPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />;
+};
+Sheet.displayName = "Sheet";
 
 const SheetTrigger = SheetPrimitive.Trigger;
 
