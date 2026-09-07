@@ -49,7 +49,7 @@ export function WkLiftsCard() {
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, schedule, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
+    grouped, reductions, schedule, planDate, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
   const entry = getCard("lift")!;
   const { display: phaseDisplay } = useCanonicalPhaseDisplay(serverPhaseDisplay, phaseKey);
@@ -149,7 +149,7 @@ export function WkLiftsCard() {
           <CardContent className="space-y-2">
             {/* Which game changed today's session, said out loud, with a way
                 to disagree. */}
-            <ScheduleAdjustmentNotice schedule={schedule} onChanged={() => generate()} />
+            <ScheduleAdjustmentNotice schedule={schedule} planDate={planDate} onChanged={() => generate()} />
             {suppressArmCareInLifts && (
               <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
                 Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.
