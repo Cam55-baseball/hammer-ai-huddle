@@ -36,6 +36,7 @@ import {
   type ThrowingPositionContext,
 } from '@/lib/throwing/reps';
 import { Loader2, ShieldAlert, Send } from 'lucide-react';
+import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 
 export default function ThrowingRepEntry() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -113,6 +114,7 @@ export default function ThrowingRepEntry() {
             Throwing is its own domain, not pitching minus a few tiles — every rep carries the
             position context it was thrown from.
           </p>
+          <SoftballBenchmarkNote />
         </header>
 
         <Card>
