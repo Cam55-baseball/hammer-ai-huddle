@@ -17,6 +17,8 @@ const PAYLOAD = {
     whenLabel: "Friday 6pm",
   },
   primer_only: true,
+  override_available: true,
+  override_applied: false,
   lift_removed: false,
   assumed_game_time: true,
   reasons: [
