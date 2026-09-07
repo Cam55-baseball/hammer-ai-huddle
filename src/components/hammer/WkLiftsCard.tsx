@@ -93,7 +93,10 @@ export function WkLiftsCard() {
     }
   };
 
-  if (gp.gameToday) {
+  // Game day pauses the lift — unless the athlete made their own call for
+  // today. The notice renders inside this branch too, otherwise "Lift anyway"
+  // would be unreachable on exactly the day it exists for.
+  if (gp.gameToday && !schedule?.override_applied) {
     return (
       <Card className="border-amber-500/40 bg-amber-500/5">
         <CardHeader className="pb-2">
@@ -102,12 +105,16 @@ export function WkLiftsCard() {
             <span>Lifts — paused for game day</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-xs text-muted-foreground">
-          Heavy work is suppressed by the generator. Freshness wins today — the card above holds the short crossover activation at the front of the day.
+        <CardContent className="space-y-2 text-xs text-muted-foreground">
+          <p>
+            Heavy work is suppressed by the generator. Freshness wins today — the card above holds the short crossover activation at the front of the day.
+          </p>
+          <ScheduleAdjustmentNotice schedule={schedule} planDate={planDate} onChanged={() => generate()} />
         </CardContent>
       </Card>
     );
   }
+
 
   return (
     <Card
