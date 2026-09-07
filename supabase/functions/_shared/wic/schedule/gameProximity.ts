@@ -119,6 +119,9 @@ export const NO_SCHEDULE: GameProximity = {
   gamesPerRollingWeek: 0,
   highDensity: false,
   zeroExposureRelief: false,
+  overrideAvailable: false,
+  overrideApplied: false,
+
   duplicatesCollapsed: 0,
   finishedExcluded: 0,
   headline: null,
