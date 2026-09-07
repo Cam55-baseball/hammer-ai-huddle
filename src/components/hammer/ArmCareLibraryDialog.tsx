@@ -5,7 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// No Radix ScrollArea here on purpose. Nested inside DialogContent's own scroll
+// container its viewport never gets a bounded height, so the list rendered at
+// full height inside an `overflow-hidden` root and could not be scrolled at all
+// under touch. A plain overflow container scrolls natively on every phone.
 
 interface ArmCareMovement {
   slug: string;
