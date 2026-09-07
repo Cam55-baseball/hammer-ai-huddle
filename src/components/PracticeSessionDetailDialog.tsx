@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trophy, Target, ArrowRight, ChevronDown, FileText, Activity } from 'lucide-react';
@@ -162,7 +161,7 @@ export function PracticeSessionDetailDialog({ session, open, onClose }: Practice
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-5 pb-5">
+        <div className="flex-1 px-5 pb-5 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="space-y-3 pt-3">
             <Separator />
 
@@ -253,7 +252,7 @@ export function PracticeSessionDetailDialog({ session, open, onClose }: Practice
               <p className="text-sm text-muted-foreground italic">No detailed data recorded for this session.</p>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

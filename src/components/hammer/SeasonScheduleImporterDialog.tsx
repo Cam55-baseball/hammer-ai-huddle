@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, ImagePlus, Wand2, Trash2, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -361,7 +360,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
             </TabsContent>
           </Tabs>
         ) : (
-          <ScrollArea className="flex-1 -mx-2 px-2">
+          <div className="flex-1 -mx-2 px-2 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="space-y-2">
               {events.map((ev, i) => (
                   <div key={i} className="border rounded-md p-3 space-y-2 bg-card" data-protected-editing="true">
@@ -426,7 +425,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
 
         <DialogFooter className="gap-2 sm:gap-2 flex-wrap">

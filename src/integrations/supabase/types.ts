@@ -15997,6 +15997,7 @@ export type Database = {
           performance_support_governance_version: string | null
           personalization_version: string | null
           plan_date: string
+          recovery_ack: Json | null
           recovery_category_coverage: Json | null
           recovery_governance_version: string | null
           recovery_profile_id: string | null
@@ -16082,6 +16083,7 @@ export type Database = {
           performance_support_governance_version?: string | null
           personalization_version?: string | null
           plan_date: string
+          recovery_ack?: Json | null
           recovery_category_coverage?: Json | null
           recovery_governance_version?: string | null
           recovery_profile_id?: string | null
@@ -16167,6 +16169,7 @@ export type Database = {
           performance_support_governance_version?: string | null
           personalization_version?: string | null
           plan_date?: string
+          recovery_ack?: Json | null
           recovery_category_coverage?: Json | null
           recovery_governance_version?: string | null
           recovery_profile_id?: string | null
@@ -16718,6 +16721,8 @@ export type Database = {
           id: string
           reduction_payload: Json
           reduction_reason: string
+          superseded_at: string | null
+          superseded_reason: string | null
           user_id: string
         }
         Insert: {
@@ -16727,6 +16732,8 @@ export type Database = {
           id?: string
           reduction_payload?: Json
           reduction_reason: string
+          superseded_at?: string | null
+          superseded_reason?: string | null
           user_id: string
         }
         Update: {
@@ -16736,6 +16743,8 @@ export type Database = {
           id?: string
           reduction_payload?: Json
           reduction_reason?: string
+          superseded_at?: string | null
+          superseded_reason?: string | null
           user_id?: string
         }
         Relationships: []

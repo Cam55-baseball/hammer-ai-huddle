@@ -5,7 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// No Radix ScrollArea here on purpose. Nested inside DialogContent's own scroll
+// container its viewport never gets a bounded height, so the list rendered at
+// full height inside an `overflow-hidden` root and could not be scrolled at all
+// under touch. A plain overflow container scrolls natively on every phone.
 
 interface ArmCareMovement {
   slug: string;
@@ -105,7 +108,11 @@ export function ArmCareLibraryDialog({ open, onOpenChange, sport }: ArmCareLibra
             ))}
           </div>
 
-          <ScrollArea className="min-h-0 flex-1 pr-2">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            data-testid="arm-care-scroll"
+          >
             {isLoading ? (
               <p className="text-sm text-muted-foreground p-4">Loading movements…</p>
             ) : filtered.length === 0 ? (
@@ -137,7 +144,7 @@ export function ArmCareLibraryDialog({ open, onOpenChange, sport }: ArmCareLibra
                 ))}
               </ul>
             )}
-          </ScrollArea>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

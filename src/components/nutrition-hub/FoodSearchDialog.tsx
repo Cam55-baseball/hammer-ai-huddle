@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFoodSearch, FoodSearchResult } from '@/hooks/useFoodSearch';
 import { useRecentFoods } from '@/hooks/useRecentFoods';
 import { MealItem } from '@/types/customActivity';
@@ -217,7 +216,7 @@ export function FoodSearchDialog({
           />
 
           {/* Results / Initial View */}
-          <ScrollArea className="flex-1 -mx-6 px-6">
+          <div className="flex-1 -mx-6 px-6 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
             {loading && (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -292,7 +291,7 @@ export function FoodSearchDialog({
                 )}
               </div>
             )}
-          </ScrollArea>
+          </div>
 
           {/* Selected Food - Quantity Adjustment */}
           {selectedFood && (

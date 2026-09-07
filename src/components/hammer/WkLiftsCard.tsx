@@ -164,11 +164,20 @@ export function WkLiftsCard() {
                     <ul className="mt-1 space-y-0.5 text-amber-900/80 dark:text-amber-100/80">
                       {reductions.map((r, i) => <li key={i}>• {r.detail}</li>)}
                     </ul>
-                    <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>I will recover</Button>
+                    <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>
+                      Got it — keep today lighter
+                    </Button>
                     {ackOpen && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <Button size="sm" onClick={submitAck}>Confirm</Button>
-                        <Button size="sm" variant="ghost" onClick={() => setAckOpen(false)}>Cancel</Button>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-amber-900/80 dark:text-amber-100/80">
+                          This tells us you've read the reason above and you're taking the lighter day.
+                          Tomorrow's session stays a little conservative too, and it goes back to normal
+                          on its own once the reason no longer applies.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" onClick={submitAck}>Take the lighter day</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setAckOpen(false)}>Cancel</Button>
+                        </div>
                       </div>
                     )}
                   </div>

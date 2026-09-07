@@ -270,12 +270,16 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   });
 
   const invokeOnce = useCallback(async () => {
-    // Pull the most recent recovery ack so the edge function can bias the
+    // Pull the most recent *live* recovery ack so the edge function can bias the
     // next plan (real learning loop instead of one-way personalization).
+    // Superseded acks are spent — their cause has cleared, or they were written
+    // by a rule that has since been fixed — and must never bias anything again.
+    // The function re-reads and re-validates this server-side; this is a hint.
     const { data: lastAck } = await supabase
       .from("wk_recovery_acks" as any)
       .select("reduction_reason, reduction_payload, acknowledged_at")
       .eq("user_id", user!.id)
+      .is("superseded_at", null)
       .order("acknowledged_at", { ascending: false })
       .limit(1)
       .maybeSingle();
