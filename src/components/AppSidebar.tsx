@@ -210,6 +210,8 @@ export function AppSidebar() {
   // Owner/Admin always see all blocks for testing.
   const trainingModules = useMemo(() => {
     const showAll = isOwner || isAdmin;
+    // Pre-launch softball lockdown — hide unfinished softball surfaces from athletes.
+    const softballLocked = selectedSport === 'softball' && !showAll;
     const items: any[] = [];
 
     const sport = selectedSport;
@@ -259,7 +261,7 @@ export function AppSidebar() {
 
           { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "Iron Bambino" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
-          { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          ...(softballLocked ? [] : [{ title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') }]),
           // Hitter-facing education. Ships to any tier with hitting access
           // (5Tool, Golden, legacy hitting) — never to pitcher-only.
           { title: 'Pitch Tipping 101', url: '/learn/pitch-tipping', icon: Eye, description: "Spot a pitcher's tells at the plate" },
@@ -288,7 +290,7 @@ export function AppSidebar() {
 
           { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
-          { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          ...(softballLocked ? [] : [{ title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') }]),
           { title: 'Pitch Tipping 101', url: '/learn/pitch-tipping', icon: Eye, description: "Spot a pitcher's tells at the plate" },
 
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
@@ -324,7 +326,9 @@ export function AppSidebar() {
     // Video Library - visible to any subscribed user
     if (showAll || modules.length > 0) {
       items.push({ key: 'video-library', title: 'Video Library', url: '/video-library', icon: Library });
-      items.push({ key: 'drill-library', title: 'Defensive Drill Library', url: '/drill-library', icon: Shield });
+      if (!softballLocked) {
+        items.push({ key: 'drill-library', title: 'Defensive Drill Library', url: '/drill-library', icon: Shield });
+      }
     }
 
     return items;
