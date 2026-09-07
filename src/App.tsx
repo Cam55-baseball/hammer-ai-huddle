@@ -120,6 +120,7 @@ const TodaySession = lazyWithRetry(() => import("./pages/TodaySession"));
 const EvidenceSafeSession = lazyWithRetry(() => import("./pages/EvidenceSafeSession"));
 const EvidenceExecution = lazyWithRetry(() => import("./pages/EvidenceExecution"));
 const EvidenceScheduleNotice = lazyWithRetry(() => import("./pages/EvidenceScheduleNotice"));
+const EvidenceArmCare = lazyWithRetry(() => import("./pages/EvidenceArmCare"));
 const OpsHealth = lazyWithRetry(() => import("./pages/ops/OpsHealth"));
 const OpsReplay = lazyWithRetry(() => import("./pages/ops/OpsReplay"));
 const OpsDrift = lazyWithRetry(() => import("./pages/ops/OpsDrift"));
