@@ -1526,11 +1526,6 @@ export default function AnalyzeVideo() {
                     anything single-discipline, so it sits above the drills. */}
                 <RootPatternCallout />
 
-                <AnalysisPrescriptionSection
-                  module={module}
-                  sport={sport}
-                  violations={analysis.violations_detected ?? null}
-                />
 
               </div>
             )}
