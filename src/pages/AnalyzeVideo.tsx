@@ -1472,6 +1472,7 @@ export default function AnalyzeVideo() {
                 )}
 
                 {scoresAllowed && analysisView === "report_card" ? (
+                  <>
                   <HammerReportCard
                     sport={sport}
                     module={module}
