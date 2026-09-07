@@ -78,6 +78,33 @@ export interface WkRx {
     generator_version?: string;
     game_day?: boolean;
     reductions?: { reason: string; detail: string }[];
+    /** Named schedule enforcement — which game moved the session, and why. */
+    schedule?: {
+      version?: string;
+      headline?: string | null;
+      driving_game?: {
+        id: string | null;
+        date: string;
+        time: string;
+        assumedTime: boolean;
+        label: string | null;
+        source: "gp_games" | "calendar_events";
+        whenLabel: string;
+      } | null;
+      primer_only?: boolean;
+      lift_removed?: boolean;
+      within_48h?: boolean;
+      hours_to_game?: number | null;
+      assumed_game_time?: boolean;
+      games_today?: number;
+      doubleheader_today?: boolean;
+      games_per_rolling_week?: number;
+      high_density?: boolean;
+      zero_exposure_relief?: boolean;
+      duplicates_collapsed?: number;
+      finished_excluded?: number;
+      reasons?: string[];
+    } | null;
     training_age_years?: number;
     is_pro_prospect?: boolean;
     intensity_class?: string;
@@ -442,6 +469,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     return first?.why_payload?.reductions ?? [];
   }, [query.data]);
 
+  /** Named schedule adjustment for today, or null when nothing moved. */
+  const schedule = useMemo(() => {
+    const first = (query.data ?? [])[0];
+    return first?.why_payload?.schedule ?? null;
+  }, [query.data]);
+
   const phaseDisplay = useMemo(() => {
     const first = (query.data ?? [])[0];
     const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
@@ -561,6 +594,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     ...query,
     grouped,
     reductions,
+    schedule,
     phaseDisplay,
     phaseKey,
     generate,
