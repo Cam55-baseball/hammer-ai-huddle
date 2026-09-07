@@ -110,6 +110,7 @@ export function AnalysisResultsPanel({
   onSaveToLibrary,
   onReturnToDashboard,
   showScore = true,
+  prescriptionExtra,
 }: Props) {
   const { t } = useTranslation();
 
