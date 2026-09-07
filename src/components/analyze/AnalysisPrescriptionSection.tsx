@@ -125,18 +125,9 @@ export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Si
     navigate(drillModule === "tex-vision" ? `/tex-vision?${params}` : `/practice?${params}`);
   };
 
-  return (
-    <Card className="border-primary/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Zap className="h-5 w-5 text-primary" />
-          Your prescription
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          What to work on next, based on this analysis. Suggested — not mandatory.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-5">
+  const body = (
+    <>
+      <div className="space-y-5">
         <section className="space-y-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {matches.length > 0 ? "From this clip" : "Maintenance work"}
