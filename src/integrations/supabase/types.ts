@@ -16737,6 +16737,36 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_schedule_overrides: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          plan_date: string
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          plan_date: string
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          plan_date?: string
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wk_session_logs: {
         Row: {
           ai_readback: string | null
