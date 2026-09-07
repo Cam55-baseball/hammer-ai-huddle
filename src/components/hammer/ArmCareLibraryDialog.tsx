@@ -108,7 +108,11 @@ export function ArmCareLibraryDialog({ open, onOpenChange, sport }: ArmCareLibra
             ))}
           </div>
 
-          <ScrollArea className="min-h-0 flex-1 pr-2">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            data-testid="arm-care-scroll"
+          >
             {isLoading ? (
               <p className="text-sm text-muted-foreground p-4">Loading movements…</p>
             ) : filtered.length === 0 ? (
@@ -140,7 +144,7 @@ export function ArmCareLibraryDialog({ open, onOpenChange, sport }: ArmCareLibra
                 ))}
               </ul>
             )}
-          </ScrollArea>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
