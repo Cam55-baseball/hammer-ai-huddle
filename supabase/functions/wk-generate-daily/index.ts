@@ -95,6 +95,7 @@ import {
 } from "../_shared/wic/determinism/globalDeterminismLock.ts";
 import { selectFromBand, DEFAULT_ROTATION_BAND, ROTATION_BAND_VERSION } from "../_shared/wic/lift/rotationBand.ts";
 import { resolveGameProximity, survivesPrimerOnly, NO_SCHEDULE, GAME_PROXIMITY_VERSION, type ScheduledGame } from "../_shared/wic/schedule/gameProximity.ts";
+import { resolveAthleteRank, meetsCompetitionLevel, COMPETITION_LEVEL_VERSION } from "../_shared/wic/competitionLevel.ts";
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
 import { aggregateValidatorReports, type EngineReport } from "../_shared/wic/validation/globalValidatorRegistry.ts";
 import { resolveCrossEngineConflicts } from "../_shared/wic/conflictResolver/crossEngineConflictResolver.ts";
@@ -873,6 +874,10 @@ const handler = async (req: Request): Promise<Response> => {
         !survivesPrimerOnly((m as any).intensity_class as string | null)
       ) return false;
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      // Competition-level ceiling. Only ever OPENS movements for higher levels
+      // — a null minimum is no gate at all, so nothing an athlete could reach
+      // yesterday disappears today.
+      if (!meetsCompetitionLevel(m.min_competition_level, athleteCompetitionRank)) return false;
       // Categorical training-age legality — the SAME field every certifier
       // reads. Never relaxable: a beginner-illegal movement is a safety call,
       // not a preference. Without this gate the selector proposed picks the
@@ -1407,7 +1412,10 @@ const handler = async (req: Request): Promise<Response> => {
     // `gameProximity.removeLift` is the athlete's own "I'm starting this game"
     // mark. Today's game already closes this block; the explicit term is here
     // so the rule is readable rather than implied.
-    if (!isGameDay && !gameProximity.removeLift) {
+    // At four or more games in a rolling seven days the 48-hour rule cannot be
+    // satisfied, so a game day still earns a primer rather than nothing at all
+    // — `primerOnly` above has already capped what can appear.
+    if ((!isGameDay || gameProximity.highDensity) && !gameProximity.removeLift) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
