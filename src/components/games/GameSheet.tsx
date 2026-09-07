@@ -102,9 +102,11 @@ export function GameSheet({
 
   const del = useMutation({
     mutationFn: async () => {
+      // Soft delete — the game leaves the calendar and stops shaping the
+      // training plan, but the row (and anything logged against it) survives.
       const { error } = await (supabase as any)
         .from("gp_games")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", gameId);
       if (error) throw error;
     },

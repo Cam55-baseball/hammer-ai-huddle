@@ -108,9 +108,12 @@ export function useSchedulingService() {
   ): Promise<boolean> => {
     if (!user) return false;
 
+    // Soft delete. A removed event has to actually disappear from the plan
+    // and the calendar, but the row is kept so nothing that referenced it
+    // breaks and the removal can be traced.
     const { error } = await supabase
       .from('calendar_events')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
       .eq('user_id', user.id);
 
