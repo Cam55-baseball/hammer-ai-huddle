@@ -1,18 +1,32 @@
 /**
- * ScheduleAdjustmentNotice — says out loud which game changed today's session.
+ * ScheduleAdjustmentNotice — says out loud which game changed today's session,
+ * and gives the athlete two honest, different answers to it:
  *
- * The old behaviour adjusted the plan silently, so an athlete saw a lighter
- * day with no explanation and no way to argue with it. This names the game and
- * the date, and gives one tap to say "No game then" when the schedule is wrong.
+ *   "No game then"  — the game isn't real. Correct the data.
+ *   "Lift anyway"   — the game is real, and I want a full session today.
  *
- * Display-only: it renders what the generator already decided and, on the
- * override tap, marks the game as not-for-training and asks for a regenerate.
- * It never computes a dose.
+ * The second one relaxes the schedule-derived caps only (the 48-hour primer and
+ * the game-day lift removal). It never touches age gates, training-age gates,
+ * deep_flexion / eccentric_overload / shoulder_end_range, the CNS cap, season
+ * legality, or the day-before-a-start protection — those are decided in the
+ * generator and this component cannot reach them.
+ *
+ * Display-only: it renders what the generator already decided, writes the
+ * athlete's choice, and asks for a regenerate. It never computes a dose.
  */
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, Undo2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CalendarClock, Dumbbell, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -33,24 +47,46 @@ export interface ScheduleNoticeData {
   games_per_rolling_week?: number;
   zero_exposure_relief?: boolean;
   assumed_game_time?: boolean;
+  override_available?: boolean;
+  override_applied?: boolean;
   reasons?: string[];
+}
+
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function ScheduleAdjustmentNotice({
   schedule,
+  planDate,
   onChanged,
 }: {
   schedule: ScheduleNoticeData | null | undefined;
+  /** The plan date the override belongs to. Defaults to today. */
+  planDate?: string;
   onChanged?: () => void;
 }) {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (!schedule) return null;
-  const changed = schedule.primer_only || schedule.lift_removed || schedule.zero_exposure_relief;
+  const applied = schedule.override_applied === true;
+  const changed =
+    schedule.primer_only || schedule.lift_removed || schedule.zero_exposure_relief || applied;
   if (!changed) return null;
 
   const game = schedule.driving_game ?? null;
+  const date = planDate ?? todayIso();
+  const canOverride = schedule.override_available === true && !applied;
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["wk-rx"] });
+    qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
+    onChanged?.();
+  };
 
   const dismissGame = async () => {
     if (!game?.id) return;
@@ -68,9 +104,49 @@ export function ScheduleAdjustmentNotice({
     toast.success("Got it — that game won't change your training.", {
       description: "It stays on your schedule. Undo any time from the game itself.",
     });
-    qc.invalidateQueries({ queryKey: ["wk-rx"] });
-    qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
-    onChanged?.();
+    refresh();
+  };
+
+  const liftAnyway = async () => {
+    if (!user?.id) return;
+    setBusy(true);
+    const { error } = await (supabase as any)
+      .from("wk_schedule_overrides")
+      .upsert(
+        {
+          user_id: user.id,
+          plan_date: date,
+          kind: "lift_anyway",
+          reason: schedule.headline ?? "game-day schedule cap",
+        },
+        { onConflict: "user_id,plan_date,kind" },
+      );
+    setBusy(false);
+    setConfirmOpen(false);
+    if (error) {
+      toast.error("Couldn't apply that");
+      return;
+    }
+    toast.success("Full session today.", { description: "Just today — tomorrow goes back to normal." });
+    refresh();
+  };
+
+  const undoOverride = async () => {
+    if (!user?.id) return;
+    setBusy(true);
+    const { error } = await (supabase as any)
+      .from("wk_schedule_overrides")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("plan_date", date)
+      .eq("kind", "lift_anyway");
+    setBusy(false);
+    if (error) {
+      toast.error("Couldn't undo that");
+      return;
+    }
+    toast.success("Back to the lighter session.");
+    refresh();
   };
 
   return (
@@ -79,7 +155,9 @@ export function ScheduleAdjustmentNotice({
         <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
         <div className="min-w-0 flex-1 space-y-2">
           <p className="font-medium">
-            {schedule.headline ?? "Today's session was adjusted around your schedule."}
+            {applied
+              ? "You chose to lift through today's game day."
+              : (schedule.headline ?? "Today's session was adjusted around your schedule.")}
           </p>
           {(schedule.reasons ?? []).length > 0 && (
             <ul className="space-y-1 text-xs text-muted-foreground">
@@ -88,20 +166,59 @@ export function ScheduleAdjustmentNotice({
               ))}
             </ul>
           )}
-          {game?.id && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8"
-              disabled={busy}
-              onClick={dismissGame}
-            >
-              <Undo2 className="mr-1.5 h-3.5 w-3.5" />
-              No game {game.whenLabel.startsWith("today") ? "today" : "then"}
-            </Button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {game?.id && !applied && (
+              <Button size="sm" variant="outline" className="h-8" disabled={busy} onClick={dismissGame}>
+                <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+                No game {game.whenLabel.startsWith("today") ? "today" : "then"}
+              </Button>
+            )}
+            {canOverride && (
+              <Button size="sm" variant="outline" className="h-8" disabled={busy} onClick={() => setConfirmOpen(true)}>
+                <Dumbbell className="mr-1.5 h-3.5 w-3.5" />
+                Lift anyway
+              </Button>
+            )}
+            {applied && (
+              <Button size="sm" variant="outline" className="h-8" disabled={busy} onClick={undoOverride}>
+                <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+                Go back to the lighter session
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Lift anyway?</DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2 text-left">
+                <p>
+                  {game
+                    ? `You have a game ${game.whenLabel}. Lifting today anyway means a full session instead of a primer.`
+                    : "Lifting today anyway means a full session instead of a primer."}{" "}
+                  Your safety limits don't change. Just today.
+                </p>
+                <p className="text-xs">
+                  Anything held back for your age, your training age, or because the movement itself
+                  isn't safe for you right now stays held back. If you're the starting pitcher, the
+                  lift still comes off — un-mark the start instead.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button onClick={liftAnyway} disabled={busy}>
+              {busy ? "Applying…" : "Lift anyway"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
