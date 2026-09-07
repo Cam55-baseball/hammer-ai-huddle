@@ -1237,6 +1237,8 @@ export type Database = {
           primary_throwing_hand: string | null
           ranking_eligible: boolean | null
           season_status: string
+          season_status_manual: boolean
+          season_status_manual_at: string | null
           secondary_coach_ids: string[] | null
           secondary_position: string | null
           sport: string
@@ -1276,6 +1278,8 @@ export type Database = {
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
           season_status?: string
+          season_status_manual?: boolean
+          season_status_manual_at?: string | null
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
           sport: string
@@ -1315,6 +1319,8 @@ export type Database = {
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
           season_status?: string
+          season_status_manual?: boolean
+          season_status_manual_at?: string | null
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
           sport?: string
@@ -2200,11 +2206,14 @@ export type Database = {
           all_day: boolean | null
           color: string | null
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           end_time: string | null
           event_date: string
           event_type: string
           id: string
+          ignored_for_training: boolean
+          is_doubleheader: boolean
           is_starting_pitcher: boolean
           related_id: string | null
           reminder_enabled: boolean | null
@@ -2220,11 +2229,14 @@ export type Database = {
           all_day?: boolean | null
           color?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           end_time?: string | null
           event_date: string
           event_type?: string
           id?: string
+          ignored_for_training?: boolean
+          is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           related_id?: string | null
           reminder_enabled?: boolean | null
@@ -2240,11 +2252,14 @@ export type Database = {
           all_day?: boolean | null
           color?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           end_time?: string | null
           event_date?: string
           event_type?: string
           id?: string
+          ignored_for_training?: boolean
+          is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           related_id?: string | null
           reminder_enabled?: boolean | null
@@ -5656,12 +5671,15 @@ export type Database = {
         Row: {
           ai_summary: string | null
           created_at: string
+          deleted_at: string | null
           game_date: string
           game_summary: Json | null
           game_type: string | null
           general_notes: string | null
           home_away: string | null
           id: string
+          ignored_for_training: boolean
+          is_doubleheader: boolean
           is_starting_pitcher: boolean
           lineup_slot: number | null
           my_positions: string[] | null
@@ -5684,12 +5702,15 @@ export type Database = {
         Insert: {
           ai_summary?: string | null
           created_at?: string
+          deleted_at?: string | null
           game_date: string
           game_summary?: Json | null
           game_type?: string | null
           general_notes?: string | null
           home_away?: string | null
           id?: string
+          ignored_for_training?: boolean
+          is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           lineup_slot?: number | null
           my_positions?: string[] | null
@@ -5712,12 +5733,15 @@ export type Database = {
         Update: {
           ai_summary?: string | null
           created_at?: string
+          deleted_at?: string | null
           game_date?: string
           game_summary?: Json | null
           game_type?: string | null
           general_notes?: string | null
           home_away?: string | null
           id?: string
+          ignored_for_training?: boolean
+          is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           lineup_slot?: number | null
           my_positions?: string[] | null
