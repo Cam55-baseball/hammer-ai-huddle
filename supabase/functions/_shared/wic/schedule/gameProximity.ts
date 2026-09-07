@@ -281,6 +281,15 @@ function mergeRows(a: ScheduledGame, b: ScheduledGame): ScheduledGame {
 export interface ProximityOptions {
   isPitcher?: boolean;
   /**
+   * The athlete tapped "Lift anyway" for this plan date. It may relax ONLY the
+   * schedule-derived caps computed in this file — the 48-hour primer cap, the
+   * density game-day primer and the pitcher-near-a-team-game default. It never
+   * touches a declared start, the CNS cap, season legality, age gates or any
+   * movement safety flag; those live outside this function entirely.
+   */
+  athleteOverride?: boolean;
+
+  /**
    * Dates in the six days before the plan date on which the athlete actually
    * received lift exposure. Used only by the zero-exposure invariant.
    */
