@@ -186,12 +186,16 @@ export function AnalysisResultsPanel({
 
 
       {/* ── 2 · KEY FINDINGS ─────────────────────────────────────────── */}
-      {summary.length > 0 && (
+      {(summary.length > 0 || crossDomainSlot) && (
         <RevealSection order={1}>
           <Card className="space-y-4 p-5 sm:p-6">
             <SectionHeading icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>
               {t('videoAnalysis.keyFindings')}
             </SectionHeading>
+
+            {crossDomainSlot}
+
+
 
             {topTakeaway && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
