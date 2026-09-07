@@ -88,7 +88,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
   );
 }
 
-export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Signals }: Props) {
+export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Signals, embedded }: Props) {
   const navigate = useNavigate();
   const { snapshot } = useHIESnapshot();
 
