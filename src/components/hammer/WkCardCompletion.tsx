@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  clearCompletion,
   loadEngagement,
   recordCompletion,
   todayCompletion,
@@ -62,6 +63,45 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
     ];
     return bank[Math.floor(Math.random() * bank.length)];
   }, []);
+
+  /** Take back today's done/skipped mark — the plan returns to untouched. */
+  async function undo() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      clearCompletion(user?.id, modality, side);
+      setCurrent(null);
+      if (user?.id && items.length > 0) {
+        if (!side) {
+          const ids = items.map((r) => r.id);
+          const { error } = await supabase
+            .from("wk_prescriptions" as any)
+            .update({ status: "pending" })
+            .in("id", ids);
+          if (error) console.warn("wk_prescriptions status undo failed", error);
+          // Remove the session-log rows this card wrote, so an accidental
+          // "done" doesn't teach tomorrow's plan the wrong thing.
+          const { error: logErr } = await supabase
+            .from("wk_session_logs" as any)
+            .delete()
+            .in("prescription_id", ids);
+          if (logErr) console.warn("wk_session_logs undo failed", logErr);
+        }
+        const seeds: TaskSeed[] = items.map((r) => ({
+          taskId: r.id,
+          source: "wk_prescription",
+          sourceRef: r.slot,
+          side,
+          payload: { name: r.movement_name, slug: r.movement_slug, side },
+        }));
+        void tasks.bulkSet(seeds, false);
+        qc.invalidateQueries({ queryKey: ["wk-rx", user.id] });
+      }
+      toast(`${modalityLabel} is open again.`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function mark(status: "done" | "skipped") {
     if (busy) return;
@@ -156,7 +196,10 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
       }
 
       if (status === "done") {
-        toast.success(`${modalityLabel} — done. ${encouragement}`);
+        toast.success(`${modalityLabel} — done. ${encouragement}`, {
+          duration: 10_000,
+          action: { label: "Undo", onClick: () => void undo() },
+        });
         const domain = MODALITY_DOMAIN[modality];
         if (domain) {
           emitVideoMoment({
@@ -172,7 +215,10 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
           });
         }
       } else {
-        toast(`${modalityLabel} skipped — Hammer will adjust the rest of today.`);
+        toast(`${modalityLabel} skipped — Hammer will adjust the rest of today.`, {
+          duration: 10_000,
+          action: { label: "Undo", onClick: () => void undo() },
+        });
       }
     } finally {
       setBusy(false);
@@ -203,6 +249,18 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
         <X className="h-3 w-3" />
         {current === "skipped" ? "Skipped" : "Skip"}
       </Button>
+      {current && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => void undo()}
+          disabled={busy}
+          className="h-7 text-[11px] text-muted-foreground"
+          title="Take that back — this card goes back to untouched"
+        >
+          Undo
+        </Button>
+      )}
     </div>
   );
 }

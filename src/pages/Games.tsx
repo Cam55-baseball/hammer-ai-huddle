@@ -344,6 +344,7 @@ function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
       const { data } = await (supabase as any)
         .from("gp_games")
         .select("id,opponent_team,status")
+        .is("deleted_at", null)
         .eq("user_id", user!.id)
         .eq("game_date", today)
         .order("created_at", { ascending: true })

@@ -77,6 +77,7 @@ export function GameSheet({
       const { data, error } = await (supabase as any)
         .from("gp_games")
         .select("*")
+        .is("deleted_at", null)
         .eq("id", gameId)
         .single();
       if (error) throw error;
@@ -101,15 +102,20 @@ export function GameSheet({
 
   const del = useMutation({
     mutationFn: async () => {
+      // Soft delete — the game leaves the calendar and stops shaping the
+      // training plan, but the row (and anything logged against it) survives.
       const { error } = await (supabase as any)
         .from("gp_games")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", gameId);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["gp-games-list"] });
-      toast.success("Game deleted");
+      qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
+      qc.invalidateQueries({ queryKey: ["calendar-projection"] });
+      qc.invalidateQueries({ queryKey: ["wk-rx"] });
+      toast.success("Game removed", { description: "It's off your calendar and no longer changes your training." });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e?.message ?? "Delete failed"),

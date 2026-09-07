@@ -18,7 +18,7 @@ import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilt
 
 export type SeasonPhase = "off" | "pre" | "in" | "post";
 export type SeasonQuarter = 1 | 2 | 3 | 4;
-export type SeasonPhaseSource = "date_window" | "stored" | "default";
+export type SeasonPhaseSource = "date_window" | "stored" | "manual" | "default";
 
 export interface QuarterDescriptor {
   readonly phase: SeasonPhase;

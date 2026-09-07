@@ -41,6 +41,7 @@ import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { ArmCareLibraryDialog } from "@/components/hammer/ArmCareLibraryDialog";
 import { BookOpen } from "lucide-react";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
+import { ScheduleAdjustmentNotice } from "@/components/hammer/ScheduleAdjustmentNotice";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 
 export function WkLiftsCard() {
@@ -48,7 +49,7 @@ export function WkLiftsCard() {
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
+    grouped, reductions, schedule, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
   const entry = getCard("lift")!;
   const { display: phaseDisplay } = useCanonicalPhaseDisplay(serverPhaseDisplay, phaseKey);
@@ -139,6 +140,9 @@ export function WkLiftsCard() {
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="space-y-2">
+            {/* Which game changed today's session, said out loud, with a way
+                to disagree. */}
+            <ScheduleAdjustmentNotice schedule={schedule} onChanged={() => generate()} />
             {suppressArmCareInLifts && (
               <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
                 Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.

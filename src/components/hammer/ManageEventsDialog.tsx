@@ -65,6 +65,7 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
         (supabase as any)
           .from("gp_games")
           .select("id, game_date, opponent_team, game_type, status")
+          .is("deleted_at", null)
           .eq("user_id", user!.id)
           .gte("game_date", start)
           .lte("game_date", end)

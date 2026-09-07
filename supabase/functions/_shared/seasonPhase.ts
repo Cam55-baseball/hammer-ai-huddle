@@ -8,11 +8,13 @@ export interface SeasonResolution {
   phaseStartedAt: string | null;
   daysIntoPhase: number | null;
   daysUntilNextPhase: number | null;
-  source: 'date_window' | 'stored' | 'default';
+  source: 'date_window' | 'stored' | 'manual' | 'default';
 }
 
 export interface SeasonSettingsLike {
   season_status?: string | null;
+  /** True when the athlete set the phase by hand. Outranks the date windows. */
+  season_status_manual?: boolean | null;
   preseason_start_date?: string | null;
   preseason_end_date?: string | null;
   in_season_start_date?: string | null;
@@ -35,31 +37,64 @@ export function normalizeSeasonStatus(v: unknown): string | null {
   return s;
 }
 
-export function resolveSeasonPhase(settings: SeasonSettingsLike | null | undefined): SeasonResolution {
+/** The athlete's own calendar day, not UTC's. */
+export function localToday(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Resolve the athlete's season phase.
+ *
+ * Two changes made after the phase-flapping report:
+ *
+ *  1. `today` is a parameter. The server used to derive it from UTC while the
+ *     app derived it locally, so on a boundary day the phase could change in
+ *     the evening and change back in the morning. Callers pass the athlete's
+ *     own plan date and the two agree.
+ *  2. `season_status_manual` wins. When the athlete has set the phase by hand
+ *     it is the answer, even if the saved dates disagree. Nothing overwrites
+ *     an athlete's own answer behind his back; the disagreement is surfaced
+ *     as a suggestion instead.
+ *
+ * Day counts are anchored to midnight on both ends so they never shift as the
+ * clock moves through the day.
+ */
+export function resolveSeasonPhase(
+  settings: SeasonSettingsLike | null | undefined,
+  today?: string,
+): SeasonResolution {
   if (!settings) {
     return { phase: 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' };
   }
   const normalizedStatus = normalizeSeasonStatus(settings.season_status);
   settings = { ...settings, season_status: normalizedStatus };
-  const today = new Date().toISOString().split('T')[0];
+  const day = today ?? localToday();
+  const storedPhase = settings.season_status as SeasonPhase | undefined;
+
+  // The athlete's own answer outranks the date windows.
+  if (settings.season_status_manual === true && storedPhase && VALID.includes(storedPhase)) {
+    return { phase: storedPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'manual' };
+  }
+
   const phases: { status: SeasonPhase; start: string | null | undefined; end: string | null | undefined }[] = [
     { status: 'preseason', start: settings.preseason_start_date, end: settings.preseason_end_date },
     { status: 'in_season', start: settings.in_season_start_date, end: settings.in_season_end_date },
     { status: 'post_season', start: settings.post_season_start_date, end: settings.post_season_end_date },
   ];
   for (const p of phases) {
-    if (p.start && p.end && today >= p.start && today <= p.end) {
-      const startDate = new Date(p.start + 'T00:00:00');
-      const endDate = new Date(p.end + 'T00:00:00');
-      const now = new Date();
-      const daysIntoPhase = Math.floor((now.getTime() - startDate.getTime()) / 86400000);
-      const daysUntilNextPhase = Math.floor((endDate.getTime() - now.getTime()) / 86400000);
+    if (p.start && p.end && day >= p.start && day <= p.end) {
+      const dayMs = (iso: string) => new Date(iso + 'T00:00:00Z').getTime();
+      const daysIntoPhase = Math.floor((dayMs(day) - dayMs(p.start)) / 86400000);
+      const daysUntilNextPhase = Math.floor((dayMs(p.end) - dayMs(day)) / 86400000);
       return { phase: p.status, phaseStartedAt: p.start, daysIntoPhase, daysUntilNextPhase, source: 'date_window' };
     }
   }
-  const stored = settings.season_status as SeasonPhase | undefined;
-  if (stored && VALID.includes(stored)) {
-    return { phase: stored, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'stored' };
+  if (storedPhase && VALID.includes(storedPhase)) {
+    return { phase: storedPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'stored' };
   }
   return { phase: 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' };
 }

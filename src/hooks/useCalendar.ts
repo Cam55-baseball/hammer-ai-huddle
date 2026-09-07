@@ -252,6 +252,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         supabase
           .from('calendar_events')
           .select('*')
+          .is("deleted_at", null)
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
@@ -920,9 +921,10 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     if (!user) return false;
     
     try {
+      // Soft delete — the event leaves every surface at once, the row stays.
       const { error } = await supabase
         .from('calendar_events')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id)
         .eq('user_id', user.id);
       

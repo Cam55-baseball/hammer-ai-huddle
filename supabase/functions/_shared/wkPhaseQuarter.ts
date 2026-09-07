@@ -38,7 +38,7 @@ const QUARTER_LABEL: Record<WkPhase, string> = {
 export interface WkPhaseResolution {
   phase: WkPhase;
   displayName: string;
-  source: "date_window" | "stored" | "default";
+  source: "date_window" | "stored" | "manual" | "default";
 }
 
 function parseDate(s: string | null | undefined): Date | null {
@@ -50,8 +50,14 @@ function parseDate(s: string | null | undefined): Date | null {
 export function resolveWkPhase(
   settings: SeasonSettingsLike | null | undefined,
   now: Date = new Date(),
+  /**
+   * The athlete's own calendar day. Passed explicitly so the server and the
+   * app never disagree about which day it is — that mismatch is what made the
+   * phase flip in the evening and flip back in the morning.
+   */
+  today?: string,
 ): WkPhaseResolution {
-  const seasonRes = resolveSeasonPhase(settings);
+  const seasonRes = resolveSeasonPhase(settings, today);
   if (seasonRes.phase === "in_season") {
     return { phase: "in_season", displayName: QUARTER_LABEL.in_season, source: seasonRes.source };
   }

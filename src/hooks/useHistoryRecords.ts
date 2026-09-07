@@ -84,6 +84,7 @@ export function useGameHistory(userId: string | null, enabled: boolean, limit = 
       const { data, error } = await supabase
         .from('gp_games')
         .select('id, game_date, opponent_team, game_type, venue, status, sport, my_score, opp_score')
+        .is("deleted_at", null)
         .eq('user_id', userId!)
         .order('game_date', { ascending: false })
         .limit(limit);
@@ -153,6 +154,7 @@ export function useDayRecords(date: string | null) {
         supabase
           .from('gp_games')
           .select('id, game_date, opponent_team, my_score, opp_score, status')
+          .is("deleted_at", null)
           .eq('user_id', userId!)
           .eq('game_date', date!),
         supabase

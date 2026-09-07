@@ -95,6 +95,7 @@ import {
 } from "../_shared/wic/determinism/globalDeterminismLock.ts";
 import { selectFromBand, DEFAULT_ROTATION_BAND, ROTATION_BAND_VERSION } from "../_shared/wic/lift/rotationBand.ts";
 import { resolveGameProximity, survivesPrimerOnly, NO_SCHEDULE, GAME_PROXIMITY_VERSION, type ScheduledGame } from "../_shared/wic/schedule/gameProximity.ts";
+import { resolveAthleteRank, meetsCompetitionLevel, COMPETITION_LEVEL_VERSION } from "../_shared/wic/competitionLevel.ts";
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
 import { aggregateValidatorReports, type EngineReport } from "../_shared/wic/validation/globalValidatorRegistry.ts";
 import { resolveCrossEngineConflicts } from "../_shared/wic/conflictResolver/crossEngineConflictResolver.ts";
@@ -349,18 +350,21 @@ const handler = async (req: Request): Promise<Response> => {
     ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("athlete_mpi_settings").select("season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
-      // Window, not a single day: the 48-hour rule needs yesterday and the
-      // next two days, and a doubleheader needs every row for a date.
+      // Window, not a single day: the 48-hour rule needs the next two days,
+      // a doubleheader needs every row for a date, and the density model needs
+      // the rolling seven days centred on today. Deleted rows never load.
       admin.from("gp_games")
-        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher")
+        .select("id, game_date, status, game_type, scheduled_time, is_starting_pitcher, is_doubleheader, ignored_for_training, opponent_team")
         .eq("user_id", user.id)
-        .gte("game_date", isoShift(planDate, -2))
-        .lte("game_date", isoShift(planDate, 2))
+        .is("deleted_at", null)
+        .gte("game_date", isoShift(planDate, -3))
+        .lte("game_date", isoShift(planDate, 3))
         .not("status", "in", "(canceled,cancelled,rescheduled)")
-        .limit(40),
+        .limit(60),
+
       // Practices: exact-date rows plus recurring weekly rows (filtered below).
       admin.from("scheduled_practice_sessions")
         .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, title, start_time, status")
@@ -379,12 +383,14 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
       // Calendar games — the surface most athletes actually use.
       admin.from("calendar_events")
-        .select("event_date, event_type, start_time, is_starting_pitcher")
+        .select("id, title, event_date, event_type, start_time, is_starting_pitcher, is_doubleheader, ignored_for_training")
         .eq("user_id", user.id)
+        .is("deleted_at", null)
         .in("event_type", ["game", "tournament", "scrimmage"])
-        .gte("event_date", isoShift(planDate, -2))
-        .lte("event_date", isoShift(planDate, 2))
-        .limit(40),
+        .gte("event_date", isoShift(planDate, -3))
+        .lte("event_date", isoShift(planDate, 3))
+        .limit(60),
+
     ]);
 
     const p: any = profile ?? {};
@@ -412,31 +418,74 @@ const handler = async (req: Request): Promise<Response> => {
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
-    const gameWindowRows: any[] = (gamesToday ?? []) as any[];
+    const gameWindowRows: any[] = ((gamesToday ?? []) as any[]).filter(
+      (g: any) => g.ignored_for_training !== true,
+    );
     const gamesOnPlanDate = gameWindowRows.filter((g: any) => String(g.game_date) === planDate);
     const isGameDay = gamesOnPlanDate.length > 0;
 
-    // -------- Schedule enforcement (Pass B) --------
-    // Two sources, one list. An athlete with neither gets NO_SCHEDULE and the
-    // session is generated exactly as it was before this rule existed.
+    // -------- Schedule enforcement (Pass B, revised) --------
+    // Two sources, one list, de-duplicated inside `resolveGameProximity`: the
+    // same real game entered in Game Plan and on the calendar is one game.
+    // An athlete with neither surface gets NO_SCHEDULE and the session is
+    // generated exactly as it was before this rule existed.
     const scheduledGames: ScheduledGame[] = [
       ...gameWindowRows.map((g: any) => ({
+        id: g.id ?? null,
         date: String(g.game_date),
         time: g.scheduled_time ?? null,
         isStartingPitcher: g.is_starting_pitcher === true,
+        status: g.status ?? null,
+        declaredDoubleheader: g.is_doubleheader === true,
+        ignored: g.ignored_for_training === true,
+        label: g.opponent_team ?? null,
         source: "gp_games" as const,
       })),
       ...((calendarGames ?? []) as any[]).map((e: any) => ({
+        id: e.id ?? null,
         date: String(e.event_date),
         time: e.start_time ?? null,
         isStartingPitcher: e.is_starting_pitcher === true,
+        status: null,
+        declaredDoubleheader: e.is_doubleheader === true,
+        ignored: e.ignored_for_training === true,
+        label: e.title ?? null,
         source: "calendar_events" as const,
       })),
     ];
     const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
+    // Zero-exposure invariant input: the days in the last week on which the
+    // athlete actually received a lift. Read-only, best-effort — a failure
+    // here degrades to "no exposure known", which can only relax a removal to
+    // a primer, never tighten anything.
+    const { data: recentLiftRows } = await admin
+      .from("wk_prescriptions")
+      .select("plan_date")
+      .eq("user_id", user.id)
+      .eq("slot", "lift")
+      .gte("plan_date", isoShift(planDate, -6))
+      .lt("plan_date", planDate)
+      .limit(60);
+    const liftExposureDatesLast7 = Array.from(
+      new Set(((recentLiftRows ?? []) as any[]).map((r: any) => String(r.plan_date))),
+    );
     const gameProximity = scheduledGames.length
-      ? resolveGameProximity(scheduledGames, planDate, { isPitcher: isPitcherAthlete })
+      ? resolveGameProximity(scheduledGames, planDate, {
+          isPitcher: isPitcherAthlete,
+          liftExposureDatesLast7,
+        })
       : NO_SCHEDULE;
+
+    // -------- Competition level --------
+    // `min_competition_level` has been on every catalog row since the catalog
+    // was built and was never read. A professional was therefore filtered by
+    // the same ceilings as a fourteen-year-old. It is a real gate now.
+    const athleteCompetitionRank = resolveAthleteRank({
+      competition_level: (ctx as any)?.competition_level ?? null,
+      competition_last_level: (ctx as any)?.competition_last_level ?? null,
+      is_professional: p.is_professional === true,
+    });
+
 
     // -------- Practice resolution (exact-date + recurring weekly) --------
     const planDow = new Date(`${planDate}T12:00:00Z`).getUTCDay();
@@ -477,6 +526,9 @@ const handler = async (req: Request): Promise<Response> => {
     const ctxAny: any = ctx ?? {};
     const seasonSettings = {
       season_status: mpi.season_status ?? ctxAny.season_phase ?? null,
+      // The athlete's hand-set phase outranks the date windows, here as well
+      // as in the app, so the plan and the profile always say the same thing.
+      season_status_manual: mpi.season_status_manual === true,
       preseason_start_date: mpi.preseason_start_date ?? null,
       preseason_end_date: mpi.preseason_end_date ?? null,
       in_season_start_date: mpi.in_season_start_date ?? null,
@@ -484,7 +536,8 @@ const handler = async (req: Request): Promise<Response> => {
       post_season_start_date: mpi.post_season_start_date ?? null,
       post_season_end_date: mpi.post_season_end_date ?? null,
     };
-    const phaseRes = resolveWkPhase(seasonSettings);
+    // `planDate` is the athlete's own day — never the server's UTC day.
+    const phaseRes = resolveWkPhase(seasonSettings, new Date(`${planDate}T12:00:00Z`), planDate);
     const isOffseason = phaseRes.phase.startsWith("os_");
     const isDeep = phaseRes.phase === "os_q1" || phaseRes.phase === "os_q2";
     const isInSeason = phaseRes.phase === "in_season";
@@ -825,6 +878,10 @@ const handler = async (req: Request): Promise<Response> => {
         !survivesPrimerOnly((m as any).intensity_class as string | null)
       ) return false;
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      // Competition-level ceiling. Only ever OPENS movements for higher levels
+      // — a null minimum is no gate at all, so nothing an athlete could reach
+      // yesterday disappears today.
+      if (!meetsCompetitionLevel(m.min_competition_level, athleteCompetitionRank)) return false;
       // Categorical training-age legality — the SAME field every certifier
       // reads. Never relaxable: a beginner-illegal movement is a safety call,
       // not a preference. Without this gate the selector proposed picks the
@@ -1281,6 +1338,27 @@ const handler = async (req: Request): Promise<Response> => {
             : null,
 
           reductions,
+          // Schedule enforcement, named. The card must be able to say WHICH
+          // game moved the session, not just that "something" did.
+          schedule: {
+            version: GAME_PROXIMITY_VERSION,
+            competition_version: COMPETITION_LEVEL_VERSION,
+            headline: gameProximity.headline,
+            driving_game: gameProximity.drivingGame,
+            primer_only: gameProximity.primerOnly,
+            lift_removed: gameProximity.removeLift,
+            within_48h: gameProximity.within48h,
+            hours_to_game: gameProximity.hoursToNearestGame,
+            assumed_game_time: gameProximity.assumedGameTime,
+            games_today: gameProximity.gamesToday,
+            doubleheader_today: gameProximity.isDoubleheaderToday,
+            games_per_rolling_week: gameProximity.gamesPerRollingWeek,
+            high_density: gameProximity.highDensity,
+            zero_exposure_relief: gameProximity.zeroExposureRelief,
+            duplicates_collapsed: gameProximity.duplicatesCollapsed,
+            finished_excluded: gameProximity.finishedExcluded,
+            reasons: gameProximity.reasons,
+          },
           override: overrideMeta,
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
           // Phase 4 — every card reads the same TrainingContext from here.
@@ -1359,7 +1437,10 @@ const handler = async (req: Request): Promise<Response> => {
     // `gameProximity.removeLift` is the athlete's own "I'm starting this game"
     // mark. Today's game already closes this block; the explicit term is here
     // so the rule is readable rather than implied.
-    if (!isGameDay && !gameProximity.removeLift) {
+    // At four or more games in a rolling seven days the 48-hour rule cannot be
+    // satisfied, so a game day still earns a primer rather than nothing at all
+    // — `primerOnly` above has already capped what can appear.
+    if ((!isGameDay || gameProximity.highDensity) && !gameProximity.removeLift) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
@@ -3128,6 +3209,11 @@ const handler = async (req: Request): Promise<Response> => {
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,
+      schedule: {
+        version: GAME_PROXIMITY_VERSION,
+        competition_rank: athleteCompetitionRank,
+        ...gameProximity,
+      },
       validator_report: validatorReport,
       diagnostics_id: diagId,
       generation_ms: generationMs,

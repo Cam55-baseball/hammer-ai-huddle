@@ -108,6 +108,7 @@ export function useScheduleWindow(): ScheduleWindow {
       const { data } = await (supabase as any)
         .from("gp_games")
         .select("id, game_date, opponent_team, status, game_type")
+        .is("deleted_at", null)
         .eq("user_id", uid!)
         .gte("game_date", start)
         .lte("game_date", end)
