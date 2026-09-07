@@ -1334,6 +1334,27 @@ const handler = async (req: Request): Promise<Response> => {
             : null,
 
           reductions,
+          // Schedule enforcement, named. The card must be able to say WHICH
+          // game moved the session, not just that "something" did.
+          schedule: {
+            version: GAME_PROXIMITY_VERSION,
+            competition_version: COMPETITION_LEVEL_VERSION,
+            headline: gameProximity.headline,
+            driving_game: gameProximity.drivingGame,
+            primer_only: gameProximity.primerOnly,
+            lift_removed: gameProximity.removeLift,
+            within_48h: gameProximity.within48h,
+            hours_to_game: gameProximity.hoursToNearestGame,
+            assumed_game_time: gameProximity.assumedGameTime,
+            games_today: gameProximity.gamesToday,
+            doubleheader_today: gameProximity.isDoubleheaderToday,
+            games_per_rolling_week: gameProximity.gamesPerRollingWeek,
+            high_density: gameProximity.highDensity,
+            zero_exposure_relief: gameProximity.zeroExposureRelief,
+            duplicates_collapsed: gameProximity.duplicatesCollapsed,
+            finished_excluded: gameProximity.finishedExcluded,
+            reasons: gameProximity.reasons,
+          },
           override: overrideMeta,
           wic: { adaptation: adaptationDecision.primary, engine: wicEngine },
           // Phase 4 — every card reads the same TrainingContext from here.
@@ -3184,6 +3205,11 @@ const handler = async (req: Request): Promise<Response> => {
       cns_used: cnsUsed,
       cns_cap: cnsCap,
       reductions,
+      schedule: {
+        version: GAME_PROXIMITY_VERSION,
+        competition_rank: athleteCompetitionRank,
+        ...gameProximity,
+      },
       validator_report: validatorReport,
       diagnostics_id: diagId,
       generation_ms: generationMs,
