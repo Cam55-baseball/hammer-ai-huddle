@@ -16718,6 +16718,8 @@ export type Database = {
           id: string
           reduction_payload: Json
           reduction_reason: string
+          superseded_at: string | null
+          superseded_reason: string | null
           user_id: string
         }
         Insert: {
@@ -16727,6 +16729,8 @@ export type Database = {
           id?: string
           reduction_payload?: Json
           reduction_reason: string
+          superseded_at?: string | null
+          superseded_reason?: string | null
           user_id: string
         }
         Update: {
@@ -16736,6 +16740,8 @@ export type Database = {
           id?: string
           reduction_payload?: Json
           reduction_reason?: string
+          superseded_at?: string | null
+          superseded_reason?: string | null
           user_id?: string
         }
         Relationships: []
