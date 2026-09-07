@@ -336,6 +336,7 @@ serve(async (req) => {
     const { data: existingEvents } = await supabase
       .from('calendar_events')
       .select('event_date, event_type')
+      .is('deleted_at', null)
       .eq('user_id', user.id)
       .gte('event_date', planStartStr)
       .lte('event_date', planEndStr);
