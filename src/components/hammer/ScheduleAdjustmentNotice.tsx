@@ -197,6 +197,10 @@ export function ScheduleAdjustmentNotice({
             <DialogTitle>Lift anyway?</DialogTitle>
           </DialogHeader>
 
+          <DialogDescription className="sr-only">
+            Choosing to lift through today's game day. Safety limits are unchanged.
+          </DialogDescription>
+
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-4 text-left text-sm text-muted-foreground">
             <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
