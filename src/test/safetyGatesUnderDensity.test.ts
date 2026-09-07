@@ -49,8 +49,18 @@ describe("safety gates are unreachable from the schedule layer", () => {
       seasonPhase: "in_season",
       isThrowingAthlete: true,
     } as any);
+    // Blocked in-season — by season legality first, and by the shoulder flag
+    // behind it. Either way it never reaches a thrower's plan.
     expect(res.allowed).toBe(false);
-    expect(res.reason).toContain("shoulder_end_range");
+    const offSeason = checkSafetyGate(m, {
+      ageYears: 18,
+      trainingAgeClass: "advanced",
+      seasonPhase: "off_season",
+      isThrowingAthlete: true,
+      slotRole: "warmup",
+    } as any);
+    expect(offSeason.allowed).toBe(false);
+    expect(offSeason.reason).toContain("shoulder_end_range");
   });
 
   it("the schedule layer never produces a positive CNS adjustment", () => {
