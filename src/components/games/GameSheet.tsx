@@ -112,7 +112,10 @@ export function GameSheet({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["gp-games-list"] });
-      toast.success("Game deleted");
+      qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
+      qc.invalidateQueries({ queryKey: ["calendar-projection"] });
+      qc.invalidateQueries({ queryKey: ["wk-rx"] });
+      toast.success("Game removed", { description: "It's off your calendar and no longer changes your training." });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e?.message ?? "Delete failed"),
