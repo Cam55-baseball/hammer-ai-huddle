@@ -78,6 +78,12 @@ interface Props {
    * card, so an athlete never sees two competing prescription boxes.
    */
   prescriptionExtra?: ReactNode;
+  /**
+   * Cross-skill root pattern, folded into Key findings so the report never
+   * repeats it in a separate block at the bottom.
+   */
+  crossDomainSlot?: ReactNode;
+
 }
 
 function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNode }) {
