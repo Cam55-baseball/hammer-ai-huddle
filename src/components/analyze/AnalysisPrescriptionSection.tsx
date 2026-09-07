@@ -24,6 +24,12 @@ interface Props {
   sport?: string | null;
   violations?: Record<string, boolean> | null;
   pieV2Signals?: string[];
+  /**
+   * When true, drop the card shell and the duplicate "Your prescription"
+   * heading — the section is being folded into the report's single
+   * prescription card rather than standing on its own.
+   */
+  embedded?: boolean;
 }
 
 function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] }) {
