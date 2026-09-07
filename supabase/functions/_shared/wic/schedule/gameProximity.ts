@@ -194,6 +194,12 @@ export interface DedupeResult {
 export function dedupeGames(
   games: readonly ScheduledGame[],
   planDate: string,
+  /**
+   * Keep games already played. Suppression only ever looks forward, but
+   * *density* is a load fact: four games in seven days is four games whether
+   * they are behind the athlete or ahead of him.
+   */
+  keepPast = false,
 ): DedupeResult {
   let finishedExcluded = 0;
   const live: ScheduledGame[] = [];
@@ -204,7 +210,7 @@ export function dedupeGames(
     if (g.ignored === true) continue;
     if (isFinishedStatus(status) || g.date < planDate) {
       finishedExcluded++;
-      continue;
+      if (!keepPast) continue;
     }
     live.push(g);
   }
@@ -306,7 +312,8 @@ export function resolveGameProximity(
   // ---- Density: deduped games inside the rolling seven days centred here. ----
   const winStart = isoAddDays(planDate, -3);
   const winEnd = isoAddDays(planDate, 3);
-  const gamesPerRollingWeek = clean.filter((g) => g.date >= winStart && g.date <= winEnd).length;
+  const densitySet = dedupeGames(games ?? [], planDate, true).games;
+  const gamesPerRollingWeek = densitySet.filter((g) => g.date >= winStart && g.date <= winEnd).length;
   const highDensity = gamesPerRollingWeek >= 4;
 
   const within48hRaw = nearest !== null && nearest <= 48;
