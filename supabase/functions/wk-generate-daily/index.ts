@@ -668,14 +668,99 @@ const handler = async (req: Request): Promise<Response> => {
     if (soreness >= 8) {
       reductions.push({ reason: "soreness", detail: `Reported soreness ${soreness}/10 — substituting regressions where possible.` });
     }
-    if (recentAck?.acknowledged_at) {
-      const ackAgeH = (Date.now() - new Date(recentAck.acknowledged_at).getTime()) / 3600000;
-      if (ackAgeH >= 0 && ackAgeH <= 48) {
+    // ---- Recovery acknowledgement — an ack may not outlive its cause. ----
+    // An ack is a promise about *a specific condition* ("I'll take the recovery
+    // on this game / this bad night's sleep"). Once that condition has cleared,
+    // the ack is spent and must stop reducing anything. Previously the only
+    // test was age <= 48h, so an ack written against a game that had already
+    // been played kept cutting volume for two more days. Superseded rather than
+    // deleted: the row stays on the record with the reason it was retired.
+    const { data: liveAckRow } = await admin
+      .from("wk_recovery_acks")
+      .select("id, reduction_reason, reduction_payload, acknowledged_at")
+      .eq("user_id", user.id)
+      .is("superseded_at", null)
+      .order("acknowledged_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const liveAck = (liveAckRow ?? null) as
+      | { id: string; reduction_reason: string | null; acknowledged_at: string }
+      | null;
+
+    /**
+     * Is the condition that produced this ack still true today? Unknown reasons
+     * fail CLOSED — we never hold volume down on a cause we cannot re-verify.
+     */
+    const ackCauseStillHolds = (reason: string): boolean | null => {
+      switch (reason) {
+        case "game_proximity":
+          return gameProximity.within48h || gameProximity.primerOnly || gameProximity.cnsCapDelta < 0;
+        case "sleep":
+          return sleep < 6;
+        case "cns":
+          return cnsReadiness <= 4;
+        case "soreness":
+          return soreness >= 8;
+        case "practice_load":
+          return isPracticeDay;
+        case "travel":
+          return isTravelDay;
+        case "mixed":
+        case "learning_loop":
+          // A composite ack survives only while at least one live cause remains.
+          return (
+            sleep < 6 || cnsReadiness <= 4 || soreness >= 8 || isPracticeDay || isTravelDay ||
+            gameProximity.within48h || gameProximity.primerOnly || gameProximity.cnsCapDelta < 0
+          );
+        default:
+          return null;
+      }
+    };
+
+    let ackDecision: Record<string, unknown> = { present: false };
+    if (liveAck?.acknowledged_at) {
+      const ackReason = String(liveAck.reduction_reason ?? "mixed");
+      const ackAgeH = (Date.now() - new Date(liveAck.acknowledged_at).getTime()) / 3600000;
+      const holds = ackCauseStillHolds(ackReason);
+      const expired = !(ackAgeH >= 0 && ackAgeH <= 48);
+      const spentReason = expired
+        ? "age_window_elapsed"
+        : holds === null
+          ? "cause_not_verifiable"
+          : holds === false
+            ? "cause_cleared"
+            : null;
+
+      if (spentReason) {
+        await admin
+          .from("wk_recovery_acks")
+          .update({ superseded_at: new Date().toISOString(), superseded_reason: spentReason })
+          .eq("id", liveAck.id);
+        ackDecision = { present: true, applied: false, reason: ackReason, age_hours: Math.round(ackAgeH), superseded_reason: spentReason };
+      } else {
         cnsCap = Math.max(1, cnsCap - 1);
+        // Name the thing, the way the schedule notice does. "game_proximity" is
+        // machine output; an athlete needs the game and the date.
+        const dg = gameProximity.drivingGame;
+        const cause = ackReason === "game_proximity" && dg
+          ? `your game ${dg.whenLabel}${dg.label ? ` vs ${dg.label}` : ""} (${dg.date})`
+          : ackReason === "sleep"
+            ? `${sleep}h of sleep`
+            : ackReason === "cns"
+              ? `CNS readiness ${cnsReadiness}/10`
+              : ackReason === "soreness"
+                ? `soreness ${soreness}/10`
+                : ackReason === "practice_load"
+                  ? "practice on the books"
+                  : ackReason === "travel"
+                    ? "a travel day"
+                    : "a lighter day";
+        const ackDay = String(liveAck.acknowledged_at).slice(0, 10);
         reductions.push({
           reason: "learning_loop",
-          detail: `Recent recovery ack (${recentAck.reduction_reason ?? "mixed"}) — holding CNS cap conservative for one more day.`,
+          detail: `You chose to take the recovery on ${ackDay} because of ${cause}, and that's still true today — CNS cap held one unit lower. It clears on its own once it isn't.`,
         });
+        ackDecision = { present: true, applied: true, reason: ackReason, age_hours: Math.round(ackAgeH), cause };
       }
     }
 
