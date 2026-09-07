@@ -1495,6 +1495,14 @@ export default function AnalyzeVideo() {
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
                     showScore={scoresAllowed}
+                    prescriptionExtra={
+                      <AnalysisPrescriptionSection
+                        embedded
+                        module={module}
+                        sport={sport}
+                        violations={analysis.violations_detected ?? null}
+                      />
+                    }
                   />
                 )}
 
