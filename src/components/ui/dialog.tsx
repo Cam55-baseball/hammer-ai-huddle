@@ -3,14 +3,29 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useCloseOnBack } from "@/hooks/useCloseOnBack";
 
-const Dialog = DialogPrimitive.Root;
+/**
+ * Dialog root. Four ways out, always: the X, Escape, a tap outside, and the
+ * Android/iOS back gesture (see `useCloseOnBack`). A modal an athlete cannot
+ * leave is worse than a feature that does not exist.
+ */
+const Dialog = ({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
+  useCloseOnBack(open, onOpenChange);
+  return <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />;
+};
+Dialog.displayName = "Dialog";
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
 const DialogPortal = DialogPrimitive.Portal;
 
 const DialogClose = DialogPrimitive.Close;
+
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
