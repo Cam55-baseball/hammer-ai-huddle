@@ -109,13 +109,14 @@ export interface RecommendInput {
   taxonomy: TaxonomyTag[];
   rules: VideoTagRule[];
   userOutcomes?: Map<string, { watchCount: number; avgPostDelta: number }>;
-  globalMetrics?: Map<string, { improvementScore: number }>;
+  globalMetrics?: Map<string, { improvementScore: number; sampleSize: number }>;
   /**
    * How many other athletes liked or saved this video FOR one of the faults in
    * this request. Measured only — never invented, and capped so a popular clip
    * can never out-rank an actual tag match.
    */
   faultEndorsements?: Map<string, number>;
+
   /**
    * Correction keys belonging to a ROOT movement pattern the athlete shows in
    * more than one skill domain. These are lifted above single-domain matches
@@ -133,6 +134,19 @@ export interface RecommendInput {
 
 
 
+export interface OutcomeEvidence {
+  /** Times THIS athlete has watched it. */
+  readonly personalWatchCount: number;
+  /** How many post-view measurements exist across all athletes. */
+  readonly globalSampleSize: number;
+  /** Distinct athletes who endorsed it for one of these faults. */
+  readonly endorsementCount: number;
+  /** True when any of the three cleared its floor and moved the score. */
+  readonly outcomeApplied: boolean;
+  /** Total measurements behind the outcome terms. */
+  readonly totalSampleSize: number;
+}
+
 export interface RecommendResult {
   video: VideoWithTags;
   score: number;
@@ -147,7 +161,24 @@ export interface RecommendResult {
   relevance: 'targeted' | 'general';
   /** Phase 7: derived monetization overlay — never feeds back into ranking. */
   conversionScore?: number;
+  /** How much measured evidence stands behind this score. Always present. */
+  outcomeEvidence: OutcomeEvidence;
+  /** True when this pick was held back for the exploration slot. */
+  exploration?: boolean;
 }
+
+/**
+ * Below these counts an outcome term is noise, so it contributes exactly zero
+ * rather than a wobbly number. Raising a video on three likes is guessing.
+ */
+export const OUTCOME_FLOORS = {
+  /** Personal watch history before their own deltas count. */
+  personalWatches: 3,
+  /** Library-wide post-view measurements before the global term counts. */
+  globalMeasurements: 5,
+  /** Distinct athletes endorsing it for this fault before peer likes count. */
+  endorsements: 3,
+} as const;
 
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
   session: { max: 4, minScore: 40 },
@@ -161,6 +192,7 @@ const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
+
 
 export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
@@ -298,28 +330,36 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
 
 
 
-    // User-specific success
+    // Outcome terms only count once there is enough measurement behind them.
+    // Below the floor they contribute exactly zero — not a small wobbly number.
     const uo = userOutcomes?.get(v.id);
-    if (uo) {
+    const gm = globalMetrics?.get(v.id);
+    const endorsements = faultEndorsements?.get(v.id) ?? 0;
+    const personalWatchCount = uo?.watchCount ?? 0;
+    const globalSampleSize = gm?.sampleSize ?? 0;
+    let outcomeApplied = false;
+
+    // User-specific success
+    if (uo && personalWatchCount >= OUTCOME_FLOORS.personalWatches) {
       score += clamp(uo.avgPostDelta * 8, -20, 20);
-      if (uo.watchCount >= 3 && uo.avgPostDelta <= 0) score -= 15;
+      if (uo.avgPostDelta <= 0) score -= 15;
+      outcomeApplied = true;
     }
 
     // Global improvement
-    const gm = globalMetrics?.get(v.id);
-    if (gm) score += clamp(gm.improvementScore * 5, -10, 10);
+    if (gm && globalSampleSize >= OUTCOME_FLOORS.globalMeasurements) {
+      score += clamp(gm.improvementScore * 5, -10, 10);
+      outcomeApplied = true;
+    }
 
     // Peer endorsement for THIS fault. Small, capped, and only counted when
-    // the like/save was recorded against a fault in this request.
-    const endorsements = faultEndorsements?.get(v.id) ?? 0;
-    if (endorsements > 0) {
+    // enough athletes recorded it against a fault in this request.
+    if (endorsements >= OUTCOME_FLOORS.endorsements) {
       score += Math.min(10, 3 + endorsements);
-      reasons.push(
-        endorsements === 1
-          ? 'Another athlete found this helped the same fault'
-          : `${endorsements} athletes found this helped the same fault`,
-      );
+      outcomeApplied = true;
+      reasons.push(`${endorsements} athletes found this helped the same fault`);
     }
+
 
     // Recency
     if (v.created_at) {
@@ -366,16 +406,39 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
         matchedLayers,
         relevance: targeted ? 'targeted' : 'general',
         reasons: dedupe(reasons).slice(0, 4),
+        outcomeEvidence: {
+          personalWatchCount,
+          globalSampleSize,
+          endorsementCount: endorsements,
+          outcomeApplied,
+          totalSampleSize: personalWatchCount + globalSampleSize + endorsements,
+        },
       });
     }
   }
 
   const cap = MODE_CAPS[mode];
-  return scored
+  const eligible = scored
     .filter(r => r.score >= cap.minScore)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, cap.max);
+    .sort((a, b) => b.score - a.score);
+
+  const top = eligible.slice(0, cap.max);
+  if (top.length < cap.max) return top;
+
+  // Exploration slot — the last slot is reserved for a video with too little
+  // outcome data to rank on. Without it a new video is never watched, never
+  // earns data, and never ranks: the library seals around whatever landed first.
+  if (top.some(r => !r.outcomeEvidence.outcomeApplied)) return top;
+  const explorer = eligible
+    .slice(cap.max)
+    .find(r => !r.outcomeEvidence.outcomeApplied);
+  if (!explorer) return top;
+  return [
+    ...top.slice(0, cap.max - 1),
+    { ...explorer, exploration: true, reasons: dedupe([...explorer.reasons, 'New — not enough data on this one yet']).slice(0, 4) },
+  ];
 }
+
 
 function dedupe(arr: string[]): string[] {
   return Array.from(new Set(arr));

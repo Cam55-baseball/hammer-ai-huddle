@@ -17885,9 +17885,24 @@ export type Database = {
         Args: { day_adaptation: string; movement_adaptation: string }
         Returns: boolean
       }
+      wk_fielding_generic_fault: { Args: { p_group: string }; Returns: string }
+      wk_fielding_position_group: { Args: { p_pos: string }; Returns: string }
+      wk_fielding_root_pattern: { Args: { p_fault: string }; Returns: string }
       wk_persist_prescriptions_atomic: {
         Args: { p_date: string; p_diag: Json; p_rows: Json; p_user: string }
         Returns: string
+      }
+      wk_upsert_fault_signal: {
+        Args: {
+          p_confidence: number
+          p_discipline: string
+          p_evidence: string
+          p_fault: string
+          p_observed: string
+          p_source: string
+          p_user: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

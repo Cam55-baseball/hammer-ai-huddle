@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,11 @@ import { VideoFilters } from "@/components/video-library/VideoFilters";
 import { SavedVideos } from "@/components/video-library/SavedVideos";
 import { FoundationsShelf } from "@/components/video-library/FoundationsShelf";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
+
+/** Below this, "Most Liked" is ranking on a handful of taps. Don't offer it. */
+const MIN_LIKES_FOR_SORT = 25;
 
 const VideoLibrary = () => {
   const navigate = useNavigate();
@@ -19,6 +23,24 @@ const VideoLibrary = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [sort, setSort] = useState<'newest' | 'most_liked'>('newest');
+  const [likeCount, setLikeCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from('library_video_likes')
+        .select('id', { count: 'exact', head: true });
+      if (!cancelled) setLikeCount(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const showMostLiked = (likeCount ?? 0) >= MIN_LIKES_FOR_SORT;
+
+  useEffect(() => {
+    if (!showMostLiked && sort === 'most_liked') setSort('newest');
+  }, [showMostLiked, sort]);
 
   const { videos, tags, loading, hasMore, loadMore, toggleLike, trackView, trackSearch } = useVideoLibrary({
     search,
@@ -27,6 +49,7 @@ const VideoLibrary = () => {
     tagFilters,
     sort,
   });
+
 
   const handlePlay = useCallback((video: LibraryVideo) => {
     trackView(video.id);
@@ -76,9 +99,12 @@ const VideoLibrary = () => {
                 <Button variant={sort === 'newest' ? 'default' : 'outline'} size="sm" onClick={() => setSort('newest')}>
                   Newest
                 </Button>
-                <Button variant={sort === 'most_liked' ? 'default' : 'outline'} size="sm" onClick={() => setSort('most_liked')}>
-                  Most Liked
-                </Button>
+                {showMostLiked && (
+                  <Button variant={sort === 'most_liked' ? 'default' : 'outline'} size="sm" onClick={() => setSort('most_liked')}>
+                    Most Liked
+                  </Button>
+                )}
+
               </div>
             </div>
 
