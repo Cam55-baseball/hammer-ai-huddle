@@ -240,8 +240,13 @@ const playTypeOptions = [
 
 const fieldingResultOptions = [
   { value: 'clean', label: '✅ Clean' },
-  { value: 'error', label: '❌ Error' },
   { value: 'assist', label: '🤝 Assist' },
+  { value: 'error', label: '❌ Error' },
+  { value: 'bobbled', label: '🤲 Bobbled' },
+  { value: 'dropped', label: '⬇️ Dropped' },
+  { value: 'missed_pick', label: '🧤 Missed Pick' },
+  { value: 'offline_throw', label: '↗️ Offline Throw' },
+  { value: 'late_throw', label: '🐢 Late Throw' },
 ];
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {

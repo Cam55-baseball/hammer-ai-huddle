@@ -3,7 +3,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Slider } from '@/components/ui/slider';
 
 const playTypes = ['ground_ball', 'fly_ball', 'line_drive', 'bunt', 'pop_up'] as const;
-const results = ['clean', 'error', 'assist'] as const;
+const results = ['clean', 'assist', 'error', 'bobbled', 'dropped', 'missed_pick', 'offline_throw', 'late_throw'] as const;
 
 interface FieldingMicroInputProps {
   playType?: string;
@@ -37,7 +37,7 @@ export function FieldingMicroInput({
         <ToggleGroup type="single" value={result} onValueChange={v => v && onResultChange(v)}>
           {results.map(r => (
             <ToggleGroupItem key={r} value={r} variant="outline" size="sm" className="text-xs capitalize">
-              {r}
+              {r.replace(/_/g, ' ')}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

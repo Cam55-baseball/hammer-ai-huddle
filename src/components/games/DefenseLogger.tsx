@@ -342,6 +342,10 @@ function DefForm({ onSave, onCancel }: {
             payload[k] = payload[k] === "" ? null : Number(payload[k]);
           });
           if (!payload.play_type) payload.play_type = null;
+          // A typed error code ("E6") is the tick — nobody also ticks the box.
+          if (typeof payload.result === "string" && /^e\s*-?\s*[1-9]$/i.test(payload.result.trim())) {
+            payload.error_flag = true;
+          }
           if (!payload.result) payload.result = null;
           if (!payload.spray_direction) payload.spray_direction = null;
           // Fold UI-only extras into notes so we never lose them, since the

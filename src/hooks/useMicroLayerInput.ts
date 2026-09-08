@@ -51,7 +51,7 @@ export interface MicroLayerData {
   execution_score?: number;
   // Fielding micro
   play_type?: 'ground_ball' | 'fly_ball' | 'line_drive' | 'bunt' | 'pop_up';
-  fielding_result?: 'clean' | 'error' | 'assist';
+  fielding_result?: 'clean' | 'assist' | 'error' | 'bobbled' | 'dropped' | 'missed_pick' | 'offline_throw' | 'late_throw';
   throw_accuracy_grade?: number;
   footwork_grade?: number;
   exchange_time_band?: 'fast' | 'average' | 'slow';
