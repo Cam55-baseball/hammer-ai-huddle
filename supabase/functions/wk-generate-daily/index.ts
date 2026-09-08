@@ -1091,6 +1091,17 @@ const handler = async (req: Request): Promise<Response> => {
       isThrower: isThrowerForBalance,
     });
 
+    // ---- Fault Ledger priority ---------------------------------------------
+    // The athlete's own recorded faults, collapsed into at most three root
+    // patterns. This may ONLY add priority to a movement that already passed
+    // every legality gate. It never filters a pool, never removes a movement
+    // and never empties a slot: an empty ledger yields a bonus of exactly 0
+    // for every slug, which reproduces today's card byte for byte.
+    const faultPriority = buildFaultPriority(
+      ((faultSignals ?? []) as unknown as LedgerSignalRow[]),
+      Date.parse(`${planDate}T12:00:00Z`) || Date.now(),
+    );
+
     /**
      * Best-fit picker for discretionary slots. Scores only among movements
      * that already passed every legality gate, so the constitutional order is
@@ -1102,7 +1113,8 @@ const handler = async (req: Request): Promise<Response> => {
       const cat = coerceCanonicalCategory(m as any) ?? "";
       const score =
         emphasisFor(goalEmphasis, m as any) +
-        (cat ? shortfallBonus(weeklyLedger, cat) : 0) -
+        (cat ? shortfallBonus(weeklyLedger, cat) : 0) +
+        faultPriority.bonusForSlug(m.slug) -
         varietyPenalty(weeklyLedger, m.slug) -
         poolIndex * 0.001; // stable pool-order tie-break
       return Math.round(score * 1e6) / 1e6;
