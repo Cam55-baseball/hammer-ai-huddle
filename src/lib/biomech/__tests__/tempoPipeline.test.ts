@@ -26,7 +26,7 @@ describe("runTempoPipeline", () => {
       MISSINGNESS_REASONS.POSE_NOT_DETECTED,
     );
     expect(r.evidence.anchors.front_foot_strike.missingness?.missing_reason).toBe(
-      MISSINGNESS_REASONS.POSE_MODEL_IS_STUB,
+      MISSINGNESS_REASONS.FRONT_FOOT_FIRST_CONTACT_MISSING,
     );
   });
 
