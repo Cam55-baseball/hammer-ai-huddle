@@ -165,6 +165,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     skillDomains,
     aiDescription,
     assignmentCount: Object.keys(assignments).length,
+    assignedLayers: layersCovered,
+    sports: selectedSports,
   });
   const foundationReady = isFoundationMetaValid(foundationMeta) && aiDescription.trim().length > 0;
   const missing = isFoundation ? [] : applicationMissing;

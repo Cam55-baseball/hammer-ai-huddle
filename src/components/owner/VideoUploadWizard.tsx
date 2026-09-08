@@ -84,6 +84,8 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
     skillDomains: structured.skillDomains,
     aiDescription: structured.aiDescription,
     assignmentCount: Object.keys(structured.tagAssignments).length,
+    assignedLayers: structured.assignedLayers ?? [],
+    sports: sport ? [sport] : [],
   });
   const step3Valid = isFoundation
     ? isFoundationMetaValid(foundationMeta) && structured.aiDescription.trim().length > 0

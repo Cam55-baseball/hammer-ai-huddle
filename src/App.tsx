@@ -397,9 +397,11 @@ const App = () => {
               <Route path="/defense/plays/entry" element={<DefensivePlayEntry />} />
               <Route path="/defense/plays" element={<MyDefensivePlays />} />
               <Route path="/pitching/tell-report" element={<StaffOnlyRoute><MyTellReport /></StaffOnlyRoute>} />
-              {/* Pre-release: baserunning / catching / throwing paperwork is staff-only until those modules ship. */}
+              {/* Entry screens stay staff-only: they are evaluator tools (athlete ID +
+                  a second person with a stopwatch), not athlete self-entry. The read-only
+                  results view is athlete-facing and RLS-scoped to their own rows. */}
               <Route path="/baserunning/splits/entry" element={<StaffOnlyRoute><BaserunningSplitEntry /></StaffOnlyRoute>} />
-              <Route path="/baserunning/splits" element={<StaffOnlyRoute><MyBaserunningSplits /></StaffOnlyRoute>} />
+              <Route path="/baserunning/splits" element={<MyBaserunningSplits />} />
               <Route path="/catching/reps/entry" element={<StaffOnlyRoute><CatchingRepEntry /></StaffOnlyRoute>} />
               <Route path="/throwing/reps/entry" element={<StaffOnlyRoute><ThrowingRepEntry /></StaffOnlyRoute>} />
               <Route path="/learn/pitch-tipping" element={<PitchTippingEducation />} />

@@ -19,6 +19,10 @@ export interface VideoDraft {
   skillDomains?: string[] | null;
   aiDescription?: string | null;
   assignmentCount?: number | null;
+  /** Layers covered by the chosen taxonomy tags — needs correction or movement. */
+  assignedLayers?: string[] | null;
+  /** Sports the video was filmed for. Softball-only tags exist, so this is required. */
+  sports?: string[] | null;
   /** Defaults to 'application' when omitted (legacy callers). */
   videoClass?: VideoClass | null;
   foundationMeta?: Partial<FoundationMeta> | null;
@@ -29,6 +33,8 @@ export type MissingFieldKey =
   | 'skill_domains'
   | 'ai_description'
   | 'tag_assignments'
+  | 'tag_reach'
+  | 'sport'
   | 'foundation_domain'
   | 'foundation_scope'
   | 'foundation_audience'
@@ -44,11 +50,14 @@ export const MISSING_LABELS: Record<MissingFieldKey, string> = {
   skill_domains: 'skill',
   ai_description: 'description',
   tag_assignments: 'tags',
+  tag_reach: 'correction or movement tag',
+  sport: 'sport',
   foundation_domain: 'topic',
   foundation_scope: 'scope',
   foundation_audience: 'audience',
   foundation_triggers: 'triggers',
 };
+
 
 export function computeMissingFields(draft: VideoDraft): MissingField[] {
   if ((draft.videoClass ?? 'application') === 'foundation') {
@@ -68,8 +77,19 @@ export function computeMissingFields(draft: VideoDraft): MissingField[] {
   if ((draft.assignmentCount ?? 0) < 2) {
     missing.push({ key: 'tag_assignments', message: 'Add at least 2 tags' });
   }
+  const layers = draft.assignedLayers ?? [];
+  if (!layers.includes('correction') && !layers.includes('movement_pattern')) {
+    missing.push({
+      key: 'tag_reach',
+      message: "This video won't reach any athlete until it has a correction or movement tag",
+    });
+  }
+  if (!draft.sports || draft.sports.filter(Boolean).length === 0) {
+    missing.push({ key: 'sport', message: 'Pick a sport' });
+  }
   return missing;
 }
+
 
 function computeFoundationMissingFields(draft: VideoDraft): MissingField[] {
   const m = draft.foundationMeta ?? null;
@@ -85,8 +105,12 @@ function computeFoundationMissingFields(draft: VideoDraft): MissingField[] {
   if (!draft.aiDescription || !draft.aiDescription.trim()) {
     missing.push({ key: 'ai_description', message: 'Write a description' });
   }
+  if (!draft.sports || draft.sports.filter(Boolean).length === 0) {
+    missing.push({ key: 'sport', message: 'Pick a sport' });
+  }
   return missing;
 }
+
 
 export function isVideoReady(draft: VideoDraft): boolean {
   return computeMissingFields(draft).length === 0;

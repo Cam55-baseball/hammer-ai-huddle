@@ -10,6 +10,7 @@ import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState }
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
 import { VideoClassificationFields } from './VideoClassificationFields';
 import { categoryToSkillDomain, isValidVideoClassification, type VideoCategory, type VideoSport } from '@/lib/videoCategoricalTaxonomy';
+import { computeMissingFields } from '@/lib/videoReadiness';
 
 interface VideoUploadFormProps {
   tags: LibraryTag[];
@@ -35,11 +36,18 @@ export function VideoUploadForm({ tags: _tags, onSuccess }: VideoUploadFormProps
     return 'external';
   };
 
+  const missing = computeMissingFields({
+    videoFormat: structured.videoFormat,
+    skillDomains: structured.skillDomains,
+    aiDescription: structured.aiDescription,
+    assignmentCount: Object.keys(structured.tagAssignments).length,
+    assignedLayers: structured.assignedLayers ?? [],
+    sports: sport ? [sport] : [],
+  });
+  const classificationOk = !!title.trim() && isValidVideoClassification(sport, category, subSkill);
+
   const handleSubmit = async () => {
-    if (!title.trim() || !isValidVideoClassification(sport, category, subSkill)) return;
-    if (!structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()) {
-      return;
-    }
+    if (!classificationOk || missing.length > 0) return;
 
     const videoType = mode === 'upload' ? 'upload' : detectVideoType(externalUrl);
 
@@ -135,9 +143,19 @@ export function VideoUploadForm({ tags: _tags, onSuccess }: VideoUploadFormProps
 
       <StructuredTagEditor value={structured} onChange={setStructured} sports={sport ? [sport] : []} />
 
+      {(missing.length > 0 || !classificationOk) && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-1">
+          <p className="text-xs font-semibold text-destructive">Can't save yet</p>
+          <ul className="text-[11px] text-destructive/90 list-disc pl-4 space-y-0.5">
+            {!classificationOk && <li>Add a title, sport, category and sub-skill</li>}
+            {missing.map(m => <li key={m.key}>{m.message}</li>)}
+          </ul>
+        </div>
+      )}
+
       <Button
         onClick={handleSubmit}
-        disabled={uploading || !title.trim() || !isValidVideoClassification(sport, category, subSkill) || !structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()}
+        disabled={uploading || !classificationOk || missing.length > 0}
         className="w-full"
       >
         {uploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</> : 'Add Video'}

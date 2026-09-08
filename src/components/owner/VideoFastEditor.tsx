@@ -37,6 +37,8 @@ const FIELD_LABEL: Record<MissingFieldKey, string> = {
   skill_domains: 'Skill domains',
   ai_description: 'Description',
   tag_assignments: 'Tags',
+  tag_reach: 'Correction or movement tag',
+  sport: 'Sport',
   foundation_domain: 'Foundation topic',
   foundation_scope: 'Foundation scope',
   foundation_audience: 'Audience level',
@@ -251,6 +253,8 @@ export function VideoFastEditor({
     skillDomains,
     aiDescription,
     assignmentCount: Object.keys(assignments).length,
+    assignedLayers: taxonomy.filter(t => assignments[t.id] != null).map(t => t.layer),
+    sports: video.sport ?? [],
   });
   const isReady = missing.length === 0;
   const canAutoSuggest = !isFoundation && aiDescription.trim().length >= SUGGEST_MIN_CHARS;
