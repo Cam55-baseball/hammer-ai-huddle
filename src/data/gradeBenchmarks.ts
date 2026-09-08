@@ -925,7 +925,9 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   position_throw_velo: {
     source: 'PG/PBR published position player velo data',
     as_of: null,
-    // Source: PG/PBR published position player velo data
+    // Source: PG/PBR published position player velo data.
+    // PRO BAND: owned by scale_reference `throw_velo_mph_infield` (dated,
+    // position-specific). Youth bands stay age-appropriate here.
     baseball: {
       '14u': [
         { raw: 45, grade: 20 }, { raw: 52, grade: 30 }, { raw: 62, grade: 45 },
@@ -939,11 +941,9 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 62, grade: 20 }, { raw: 70, grade: 30 }, { raw: 81, grade: 45 },
         { raw: 87, grade: 55 }, { raw: 92, grade: 65 }, { raw: 99, grade: 80 },
       ],
-      pro: [
-        { raw: 68, grade: 20 }, { raw: 76, grade: 30 }, { raw: 86, grade: 45 },
-        { raw: 91, grade: 55 }, { raw: 95, grade: 65 }, { raw: 102, grade: 80 },
-      ],
+      pro: scaleDerivedPoints('throw_velo_mph_infield'),
     },
+
     softball: {
       '14u': [
         { raw: 35, grade: 20 }, { raw: 42, grade: 30 }, { raw: 50, grade: 45 },
