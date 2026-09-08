@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import {
   deriveDefensivePlayMetrics,
@@ -28,7 +29,7 @@ import {
 import { DefensivePlayList, beatenRunnerSentence } from '@/components/defense/DefensivePlayList';
 import { POSITION_ORDER, positionLabel } from '@/lib/drills/positionLabels';
 import type { BatterHandedness } from '@/lib/defense/beatenRunnerGrade';
-import { Loader2, Shield, ShieldAlert } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 
 const OUTCOMES = [
   'out',
@@ -56,9 +57,13 @@ const NONE = '__none__';
 export default function DefensivePlayEntry() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { canSendActivities, isScout, isCoach, loading: accessLoading } = useScoutAccess();
+  const { user } = useAuth();
+  // Athletes log their own defense. Evaluators keep the athlete picker; a
+  // scout or coach never gets the player-only self-logging path.
+  const selfMode = !accessLoading && !canSendActivities;
   const { toast } = useToast();
 
-  const athleteId = searchParams.get('athleteId') ?? '';
+  const athleteId = selfMode ? (user?.id ?? '') : (searchParams.get('athleteId') ?? '');
   const [athleteInput, setAthleteInput] = useState(athleteId);
 
   const [atBatId, setAtBatId] = useState<string>(NONE);
@@ -112,7 +117,7 @@ export default function DefensivePlayEntry() {
       });
       toast({
         title: 'Defensive play logged',
-        description: 'Saved as evaluator-entered.',
+        description: selfMode ? 'Saved to your defensive play log.' : 'Saved as evaluator-entered.',
       });
       setDistance('');
       setHangTime('');
@@ -139,23 +144,6 @@ export default function DefensivePlayEntry() {
     );
   }
 
-  if (!canSendActivities) {
-    return (
-      <DashboardLayout>
-        <Card className="max-w-xl mx-auto mt-10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-destructive" /> Evaluator access required
-            </CardTitle>
-            <CardDescription>
-              Defensive plays can only be logged by an active scout or coach.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6 pb-16">
@@ -164,13 +152,13 @@ export default function DefensivePlayEntry() {
             <Shield className="h-6 w-6 text-primary" /> Defensive Play Entry
           </h1>
           <p className="text-sm text-muted-foreground">
-            Manual play logging for {isScout ? 'scouts' : ''}
-            {isScout && isCoach ? ' and ' : ''}
-            {isCoach ? 'coaches' : ''}. Every play recorded here is marked evaluator-entered —
-            camera-measured plays will only ever come from the video pipeline.
+            {selfMode
+              ? 'Log a play from your own defense. Hand-timed entries are marked as such — camera-measured plays only ever come from the video pipeline.'
+              : `Manual play logging for ${[isScout ? 'scouts' : '', isCoach ? 'coaches' : ''].filter(Boolean).join(' and ')}. Every play recorded here is marked evaluator-entered — camera-measured plays will only ever come from the video pipeline.`}
           </p>
         </header>
 
+        {!selfMode && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Athlete</CardTitle>
@@ -194,6 +182,7 @@ export default function DefensivePlayEntry() {
             </Button>
           </CardContent>
         </Card>
+        )}
 
         {athleteId && (
           <>

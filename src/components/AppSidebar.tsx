@@ -315,6 +315,11 @@ export function AppSidebar() {
     // History — practices, games, reports and recaps (everything without video)
     items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });
 
+    // My Defensive Plays — player-only. A coach or scout never sees it.
+    if (hasPlayerAccess) {
+      items.push({ key: 'defensive-plays', title: 'My Defensive Plays', url: '/defense/plays', icon: Shield });
+    }
+
     // Evaluations — official scouting reports about me + reports I've filed
     items.push({ key: 'evaluations', title: 'Evaluations', url: '/evaluations', icon: ClipboardList });
 
@@ -332,7 +337,7 @@ export function AppSidebar() {
     }
 
     return items;
-  }, [isOwner, isAdmin, activeTier, modules, selectedSport, t]);
+  }, [isOwner, isAdmin, activeTier, modules, selectedSport, hasPlayerAccess, t]);
 
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
