@@ -109,9 +109,7 @@ export function gradeFromScaleRow(
   let raw: number;
   if (t <= rec) {
     raw = 80;
-  let raw: number;
-  if (t <= rec) {
-    raw = 80;
+
   } else if (t <= av) {
     // between record (80) and average (50)
     raw = 50 + ((av - t) / (av - rec)) * 30;
