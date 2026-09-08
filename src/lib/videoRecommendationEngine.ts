@@ -109,13 +109,14 @@ export interface RecommendInput {
   taxonomy: TaxonomyTag[];
   rules: VideoTagRule[];
   userOutcomes?: Map<string, { watchCount: number; avgPostDelta: number }>;
-  globalMetrics?: Map<string, { improvementScore: number }>;
+  globalMetrics?: Map<string, { improvementScore: number; sampleSize: number }>;
   /**
    * How many other athletes liked or saved this video FOR one of the faults in
    * this request. Measured only — never invented, and capped so a popular clip
    * can never out-rank an actual tag match.
    */
   faultEndorsements?: Map<string, number>;
+
   /**
    * Correction keys belonging to a ROOT movement pattern the athlete shows in
    * more than one skill domain. These are lifted above single-domain matches
