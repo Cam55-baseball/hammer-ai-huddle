@@ -29,7 +29,7 @@ import {
 import { DefensivePlayList, beatenRunnerSentence } from '@/components/defense/DefensivePlayList';
 import { POSITION_ORDER, positionLabel } from '@/lib/drills/positionLabels';
 import type { BatterHandedness } from '@/lib/defense/beatenRunnerGrade';
-import { Loader2, Shield, ShieldAlert } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 
 const OUTCOMES = [
   'out',

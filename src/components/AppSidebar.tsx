@@ -315,6 +315,9 @@ export function AppSidebar() {
     // History — practices, games, reports and recaps (everything without video)
     items.push({ key: 'history', title: 'History', url: '/history', icon: Archive });
 
+    // My Defensive Plays — every play logged about this athlete's defense.
+    items.push({ key: 'defensive-plays', title: 'My Defensive Plays', url: '/defense/plays', icon: Shield });
+
     // Evaluations — official scouting reports about me + reports I've filed
     items.push({ key: 'evaluations', title: 'Evaluations', url: '/evaluations', icon: ClipboardList });
 
