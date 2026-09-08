@@ -90,7 +90,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
 
       // Extra columns + assignments fetched separately to avoid TS strictness on new cols
       const faultKeys = [...(params.correctionTags ?? []), ...params.movementPatterns];
-      const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }, { data: likeRows }, { data: saveRows }] = await Promise.all([
+      const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }, { data: likeRows }, { data: saveRows }, { data: seenRows }] = await Promise.all([
         (supabase as any).from('library_videos').select('id, video_format, skill_domains, sport, ai_description, confidence_score, distribution_tier').in('id', ids),
         (supabase as any).from('video_tag_assignments').select('video_id, tag_id, weight').in('video_id', ids),
         (supabase as any).from('video_performance_metrics').select('video_id, post_view_improvement_sum, post_view_improvement_n').in('video_id', ids),
