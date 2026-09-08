@@ -7828,6 +7828,7 @@ export type Database = {
         Row: {
           action: string
           created_at: string
+          fault_scope: string | null
           id: string
           search_term: string | null
           user_id: string | null
@@ -7836,6 +7837,7 @@ export type Database = {
         Insert: {
           action: string
           created_at?: string
+          fault_scope?: string | null
           id?: string
           search_term?: string | null
           user_id?: string | null
@@ -7844,6 +7846,7 @@ export type Database = {
         Update: {
           action?: string
           created_at?: string
+          fault_scope?: string | null
           id?: string
           search_term?: string | null
           user_id?: string | null
