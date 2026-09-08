@@ -8,15 +8,23 @@
  *
  * Estimates are NOT failures — they are honest, and surfaced to the athlete.
  * They are counted separately so the gap stays visible.
+ *
+ * `convention` is its OWN category, never folded into "sourced". A convention
+ * is a deliberate choice we made (the sub-floor tail slope, for example) — it
+ * has a date and a rationale but no citation, and must never later be
+ * mistaken for a measured figure. That mistake is how a 90 mph "average
+ * fastball" survived for years.
  */
 
 import { GRADE_BENCHMARKS } from "../src/data/gradeBenchmarks";
+import { SUB_FLOOR_TAIL_PROVENANCE } from "../src/lib/benchmarks/gradeScale";
 
 const STALE_YEARS = 3;
 const now = new Date();
 
 const missing: string[] = [];
 const estimates: string[] = [];
+const conventions: string[] = [];
 const undated: string[] = [];
 const stale: string[] = [];
 const ok: string[] = [];
@@ -31,6 +39,10 @@ for (const [metric, entry] of Object.entries(GRADE_BENCHMARKS)) {
   }
   if (source === "estimate") {
     estimates.push(metric);
+    continue;
+  }
+  if (source === "convention") {
+    conventions.push(`${metric}${asOf ? ` (${asOf})` : " — UNDATED"}`);
     continue;
   }
   if (!asOf) {
@@ -50,6 +62,8 @@ console.log(`  sourced but stale : ${stale.length} (> ${STALE_YEARS} yrs)`);
 for (const m of stale) console.log(`      ⚠ ${m}`);
 console.log(`  sourced, undated  : ${undated.length}`);
 for (const m of undated) console.log(`      ⚠ ${m}`);
+console.log(`  conventions       : ${conventions.length} (chosen, not measured)`);
+for (const m of conventions) console.log(`      · ${m}`);
 console.log(`  estimates         : ${estimates.length}`);
 for (const m of estimates) console.log(`      ~ ${m}`);
 console.log(`  NO SOURCE         : ${missing.length}`);
@@ -67,4 +81,7 @@ if (undated.length > 0 || stale.length > 0) {
   );
   process.exit(1);
 }
+console.log(
+  `[benchmark-provenance] sub-floor tail: source=${SUB_FLOOR_TAIL_PROVENANCE.source}, as_of=${SUB_FLOOR_TAIL_PROVENANCE.as_of} — ${SUB_FLOOR_TAIL_PROVENANCE.rationale}`,
+);
 console.log("[benchmark-provenance] PASS");

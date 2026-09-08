@@ -32,13 +32,16 @@ describe("computePopTimeGrade", () => {
 
   it("grades the pro anchors — Baseball Savant, 2026", () => {
     expect(computePopTimeGrade(1.6, SCALE)).toEqual({ grade: 80, missing: false });
-    expect(computePopTimeGrade(2.0, SCALE)).toEqual({ grade: 45, missing: false });
+    // 2.00s is the professional average (owner figure, 2026-09-08) and the
+    // professional average is grade 50 — it was anchored a band low before.
+    expect(computePopTimeGrade(2.0, SCALE)).toEqual({ grade: 50, missing: false });
     expect(computePopTimeGrade(2.5, SCALE)).toEqual({ grade: 20, missing: false });
   });
 
-  it("clamps beyond the anchors instead of extrapolating", () => {
+  it("caps at the record but keeps running below the MLB floor", () => {
     expect(computePopTimeGrade(1.5, SCALE).grade).toBe(80);
-    expect(computePopTimeGrade(2.8, SCALE).grade).toBe(20);
+    // Below the floor the development tail continues, to one decimal.
+    expect(computePopTimeGrade(2.8, SCALE).grade).toBe(15.5);
   });
 
 

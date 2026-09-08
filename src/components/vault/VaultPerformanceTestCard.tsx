@@ -23,6 +23,7 @@ import {
 } from '@/data/performanceTestRegistry';
 import { rawToGrade, gradeToLabel, gradeToColor, gradeAllResults } from '@/lib/gradeEngine';
 import { EstimateBenchmarkNote } from '@/components/grades/EstimateBenchmarkNote';
+import { DevelopmentCurveNote } from '@/components/grades/DevelopmentCurveNote';
 import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 import { computeToolGrades, TOOL_LABELS, type ToolName } from '@/data/positionToolProfiles';
 import { generateReport, type TestIntelligenceReport } from '@/lib/testIntelligenceEngine';
@@ -382,6 +383,12 @@ export function VaultPerformanceTestCard({
                           );
                         })}
                       </div>
+                      <DevelopmentCurveNote
+                        className="mt-2"
+                        grades={(['hit', 'power', 'run', 'field', 'arm'] as ToolName[]).map(
+                          (tl) => latestReport.toolGrades[tl],
+                        )}
+                      />
                       <SoftballBenchmarkNote className="mt-2" />
                       <EstimateBenchmarkNote
                         className="mt-2"
@@ -421,6 +428,10 @@ export function VaultPerformanceTestCard({
                               </p>
                             </div>
                           </div>
+                          <DevelopmentCurveNote
+                            className="mt-2"
+                            grades={[speed.accel, speed.maxSpeed, speed.overall]}
+                          />
                           {(speed.elasticBoost !== 0 || speed.asymmetryPenalty !== 0 || speed.combinedElasticOutput !== null) && (
                             <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
                               {speed.combinedElasticOutput !== null && (
@@ -702,6 +713,12 @@ export function VaultPerformanceTestCard({
                                 );
                               })}
                           </div>
+                          <DevelopmentCurveNote
+                            className="mt-2"
+                            grades={Object.keys(test.results)
+                              .filter((k) => !k.startsWith('_'))
+                              .map((k) => grades[k])}
+                          />
                           <SoftballBenchmarkNote className="mt-2" />
                         </div>
 

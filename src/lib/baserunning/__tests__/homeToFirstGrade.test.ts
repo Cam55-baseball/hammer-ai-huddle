@@ -29,8 +29,12 @@ describe("computeHomeToFirstGrade", () => {
     expect(computeHomeToFirstGrade(3.5, "L", ROWS).grade).toBe(80);
   });
 
-  it("floors at 20 for slow splits", () => {
-    expect(computeHomeToFirstGrade(6.0, "R", ROWS).grade).toBe(20);
+  it("continues below the MLB floor on the development tail, clamped at 0", () => {
+    // 20 is the MLB floor, not the app's floor. A slow split keeps a reading
+    // so a developing runner can see movement — but it never goes negative.
+    expect(computeHomeToFirstGrade(4.65, "R", ROWS).grade).toBe(18.7);
+    expect(computeHomeToFirstGrade(4.7, "R", ROWS).grade).toBe(17.5);
+    expect(computeHomeToFirstGrade(6.0, "R", ROWS).grade).toBe(0);
   });
 
   it("interpolates between anchors", () => {
@@ -45,9 +49,14 @@ describe("computeHomeToFirstGrade", () => {
     );
   });
 
-  it("returns grades on the 5-point scouting grid", () => {
-    for (let t = 3.8; t <= 4.8; t += 0.03) {
-      expect(computeHomeToFirstGrade(t, "R", ROWS).grade! % 5).toBe(0);
+  it("returns 5-point scouting grades at and above the MLB floor", () => {
+    // Below the floor the reading is a development curve, reported to one
+    // decimal — the 5-point grid is a scouting convention and only applies
+    // inside the scouting range.
+    for (let t = 3.8; t <= 4.6; t += 0.03) {
+      const g = computeHomeToFirstGrade(t, "R", ROWS).grade!;
+      if (g >= 20) expect(g % 5).toBe(0);
+      else expect(Math.round(g * 10) / 10).toBe(g);
     }
   });
 

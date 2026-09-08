@@ -54,8 +54,9 @@ describe("computeBeatenRunnerGrade", () => {
     expect(computeBeatenRunnerGrade(4.45, "R", ROWS).grade).toBe(35);
   });
 
-  it("floors at 20 for slow plays", () => {
-    expect(computeBeatenRunnerGrade(6.0, "R", ROWS)).toEqual({ grade: 20, missing: false });
+  it("keeps running below the MLB floor, clamped at 0", () => {
+    expect(computeBeatenRunnerGrade(4.7, "R", ROWS).grade).toBe(17.5);
+    expect(computeBeatenRunnerGrade(6.0, "R", ROWS)).toEqual({ grade: 0, missing: false });
   });
 
   it("is handedness sensitive — the same time grades differently", () => {
@@ -64,8 +65,9 @@ describe("computeBeatenRunnerGrade", () => {
     expect(r).toBeGreaterThan(l);
   });
 
-  it("rounds to the nearest 5-point scouting grade", () => {
+  it("rounds to the nearest 5-point scouting grade inside the scouting range", () => {
     const g = computeBeatenRunnerGrade(4.17, "R", ROWS).grade!;
+    expect(g).toBeGreaterThanOrEqual(20);
     expect(g % 5).toBe(0);
   });
 
@@ -129,8 +131,9 @@ describe("gradeFromScaleRow with higher_better anchors", () => {
     expect(gradeFromScaleRow(101, "throw_velo_mph_infield", VELO).grade).toBe(80);
   });
 
-  it("floors at 20 below the floor value", () => {
-    expect(gradeFromScaleRow(70, "throw_velo_mph_infield", VELO).grade).toBe(20);
+  it("continues below the floor value on the development tail", () => {
+    expect(gradeFromScaleRow(70, "throw_velo_mph_infield", VELO).grade).toBe(17.1);
+    expect(gradeFromScaleRow(60, "throw_velo_mph_infield", VELO).grade).toBe(11.3);
   });
 
   it("is monotonic — harder throws never grade lower", () => {
