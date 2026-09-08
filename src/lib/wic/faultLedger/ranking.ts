@@ -25,7 +25,19 @@ export type FaultSource =
   | "coach_note"
   | "game_hub";
 
-export type Discipline = "hitting" | "throwing" | "fielding" | "running" | "lifting";
+/**
+ * `pitching` is its own discipline, not a flavour of throwing. The app treats
+ * the two as different things everywhere else, and folding one into the other
+ * would let a pitching fault and a throwing fault agree with each other when
+ * they are actually one source reporting twice.
+ */
+export type Discipline =
+  | "hitting"
+  | "pitching"
+  | "throwing"
+  | "fielding"
+  | "running"
+  | "lifting";
 
 export interface FaultSignal {
   readonly id: string;

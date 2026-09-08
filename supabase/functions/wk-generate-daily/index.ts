@@ -94,6 +94,11 @@ import {
   canonicalJson,
 } from "../_shared/wic/determinism/globalDeterminismLock.ts";
 import { selectFromBand, DEFAULT_ROTATION_BAND, ROTATION_BAND_VERSION } from "../_shared/wic/lift/rotationBand.ts";
+import {
+  buildFaultPriority,
+  FAULT_PRIORITY_VERSION,
+  type LedgerSignalRow,
+} from "../_shared/wic/faultLedger/priority.ts";
 import { resolveGameProximity, survivesPrimerOnly, NO_SCHEDULE, GAME_PROXIMITY_VERSION, type ScheduledGame } from "../_shared/wic/schedule/gameProximity.ts";
 import { resolveAthleteRank, meetsCompetitionLevel, COMPETITION_LEVEL_VERSION } from "../_shared/wic/competitionLevel.ts";
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
@@ -880,6 +885,20 @@ const handler = async (req: Request): Promise<Response> => {
     const sevenDaysAgo = new Date(planDate + "T00:00:00");
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+    // The fault ledger, 120 days back. Read-only, priority-only: see
+    // `buildFaultPriority` below. A read failure yields no rows, which is the
+    // same as an empty ledger — it can never block a plan.
+    const ledgerSince = new Date(
+      new Date(planDate + "T00:00:00Z").getTime() - 120 * 86400000,
+    ).toISOString();
+    const { data: faultSignals } = await admin
+      .from("wk_fault_signals")
+      .select("source,fault_key,root_pattern_id,discipline,confidence,sample_size,severity,observed_at")
+      .eq("user_id", user.id)
+      .gte("observed_at", ledgerSince)
+      .order("observed_at", { ascending: false })
+      .limit(500);
+
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
         .select("movement_slug, plan_date, slot, why_payload")
@@ -1086,6 +1105,17 @@ const handler = async (req: Request): Promise<Response> => {
       isThrower: isThrowerForBalance,
     });
 
+    // ---- Fault Ledger priority ---------------------------------------------
+    // The athlete's own recorded faults, collapsed into at most three root
+    // patterns. This may ONLY add priority to a movement that already passed
+    // every legality gate. It never filters a pool, never removes a movement
+    // and never empties a slot: an empty ledger yields a bonus of exactly 0
+    // for every slug, which reproduces today's card byte for byte.
+    const faultPriority = buildFaultPriority(
+      ((faultSignals ?? []) as unknown as LedgerSignalRow[]),
+      Date.parse(`${planDate}T12:00:00Z`) || Date.now(),
+    );
+
     /**
      * Best-fit picker for discretionary slots. Scores only among movements
      * that already passed every legality gate, so the constitutional order is
@@ -1097,7 +1127,8 @@ const handler = async (req: Request): Promise<Response> => {
       const cat = coerceCanonicalCategory(m as any) ?? "";
       const score =
         emphasisFor(goalEmphasis, m as any) +
-        (cat ? shortfallBonus(weeklyLedger, cat) : 0) -
+        (cat ? shortfallBonus(weeklyLedger, cat) : 0) +
+        faultPriority.bonusForSlug(m.slug) -
         varietyPenalty(weeklyLedger, m.slug) -
         poolIndex * 0.001; // stable pool-order tie-break
       return Math.round(score * 1e6) / 1e6;
@@ -3336,6 +3367,14 @@ const handler = async (req: Request): Promise<Response> => {
         ...gameProximity,
       },
       validator_report: validatorReport,
+      // What the athlete's own recorded faults asked for today, and what that
+      // was worth. Priority only — never a filter, never a dose.
+      fault_priority: {
+        version: FAULT_PRIORITY_VERSION,
+        active: faultPriority.active,
+        signals_read: (faultSignals ?? []).length,
+        ranked: faultPriority.trace,
+      },
       diagnostics_id: diagId,
       generation_ms: generationMs,
       training_context: trainingContext,
