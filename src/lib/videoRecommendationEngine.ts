@@ -209,8 +209,11 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     correctionTags, feedbackEvidence,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics, faultEndorsements,
-    activePhases, sport, positions, rootPatternCorrectionKeys,
+    activePhases, sport, positions, rootPatternCorrectionKeys, seenVideoIds,
   } = input;
+  // Coverage: what this athlete has already watched FOR THESE faults.
+  const seen = seenVideoIds instanceof Set ? seenVideoIds : new Set(seenVideoIds ?? []);
+  const faultScope = dedupe([...(correctionTags ?? []), ...movementPatterns]);
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
   const evidence = feedbackEvidence ?? {};
 
