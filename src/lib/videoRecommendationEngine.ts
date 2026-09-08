@@ -165,6 +165,16 @@ export interface RecommendResult {
   outcomeEvidence: OutcomeEvidence;
   /** True when this pick was held back for the exploration slot. */
   exploration?: boolean;
+  /**
+   * Coverage partition state for this pick.
+   * `unseen` — the athlete has not watched it for this fault yet (ranked first).
+   * `seen`   — already watched for this fault.
+   * `reset`  — every eligible video had been seen, so the seen-set was cleared
+   *            and normal ranking resumed.
+   */
+  coverage?: 'unseen' | 'seen' | 'reset';
+  /** The fault keys this pick was ranked against. Scopes the seen-set. */
+  faultScope: string[];
 }
 
 /**
