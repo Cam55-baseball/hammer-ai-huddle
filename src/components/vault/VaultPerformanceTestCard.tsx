@@ -388,6 +388,10 @@ export function VaultPerformanceTestCard({
                         grades={(['hit', 'power', 'run', 'field', 'arm'] as ToolName[]).map(
                           (tl) => latestReport.toolGrades[tl],
                         )}
+                        subFloorMetricKeys={latestReport.metricGrades
+                          .filter((m) => m.grade < 20)
+                          .map((m) => m.key)}
+                        hasTrendProjection={trends.some((t) => t.projection)}
                       />
                       <SoftballBenchmarkNote className="mt-2" />
                       <EstimateBenchmarkNote
@@ -431,6 +435,10 @@ export function VaultPerformanceTestCard({
                           <DevelopmentCurveNote
                             className="mt-2"
                             grades={[speed.accel, speed.maxSpeed, speed.overall]}
+                            subFloorMetricKeys={(latestReport?.metricGrades ?? [])
+                              .filter((m) => m.grade < 20 && m.category === 'speed')
+                              .map((m) => m.key)}
+                            hasTrendProjection={trends.some((t) => t.projection)}
                           />
                           {(speed.elasticBoost !== 0 || speed.asymmetryPenalty !== 0 || speed.combinedElasticOutput !== null) && (
                             <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
@@ -718,6 +726,13 @@ export function VaultPerformanceTestCard({
                             grades={Object.keys(test.results)
                               .filter((k) => !k.startsWith('_'))
                               .map((k) => grades[k])}
+                            subFloorMetricKeys={Object.keys(test.results)
+                              .filter((k) => !k.startsWith('_'))
+                              .filter((k) => {
+                                const g = grades[k];
+                                return typeof g === 'number' && g < 20;
+                              })}
+                            hasTrendProjection={trends.some((t) => t.projection)}
                           />
                           <SoftballBenchmarkNote className="mt-2" />
                         </div>

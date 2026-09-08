@@ -78,9 +78,13 @@ export function isSoftballFeatureLocked(
  * measurement is still shown and stored.
  */
 export const SOFTBALL_BENCHMARKS_PENDING_NOTE =
-  "Your number is measured and saved, but not graded yet: there is no published " +
-  "professional softball benchmark to grade it against, and we will not score you " +
-  "against a converted baseball figure. Grades appear the moment real figures exist.";
+  "Your mark is measured and saved — it is not lost, and nothing about it is missing. " +
+  "It simply is not graded, because there is no professional softball benchmark to grade it " +
+  "against: the AUSL publishes no tracking averages today, and no other pro softball league " +
+  "publishes them either. We could convert a baseball figure and hand you a number, but that " +
+  "number would be a guess dressed up as a grade, and we will not do that to you. " +
+  "This is a refusal to guess, not a gap in your data. The moment real professional softball " +
+  "figures exist, your saved marks get graded against them.";
 
 /**
  * Reads the same source the sidebar and sport theme read. Deliberately not a
