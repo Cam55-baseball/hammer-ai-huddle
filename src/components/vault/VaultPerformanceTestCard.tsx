@@ -23,6 +23,7 @@ import {
 } from '@/data/performanceTestRegistry';
 import { rawToGrade, gradeToLabel, gradeToColor, gradeAllResults } from '@/lib/gradeEngine';
 import { EstimateBenchmarkNote } from '@/components/grades/EstimateBenchmarkNote';
+import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 import { computeToolGrades, TOOL_LABELS, type ToolName } from '@/data/positionToolProfiles';
 import { generateReport, type TestIntelligenceReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus, type NextTestFocus } from '@/lib/adaptiveTestPriority';
@@ -381,6 +382,7 @@ export function VaultPerformanceTestCard({
                           );
                         })}
                       </div>
+                      <SoftballBenchmarkNote className="mt-2" />
                       <EstimateBenchmarkNote
                         className="mt-2"
                         metricKeys={Object.keys(latestTest?.results ?? {}).filter(

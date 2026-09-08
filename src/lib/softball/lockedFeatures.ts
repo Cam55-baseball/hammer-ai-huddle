@@ -78,7 +78,9 @@ export function isSoftballFeatureLocked(
  * measurement is still shown and stored.
  */
 export const SOFTBALL_BENCHMARKS_PENDING_NOTE =
-  "Softball benchmarks are still being built — your raw number is saved, but it isn't graded yet.";
+  "Your number is measured and saved, but not graded yet: there is no published " +
+  "professional softball benchmark to grade it against, and we will not score you " +
+  "against a converted baseball figure. Grades appear the moment real figures exist.";
 
 /**
  * Reads the same source the sidebar and sport theme read. Deliberately not a
