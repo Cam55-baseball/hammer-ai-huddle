@@ -240,11 +240,25 @@ export async function trackVideoSuggestionShown(
   });
 }
 
-export async function trackVideoWatched(userId: string, videoId: string, watchSeconds: number) {
+export async function trackVideoWatched(
+  userId: string,
+  videoId: string,
+  watchSeconds: number,
+  /** Fault keys this video was shown for. Feeds the per-fault coverage set. */
+  faultScope?: string[],
+) {
   await (supabase as any)
     .from('video_user_outcomes')
     .update({ watched_at: new Date().toISOString(), watch_seconds: watchSeconds })
     .eq('user_id', userId)
     .eq('video_id', videoId)
     .is('watched_at', null);
+
+  // One "seen" row per fault this video was offered for, so coverage is scoped
+  // to the fault and never leaks across skills.
+  const keys = Array.from(new Set((faultScope ?? []).filter(Boolean)));
+  if (!keys.length) return;
+  await (supabase as any).from('library_video_analytics').insert(
+    keys.map(k => ({ user_id: userId, video_id: videoId, action: 'view', fault_scope: k })),
+  );
 }
