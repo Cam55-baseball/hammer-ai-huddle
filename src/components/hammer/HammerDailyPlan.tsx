@@ -133,6 +133,8 @@ function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | 
   return null;
 }
 import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
+import { DefensivePrepVideo } from "@/components/hammer/DefensivePrepVideo";
+
 
 /**
  * Non-physical prescribed blocks that belong in the "Before you start"
@@ -712,8 +714,13 @@ function HammerDailyPlanBody({
 
         {/* 2. Today's Wisdom */}
         <TodaysWisdomCard />
+        {/* 2b. Defensive prep video — driven by the athlete's fielding signals */}
+        <ErrorBoundary>
+          <DefensivePrepVideo />
+        </ErrorBoundary>
         {/* 3. Human Performance Intelligence */}
         <HumanPerformanceCard />
+
         {/* 4. Start Line (DailyIntentHeader) */}
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
         {/* 5. Ask Hammer — Recall & Clarity */}
