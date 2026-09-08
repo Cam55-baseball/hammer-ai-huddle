@@ -20,4 +20,4 @@
 - [x] Section 2 — standards: 265 lb bodyweight cap, per-implement med-ball marks (4/6/10 lb), target disclaimer on every surface.
 - [x] Section 3 — quality tracks: emphasis ordering, never filters, weak-track weekly exposure floor.
 - [x] Section 4 — reload detector: hard/soft signals, guardrails, cold-start wave, plain-English reason.
-- [ ] Section 5 — wave: built but NOT wired, `lifting_v2_enabled` false. Full diff by group in `scripts/audits/evidence/wave-diff.json` — sets never move, only reps in main_compound / unilateral / upper. Awaiting owner sign-off before wiring.
+- [x] Section 5 — wave: **wired and live**, `lifting_v2_enabled` = true (owner approved; confirmed live with the stamped `wave_v2` proof). Full diff by group in `scripts/audits/evidence/wave-diff.json` — sets never move, only reps in main_compound / unilateral / upper. (Note corrected 2026-09-08: the roadmap said "false / awaiting sign-off"; the flag was right, the note was stale.)
