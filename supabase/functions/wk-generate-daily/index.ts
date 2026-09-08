@@ -3367,6 +3367,14 @@ const handler = async (req: Request): Promise<Response> => {
         ...gameProximity,
       },
       validator_report: validatorReport,
+      // What the athlete's own recorded faults asked for today, and what that
+      // was worth. Priority only — never a filter, never a dose.
+      fault_priority: {
+        version: FAULT_PRIORITY_VERSION,
+        active: faultPriority.active,
+        signals_read: (faultSignals ?? []).length,
+        ranked: faultPriority.trace,
+      },
       diagnostics_id: diagId,
       generation_ms: generationMs,
       training_context: trainingContext,
