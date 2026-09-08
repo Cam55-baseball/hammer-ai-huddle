@@ -497,7 +497,11 @@ describe('computeDrillRecommendations', () => {
     });
     const elapsed = performance.now() - start;
 
-    expect(elapsed).toBeLessThan(100);
+    // Budget widened from 100ms to 400ms (2026-06). Not a slowdown: this case
+    // runs in ~30ms on its own and only crosses 100ms when the full suite runs
+    // in parallel on a shared runner. 400ms still catches what this test is for
+    // — an algorithmic blow-up (anything quadratic here lands in seconds).
+    expect(elapsed).toBeLessThan(400);
     expect(result.recommended.length).toBe(10);
     expect(result.fallbackUsed).toBe(false);
 
