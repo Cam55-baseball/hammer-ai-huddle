@@ -154,7 +154,7 @@ describe("fault ledger → daily plan wiring", () => {
     expect(priority.ranked[0].family).toBe("trunk_transfer");
     expect(priority.ranked[1].family).toBe("rotational_output");
     // Two disciplines reporting the same root pattern counts as agreement.
-    expect(priority.ranked[1].disciplines.sort()).toEqual(["hitting", "pitching"]);
+    expect([...priority.ranked[1].disciplines].sort()).toEqual(["hitting", "pitching"]);
   });
 
   it("3. priority only: same slots, same categories, nothing removed from the pool", () => {
