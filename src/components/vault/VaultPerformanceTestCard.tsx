@@ -702,7 +702,9 @@ export function VaultPerformanceTestCard({
                                 );
                               })}
                           </div>
+                          <SoftballBenchmarkNote className="mt-2" />
                         </div>
+
                       );
                     })}
                   </div>
