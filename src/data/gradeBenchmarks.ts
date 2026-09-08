@@ -690,7 +690,11 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   tee_exit_velocity: {
     source: 'MLB Combine, Driveline data, PG events',
     as_of: null,
-    // Source: MLB Combine, Driveline data, PG events
+    // UNSOURCED — needs a TEE-SPECIFIC figure (Driveline / Perfect Game).
+    // Deliberately NOT re-anchored to the MLB ~88.5-89 mph average: that is an
+    // IN-GAME exit velocity. Tee EV runs higher, so borrowing the game number
+    // would make this scale too easy. Left untouched until a tee source exists.
+
     baseball: {
       '14u': [
         { raw: 50, grade: 20 }, { raw: 58, grade: 30 }, { raw: 68, grade: 45 },
@@ -764,9 +768,12 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   bat_speed: {
-    source: 'Blast Motion data, Driveline published ranges',
-    as_of: null,
-    // Source: Blast Motion data, Driveline published ranges
+    source: 'Statcast bat tracking, league-wide (MLB avg 71.5 mph, elite 78-80+)',
+    as_of: '2026-01-01',
+    // Source: Statcast bat tracking (ESPN/MLB league-wide). Confirmed 2026-09:
+    // the pro average anchor of 71 already matches the published 71.5 mph
+    // league average, so the numbers were NOT moved — only sourced and dated.
+
     baseball: {
       '14u': [
         { raw: 40, grade: 20 }, { raw: 47, grade: 30 }, { raw: 55, grade: 45 },
@@ -1020,9 +1027,10 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   pop_time: {
-    source: 'MLB Statcast pop time data',
-    as_of: null,
-    // Source: MLB Statcast pop time data
+    source: 'Baseball Savant pop time leaderboard (MLB avg 2.00s to 2B)',
+    as_of: '2026-01-01',
+    // Source: Baseball Savant pop time leaderboard, 2026. Published MLB range
+    // 1.6-2.5s; league average 2.00, elite ~1.85, poor ~2.14.
     baseball: {
       '14u': [
         { raw: 2.4, grade: 20 }, { raw: 2.25, grade: 30 }, { raw: 2.1, grade: 45 },
@@ -1036,11 +1044,14 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 2.2, grade: 20 }, { raw: 2.1, grade: 30 }, { raw: 1.95, grade: 45 },
         { raw: 1.9, grade: 55 }, { raw: 1.85, grade: 65 }, { raw: 1.78, grade: 80 },
       ],
+      // Savant anchors: 2.50 floor, 2.14 poor, 2.00 league average,
+      // 1.85 elite, 1.60 leaderboard best.
       pro: [
-        { raw: 2.15, grade: 20 }, { raw: 2.05, grade: 30 }, { raw: 1.93, grade: 45 },
-        { raw: 1.88, grade: 55 }, { raw: 1.83, grade: 65 }, { raw: 1.75, grade: 80 },
+        { raw: 2.5, grade: 20 }, { raw: 2.14, grade: 30 }, { raw: 2.0, grade: 45 },
+        { raw: 1.93, grade: 55 }, { raw: 1.85, grade: 65 }, { raw: 1.6, grade: 80 },
       ],
     },
+
     softball: {
       '14u': [
         { raw: 2.5, grade: 20 }, { raw: 2.35, grade: 30 }, { raw: 2.2, grade: 45 },
