@@ -16,6 +16,12 @@
  * reason. A grade is never fabricated.
  */
 
+import {
+  GRADE_MAX,
+  GRADE_MIN,
+  MLB_FLOOR_GRADE,
+} from "@/lib/benchmarks/gradeScale";
+
 export type BatterHandedness = "L" | "R";
 
 /** The subset of a `scale_reference` row this computation needs. */
@@ -46,13 +52,17 @@ function missing(reason: BeatenRunnerMissingReason): BeatenRunnerResult {
 }
 
 /**
- * Round to the nearest half-grade (scouting convention) and clamp to 20–80.
+ * Round to the nearest half-grade (scouting convention) inside the graded
+ * range, and to one decimal below the MLB floor of 20 — the floor is the
+ * show's floor, not the app's. Clamped to 0–80; never negative.
  * Exported so aggregation reuses this exact rounding rather than duplicating it.
  */
 export function toScoutingGrade(raw: number): number {
-  const clamped = Math.max(20, Math.min(80, raw));
+  const clamped = Math.max(GRADE_MIN, Math.min(GRADE_MAX, raw));
+  if (clamped < MLB_FLOOR_GRADE) return Math.round(clamped * 10) / 10;
   return Math.round(clamped / 5) * 5;
 }
+
 
 /**
  * Shared 20–80 interpolation against ONE `scale_reference` row.
@@ -105,18 +115,19 @@ export function gradeFromScaleRow(
   let raw: number;
   if (t <= rec) {
     raw = 80;
+
   } else if (t <= av) {
     // between record (80) and average (50)
     raw = 50 + ((av - t) / (av - rec)) * 30;
-  } else if (t <= flo) {
-    // between average (50) and floor (20)
-    raw = 20 + ((flo - t) / (flo - av)) * 30;
   } else {
-    raw = 20;
+    // between average (50) and floor (20) — and BELOW the floor, where the
+    // same slope simply keeps going so a developing athlete can see movement.
+    raw = 20 + ((flo - t) / (flo - av)) * 30;
   }
 
   return { grade: toScoutingGrade(raw), missing: false };
 }
+
 
 
 /**
