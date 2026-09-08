@@ -2,7 +2,13 @@
 // GRADE ENGINE — 20-80 Scale Conversion via Piecewise Linear Interpolation
 // =====================================================================
 
-import { GRADE_BENCHMARKS, type AgeBand, type BenchmarkPoint } from '@/data/gradeBenchmarks';
+import {
+  GRADE_BENCHMARKS,
+  isSoftballGradable,
+  type AgeBand,
+  type BenchmarkPoint,
+} from '@/data/gradeBenchmarks';
+
 import { METRIC_BY_KEY } from '@/data/performanceTestRegistry';
 import {
   SCALE_ANCHOR_SNAPSHOT,
