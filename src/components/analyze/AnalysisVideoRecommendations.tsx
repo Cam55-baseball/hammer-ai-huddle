@@ -132,10 +132,47 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
       ) : isLoading ? (
         <p className="text-sm text-muted-foreground">Matching your feedback to the library…</p>
       ) : suggestions.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No video in the library covers what this analysis found yet. We won't show you an
-          unrelated clip to fill the space — this will appear as soon as one is added.
-        </p>
+        fallback ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              No video in the library covers this fault yet. Here's the closest foundational
+              video for this part of your game — it isn't a fix for what this clip showed.
+            </p>
+            <div className="flex gap-3 p-2 rounded-md border bg-card">
+              <VideoThumb
+                videoUrl={fallback.video.video_url}
+                thumbnailUrl={fallback.video.thumbnail_url}
+                title={fallback.video.title}
+                className="h-16 w-24"
+              />
+              <div className="min-w-0 flex-1 self-center">
+                <p className="text-sm font-medium truncate">{fallback.video.title}</p>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 mt-1">Foundational</Badge>
+              </div>
+              <Button
+                size="sm"
+                className="self-center shrink-0"
+                onClick={() => {
+                  if (user) trackVideoWatched(user.id, fallback.video.id, 0).catch(() => {});
+                  setPlaying({
+                    id: fallback.video.id,
+                    title: fallback.video.title,
+                    video_url: fallback.video.video_url,
+                    thumbnail_url: fallback.video.thumbnail_url,
+                  });
+                }}
+              >
+                <Play className="h-3 w-3 mr-1" /> Watch
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No video in the library covers what this analysis found yet. We won't show you an
+            unrelated clip to fill the space — this will appear as soon as one is added.
+          </p>
+        )
+
       ) : (
         <div className="space-y-2">
           {suggestions.map(({ video, reasons, relevance }) => (
