@@ -1859,6 +1859,9 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
   it('Test 56: every metric with benchmarks has ≥3 points per age band per sport', () => {
     for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
       for (const sport of ['baseball', 'softball'] as const) {
+        // Softball grades are withheld where the column is a converted
+        // baseball number — there is nothing to anchor against.
+        if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
         const sportBench = entry[sport];
         for (const [ageBand, points] of Object.entries(sportBench)) {
           if (points && points.length > 0) {
@@ -1876,6 +1879,9 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
       if (!metricDef) continue;
 
       for (const sport of ['baseball', 'softball'] as const) {
+        // Softball grades are withheld where the column is a converted
+        // baseball number — there is nothing to anchor against.
+        if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
         const sportBench = entry[sport];
         for (const [ageBand, points] of Object.entries(sportBench)) {
           if (!points || points.length === 0) continue;
@@ -1903,6 +1909,7 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
       if (!metricDef) continue;
 
       for (const sport of ['baseball', 'softball'] as const) {
+        if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
         const sportBench = entry[sport];
         if (Object.keys(sportBench).length === 0) continue;
 
