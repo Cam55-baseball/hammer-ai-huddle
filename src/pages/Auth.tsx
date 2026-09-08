@@ -14,6 +14,7 @@ import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostLoginRoute, withLoginTimeout } from "@/lib/auth/postLoginRoute";
+import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 
 
 const authSchema = z.object({
@@ -467,6 +468,25 @@ const Auth = () => {
                 : t('auth.signUp')}
             </Button>
           </form>
+
+          {/* Third-party sign-in. Apple requires equal prominence with any
+              other social option, so this block sits directly under the form
+              on BOTH the sign-in and sign-up tabs — never behind a toggle. */}
+          {!isForgotPassword && (
+            <div className="mt-6 space-y-3">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                  <span className="bg-card px-3 text-muted-foreground">or</span>
+                </div>
+              </div>
+              <AppleSignInButton redirectTarget={resolveRedirect()} disabled={isLoading} />
+            </div>
+          )}
+
+
 
           {!isForgotPassword && isLogin ? (
             <div className="mt-6">
