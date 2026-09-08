@@ -1362,3 +1362,54 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   // Health & Recovery categories removed — accounted for elsewhere in system.
 };
 
+
+// =====================================================================
+// SOFTBALL GRADING — SUPPRESSED WHERE THE NUMBER IS A CONVERTED ONE
+// =====================================================================
+// Owner's rule: real numbers only, and no baseball-converted numbers for
+// softball. Different game, different biology.
+//
+// AUSL is in its second season (six teams, 25-game schedule) and publishes no
+// tracking-metric averages — there is no Statcast-equivalent leaderboard for
+// professional softball. Every softball column below that has a baseball
+// counterpart was produced by scaling the baseball figure by a constant, which
+// is exactly the thing we will not grade an athlete against.
+//
+// So those metrics are MEASURED AND STORED but NOT GRADED. The raw value is
+// still logged; the moment AUSL publishes, or the owner supplies figures, the
+// grades light up from data we already have.
+//
+// A wrong grade is worse than an absent one.
+//
+// NOT suppressed, and why:
+//   seven_yard_dash, forty_yard_dash  — softball-native tests (PG/PBR softball
+//                                       event timing); no baseball table exists
+//                                       to have been converted from.
+//   shoulder_rom_*, hip_internal_rotation, ankle_dorsiflexion,
+//   sl_balance_eyes_closed            — clinical mobility/balance norms from
+//                                       human-movement research, not a
+//                                       professional-league performance scale.
+const SOFTBALL_GRADED_METRICS = new Set<string>([
+  'seven_yard_dash',
+  'forty_yard_dash',
+  'shoulder_rom_internal',
+  'shoulder_rom_external',
+  'hip_internal_rotation',
+  'ankle_dorsiflexion',
+  'sl_balance_eyes_closed',
+]);
+
+/**
+ * True when a softball athlete's raw value for this metric can honestly be
+ * turned into a grade. False means: keep the number, withhold the grade, and
+ * say why.
+ */
+export function isSoftballGradable(metricKey: string): boolean {
+  return SOFTBALL_GRADED_METRICS.has(metricKey);
+}
+
+/** Every softball metric whose grade is withheld for want of a real benchmark. */
+export const SOFTBALL_UNGRADED_METRICS: string[] = Object.entries(GRADE_BENCHMARKS)
+  .filter(([key, entry]) =>
+    Object.keys(entry.softball ?? {}).length > 0 && !SOFTBALL_GRADED_METRICS.has(key))
+  .map(([key]) => key);
