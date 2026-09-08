@@ -186,6 +186,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         sport,
         positions,
         rootPatternCorrectionKeys: params.rootPatternCorrectionKeys,
+        seenVideoIds,
       });
 
     },
