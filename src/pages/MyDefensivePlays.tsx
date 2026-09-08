@@ -1,6 +1,6 @@
 /**
  * Athlete-facing results view for defensive plays logged about them.
- * Read-only — athletes never hand-enter their own defensive plays.
+ * Shows plays an evaluator filed and plays the athlete logged themselves.
  */
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,8 @@ import { useAthleteDefensivePlays } from '@/hooks/useDefensivePlays';
 import { DefensivePlayList } from '@/components/defense/DefensivePlayList';
 import { DefenseGradeCard } from '@/components/defense/DefenseGradeCard';
 import { Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
 
 export default function MyDefensivePlays() {
@@ -26,6 +28,9 @@ export default function MyDefensivePlays() {
             Every play logged about your defense, with the inputs it was judged on and the runner
             grade the play would have beaten.
           </p>
+          <Button asChild size="sm" variant="secondary" className="mt-2">
+            <Link to="/defense/plays/entry">Log a play</Link>
+          </Button>
           <SoftballBenchmarkNote />
         </header>
 
