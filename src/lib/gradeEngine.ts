@@ -72,13 +72,17 @@ export function rawToGrade(
   sport: 'baseball' | 'softball',
   age?: number | null
 ): number | null {
-  // Duplicated metrics: baseball grades come from whichever system owns the
-  // numbers, so the same input scores the same on every surface.
-  if (sport === 'baseball' && isScaleOwned(metricKey)) {
+  // Duplicated metrics: at the professional band the numbers are owned by
+  // `scale_reference`, and the grade is computed by the SAME function the rep
+  // surfaces use — so the same input scores the same wherever it is shown.
+  // Youth bands keep their age-appropriate table entries (MLB anchors would
+  // grade a 14-year-old against a big leaguer).
+  if (sport === 'baseball' && isScaleOwned(metricKey) && ageToAgeBand(age) === 'pro') {
     const canonical = resolutionFor(metricKey)!.canonical;
     const result = gradeFromScaleRow(rawValue, canonical, SCALE_ANCHOR_SNAPSHOT);
     return result.missing ? null : result.grade;
   }
+
 
   const benchmarkEntry = GRADE_BENCHMARKS[metricKey];
   if (!benchmarkEntry) return null;
