@@ -1219,7 +1219,10 @@ describe('Layer 16 — External Truth Validation', () => {
     const eliteRaws: Record<string, number> = {
       sixty_yard_dash: 6.2,
       tee_exit_velocity: 110,
-      pitching_velocity: 100,
+      // 100 mph is a 65 on the re-anchored pro band (94.5 avg, 104.2 record);
+      // elite for a professional arm now starts at the record anchor.
+      pitching_velocity: 104,
+
       position_throw_velo: 98,
       bat_speed: 85,
       vertical_jump: 40,
