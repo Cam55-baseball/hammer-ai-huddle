@@ -130,6 +130,13 @@ export interface RecommendInput {
   sport?: TagSport | null;
   /** HARD GATE for rules/tags scoped to position groups (catcher, middle_infield, …). */
   positions?: string[] | null;
+  /**
+   * Videos this athlete has already watched FOR THE FAULTS in this request.
+   * Coverage rule: unseen videos rank above seen ones so an athlete works
+   * through every video for a fault before any repeats. Never a filter — when
+   * everything has been seen the set resets and normal ranking resumes.
+   */
+  seenVideoIds?: ReadonlySet<string> | string[];
 }
 
 
