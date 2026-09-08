@@ -23,7 +23,7 @@ describe("fault ledger priority mirror", () => {
   it("offers the same movements per family as the app", () => {
     const expected: Record<string, string[]> = {};
     for (const f of FAULT_FAMILIES) {
-      expected[f.id] = f.ladders.map((l) => l.slug);
+      expected[f.id] = f.ladder.map((rung) => rung.slug);
     }
     expect(
       Object.fromEntries(
