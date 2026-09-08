@@ -16,6 +16,12 @@
  * reason. A grade is never fabricated.
  */
 
+import {
+  GRADE_MAX,
+  GRADE_MIN,
+  MLB_FLOOR_GRADE,
+} from "@/lib/benchmarks/gradeScale";
+
 export type BatterHandedness = "L" | "R";
 
 /** The subset of a `scale_reference` row this computation needs. */
