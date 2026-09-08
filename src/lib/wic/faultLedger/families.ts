@@ -118,7 +118,14 @@ export const FAULT_FAMILIES: readonly FaultFamily[] = [
     id: "back_leg_block",
     label: "Back leg and groin",
     plain: "The back leg has to hold and block. When the groin is weak it slides instead.",
-    rootPatterns: ["groin_strain_risk", "weak_adductors", "back_leg_collapse"],
+    // `direction_off_the_target_line` is the video-analysis key for the same
+    // problem: the back leg finishes pointing somewhere other than the target.
+    rootPatterns: [
+      "groin_strain_risk",
+      "weak_adductors",
+      "back_leg_collapse",
+      "direction_off_the_target_line",
+    ],
     troubleshooting: ["groin grabs", "inside of the knee aches", "hip pinches at the bottom"],
     ladder: [
       { slug: "wu_copenhagen_short_lever", tier: 0 },
