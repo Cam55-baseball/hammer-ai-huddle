@@ -36,6 +36,8 @@ export interface VideoMomentItem {
   videoUrl: string;
   thumbnailUrl?: string | null;
   reasons: string[];
+  /** Fault keys this pick was matched on. Scopes the per-fault seen-set. */
+  faultScope?: string[];
 }
 
 /** Which fallback tier produced the current items. */
