@@ -99,9 +99,12 @@ const VideoLibrary = () => {
                 <Button variant={sort === 'newest' ? 'default' : 'outline'} size="sm" onClick={() => setSort('newest')}>
                   Newest
                 </Button>
-                <Button variant={sort === 'most_liked' ? 'default' : 'outline'} size="sm" onClick={() => setSort('most_liked')}>
-                  Most Liked
-                </Button>
+                {showMostLiked && (
+                  <Button variant={sort === 'most_liked' ? 'default' : 'outline'} size="sm" onClick={() => setSort('most_liked')}>
+                    Most Liked
+                  </Button>
+                )}
+
               </div>
             </div>
 
