@@ -12,6 +12,8 @@
 //   Estimate     = Interpolated from available data points
 // =====================================================================
 
+import { scaleDerivedPoints } from '@/lib/benchmarks/canonical';
+
 export interface BenchmarkPoint {
   raw: number;
   grade: number;
@@ -1000,10 +1002,10 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 2.2, grade: 20 }, { raw: 1.8, grade: 30 }, { raw: 1.4, grade: 45 },
         { raw: 1.2, grade: 55 }, { raw: 1.05, grade: 65 }, { raw: 0.85, grade: 80 },
       ],
-      pro: [
-        { raw: 1.8, grade: 20 }, { raw: 1.5, grade: 30 }, { raw: 1.2, grade: 45 },
-        { raw: 1.05, grade: 55 }, { raw: 0.9, grade: 65 }, { raw: 0.75, grade: 80 },
-      ],
+      // PRO BAND: owned by scale_reference `exchange_time_sec` (documented,
+      // dated). The estimate that used to sit here no longer grades anyone.
+      pro: scaleDerivedPoints('exchange_time_sec'),
+
     },
     softball: {
       '18u': [
