@@ -12,14 +12,18 @@ const baseInputs = {
 };
 
 describe("runTempoPipeline", () => {
-  it("emits canonical pose-stub missingness end-to-end while D-POSE is stubbed", async () => {
+  // D-POSE is no longer stubbed — LANDMARK_MODEL_VERSION now binds the real
+  // MediaPipe BlazePose build, so POSE_MODEL_IS_STUB can never be emitted. With
+  // no pose frames the honest reason is POSE_NOT_DETECTED. The end-to-end
+  // guarantee under test is unchanged: no anchor, no value, reason preserved.
+  it("emits canonical pose missingness end-to-end when no pose frames are detected", async () => {
     const r = await runTempoPipeline(baseInputs);
     expect(r.metric.value).toBeNull();
     expect(r.metric.missingness?.missing_reason).toBe(
       MISSINGNESS_REASONS.PEAK_LEG_LIFT_MISSING,
     );
     expect(r.evidence.anchors.peak_leg_lift.missingness?.missing_reason).toBe(
-      MISSINGNESS_REASONS.POSE_MODEL_IS_STUB,
+      MISSINGNESS_REASONS.POSE_NOT_DETECTED,
     );
     expect(r.evidence.anchors.front_foot_strike.missingness?.missing_reason).toBe(
       MISSINGNESS_REASONS.POSE_MODEL_IS_STUB,
