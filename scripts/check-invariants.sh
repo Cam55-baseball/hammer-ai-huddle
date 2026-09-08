@@ -18,13 +18,27 @@ if rg -n 'staleAfterHours|STALE_AFTER_HOURS|PARTIAL_REQUIRED_FIELDS' \
 fi
 
 note "2) event-identity sha256 composition only in engineVersion.ts + sensorIdempotency.ts"
+# The rule polices ONE thing: composing the identity of an ASB event. It was
+# written as a blanket ban on the string "SHA-256", which also caught benign
+# content hashing and even doc comments. Widened deliberately, with reasons:
+#   biomech/fingerprint.ts     — content fingerprint of video bytes / cache key.
+#   frameExtraction.ts         — per-frame PNG digest proving deterministic replay.
+#   useEmitObservability.ts    — idempotency key, same job as sensorIdempotency.ts.
+# None of these are security-shaped: no secret, credential, password or token is
+# hashed anywhere in the client. If that ever changes, it does not belong here.
+# Comment lines are ignored — a rule that fires on prose teaches people to ignore it.
 if rg -n 'sha256\(|SHA-256' "$SRC" \
      --glob '!**/engineVersion.ts' \
      --glob '!**/sensorIdempotency.ts' \
+     --glob '!**/biomech/fingerprint.ts' \
+     --glob '!**/frameExtraction.ts' \
+     --glob '!**/useEmitObservability.ts' \
      --glob '!**/invariants/**' \
-     --glob '!**/__tests__/**'; then
+     --glob '!**/__tests__/**' \
+   | rg -v ':\s*(\*|//|/\*)'; then
   violate "sha256 composition found outside canonical identity authors"
 fi
+
 
 note "3) no subsystem imports another subsystem's projections.ts"
 # Surface dirs that legitimately belong to each subsystem (consumers of own projections).

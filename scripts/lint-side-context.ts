@@ -59,6 +59,11 @@ function scan(): Violation[] {
         txt.includes("useSideContext");
       if (!sideAware) continue;
 
+      // A file that builds its stamp through the one canonical helper is
+      // allowed to spread it (`...sideStamp`); the helper is what guarantees
+      // the side is real rather than a default. See SideContext.sideStampFor.
+      const usesCanonicalStamp = txt.includes("sideStampFor(");
+
       for (const tbl of SIDE_TABLES) {
         // Anchor on `.from('table').insert|upsert(` then scan forward up
         // to ~2000 chars (or until the next `.from(` call) looking for an
@@ -70,6 +75,11 @@ function scan(): Violation[] {
         );
         let m: RegExpExecArray | null;
         while ((m = anchor.exec(txt))) {
+          // `supabase.storage.from('videos')` is a storage bucket, not the
+          // side-aware table of the same name. Its uploads carry no columns.
+          const before = txt.slice(Math.max(0, m.index - 40), m.index);
+          if (/\.storage\s*$/.test(before)) continue;
+
           const start = m.index + m[0].length;
           const rest = txt.slice(start, start + 2000);
           const nextFrom = rest.search(/\.from\(/);
@@ -78,7 +88,9 @@ function scan(): Violation[] {
             /\bside\b\s*:/.test(window) ||
             /\bbatting_side\b\s*:/.test(window) ||
             /\bthrowing_hand\b\s*:/.test(window) ||
-            /\.\.\.[^;]*\bside\b/.test(window)
+            /\.\.\.[^;]*\bside\b/.test(window) ||
+            // `...sideStamp` / `...sideFields` from the canonical helper.
+            (usesCanonicalStamp && /\.\.\.\s*side[A-Za-z_]*/.test(window))
           ) continue;
           const idx = m.index;
           const line = txt.slice(0, idx).split("\n").length;
@@ -90,6 +102,7 @@ function scan(): Violation[] {
           });
         }
       }
+
     }
   }
   return out;

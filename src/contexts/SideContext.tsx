@@ -23,8 +23,23 @@ interface SideContextValue {
   setSide: (discipline: Discipline, side: Side) => void;
   /** Whether the picker should render for this discipline */
   shouldShowPicker: (discipline: Discipline) => boolean;
+  /**
+   * True when the active side is a fact (picked by the athlete, a stored
+   * preference, or declared handedness) rather than the "R" safety default.
+   */
+  sideIsKnown: (discipline: Discipline) => boolean;
+  /**
+   * Canonical side stamp for a side-aware write. Returns `{ batting_side }` /
+   * `{ throwing_hand }` when the side is known, `{}` when it genuinely is not
+   * — an analysis must never be told a guessed side.
+   *
+   * Single authority: every side-aware insert should spread this rather than
+   * rebuild the ternary, so the rule can never drift per screen.
+   */
+  sideStampFor: (discipline: Discipline) => Record<string, Side>;
   loading: boolean;
 }
+
 
 const SideContext = createContext<SideContextValue | null>(null);
 
@@ -119,7 +134,24 @@ export function SideContextProvider({ children }: { children: ReactNode }) {
     };
   }, [identity, prefs]);
 
+  /**
+   * Did any real source supply this side, or are we sitting on the "R" default?
+   * A stamped side drives which half of the body a fault is attributed to, so a
+   * default must never be written to a video row as though it were observed.
+   */
+  const resolvedIsKnown = useMemo<Record<Discipline, boolean>>(() => {
+    const local = readLocal();
+    const hitPrimary = identity?.primary_batting_side === "L" || identity?.primary_batting_side === "R";
+    const throwPrimary = identity?.primary_throwing_hand === "L" || identity?.primary_throwing_hand === "R";
+    return {
+      hit: !!(prefs?.hit.last_used_side || prefs?.hit.dominant_side || hitPrimary || local.hit),
+      throw: !!(prefs?.throw.last_used_side || prefs?.throw.dominant_side || throwPrimary || local.throw),
+    };
+  }, [identity, prefs]);
+
   const [selectedSide, setSelectedSide] = useState<Record<Discipline, Side>>(resolved);
+  /** Disciplines the athlete has explicitly picked this session. */
+  const [pickedSide, setPickedSide] = useState<Record<Discipline, boolean>>({ hit: false, throw: false });
 
   // Keep state in sync when async resolution lands.
   useEffect(() => {
@@ -132,6 +164,7 @@ export function SideContextProvider({ children }: { children: ReactNode }) {
       writeLocal(next);
       return next;
     });
+    setPickedSide(prev => ({ ...prev, [discipline]: true }));
     if (user) {
       // Fire-and-forget upsert; never block UI.
       void supabase.from("athlete_side_preferences").upsert(
@@ -150,12 +183,30 @@ export function SideContextProvider({ children }: { children: ReactNode }) {
     return false;
   }, [isSwitchHitter, isAmbidextrousThrower]);
 
+  const sideIsKnown = useCallback(
+    (d: Discipline) => pickedSide[d] || resolvedIsKnown[d],
+    [pickedSide, resolvedIsKnown],
+  );
+
+  const sideStampFor = useCallback(
+    (d: Discipline): Record<string, Side> => {
+      if (!sideIsKnown(d)) return {};
+      return d === "hit"
+        ? { batting_side: selectedSide.hit }
+        : { throwing_hand: selectedSide.throw };
+    },
+    [sideIsKnown, selectedSide],
+  );
+
+
   const value: SideContextValue = {
     isSwitchHitter,
     isAmbidextrousThrower,
     selectedSide,
     setSide,
     shouldShowPicker,
+    sideIsKnown,
+    sideStampFor,
     loading: identityQuery.isLoading || prefsQuery.isLoading,
   };
 
@@ -172,9 +223,13 @@ export function useSideContext(): SideContextValue {
       selectedSide: { hit: "R", throw: "R" },
       setSide: () => {},
       shouldShowPicker: () => false,
+      // Outside a provider nothing is known, so nothing gets stamped.
+      sideIsKnown: () => false,
+      sideStampFor: () => ({}),
       loading: false,
     };
   }
+
   return ctx;
 }
 
