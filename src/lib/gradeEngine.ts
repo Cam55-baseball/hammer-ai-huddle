@@ -89,6 +89,11 @@ export function rawToGrade(
     return result.missing ? null : result.grade;
   }
 
+  // Softball: no grade unless the benchmark is a real softball figure. The
+  // converted-from-baseball columns are not graded against — see
+  // SOFTBALL_UNGRADED_METRICS. The raw value is still recorded.
+  if (sport === 'softball' && !isSoftballGradable(metricKey)) return null;
+
 
   const benchmarkEntry = GRADE_BENCHMARKS[metricKey];
   if (!benchmarkEntry) return null;
