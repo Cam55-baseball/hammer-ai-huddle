@@ -94,6 +94,11 @@ import {
   canonicalJson,
 } from "../_shared/wic/determinism/globalDeterminismLock.ts";
 import { selectFromBand, DEFAULT_ROTATION_BAND, ROTATION_BAND_VERSION } from "../_shared/wic/lift/rotationBand.ts";
+import {
+  buildFaultPriority,
+  FAULT_PRIORITY_VERSION,
+  type LedgerSignalRow,
+} from "../_shared/wic/faultLedger/priority.ts";
 import { resolveGameProximity, survivesPrimerOnly, NO_SCHEDULE, GAME_PROXIMITY_VERSION, type ScheduledGame } from "../_shared/wic/schedule/gameProximity.ts";
 import { resolveAthleteRank, meetsCompetitionLevel, COMPETITION_LEVEL_VERSION } from "../_shared/wic/competitionLevel.ts";
 import { hashSnapshot, assertImmutable } from "../_shared/wic/snapshots/snapshotImmutabilityGuard.ts";
