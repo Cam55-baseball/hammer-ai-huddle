@@ -144,11 +144,13 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         };
       });
 
-      const globalMetrics = new Map<string, { improvementScore: number }>();
+      const globalMetrics = new Map<string, { improvementScore: number; sampleSize: number }>();
       (metrics || []).forEach((m: any) => {
-        const score = m.post_view_improvement_n > 0 ? m.post_view_improvement_sum / m.post_view_improvement_n : 0;
-        globalMetrics.set(m.video_id, { improvementScore: score });
+        const n = Number(m.post_view_improvement_n) || 0;
+        const score = n > 0 ? m.post_view_improvement_sum / n : 0;
+        globalMetrics.set(m.video_id, { improvementScore: score, sampleSize: n });
       });
+
 
       const userOutcomes = new Map<string, { watchCount: number; avgPostDelta: number }>();
       (outcomes || []).forEach((o: any) => {
