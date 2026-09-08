@@ -11,7 +11,7 @@ import { computeToolGrades, POSITION_TOOL_PROFILES, type ToolName, type ToolProf
 import { generateReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus } from '@/lib/adaptiveTestPriority';
 import { computeTrends } from '@/lib/longitudinalEngine';
-import { GRADE_BENCHMARKS, type AgeBand } from '@/data/gradeBenchmarks';
+import { GRADE_BENCHMARKS, isSoftballGradable, type AgeBand } from '@/data/gradeBenchmarks';
 import { METRIC_BY_KEY, PERFORMANCE_METRICS } from '@/data/performanceTestRegistry';
 
 // ── Helpers ──────────────────────────────────────────────
@@ -324,7 +324,7 @@ describe('Layer 3 — Data Integrity', () => {
 // =====================================================================
 
 describe('Layer 4 — Tier & Sport Truth', () => {
-  it('Test 12: Sport Flip — same raw data produces different grades per sport', () => {
+  it('Test 12: Sport Flip — softball is never graded on a converted baseball number', () => {
     const sharedResults = {
       pitching_velocity: 75,
       tee_exit_velocity: 85,
@@ -334,20 +334,18 @@ describe('Layer 4 — Tier & Sport Truth', () => {
     const baseballGrades = gradeAllResults(sharedResults, 'baseball', 16);
     const softballGrades = gradeAllResults(sharedResults, 'softball', 16);
 
-    // At least one metric should differ between sports
-    let hasDifference = false;
+    // Baseball grades every one of these; softball grades none of them,
+    // because no professional softball benchmark exists to grade against.
     for (const key of Object.keys(sharedResults)) {
-      if (
-        baseballGrades[key] !== undefined &&
-        softballGrades[key] !== undefined &&
-        baseballGrades[key] !== softballGrades[key]
-      ) {
-        hasDifference = true;
-        break;
-      }
+      expect(isSoftballGradable(key)).toBe(false);
+      expect(baseballGrades[key]).not.toBeNull();
+      expect(baseballGrades[key] ?? null).not.toBeNull();
+      expect(softballGrades[key] ?? null).toBeNull();
     }
 
-    expect(hasDifference).toBe(true);
+    // A softball-native test still grades — suppression is targeted, not blanket.
+    expect(isSoftballGradable('forty_yard_dash')).toBe(true);
+    expect(rawToGrade('forty_yard_dash', 5.4, 'softball', 16)).not.toBeNull();
   });
 
   it('Test 13: Tier Degradation — fewer metrics don\'t wildly flip conclusions', () => {
@@ -1859,6 +1857,9 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
   it('Test 56: every metric with benchmarks has ≥3 points per age band per sport', () => {
     for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
       for (const sport of ['baseball', 'softball'] as const) {
+        // Softball grades are withheld where the column is a converted
+        // baseball number — there is nothing to anchor against.
+        if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
         const sportBench = entry[sport];
         for (const [ageBand, points] of Object.entries(sportBench)) {
           if (points && points.length > 0) {
@@ -1876,6 +1877,9 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
       if (!metricDef) continue;
 
       for (const sport of ['baseball', 'softball'] as const) {
+        // Softball grades are withheld where the column is a converted
+        // baseball number — there is nothing to anchor against.
+        if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
         const sportBench = entry[sport];
         for (const [ageBand, points] of Object.entries(sportBench)) {
           if (!points || points.length === 0) continue;
@@ -1903,6 +1907,7 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
       if (!metricDef) continue;
 
       for (const sport of ['baseball', 'softball'] as const) {
+        if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
         const sportBench = entry[sport];
         if (Object.keys(sportBench).length === 0) continue;
 

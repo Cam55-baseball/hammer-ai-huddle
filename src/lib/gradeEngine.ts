@@ -2,7 +2,13 @@
 // GRADE ENGINE — 20-80 Scale Conversion via Piecewise Linear Interpolation
 // =====================================================================
 
-import { GRADE_BENCHMARKS, type AgeBand, type BenchmarkPoint } from '@/data/gradeBenchmarks';
+import {
+  GRADE_BENCHMARKS,
+  isSoftballGradable,
+  type AgeBand,
+  type BenchmarkPoint,
+} from '@/data/gradeBenchmarks';
+
 import { METRIC_BY_KEY } from '@/data/performanceTestRegistry';
 import {
   SCALE_ANCHOR_SNAPSHOT,
@@ -82,6 +88,11 @@ export function rawToGrade(
     const result = gradeFromScaleRow(rawValue, canonical, SCALE_ANCHOR_SNAPSHOT);
     return result.missing ? null : result.grade;
   }
+
+  // Softball: no grade unless the benchmark is a real softball figure. The
+  // converted-from-baseball columns are not graded against — see
+  // SOFTBALL_UNGRADED_METRICS. The raw value is still recorded.
+  if (sport === 'softball' && !isSoftballGradable(metricKey)) return null;
 
 
   const benchmarkEntry = GRADE_BENCHMARKS[metricKey];

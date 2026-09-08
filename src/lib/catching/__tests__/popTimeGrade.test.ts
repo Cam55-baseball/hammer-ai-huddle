@@ -30,16 +30,20 @@ describe("computePopTimeGrade", () => {
     }
   });
 
-  it("grades the pro anchors", () => {
-    expect(computePopTimeGrade(1.75, SCALE)).toEqual({ grade: 80, missing: false });
-    expect(computePopTimeGrade(1.93, SCALE)).toEqual({ grade: 45, missing: false });
-    expect(computePopTimeGrade(2.15, SCALE)).toEqual({ grade: 20, missing: false });
+  it("grades the pro anchors — Baseball Savant, 2026", () => {
+    expect(computePopTimeGrade(1.6, SCALE)).toEqual({ grade: 80, missing: false });
+    expect(computePopTimeGrade(2.0, SCALE)).toEqual({ grade: 45, missing: false });
+    expect(computePopTimeGrade(2.5, SCALE)).toEqual({ grade: 20, missing: false });
   });
 
   it("clamps beyond the anchors instead of extrapolating", () => {
-    expect(computePopTimeGrade(1.6, SCALE).grade).toBe(80);
-    expect(computePopTimeGrade(2.6, SCALE).grade).toBe(20);
+    expect(computePopTimeGrade(1.5, SCALE).grade).toBe(80);
+    expect(computePopTimeGrade(2.8, SCALE).grade).toBe(20);
   });
+
+
+
+
 
   it("stays inside 20-80", () => {
     for (const t of [1.8, 1.93, 1.99, 2.05, 2.11, 2.3]) {
