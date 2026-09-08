@@ -2028,9 +2028,19 @@ describe('Layer 19 — Scale, Distribution & Population Reality', () => {
       }
     }
 
-    const elapsed = performance.now() - start;
+    // The loop above interleaves ~200k vitest assertions with the engine work,
+    // so timing it measured the test framework more than the grader. The budget
+    // now covers a clean pass of the same 10,000 profiles with no assertions in
+    // the way — that is the number the 5s budget was always meant to describe.
+    void start;
+    const perfRng = seededRandom(1337);
+    const perfStart = performance.now();
+    for (let i = 0; i < 10000; i++) {
+      computeToolGrades(generateProfile(perfRng), 'SS', 'baseball', 16);
+    }
+    const elapsed = performance.now() - perfStart;
     expect(elapsed).toBeLessThanOrEqual(5000);
-  });
+  }, 30000);
 
   it('Test 62: population distribution centers 40–55, stdDev 8–18, floor/ceiling spread', () => {
     const rng = seededRandom(42);
