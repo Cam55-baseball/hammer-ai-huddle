@@ -12,6 +12,8 @@
 //   Estimate     = Interpolated from available data points
 // =====================================================================
 
+import { scaleDerivedPoints } from '@/lib/benchmarks/canonical';
+
 export interface BenchmarkPoint {
   raw: number;
   grade: number;
@@ -21,10 +23,32 @@ export type AgeBand = '14u' | '18u' | 'college' | 'pro';
 
 export type SportBenchmarks = Partial<Record<AgeBand, BenchmarkPoint[]>>;
 
-export type BenchmarkTable = Record<string, {
+export interface BenchmarkProvenance {
+  /**
+   * Where the anchors came from. `'estimate'` means interpolated from
+   * neighbouring data points — NOT a citation, and surfaced as such to the
+   * athlete. Never upgrade an estimate into a citation without a real source.
+   */
+  source: string;
+  /**
+   * Date the source figures describe (ISO). `null` = undated; the provenance
+   * guard treats undated the same as unverifiable and reports it.
+   */
+  as_of: string | null;
+}
+
+export type BenchmarkEntry = BenchmarkProvenance & {
   baseball: SportBenchmarks;
   softball: SportBenchmarks;
-}>;
+};
+
+export type BenchmarkTable = Record<string, BenchmarkEntry>;
+
+/** True when a metric's anchors are interpolated rather than sourced. */
+export function isEstimateBenchmark(metricKey: string): boolean {
+  return GRADE_BENCHMARKS[metricKey]?.source === 'estimate';
+}
+
 
 /**
  * For metrics where lower is better (times), benchmarks are listed
@@ -34,6 +58,8 @@ export type BenchmarkTable = Record<string, {
 export const GRADE_BENCHMARKS: BenchmarkTable = {
   // ── SPEED ──────────────────────────────────────────────
   ten_yard_dash: {
+    source: 'PG/PBR event timing data, MLB Combine — baseball only',
+    as_of: null,
     // Source: PG/PBR event timing data, MLB Combine — baseball only
     baseball: {
       '14u': [
@@ -57,6 +83,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   seven_yard_dash: {
+    source: 'PG/PBR softball event timing — softball acceleration test',
+    as_of: null,
     // Source: PG/PBR softball event timing — softball acceleration test
     baseball: {},
     softball: {
@@ -80,6 +108,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   thirty_yard_dash: {
+    source: 'estimate',
+    as_of: null,
     // Source: PG event data, Estimate
     baseball: {
       '14u': [
@@ -120,6 +150,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   sixty_yard_dash: {
+    source: 'MLB Combine avg 2019-2023 — baseball only',
+    as_of: '2023-12-31',
     // Source: MLB Combine avg 2019-2023 — baseball only
     baseball: {
       '14u': [
@@ -143,6 +175,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   forty_yard_dash: {
+    source: 'PG/PBR softball event timing — softball top-end speed test',
+    as_of: null,
     // Source: PG/PBR softball event timing — softball top-end speed test
     baseball: {},
     softball: {
@@ -166,6 +200,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   ten_thirty_split: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate derived from 10yd and 30yd data
     baseball: {
       '18u': [
@@ -190,6 +226,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   thirty_sixty_split: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate
     baseball: {
       '18u': [
@@ -215,6 +253,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── QUICKNESS ──────────────────────────────────────────
   pro_agility: {
+    source: 'NFL/MLB Combine cross-reference, PG data',
+    as_of: null,
     // Source: NFL/MLB Combine cross-reference, PG data
     baseball: {
       '14u': [
@@ -255,6 +295,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   lateral_shuffle: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate from agility/quickness norms
     baseball: {
       '18u': [
@@ -279,6 +321,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   first_step_5yd: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate
     baseball: {
       '18u': [
@@ -304,6 +348,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── POWER — LOWER BODY ─────────────────────────────────
   sl_broad_jump: {
+    source: 'NSCA normative tables, PG data',
+    as_of: null,
     // Source: NSCA normative tables, PG data
     baseball: {
       '14u': [
@@ -344,6 +390,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   sl_lateral_broad_jump: {
+    source: 'estimate',
+    as_of: null,
     // Source: NSCA, Estimate
     baseball: {
       '14u': [
@@ -384,6 +432,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   sl_vert_jump: {
+    source: 'NSCA, PG event data',
+    as_of: null,
     // Source: NSCA, PG event data
     baseball: {
       '14u': [
@@ -424,6 +474,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   vertical_jump: {
+    source: 'NSCA normative tables',
+    as_of: null,
     // Source: NSCA normative tables
     baseball: {
       '14u': [
@@ -464,6 +516,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   standing_broad_jump: {
+    source: 'NSCA normative tables',
+    as_of: null,
     // Source: NSCA normative tables
     baseball: {
       '18u': [
@@ -489,6 +543,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── POWER — UPPER BODY / ROTATIONAL ────────────────────
   mb_situp_throw: {
+    source: 'estimate',
+    as_of: null,
     // Source: NSCA, Estimate
     baseball: {
       '14u': [
@@ -529,6 +585,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   seated_chest_pass: {
+    source: 'estimate',
+    as_of: null,
     // Source: NSCA, Estimate
     baseball: {
       '14u': [
@@ -569,6 +627,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   mb_rotational_throw: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate from rotational power research
     baseball: {
       '14u': [
@@ -601,6 +661,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   mb_overhead_throw: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate
     baseball: {
       '18u': [
@@ -626,6 +688,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── EXIT VELOCITY & BAT SPEED ──────────────────────────
   tee_exit_velocity: {
+    source: 'MLB Combine, Driveline data, PG events',
+    as_of: null,
     // Source: MLB Combine, Driveline data, PG events
     baseball: {
       '14u': [
@@ -666,6 +730,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   max_tee_distance: {
+    source: 'estimate',
+    as_of: null,
     // Source: PG event data, Estimate
     baseball: {
       '14u': [
@@ -698,6 +764,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   bat_speed: {
+    source: 'Blast Motion data, Driveline published ranges',
+    as_of: null,
     // Source: Blast Motion data, Driveline published ranges
     baseball: {
       '14u': [
@@ -738,6 +806,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   avg_exit_velo_bp: {
+    source: 'Driveline, MLB Combine avg',
+    as_of: null,
     // Source: Driveline, MLB Combine avg
     baseball: {
       '18u': [
@@ -763,6 +833,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── THROWING VELOCITY & ARM STRENGTH ───────────────────
   long_toss_distance: {
+    source: 'Driveline, PG event data',
+    as_of: null,
     // Source: Driveline, PG event data
     baseball: {
       '14u': [
@@ -803,6 +875,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   pitching_velocity: {
+    source: 'MLB Combine avg 2019-2023, PG/PBR event data',
+    as_of: '2023-12-31',
     // Source: MLB Combine avg 2019-2023, PG/PBR event data
     // PRO BAND RE-ANCHORED 2026-09-08 to `scale_reference.fastball_velocity`
     // (floor 84 / avg 94.7 / record 104.2, Statcast-reported four-seam
@@ -851,7 +925,11 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   position_throw_velo: {
-    // Source: PG/PBR published position player velo data
+    source: 'PG/PBR published position player velo data',
+    as_of: null,
+    // Source: PG/PBR published position player velo data.
+    // PRO BAND: owned by scale_reference `throw_velo_mph_infield` (dated,
+    // position-specific). Youth bands stay age-appropriate here.
     baseball: {
       '14u': [
         { raw: 45, grade: 20 }, { raw: 52, grade: 30 }, { raw: 62, grade: 45 },
@@ -865,11 +943,9 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 62, grade: 20 }, { raw: 70, grade: 30 }, { raw: 81, grade: 45 },
         { raw: 87, grade: 55 }, { raw: 92, grade: 65 }, { raw: 99, grade: 80 },
       ],
-      pro: [
-        { raw: 68, grade: 20 }, { raw: 76, grade: 30 }, { raw: 86, grade: 45 },
-        { raw: 91, grade: 55 }, { raw: 95, grade: 65 }, { raw: 102, grade: 80 },
-      ],
+      pro: scaleDerivedPoints('throw_velo_mph_infield'),
     },
+
     softball: {
       '14u': [
         { raw: 35, grade: 20 }, { raw: 42, grade: 30 }, { raw: 50, grade: 45 },
@@ -891,6 +967,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   pulldown_velocity: {
+    source: 'Driveline published pulldown data',
+    as_of: null,
     // Source: Driveline published pulldown data
     baseball: {
       '18u': [
@@ -916,16 +994,18 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── FIELDING ───────────────────────────────────────────
   fielding_exchange_time: {
+    source: 'estimate',
+    as_of: null,
     // Source: MLB advanced fielding stats, Estimate
     baseball: {
       '18u': [
         { raw: 2.2, grade: 20 }, { raw: 1.8, grade: 30 }, { raw: 1.4, grade: 45 },
         { raw: 1.2, grade: 55 }, { raw: 1.05, grade: 65 }, { raw: 0.85, grade: 80 },
       ],
-      pro: [
-        { raw: 1.8, grade: 20 }, { raw: 1.5, grade: 30 }, { raw: 1.2, grade: 45 },
-        { raw: 1.05, grade: 55 }, { raw: 0.9, grade: 65 }, { raw: 0.75, grade: 80 },
-      ],
+      // PRO BAND: owned by scale_reference `exchange_time_sec` (documented,
+      // dated). The estimate that used to sit here no longer grades anyone.
+      pro: scaleDerivedPoints('exchange_time_sec'),
+
     },
     softball: {
       '18u': [
@@ -940,6 +1020,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   pop_time: {
+    source: 'MLB Statcast pop time data',
+    as_of: null,
     // Source: MLB Statcast pop time data
     baseball: {
       '14u': [
@@ -980,6 +1062,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   sixty_yard_shuttle: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate
     baseball: {
       '18u': [
@@ -1005,6 +1089,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── BODY CONTROL ───────────────────────────────────────
   sl_balance_eyes_closed: {
+    source: 'Research - balance norms for athletes',
+    as_of: null,
     // Source: Research - balance norms for athletes
     baseball: {
       '14u': [
@@ -1037,6 +1123,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   deceleration_10yd: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate
     baseball: {
       '18u': [
@@ -1062,6 +1150,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── ENERGY SYSTEM ──────────────────────────────────────
   three_hundred_yd_shuttle: {
+    source: 'NSCA normative tables',
+    as_of: null,
     // Source: NSCA normative tables
     baseball: {
       '18u': [
@@ -1086,6 +1176,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   sprint_repeat_avg: {
+    source: 'estimate',
+    as_of: null,
     // Source: Estimate from sprint conditioning norms
     baseball: {
       '18u': [
@@ -1111,6 +1203,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   // ── FASCIAL ELASTICITY ─────────────────────────────────
   sl_3x_bound: {
+    source: 'NSCA bound norms + sport-specific elastic output research',
+    as_of: null,
     // Source: NSCA bound norms + sport-specific elastic output research.
     // Total distance for three consecutive single-leg bounds (per leg).
     baseball: {
@@ -1152,6 +1246,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   shoulder_rom_internal: {
+    source: 'Research - GIRD norms, throwing athlete ROM studies',
+    as_of: null,
     // Source: Research - GIRD norms, throwing athlete ROM studies
     baseball: {
       '18u': [
@@ -1176,6 +1272,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   shoulder_rom_external: {
+    source: 'Research - throwing athlete ROM studies',
+    as_of: null,
     // Source: Research - throwing athlete ROM studies
     baseball: {
       '18u': [
@@ -1200,6 +1298,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   hip_internal_rotation: {
+    source: 'Research - hip mobility norms for rotational athletes',
+    as_of: null,
     // Source: Research - hip mobility norms for rotational athletes
     baseball: {
       '18u': [
@@ -1224,6 +1324,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   ankle_dorsiflexion: {
+    source: 'Research - knee-to-wall test norms',
+    as_of: null,
     // Source: Research - knee-to-wall test norms
     baseball: {
       '18u': [

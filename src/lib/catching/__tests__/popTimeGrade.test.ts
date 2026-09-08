@@ -4,7 +4,13 @@ import {
   CATCHER_POP_TIME_METRIC,
   type ScaleReferenceRow,
 } from "@/lib/catching/popTimeGrade";
+import { rawToGrade } from "@/lib/gradeEngine";
 
+/**
+ * Pop time is owned by `GRADE_BENCHMARKS.pop_time` (MLB Statcast sourced).
+ * The `scale_reference` row is still loaded — its presence is what tells us
+ * the athlete's sport has anchors at all — but it no longer supplies numbers.
+ */
 const SCALE: ScaleReferenceRow[] = [
   {
     metric: CATCHER_POP_TIME_METRIC,
@@ -16,34 +22,28 @@ const SCALE: ScaleReferenceRow[] = [
 ];
 
 describe("computePopTimeGrade", () => {
-  it("grades the record anchor and anything faster at 80", () => {
-    expect(computePopTimeGrade(1.9, SCALE)).toEqual({ grade: 80, missing: false });
+  it("agrees exactly with the combine surface", () => {
+    for (const t of [1.7, 1.83, 1.93, 2.05, 2.2]) {
+      expect(computePopTimeGrade(t, SCALE).grade).toBe(
+        rawToGrade("pop_time", t, "baseball", 25),
+      );
+    }
+  });
+
+  it("grades the pro anchors", () => {
     expect(computePopTimeGrade(1.75, SCALE)).toEqual({ grade: 80, missing: false });
-  });
-
-  it("grades the average anchor at 50", () => {
-    expect(computePopTimeGrade(2.02, SCALE)).toEqual({ grade: 50, missing: false });
-  });
-
-  it("grades the floor anchor and anything slower at 20", () => {
+    expect(computePopTimeGrade(1.93, SCALE)).toEqual({ grade: 45, missing: false });
     expect(computePopTimeGrade(2.15, SCALE)).toEqual({ grade: 20, missing: false });
-    expect(computePopTimeGrade(2.6, SCALE)).toEqual({ grade: 20, missing: false });
   });
 
-  it("interpolates between record and average", () => {
-    // midway 1.96 → ~65
-    expect(computePopTimeGrade(1.96, SCALE).grade).toBe(65);
+  it("clamps beyond the anchors instead of extrapolating", () => {
+    expect(computePopTimeGrade(1.6, SCALE).grade).toBe(80);
+    expect(computePopTimeGrade(2.6, SCALE).grade).toBe(20);
   });
 
-  it("interpolates between average and floor", () => {
-    // midway 2.085 → ~35
-    expect(computePopTimeGrade(2.085, SCALE).grade).toBe(35);
-  });
-
-  it("always returns a 5-point scouting grade inside 20-80", () => {
+  it("stays inside 20-80", () => {
     for (const t of [1.8, 1.93, 1.99, 2.05, 2.11, 2.3]) {
       const g = computePopTimeGrade(t, SCALE).grade!;
-      expect(g % 5).toBe(0);
       expect(g).toBeGreaterThanOrEqual(20);
       expect(g).toBeLessThanOrEqual(80);
     }
@@ -67,25 +67,10 @@ describe("computePopTimeGrade", () => {
     expect(computePopTimeGrade(Number.NaN, SCALE)).toMatchObject({ missing: true });
   });
 
-  it("returns missing when the scale row is absent", () => {
+  it("returns missing when the athlete's sport has no anchors", () => {
     expect(computePopTimeGrade(2.0, [])).toMatchObject({
       missing: true,
       missing_reason: "no_scale_reference",
     });
-  });
-
-  it("returns missing when the scale row is incomplete or out of order", () => {
-    expect(
-      computePopTimeGrade(2.0, [{ ...SCALE[0], floor_value: null }]),
-    ).toMatchObject({ missing: true, missing_reason: "incomplete_scale_reference" });
-    expect(
-      computePopTimeGrade(2.0, [{ ...SCALE[0], record_value: 2.5 }]),
-    ).toMatchObject({ missing: true, missing_reason: "incomplete_scale_reference" });
-  });
-
-  it("refuses a direction it was not built for", () => {
-    expect(
-      computePopTimeGrade(2.0, [{ ...SCALE[0], direction: "sideways_better" }]),
-    ).toMatchObject({ missing: true, missing_reason: "unsupported_direction" });
   });
 });

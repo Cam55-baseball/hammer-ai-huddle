@@ -1198,7 +1198,10 @@ describe('Layer 16 — External Truth Validation', () => {
     const mlbAverages: Record<string, number> = {
       sixty_yard_dash: 6.7,
       tee_exit_velocity: 88,
-      pitching_velocity: 92,
+      // Re-anchored 2026-09 on the owner's correction: the MLB four-seam
+      // average is 94.7 today, and the pro band now sits at 94.5 = grade 45.
+      pitching_velocity: 94.5,
+
       position_throw_velo: 86,
       bat_speed: 71,
       vertical_jump: 31,
@@ -1216,7 +1219,10 @@ describe('Layer 16 — External Truth Validation', () => {
     const eliteRaws: Record<string, number> = {
       sixty_yard_dash: 6.2,
       tee_exit_velocity: 110,
-      pitching_velocity: 100,
+      // 100 mph is a 65 on the re-anchored pro band (94.5 avg, 104.2 record);
+      // elite for a professional arm now starts at the record anchor.
+      pitching_velocity: 104,
+
       position_throw_velo: 98,
       bat_speed: 85,
       vertical_jump: 40,
