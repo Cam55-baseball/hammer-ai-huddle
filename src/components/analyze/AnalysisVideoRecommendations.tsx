@@ -22,11 +22,14 @@ import { seasonContextTags, phaseLabel, type RelevancePhase } from '@/lib/videoR
 import { crossDomainCorrectionKeys } from '@/lib/analysis/crossDomainFaults';
 import { analysisFeedbackToTaxonomy, type AnalysisLike } from '@/lib/analysisFeedbackToTaxonomy';
 import { useVideoFaultFeedback } from '@/hooks/useVideoFaultFeedback';
+import { useFoundationVideos } from '@/hooks/useFoundationVideos';
+import type { FoundationDomain } from '@/lib/foundationVideos';
 import { cn } from '@/lib/utils';
 import { moduleToSkillDomain } from '@/lib/videoMoments/registry';
 import { VideoThumb } from '@/components/video/VideoThumb';
 import { VideoLightbox, type LightboxVideo } from '@/components/video/VideoLightbox';
 import type { SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
+
 
 interface Props {
   analysis: AnalysisLike | null | undefined;
