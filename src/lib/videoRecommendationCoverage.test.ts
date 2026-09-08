@@ -78,8 +78,10 @@ describe('coverage before repetition', () => {
     const out = run(new Set(['v1']));
     expect(out[0].video.id).toBe('v2');
     expect(out[0].coverage).toBe('unseen');
-    // v1 is still present, just demoted. Coverage reorders, it never filters.
-    expect(out.some(r => r.video.id === 'v1' && r.coverage === 'seen')).toBe(true);
+    // v1 is demoted below the unseen four, so it drops out of the top slots
+    // rather than being removed from the pool.
+    expect(out.every(r => r.coverage === 'unseen')).toBe(true);
+    expect(out.map(r => r.video.id)).not.toContain('v1');
   });
 
   it('never returns an empty set when every video has been seen', () => {
