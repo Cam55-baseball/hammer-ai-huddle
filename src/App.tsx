@@ -393,10 +393,9 @@ const App = () => {
               <Route path="/combine/entry" element={<CombineComingSoon />} />
               <Route path="/combine/results" element={<CombineComingSoon />} />
               <Route path="/combine/*" element={<CombineComingSoon />} />
-              {/* Pre-release: evaluator defensive play entry is staff-only until the module ships. */}
-
-              <Route path="/defense/plays/entry" element={<StaffOnlyRoute><DefensivePlayEntry /></StaffOnlyRoute>} />
-              <Route path="/defense/plays" element={<StaffOnlyRoute><MyDefensivePlays /></StaffOnlyRoute>} />
+              {/* Open to athletes: each one sees and writes only their own plays (RLS). */}
+              <Route path="/defense/plays/entry" element={<DefensivePlayEntry />} />
+              <Route path="/defense/plays" element={<MyDefensivePlays />} />
               <Route path="/pitching/tell-report" element={<StaffOnlyRoute><MyTellReport /></StaffOnlyRoute>} />
               {/* Pre-release: baserunning / catching / throwing paperwork is staff-only until those modules ship. */}
               <Route path="/baserunning/splits/entry" element={<StaffOnlyRoute><BaserunningSplitEntry /></StaffOnlyRoute>} />
