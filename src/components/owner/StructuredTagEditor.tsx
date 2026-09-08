@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +32,8 @@ export interface StructuredTagState {
   skillDomains: SkillDomain[];
   aiDescription: string;
   tagAssignments: Record<string, number>; // tagId -> weight (1 / 3 / 5)
+  /** Layers covered by the picked tags — a video needs correction or movement. */
+  assignedLayers?: TagLayer[];
   formulaLinkage: FormulaLinkageValue;
 }
 
@@ -70,15 +72,31 @@ export function StructuredTagEditor({ value, onChange, sports }: Props) {
     onChange({ ...value, skillDomains: next });
   };
 
+  // Remember every tag's layer we've ever loaded, so narrowing the position
+  // filter can never lose the layer of an already-picked tag.
+  const layerById = useRef<Record<string, TagLayer>>({});
+  for (const t of taxonomy) layerById.current[t.id] = t.layer;
+
+  const layersFor = (assignmentMap: Record<string, number>): TagLayer[] =>
+    Array.from(
+      new Set(
+        Object.keys(assignmentMap)
+          .map(id => layerById.current[id])
+          .filter(Boolean) as TagLayer[],
+      ),
+    );
+
   const toggleTag = (tagId: string) => {
     const next = { ...value.tagAssignments };
     if (next[tagId] != null) delete next[tagId];
     else next[tagId] = DEFAULT_WEIGHT;
-    onChange({ ...value, tagAssignments: next });
+    onChange({ ...value, tagAssignments: next, assignedLayers: layersFor(next) });
   };
   const setWeight = (tagId: string, weight: number) => {
-    onChange({ ...value, tagAssignments: { ...value.tagAssignments, [tagId]: weight } });
+    const next = { ...value.tagAssignments, [tagId]: weight };
+    onChange({ ...value, tagAssignments: next, assignedLayers: layersFor(next) });
   };
+
 
   return (
     <div className="space-y-5 border rounded-lg p-4 bg-muted/30">
@@ -254,5 +272,6 @@ export const emptyStructuredTagState: StructuredTagState = {
   skillDomains: [],
   aiDescription: '',
   tagAssignments: {},
+  assignedLayers: [],
   formulaLinkage: emptyFormulaLinkage,
 };
