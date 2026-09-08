@@ -15,6 +15,7 @@ import {
   resolutionFor,
 } from '@/lib/benchmarks/canonical';
 import { gradeFromScaleRow } from '@/lib/defense/beatenRunnerGrade';
+import { extendBelowFloor, roundGrade } from '@/lib/benchmarks/gradeScale';
 
 /**
  * ONE SCALE. The 20-80 grade is MLB-anchored and NOT age-adjusted: a
@@ -105,7 +106,9 @@ export function rawToGrade(
   const higherIsBetter = metricDef?.higherIsBetter ?? true;
 
   const grade = interpolate(rawValue, points, higherIsBetter);
-  return Math.max(20, Math.min(80, grade));
+  // 20 is the MLB floor, not the app's floor: sub-floor grades carry one
+  // decimal and clamp at 0, so a developing athlete can see movement.
+  return roundGrade(grade);
 }
 
 /**
@@ -120,7 +123,8 @@ export function gradeToLabel(grade: number): string {
   if (grade >= 45) return 'Fringe';
   if (grade >= 40) return 'Below Average';
   if (grade >= 30) return 'Well Below Average';
-  return 'Poor';
+  if (grade >= 20) return 'Poor';
+  return 'Developing';
 }
 
 /**
