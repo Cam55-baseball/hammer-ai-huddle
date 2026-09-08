@@ -54,7 +54,9 @@ describe("one source of truth per metric", () => {
     }
   });
 
-  it("leaves softball on its own table — baseball anchors never leak across", () => {
-    expect(rawToGrade("position_throw_velo", 70, "softball", 20)).not.toBeNull();
+  it("never leaks baseball anchors into softball — the grade is withheld instead", () => {
+    expect(rawToGrade("position_throw_velo", 70, "softball", 20)).toBeNull();
+    expect(rawToGrade("position_throw_velo", 70, "baseball", 20)).not.toBeNull();
   });
+
 });
