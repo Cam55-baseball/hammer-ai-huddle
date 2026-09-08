@@ -1,5 +1,5 @@
 import { Shield, Lock, CheckCircle, Construction, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -193,7 +193,12 @@ const Index = () => {
               Secure Storage
             </Badge>
           </div>
-          <div className="text-center text-muted-foreground">
+          <div className="text-center text-muted-foreground space-y-4">
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <Link to="/privacy" className="hover:text-foreground underline underline-offset-4">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-foreground underline underline-offset-4">Terms of Service</Link>
+              <Link to="/support" className="hover:text-foreground underline underline-offset-4">Support</Link>
+            </div>
             <p className="text-sm">
               © 2025 Hammers Modality. Training content only — consult professionals for medical issues.
             </p>

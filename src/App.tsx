@@ -59,6 +59,9 @@ const Index = lazyWithRetry(() => import("./pages/Index"));
 
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
 const AccountDeleted = lazyWithRetry(() => import("./pages/AccountDeleted"));
+const Privacy = lazyWithRetry(() => import("./pages/Privacy"));
+const Terms = lazyWithRetry(() => import("./pages/Terms"));
+const Support = lazyWithRetry(() => import("./pages/Support"));
 const AuthCallback = lazyWithRetry(() => import("./pages/AuthCallback"));
 const CompleteProfileName = lazyWithRetry(() => import("./pages/CompleteProfileName"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
@@ -298,6 +301,9 @@ const App = () => {
 
               <Route path="/auth" element={<Auth />} />
               <Route path="/account-deleted" element={<AccountDeleted />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/complete-profile" element={<CompleteProfileName />} />
 
