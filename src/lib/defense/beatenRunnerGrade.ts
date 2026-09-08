@@ -109,18 +109,21 @@ export function gradeFromScaleRow(
   let raw: number;
   if (t <= rec) {
     raw = 80;
+  let raw: number;
+  if (t <= rec) {
+    raw = 80;
   } else if (t <= av) {
     // between record (80) and average (50)
     raw = 50 + ((av - t) / (av - rec)) * 30;
-  } else if (t <= flo) {
-    // between average (50) and floor (20)
-    raw = 20 + ((flo - t) / (flo - av)) * 30;
   } else {
-    raw = 20;
+    // between average (50) and floor (20) — and BELOW the floor, where the
+    // same slope simply keeps going so a developing athlete can see movement.
+    raw = 20 + ((flo - t) / (flo - av)) * 30;
   }
 
   return { grade: toScoutingGrade(raw), missing: false };
 }
+
 
 
 /**
