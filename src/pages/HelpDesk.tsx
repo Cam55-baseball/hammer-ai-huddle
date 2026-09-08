@@ -246,6 +246,27 @@ export default function HelpDesk() {
           )}
         </div>
 
+        {/* Legal & Support */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Policies & Support</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { label: "Privacy Policy", url: "/privacy", desc: "What we collect and why." },
+              { label: "Terms of Service", url: "/terms", desc: "The rules for using the app." },
+              { label: "Support", url: "/support", desc: "Email us and read the FAQ." },
+            ].map((item) => (
+              <Card
+                key={item.url}
+                className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => navigate(item.url)}
+              >
+                <p className="text-sm font-medium">{item.label}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         {/* Idea Drop Box */}
         <IdeaDropBox />
 
