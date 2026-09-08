@@ -1198,7 +1198,10 @@ describe('Layer 16 — External Truth Validation', () => {
     const mlbAverages: Record<string, number> = {
       sixty_yard_dash: 6.7,
       tee_exit_velocity: 88,
-      pitching_velocity: 92,
+      // Re-anchored 2026-09 on the owner's correction: the MLB four-seam
+      // average is 94.7 today, and the pro band now sits at 94.5 = grade 45.
+      pitching_velocity: 94.5,
+
       position_throw_velo: 86,
       bat_speed: 71,
       vertical_jump: 31,
