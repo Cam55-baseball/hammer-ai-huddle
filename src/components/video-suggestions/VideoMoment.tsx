@@ -66,7 +66,7 @@ export function VideoMoment({ event, variant = 'inline', className, showEmptySta
             <Button
               size="sm"
               onClick={() => {
-                if (user) trackVideoWatched(user.id, item.id, 0).catch(() => {});
+                if (user) trackVideoWatched(user.id, item.id, 0, item.faultScope).catch(() => {});
                 openVideo({ id: item.id, title: item.title, video_url: item.videoUrl, thumbnail_url: item.thumbnailUrl });
               }}
             >

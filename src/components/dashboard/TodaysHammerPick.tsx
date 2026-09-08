@@ -117,7 +117,7 @@ export function TodaysHammerPick() {
         size="sm"
         className="shrink-0"
         onClick={() => {
-          if (user) trackVideoWatched(user.id, top.video.id, 0).catch(() => {});
+          if (user) trackVideoWatched(user.id, top.video.id, 0, top.faultScope).catch(() => {});
           openVideo({ id: top.video.id, title: top.video.title, video_url: top.video.video_url, thumbnail_url: top.video.thumbnail_url });
         }}
       >

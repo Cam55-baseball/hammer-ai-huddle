@@ -90,7 +90,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
 
       // Extra columns + assignments fetched separately to avoid TS strictness on new cols
       const faultKeys = [...(params.correctionTags ?? []), ...params.movementPatterns];
-      const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }, { data: likeRows }, { data: saveRows }] = await Promise.all([
+      const [{ data: meta }, { data: assignments }, { data: metrics }, { data: outcomes }, { data: likeRows }, { data: saveRows }, { data: seenRows }] = await Promise.all([
         (supabase as any).from('library_videos').select('id, video_format, skill_domains, sport, ai_description, confidence_score, distribution_tier').in('id', ids),
         (supabase as any).from('video_tag_assignments').select('video_id, tag_id, weight').in('video_id', ids),
         (supabase as any).from('video_performance_metrics').select('video_id, post_view_improvement_sum, post_view_improvement_n').in('video_id', ids),
@@ -101,7 +101,16 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         faultKeys.length
           ? (supabase as any).from('library_video_saves').select('video_id, user_id, fault_tag_key').in('video_id', ids).in('fault_tag_key', faultKeys)
           : Promise.resolve({ data: [] }),
+        // Coverage seen-set: views recorded AGAINST ONE OF THESE FAULTS only.
+        // A view for a hitting fault never counts against a fielding fault.
+        user && faultKeys.length
+          ? (supabase as any).from('library_video_analytics').select('video_id')
+              .eq('user_id', user.id).eq('action', 'view')
+              .in('video_id', ids).in('fault_scope', faultKeys)
+          : Promise.resolve({ data: [] }),
       ]);
+
+      const seenVideoIds = new Set<string>((seenRows || []).map((r: any) => r.video_id));
 
       // One athlete counts once per video, whether they liked it, saved it or both.
       const endorsers = new Map<string, Set<string>>();
@@ -177,6 +186,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         sport,
         positions,
         rootPatternCorrectionKeys: params.rootPatternCorrectionKeys,
+        seenVideoIds,
       });
 
     },
@@ -230,11 +240,25 @@ export async function trackVideoSuggestionShown(
   });
 }
 
-export async function trackVideoWatched(userId: string, videoId: string, watchSeconds: number) {
+export async function trackVideoWatched(
+  userId: string,
+  videoId: string,
+  watchSeconds: number,
+  /** Fault keys this video was shown for. Feeds the per-fault coverage set. */
+  faultScope?: string[],
+) {
   await (supabase as any)
     .from('video_user_outcomes')
     .update({ watched_at: new Date().toISOString(), watch_seconds: watchSeconds })
     .eq('user_id', userId)
     .eq('video_id', videoId)
     .is('watched_at', null);
+
+  // One "seen" row per fault this video was offered for, so coverage is scoped
+  // to the fault and never leaks across skills.
+  const keys = Array.from(new Set((faultScope ?? []).filter(Boolean)));
+  if (!keys.length) return;
+  await (supabase as any).from('library_video_analytics').insert(
+    keys.map(k => ({ user_id: userId, video_id: videoId, action: 'view', fault_scope: k })),
+  );
 }

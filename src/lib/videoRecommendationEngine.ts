@@ -130,6 +130,13 @@ export interface RecommendInput {
   sport?: TagSport | null;
   /** HARD GATE for rules/tags scoped to position groups (catcher, middle_infield, …). */
   positions?: string[] | null;
+  /**
+   * Videos this athlete has already watched FOR THE FAULTS in this request.
+   * Coverage rule: unseen videos rank above seen ones so an athlete works
+   * through every video for a fault before any repeats. Never a filter — when
+   * everything has been seen the set resets and normal ranking resumes.
+   */
+  seenVideoIds?: ReadonlySet<string> | string[];
 }
 
 
@@ -165,6 +172,16 @@ export interface RecommendResult {
   outcomeEvidence: OutcomeEvidence;
   /** True when this pick was held back for the exploration slot. */
   exploration?: boolean;
+  /**
+   * Coverage partition state for this pick.
+   * `unseen` — the athlete has not watched it for this fault yet (ranked first).
+   * `seen`   — already watched for this fault.
+   * `reset`  — every eligible video had been seen, so the seen-set was cleared
+   *            and normal ranking resumed.
+   */
+  coverage?: 'unseen' | 'seen' | 'reset';
+  /** The fault keys this pick was ranked against. Scopes the seen-set. */
+  faultScope: string[];
 }
 
 /**
@@ -199,8 +216,11 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     correctionTags, feedbackEvidence,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics, faultEndorsements,
-    activePhases, sport, positions, rootPatternCorrectionKeys,
+    activePhases, sport, positions, rootPatternCorrectionKeys, seenVideoIds,
   } = input;
+  // Coverage: what this athlete has already watched FOR THESE faults.
+  const seen = seenVideoIds instanceof Set ? seenVideoIds : new Set(seenVideoIds ?? []);
+  const faultScope = dedupe([...(correctionTags ?? []), ...movementPatterns]);
   const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
   const evidence = feedbackEvidence ?? {};
 
@@ -413,14 +433,29 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
           outcomeApplied,
           totalSampleSize: personalWatchCount + globalSampleSize + endorsements,
         },
+        faultScope,
       });
     }
   }
 
   const cap = MODE_CAPS[mode];
-  const eligible = scored
+  const relevant = scored
     .filter(r => r.score >= cap.minScore)
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.score - a.score || (a.video.id < b.video.id ? -1 : 1));
+
+  // COVERAGE PARTITION — relevance still gates entry above; this only reorders.
+  // Unseen videos for this fault rank above seen ones, so the athlete works
+  // through every video tagged to the fault before any of them repeat. When
+  // everything has been seen the seen-set resets and normal ranking resumes,
+  // so coverage can never empty the shelf.
+  const unseen = relevant.filter(r => !seen.has(r.video.id));
+  const allSeen = unseen.length === 0;
+  const eligible = allSeen
+    ? relevant.map(r => ({ ...r, coverage: 'reset' as const }))
+    : [
+        ...unseen.map(r => ({ ...r, coverage: 'unseen' as const })),
+        ...relevant.filter(r => seen.has(r.video.id)).map(r => ({ ...r, coverage: 'seen' as const })),
+      ];
 
   const top = eligible.slice(0, cap.max);
   if (top.length < cap.max) return top;

@@ -81,6 +81,7 @@ export function useVideoMoment(event: VideoMomentEvent | null, enabled = true): 
           videoUrl: s.video.video_url,
           thumbnailUrl: s.video.thumbnail_url,
           reasons: s.reasons.slice(0, 3),
+          faultScope: s.faultScope,
         })),
     [tagged.data, user?.id],
   );

@@ -119,7 +119,7 @@ export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
         <Sparkles className="h-3 w-3" /> Hammer picks for this block
       </div>
       <div className="space-y-1.5">
-        {visible.map(({ video, reasons }) => (
+        {visible.map(({ video, reasons, faultScope }) => (
           <div
             key={video.id}
             className="flex gap-2 items-center rounded border bg-background/70 p-1.5"
@@ -148,7 +148,7 @@ export function DailyPlanVideoChips({ modality }: { modality: ModalityKey }) {
               variant="default"
               className="h-7 px-2 text-[10px] shrink-0"
               onClick={() => {
-                if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
+                if (user) trackVideoWatched(user.id, video.id, 0, faultScope).catch(() => {});
                 openVideo({ id: video.id, title: video.title, video_url: video.video_url, thumbnail_url: video.thumbnail_url });
               }}
             >

@@ -188,7 +188,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
 
       ) : (
         <div className="space-y-2">
-          {suggestions.map(({ video, reasons, relevance }) => (
+          {suggestions.map(({ video, reasons, relevance, faultScope }) => (
             <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
               <VideoThumb
                 videoUrl={video.video_url}
@@ -221,7 +221,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                 <Button
                   size="sm"
                   onClick={() => {
-                    if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
+                    if (user) trackVideoWatched(user.id, video.id, 0, faultScope).catch(() => {});
                     // Plays in an overlay. Nothing leaves the app, so closing
                     // returns to this analysis, same scroll, still signed in.
                     setPlaying({
