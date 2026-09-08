@@ -59,6 +59,8 @@ const Index = lazyWithRetry(() => import("./pages/Index"));
 
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
 const AccountDeleted = lazyWithRetry(() => import("./pages/AccountDeleted"));
+const AuthCallback = lazyWithRetry(() => import("./pages/AuthCallback"));
+const CompleteProfileName = lazyWithRetry(() => import("./pages/CompleteProfileName"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const SelectUserRole = lazyWithRetry(() => import("./pages/SelectUserRole"));
 const SelectSportScout = lazyWithRetry(() => import("./pages/SelectSportScout"));
