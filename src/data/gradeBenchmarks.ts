@@ -825,8 +825,9 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 92, grade: 55 }, { raw: 96, grade: 65 }, { raw: 101, grade: 80 },
       ],
       pro: [
-        { raw: 75, grade: 20 }, { raw: 83, grade: 30 }, { raw: 92, grade: 45 },
-        { raw: 95, grade: 55 }, { raw: 98, grade: 65 }, { raw: 103, grade: 80 },
+        { raw: 84, grade: 20 }, { raw: 88.2, grade: 30 }, { raw: 94.5, grade: 45 },
+        { raw: 97.3, grade: 55 }, { raw: 100.1, grade: 65 }, { raw: 104.2, grade: 80 },
+
       ],
     },
     softball: {
