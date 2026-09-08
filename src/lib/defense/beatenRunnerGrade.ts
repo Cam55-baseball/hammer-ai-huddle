@@ -46,13 +46,17 @@ function missing(reason: BeatenRunnerMissingReason): BeatenRunnerResult {
 }
 
 /**
- * Round to the nearest half-grade (scouting convention) and clamp to 20–80.
+ * Round to the nearest half-grade (scouting convention) inside the graded
+ * range, and to one decimal below the MLB floor of 20 — the floor is the
+ * show's floor, not the app's. Clamped to 0–80; never negative.
  * Exported so aggregation reuses this exact rounding rather than duplicating it.
  */
 export function toScoutingGrade(raw: number): number {
-  const clamped = Math.max(20, Math.min(80, raw));
+  const clamped = Math.max(GRADE_MIN, Math.min(GRADE_MAX, raw));
+  if (clamped < MLB_FLOOR_GRADE) return Math.round(clamped * 10) / 10;
   return Math.round(clamped / 5) * 5;
 }
+
 
 /**
  * Shared 20–80 interpolation against ONE `scale_reference` row.
