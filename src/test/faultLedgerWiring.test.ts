@@ -33,8 +33,8 @@ interface PoolMovement {
 const POOLS: Record<string, PoolMovement[]> = {
   // Corrective slot — trunk and anti-rotation work.
   corrective: [
-    { slug: "four_way_plank", category: "core", sets: 2, reps: 8 },
     { slug: "bs_side_plank_rot_reach", category: "core", sets: 2, reps: 8 },
+    { slug: "four_way_plank", category: "core", sets: 2, reps: 8 },
     { slug: "bird_dog", category: "core", sets: 2, reps: 8 },
     { slug: "kneeling_ab_rollout", category: "core", sets: 2, reps: 8 },
   ],
@@ -142,17 +142,19 @@ describe("fault ledger → daily plan wiring", () => {
     // If this is empty the ledger is still a dead end.
     expect(diff.length).toBeGreaterThan(0);
     expect(diff).toEqual([
-      { slot: "corrective", before: "four_way_plank", after: "bs_side_plank_rot_reach" },
+      { slot: "corrective", before: "bs_side_plank_rot_reach", after: "four_way_plank" },
       { slot: "supplemental", before: "hurdle_jump", after: "medicine_ball_scoop_toss" },
     ]);
 
     // And it changed for a reason the athlete could read back.
     expect(priority.ranked.map((r) => r.rootPatternId)).toEqual([
-      "trunk_rotates_before_front_foot_plant",
       "hands_leak_forward_early",
+      "trunk_rotates_before_front_foot_plant",
     ]);
-    expect(priority.ranked[0].family).toBe("rotational_output");
-    expect(priority.ranked[1].family).toBe("trunk_transfer");
+    expect(priority.ranked[0].family).toBe("trunk_transfer");
+    expect(priority.ranked[1].family).toBe("rotational_output");
+    // Two disciplines reporting the same root pattern counts as agreement.
+    expect(priority.ranked[1].disciplines.sort()).toEqual(["hitting", "pitching"]);
   });
 
   it("3. priority only: same slots, same categories, nothing removed from the pool", () => {
