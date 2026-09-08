@@ -91,7 +91,17 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   });
 
   const feedback = useVideoFaultFeedback(suggestions.map(s => s.video.id));
+  // Never a blank shelf: if nothing matches the fault, offer the closest
+  // foundational video for this part of the game, labelled as exactly that.
+  const { results: foundationPicks } = useFoundationVideos({
+    domain: (skillDomain === 'base_running' ? undefined : skillDomain) as FoundationDomain | undefined,
+    limit: 1,
+    triggerGated: false,
+    surface: 'library',
+  });
+  const fallback = suggestions.length === 0 ? foundationPicks[0] ?? null : null;
   const navigate = useNavigate();
+
   const primaryFault = signals?.correctionTags[0] ?? signals?.movementPatterns[0] ?? null;
   const faultLayer: 'correction' | 'movement_pattern' | null =
     signals?.correctionTags.length ? 'correction' : signals?.movementPatterns.length ? 'movement_pattern' : null;
