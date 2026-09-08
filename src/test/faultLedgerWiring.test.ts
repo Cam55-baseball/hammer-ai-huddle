@@ -25,21 +25,25 @@ interface PoolMovement {
   reps: number;
 }
 
-/** Two discretionary slots, each with a legal pool. Order is the pool order. */
+/**
+ * Two discretionary slots, each with a legal pool. Order is the pool order.
+ * Each pool is category-scoped, exactly as the generator's slot pools are, so
+ * the category filled by a slot cannot move no matter what the ledger says.
+ */
 const POOLS: Record<string, PoolMovement[]> = {
-  // Corrective slot — trunk / anti-rotation work.
+  // Corrective slot — trunk and anti-rotation work.
   corrective: [
-    { slug: "bird_dog", category: "core", sets: 2, reps: 8 },
     { slug: "four_way_plank", category: "core", sets: 2, reps: 8 },
-    { slug: "wu_pallof_press_iso", category: "core", sets: 2, reps: 8 },
-    { slug: "heenan_dead_bug_reach", category: "core", sets: 2, reps: 8 },
+    { slug: "bs_side_plank_rot_reach", category: "core", sets: 2, reps: 8 },
+    { slug: "bird_dog", category: "core", sets: 2, reps: 8 },
+    { slug: "kneeling_ab_rollout", category: "core", sets: 2, reps: 8 },
   ],
-  // Supplemental slot — rotational / posterior options.
+  // Supplemental slot — explosive options.
   supplemental: [
-    { slug: "single_leg_back_extension", category: "posterior_chain", sets: 3, reps: 8 },
-    { slug: "medicine_ball_scoop_toss", category: "rotation", sets: 3, reps: 5 },
-    { slug: "bs_deep_hip_load", category: "rotation", sets: 3, reps: 5 },
-    { slug: "kneeling_ab_rollout", category: "core", sets: 3, reps: 8 },
+    { slug: "hurdle_jump", category: "power", sets: 3, reps: 5 },
+    { slug: "medicine_ball_scoop_toss", category: "power", sets: 3, reps: 5 },
+    { slug: "medicine_ball_shot_put_throw", category: "power", sets: 3, reps: 5 },
+    { slug: "sp_pogo_single", category: "power", sets: 3, reps: 5 },
   ],
 };
 
