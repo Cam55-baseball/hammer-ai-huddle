@@ -14,7 +14,8 @@ import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { useVideoTaxonomy, groupTaxonomyByLayer } from "@/hooks/useVideoTaxonomy";
 import { supabase } from "@/integrations/supabase/client";
 import type { LibraryVideo, LibraryTag } from "@/hooks/useVideoLibrary";
-import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
+import type { SkillDomain, TagLayer, TagSport } from "@/lib/videoRecommendationEngine";
+import { POSITION_GROUPS, POSITION_GROUP_LABELS, type PositionGroup } from "@/lib/hammer/positions/positionGroups";
 import { computeMissingFields } from "@/lib/videoReadiness";
 import { computeVideoConfidence, computeFoundationConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
@@ -29,6 +30,8 @@ import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
 const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
+/** Domains where position scoping materially changes the coaching cue. */
+const POSITION_SCOPED_DOMAINS: SkillDomain[] = ['fielding', 'throwing', 'pitching'];
 const LAYER_LABELS: Record<TagLayer, string> = {
   movement_pattern: 'Movement',
   result: 'Result',
@@ -83,8 +86,23 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   const [regenLoading, setRegenLoading] = useState(false);
 
   const primaryDomain = skillDomains[0];
-  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
+  // Position focus mirrors the upload form — fielding/throwing/pitching cues
+  // differ per position, so 100+ tags must be narrowable to be usable.
+  const [positionFocus, setPositionFocus] = useState<PositionGroup[]>([]);
+  const showPositionFocus =
+    !!primaryDomain && POSITION_SCOPED_DOMAINS.includes(primaryDomain);
+  // Sport scope: a single-sport video never shows the other sport's tags.
+  const sportScope: TagSport = useMemo(() => {
+    const s = selectedSports.filter(Boolean);
+    if (s.length !== 1) return 'both';
+    return s[0] === 'softball' ? 'softball' : s[0] === 'baseball' ? 'baseball' : 'both';
+  }, [selectedSports]);
+  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain, {
+    sport: sportScope,
+    positions: showPositionFocus && positionFocus.length ? positionFocus : null,
+  });
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
+
 
   // Load existing assignments for this video on mount
   useEffect(() => {
