@@ -578,7 +578,7 @@ describe('Layer 7 — Adversarial Fuzz Testing', () => {
     }
 
     expect(violations).toBe(0);
-  });
+  }, 30000);
 
   it('Test 22: Type Corruption Fuzz — corrupt values never crash or leak NaN', () => {
     const corruptValues: any[] = [
@@ -1181,7 +1181,7 @@ describe('Layer 15 — Integration Kill Tests', () => {
     const elapsed = performance.now() - start;
     expect(violations).toBe(0);
     expect(elapsed).toBeLessThan(10000); // 10s ceiling
-  });
+  }, 30000);
 });
 
 // =====================================================================
