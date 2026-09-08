@@ -563,6 +563,36 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
             </p>
           ) : (
             <div className="space-y-3">
+              {showPositionFocus && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    Position focus (optional)
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POSITION_GROUPS.map(pg => {
+                      const on = positionFocus.includes(pg);
+                      return (
+                        <Badge
+                          key={pg}
+                          variant={on ? 'default' : 'outline'}
+                          className="cursor-pointer text-[10px]"
+                          onClick={() =>
+                            setPositionFocus(prev =>
+                              prev.includes(pg) ? prev.filter(p => p !== pg) : [...prev, pg],
+                            )
+                          }
+                        >
+                          {POSITION_GROUP_LABELS[pg]}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Narrows the tag list. Universal tags always stay visible.
+                  </p>
+                </div>
+              )}
+
               {(['movement_pattern', 'result', 'context', 'correction'] as TagLayer[]).map(layer => (
                 <div key={layer} className="space-y-1">
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
