@@ -134,6 +134,19 @@ export interface RecommendInput {
 
 
 
+export interface OutcomeEvidence {
+  /** Times THIS athlete has watched it. */
+  readonly personalWatchCount: number;
+  /** How many post-view measurements exist across all athletes. */
+  readonly globalSampleSize: number;
+  /** Distinct athletes who endorsed it for one of these faults. */
+  readonly endorsementCount: number;
+  /** True when any of the three cleared its floor and moved the score. */
+  readonly outcomeApplied: boolean;
+  /** Total measurements behind the outcome terms. */
+  readonly totalSampleSize: number;
+}
+
 export interface RecommendResult {
   video: VideoWithTags;
   score: number;
@@ -148,7 +161,24 @@ export interface RecommendResult {
   relevance: 'targeted' | 'general';
   /** Phase 7: derived monetization overlay — never feeds back into ranking. */
   conversionScore?: number;
+  /** How much measured evidence stands behind this score. Always present. */
+  outcomeEvidence: OutcomeEvidence;
+  /** True when this pick was held back for the exploration slot. */
+  exploration?: boolean;
 }
+
+/**
+ * Below these counts an outcome term is noise, so it contributes exactly zero
+ * rather than a wobbly number. Raising a video on three likes is guessing.
+ */
+export const OUTCOME_FLOORS = {
+  /** Personal watch history before their own deltas count. */
+  personalWatches: 3,
+  /** Library-wide post-view measurements before the global term counts. */
+  globalMeasurements: 5,
+  /** Distinct athletes endorsing it for this fault before peer likes count. */
+  endorsements: 3,
+} as const;
 
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
   session: { max: 4, minScore: 40 },
@@ -162,6 +192,7 @@ const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
+
 
 export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
