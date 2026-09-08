@@ -14,6 +14,7 @@ import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostLoginRoute, withLoginTimeout } from "@/lib/auth/postLoginRoute";
+import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 
 
 const authSchema = z.object({
