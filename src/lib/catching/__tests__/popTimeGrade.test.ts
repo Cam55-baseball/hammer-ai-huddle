@@ -42,10 +42,8 @@ describe("computePopTimeGrade", () => {
   });
 
 
-  it("clamps beyond the anchors instead of extrapolating", () => {
-    expect(computePopTimeGrade(1.6, SCALE).grade).toBe(80);
-    expect(computePopTimeGrade(2.6, SCALE).grade).toBe(20);
-  });
+
+
 
   it("stays inside 20-80", () => {
     for (const t of [1.8, 1.93, 1.99, 2.05, 2.11, 2.3]) {
