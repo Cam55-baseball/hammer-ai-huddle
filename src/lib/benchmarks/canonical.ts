@@ -88,17 +88,17 @@ export const SCALE_ANCHOR_SNAPSHOT: readonly (ScaleReferenceRow & {
     floor_value: 75,
     avg_value: 88,
     record_value: 95,
-    source: "MLB infield throw velocity and D1 middle-infield recruiting benchmarks.",
-    as_of: "2026-08-29",
+    source: "owner",
+    as_of: "2026-09-08",
   },
   {
     metric: "throw_velo_mph_outfield",
     direction: "higher_better",
     floor_value: 78,
-    avg_value: 90,
+    avg_value: 92,
     record_value: 98,
-    source: "Elite HS/college corner OF verified at 87+ mph; MLB averages higher.",
-    as_of: "2026-08-29",
+    source: "owner",
+    as_of: "2026-09-08",
   },
 ];
 
@@ -116,8 +116,7 @@ export function isScaleOwned(metricKey: string): boolean {
  * The winning `scale_reference` anchors expressed as benchmark points, so the
  * static table shows the same numbers the grader uses rather than keeping a
  * stale second copy. floor → 20, average → 50, record → 80 (the scale's own
- * grade mapping). These are MLB-level marks, so they own the `pro` band only;
- * youth bands keep their age-appropriate table entries.
+ * grade mapping). One MLB-anchored scale — no age bands.
  */
 export function scaleDerivedPoints(
   metric: string,

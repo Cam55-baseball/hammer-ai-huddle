@@ -5,7 +5,6 @@
 import {
   GRADE_BENCHMARKS,
   isSoftballGradable,
-  type AgeBand,
   type BenchmarkPoint,
 } from '@/data/gradeBenchmarks';
 
@@ -18,14 +17,11 @@ import {
 import { gradeFromScaleRow } from '@/lib/defense/beatenRunnerGrade';
 
 /**
- * Convert an age (number) to an age band for benchmark lookup.
+ * ONE SCALE. The 20-80 grade is MLB-anchored and NOT age-adjusted: a
+ * 14-year-old is measured against the same standard as a big leaguer and
+ * lands where he lands. Age is still accepted by the grading calls so
+ * callers need not change, but it no longer selects a benchmark curve.
  */
-export function ageToAgeBand(age: number | null | undefined): AgeBand {
-  if (!age || age <= 14) return '14u';
-  if (age <= 18) return '18u';
-  if (age <= 22) return 'college';
-  return 'pro';
-}
 
 /**
  * Piecewise linear interpolation between benchmark points.
@@ -33,7 +29,7 @@ export function ageToAgeBand(age: number | null | undefined): AgeBand {
  * or descending for lower-is-better (handled automatically).
  */
 function interpolate(raw: number, points: BenchmarkPoint[], higherIsBetter: boolean): number {
-  if (points.length === 0) return 45; // No data → average
+  if (points.length === 0) return 50; // No data → average (50 = MLB average)
   if (points.length === 1) return points[0].grade;
 
   // Sort points by raw value ascending
@@ -65,7 +61,7 @@ function interpolate(raw: number, points: BenchmarkPoint[], higherIsBetter: bool
     }
   }
 
-  return 45;
+  return 50;
 }
 
 /**
@@ -83,7 +79,7 @@ export function rawToGrade(
   // surfaces use — so the same input scores the same wherever it is shown.
   // Youth bands keep their age-appropriate table entries (MLB anchors would
   // grade a 14-year-old against a big leaguer).
-  if (sport === 'baseball' && isScaleOwned(metricKey) && ageToAgeBand(age) === 'pro') {
+  if (sport === 'baseball' && isScaleOwned(metricKey)) {
     const canonical = resolutionFor(metricKey)!.canonical;
     const result = gradeFromScaleRow(rawValue, canonical, SCALE_ANCHOR_SNAPSHOT);
     return result.missing ? null : result.grade;
@@ -98,35 +94,11 @@ export function rawToGrade(
   const benchmarkEntry = GRADE_BENCHMARKS[metricKey];
   if (!benchmarkEntry) return null;
 
-  const sportBenchmarks = benchmarkEntry[sport];
-  if (!sportBenchmarks || Object.keys(sportBenchmarks).length === 0) return null;
+  const points = benchmarkEntry[sport];
+  if (!points || points.length === 0) return null;
 
-
-  const ageBand = ageToAgeBand(age);
   const metricDef = METRIC_BY_KEY[metricKey];
   const higherIsBetter = metricDef?.higherIsBetter ?? true;
-
-  // Find best matching age band (try exact, then fall back)
-  let points = sportBenchmarks[ageBand];
-  if (!points) {
-    // Fall back: try nearby age bands
-    const fallbackOrder: AgeBand[] = ageBand === '14u' 
-      ? ['18u', 'college', 'pro']
-      : ageBand === '18u'
-      ? ['college', '14u', 'pro']
-      : ageBand === 'college'
-      ? ['18u', 'pro', '14u']
-      : ['college', '18u', '14u'];
-    
-    for (const fb of fallbackOrder) {
-      if (sportBenchmarks[fb]) {
-        points = sportBenchmarks[fb];
-        break;
-      }
-    }
-  }
-
-  if (!points || points.length === 0) return null;
 
   const grade = interpolate(rawValue, points, higherIsBetter);
   return Math.max(20, Math.min(80, grade));
@@ -136,13 +108,14 @@ export function rawToGrade(
  * Get a human-readable label for a 20-80 grade.
  */
 export function gradeToLabel(grade: number): string {
-  if (grade >= 70) return 'Elite';
-  if (grade >= 60) return 'Plus-Plus';
-  if (grade >= 55) return 'Plus';
-  if (grade >= 50) return 'Above Average';
-  if (grade >= 45) return 'Average';
+  if (grade >= 80) return 'Elite';
+  if (grade >= 70) return 'Plus-Plus';
+  if (grade >= 60) return 'Plus';
+  if (grade >= 55) return 'Above Average';
+  if (grade >= 50) return 'Average';
+  if (grade >= 45) return 'Fringe';
   if (grade >= 40) return 'Below Average';
-  if (grade >= 30) return 'Fringe';
+  if (grade >= 30) return 'Well Below Average';
   return 'Poor';
 }
 
@@ -153,8 +126,8 @@ export function gradeToColor(grade: number): string {
   if (grade >= 70) return 'text-emerald-400';
   if (grade >= 60) return 'text-green-500';
   if (grade >= 55) return 'text-blue-500';
-  if (grade >= 50) return 'text-cyan-500';
-  if (grade >= 45) return 'text-foreground';
+  if (grade >= 50) return 'text-foreground';
+  if (grade >= 45) return 'text-amber-500';
   if (grade >= 40) return 'text-amber-500';
   if (grade >= 30) return 'text-orange-500';
   return 'text-red-500';
@@ -169,8 +142,8 @@ export function gradeToHex(grade: number): string {
   if (grade >= 70) return '#34d399'; // emerald-400
   if (grade >= 60) return '#22c55e'; // green-500
   if (grade >= 55) return '#3b82f6'; // blue-500
-  if (grade >= 50) return '#06b6d4'; // cyan-500
-  if (grade >= 45) return 'hsl(var(--foreground))';
+  if (grade >= 50) return 'hsl(var(--foreground))';
+  if (grade >= 45) return '#f59e0b'; // amber-500
   if (grade >= 40) return '#f59e0b'; // amber-500
   if (grade >= 30) return '#f97316'; // orange-500
   return '#ef4444'; // red-500
@@ -184,8 +157,8 @@ export function gradeToSurface(grade: number): string {
   if (grade >= 70) return 'border-emerald-400/40 bg-emerald-400/5';
   if (grade >= 60) return 'border-green-500/40 bg-green-500/5';
   if (grade >= 55) return 'border-blue-500/40 bg-blue-500/5';
-  if (grade >= 50) return 'border-cyan-500/40 bg-cyan-500/5';
-  if (grade >= 45) return 'border-border bg-muted/30';
+  if (grade >= 50) return 'border-border bg-muted/30';
+  if (grade >= 45) return 'border-amber-500/40 bg-amber-500/5';
   if (grade >= 40) return 'border-amber-500/40 bg-amber-500/5';
   if (grade >= 30) return 'border-orange-500/40 bg-orange-500/5';
   return 'border-red-500/40 bg-red-500/5';
