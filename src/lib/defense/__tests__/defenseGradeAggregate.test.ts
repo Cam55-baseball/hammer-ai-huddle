@@ -81,11 +81,12 @@ describe("aggregateDefenseGrade", () => {
     expect(r.grade! % 5).toBe(0);
     expect(r.grade).toBe(55);
 
+    // A sub-floor rep stays sub-floor: 20 is the MLB floor, not a clamp.
     const low = aggregateDefenseGrade(
       [{ beaten_runner_grade: 5, created_at: daysAgo(0) }],
       { now: NOW },
     );
-    expect(low.grade).toBe(20);
+    expect(low.grade).toBe(5);
   });
 
   it("attaches the shared grade label", () => {
@@ -93,7 +94,8 @@ describe("aggregateDefenseGrade", () => {
       [{ beaten_runner_grade: 70, created_at: daysAgo(0) }],
       { now: NOW },
     );
-    expect(r.label).toBe("Elite");
+    // 70 is Plus-Plus; Elite is reserved for 80, the all-time record.
+    expect(r.label).toBe("Plus-Plus");
   });
 
   it("treats reps with no timestamp as unweighted rather than dropping them", () => {
