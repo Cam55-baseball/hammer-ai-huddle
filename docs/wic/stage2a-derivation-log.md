@@ -746,7 +746,9 @@ reload writes a plain-English `reason`; the week after a reload returns
 `git diff` on `dosage/doctrine.ts`. The rebuild lives in a separate module,
 `_shared/wic/dosage/wave.ts`, which **nothing imports** and which returns
 `resolveDose()` verbatim when the flag is off (asserted inside the diff run).
-`lifting_v2_enabled` remains `false`. Full preview diff by group, 1,920
+`lifting_v2_enabled` was `false` at the time of this run; it was later
+approved by the owner and is now `true` in the database (confirmed live with
+the stamped `wave_v2` proof). Full preview diff by group, 1,920
 combinations (`scripts/audits/evidence/wave-diff.json`):
 
 | group | compared | changed | rep delta |
