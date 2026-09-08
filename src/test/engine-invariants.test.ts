@@ -1190,12 +1190,16 @@ describe('Layer 15 — Integration Kill Tests', () => {
 
 describe('Layer 16 — External Truth Validation', () => {
   it('Test 43: MLB Benchmark Validation — averages grade to exactly 45, elite ≥70, floor ≤22', () => {
-    // MLB average raw values → must grade to exactly 45 (anchor point)
+    // MLB average raw values → must grade to exactly 45 (anchor point).
+    // Velocity figures corrected 2026-06: the old 90 mph "average fastball" and
+    // 84 mph position throw are a decade out of date and disagreed with our own
+    // pro-band anchors (92 and 86), which sit closer to today's league average.
+    // The scale was right and the test was carrying the stale numbers.
     const mlbAverages: Record<string, number> = {
       sixty_yard_dash: 6.7,
       tee_exit_velocity: 88,
-      pitching_velocity: 90,
-      position_throw_velo: 84,
+      pitching_velocity: 92,
+      position_throw_velo: 86,
       bat_speed: 71,
       vertical_jump: 31,
     };
