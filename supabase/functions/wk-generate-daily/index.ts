@@ -885,6 +885,20 @@ const handler = async (req: Request): Promise<Response> => {
     const sevenDaysAgo = new Date(planDate + "T00:00:00");
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+    // The fault ledger, 120 days back. Read-only, priority-only: see
+    // `buildFaultPriority` below. A read failure yields no rows, which is the
+    // same as an empty ledger — it can never block a plan.
+    const ledgerSince = new Date(
+      new Date(planDate + "T00:00:00Z").getTime() - 120 * 86400000,
+    ).toISOString();
+    const { data: faultSignals } = await admin
+      .from("wk_fault_signals")
+      .select("source,fault_key,root_pattern_id,discipline,confidence,sample_size,severity,observed_at")
+      .eq("user_id", user.id)
+      .gte("observed_at", ledgerSince)
+      .order("observed_at", { ascending: false })
+      .limit(500);
+
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
         .select("movement_slug, plan_date, slot, why_payload")
