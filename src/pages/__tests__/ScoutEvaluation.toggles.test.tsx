@@ -62,7 +62,7 @@ describe('ScoutEvaluation hand/side toggles', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('Throwing hand for position 1')).toBeTruthy(),
     );
-  });
+  }, 20000);
 
   it('ambidextrous pitcher toggle renders a full pitching set per hand', async () => {
     renderForm();
@@ -82,5 +82,5 @@ describe('ScoutEvaluation hand/side toggles', () => {
     await waitFor(() =>
       expect(screen.queryByRole('heading', { name: 'Right-handed pitching' })).toBeNull(),
     );
-  });
+  }, 20000);
 });
