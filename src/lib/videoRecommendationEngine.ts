@@ -330,28 +330,36 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
 
 
 
-    // User-specific success
+    // Outcome terms only count once there is enough measurement behind them.
+    // Below the floor they contribute exactly zero — not a small wobbly number.
     const uo = userOutcomes?.get(v.id);
-    if (uo) {
+    const gm = globalMetrics?.get(v.id);
+    const endorsements = faultEndorsements?.get(v.id) ?? 0;
+    const personalWatchCount = uo?.watchCount ?? 0;
+    const globalSampleSize = gm?.sampleSize ?? 0;
+    let outcomeApplied = false;
+
+    // User-specific success
+    if (uo && personalWatchCount >= OUTCOME_FLOORS.personalWatches) {
       score += clamp(uo.avgPostDelta * 8, -20, 20);
-      if (uo.watchCount >= 3 && uo.avgPostDelta <= 0) score -= 15;
+      if (uo.avgPostDelta <= 0) score -= 15;
+      outcomeApplied = true;
     }
 
     // Global improvement
-    const gm = globalMetrics?.get(v.id);
-    if (gm) score += clamp(gm.improvementScore * 5, -10, 10);
+    if (gm && globalSampleSize >= OUTCOME_FLOORS.globalMeasurements) {
+      score += clamp(gm.improvementScore * 5, -10, 10);
+      outcomeApplied = true;
+    }
 
     // Peer endorsement for THIS fault. Small, capped, and only counted when
-    // the like/save was recorded against a fault in this request.
-    const endorsements = faultEndorsements?.get(v.id) ?? 0;
-    if (endorsements > 0) {
+    // enough athletes recorded it against a fault in this request.
+    if (endorsements >= OUTCOME_FLOORS.endorsements) {
       score += Math.min(10, 3 + endorsements);
-      reasons.push(
-        endorsements === 1
-          ? 'Another athlete found this helped the same fault'
-          : `${endorsements} athletes found this helped the same fault`,
-      );
+      outcomeApplied = true;
+      reasons.push(`${endorsements} athletes found this helped the same fault`);
     }
+
 
     // Recency
     if (v.created_at) {
