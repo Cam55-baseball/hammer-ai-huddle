@@ -142,12 +142,8 @@ describe("fault ledger → daily plan wiring", () => {
     // If this is empty the ledger is still a dead end.
     expect(diff.length).toBeGreaterThan(0);
     expect(diff).toEqual([
-      { slot: "corrective", before: "bird_dog", after: "wu_pallof_press_iso" },
-      {
-        slot: "supplemental",
-        before: "single_leg_back_extension",
-        after: "medicine_ball_scoop_toss",
-      },
+      { slot: "corrective", before: "four_way_plank", after: "bs_side_plank_rot_reach" },
+      { slot: "supplemental", before: "hurdle_jump", after: "medicine_ball_scoop_toss" },
     ]);
 
     // And it changed for a reason the athlete could read back.
