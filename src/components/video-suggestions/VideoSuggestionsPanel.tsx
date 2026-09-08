@@ -57,7 +57,7 @@ export function VideoSuggestionsPanel({
       </div>
 
       <div className="space-y-2">
-        {suggestions.map(({ video, reasons, score }) => (
+        {suggestions.map(({ video, reasons, score, faultScope }) => (
           <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
             <VideoThumb
               videoUrl={video.video_url}
@@ -78,7 +78,7 @@ export function VideoSuggestionsPanel({
               variant="default"
               className="self-center shrink-0"
               onClick={() => {
-                if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
+                if (user) trackVideoWatched(user.id, video.id, 0, faultScope).catch(() => {});
                 openVideo({ id: video.id, title: video.title, video_url: video.video_url, thumbnail_url: video.thumbnail_url });
               }}
             >

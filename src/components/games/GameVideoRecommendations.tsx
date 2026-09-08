@@ -93,7 +93,7 @@ function GameDomainRecommendations({ signals }: { signals: GameSignals }) {
       </div>
       <p className="text-[11px] text-muted-foreground">{signals.evidence.join(" · ")}</p>
       <div className="space-y-2">
-        {results.map(({ video, reasons, relevance }) => (
+        {results.map(({ video, reasons, relevance, faultScope }) => (
           <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card">
             <VideoThumb
               videoUrl={video.video_url}
@@ -118,7 +118,7 @@ function GameDomainRecommendations({ signals }: { signals: GameSignals }) {
               size="sm"
               className="self-center shrink-0"
               onClick={() => {
-                if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
+                if (user) trackVideoWatched(user.id, video.id, 0, faultScope).catch(() => {});
                 openVideo(video);
               }}
             >
