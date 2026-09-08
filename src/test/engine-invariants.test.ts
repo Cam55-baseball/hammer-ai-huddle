@@ -11,7 +11,7 @@ import { computeToolGrades, POSITION_TOOL_PROFILES, type ToolName, type ToolProf
 import { generateReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus } from '@/lib/adaptiveTestPriority';
 import { computeTrends } from '@/lib/longitudinalEngine';
-import { GRADE_BENCHMARKS, isSoftballGradable, type AgeBand } from '@/data/gradeBenchmarks';
+import { GRADE_BENCHMARKS, isSoftballGradable } from '@/data/gradeBenchmarks';
 import { METRIC_BY_KEY, PERFORMANCE_METRICS } from '@/data/performanceTestRegistry';
 
 // ── Helpers ──────────────────────────────────────────────
@@ -51,12 +51,10 @@ describe('Layer 1 — Mathematical Integrity', () => {
       if (!def) continue;
 
       for (const sport of ['baseball', 'softball'] as const) {
-        const sportBench = benchmarkEntry[sport];
-        if (!sportBench || Object.keys(sportBench).length === 0) continue;
+        const points = benchmarkEntry[sport];
+        if (!points || points.length < 2) continue;
 
-        for (const ageBand of Object.keys(sportBench)) {
-          const points = sportBench[ageBand as keyof typeof sportBench];
-          if (!points || points.length < 2) continue;
+        {
 
           // Get raw value range from benchmarks
           const raws = points.map(p => p.raw);
@@ -1860,11 +1858,9 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
         // Softball grades are withheld where the column is a converted
         // baseball number — there is nothing to anchor against.
         if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
-        const sportBench = entry[sport];
-        for (const [ageBand, points] of Object.entries(sportBench)) {
-          if (points && points.length > 0) {
-            expect(points.length).toBeGreaterThanOrEqual(3);
-          }
+        const points = entry[sport];
+        if (points && points.length > 0) {
+          expect(points.length).toBeGreaterThanOrEqual(3);
         }
       }
     }
@@ -1880,46 +1876,37 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
         // Softball grades are withheld where the column is a converted
         // baseball number — there is nothing to anchor against.
         if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
-        const sportBench = entry[sport];
-        for (const [ageBand, points] of Object.entries(sportBench)) {
-          if (!points || points.length === 0) continue;
+        const points = entry[sport];
+        if (!points || points.length === 0) continue;
 
-          // Map age band to an age number for lookup
-          const ageMap: Record<string, number> = { '14u': 13, '18u': 17, college: 20, pro: 25 };
-          const age = ageMap[ageBand] ?? 17;
-
-          for (const pt of points) {
-            const grade = rawToGrade(metricKey, pt.raw, sport, age);
-            expect(grade).not.toBeNull();
-            // Allow ±1 for rounding
-            expect(Math.abs(grade! - pt.grade)).toBeLessThanOrEqual(1);
-          }
+        // One MLB scale, no age bands — age must not change the answer.
+        for (const pt of points) {
+          const grade = rawToGrade(metricKey, pt.raw, sport, 25);
+          expect(grade).not.toBeNull();
+          // Allow ±1 for rounding
+          expect(Math.abs(grade! - pt.grade)).toBeLessThanOrEqual(1);
         }
       }
     }
   });
 
-  it('Test 58: age band fallback produces valid grades when exact band missing', () => {
-    // Find a metric that has benchmarks for 'college' but test with an age that maps to 'pro'
-    // If 'pro' is missing, fallback should still work
+  it('Test 58: age never changes the grade — one MLB-anchored scale', () => {
     for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
       const metricDef = METRIC_BY_KEY[metricKey];
       if (!metricDef) continue;
 
       for (const sport of ['baseball', 'softball'] as const) {
         if (sport === 'softball' && !isSoftballGradable(metricKey)) continue;
-        const sportBench = entry[sport];
-        if (Object.keys(sportBench).length === 0) continue;
+        const points = entry[sport];
+        if (!points || points.length === 0) continue;
 
-        // Get a raw value from any available band
-        const anyBand = Object.values(sportBench).find(p => p && p.length > 0);
-        if (!anyBand) continue;
-        const testRaw = anyBand[Math.floor(anyBand.length / 2)].raw;
+        const testRaw = points[Math.floor(points.length / 2)].raw;
+        const reference = rawToGrade(metricKey, testRaw, sport, 25);
+        expect(reference).not.toBeNull();
 
-        // Test all age values — should never return null if any band exists
         for (const testAge of [10, 15, 17, 20, 25]) {
           const grade = rawToGrade(metricKey, testRaw, sport, testAge);
-          expect(grade).not.toBeNull();
+          expect(grade).toBe(reference);
           expect(grade!).toBeGreaterThanOrEqual(20);
           expect(grade!).toBeLessThanOrEqual(80);
         }
@@ -1927,32 +1914,20 @@ describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
     }
   });
 
-  it('Test 59: baseball and softball benchmarks differ for at least one age band', () => {
+  it('Test 59: baseball and softball benchmarks differ on at least one metric', () => {
     let anyDifference = false;
 
     for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
-      const bbBands = Object.keys(entry.baseball);
-      const sbBands = Object.keys(entry.softball);
-      const sharedBands = bbBands.filter(b => sbBands.includes(b));
+      const bbPoints = entry.baseball;
+      const sbPoints = entry.softball;
+      if (!bbPoints?.length || !sbPoints?.length) continue;
 
-      if (sharedBands.length === 0) continue;
+      const midRaw = bbPoints[Math.floor(bbPoints.length / 2)].raw;
+      const bbGrade = rawToGrade(metricKey, midRaw, 'baseball', 25);
+      const sbGrade = rawToGrade(metricKey, midRaw, 'softball', 25);
 
-      for (const band of sharedBands) {
-        const bbPoints = entry.baseball[band as AgeBand];
-        const sbPoints = entry.softball[band as AgeBand];
-        if (!bbPoints || !sbPoints) continue;
-
-        // Use a mid-range raw from baseball benchmarks
-        const midRaw = bbPoints[Math.floor(bbPoints.length / 2)].raw;
-        const ageMap: Record<string, number> = { '14u': 13, '18u': 17, college: 20, pro: 25 };
-        const age = ageMap[band] ?? 17;
-
-        const bbGrade = rawToGrade(metricKey, midRaw, 'baseball', age);
-        const sbGrade = rawToGrade(metricKey, midRaw, 'softball', age);
-
-        if (bbGrade !== null && sbGrade !== null && bbGrade !== sbGrade) {
-          anyDifference = true;
-        }
+      if (bbGrade !== null && sbGrade !== null && bbGrade !== sbGrade) {
+        anyDifference = true;
       }
     }
 
