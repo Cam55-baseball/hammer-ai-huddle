@@ -101,7 +101,16 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
         faultKeys.length
           ? (supabase as any).from('library_video_saves').select('video_id, user_id, fault_tag_key').in('video_id', ids).in('fault_tag_key', faultKeys)
           : Promise.resolve({ data: [] }),
+        // Coverage seen-set: views recorded AGAINST ONE OF THESE FAULTS only.
+        // A view for a hitting fault never counts against a fielding fault.
+        user && faultKeys.length
+          ? (supabase as any).from('library_video_analytics').select('video_id')
+              .eq('user_id', user.id).eq('action', 'view')
+              .in('video_id', ids).in('fault_scope', faultKeys)
+          : Promise.resolve({ data: [] }),
       ]);
+
+      const seenVideoIds = new Set<string>((seenRows || []).map((r: any) => r.video_id));
 
       // One athlete counts once per video, whether they liked it, saved it or both.
       const endorsers = new Map<string, Set<string>>();
