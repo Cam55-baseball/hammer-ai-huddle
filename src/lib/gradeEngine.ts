@@ -4,6 +4,12 @@
 
 import { GRADE_BENCHMARKS, type AgeBand, type BenchmarkPoint } from '@/data/gradeBenchmarks';
 import { METRIC_BY_KEY } from '@/data/performanceTestRegistry';
+import {
+  SCALE_ANCHOR_SNAPSHOT,
+  isScaleOwned,
+  resolutionFor,
+} from '@/lib/benchmarks/canonical';
+import { gradeFromScaleRow } from '@/lib/defense/beatenRunnerGrade';
 
 /**
  * Convert an age (number) to an age band for benchmark lookup.
@@ -66,11 +72,20 @@ export function rawToGrade(
   sport: 'baseball' | 'softball',
   age?: number | null
 ): number | null {
+  // Duplicated metrics: baseball grades come from whichever system owns the
+  // numbers, so the same input scores the same on every surface.
+  if (sport === 'baseball' && isScaleOwned(metricKey)) {
+    const canonical = resolutionFor(metricKey)!.canonical;
+    const result = gradeFromScaleRow(rawValue, canonical, SCALE_ANCHOR_SNAPSHOT);
+    return result.missing ? null : result.grade;
+  }
+
   const benchmarkEntry = GRADE_BENCHMARKS[metricKey];
   if (!benchmarkEntry) return null;
 
   const sportBenchmarks = benchmarkEntry[sport];
   if (!sportBenchmarks || Object.keys(sportBenchmarks).length === 0) return null;
+
 
   const ageBand = ageToAgeBand(age);
   const metricDef = METRIC_BY_KEY[metricKey];

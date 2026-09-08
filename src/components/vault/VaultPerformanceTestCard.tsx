@@ -22,6 +22,7 @@ import {
   type MetricCategory,
 } from '@/data/performanceTestRegistry';
 import { rawToGrade, gradeToLabel, gradeToColor, gradeAllResults } from '@/lib/gradeEngine';
+import { EstimateBenchmarkNote } from '@/components/grades/EstimateBenchmarkNote';
 import { computeToolGrades, TOOL_LABELS, type ToolName } from '@/data/positionToolProfiles';
 import { generateReport, type TestIntelligenceReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus, type NextTestFocus } from '@/lib/adaptiveTestPriority';
@@ -380,7 +381,14 @@ export function VaultPerformanceTestCard({
                           );
                         })}
                       </div>
+                      <EstimateBenchmarkNote
+                        className="mt-2"
+                        metricKeys={Object.keys(latestTest?.results ?? {}).filter(
+                          (k) => !k.startsWith('_'),
+                        )}
+                      />
                     </div>
+
 
                     {/* Speed Summary — sport-normalized acceleration / max speed / overall */}
                     {(() => {

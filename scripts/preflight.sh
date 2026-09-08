@@ -45,6 +45,8 @@ run_guard "unilateral-catalog"    bunx tsx "$ROOT/scripts/audit-unilateral-catal
 run_guard "goal-balance"          bunx tsx "$ROOT/scripts/audits/goal-balance-audit.ts"
 # In-season safety — no deep flexion / eccentric overload in season or warm-ups.
 run_guard "in-season-eccentric"   bunx tsx "$ROOT/scripts/check-no-inseason-eccentric.ts"
+# Benchmark provenance — every grading anchor names a source and a date.
+run_guard "benchmark-provenance" bunx tsx "$ROOT/scripts/check-benchmark-provenance.ts"
 # Eternity guards — raw lazy(), legacy strings, AuthContext drift, dupe routes.
 run_guard "eternity-guards"       bash "$ROOT/scripts/check-eternity-guards.sh"
 
