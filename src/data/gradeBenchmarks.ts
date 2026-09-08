@@ -804,6 +804,13 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
 
   pitching_velocity: {
     // Source: MLB Combine avg 2019-2023, PG/PBR event data
+    // PRO BAND RE-ANCHORED 2026-09-08 to `scale_reference.fastball_velocity`
+    // (floor 84 / avg 94.7 / record 104.2, Statcast-reported four-seam
+    // distribution). Grade 45 is set at 94.5 per owner direction ("94.7 today,
+    // anchor 94.5+"); grades 30/55/65 are linear interpolations between the
+    // three sourced anchors so the curve has no kink. Non-pro bands unchanged —
+    // no source available to move them.
+
     baseball: {
       '14u': [
         { raw: 48, grade: 20 }, { raw: 55, grade: 30 }, { raw: 65, grade: 45 },
@@ -818,8 +825,9 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 92, grade: 55 }, { raw: 96, grade: 65 }, { raw: 101, grade: 80 },
       ],
       pro: [
-        { raw: 75, grade: 20 }, { raw: 83, grade: 30 }, { raw: 92, grade: 45 },
-        { raw: 95, grade: 55 }, { raw: 98, grade: 65 }, { raw: 103, grade: 80 },
+        { raw: 84, grade: 20 }, { raw: 88.2, grade: 30 }, { raw: 94.5, grade: 45 },
+        { raw: 97.3, grade: 55 }, { raw: 100.1, grade: 65 }, { raw: 104.2, grade: 80 },
+
       ],
     },
     softball: {
