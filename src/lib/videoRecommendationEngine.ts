@@ -406,16 +406,39 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
         matchedLayers,
         relevance: targeted ? 'targeted' : 'general',
         reasons: dedupe(reasons).slice(0, 4),
+        outcomeEvidence: {
+          personalWatchCount,
+          globalSampleSize,
+          endorsementCount: endorsements,
+          outcomeApplied,
+          totalSampleSize: personalWatchCount + globalSampleSize + endorsements,
+        },
       });
     }
   }
 
   const cap = MODE_CAPS[mode];
-  return scored
+  const eligible = scored
     .filter(r => r.score >= cap.minScore)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, cap.max);
+    .sort((a, b) => b.score - a.score);
+
+  const top = eligible.slice(0, cap.max);
+  if (top.length < cap.max) return top;
+
+  // Exploration slot — the last slot is reserved for a video with too little
+  // outcome data to rank on. Without it a new video is never watched, never
+  // earns data, and never ranks: the library seals around whatever landed first.
+  if (top.some(r => !r.outcomeEvidence.outcomeApplied)) return top;
+  const explorer = eligible
+    .slice(cap.max)
+    .find(r => !r.outcomeEvidence.outcomeApplied);
+  if (!explorer) return top;
+  return [
+    ...top.slice(0, cap.max - 1),
+    { ...explorer, exploration: true, reasons: dedupe([...explorer.reasons, 'New — not enough data on this one yet']).slice(0, 4) },
+  ];
 }
+
 
 function dedupe(arr: string[]): string[] {
   return Array.from(new Set(arr));
