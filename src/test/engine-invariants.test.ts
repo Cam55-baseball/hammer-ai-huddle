@@ -324,7 +324,7 @@ describe('Layer 3 — Data Integrity', () => {
 // =====================================================================
 
 describe('Layer 4 — Tier & Sport Truth', () => {
-  it('Test 12: Sport Flip — same raw data produces different grades per sport', () => {
+  it('Test 12: Sport Flip — softball is never graded on a converted baseball number', () => {
     const sharedResults = {
       pitching_velocity: 75,
       tee_exit_velocity: 85,
@@ -334,20 +334,18 @@ describe('Layer 4 — Tier & Sport Truth', () => {
     const baseballGrades = gradeAllResults(sharedResults, 'baseball', 16);
     const softballGrades = gradeAllResults(sharedResults, 'softball', 16);
 
-    // At least one metric should differ between sports
-    let hasDifference = false;
+    // Baseball grades every one of these; softball grades none of them,
+    // because no professional softball benchmark exists to grade against.
     for (const key of Object.keys(sharedResults)) {
-      if (
-        baseballGrades[key] !== undefined &&
-        softballGrades[key] !== undefined &&
-        baseballGrades[key] !== softballGrades[key]
-      ) {
-        hasDifference = true;
-        break;
-      }
+      expect(isSoftballGradable(key)).toBe(false);
+      expect(baseballGrades[key]).not.toBeNull();
+      expect(baseballGrades[key] ?? null).not.toBeNull();
+      expect(softballGrades[key] ?? null).toBeNull();
     }
 
-    expect(hasDifference).toBe(true);
+    // A softball-native test still grades — suppression is targeted, not blanket.
+    expect(isSoftballGradable('forty_yard_dash')).toBe(true);
+    expect(rawToGrade('forty_yard_dash', 5.4, 'softball', 16)).not.toBeNull();
   });
 
   it('Test 13: Tier Degradation — fewer metrics don\'t wildly flip conclusions', () => {
