@@ -72,7 +72,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
     ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
       "baseball");
   const sideDiscipline: "hit" | "throw" = resolvedModule === "hitting" ? "hit" : "throw";
-  const { selectedSide, shouldShowPicker } = useSideContext();
+  const { selectedSide, shouldShowPicker, sideStampFor } = useSideContext();
   const activeSide = selectedSide[sideDiscipline];
   const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
 
@@ -324,9 +324,11 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
         thumbnailUrl = await uploadVideoThumbnail(thumbBlob, user.id, filePath);
       } catch { /* thumbnails are best-effort */ }
 
-      const sideStamp = requiresSideConfirmation
-        ? sideDiscipline === "hit" ? { batting_side: activeSide } : { throwing_hand: activeSide }
-        : {};
+      // Side is stamped whenever it is known — not only when the picker showed.
+      // A righty never sees a picker, but the analysis still has to know which
+      // side of the body it is judging. `sideStampFor` returns {} only when the
+      // side is genuinely unknown (no declared handedness, no stored pick).
+      const sideStamp = sideStampFor(sideDiscipline);
 
       const { data: videoRow, error: insertError } = await supabase
         .from("videos")
@@ -410,7 +412,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
     } finally {
       setSaving(null);
     }
-  }, [activeSide, cap, clip, requiresSideConfirmation, resolvedModule, resolvedSport, sideDiscipline, user]);
+  }, [activeSide, cap, clip, requiresSideConfirmation, resolvedModule, resolvedSport, sideDiscipline, sideStampFor, user]);
 
   const tierBadge = (() => {
     if (!cap) return null;

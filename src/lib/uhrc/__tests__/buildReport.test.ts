@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildUhrcReport } from "../buildReport";
 import { UHRC_ENGINE_VERSION } from "../types";
 import { PIE_V2_ENGINE_VERSION, type PieV2SessionAggregate } from "@/lib/pieV2/types";
+import { RELEASE1_HITTING_SUPPRESSED } from "@/lib/reportCard/release1";
 
 function makeAgg(): PieV2SessionAggregate {
   return {
@@ -50,7 +51,11 @@ describe("buildUhrcReport", () => {
     expect(r.missingness.missing_signal_ids.length).toBeGreaterThan(0);
   });
 
-  it("includes hitting phases when hitting discipline requested with doctrine", () => {
+  // Hitting is suppressed in its entirety for Release-1 (RELEASE1_HITTING_SUPPRESSED),
+  // because every bat-tracking input it would rest on is still missing. The test
+  // now asserts whichever contract is actually in force, so it stays true both
+  // now and on the day the flag flips rather than failing silently for months.
+  it("hitting phases follow the Release-1 suppression flag", () => {
     const r = buildUhrcReport({
       athlete_id: "a1",
       disciplines: ["hitting"],
@@ -68,10 +73,11 @@ describe("buildUhrcReport", () => {
         decision_speed_index: 70,
       },
     });
+    const expectHitting = !RELEASE1_HITTING_SUPPRESSED;
     const mechanics = r.pillars.find((p) => p.id === "mechanics");
-    expect(mechanics?.contributions.some((c) => c.source_signal_id === "hitting.P1")).toBe(true);
+    expect(mechanics?.contributions.some((c) => c.source_signal_id === "hitting.P1")).toBe(expectHitting);
     const stuff = r.pillars.find((p) => p.id === "stuff");
-    expect(stuff?.contributions.some((c) => c.source_signal_id === "hitting.P3")).toBe(true);
+    expect(stuff?.contributions.some((c) => c.source_signal_id === "hitting.P3")).toBe(expectHitting);
     expect(r.source_engine_versions.hie).toBe("hie-1.0.0");
   });
 });

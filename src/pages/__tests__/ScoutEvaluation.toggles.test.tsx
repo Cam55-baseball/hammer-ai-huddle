@@ -32,6 +32,8 @@ const renderForm = () =>
 describe('ScoutEvaluation hand/side toggles', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  // These render the whole evaluation form (hundreds of inputs). ~2.3s alone,
+  // over the 5s default only under full-suite parallel load. Explicit 20s.
   it('switch hitter toggle alone renders both labeled hitting tables', async () => {
     renderForm();
     expect(screen.queryByRole('heading', { name: 'Right-handed' })).toBeNull();
@@ -51,7 +53,7 @@ describe('ScoutEvaluation hand/side toggles', () => {
     fireEvent.click(screen.getByLabelText('Dismiss Left-handed'));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Left-handed' })).toBeNull());
     expect(screen.getByRole('heading', { name: 'Right-handed' })).toBeTruthy();
-  });
+  }, 20000);
 
   it('ambidextrous thrower toggle adds a throwing-hand picker to each position look', async () => {
     renderForm();
@@ -60,7 +62,7 @@ describe('ScoutEvaluation hand/side toggles', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('Throwing hand for position 1')).toBeTruthy(),
     );
-  });
+  }, 20000);
 
   it('ambidextrous pitcher toggle renders a full pitching set per hand', async () => {
     renderForm();
@@ -80,5 +82,5 @@ describe('ScoutEvaluation hand/side toggles', () => {
     await waitFor(() =>
       expect(screen.queryByRole('heading', { name: 'Right-handed pitching' })).toBeNull(),
     );
-  });
+  }, 20000);
 });

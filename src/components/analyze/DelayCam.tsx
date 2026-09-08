@@ -88,7 +88,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
     ((typeof window !== "undefined" && (localStorage.getItem("selectedSport") as ClipSport)) ||
       "baseball");
   const sideDiscipline: "hit" | "throw" = resolvedModule === "hitting" ? "hit" : "throw";
-  const { selectedSide, shouldShowPicker } = useSideContext();
+  const { selectedSide, shouldShowPicker, sideStampFor } = useSideContext();
   const activeSide = selectedSide[sideDiscipline];
   const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
   const liveRef = useRef<HTMLVideoElement>(null);
@@ -374,11 +374,9 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       console.warn("[DelayCam] thumbnail generation failed", thumbErr);
     }
 
-    const sideStamp = shouldShowPicker(sideDiscipline)
-      ? sideDiscipline === "hit"
-        ? { batting_side: activeSide }
-        : { throwing_hand: activeSide }
-      : {};
+    // Stamped whenever the side is known, not only when the picker showed —
+    // see SideContext.sideStampFor. {} means genuinely unknown, never a guess.
+    const sideStamp = sideStampFor(sideDiscipline);
 
     const { data: insertedVideo, error: insertError } = await supabase
       .from("videos")
@@ -453,7 +451,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
     return { videoId, failedNotes };
   }, [
-    activeSide, notes, resolvedModule, resolvedSport, shouldShowPicker, sideDiscipline, user,
+    activeSide, notes, resolvedModule, resolvedSport, shouldShowPicker, sideDiscipline, sideStampFor, user,
   ]);
 
   /** Shared guard so both save buttons refuse for the same honest reasons. */

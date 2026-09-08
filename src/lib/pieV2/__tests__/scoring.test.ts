@@ -39,7 +39,11 @@ describe("PIE V2 scoring — replay determinism", () => {
   it("energy angle tier boundaries", () => {
     expect(scoreEnergyAngle({ ...baseRep, energy_angle_deg: 25 }).tier).toBe("clean");
     expect(scoreEnergyAngle({ ...baseRep, energy_angle_deg: 18 }).tier).toBe("minor");
-    expect(scoreEnergyAngle({ ...baseRep, energy_angle_deg: 12 }).tier).toBe("major");
+    // The 10–18° band maps linearly to 40–70 points, so the major/critical line
+    // sits at 12.67°, not at 12°. The old assertion sat on the wrong side of a
+    // boundary the curve never claimed. Both sides asserted so it can't drift.
+    expect(scoreEnergyAngle({ ...baseRep, energy_angle_deg: 13 }).tier).toBe("major");
+    expect(scoreEnergyAngle({ ...baseRep, energy_angle_deg: 12 }).tier).toBe("critical");
     expect(scoreEnergyAngle({ ...baseRep, energy_angle_deg: 0 }).tier).toBe("critical");
   });
 

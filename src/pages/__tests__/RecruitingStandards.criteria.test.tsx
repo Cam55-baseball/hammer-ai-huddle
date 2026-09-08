@@ -78,6 +78,8 @@ const renderPage = () =>
 describe('RecruitingStandards — role/position + mandatory/preferred', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  // Full page render (~1.3s alone); only breaches the 5s default under
+  // full-suite parallel load, so the timeout is explicit rather than global.
   it('New standard button reveals the creation form with role and position controls', async () => {
     renderPage();
     expect(screen.queryByLabelText('Organization')).toBeNull();
@@ -97,7 +99,7 @@ describe('RecruitingStandards — role/position + mandatory/preferred', () => {
     expect(screen.queryByText(/When several positions are selected/i)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '2B' }));
     await waitFor(() => expect(screen.getByText(/When several positions are selected/i)).toBeTruthy());
-  });
+  }, 20000);
 
   it('criteria list separates mandatory from preferred and can flip a criterion', async () => {
     renderPage();
@@ -118,6 +120,6 @@ describe('RecruitingStandards — role/position + mandatory/preferred', () => {
     await waitFor(() =>
       expect(setCriterionMandatory.mutate).toHaveBeenCalledWith({ id: 'c-2', is_mandatory: true }),
     );
-  });
+  }, 20000);
 });
 
