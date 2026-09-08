@@ -20,6 +20,7 @@ import {
   GRADE_MAX,
   GRADE_MIN,
   MLB_FLOOR_GRADE,
+  extendBelowFloor,
 } from "@/lib/benchmarks/gradeScale";
 
 export type BatterHandedness = "L" | "R";
@@ -119,10 +120,13 @@ export function gradeFromScaleRow(
   } else if (t <= av) {
     // between record (80) and average (50)
     raw = 50 + ((av - t) / (av - rec)) * 30;
-  } else {
-    // between average (50) and floor (20) — and BELOW the floor, where the
-    // same slope simply keeps going so a developing athlete can see movement.
+  } else if (t <= flo) {
+    // between average (50) and floor (20)
     raw = 20 + ((flo - t) / (flo - av)) * 30;
+  } else {
+    // BELOW the MLB floor: the shallow development tail (a convention — see
+    // gradeScale.ts). Same function every other grading path uses.
+    raw = extendBelowFloor(-t, -flo, -av);
   }
 
   return { grade: toScoutingGrade(raw), missing: false };
