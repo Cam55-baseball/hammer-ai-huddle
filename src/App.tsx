@@ -58,6 +58,7 @@ const ScoutDashboard = lazyWithRetry(() => scoutDashboardPreload.then((m) => m ?
 const Index = lazyWithRetry(() => import("./pages/Index"));
 
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const AccountDeleted = lazyWithRetry(() => import("./pages/AccountDeleted"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const SelectUserRole = lazyWithRetry(() => import("./pages/SelectUserRole"));
 const SelectSportScout = lazyWithRetry(() => import("./pages/SelectSportScout"));
@@ -294,6 +295,7 @@ const App = () => {
               )}
 
               <Route path="/auth" element={<Auth />} />
+              <Route path="/account-deleted" element={<AccountDeleted />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/select-user-role" element={<SelectUserRole />} />

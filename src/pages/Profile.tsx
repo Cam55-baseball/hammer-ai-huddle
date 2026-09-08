@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,7 @@ import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
 import { OnboardingQuickAccess } from "@/components/settings/OnboardingQuickAccess";
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
+import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -80,6 +82,7 @@ export default function Profile() {
   useRequireAuth();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
   const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -1939,6 +1942,15 @@ export default function Profile() {
             </div>
           </div>
         </Card>
+
+        {/* Danger zone — self-service account deletion (own profile only) */}
+        {!viewingOtherProfile && (
+          <DeleteAccountSection
+            userId={user.id}
+            isStaff={isOwner || isAdmin}
+            hasActiveSubscription={(subscribedModules?.length ?? 0) > 0}
+          />
+        )}
       </main>
     </div>
   );
