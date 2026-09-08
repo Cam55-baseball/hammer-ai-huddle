@@ -155,7 +155,14 @@ export const FAULT_FAMILIES: readonly FaultFamily[] = [
     id: "rotational_output",
     label: "Turning power",
     plain: "You turn, but nothing leaves the ground with it — the hips and chest go together.",
-    rootPatterns: ["poor_hip_shoulder_separation", "low_rotational_power", "arm_only_swing"],
+    // `trunk_rotates_before_front_foot_plant` is the video-analysis key for a
+    // lost separation: the chest goes with the hips instead of after them.
+    rootPatterns: [
+      "poor_hip_shoulder_separation",
+      "low_rotational_power",
+      "arm_only_swing",
+      "trunk_rotates_before_front_foot_plant",
+    ],
     troubleshooting: ["all arms, no legs", "lower back sore after", "front side flies open"],
     ladder: [
       { slug: "bs_deep_hip_load", tier: 0 },
@@ -185,7 +192,14 @@ export const FAULT_FAMILIES: readonly FaultFamily[] = [
     id: "trunk_transfer",
     label: "Middle of the body",
     plain: "Power made by the legs leaks before it reaches the ball because the middle gives.",
-    rootPatterns: ["energy_leak_trunk", "poor_anti_rotation", "weak_bracing"],
+    // `hands_leak_forward_early` is the video-analysis key for the same leak:
+    // the top half goes before the middle has finished its work.
+    rootPatterns: [
+      "energy_leak_trunk",
+      "poor_anti_rotation",
+      "weak_bracing",
+      "hands_leak_forward_early",
+    ],
     troubleshooting: ["lower back does the work", "ribs flare", "can't breathe and brace"],
     ladder: [
       { slug: "wu_pallof_press_iso", tier: 0 },
