@@ -25,8 +25,12 @@ import { gradeFromScaleRow } from '@/lib/defense/beatenRunnerGrade';
 
 /**
  * Piecewise linear interpolation between benchmark points.
- * Points must be sorted by raw value ascending for higher-is-better,
- * or descending for lower-is-better (handled automatically).
+ *
+ * Inside the graded range this is a straight interpolation between anchors.
+ * BELOW the floor anchor (grade 20) the floor→average slope is extended
+ * downward, so a developing athlete gets a real, moving number instead of a
+ * flat 20. Clamped at 0 — never negative. Returns an unrounded value; the
+ * caller applies the reporting convention.
  */
 function interpolate(raw: number, points: BenchmarkPoint[], higherIsBetter: boolean): number {
   if (points.length === 0) return 50; // No data → average (50 = MLB average)
@@ -34,35 +38,35 @@ function interpolate(raw: number, points: BenchmarkPoint[], higherIsBetter: bool
 
   // Sort points by raw value ascending
   const sorted = [...points].sort((a, b) => a.raw - b.raw);
+  // Worst-end anchor: the floor (grade 20). For higher-is-better that is the
+  // lowest raw; for lower-is-better (times) it is the highest raw.
+  const floorPoint = higherIsBetter ? sorted[0] : sorted[sorted.length - 1];
+  const bestPoint = higherIsBetter ? sorted[sorted.length - 1] : sorted[0];
+  const averagePoint =
+    sorted.find((p) => p.grade === 50) ??
+    (higherIsBetter ? sorted[1] : sorted[sorted.length - 2]);
 
-  if (higherIsBetter) {
-    // Higher raw = higher grade
-    if (raw <= sorted[0].raw) return sorted[0].grade;
-    if (raw >= sorted[sorted.length - 1].raw) return sorted[sorted.length - 1].grade;
+  const worseThanFloor = higherIsBetter
+    ? raw < floorPoint.raw
+    : raw > floorPoint.raw;
+  if (worseThanFloor) {
+    return extendBelowFloor(raw, floorPoint.raw, averagePoint.raw);
+  }
+  const betterThanBest = higherIsBetter
+    ? raw >= bestPoint.raw
+    : raw <= bestPoint.raw;
+  if (betterThanBest) return bestPoint.grade;
 
-    for (let i = 0; i < sorted.length - 1; i++) {
-      if (raw >= sorted[i].raw && raw <= sorted[i + 1].raw) {
-        const t = (raw - sorted[i].raw) / (sorted[i + 1].raw - sorted[i].raw);
-        return Math.round(sorted[i].grade + t * (sorted[i + 1].grade - sorted[i].grade));
-      }
-    }
-  } else {
-    // Lower raw = higher grade (times, etc.)
-    // sorted ascending by raw: [1.55(80), 1.65(65), ..., 2.2(20)]
-    // grades decrease as raw increases
-    if (raw <= sorted[0].raw) return sorted[0].grade;
-    if (raw >= sorted[sorted.length - 1].raw) return sorted[sorted.length - 1].grade;
-
-    for (let i = 0; i < sorted.length - 1; i++) {
-      if (raw >= sorted[i].raw && raw <= sorted[i + 1].raw) {
-        const t = (raw - sorted[i].raw) / (sorted[i + 1].raw - sorted[i].raw);
-        return Math.round(sorted[i].grade + t * (sorted[i + 1].grade - sorted[i].grade));
-      }
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (raw >= sorted[i].raw && raw <= sorted[i + 1].raw) {
+      const t = (raw - sorted[i].raw) / (sorted[i + 1].raw - sorted[i].raw);
+      return sorted[i].grade + t * (sorted[i + 1].grade - sorted[i].grade);
     }
   }
 
   return 50;
 }
+
 
 /**
  * Convert a raw metric value to a 20-80 scout grade.
