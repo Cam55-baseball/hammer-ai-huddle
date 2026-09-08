@@ -298,6 +298,9 @@ const App = () => {
 
               <Route path="/auth" element={<Auth />} />
               <Route path="/account-deleted" element={<AccountDeleted />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/complete-profile" element={<CompleteProfileName />} />
+
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/select-user-role" element={<SelectUserRole />} />
