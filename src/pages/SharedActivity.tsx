@@ -12,6 +12,7 @@ import { Download, Clock, Zap, Star, RefreshCw, ArrowLeft, Loader2 } from 'lucid
 import { getActivityIcon } from '@/components/custom-activities/IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 import { branding } from '@/branding';
+import { SafetyMenu } from '@/components/safety/SafetyMenu';
 
 interface SharedTemplate {
   id: string;
