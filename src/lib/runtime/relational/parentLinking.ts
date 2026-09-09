@@ -7,12 +7,13 @@
  * exists only to convey the relationship_id from athlete to parent.
  */
 import {
-import { isBlockedPair } from "@/lib/safety/blocks";
   emitRelationshipCreated,
   emitRelationshipConfirmed,
   emitRelationshipRevoked,
   type RelationshipEmitContext,
 } from "./relationshipEmitters";
+import { isBlockedPair } from "@/lib/safety/blocks";
+
 
 /**
  * Wave-1 closure: tokens now carry an explicit `expires_at` (ISO-8601).
