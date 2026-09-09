@@ -13,6 +13,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isBlockedPair } from "@/lib/safety/blocks";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface PendingPing {
@@ -141,6 +142,10 @@ export function useFollowMatchedAthlete() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (athleteUserId: string) => {
+      // Apple Guideline 1.2 — a block stops any new link or invite, both ways.
+      if (await isBlockedPair(user!.id, athleteUserId)) {
+        throw new Error("You cannot connect with this person.");
+      }
       const { data: existing } = await supabase
         .from("scout_follows")
         .select("id, status")

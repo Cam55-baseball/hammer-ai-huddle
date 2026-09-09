@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
+import { fetchBlockedUserIds } from '@/lib/safety/blocks';
 
 export interface PoolPlayer {
   id: string;
@@ -21,6 +22,8 @@ export function useCoachPlayerPool() {
       if (!user) return [];
 
       const playerMap = new Map<string, PoolPlayer>();
+      // Apple Guideline 1.2 — blocked pairs never resolve as linked people.
+      const blocked = await fetchBlockedUserIds(user.id);
 
       // 1. Linked players from scout_follows
       const { data: linked } = await supabase
@@ -33,7 +36,7 @@ export function useCoachPlayerPool() {
       if (linked) {
         for (const row of linked) {
           const p = row.profiles_public as any;
-          if (!p?.id) continue;
+          if (!p?.id || blocked.has(p.id)) continue;
           playerMap.set(p.id, {
             id: p.id,
             name: p.full_name ?? 'Unknown',
@@ -62,7 +65,7 @@ export function useCoachPlayerPool() {
 
           if (profiles) {
             for (const p of profiles) {
-              if (!p.id) continue;
+              if (!p.id || blocked.has(p.id)) continue;
               const existing = playerMap.get(p.id);
               if (existing) {
                 existing.source = 'both';
