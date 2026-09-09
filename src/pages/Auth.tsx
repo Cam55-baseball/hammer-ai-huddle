@@ -458,7 +458,31 @@ const Auth = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading || (!isLogin && !isForgotPassword && !!ageBlocked)}>
+            {!isLogin && !isForgotPassword && (
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="acceptTerms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(v) => setAcceptedTerms(v === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="acceptTerms" className="text-xs font-normal leading-relaxed text-muted-foreground">
+                  I agree to the{" "}
+                  <Link to="/terms" target="_blank" className="underline text-foreground">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" target="_blank" className="underline text-foreground">
+                    Privacy Policy
+                  </Link>
+                  , and I understand that abusive behaviour or objectionable content will get my
+                  account removed.
+                </Label>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isLoading || (!isLogin && !isForgotPassword && (!!ageBlocked || !acceptedTerms))}>
+
               {isLoading 
                 ? t('common.loading') 
                 : isForgotPassword 
