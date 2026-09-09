@@ -209,7 +209,16 @@ export default function SharedActivity() {
                 )}
               </div>
               <div className="flex-1">
-                <CardTitle className="text-xl">{template.title}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-xl">{template.title}</CardTitle>
+                  <SafetyMenu
+                    contentType="shared_activity"
+                    contentId={sharedData.share_code}
+                    label="this shared activity"
+                    allowBlock={false}
+                  />
+                </div>
+
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="secondary">
                     {t(`customActivity.types.${template.activity_type}`)}
