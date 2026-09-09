@@ -63,6 +63,28 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "zero-tolerance",
+    title: "Zero tolerance for abuse and objectionable content",
+    body: (
+      <>
+        <p>
+          <strong>There is no tolerance here for objectionable content or abusive behaviour.</strong>{" "}
+          That means harassment or bullying, sexual content, violence or threats, hate speech, spam,
+          and posting video of someone else without their permission.
+        </p>
+        <ul>
+          <li>Anyone can report content or a user from the menu next to it.</li>
+          <li>Anyone can block another user, which removes any link between you.</li>
+          <li>
+            We review every report <strong>within 24 hours</strong>. Content that breaks this rule is
+            removed and the account that posted it is removed too.
+          </li>
+          <li>We can remove content or an account for this without warning.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "rules",
     title: "What you can and cannot do",
     body: (

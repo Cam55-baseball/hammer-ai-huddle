@@ -11,6 +11,24 @@ import { LegalPageFooterLinks } from "@/components/legal/LegalPageLayout";
 
 const faqs: { q: string; a: React.ReactNode }[] = [
   {
+    q: "How do I report someone, or block them?",
+    a: (
+      <>
+        <p>
+          Next to a video, a shared report, or someone's profile there is a small menu button. Open
+          it and choose <strong>Report</strong>. Pick a reason, add anything else we should know, and
+          send it. We review every report within 24 hours.
+        </p>
+        <p>
+          The same menu has <strong>Block this user</strong>. Blocking removes any parent, coach, or
+          scout link between you, hides you from each other, and stops either of you sending a new
+          invite. You can undo it any time under Blocked users in relationship settings.
+        </p>
+      </>
+    ),
+  },
+  {
+
     q: "How do I cancel my subscription?",
     a: (
       <>

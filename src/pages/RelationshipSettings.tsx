@@ -228,6 +228,11 @@ export default function RelationshipSettings() {
           })}
         </ul>
       </div>
+
+      <div className="mt-8">
+        <BlockedUsersList />
+      </div>
     </main>
+
   );
 }
