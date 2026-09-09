@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,6 +40,8 @@ const Auth = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
   const [guardianEmail, setGuardianEmail] = useState("");
+  // Apple Guideline 1.2 — signup cannot proceed without the agreement.
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Display-only hint so the guardian field appears before submit. The server
   // remains the sole authority on the age band.
@@ -248,6 +251,16 @@ const Auth = () => {
             title: "Parent or guardian email needed",
             description:
               "Enter a parent or guardian's email address so we can let them know this account was created.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!acceptedTerms) {
+          toast({
+            title: "Please agree to the rules",
+            description:
+              "Tick the box to accept the Terms of Service and Privacy Policy before creating an account.",
             variant: "destructive",
           });
           return;
