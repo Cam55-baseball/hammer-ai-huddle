@@ -7,6 +7,7 @@
  * exists only to convey the relationship_id from athlete to parent.
  */
 import {
+import { isBlockedPair } from "@/lib/safety/blocks";
   emitRelationshipCreated,
   emitRelationshipConfirmed,
   emitRelationshipRevoked,
@@ -195,6 +196,10 @@ export async function acceptParentInvite(input: {
       // the authoritative client-visible signal.
     }
     throw new AcceptInviteError("expired_token");
+  }
+  // Apple Guideline 1.2 — a block stops a new link forming in either direction.
+  if (await isBlockedPair(decoded.athlete_id, input.parentUserId)) {
+    throw new AcceptInviteError("invalid_token");
   }
   const occurredAt = input.occurredAt ?? new Date().toISOString();
   const ctx: RelationshipEmitContext = {
