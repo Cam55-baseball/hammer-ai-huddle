@@ -8,15 +8,16 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          This app is run by <strong>[LEGAL ENTITY NAME]</strong>. Our address is{" "}
+          This app is run by <strong>Hammers Modality LLC</strong>. Our address is{" "}
           <strong>[BUSINESS ADDRESS]</strong>.
         </p>
         <p>
-          If you have a question about privacy, email <strong>[PRIVACY EMAIL]</strong>. For general
-          help, email <strong>[SUPPORT EMAIL]</strong>.
+          For questions about privacy, or for general help, email{" "}
+          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
         </p>
-        <p>This policy takes effect on <strong>[EFFECTIVE DATE]</strong>.</p>
+        <p>This policy takes effect on <strong>June 28, 2025</strong>.</p>
       </>
+
     ),
   },
   {
@@ -125,9 +126,9 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          You must be at least <strong>[MINIMUM AGE]</strong> to hold an account on your own.
-          Younger athletes can still use the app, but a parent or guardian must set up the account
-          and agree to this policy first.
+          You must be <strong>18 or older</strong> to hold an account on your own. Anyone under 18
+          must have a parent or guardian set up the account, give permission, and agree to this
+          policy first.
         </p>
         <p>
           For users under 13, we ask for verifiable parent or guardian consent before the account
@@ -136,9 +137,10 @@ const sections: LegalSection[] = [
         <p>
           A parent or guardian who is linked to the account can see the athlete's data, ask us to
           correct it, and ask us to delete it. To request deletion, email{" "}
-          <strong>[PRIVACY EMAIL]</strong> from the address on file, or use the delete button on the{" "}
-          <Link to="/profile">profile page</Link>.
+          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> from the address
+          on file, or use the delete button on the <Link to="/profile">profile page</Link>.
         </p>
+
       </>
     ),
   },
@@ -175,8 +177,9 @@ const sections: LegalSection[] = [
           The fastest way to delete everything is the <strong>Delete my account</strong> button at
           the bottom of your <Link to="/profile">profile page</Link>.{" "}
           <strong>Deletion is permanent and cannot be undone.</strong> For anything else, email{" "}
-          <strong>[PRIVACY EMAIL]</strong>.
+          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
         </p>
+
       </>
     ),
   },
@@ -208,8 +211,10 @@ const sections: LegalSection[] = [
         </p>
         <p>
           We do not sell personal information and we do not share it for cross-context behavioural
-          advertising. To make a request, email <strong>[PRIVACY EMAIL]</strong>.
+          advertising. To make a request, email{" "}
+          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
         </p>
+
       </>
     ),
   },
@@ -229,7 +234,7 @@ export default function Privacy() {
   return (
     <LegalPageLayout
       title="Privacy Policy"
-      lastUpdated="[EFFECTIVE DATE]"
+      lastUpdated="June 28, 2025"
       intro={
         <p>
           This page explains what we collect, why we collect it, and what you can do about it. We
