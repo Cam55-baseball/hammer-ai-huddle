@@ -22,6 +22,8 @@ import { snapshotAthlete } from "@/lib/coach/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 import { useEmitOnce } from "@/hooks/useEmitObservability";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { SafetyMenu } from "@/components/safety/SafetyMenu";
+import { isBlockedPair } from "@/lib/safety/blocks";
 
 
 const COLS =
@@ -40,6 +42,9 @@ export default function CoachAthleteDetail() {
     queryFn: async () => {
       if (!user?.id || !athleteId) return false;
       if (user.id === athleteId) return true; // self-view always allowed
+      // Apple Guideline 1.2 — a block is enforced in the data layer, not just
+      // by hiding buttons. Blocked pairs never resolve as linked.
+      if (await isBlockedPair(user.id, athleteId)) return false;
       const { data, error } = await supabase
         .from("scout_follows")
         .select("id")
@@ -150,6 +155,15 @@ export default function CoachAthleteDetail() {
           </Button>
           <h1 className="text-xl font-bold">Athlete drilldown</h1>
           <code className="rounded bg-muted px-2 py-0.5 text-xs">{athleteId}</code>
+          {athleteId && (
+            <SafetyMenu
+              reportedUserId={athleteId}
+              contentType="profile"
+              contentId={athleteId}
+              label="this athlete"
+              className="ml-auto h-8 w-8 text-muted-foreground"
+            />
+          )}
         </div>
 
         {error && (

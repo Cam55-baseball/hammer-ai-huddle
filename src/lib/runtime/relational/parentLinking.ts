@@ -12,6 +12,8 @@ import {
   emitRelationshipRevoked,
   type RelationshipEmitContext,
 } from "./relationshipEmitters";
+import { isBlockedPair } from "@/lib/safety/blocks";
+
 
 /**
  * Wave-1 closure: tokens now carry an explicit `expires_at` (ISO-8601).
@@ -195,6 +197,10 @@ export async function acceptParentInvite(input: {
       // the authoritative client-visible signal.
     }
     throw new AcceptInviteError("expired_token");
+  }
+  // Apple Guideline 1.2 — a block stops a new link forming in either direction.
+  if (await isBlockedPair(decoded.athlete_id, input.parentUserId)) {
+    throw new AcceptInviteError("invalid_token");
   }
   const occurredAt = input.occurredAt ?? new Date().toISOString();
   const ctx: RelationshipEmitContext = {

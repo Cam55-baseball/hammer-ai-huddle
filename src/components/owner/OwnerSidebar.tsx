@@ -18,6 +18,7 @@ import {
   PinOff,
   Star,
   Brain,
+  ShieldAlert,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -74,6 +75,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "users", label: "User Management", icon: Users },
       { id: "admin-requests", label: "Admin Requests", icon: UserCog, badgeKey: "admin" },
       { id: "scout-applications", label: "Scout Applications", icon: UserPlus, badgeKey: "scout" },
+      { id: "users" as OwnerSection, label: "Moderation", icon: ShieldAlert, href: "/owner/moderation" },
     ],
   },
   {

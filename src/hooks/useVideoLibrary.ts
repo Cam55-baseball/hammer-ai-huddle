@@ -4,6 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface LibraryVideo {
   id: string;
+  /** Uploader — used by the report action. */
+  owner_id?: string | null;
+  /** Set when moderation removed this video (Apple Guideline 1.2). */
+  moderation_removed_at?: string | null;
   title: string;
   description: string | null;
   video_url: string | null;
@@ -78,6 +82,8 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       // Owner manager opts in via includeBlocked so it can see/fix them.
       if (!includeBlocked) {
         query = query.neq('distribution_tier', 'blocked');
+        // Apple Guideline 1.2 — content removed by moderation never resurfaces.
+        query = query.is('moderation_removed_at', null);
       }
 
       // Foundation videos live exclusively in the dedicated shelf / route.

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEmbedInfo, detectPlatform, isDirectVideoFile, firstFrameSrc } from "@/lib/videoEmbed";
 import type { LibraryVideo } from "@/hooks/useVideoLibrary";
+import { SafetyMenu } from "@/components/safety/SafetyMenu";
 
 interface VideoCardProps {
   video: LibraryVideo;
@@ -94,6 +95,14 @@ export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
             <Heart className={cn("h-3.5 w-3.5", video.is_liked && "fill-destructive text-destructive")} />
             <span className="text-xs">{video.likes_count}</span>
           </Button>
+          <SafetyMenu
+            reportedUserId={video.owner_id ?? null}
+            contentType="video"
+            contentId={video.id}
+            label="this video"
+            allowBlock={false}
+            className="h-7 w-7 text-muted-foreground"
+          />
         </div>
       </div>
     </Card>

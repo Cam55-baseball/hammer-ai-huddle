@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,6 +40,8 @@ const Auth = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
   const [guardianEmail, setGuardianEmail] = useState("");
+  // Apple Guideline 1.2 — signup cannot proceed without the agreement.
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Display-only hint so the guardian field appears before submit. The server
   // remains the sole authority on the age band.
@@ -253,6 +256,16 @@ const Auth = () => {
           return;
         }
 
+        if (!acceptedTerms) {
+          toast({
+            title: "Please agree to the rules",
+            description:
+              "Tick the box to accept the Terms of Service and Privacy Policy before creating an account.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const validated = signUpSchema.parse({ email, password, fullName });
         const { error } = await signUp(validated.email, validated.password, validated.fullName, {
           date_of_birth: dob,
@@ -458,7 +471,31 @@ const Auth = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading || (!isLogin && !isForgotPassword && !!ageBlocked)}>
+            {!isLogin && !isForgotPassword && (
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="acceptTerms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(v) => setAcceptedTerms(v === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="acceptTerms" className="text-xs font-normal leading-relaxed text-muted-foreground">
+                  I agree to the{" "}
+                  <Link to="/terms" target="_blank" className="underline text-foreground">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" target="_blank" className="underline text-foreground">
+                    Privacy Policy
+                  </Link>
+                  , and I understand that abusive behaviour or objectionable content will get my
+                  account removed.
+                </Label>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isLoading || (!isLogin && !isForgotPassword && (!!ageBlocked || !acceptedTerms))}>
+
               {isLoading 
                 ? t('common.loading') 
                 : isForgotPassword 

@@ -155,6 +155,15 @@ export default function RelationshipSettings() {
                       </div>
                       <div className="text-xs text-muted-foreground">{label}</div>
                     </div>
+                    {rel.counterparty_user_id && (
+                      <SafetyMenu
+                        reportedUserId={rel.counterparty_user_id}
+                        contentType="profile"
+                        contentId={rel.counterparty_user_id}
+                        label={`this ${rel.relationship_type}`}
+                        displayName={`this ${rel.relationship_type}`}
+                      />
+                    )}
                   </div>
 
                   {!isConfirming && rel.status !== "revoked" && (
@@ -228,6 +237,11 @@ export default function RelationshipSettings() {
           })}
         </ul>
       </div>
+
+      <div className="mt-8">
+        <BlockedUsersList />
+      </div>
     </main>
+
   );
 }
