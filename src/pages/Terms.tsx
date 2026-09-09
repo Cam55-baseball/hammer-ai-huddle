@@ -8,15 +8,16 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          These terms are an agreement between you and <strong>[LEGAL ENTITY NAME]</strong>,{" "}
+          These terms are an agreement between you and <strong>Hammers Modality LLC</strong>,{" "}
           <strong>[BUSINESS ADDRESS]</strong>. By using the app, you agree to them. They take effect
-          on <strong>[EFFECTIVE DATE]</strong>.
+          on <strong>June 28, 2025</strong>.
         </p>
         <p>
-          You must be at least <strong>[MINIMUM AGE]</strong> to hold an account on your own. If you
-          are younger, a parent or guardian must set up the account, agree to these terms, and stay
-          responsible for how it is used.
+          You must be <strong>18 or older</strong> to hold an account on your own. Anyone under 18
+          must have a parent or guardian set up the account, give permission, agree to these terms,
+          and stay responsible for how it is used.
         </p>
+
       </>
     ),
   },
@@ -28,7 +29,7 @@ const sections: LegalSection[] = [
         <li>Give us true information, and keep it up to date.</li>
         <li>Keep your password safe. Anything done with your login counts as done by you.</li>
         <li>One account per person. Do not share a login with a teammate.</li>
-        <li>Tell us at <strong>[SUPPORT EMAIL]</strong> if you think someone else got into your account.</li>
+        <li>Tell us at <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> if you think someone else got into your account.</li>
       </ul>
     ),
   },
@@ -47,9 +48,11 @@ const sections: LegalSection[] = [
           <li>You can cancel any time from your profile or billing screen. You keep access until the end of the period you already paid for.</li>
           <li>
             We do not give refunds for time already paid for, unless the law where you live says we
-            must. If something went wrong, email <strong>[SUPPORT EMAIL]</strong> and we will look at
-            it.
+            must. If something went wrong, email{" "}
+            <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> and we will
+            look at it.
           </li>
+
         </ul>
         <p>
           <strong>If you subscribed inside a mobile app store</strong> (for example Apple's App
@@ -184,7 +187,7 @@ export default function Terms() {
   return (
     <LegalPageLayout
       title="Terms of Service"
-      lastUpdated="[EFFECTIVE DATE]"
+      lastUpdated="June 28, 2025"
       intro={<p>These are the rules for using the app, written in plain English.</p>}
       sections={sections}
     />
