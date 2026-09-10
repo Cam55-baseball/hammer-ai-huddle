@@ -26,8 +26,6 @@ import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { 
-import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
-import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
   PITCHING_CYCLES, 
   PITCHING_EQUIPMENT,
   ARM_CARE_EXERCISES,
@@ -42,6 +40,8 @@ import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
   PITCH_DEV_DAY_3,
   STRENGTH_DAY_ARM_CARE,
 } from '@/data/heatFactoryProgram';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 // Helper to get exercises as Exercise objects
 const getThrowingExercises = (names: string[]): Exercise[] => {
