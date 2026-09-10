@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { RELATIONSHIP_SETTINGS_VOICE, TERMS } from "@/lib/relational/copy";
+import { BlockedUsersList } from "@/components/safety/BlockedUsersList";
 
 export default function RelationshipSettings() {
   const { user } = useAuth();
