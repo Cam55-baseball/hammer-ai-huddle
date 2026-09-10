@@ -20,6 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays, addDays } from 'date-fns';
 import { toast } from 'sonner';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 interface ActiveDrill {
   id: string;

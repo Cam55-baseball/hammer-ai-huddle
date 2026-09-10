@@ -27,6 +27,8 @@ import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton'
 import { hasUnicornAccess } from '@/utils/tierAccess';
 import { Exercise, DayData, WeekData } from '@/types/workout';
 import {
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
   UNICORN_CYCLES,
   UNICORN_WEEKLY_CNS_TARGET,
   UNICORN_RULES,

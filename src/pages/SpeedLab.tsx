@@ -19,6 +19,8 @@ import { SpeedSessionHistory } from '@/components/speed-lab/SpeedSessionHistory'
 import { SpeedGoalAdjustmentCard } from '@/components/speed-lab/SpeedGoalAdjustmentCard';
 import { SportType, FOCUS_MESSAGE_FALLBACKS } from '@/data/speedLabProgram';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 export default function SpeedLab() {
   const { t } = useTranslation();

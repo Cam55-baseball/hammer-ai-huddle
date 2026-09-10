@@ -26,6 +26,8 @@ import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { 
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
   PITCHING_CYCLES, 
   PITCHING_EQUIPMENT,
   ARM_CARE_EXERCISES,

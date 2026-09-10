@@ -26,6 +26,8 @@ import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { CYCLES, BAT_SPEED_EXERCISES, BAT_SPEED_DAY_1, BAT_SPEED_DAY_2, BAT_SPEED_DAY_3, BAT_SPEED_DAY_4, STRENGTH_DAY_BAT_SPEED, HITTING_EQUIPMENT } from '@/data/ironBambinoProgram';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 // Helper to get bat speed exercises as Exercise objects
 const getBatSpeedExercises = (names: string[]): Exercise[] => {
