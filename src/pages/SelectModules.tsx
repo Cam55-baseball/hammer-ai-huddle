@@ -10,6 +10,8 @@ import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkipNudgeBanner } from "@/components/demo/SkipNudgeBanner";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 const MOMENTUM_SIM_LABEL: Record<string, string> = {
   hitting: "hitting",
