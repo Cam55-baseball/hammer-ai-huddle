@@ -1803,7 +1803,7 @@ export default function Profile() {
                 </div>
               )}
 
-              {!viewingOtherProfile && (
+              {!viewingOtherProfile && canShowPurchaseUI && (
                 <div className="space-y-4 pt-4 border-t">
                   <div>
                     <h4 className="text-sm font-semibold text-muted-foreground mb-3">{t('profile.manageYourModules')}</h4>
