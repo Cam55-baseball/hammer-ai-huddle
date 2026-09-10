@@ -43,6 +43,7 @@ import { ScoutUpgradeCard } from "@/components/scout/ScoutUpgradeCard";
 import { ClipboardCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 function PracticeIntelligenceSections() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -1822,9 +1823,11 @@ export default function Profile() {
               <p className="text-muted-foreground mb-4">
                 {t('profile.noActiveSubscriptions')}
               </p>
-              <Button onClick={() => navigate("/checkout")}>
-                {t('profile.subscribeToModules')}
-              </Button>
+              {canShowPurchaseUI && (
+                <Button onClick={() => navigate("/checkout")}>
+                  {t('profile.subscribeToModules')}
+                </Button>
+              )}
             </div>
           )}
         </Card>

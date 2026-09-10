@@ -11,6 +11,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 type TierCopy = {
   tag: string;
@@ -77,6 +78,8 @@ const Activate = () => {
     }
   }, [authLoading, profileLoading, subLoading, ownerLoading, adminLoading, user, isOwner, isAdmin, initialized, modules, navigate]);
 
+  const { canShowPurchaseUI } = usePurchaseAvailability();
+
   const recordChoice = async (choice: "paid" | "free") => {
     try {
       await updateProfile({ activation_choice: choice });
@@ -86,6 +89,7 @@ const Activate = () => {
   };
 
   const handlePickTier = async (tierKey: string) => {
+    if (!canShowPurchaseUI) return;
     await recordChoice("paid");
     localStorage.setItem("selectedTier", tierKey);
     localStorage.setItem("selectedSport", sport);
@@ -126,12 +130,14 @@ const Activate = () => {
             Choose Your Access
           </h1>
           <p className="text-muted-foreground mt-3 text-base">
-            Get full access instantly or continue with free tools. Upgrade anytime.
+            {canShowPurchaseUI
+              ? "Get full access instantly or continue with free tools. Upgrade anytime."
+              : "Continue with the free training tools to get started."}
           </p>
         </header>
 
         <div className="space-y-5 md:space-y-6">
-          {TIER_ORDER.map((tierKey) => {
+          {canShowPurchaseUI && TIER_ORDER.map((tierKey) => {
             const tier = TIER_CONFIG[tierKey];
             const copy = TIER_COPY[tierKey];
             const featured = !!copy.isFeatured;
@@ -202,7 +208,7 @@ const Activate = () => {
               {[
                 "Access select training content",
                 "Get familiar with the system",
-                "Upgrade anytime for full access",
+                ...(canShowPurchaseUI ? ["Upgrade anytime for full access"] : []),
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
                   <Check className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -216,7 +222,7 @@ const Activate = () => {
               className="w-full"
               onClick={handleContinueFree}
             >
-              Continue Free
+              {canShowPurchaseUI ? "Continue Free" : "Continue"}
             </Button>
           </Card>
         </div>
