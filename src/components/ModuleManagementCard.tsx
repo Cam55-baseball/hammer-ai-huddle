@@ -26,6 +26,7 @@ interface Props {
 }
 
 export function ModuleManagementCard({ sport, module, details, onActionComplete }: Props) {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);

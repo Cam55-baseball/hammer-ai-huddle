@@ -80,6 +80,7 @@ function PracticeIntelligenceSections() {
 }
 
 export default function Profile() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   useRequireAuth();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
