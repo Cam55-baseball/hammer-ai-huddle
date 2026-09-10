@@ -9,8 +9,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 const Pricing = () => {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
