@@ -96,7 +96,7 @@ export async function unblockUser(blockerId: string, blockedId: string): Promise
  * cannot touch must not stop the block itself from being recorded.
  */
 async function revokeLinksBetween(a: string, b: string): Promise<void> {
-  const attempts: Promise<unknown>[] = [
+  const attempts: PromiseLike<unknown>[] = [
     supabase
       .from("parent_athlete_links")
       .delete()
