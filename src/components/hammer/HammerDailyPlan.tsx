@@ -473,6 +473,7 @@ export function HammerDailyPlan({
   beforeStartPortalTarget?: HTMLElement | null;
 } = {}) {
   const { modules, loading, initialized } = useSubscription();
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
   const navigate = useNavigate();

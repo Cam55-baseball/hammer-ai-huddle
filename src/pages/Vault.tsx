@@ -124,6 +124,7 @@ export default function Vault() {
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [editPhysioOpen, setEditPhysioOpen] = useState(false);
 
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('today');
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
