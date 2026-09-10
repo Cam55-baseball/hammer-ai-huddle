@@ -135,6 +135,7 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
 };
 
 export default function ProductionStudio() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -206,6 +207,16 @@ export default function ProductionStudio() {
 
   if (authLoading || subLoading || progressLoading || ownerLoading || adminLoading) {
     return <PageLoadingSkeleton />;
+  }
+
+  // Purchase hidden: locked modules show a neutral unavailable state, with no
+  // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
+  if (!hasAccess && !canShowPurchaseUI) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
+      </DashboardLayout>
+    );
   }
 
   if (!hasAccess) {

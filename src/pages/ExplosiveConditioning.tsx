@@ -23,6 +23,7 @@ import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 export default function ExplosiveConditioning() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -74,6 +75,16 @@ export default function ExplosiveConditioning() {
   if (isLoading) return <PageLoadingSkeleton />;
 
   // ─── No Access ────────────────────────────────────────────────────
+
+  // Purchase hidden: locked modules show a neutral unavailable state, with no
+  // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
+  if (!hasAccess && !canShowPurchaseUI) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
+      </DashboardLayout>
+    );
+  }
 
   if (!hasAccess) {
     return (
