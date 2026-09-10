@@ -321,7 +321,7 @@ export default function Dashboard() {
 
     // Purchase hidden: a locked tile is inert. No routing to pricing, no toast
     // that hints the tier can be bought elsewhere.
-    if (!canShowPurchaseUI && !isOwnerOrAdmin && !isTierUnlocked(module as never)) {
+    if (!canShowPurchaseUI && !isOwnerOrAdmin && !isTierUnlocked(module)) {
       return;
     }
     
