@@ -2625,6 +2625,51 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          content_id: string | null
+          content_type: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_user_id: string | null
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          content_id?: string | null
+          content_type: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_user_id?: string | null
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          content_id?: string | null
+          content_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       coupon_metadata: {
         Row: {
           coupon_code: string
@@ -8058,6 +8103,7 @@ export type Database = {
           foundation_meta: Json | null
           id: string
           likes_count: number
+          moderation_removed_at: string | null
           notes: string | null
           owner_id: string
           skill_domains:
@@ -8091,6 +8137,7 @@ export type Database = {
           foundation_meta?: Json | null
           id?: string
           likes_count?: number
+          moderation_removed_at?: string | null
           notes?: string | null
           owner_id: string
           skill_domains?:
@@ -8124,6 +8171,7 @@ export type Database = {
           foundation_meta?: Json | null
           id?: string
           likes_count?: number
+          moderation_removed_at?: string | null
           notes?: string | null
           owner_id?: string
           skill_domains?:
@@ -9963,6 +10011,7 @@ export type Database = {
           social_website_5: string | null
           social_youtube: string | null
           state: string | null
+          suspended_at: string | null
           team_affiliation: string | null
           throwing_hand: Database["public"]["Enums"]["throwing_hand"] | null
           training_age_years: number | null
@@ -10031,6 +10080,7 @@ export type Database = {
           social_website_5?: string | null
           social_youtube?: string | null
           state?: string | null
+          suspended_at?: string | null
           team_affiliation?: string | null
           throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
           training_age_years?: number | null
@@ -10099,6 +10149,7 @@ export type Database = {
           social_website_5?: string | null
           social_youtube?: string | null
           state?: string | null
+          suspended_at?: string | null
           team_affiliation?: string | null
           throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
           training_age_years?: number | null
@@ -12741,6 +12792,27 @@ export type Database = {
           pattern_key?: string
           pattern_type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
         }
         Relationships: []
       }
@@ -17783,6 +17855,7 @@ export type Database = {
         Args: { _athlete: string; _parent: string }
         Returns: boolean
       }
+      is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
       is_coach_of: {
         Args: { _athlete: string; _coach: string }
         Returns: boolean
