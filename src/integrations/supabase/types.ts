@@ -17598,6 +17598,7 @@ export type Database = {
         Args: { p_workout_ids: string[] }
         Returns: number
       }
+      blocked_user_ids: { Args: never; Returns: string[] }
       can_edit_folder_item: {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
