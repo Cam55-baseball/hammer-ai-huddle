@@ -134,6 +134,8 @@ function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | 
 }
 import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
 import { DefensivePrepVideo } from "@/components/hammer/DefensivePrepVideo";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 
 /**
@@ -517,6 +519,11 @@ export function HammerDailyPlan({
         </CardContent>
       </Card>
     );
+  }
+
+  if (!hasAccess && !canShowPurchaseUI) {
+    // Purchase hidden: no subscription language, no "view plans" button.
+    return <PurchaseUnavailable featureName="Coach Hammer's daily plan" />;
   }
 
   if (!hasAccess) {
