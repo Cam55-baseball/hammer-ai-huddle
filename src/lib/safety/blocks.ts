@@ -14,13 +14,17 @@ export interface BlockRecord {
   created_at: string;
 }
 
-/** Every user id the signed-in user has blocked, or who has blocked them. */
+/**
+ * Every user id the signed-in user has blocked, or who has blocked them.
+ *
+ * Reads through the SECURITY DEFINER `blocked_user_ids()` function, not the
+ * table: the SELECT policy on `user_blocks` only exposes rows to the blocker,
+ * so a direct read would silently drop the "someone blocked me" direction and
+ * quietly stop hiding their content.
+ */
 export async function fetchBlockedUserIds(userId: string): Promise<Set<string>> {
   if (!userId) return new Set();
-  const { data, error } = await supabase
-    .from("user_blocks")
-    .select("blocker_id, blocked_id")
-    .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+  const { data, error } = await supabase.rpc("blocked_user_ids");
 
   if (error) {
     console.warn("[safety] block lookup failed", error);
@@ -28,11 +32,12 @@ export async function fetchBlockedUserIds(userId: string): Promise<Set<string>> 
   }
 
   const ids = new Set<string>();
-  for (const row of data ?? []) {
-    ids.add(row.blocker_id === userId ? row.blocked_id : row.blocker_id);
+  for (const id of (data ?? []) as string[]) {
+    if (id) ids.add(id);
   }
   return ids;
 }
+
 
 /** Blocks the signed-in user created, for the "Blocked users" list. */
 export async function fetchMyBlocks(userId: string): Promise<BlockRecord[]> {
