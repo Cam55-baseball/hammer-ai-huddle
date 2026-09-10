@@ -327,6 +327,17 @@ const Checkout = () => {
     );
   }
 
+  // Purchase hidden: no prices, no checkout call, no outbound link.
+  // Placed after the post-purchase success state so an already-paid user still
+  // completes their activation flow.
+  if (!canShowPurchaseUI) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <PurchaseUnavailable variant="full" />
+      </div>
+    );
+  }
+
   if (authLoading || subLoading || ownerLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
