@@ -20,6 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays, addDays } from 'date-fns';
 import { toast } from 'sonner';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 interface ActiveDrill {
   id: string;
@@ -27,6 +29,7 @@ interface ActiveDrill {
 }
 
 export default function TexVision() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
@@ -189,6 +192,16 @@ export default function TexVision() {
   }
 
   // Access denied - show locked state
+  // Purchase hidden: locked modules show a neutral unavailable state, with no
+  // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
+  if (!hasAccess && !canShowPurchaseUI) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
+      </DashboardLayout>
+    );
+  }
+
   if (!hasAccess) {
     return (
       <DashboardLayout>

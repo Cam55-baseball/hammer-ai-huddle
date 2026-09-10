@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Calendar, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 export interface ModuleDetails {
   subscription_id: string;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function ModuleManagementCard({ sport, module, details, onActionComplete }: Props) {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -179,7 +181,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
             )}
             
             {/* Fully canceled module - show resubscribe button */}
-            {details.status === 'canceled' && (
+            {details.status === 'canceled' && canShowPurchaseUI && (
               <Button
                 size="sm"
                 onClick={() => window.location.href = '/pricing'}

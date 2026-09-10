@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
+import { PurchaseUnavailable } from '@/components/purchase/PurchaseUnavailable';
 
 interface UpgradePromptProps {
   featureName: string;
@@ -13,6 +15,13 @@ interface UpgradePromptProps {
 export function UpgradePrompt({ featureName, featureDescription, variant = 'inline' }: UpgradePromptProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { canShowPurchaseUI } = usePurchaseAvailability();
+
+  // Purchase hidden (native, non-US or unknown storefront): no price, no CTA, no link.
+  if (!canShowPurchaseUI) {
+    return <PurchaseUnavailable featureName={featureName} variant={variant} />;
+  }
+
 
   if (variant === 'full') {
     return (

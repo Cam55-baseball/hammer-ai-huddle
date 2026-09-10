@@ -26,6 +26,8 @@ import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { CYCLES, BAT_SPEED_EXERCISES, BAT_SPEED_DAY_1, BAT_SPEED_DAY_2, BAT_SPEED_DAY_3, BAT_SPEED_DAY_4, STRENGTH_DAY_BAT_SPEED, HITTING_EQUIPMENT } from '@/data/ironBambinoProgram';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 // Helper to get bat speed exercises as Exercise objects
 const getBatSpeedExercises = (names: string[]): Exercise[] => {
@@ -97,6 +99,7 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
 };
 
 export default function ProductionLab() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -171,6 +174,16 @@ export default function ProductionLab() {
 
   if (authLoading || subLoading || progressLoading || ownerLoading || adminLoading) {
     return <PageLoadingSkeleton />;
+  }
+
+  // Purchase hidden: locked modules show a neutral unavailable state, with no
+  // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
+  if (!hasAccess && !canShowPurchaseUI) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
+      </DashboardLayout>
+    );
   }
 
   if (!hasAccess) {

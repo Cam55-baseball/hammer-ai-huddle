@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuickEditProfile } from "@/components/profile/QuickEditProfile";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 interface UserMenuProps {
   userName?: string;
@@ -22,6 +23,7 @@ interface UserMenuProps {
 
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { signOut } = useAuth();
   const { open: openQuickEdit } = useQuickEditProfile();
   const { hasCompletedOnboarding, loading: onboardingLoading } = useAthleteOnboardingState();
@@ -76,10 +78,12 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
           <Pencil className="mr-2 h-4 w-4" />
           <span>Quick edit</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/checkout")}>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Manage Subscription</span>
-        </DropdownMenuItem>
+        {canShowPurchaseUI && (
+          <DropdownMenuItem onClick={() => navigate("/checkout")}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Manage Subscription</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem>
           <HelpCircle className="mr-2 h-4 w-4" />
           <span>Help</span>

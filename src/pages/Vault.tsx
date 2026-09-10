@@ -64,6 +64,8 @@ import { VaultDrillWork } from '@/components/vault/VaultDrillWork';
 
 
 import { useAuth } from '@/hooks/useAuth';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 export default function Vault() {
   const { t } = useTranslation();
@@ -122,6 +124,7 @@ export default function Vault() {
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [editPhysioOpen, setEditPhysioOpen] = useState(false);
 
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('today');
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
@@ -375,6 +378,15 @@ export default function Vault() {
   }
 
   // Locked state
+  // Purchase hidden: neutral unavailable state, no unlock CTA, no link.
+  if (!hasAccess && !canShowPurchaseUI) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
+      </DashboardLayout>
+    );
+  }
+
   if (!hasAccess) {
   return (
     <DashboardLayout>

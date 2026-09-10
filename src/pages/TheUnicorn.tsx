@@ -33,6 +33,8 @@ import {
   isUnicornDeloadWeek,
   UNICORN_DELOAD_MODIFIER,
 } from '@/data/unicornProgram';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 // Generate 6-week schedule for a Unicorn cycle
 const generateCycleWeeks = (cycleId: number): WeekData[] => {
@@ -82,6 +84,7 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
 };
 
 export default function TheUnicorn() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -146,6 +149,16 @@ export default function TheUnicorn() {
           programIcon={<Sparkles className="h-10 w-10 text-primary" />}
           onStart={handleStartUnicorn}
         />
+      </DashboardLayout>
+    );
+  }
+
+  // Purchase hidden: locked modules show a neutral unavailable state, with no
+  // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
+  if (!hasAccess && !canShowPurchaseUI) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
       </DashboardLayout>
     );
   }

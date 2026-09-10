@@ -43,6 +43,7 @@ import { ScoutUpgradeCard } from "@/components/scout/ScoutUpgradeCard";
 import { ClipboardCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 function PracticeIntelligenceSections() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -79,6 +80,7 @@ function PracticeIntelligenceSections() {
 }
 
 export default function Profile() {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   useRequireAuth();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -1801,7 +1803,7 @@ export default function Profile() {
                 </div>
               )}
 
-              {!viewingOtherProfile && (
+              {!viewingOtherProfile && canShowPurchaseUI && (
                 <div className="space-y-4 pt-4 border-t">
                   <div>
                     <h4 className="text-sm font-semibold text-muted-foreground mb-3">{t('profile.manageYourModules')}</h4>
@@ -1822,9 +1824,11 @@ export default function Profile() {
               <p className="text-muted-foreground mb-4">
                 {t('profile.noActiveSubscriptions')}
               </p>
-              <Button onClick={() => navigate("/checkout")}>
-                {t('profile.subscribeToModules')}
-              </Button>
+              {canShowPurchaseUI && (
+                <Button onClick={() => navigate("/checkout")}>
+                  {t('profile.subscribeToModules')}
+                </Button>
+              )}
             </div>
           )}
         </Card>

@@ -40,6 +40,7 @@ import dashboardHero1 from "@/assets/dashboard-hero.jpg";
 import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
 import dashboardHero3 from "@/assets/dashboard-hero-2.jpg";
 import dashboardHero4 from "@/assets/dashboard-hero-3.jpg";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 type ModuleType = "hitting" | "pitching" | "throwing" | "pitcher" | "5tool" | "golden2way";
 type SportType = "baseball" | "softball";
@@ -113,6 +114,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
@@ -316,6 +318,12 @@ export default function Dashboard() {
 
   const handleModuleSelect = (module: ModuleType) => {
     const isOwnerOrAdmin = isOwner || isAdmin;
+
+    // Purchase hidden: a locked tile is inert. No routing to pricing, no toast
+    // that hints the tier can be bought elsewhere.
+    if (!canShowPurchaseUI && !isOwnerOrAdmin && !isTierUnlocked(module)) {
+      return;
+    }
     
     // For tier-based modules, check access differently
     if (module === 'pitcher') {
@@ -474,7 +482,7 @@ export default function Dashboard() {
                   <Badge variant="secondary" className="text-[10px] bg-emerald-500/15 text-emerald-600 border border-emerald-500/40">
                     <Check className="h-3 w-3 mr-1" /> Unlocked
                   </Badge>
-                ) : topBadge ? (
+                ) : topBadge && canShowPurchaseUI ? (
                   <Badge className="bg-primary text-primary-foreground text-xs">{topBadge}</Badge>
                 ) : null}
                 <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
@@ -489,6 +497,8 @@ export default function Dashboard() {
                   >
                     <ModIcon className="h-4 w-4 sm:mr-2" /> Start Training
                   </Button>
+                ) : !canShowPurchaseUI ? (
+                  <p className="text-xs text-muted-foreground">Not available on your account yet</p>
                 ) : (
                   <Button
                     className="w-full h-12 font-bold uppercase tracking-wide text-primary-foreground border-0

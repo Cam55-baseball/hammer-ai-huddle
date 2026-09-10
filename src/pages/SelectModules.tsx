@@ -10,6 +10,8 @@ import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkipNudgeBanner } from "@/components/demo/SkipNudgeBanner";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 const MOMENTUM_SIM_LABEL: Record<string, string> = {
   hitting: "hitting",
@@ -54,6 +56,7 @@ function MomentumBanner({ context, gap }: { context: string; gap: string }) {
 }
 
 const SelectModules = () => {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,6 +92,15 @@ const SelectModules = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Purchase hidden: no tiers, no prices, no checkout entry point.
+  if (!canShowPurchaseUI) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <PurchaseUnavailable variant="full" />
       </div>
     );
   }

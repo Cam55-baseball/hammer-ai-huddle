@@ -9,8 +9,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 const Pricing = () => {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +39,15 @@ const Pricing = () => {
       state: { tier: tierKey, sport: selectedSport } 
     });
   };
+
+  // Purchase hidden: never render tier prices or checkout entry points.
+  if (!canShowPurchaseUI) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <PurchaseUnavailable variant="full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">

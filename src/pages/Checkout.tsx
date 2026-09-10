@@ -14,6 +14,8 @@ import { Check, ShieldCheck, Sparkles, Clock } from "lucide-react";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 const SIM_LABEL: Record<string, string> = {
   hitting: "hitting",
@@ -28,6 +30,7 @@ const SUCCESS_STEPS = [
 ];
 
 const Checkout = () => {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -320,6 +323,17 @@ const Checkout = () => {
             </li>
           ))}
         </ul>
+      </div>
+    );
+  }
+
+  // Purchase hidden: no prices, no checkout call, no outbound link.
+  // Placed after the post-purchase success state so an already-paid user still
+  // completes their activation flow.
+  if (!canShowPurchaseUI) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <PurchaseUnavailable variant="full" />
       </div>
     );
   }
