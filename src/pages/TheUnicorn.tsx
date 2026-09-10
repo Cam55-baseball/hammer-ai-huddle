@@ -27,14 +27,14 @@ import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton'
 import { hasUnicornAccess } from '@/utils/tierAccess';
 import { Exercise, DayData, WeekData } from '@/types/workout';
 import {
-import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
-import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
   UNICORN_CYCLES,
   UNICORN_WEEKLY_CNS_TARGET,
   UNICORN_RULES,
   isUnicornDeloadWeek,
   UNICORN_DELOAD_MODIFIER,
 } from '@/data/unicornProgram';
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
 // Generate 6-week schedule for a Unicorn cycle
 const generateCycleWeeks = (cycleId: number): WeekData[] => {
