@@ -54,6 +54,7 @@ function MomentumBanner({ context, gap }: { context: string; gap: string }) {
 }
 
 const SelectModules = () => {
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
