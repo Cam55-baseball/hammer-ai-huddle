@@ -40,6 +40,15 @@ const Pricing = () => {
     });
   };
 
+  // Purchase hidden: never render tier prices or checkout entry points.
+  if (!canShowPurchaseUI) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <PurchaseUnavailable variant="full" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
       <div className="w-full max-w-5xl">
