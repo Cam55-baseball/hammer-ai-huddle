@@ -23,6 +23,7 @@ interface UserMenuProps {
 
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const { signOut } = useAuth();
   const { open: openQuickEdit } = useQuickEditProfile();
   const { hasCompletedOnboarding, loading: onboardingLoading } = useAthleteOnboardingState();
