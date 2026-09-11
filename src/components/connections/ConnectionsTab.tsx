@@ -86,7 +86,7 @@ export function ConnectionsTab() {
     mutationFn: async (connectionId: string) => {
       const { error } = await supabase
         .from('scout_follows')
-        .update({ status: 'revoked' })
+        .update({ status: 'rejected' })
         .eq('id', connectionId)
         .eq('player_id', user!.id);
       if (error) throw error;
