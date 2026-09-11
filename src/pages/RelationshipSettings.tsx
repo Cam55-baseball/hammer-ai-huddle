@@ -20,6 +20,11 @@ import { toast } from "sonner";
 import { RELATIONSHIP_SETTINGS_VOICE, TERMS } from "@/lib/relational/copy";
 import { BlockedUsersList } from "@/components/safety/BlockedUsersList";
 import { SafetyMenu } from "@/components/safety/SafetyMenu";
+import { BlockUserDialog } from "@/components/safety/BlockUserDialog";
+import { useCoachConnections, COACH_CONNECTIONS_KEY } from "@/hooks/useCoachConnections";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Ban, Link2Off } from "lucide-react";
 
 export default function RelationshipSettings() {
   const { user } = useAuth();
