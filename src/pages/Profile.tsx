@@ -44,6 +44,7 @@ import { ClipboardCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { SafetyMenu } from "@/components/safety/SafetyMenu";
 
 function PracticeIntelligenceSections() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -709,6 +710,18 @@ export default function Profile() {
                 File a report
               </Button>
             </>
+          )}
+
+          {/* Apple Guideline 1.2 — report or block the person whose profile this is. */}
+          {viewingOtherProfile && viewingUserId && (
+            <SafetyMenu
+              reportedUserId={viewingUserId}
+              contentType="profile"
+              contentId={viewingUserId}
+              label={displayName}
+              displayName={displayName}
+              onBlocked={() => navigate("/dashboard")}
+            />
           )}
         </div>
       </div>
