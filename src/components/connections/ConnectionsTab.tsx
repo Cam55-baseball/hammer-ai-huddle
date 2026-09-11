@@ -250,10 +250,18 @@ export function ConnectionsTab() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive"
+                        className="text-muted-foreground"
                         onClick={() => revokeMutation.mutate(c.id)}
                       >
-                        <Link2Off className="h-3.5 w-3.5 mr-1" /> Revoke
+                        <Link2Off className="h-3.5 w-3.5 mr-1" /> Revoke access
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setBlockTarget({ id: c.coach_id, name: c.coach_name })}
+                      >
+                        <Ban className="h-3.5 w-3.5 mr-1" /> Block
                       </Button>
                     </div>
                   </div>
@@ -265,6 +273,19 @@ export function ConnectionsTab() {
       </Card>
       {/* Folder Permissions Matrix */}
       {activeCoaches.length > 0 && <FolderPermissionMatrix />}
+
+      {blockTarget && (
+        <BlockUserDialog
+          open={!!blockTarget}
+          onOpenChange={(open) => !open && setBlockTarget(null)}
+          blockedUserId={blockTarget.id}
+          displayName={blockTarget.name}
+          onBlocked={() => {
+            setBlockTarget(null);
+            queryClient.invalidateQueries({ queryKey: [COACH_CONNECTIONS_KEY] });
+          }}
+        />
+      )}
     </div>
   );
 }
