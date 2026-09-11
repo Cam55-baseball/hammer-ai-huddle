@@ -96,24 +96,21 @@ export async function unblockUser(blockerId: string, blockedId: string): Promise
 }
 
 /**
- * Remove parent / coach / scout links and any open invite between two users.
- * Each table is attempted independently: a missing table or a row the caller
- * cannot touch must not stop the block itself from being recorded.
+ * Ending the links is done in the data layer by the `apply_block_severance`
+ * trigger on `user_blocks`: neither side of a pair is allowed to delete the
+ * other's relationship rows directly, so doing it from the client silently
+ * failed. This helper only clears the rows the caller genuinely owns, as a
+ * best effort; the trigger is the guarantee.
  */
 async function revokeLinksBetween(a: string, b: string): Promise<void> {
   const attempts: PromiseLike<unknown>[] = [
     supabase
       .from("parent_athlete_links")
-      .delete()
+      .update({ status: "revoked", revoked_at: new Date().toISOString() })
       .or(
-        `and(parent_id.eq.${a},athlete_id.eq.${b}),and(parent_id.eq.${b},athlete_id.eq.${a})`,
-      ),
-    supabase
-      .from("scout_follows")
-      .delete()
-      .or(
-        `and(scout_id.eq.${a},player_id.eq.${b}),and(scout_id.eq.${b},player_id.eq.${a})`,
-      ),
+        `and(parent_user_id.eq.${a},athlete_user_id.eq.${b}),and(parent_user_id.eq.${b},athlete_user_id.eq.${a})`,
+      )
+      .is("revoked_at", null),
   ];
 
   await Promise.allSettled(attempts);
