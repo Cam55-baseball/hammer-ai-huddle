@@ -6,37 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off, Crown } from 'lucide-react';
+import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off, Crown, Ban } from 'lucide-react';
 import { CoachSearchConnect } from './CoachSearchConnect';
 import { FolderPermissionMatrix } from './FolderPermissionMatrix';
-
-interface CoachConnection {
-  id: string;
-  coach_id: string;
-  coach_name: string;
-  coach_avatar: string | null;
-  status: string;
-  initiated_by: string;
-  relationship_type: string;
-  confirmed_at: string | null;
-  created_at: string;
-}
+import { BlockUserDialog } from '@/components/safety/BlockUserDialog';
+import { useCoachConnections, COACH_CONNECTIONS_KEY } from '@/hooks/useCoachConnections';
 
 export function ConnectionsTab() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSearch, setShowSearch] = useState(false);
+  const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const { data: connections = [], isLoading } = useQuery({
-    queryKey: ['coach-connections', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('get-coach-connections');
-      if (error) throw error;
-      return (data?.results ?? []) as CoachConnection[];
-    },
-    enabled: !!user,
-  });
+  const { data: connections = [], isLoading } = useCoachConnections();
 
   const { data: headCoachId } = useQuery({
     queryKey: ['head-coach', user?.id],
