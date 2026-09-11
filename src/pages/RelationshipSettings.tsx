@@ -325,6 +325,19 @@ export default function RelationshipSettings() {
       <div className="mt-8">
         <BlockedUsersList />
       </div>
+
+      {blockTarget && (
+        <BlockUserDialog
+          open={!!blockTarget}
+          onOpenChange={(open) => !open && setBlockTarget(null)}
+          blockedUserId={blockTarget.id}
+          displayName={blockTarget.name}
+          onBlocked={() => {
+            setBlockTarget(null);
+            queryClient.invalidateQueries({ queryKey: [COACH_CONNECTIONS_KEY] });
+          }}
+        />
+      )}
     </main>
 
   );
