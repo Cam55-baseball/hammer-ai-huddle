@@ -6,37 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off, Crown } from 'lucide-react';
+import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off, Crown, Ban } from 'lucide-react';
 import { CoachSearchConnect } from './CoachSearchConnect';
 import { FolderPermissionMatrix } from './FolderPermissionMatrix';
-
-interface CoachConnection {
-  id: string;
-  coach_id: string;
-  coach_name: string;
-  coach_avatar: string | null;
-  status: string;
-  initiated_by: string;
-  relationship_type: string;
-  confirmed_at: string | null;
-  created_at: string;
-}
+import { BlockUserDialog } from '@/components/safety/BlockUserDialog';
+import { useCoachConnections, COACH_CONNECTIONS_KEY } from '@/hooks/useCoachConnections';
 
 export function ConnectionsTab() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSearch, setShowSearch] = useState(false);
+  const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const { data: connections = [], isLoading } = useQuery({
-    queryKey: ['coach-connections', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('get-coach-connections');
-      if (error) throw error;
-      return (data?.results ?? []) as CoachConnection[];
-    },
-    enabled: !!user,
-  });
+  const { data: connections = [], isLoading } = useCoachConnections();
 
   const { data: headCoachId } = useQuery({
     queryKey: ['head-coach', user?.id],
@@ -103,7 +86,7 @@ export function ConnectionsTab() {
     mutationFn: async (connectionId: string) => {
       const { error } = await supabase
         .from('scout_follows')
-        .update({ status: 'revoked' })
+        .update({ status: 'rejected' })
         .eq('id', connectionId)
         .eq('player_id', user!.id);
       if (error) throw error;
@@ -267,10 +250,18 @@ export function ConnectionsTab() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive"
+                        className="text-muted-foreground"
                         onClick={() => revokeMutation.mutate(c.id)}
                       >
-                        <Link2Off className="h-3.5 w-3.5 mr-1" /> Revoke
+                        <Link2Off className="h-3.5 w-3.5 mr-1" /> Revoke access
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setBlockTarget({ id: c.coach_id, name: c.coach_name })}
+                      >
+                        <Ban className="h-3.5 w-3.5 mr-1" /> Block
                       </Button>
                     </div>
                   </div>
@@ -282,6 +273,19 @@ export function ConnectionsTab() {
       </Card>
       {/* Folder Permissions Matrix */}
       {activeCoaches.length > 0 && <FolderPermissionMatrix />}
+
+      {blockTarget && (
+        <BlockUserDialog
+          open={!!blockTarget}
+          onOpenChange={(open) => !open && setBlockTarget(null)}
+          blockedUserId={blockTarget.id}
+          displayName={blockTarget.name}
+          onBlocked={() => {
+            setBlockTarget(null);
+            queryClient.invalidateQueries({ queryKey: [COACH_CONNECTIONS_KEY] });
+          }}
+        />
+      )}
     </div>
   );
 }
