@@ -156,13 +156,66 @@ export default function RelationshipSettings() {
           </p>
         </header>
 
-        {meta.sourceCount === 0 && (
+        {loadingConnections && (
           <Card className="p-5">
             <Skeleton className="h-4 w-2/3" />
           </Card>
         )}
 
-        {records.length === 0 && meta.sourceCount > 0 && (
+        {/* Coaches and scouts you are linked with. */}
+        <ul className="space-y-3">
+          {linkedPeople.map((c) => (
+            <li key={c.id}>
+              <Card className="p-5 space-y-3 rounded-xl shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm">
+                    <div className="font-medium text-foreground">{c.coach_name}</div>
+                    <div className="text-xs text-muted-foreground capitalize">
+                      {c.relationship_type === "linked" ? "Coach — linked" : "Coach — following"}
+                    </div>
+                  </div>
+                  <SafetyMenu
+                    reportedUserId={c.coach_id}
+                    contentType="profile"
+                    contentId={c.coach_id}
+                    label={c.coach_name}
+                    displayName={c.coach_name}
+                    onBlocked={() =>
+                      queryClient.invalidateQueries({ queryKey: [COACH_CONNECTIONS_KEY] })
+                    }
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="min-h-11 text-muted-foreground"
+                    disabled={busyId === c.id}
+                    onClick={() => revokeConnection(c.id)}
+                  >
+                    <Link2Off className="mr-1 h-3.5 w-3.5" />
+                    Revoke access
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="min-h-11 text-destructive hover:text-destructive"
+                    onClick={() => setBlockTarget({ id: c.coach_id, name: c.coach_name })}
+                  >
+                    <Ban className="mr-1 h-3.5 w-3.5" />
+                    Block
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Revoking access ends the link. Blocking also stops them seeing your profile or
+                  sending you a new link.
+                </p>
+              </Card>
+            </li>
+          ))}
+        </ul>
+
+        {!loadingConnections && linkedPeople.length === 0 && records.length === 0 && (
           <Card className="p-5">
             <p className="text-sm text-muted-foreground">
               {RELATIONSHIP_SETTINGS_VOICE.empty}
