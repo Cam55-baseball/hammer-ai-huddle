@@ -32,8 +32,32 @@ export default function RelationshipSettings() {
   const { state, meta } = useRelationshipState(athleteId, "self");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
+  const queryClient = useQueryClient();
+  // Same source of truth as My Connections, so the two screens always agree.
+  const { data: connections = [], isLoading: loadingConnections } = useCoachConnections();
+  const linkedPeople = connections.filter((c) => c.status === "accepted");
 
   const records = Object.values(state.byId) as RelationshipRecord[];
+
+  async function revokeConnection(connectionId: string) {
+    setBusyId(connectionId);
+    try {
+      const { error } = await supabase
+        .from("scout_follows")
+        .update({ status: "rejected" })
+        .eq("id", connectionId)
+        .eq("player_id", user!.id);
+      if (error) throw error;
+      toast.success(TERMS.accessRemoved);
+      queryClient.invalidateQueries({ queryKey: [COACH_CONNECTIONS_KEY] });
+    } catch (e) {
+      console.warn("[settings] revoke connection failed", e);
+      toast.error(TERMS.somethingOff);
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function pause(rel: RelationshipRecord) {
     if (!user) return;
