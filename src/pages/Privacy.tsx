@@ -122,7 +122,7 @@ const sections: LegalSection[] = [
   },
   {
     id: "young-users",
-    title: "Users under 18, and users under 13",
+    title: "Users aged 13 to 17, and users under 13",
     body: (
       <>
         <p>
