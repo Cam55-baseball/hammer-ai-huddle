@@ -13,10 +13,16 @@ const sections: LegalSection[] = [
           on <strong>June 28, 2025</strong>.
         </p>
         <p>
-          You must be <strong>18 or older</strong> to hold an account on your own. Anyone under 18
-          must have a parent or guardian set up the account, give permission, agree to these terms,
-          and stay responsible for how it is used.
+          You must be <strong>at least 13</strong> to have an account. If you are{" "}
+          <strong>13 to 17</strong>, a parent or guardian must give permission before you use the
+          app, agree to these terms, stay responsible for how the account is used, and they may have
+          access to the account.
         </p>
+        <p>
+          Accounts are <strong>not available to anyone under 13</strong>. If we learn an account
+          belongs to someone under 13, we delete it.
+        </p>
+
 
       </>
     ),
