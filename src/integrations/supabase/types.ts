@@ -5198,6 +5198,8 @@ export type Database = {
           manual_order_training: string[]
           plan_in_use_athlete: boolean
           plan_in_use_staff: boolean
+          plan_open_athlete: boolean
+          plan_open_staff: boolean
           sort_mode: string
           timeline_order: string[]
           updated_at: string
@@ -5211,6 +5213,8 @@ export type Database = {
           manual_order_training?: string[]
           plan_in_use_athlete?: boolean
           plan_in_use_staff?: boolean
+          plan_open_athlete?: boolean
+          plan_open_staff?: boolean
           sort_mode?: string
           timeline_order?: string[]
           updated_at?: string
@@ -5224,6 +5228,8 @@ export type Database = {
           manual_order_training?: string[]
           plan_in_use_athlete?: boolean
           plan_in_use_staff?: boolean
+          plan_open_athlete?: boolean
+          plan_open_staff?: boolean
           sort_mode?: string
           timeline_order?: string[]
           updated_at?: string
