@@ -78,7 +78,7 @@ export function ChatWidget({ onClose }: ChatWidgetProps) {
   };
 
   return (
-    <Card className="fixed bottom-24 right-6 z-50 w-96 shadow-2xl">
+    <Card className="fixed bottom-[calc(6rem+var(--safe-bottom))] right-[calc(1.5rem+var(--safe-right))] z-50 w-96 shadow-2xl">
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />

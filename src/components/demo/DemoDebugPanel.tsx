@@ -43,7 +43,7 @@ export function DemoDebugPanel({ progress }: Props) {
     : 0;
 
   return (
-    <div className="fixed bottom-2 right-2 z-[9999] w-[300px] rounded-md border border-border bg-card/95 p-2 text-[10px] shadow-lg backdrop-blur">
+    <div className="fixed bottom-[calc(0.5rem+var(--safe-bottom))] right-[calc(0.5rem+var(--safe-right))] z-[9999] w-[300px] rounded-md border border-border bg-card/95 p-2 text-[10px] shadow-lg backdrop-blur">
       <p className="mb-1 font-black uppercase tracking-wide text-muted-foreground">Demo Inspector</p>
       <Row label="Completion" value={`${progress?.completion_pct ?? 0}%`} />
       <Row label="State" value={progress?.demo_state ?? '—'} />

@@ -152,7 +152,7 @@ export function HelpDeskChat({ embedded = false, onClose }: HelpDeskChatProps) {
 
   // Floating card variant
   return (
-    <Card className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] shadow-2xl">
+    <Card className="fixed bottom-[calc(6rem+var(--safe-bottom))] right-[calc(1.5rem+var(--safe-right))] z-50 w-96 max-w-[calc(100vw-3rem)] shadow-2xl">
       <CardHeader className="border-b border-border py-3 px-4">
         <CardTitle className="flex items-center gap-2 text-base">
           <HelpCircle className="h-5 w-5 text-primary" />

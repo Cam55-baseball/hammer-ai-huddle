@@ -12,7 +12,7 @@ export function FloatingChatButton() {
       {/* Floating Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full p-0 shadow-lg transition-all hover:scale-110"
+        className="fixed bottom-[calc(1.5rem+var(--safe-bottom))] right-[calc(1.5rem+var(--safe-right))] z-50 h-14 w-14 rounded-full p-0 shadow-lg transition-all hover:scale-110"
         size="icon"
       >
         {isOpen ? (
