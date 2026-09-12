@@ -193,7 +193,7 @@ export function FullScreenWorkoutMode({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6"
+        className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]"
       >
         {/* Confetti Effect */}
         {showConfetti && (
@@ -328,7 +328,7 @@ export function FullScreenWorkoutMode({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className={cn(
-        "fixed inset-0 z-[100] overflow-y-auto",
+        "fixed inset-0 z-[100] overflow-y-auto pt-safe pb-safe",
         getBackgroundClass(),
         getNeonAccentClass()
       )}
