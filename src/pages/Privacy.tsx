@@ -34,8 +34,19 @@ const sections: LegalSection[] = [
             your video, like joint angles, timing, and bat or arm speed estimates.
           </li>
           <li><strong>Wellness and daily check-ins.</strong> Sleep, soreness, mood, and similar answers you give.</li>
+          <li>
+            <strong>Location, only if you allow it.</strong> If you open Weather and say yes to the
+            location prompt, your device gives us your exact coordinates so we can look up the
+            forecast for where you are. You can type a town or city instead. If you save a place as
+            a favourite, we store that place and its coordinates on your account until you delete it.
+          </li>
+          <li>
+            <strong>Camera, microphone, and photos.</strong> Only when you record or pick a video or
+            photo yourself. Some recording tools capture sound with the video.
+          </li>
           <li><strong>Usage data.</strong> Which pages you open, what you tap, and basic device info.</li>
           <li><strong>Payment status.</strong> Whether your subscription is active. We never see your card number.</li>
+
         </ul>
         <p>
           To be clear: <strong>your video is uploaded to our servers and processed there.</strong> It
@@ -63,6 +74,43 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "location",
+    title: "Location and weather",
+    body: (
+      <>
+        <p>
+          The Weather screen shows conditions for the field you are training or playing on. To do
+          that it needs a place.
+        </p>
+        <ul>
+          <li>
+            <strong>You can share your device location.</strong> Your phone or browser asks first.
+            If you say yes, we get your exact coordinates and send them to our weather service to
+            get the forecast for that spot.
+          </li>
+          <li>
+            <strong>Or you can just type a town or city.</strong> No device location needed.
+          </li>
+          <li>
+            <strong>You can say no, or turn the permission off later.</strong> Weather then falls
+            back to a typed or saved place, and every other part of the app works exactly the same.
+          </li>
+        </ul>
+        <p>
+          <strong>We do not save your device location.</strong> It is used in the moment to fetch
+          the forecast and is not written to your account. The one exception is a place you choose
+          to save as a favourite — that place and its coordinates are stored on your account until
+          you delete it.
+        </p>
+        <p>
+          We do not track you in the background, we do not build a history of where you have been,
+          and we never use location for advertising.
+        </p>
+      </>
+    ),
+  },
+
+  {
     id: "why-we-collect",
     title: "Why we collect each thing",
     body: (
@@ -72,7 +120,10 @@ const sections: LegalSection[] = [
         <li><strong>Video</strong> — to run your analysis and let you look back at old reps.</li>
         <li><strong>Measurements</strong> — to produce grades, feedback, and training suggestions.</li>
         <li><strong>Wellness check-ins</strong> — to adjust your workload so you train safely.</li>
+        <li><strong>Location</strong> — to show the weather for where you are playing, if you share it.</li>
+        <li><strong>Camera, microphone, and photos</strong> — to record or upload the clips you want analysed.</li>
         <li><strong>Usage data</strong> — to fix bugs and make the app work better.</li>
+
         <li><strong>Payment status</strong> — to know which features your account can use.</li>
       </ul>
     ),
@@ -88,6 +139,8 @@ const sections: LegalSection[] = [
           <li><strong>Payment processor</strong> — handles subscriptions and card payments.</li>
           <li><strong>Video-processing and AI analysis providers</strong> — help turn your video into measurements and feedback.</li>
           <li><strong>Video-rendering provider</strong> — creates the marked-up clips you watch.</li>
+          <li><strong>Weather and place-lookup provider</strong> — receives the coordinates or place name you use on the Weather screen and returns the forecast.</li>
+
         </ul>
         <p>
           These companies may only use your data to do that job for us. <strong>We do not sell
