@@ -74,6 +74,43 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "location",
+    title: "Location and weather",
+    body: (
+      <>
+        <p>
+          The Weather screen shows conditions for the field you are training or playing on. To do
+          that it needs a place.
+        </p>
+        <ul>
+          <li>
+            <strong>You can share your device location.</strong> Your phone or browser asks first.
+            If you say yes, we get your exact coordinates and send them to our weather service to
+            get the forecast for that spot.
+          </li>
+          <li>
+            <strong>Or you can just type a town or city.</strong> No device location needed.
+          </li>
+          <li>
+            <strong>You can say no, or turn the permission off later.</strong> Weather then falls
+            back to a typed or saved place, and every other part of the app works exactly the same.
+          </li>
+        </ul>
+        <p>
+          <strong>We do not save your device location.</strong> It is used in the moment to fetch
+          the forecast and is not written to your account. The one exception is a place you choose
+          to save as a favourite — that place and its coordinates are stored on your account until
+          you delete it.
+        </p>
+        <p>
+          We do not track you in the background, we do not build a history of where you have been,
+          and we never use location for advertising.
+        </p>
+      </>
+    ),
+  },
+
+  {
     id: "why-we-collect",
     title: "Why we collect each thing",
     body: (
