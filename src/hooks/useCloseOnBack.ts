@@ -29,7 +29,11 @@ export function useCloseOnBack(open: boolean | undefined, onOpenChange?: (v: boo
 
     const id = ++seq;
     idRef.current = id;
-    window.history.pushState({ __overlay: id }, "");
+    // Carry the router's own history state (key/idx) onto the throwaway entry.
+    // Without it react-router sees an unknown entry, falls back to index 0, and
+    // a later in-app "back" lands on the app root instead of the previous page.
+    const routerState = (window.history.state ?? {}) as Record<string, unknown>;
+    window.history.pushState({ ...routerState, __overlay: id }, "");
 
     // True only while our own throwaway entry is the current history entry.
     const isOurEntry = () =>
