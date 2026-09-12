@@ -179,7 +179,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-12 border-t border-border">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center gap-6 mb-8">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8">
             <Badge variant="outline" className="px-4 py-2">
               <Shield className="h-4 w-4 mr-2" />
               256-bit Encryption
