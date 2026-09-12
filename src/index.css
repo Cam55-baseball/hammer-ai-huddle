@@ -604,3 +604,41 @@ All colors MUST be HSL.
   .break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
 }
 
+
+/* ---------------------------------------------------------------------------
+ * Safe-area insets (iOS notch / Dynamic Island / home indicator).
+ *
+ * Requires `viewport-fit=cover` on the viewport meta tag, otherwise every
+ * env(safe-area-inset-*) resolves to 0.
+ *
+ * On the web (and on any device without insets) every value below evaluates to
+ * 0px, so these utilities are inert and the browser layout is unchanged.
+ * ------------------------------------------------------------------------ */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+.pt-safe { padding-top: var(--safe-top); }
+.pb-safe { padding-bottom: var(--safe-bottom); }
+.pl-safe { padding-left: var(--safe-left); }
+.pr-safe { padding-right: var(--safe-right); }
+.px-safe { padding-left: var(--safe-left); padding-right: var(--safe-right); }
+.py-safe { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+.mt-safe { margin-top: var(--safe-top); }
+.mb-safe { margin-bottom: var(--safe-bottom); }
+.my-safe { margin-top: var(--safe-top); margin-bottom: var(--safe-bottom); }
+
+/* Adds the inset on top of whatever bottom padding the element already has. */
+.pb-safe-add { padding-bottom: calc(var(--safe-bottom) + var(--pb-base, 0px)); }
+
+/* Sonner toasts are fixed-position; margins shift them without overriding the
+   library's own offset variables. Zero on the web. */
+[data-sonner-toaster] {
+  margin-bottom: var(--safe-bottom);
+  margin-top: var(--safe-top);
+  margin-left: var(--safe-left);
+  margin-right: var(--safe-right);
+}
