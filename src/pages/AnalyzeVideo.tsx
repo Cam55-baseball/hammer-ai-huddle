@@ -55,6 +55,7 @@ import { runBallFlight, type BallFlightResult } from "@/lib/cv/runBallFlight";
 import { DEFAULT_DISTANCE_FT } from "@/lib/capture/referenceDistance";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 /**
  * A replayed (cached) analysis comes back wrapped as `{ replay_cache, ai_analysis }`,
@@ -80,6 +81,7 @@ export default function AnalyzeVideo() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const location = useLocation();
   const [uploading, setUploading] = useState(false);
   // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
@@ -1122,7 +1124,7 @@ export default function AnalyzeVideo() {
                 <span className="hidden sm:inline">{t('videoAnalysis.deleteVideo')}</span>
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="flex-1 sm:flex-initial">
+            <Button variant="outline" size="sm" onClick={goBack} className="flex-1 sm:flex-initial">
               <ArrowLeft className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{t('videoAnalysis.back')}</span>
             </Button>
