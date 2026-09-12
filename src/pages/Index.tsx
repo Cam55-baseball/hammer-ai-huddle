@@ -22,21 +22,21 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border pt-safe">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">H</span>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg sm:text-xl">H</span>
             </div>
-            <h1 className="text-xl font-bold">Hammers Modality</h1>
+            <h1 className="truncate text-base sm:text-xl font-bold">Hammers Modality</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <LanguageSelector />
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            <LanguageSelector responsive />
             {user ? (
-              <Button variant="outline" onClick={() => navigate("/dashboard")}>
+              <Button variant="outline" size="sm" className="sm:h-10 sm:px-4" onClick={() => navigate("/dashboard")}>
                 Dashboard
               </Button>
             ) : (
-              <Button variant="outline" onClick={() => navigate("/auth")}>
+              <Button variant="outline" size="sm" className="sm:h-10 sm:px-4" onClick={() => navigate("/auth")}>
                 Sign In
               </Button>
             )}
