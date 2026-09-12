@@ -121,7 +121,7 @@ export default function BundlePlayer() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-5">
-        <Button variant="ghost" size="sm" className="-ml-2" onClick={() => navigate('/dashboard')}>
+        <Button variant="ghost" size="sm" className="-ml-2" onClick={goBack}>
           <ArrowLeft className="h-4 w-4 mr-1.5" />
           Dashboard
         </Button>

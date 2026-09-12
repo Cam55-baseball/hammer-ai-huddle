@@ -165,7 +165,7 @@ export default function Games() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/dashboard")}
+            onClick={goBack}
             className="-ml-2 mb-1 gap-1 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />

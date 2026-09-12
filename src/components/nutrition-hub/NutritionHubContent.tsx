@@ -373,7 +373,7 @@ export function NutritionHubContent() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate('/dashboard')}
+            onClick={goBack}
             className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -442,7 +442,7 @@ export function NutritionHubContent() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate('/dashboard')}
+            onClick={goBack}
             className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />
