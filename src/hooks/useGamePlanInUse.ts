@@ -134,9 +134,14 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
   const persist = useCallback(
     (patch: Record<string, boolean>) => {
       if (!userId) return;
+      // `.then()` matters: the query builder is lazy, so a bare `void
+      // supabase...upsert(...)` never actually sends the request.
       void supabase
         .from('game_plan_user_preferences')
-        .upsert({ user_id: userId, ...patch }, { onConflict: 'user_id' });
+        .upsert({ user_id: userId, ...patch }, { onConflict: 'user_id' })
+        .then(({ error }) => {
+          if (error) console.error('Failed to save game plan preference', error);
+        });
     },
     [userId],
   );
