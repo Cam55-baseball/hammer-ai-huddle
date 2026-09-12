@@ -120,7 +120,10 @@ const sections: LegalSection[] = [
         <li><strong>Video</strong> — to run your analysis and let you look back at old reps.</li>
         <li><strong>Measurements</strong> — to produce grades, feedback, and training suggestions.</li>
         <li><strong>Wellness check-ins</strong> — to adjust your workload so you train safely.</li>
+        <li><strong>Location</strong> — to show the weather for where you are playing, if you share it.</li>
+        <li><strong>Camera, microphone, and photos</strong> — to record or upload the clips you want analysed.</li>
         <li><strong>Usage data</strong> — to fix bugs and make the app work better.</li>
+
         <li><strong>Payment status</strong> — to know which features your account can use.</li>
       </ul>
     ),
