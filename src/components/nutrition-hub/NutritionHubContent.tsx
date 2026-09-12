@@ -34,6 +34,7 @@ import { PhysioNutritionSuggestions } from '@/components/physio/PhysioNutritionS
 import { useRecipes, RecipeIngredient, CreateRecipeInput } from '@/hooks/useRecipes';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 interface ConsumedTotals {
   calories: number;
@@ -71,6 +72,7 @@ export function NutritionHubContent() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();

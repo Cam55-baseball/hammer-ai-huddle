@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { LandingDemoVideoManager } from "@/components/landing/LandingDemoVideoManager";
 import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 export default function LandingDemoManager() {
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { isOwner, loading } = useOwnerAccess();
 
   if (loading) {

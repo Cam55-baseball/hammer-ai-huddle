@@ -13,6 +13,7 @@ import { Loader2, ArrowLeft, CheckCircle2, PlayCircle, Lock } from 'lucide-react
 import { safeGet, safeSet } from '@/lib/safeStorage';
 import { claimPurchases, getBundleVideos, type BundleVideo } from '@/lib/bundles';
 import { supabase } from '@/integrations/supabase/client';
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const watchedKey = (bundleId: string) => `bundle_watched_${bundleId}`;
 
@@ -29,6 +30,7 @@ function loadWatched(bundleId: string): string[] {
 export default function BundlePlayer() {
   const { id: bundleId = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { user, loading: authLoading } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
 

@@ -21,11 +21,13 @@ import { SportType, FOCUS_MESSAGE_FALLBACKS } from '@/data/speedLabProgram';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 export default function SpeedLab() {
   const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { user, loading: authLoading } = useAuth();
   const { modules, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();

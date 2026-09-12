@@ -42,6 +42,7 @@ import {
 } from '@/data/heatFactoryProgram';
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 // Helper to get exercises as Exercise objects
 const getThrowingExercises = (names: string[]): Exercise[] => {
@@ -138,6 +139,7 @@ export default function ProductionStudio() {
   const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { user, loading: authLoading } = useAuth();
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
   const [gateModalOpen, setGateModalOpen] = useState(false);

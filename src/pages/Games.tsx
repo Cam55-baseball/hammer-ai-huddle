@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { GameSheet } from "@/components/games/GameSheet";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
 import { useGameDayContext } from "@/hooks/useGameDayContext";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 interface GameRow {
   id: string;
@@ -67,6 +68,7 @@ export default function Games() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   // Deep link: /games?game=<id> opens straight into that game's sheet, so the

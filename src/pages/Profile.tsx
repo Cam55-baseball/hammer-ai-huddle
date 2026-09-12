@@ -45,6 +45,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { SafetyMenu } from "@/components/safety/SafetyMenu";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 function PracticeIntelligenceSections() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -88,6 +89,7 @@ export default function Profile() {
   const { isAdmin } = useAdminAccess();
   const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const [searchParams] = useSearchParams();
   const viewingUserId = searchParams.get('userId');
   const [openingPortal, setOpeningPortal] = useState(false);
