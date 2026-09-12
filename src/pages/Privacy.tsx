@@ -122,24 +122,28 @@ const sections: LegalSection[] = [
   },
   {
     id: "young-users",
-    title: "Users under 18, and users under 13",
+    title: "Users aged 13 to 17, and users under 13",
     body: (
       <>
         <p>
-          You must be <strong>18 or older</strong> to hold an account on your own. Anyone under 18
-          must have a parent or guardian set up the account, give permission, and agree to this
-          policy first.
+          You must be <strong>at least 13</strong> to have an account.
         </p>
         <p>
-          For users under 13, we ask for verifiable parent or guardian consent before the account
-          can be used, and we collect only what the app needs to work.
+          If you are <strong>13 to 17</strong>, a parent or guardian must give permission before you
+          use the app, and they may have access to the account.
         </p>
         <p>
-          A parent or guardian who is linked to the account can see the athlete's data, ask us to
-          correct it, and ask us to delete it. To request deletion, email{" "}
+          A parent or guardian linked to the account can see the athlete's data, ask us to correct
+          it, and ask us to delete it. To request deletion, email{" "}
           <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> from the address
           on file, or use the delete button on the <Link to="/profile">profile page</Link>.
         </p>
+        <p>
+          Accounts are <strong>not available to anyone under 13</strong>. We do not knowingly collect
+          data from children under 13. If we learn an account belongs to someone under 13, we delete
+          the account and its data.
+        </p>
+
 
       </>
     ),
