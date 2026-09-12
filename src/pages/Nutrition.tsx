@@ -13,6 +13,7 @@ import { NutritionBadges } from '@/components/NutritionBadges';
 import EatingDisorderEducation from '@/components/nutrition/EatingDisorderEducation';
 import BodyImageEducation from '@/components/nutrition/BodyImageEducation';
 import { useAuth } from '@/hooks/useAuth';
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 interface StreakData {
   currentStreak: number;
@@ -25,6 +26,7 @@ interface StreakData {
 export default function Nutrition() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const location = useLocation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   
@@ -97,7 +99,7 @@ export default function Nutrition() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate('/dashboard')}
+            onClick={goBack}
             className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />

@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { LandingDemoVideoManager } from "@/components/landing/LandingDemoVideoManager";
 import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 export default function LandingDemoManager() {
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { isOwner, loading } = useOwnerAccess();
 
   if (loading) {
@@ -30,7 +32,7 @@ export default function LandingDemoManager() {
             Upload, replace, hide, or remove the demo video shown on the public landing page.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")}>
+        <Button variant="outline" size="sm" onClick={goBack}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>

@@ -12,12 +12,14 @@ import { FoundationsShelf } from "@/components/video-library/FoundationsShelf";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 /** Below this, "Most Liked" is ranking on a handful of taps. Don't offer it. */
 const MIN_LIKES_FOR_SORT = 25;
 
 const VideoLibrary = () => {
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const [search, setSearch] = useState('');
   const [sportFilter, setSportFilter] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -73,7 +75,7 @@ const VideoLibrary = () => {
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+            <Button variant="ghost" size="icon" onClick={goBack}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

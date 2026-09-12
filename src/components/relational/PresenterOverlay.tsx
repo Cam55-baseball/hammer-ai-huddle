@@ -76,7 +76,7 @@ export function PresenterOverlay({ stepIdx, onStep }: Props) {
 
   return (
     <div
-      className="fixed bottom-3 right-3 z-50 rounded-lg border border-border bg-card/95 backdrop-blur shadow-lg p-3 w-72 space-y-2 text-foreground"
+      className="fixed bottom-[calc(0.75rem+var(--safe-bottom))] right-[calc(0.75rem+var(--safe-right))] z-50 rounded-lg border border-border bg-card/95 backdrop-blur shadow-lg p-3 w-72 space-y-2 text-foreground"
       role="region"
       aria-label="Presenter assist"
     >

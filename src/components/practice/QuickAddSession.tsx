@@ -47,7 +47,7 @@ export function QuickAddSession() {
   return (
     <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>
-        <Button size="lg" className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg p-0">
+        <Button size="lg" className="fixed bottom-[calc(1.5rem+var(--safe-bottom))] right-[calc(1.5rem+var(--safe-right))] z-50 h-14 w-14 rounded-full shadow-lg p-0">
           <Plus className="h-6 w-6" />
         </Button>
       </DialogTrigger>

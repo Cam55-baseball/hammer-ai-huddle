@@ -21,11 +21,13 @@ import { SportType, FOCUS_MESSAGE_FALLBACKS } from '@/data/speedLabProgram';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 export default function SpeedLab() {
   const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { user, loading: authLoading } = useAuth();
   const { modules, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -198,7 +200,7 @@ export default function SpeedLab() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+            <Button variant="ghost" size="sm" onClick={goBack}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>

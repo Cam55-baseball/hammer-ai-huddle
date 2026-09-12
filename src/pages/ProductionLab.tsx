@@ -28,6 +28,7 @@ import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { CYCLES, BAT_SPEED_EXERCISES, BAT_SPEED_DAY_1, BAT_SPEED_DAY_2, BAT_SPEED_DAY_3, BAT_SPEED_DAY_4, STRENGTH_DAY_BAT_SPEED, HITTING_EQUIPMENT } from '@/data/ironBambinoProgram';
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 // Helper to get bat speed exercises as Exercise objects
 const getBatSpeedExercises = (names: string[]): Exercise[] => {
@@ -102,6 +103,7 @@ export default function ProductionLab() {
   const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { user, loading: authLoading } = useAuth();
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
   const [gateModalOpen, setGateModalOpen] = useState(false);
@@ -265,7 +267,7 @@ export default function ProductionLab() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+            <Button variant="ghost" size="sm" onClick={goBack}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>

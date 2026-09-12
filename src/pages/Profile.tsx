@@ -45,6 +45,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { SafetyMenu } from "@/components/safety/SafetyMenu";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 function PracticeIntelligenceSections() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -88,6 +89,7 @@ export default function Profile() {
   const { isAdmin } = useAdminAccess();
   const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const [searchParams] = useSearchParams();
   const viewingUserId = searchParams.get('userId');
   const [openingPortal, setOpeningPortal] = useState(false);
@@ -637,7 +639,7 @@ export default function Profile() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" onClick={goBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t('profile.backToDashboard')}
           </Button>

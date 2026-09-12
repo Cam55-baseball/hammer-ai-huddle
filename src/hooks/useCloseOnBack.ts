@@ -1,57 +1,24 @@
 /**
- * useCloseOnBack — makes the Android hardware back gesture (and the browser
- * back button, and iOS edge-swipe back) close an open overlay instead of
- * navigating the athlete out of the app.
+ * useCloseOnBack — intentionally inert.
  *
- * While the overlay is open a throwaway history entry is pushed, tagged with a
- * unique id. A `popstate` consumes that entry and closes the overlay.
+ * This hook used to push a throwaway history entry whenever a sheet or dialog
+ * opened, so an Android hardware back press would close the overlay instead of
+ * leaving the app. In practice it kept corrupting real navigation:
  *
- * SAFETY (regression fix): the cleanup may only remove the pushed entry when
- * that entry is *still the current one*. If the app navigated to another route
- * while the overlay was open — the common case, because a nav link inside a
- * sheet both closes the sheet and changes the route — the current history entry
- * belongs to the router, not to us. Calling `history.back()` then would undo
- * the athlete's navigation and bounce them to the previous page. In that case
- * we abandon the entry and navigate nothing.
+ *  - it once broke the Calendar module (back-out on unmount undid the route
+ *    change the athlete had just made);
+ *  - the overlay entry is invisible to react-router, so a later in-app "back"
+ *    could resolve to the app root instead of the previous screen;
+ *  - closing a sheet by tapping a menu item races the route change, and the
+ *    rewind swallows a genuine history entry — the athlete lands on the
+ *    dashboard instead of the screen they came from.
  *
- * No-ops for uncontrolled overlays (no `open` / `onOpenChange` pair).
+ * The app now ships as a native iOS app, where there is no hardware back
+ * button at all, so the hook buys nothing and costs correct navigation. It is
+ * kept as a no-op so its two call sites (sheet, dialog) stay unchanged; if
+ * Android hardware back is ever needed, implement it with the Capacitor App
+ * back-button listener rather than by mutating browser history.
  */
-import { useEffect, useRef } from "react";
-
-let seq = 0;
-
-export function useCloseOnBack(open: boolean | undefined, onOpenChange?: (v: boolean) => void) {
-  const idRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (open !== true || typeof onOpenChange !== "function") return;
-
-    const id = ++seq;
-    idRef.current = id;
-    window.history.pushState({ __overlay: id }, "");
-
-    // True only while our own throwaway entry is the current history entry.
-    const isOurEntry = () =>
-      (window.history.state as { __overlay?: number } | null)?.__overlay === id;
-
-    const onPop = () => {
-      idRef.current = null;
-      onOpenChange(false);
-    };
-    window.addEventListener("popstate", onPop);
-
-    return () => {
-      window.removeEventListener("popstate", onPop);
-      if (idRef.current === id && isOurEntry()) {
-        // Overlay closed on its own terms and nothing navigated underneath us:
-        // safe to remove the entry we added.
-        idRef.current = null;
-        window.history.back();
-      }
-      // Otherwise the location changed underneath the overlay (route change,
-      // redirect, or a nested overlay pushed on top). Drop the entry silently.
-      idRef.current = null;
-    };
-  }, [open, onOpenChange]);
+export function useCloseOnBack(_open?: boolean, _onOpenChange?: (v: boolean) => void) {
+  // no-op
 }

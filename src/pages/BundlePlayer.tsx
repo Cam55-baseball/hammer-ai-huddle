@@ -13,6 +13,7 @@ import { Loader2, ArrowLeft, CheckCircle2, PlayCircle, Lock } from 'lucide-react
 import { safeGet, safeSet } from '@/lib/safeStorage';
 import { claimPurchases, getBundleVideos, type BundleVideo } from '@/lib/bundles';
 import { supabase } from '@/integrations/supabase/client';
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const watchedKey = (bundleId: string) => `bundle_watched_${bundleId}`;
 
@@ -29,6 +30,7 @@ function loadWatched(bundleId: string): string[] {
 export default function BundlePlayer() {
   const { id: bundleId = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const goBack = useSmartBack();
   const { user, loading: authLoading } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
 
@@ -121,7 +123,7 @@ export default function BundlePlayer() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-5">
-        <Button variant="ghost" size="sm" className="-ml-2" onClick={() => navigate('/dashboard')}>
+        <Button variant="ghost" size="sm" className="-ml-2" onClick={goBack}>
           <ArrowLeft className="h-4 w-4 mr-1.5" />
           Dashboard
         </Button>

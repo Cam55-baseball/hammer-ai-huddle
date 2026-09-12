@@ -30,7 +30,7 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
   const { toggleSidebar } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
+    <header className="sticky top-0 z-10 flex min-h-14 items-center gap-4 border-b bg-background px-4 pt-safe pl-[calc(1rem+var(--safe-left))] pr-[calc(1rem+var(--safe-right))]">
       <div className="relative flex items-center gap-2">
         {/* Enhanced Menu Button */}
         <Button
@@ -138,7 +138,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             user={user}
             onTutorialOpen={() => setTutorialOpen(true)}
           />
-          <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-w-full box-border">
+          <main className="flex-1 p-3 sm:p-6 pb-[calc(0.75rem+var(--safe-bottom))] sm:pb-[calc(1.5rem+var(--safe-bottom))] pl-[calc(0.75rem+var(--safe-left))] pr-[calc(0.75rem+var(--safe-right))] sm:pl-[calc(1.5rem+var(--safe-left))] sm:pr-[calc(1.5rem+var(--safe-right))] overflow-x-hidden max-w-full box-border">
             <OfflineIndicator />
             <OnboardingResumeBanner />
             <StaffOnboardingResumeBanner />

@@ -164,7 +164,9 @@ const Sidebar = React.forwardRef<
           }
           side={side}
         >
-          <div className="flex h-full w-full flex-col">{children}</div>
+          {/* Safe-area padding lives on the inner column because the sheet
+              itself is `p-0` here. Zero on the web. */}
+          <div className="flex h-full w-full flex-col pt-safe pb-safe">{children}</div>
         </SheetContent>
       </Sheet>
     );
@@ -206,7 +208,7 @@ const Sidebar = React.forwardRef<
       >
         <div
           data-sidebar="sidebar"
-          className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+          className="flex h-full w-full flex-col bg-sidebar pt-safe pb-safe group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
         >
           {children}
         </div>
