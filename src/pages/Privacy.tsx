@@ -139,6 +139,8 @@ const sections: LegalSection[] = [
           <li><strong>Payment processor</strong> — handles subscriptions and card payments.</li>
           <li><strong>Video-processing and AI analysis providers</strong> — help turn your video into measurements and feedback.</li>
           <li><strong>Video-rendering provider</strong> — creates the marked-up clips you watch.</li>
+          <li><strong>Weather and place-lookup provider</strong> — receives the coordinates or place name you use on the Weather screen and returns the forecast.</li>
+
         </ul>
         <p>
           These companies may only use your data to do that job for us. <strong>We do not sell
