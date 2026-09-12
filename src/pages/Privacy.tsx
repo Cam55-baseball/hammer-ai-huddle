@@ -34,8 +34,19 @@ const sections: LegalSection[] = [
             your video, like joint angles, timing, and bat or arm speed estimates.
           </li>
           <li><strong>Wellness and daily check-ins.</strong> Sleep, soreness, mood, and similar answers you give.</li>
+          <li>
+            <strong>Location, only if you allow it.</strong> If you open Weather and say yes to the
+            location prompt, your device gives us your exact coordinates so we can look up the
+            forecast for where you are. You can type a town or city instead. If you save a place as
+            a favourite, we store that place and its coordinates on your account until you delete it.
+          </li>
+          <li>
+            <strong>Camera, microphone, and photos.</strong> Only when you record or pick a video or
+            photo yourself. Some recording tools capture sound with the video.
+          </li>
           <li><strong>Usage data.</strong> Which pages you open, what you tap, and basic device info.</li>
           <li><strong>Payment status.</strong> Whether your subscription is active. We never see your card number.</li>
+
         </ul>
         <p>
           To be clear: <strong>your video is uploaded to our servers and processed there.</strong> It
