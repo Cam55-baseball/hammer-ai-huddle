@@ -642,34 +642,61 @@ call them. `discipline` is constrained to hitting/pitching/throwing/fielding/run
   `source, fault_key, root_pattern_id, discipline, confidence, sample_size, severity, observed_at`
   (`index.ts:888-896`)
 - the comment at `:888` states the read is **"Read-only, priority-only"**
-- `buildFaultPriority(...)` (`:1109-1115`) collapses the athlete's recorded faults into **at
-  most three root patterns**
-- the only effect is `faultPriority.bonusForSlug(m.slug)` added into the movement selection
-  score at `:1131`
+- `buildFaultPriority(faultSignals, planDateEpoch)` (`:1109-1118`) collapses the athlete's
+  recorded faults into **at most three root-pattern families**, weighted
+  `RANK_BONUS = [0.9, 0.55, 0.3]` (`priority.ts:236, :262-280`)
+- the only effect is `faultPriority.bonusForSlug(m.slug)` added as one additive term inside
+  `scoreCandidate` (`:1120-1136`), alongside `emphasisFor()` and `shortfallBonus()`, minus
+  `varietyPenalty()`
+- an empty or unreadable ledger yields `active: false` and a bonus of 0 for every slug
+  (`priority.ts:282-287`) — a read failure can never block a plan
+- the decision is recorded for replay at `:3370-3377` as
+  `fault_priority: { version, active, signals_read, ranked }`
 
-So a fault signal changes **which movement is chosen within an already-decided slot**. It
-does not change slots, categories, pools, or doses — doses are resolved separately from
-catalog defaults and the dosage doctrine (`:1289-1428`).
+So a fault signal changes **which of the already-legal options wins a discretionary slot**.
+By construction it cannot filter a pool, remove a movement, empty a slot, or author a dose
+(`priority.ts:1-16`). Pools and gates run before scoring; doses are resolved separately from
+catalog defaults and the dosage doctrine (`index.ts:1289-1428`), which never reads fault
+priority.
 
 ### Fault ledger → video recommendations
 
-`src/lib/videoRecommendationEngine.ts` builds a `faultScope` as the deduped union of
-correction tags and movement patterns (`:184, :223, :436`), used for the unseen-first
-rotation: unseen videos rank above seen ones *for the same fault* until all are seen, then
-the scope resets. Consumers: `src/hooks/useVideoSuggestions.ts`,
-`src/hooks/useVideoTaxonomy.ts`, `src/hooks/useVideoMoment.ts`,
-`src/hooks/useVideoConfidenceMap.ts`, `src/lib/videoRelevanceContext.ts`,
-`src/lib/videoMonetization.ts`, `src/components/video-suggestions/VideoSuggestionsPanel.tsx`.
-Tests: `videoRecommendationEvidence.test.ts`, `videoRecommendationCoverage.test.ts`.
+`src/lib/videoRecommendationEngine.ts` `recommendVideos()` is a **pure function** with no DB
+or ledger awareness. It builds a `faultScope` as the deduped union of correction tags and
+movement patterns (`:184, :223, :436`), used for the unseen-first rotation: unseen videos
+rank above seen ones *for the same fault* until all are seen, then the scope resets.
+
+Two upstream paths feed it, and only one touches the ledger:
+
+1. **Ledger path (one component).** `src/components/hammer/DefensivePrepVideo.tsx:18,32,35-44`
+   calls `useFaultLedger()`, filters to `discipline === 'fielding'`, and passes the fault
+   keys as both `movementPatterns` and `correctionTags` into `useVideoSuggestions()` →
+   `recommendVideos()`.
+2. **Bypass paths (most surfaces).** `src/hooks/useRecentFaultKeys.ts:20-28` reads
+   `analysis_fault_findings.correction_key` **directly**, feeding
+   `AnalysisVideoRecommendations.tsx:19,78-90`. `TodaysHammerPick.tsx:29-71` reads
+   `hie_snapshots.weakness_clusters` plus recent `performance_sessions`.
+   `DailyPlanVideoChips.tsx:103` consumes taxonomy-aggregated movement patterns. None of
+   these read `wk_fault_signals`.
+
+**`fault_scope` analytics.** Nullable column on `library_video_analytics`
+(`20260908125728_*.sql:1-4`), written by `trackVideoWatched()`
+(`useVideoSuggestions.ts:248-262`) and read back for the seen-set at `:105-109`. Passed
+through by `useVideoMoment.ts:84`, `VideoSuggestionsPanel.tsx:60-81`, `VideoMoment.tsx:69`,
+`TodaysHammerPick.tsx:120`, `AnalysisVideoRecommendations.tsx:191-224`,
+`GameVideoRecommendations.tsx:96-121`, `DefensivePrepVideo.tsx:81-99`,
+`DailyPlanVideoChips.tsx:122-151`. Note it holds the **recommendation engine's tag-layer
+scope**, not `wk_fault_signals.fault_key` — they coincide only in the `DefensivePrepVideo`
+path, because that component seeds its tags from the ledger. Tests:
+`videoRecommendationEvidence.test.ts`, `videoRecommendationCoverage.test.ts`.
 
 ### The link that does NOT exist
 
-**A report-card tile grade does not reach the fault ledger.** Nothing in
-`src/lib/reportCard/` writes to `wk_fault_signals`, and nothing in the fault-ledger files
-imports from `src/lib/reportCard/`. The path that does exist runs from *video analysis
-findings* (`analysis_fault_findings`) into `wk_fault_signals` via DB trigger, and from
-defensive/practice logging via its own mappers — the report card reads the same analysis
-payload but is a parallel presentation layer, not a ledger writer.
+**A report-card grade does not reach the fault ledger.** Nothing in `src/lib/reportCard/`
+writes to `wk_fault_signals`, and nothing in the fault-ledger files imports from
+`src/lib/reportCard/`. The schema anticipates it — `report_card`, `grade_low` and
+`standards_gap` are legal `source` values — but no writer exists. The report card reads the
+same analysis payload the trigger reads; it is a parallel presentation layer, not a writer.
 
 Concretely, the chain from a benchmark edit is:
 
@@ -677,14 +704,21 @@ Concretely, the chain from a benchmark edit is:
 GRADE_BENCHMARKS / scale_reference anchor
         ↓ rawToGrade()
 grade (20–80, or sub-floor decimal)
-        ↓ if sub-floor
-DevelopmentCurveNote → whatMovesIt → FAULT_FAMILIES (display guidance only)
+        ↓ only if sub-floor
+DevelopmentCurveNote → whatMovesIt → FAULT_FAMILIES        (display guidance only)
 
-analysis findings  →  wk_fault_signals  →  buildFaultPriority  →  wk-generate-daily
-                                        →  faultScope          →  video recommendations
+analysis_fault_findings ─┐
+performance_sessions ────┼─ DB trigger ─→ wk_fault_signals ─┬─→ buildFaultPriority
+gp_defense_plays ────────┘                                  │      → wk-generate-daily
+                                                            └─→ useFaultLedger
+                                                                   → DefensivePrepVideo
+                                                                     → recommendVideos
 ```
 
-The two halves meet only in the *family vocabulary*, not in data flow.
+The two halves meet only in the *family vocabulary* (`FAULT_FAMILIES`), never in data flow.
+Editing a benchmark anchor changes grades and the sub-floor guidance text; it does not
+change a single daily-plan movement or video recommendation.
+
 
 ---
 
