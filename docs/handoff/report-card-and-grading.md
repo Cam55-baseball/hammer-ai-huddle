@@ -596,18 +596,43 @@ build if any family lacks a tier-0 rung.
 
 `DevelopmentCurveNote.tsx` is the **only** consumer of `whatMovesIt` in the repo.
 
-### The fault ledger
+### The fault ledger — who writes it
 
-Table: `wk_fault_signals`. Touchpoints found:
+Table: `wk_fault_signals`. **There is no client-side or edge-function writer anywhere in
+the app.** Every row is written by a Postgres trigger; all TypeScript access is read-only.
 
-| File | Role |
+| Writer (all SQL) | Trigger | Fires on | `source` |
+|---|---|---|---|
+| `wk_record_fault_signal_from_finding()` — `20260908120738_*.sql:8-54` | `analysis_fault_findings_to_ledger` | `AFTER INSERT ON analysis_fault_findings` | `video_analysis` |
+| `wk_fielding_signals_from_session()` — `20260908122244_*.sql:110-156` | `performance_sessions_fielding_to_ledger` | `AFTER INSERT ON performance_sessions` (module `fielding`) | `log_trend` |
+| `wk_fielding_signals_from_game_play()` — `20260908122244_*.sql:164-192` | `gp_defense_plays_to_ledger` | `AFTER INSERT ON gp_defense_plays` | `game_hub` |
+
+All three funnel through `wk_upsert_fault_signal()` (`20260908122244_*.sql:82-107`), which
+upserts on `(user_id, source, discipline, fault_key, root_pattern_id)` — incrementing
+`sample_size`, recomputing `severity`, bumping `observed_at`. `EXECUTE` on the writers is
+revoked from `public`/`anon`/`authenticated`, so only SECURITY DEFINER trigger context can
+call them. `discipline` is constrained to hitting/pitching/throwing/fielding/running/lifting.
+
+| Reader | Role |
 |---|---|
-| `supabase/migrations/20260906210728_*.sql`, `20260908120738_*.sql`, `20260908122244_*.sql` | table + mapper triggers + backfill |
-| `src/hooks/useFaultLedger.ts` | client read |
-| `src/lib/wic/faultLedger/ranking.ts` | client-side ranking |
-| `supabase/functions/_shared/wic/faultLedger/priority.ts` | `buildFaultPriority` — server-side priority |
-| `supabase/functions/wk-generate-daily/index.ts` | the consumer (below) |
+| `src/hooks/useFaultLedger.ts:31-40` | client read; also `useFamilyAlternatives()` (`:13-17,54-55`) for same-problem swap ladders gated by equipment tier |
+| `src/lib/wic/faultLedger/ranking.ts` | client-side ranking (`rankFaults`, `familyForRootPattern` at `:15,120`) |
+| `supabase/functions/_shared/wic/faultLedger/priority.ts` | `buildFaultPriority` — the server mirror |
+| `supabase/functions/wk-generate-daily/index.ts:888-899` | the daily-plan consumer (below) |
 | `supabase/functions/delete-account/ownedTables.ts` | included in account deletion |
+
+> **Duplication risk to know about.** `priority.ts:37-166` hard-codes `ROOT_PATTERN_FAMILY`
+> and `FAMILY_LADDER_SLUGS` as a **manual copy** of `families.ts`, because an edge function
+> cannot import from `src/`. `src/test/faultLedgerPriorityParity.test.ts` catches drift, but
+> nothing syncs them automatically. Edit `families.ts` and you must edit `priority.ts`.
+
+> **Dead schema to flag.** The `source` check constraint (`20260906210728_*.sql:4`) and the
+> `FaultSource` type (`ranking.ts:17-26`) both allow `complaint`, `report_card`,
+> `standards_gap`, `grade_low`, `daily_checkin`, `coach_note`. **Nothing writes any of
+> them.** Whether these are planned or dead could not be determined — no TODO or ticket
+> reference exists.
+
+
 
 ### Fault ledger → Hammer's Today (daily plan)
 
