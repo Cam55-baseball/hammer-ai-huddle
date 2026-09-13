@@ -544,9 +544,6 @@ tiles → identical letter.
 
 ## Section 5 — What's wired to what
 
-*(Wiring trace was still running when this section was written; see the "Could not
-determine" list below for what is confirmed versus outstanding.)*
-
 ### Benchmark consumers — everything downstream of a benchmark edit
 
 Every file that imports `GRADE_BENCHMARKS`, `rawToGrade`, the `gradeScale` helpers,
@@ -747,5 +744,10 @@ change a single daily-plan movement or video recommendation.
    is wired to the build, but I did not run it in this pass, so the live
    sourced/undated/estimate tallies it reports were not re-verified here. The counts in
    Section 2 were counted by hand from the table.
-9. **Whether the 30 suppressed softball rows should be deleted or retained.** The code keeps
+9. **Whether `report_card` / `grade_low` / `standards_gap` fault sources are planned or
+   dead.** The check constraint and the `FaultSource` type accept them; nothing writes them.
+10. **Whether the three ledger triggers are attached in the live database.** They are present
+    in the migration files; this pass inspected files only and did not query the deployed
+    instance.
+11. **Whether the 30 suppressed softball rows should be deleted or retained.** The code keeps
    them and gates them by whitelist; nothing states the intended end state.
