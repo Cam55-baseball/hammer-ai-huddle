@@ -293,7 +293,8 @@ Stripe price IDs are keyed per tier per sport in `TIER_PRICES`.
    free → 1, pitcher → 2, 5tool → 3, golden2way → 4, controlling which logging fields the
    athlete is even asked for.
 4. The Combine has its own gate — see section 6.
-5. On top of all of this sits the **purchase gate** (`src/lib/purchaseGate.ts`): on web,
+5. On top of all of this sits the **purchase gate** (`src/lib/purchase/purchaseGate.ts`,
+   surfaced through `src/hooks/usePurchaseAvailability.ts`): on web,
    purchase is allowed; in the native iOS wrap, purchase is only surfaced in link-out mode
    on a known US storefront, and otherwise the tier surfaces render a neutral unavailable
    state with no prices and no subscribe language. Already-subscribed access is unaffected
