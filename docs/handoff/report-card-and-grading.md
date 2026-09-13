@@ -751,3 +751,127 @@ change a single daily-plan movement or video recommendation.
     instance.
 11. **Whether the 30 suppressed softball rows should be deleted or retained.** The code keeps
    them and gates them by whitelist; nothing states the intended end state.
+
+---
+
+## Section 6 — Doctrine and decision history
+
+Recorded 2026-09-13 from the decision record. These are **decisions already made and in
+force**, not proposals. Dates are the dates the decision was taken.
+
+### 6.1 The grading scale (standing doctrine)
+
+One MLB-anchored band, used for both sports.
+
+- **20 = the MLB floor. 50 = the MLB average. 80 = the all-time record.**
+- **Never age-adjusted.** A 14-year-old is measured against the show. There are no youth,
+  high-school, college or professional curves.
+- **Below 20 is a development curve**, not a scouting grade: one decimal place, clamped at
+  zero, running at **one quarter** of the floor-to-average slope.
+- That quarter multiplier is a **convention chosen for usable separation, not a figure
+  derived from data.** It carries its own provenance category (`source: "convention"`) for
+  exactly that reason — so it can never be read as a benchmark. See Section 1.
+
+### 6.2 Corrections made 2026-09-08 — all four were live bugs, not refinements
+
+1. **Average was anchored at 45.** The benchmark table treated 45 as average while the
+   doctrine and `scale_reference` both said 50. Every metric sat a full band low — the app
+   was telling average athletes they were below average. Corrected to 50 throughout,
+   including the label ladder, which had read 45–49 as "Average."
+2. **The no-data fallback also returned 45.** It would have silently reinstated the old
+   scale anywhere a benchmark was missing. Corrected.
+3. **The table carried separate 14u / 18u / college / pro anchor sets.** That is age
+   adjustment, which the doctrine forbids. Collapsed to one scale.
+4. **The MLB four-seam average was 90 mph and years stale.** The owner's figure is
+   94.7 mph; anchored at **94.5**.
+
+### 6.3 Figures at grade 50, with their standing
+
+**Sourced from published tracking data:**
+
+| Figure | Value | Source |
+|---|---|---|
+| Catcher pop time to 2B | 2.00 s | Baseball Savant, league average |
+| Bat speed | 71.5 mph | Statcast bat tracking |
+| Sprint speed | 27.0 ft/sec | Statcast |
+
+**Owner-supplied and dated** (these are judgement calls by the owner, recorded as such, not
+league publications):
+
+| Figure | Value |
+|---|---|
+| Infielder arm | 88 mph |
+| Outfielder throw | 92 mph |
+| Pulldown | 93 mph |
+| Tee exit velocity | 93 mph |
+| Sixty-yard dash | 6.8 s |
+
+### 6.4 A trap worth recording — in-game vs. tee exit velocity
+
+MLB's **~88.9 mph average exit velocity is an in-game number.** Tee exit velocity runs
+higher. Substituting the in-game figure for the tee anchor would make the scale too easy
+while looking like diligence — it has a real source and a real date attached, so it passes
+every provenance check while being the wrong measurement. Do not do it. The tee anchor is
+93 mph, owner-supplied, and that is deliberate.
+
+### 6.5 Softball — the refusal to guess
+
+AUSL publishes no tracking averages, and neither does any other professional softball
+league. **Standing rule: never grade a softball athlete against a converted baseball
+figure.** Different game, different biology; scaling a baseball number by a constant is
+invention wearing a decimal point.
+
+Therefore: the mark is recorded, **no grade is given**, and the copy states plainly that we
+refused to guess rather than hiding the absence. Grades appear the moment real figures
+exist — the anchors are already in the table and the gate is a one-line whitelist edit
+(Section 2).
+
+### 6.6 No projections
+
+A future grade requires development-curve data we do not have. Producing one would be the
+same invention the rest of this doctrine forbids.
+
+Where a sub-floor grade appears with no trend behind it, the athlete is shown **what moves
+the number** instead: the fault family, a tier-0 movement needing no equipment, and the next
+standard on the ladder. That is `whatMovesIt.ts` → `DevelopmentCurveNote.tsx` (Section 5).
+
+**A projection engine is a separate post-publish project**, not a gap in this one.
+
+### 6.7 The governing rule
+
+**No invented values.** No constant presented as a measure. No default filling a gap. No
+number rendered without its source and its sample size.
+
+Every benchmark carries `source` and `as_of`, and `scripts/check-benchmark-provenance.ts`
+fails the build when either is missing. **It is currently red on purpose** over 17 undated
+entries, listed in `docs/audits/undated-benchmarks-2026-09-09.md`. The red is the honest
+state; do not make it green by inventing dates.
+
+This rule is also why four pitching tiles are hidden rather than shipped (Section 4): they
+returned a constant instead of a measurement, and a constant that looks like a measurement
+is the exact failure this rule exists to prevent.
+
+### 6.8 Still open
+
+1. **The 17 undated benchmarks** need real dates or an explicit, recorded acceptance of
+   being undated. Until one or the other, the provenance guard stays red.
+   Source list: `docs/audits/undated-benchmarks-2026-09-09.md`.
+2. **The report card must eventually cover the metric ground of all nine researched
+   competitor apps.** Recorded as an open requirement. The nine, with current coverage
+   status, are mapped in `docs/REPORT-CARD-AND-COVERAGE.md §5`:
+
+   | # | App | Status recorded there |
+   |---|---|---|
+   | 1 | Teammstrd (Mustard) | Partially covered — only 2 visible pitching tiles |
+   | 2 | Pelotero | Covered for baseball; no softball anchors; 17 undated |
+   | 3 | SmartScout Baseball | Covered |
+   | 4 | PitchLab | Partially covered — owner/admin locked, 30fps detection fails, no movement or spin |
+   | 5 | Ember Sports | Covered |
+   | 6 | HeyBLU | Partially covered — Game IQ 101 behind a coming-soon screen |
+   | 7 | B4 App | Covered |
+   | 8 | Smart Pitch & Baseball Tracker | Covered; game logging staff-only |
+   | 9 | FieldCoach.ai | Partially covered — very thin video library behind the fielding tags |
+
+   Cross-cutting gap for all nine: the video library holds **16 videos**. The ranking,
+   rotation, confidence floors and empty states are built and tested; the content is what
+   is missing.
