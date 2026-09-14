@@ -35,7 +35,9 @@ import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCa
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
-import { runPoseInference } from "@/lib/biomech/pose/poseRunner";
+import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
+import { captureDenseLandmarkSeries } from "@/lib/biomech/pose/denseLandmarkCapture";
+import { writeLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
 import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
@@ -522,7 +524,11 @@ export default function AnalyzeVideo() {
     // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
     // captured here and persisted into `video_landmark_runs` after the video
     // row is created. Surfaced on `window.__DPOSE_LAST_RUN__` for proof capture.
-    let poseRun: Awaited<ReturnType<typeof runPoseInference>> | null = null;
+    // STEP 1 — dense capture replaces the 7-frame pose sample. The full series
+    // is persisted to storage so metrics can be RECOMPUTED when the engine
+    // improves, without re-filming the athlete.
+    let denseRun: Awaited<ReturnType<typeof captureDenseLandmarkSeries>> | null = null;
+    let poseRows: PoseFrameRow[] = [];
     let tempoRun: Awaited<ReturnType<typeof runTempoPipeline>> | null = null;
 
     if (analysisEnabled) {
@@ -573,30 +579,38 @@ export default function AnalyzeVideo() {
       }
 
 
-      // ===== PHASE 42B — Real D-POSE landmark production =====
-      // Runs MediaPipe Tasks Vision (BlazePose Full) over the same PNG
-      // data-URL frames `extractKeyFramesDeterministic` just emitted.
-      // Feeds the existing `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
+      // ===== STEP 1 — Dense D-POSE landmark production =====
+      // Contiguous native-frame-rate sweep across the movement window (not the
+      // 7 AI frames). Produces 2D normalized + world landmarks + per-landmark
+      // visibility for every frame in the window. Feeds the existing
+      // `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
       try {
-        console.log('[D-POSE] starting real pose inference over', frames.length, 'frames');
-        const inputFrames = frameExtractions.map((fx, i) => ({
-          frame_index: fx.frame_index,
-          timestamp_seconds: fx.timestamp_seconds,
-          dataUrl: frames[i],
-          width: fx.width,
-          height: fx.height,
-        }));
-        poseRun = await runPoseInference(inputFrames);
-        console.log('[D-POSE] inference complete', {
-          producer: poseRun.landmark_producer_version,
-          frames_processed: poseRun.frames_processed,
-          frames_with_pose: poseRun.frames_with_pose,
-          mean_visibility: poseRun.mean_visibility,
-          total_landmarks: poseRun.rows.reduce((s, r) => s + r.landmarks.length, 0),
+        denseRun = await captureDenseLandmarkSeries({
+          videoFile,
+          video_sha256_hex: probed.sha256_hex,
+          fps_true: probed.fps_true,
+          duration_sec: probed.duration_sec,
+          width: probed.width,
+          height: probed.height,
+          orientation: probed.orientation,
+          landingTimeSec: landingTime ?? null,
+        });
+        poseRows = denseRun.series.frames.map((f) =>
+          densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
+        );
+        console.log('[D-POSE] dense capture complete', {
+          producer: denseRun.series.header.landmark_model_version,
+          fps_true: probed.fps_true,
+          density_tier: denseRun.density_tier,
+          window: denseRun.window,
+          frames_processed: denseRun.frames_processed,
+          frames_with_pose: denseRun.frames_with_pose,
+          frames_dropped: denseRun.frames_dropped,
+          mean_visibility: denseRun.mean_visibility,
         });
 
-        const peakFrames = toPeakLegLiftFrames(poseRun.rows);
-        const plantFrames = toPlantFrames(poseRun.rows);
+        const peakFrames = toPeakLegLiftFrames(poseRows);
+        const plantFrames = toPlantFrames(poseRows);
         const merged = peakFrames.map((p, i) => ({
           frame_index: p.frame_index,
           lift_ankle_y: p.lift_ankle_y,
@@ -619,7 +633,16 @@ export default function AnalyzeVideo() {
 
         // Expose for Playwright proof capture without affecting UI behavior.
         (window as unknown as { __DPOSE_LAST_RUN__?: unknown }).__DPOSE_LAST_RUN__ = {
-          pose: poseRun,
+          pose: {
+            landmark_producer_version: denseRun.series.header.landmark_model_version,
+            frames_processed: denseRun.frames_processed,
+            frames_with_pose: denseRun.frames_with_pose,
+            frames_dropped: denseRun.frames_dropped,
+            mean_visibility: denseRun.mean_visibility,
+            density_tier: denseRun.density_tier,
+            window: denseRun.window,
+            header: denseRun.series.header,
+          },
           tempo: tempoRun,
         };
       } catch (poseErr: any) {
@@ -737,29 +760,54 @@ export default function AnalyzeVideo() {
       // `video_metric_runs` after the upload completes. No fabrication:
       // if D-POSE produced no usable anchors, the canonical missingness
       // reason is what gets persisted and rendered.
-      if (poseRun && tempoRun) {
+      if (denseRun && tempoRun) {
+        // STEP 1 — persist the FULL landmark series before the lineage row, so
+        // `landmarks_storage_path` records a real, readable object key. If the
+        // write fails we store null and say why in diagnostics; we never claim
+        // a path that does not exist.
+        let seriesWrite: Awaited<ReturnType<typeof writeLandmarkSeries>> | null = null;
+        let seriesWriteError: string | null = null;
+        try {
+          seriesWrite = await writeLandmarkSeries(user.id, videoData.id, denseRun.series);
+          console.log('[D-POSE] landmark series persisted', seriesWrite);
+        } catch (seriesErr: any) {
+          seriesWriteError = String(seriesErr?.message ?? seriesErr);
+          console.error('[D-POSE] landmark series persistence failed:', seriesErr);
+        }
+
         try {
           const { data: landmarkRow, error: landmarkErr } = await (supabase
             .from("video_landmark_runs")
             .insert([{
               video_id: videoData.id,
-              landmark_model_id: "blazepose_full",
-              landmark_model_version: poseRun.landmark_producer_version,
+              landmark_model_id: denseRun.series.header.landmark_model_id,
+              landmark_model_version: denseRun.series.header.landmark_model_version,
               fps_true: probed.fps_true,
-              frame_count: poseRun.frames_processed,
-              landmarks_storage_path: null,
-              landmarks_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
-              mean_visibility: poseRun.mean_visibility,
+              frame_count: denseRun.frames_processed,
+              landmarks_storage_path: seriesWrite?.path ?? null,
+              landmarks_sha256_hex:
+                seriesWrite?.series_sha256_hex ?? tempoRun.evidence.evidence_sha256_hex,
+              mean_visibility: denseRun.mean_visibility,
               diagnostics: {
-                phase: "51",
-                frames_with_pose: poseRun.frames_with_pose,
+                phase: "step1_dense_capture",
+                series_format: denseRun.series.header.format,
+                series_bucket: seriesWrite ? "pose-landmarks" : null,
+                series_bytes_stored: seriesWrite?.bytes_stored ?? null,
+                series_bytes_uncompressed: seriesWrite?.bytes_uncompressed ?? null,
+                series_gzipped: seriesWrite?.gzipped ?? null,
+                series_write_error: seriesWriteError,
+                density_tier: denseRun.density_tier,
+                window_rule: denseRun.window.rule,
+                window_start_frame: denseRun.window.start_frame,
+                window_end_frame: denseRun.window.end_frame,
+                frames_with_pose: denseRun.frames_with_pose,
+                frames_dropped: denseRun.frames_dropped,
                 evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
                 cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
                 tempo_sec: tempoRun.metric.value,
                 tempo_missingness: tempoRun.metric.missingness,
                 peak_leg_lift_frame_index: tempoRun.evidence.anchors.peak_leg_lift.frame_index,
                 front_foot_strike_frame_index: tempoRun.evidence.anchors.front_foot_strike.frame_index,
-                landmark_sample_first_frame: poseRun.rows[0]?.landmarks ?? [],
               },
             }] as never)
             .select("id")
@@ -823,7 +871,7 @@ export default function AnalyzeVideo() {
                     cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
                     cache_hit: false,
                     video_sha256_hex: probed.sha256_hex,
-                    landmark_model_version: poseRun.landmark_producer_version,
+                    landmark_model_version: denseRun.series.header.landmark_model_version,
                     detector_version: detectorVersion,
                     metric_engine_version: metricEngineVersion,
                     fps_true: probed.fps_true,

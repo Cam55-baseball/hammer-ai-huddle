@@ -151,3 +151,95 @@ export const BLAZEPOSE_INDEX = {
   LEFT_ANKLE: 27,
   RIGHT_ANKLE: 28,
 } as const;
+
+/**
+ * STEP 1 — dense capture support.
+ *
+ * The dense pass decodes hundreds of frames per clip, so it cannot afford the
+ * data-URL → fetch → Blob → ImageBitmap round trip `runPoseInference` uses. It
+ * hands the landmarker a canvas directly and asks for BOTH channels:
+ * normalized image coords and world (metric, hip-centred) coords, plus
+ * per-landmark visibility. Nothing here changes the existing 7-frame path.
+ */
+export interface DensePoseDetection {
+  readonly pose_detected: boolean;
+  /** 33 × (x,y,z) normalized image coords, flattened. */
+  readonly normalized: number[];
+  /** 33 × (x,y,z) world coords in metres, flattened. */
+  readonly world: number[];
+  /** 33 per-landmark visibility. */
+  readonly visibility: number[];
+  readonly mean_visibility: number;
+}
+
+const EMPTY_DETECTION: DensePoseDetection = {
+  pose_detected: false,
+  normalized: [],
+  world: [],
+  visibility: [],
+  mean_visibility: 0,
+};
+
+export async function getPoseLandmarkerForDenseCapture(): Promise<PoseLandmarker> {
+  return await getLandmarker();
+}
+
+export function detectDensePose(
+  landmarker: PoseLandmarker,
+  source: HTMLCanvasElement | ImageBitmap,
+): DensePoseDetection {
+  const result = landmarker.detect(source as unknown as HTMLCanvasElement);
+  const norm = result.landmarks?.[0];
+  if (!norm || norm.length === 0) return EMPTY_DETECTION;
+  const world = result.worldLandmarks?.[0] ?? [];
+
+  const normalized: number[] = [];
+  const visibility: number[] = [];
+  for (const l of norm) {
+    normalized.push(l.x ?? 0, l.y ?? 0, l.z ?? 0);
+    visibility.push(l.visibility ?? 0);
+  }
+  const worldFlat: number[] = [];
+  for (const l of world) {
+    worldFlat.push(l.x ?? 0, l.y ?? 0, l.z ?? 0);
+  }
+  const meanVis =
+    visibility.length > 0 ? visibility.reduce((s, v) => s + v, 0) / visibility.length : 0;
+
+  return {
+    pose_detected: true,
+    normalized,
+    world: worldFlat,
+    visibility,
+    mean_visibility: round6(meanVis),
+  };
+}
+
+/** Adapt a dense series frame back into the legacy `PoseFrameRow` shape. */
+export function densePoseRowToPoseFrameRow(
+  frame_index: number,
+  timestamp_seconds: number,
+  d: {
+    pose_detected: boolean;
+    normalized: readonly number[];
+    visibility: readonly number[];
+  },
+): PoseFrameRow {
+  if (!d.pose_detected || d.visibility.length === 0) {
+    return { frame_index, timestamp_seconds, pose_detected: false, landmarks: [], mean_visibility: 0 };
+  }
+  const landmarks: PoseLandmarkPoint[] = d.visibility.map((v, i) => ({
+    x: round6(d.normalized[i * 3] ?? 0),
+    y: round6(d.normalized[i * 3 + 1] ?? 0),
+    z: round6(d.normalized[i * 3 + 2] ?? 0),
+    visibility: round6(v),
+  }));
+  const meanVis = landmarks.reduce((s, p) => s + p.visibility, 0) / landmarks.length;
+  return {
+    frame_index,
+    timestamp_seconds,
+    pose_detected: true,
+    landmarks,
+    mean_visibility: round6(meanVis),
+  };
+}
