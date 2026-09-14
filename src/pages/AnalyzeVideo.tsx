@@ -760,29 +760,54 @@ export default function AnalyzeVideo() {
       // `video_metric_runs` after the upload completes. No fabrication:
       // if D-POSE produced no usable anchors, the canonical missingness
       // reason is what gets persisted and rendered.
-      if (poseRun && tempoRun) {
+      if (denseRun && tempoRun) {
+        // STEP 1 — persist the FULL landmark series before the lineage row, so
+        // `landmarks_storage_path` records a real, readable object key. If the
+        // write fails we store null and say why in diagnostics; we never claim
+        // a path that does not exist.
+        let seriesWrite: Awaited<ReturnType<typeof writeLandmarkSeries>> | null = null;
+        let seriesWriteError: string | null = null;
+        try {
+          seriesWrite = await writeLandmarkSeries(user.id, videoData.id, denseRun.series);
+          console.log('[D-POSE] landmark series persisted', seriesWrite);
+        } catch (seriesErr: any) {
+          seriesWriteError = String(seriesErr?.message ?? seriesErr);
+          console.error('[D-POSE] landmark series persistence failed:', seriesErr);
+        }
+
         try {
           const { data: landmarkRow, error: landmarkErr } = await (supabase
             .from("video_landmark_runs")
             .insert([{
               video_id: videoData.id,
-              landmark_model_id: "blazepose_full",
-              landmark_model_version: poseRun.landmark_producer_version,
+              landmark_model_id: denseRun.series.header.landmark_model_id,
+              landmark_model_version: denseRun.series.header.landmark_model_version,
               fps_true: probed.fps_true,
-              frame_count: poseRun.frames_processed,
-              landmarks_storage_path: null,
-              landmarks_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
-              mean_visibility: poseRun.mean_visibility,
+              frame_count: denseRun.frames_processed,
+              landmarks_storage_path: seriesWrite?.path ?? null,
+              landmarks_sha256_hex:
+                seriesWrite?.series_sha256_hex ?? tempoRun.evidence.evidence_sha256_hex,
+              mean_visibility: denseRun.mean_visibility,
               diagnostics: {
-                phase: "51",
-                frames_with_pose: poseRun.frames_with_pose,
+                phase: "step1_dense_capture",
+                series_format: denseRun.series.header.format,
+                series_bucket: seriesWrite ? "pose-landmarks" : null,
+                series_bytes_stored: seriesWrite?.bytes_stored ?? null,
+                series_bytes_uncompressed: seriesWrite?.bytes_uncompressed ?? null,
+                series_gzipped: seriesWrite?.gzipped ?? null,
+                series_write_error: seriesWriteError,
+                density_tier: denseRun.density_tier,
+                window_rule: denseRun.window.rule,
+                window_start_frame: denseRun.window.start_frame,
+                window_end_frame: denseRun.window.end_frame,
+                frames_with_pose: denseRun.frames_with_pose,
+                frames_dropped: denseRun.frames_dropped,
                 evidence_sha256_hex: tempoRun.evidence.evidence_sha256_hex,
                 cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
                 tempo_sec: tempoRun.metric.value,
                 tempo_missingness: tempoRun.metric.missingness,
                 peak_leg_lift_frame_index: tempoRun.evidence.anchors.peak_leg_lift.frame_index,
                 front_foot_strike_frame_index: tempoRun.evidence.anchors.front_foot_strike.frame_index,
-                landmark_sample_first_frame: poseRun.rows[0]?.landmarks ?? [],
               },
             }] as never)
             .select("id")
