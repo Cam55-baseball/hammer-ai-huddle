@@ -633,7 +633,16 @@ export default function AnalyzeVideo() {
 
         // Expose for Playwright proof capture without affecting UI behavior.
         (window as unknown as { __DPOSE_LAST_RUN__?: unknown }).__DPOSE_LAST_RUN__ = {
-          pose: poseRun,
+          pose: {
+            landmark_producer_version: denseRun.series.header.landmark_model_version,
+            frames_processed: denseRun.frames_processed,
+            frames_with_pose: denseRun.frames_with_pose,
+            frames_dropped: denseRun.frames_dropped,
+            mean_visibility: denseRun.mean_visibility,
+            density_tier: denseRun.density_tier,
+            window: denseRun.window,
+            header: denseRun.series.header,
+          },
           tempo: tempoRun,
         };
       } catch (poseErr: any) {
