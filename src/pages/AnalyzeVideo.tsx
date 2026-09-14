@@ -579,30 +579,38 @@ export default function AnalyzeVideo() {
       }
 
 
-      // ===== PHASE 42B — Real D-POSE landmark production =====
-      // Runs MediaPipe Tasks Vision (BlazePose Full) over the same PNG
-      // data-URL frames `extractKeyFramesDeterministic` just emitted.
-      // Feeds the existing `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
+      // ===== STEP 1 — Dense D-POSE landmark production =====
+      // Contiguous native-frame-rate sweep across the movement window (not the
+      // 7 AI frames). Produces 2D normalized + world landmarks + per-landmark
+      // visibility for every frame in the window. Feeds the existing
+      // `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
       try {
-        console.log('[D-POSE] starting real pose inference over', frames.length, 'frames');
-        const inputFrames = frameExtractions.map((fx, i) => ({
-          frame_index: fx.frame_index,
-          timestamp_seconds: fx.timestamp_seconds,
-          dataUrl: frames[i],
-          width: fx.width,
-          height: fx.height,
-        }));
-        poseRun = await runPoseInference(inputFrames);
-        console.log('[D-POSE] inference complete', {
-          producer: poseRun.landmark_producer_version,
-          frames_processed: poseRun.frames_processed,
-          frames_with_pose: poseRun.frames_with_pose,
-          mean_visibility: poseRun.mean_visibility,
-          total_landmarks: poseRun.rows.reduce((s, r) => s + r.landmarks.length, 0),
+        denseRun = await captureDenseLandmarkSeries({
+          videoFile,
+          video_sha256_hex: probed.sha256_hex,
+          fps_true: probed.fps_true,
+          duration_sec: probed.duration_sec,
+          width: probed.width,
+          height: probed.height,
+          orientation: probed.orientation,
+          landingTimeSec: landingTime ?? null,
+        });
+        poseRows = denseRun.series.frames.map((f) =>
+          densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
+        );
+        console.log('[D-POSE] dense capture complete', {
+          producer: denseRun.series.header.landmark_model_version,
+          fps_true: probed.fps_true,
+          density_tier: denseRun.density_tier,
+          window: denseRun.window,
+          frames_processed: denseRun.frames_processed,
+          frames_with_pose: denseRun.frames_with_pose,
+          frames_dropped: denseRun.frames_dropped,
+          mean_visibility: denseRun.mean_visibility,
         });
 
-        const peakFrames = toPeakLegLiftFrames(poseRun.rows);
-        const plantFrames = toPlantFrames(poseRun.rows);
+        const peakFrames = toPeakLegLiftFrames(poseRows);
+        const plantFrames = toPlantFrames(poseRows);
         const merged = peakFrames.map((p, i) => ({
           frame_index: p.frame_index,
           lift_ankle_y: p.lift_ankle_y,
