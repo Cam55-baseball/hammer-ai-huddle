@@ -524,7 +524,11 @@ export default function AnalyzeVideo() {
     // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
     // captured here and persisted into `video_landmark_runs` after the video
     // row is created. Surfaced on `window.__DPOSE_LAST_RUN__` for proof capture.
-    let poseRun: Awaited<ReturnType<typeof runPoseInference>> | null = null;
+    // STEP 1 — dense capture replaces the 7-frame pose sample. The full series
+    // is persisted to storage so metrics can be RECOMPUTED when the engine
+    // improves, without re-filming the athlete.
+    let denseRun: Awaited<ReturnType<typeof captureDenseLandmarkSeries>> | null = null;
+    let poseRows: PoseFrameRow[] = [];
     let tempoRun: Awaited<ReturnType<typeof runTempoPipeline>> | null = null;
 
     if (analysisEnabled) {
