@@ -871,7 +871,7 @@ export default function AnalyzeVideo() {
                     cache_fingerprint_hex: tempoRun.evidence.cache_fingerprint_hex,
                     cache_hit: false,
                     video_sha256_hex: probed.sha256_hex,
-                    landmark_model_version: poseRun.landmark_producer_version,
+                    landmark_model_version: denseRun.series.header.landmark_model_version,
                     detector_version: detectorVersion,
                     metric_engine_version: metricEngineVersion,
                     fps_true: probed.fps_true,
