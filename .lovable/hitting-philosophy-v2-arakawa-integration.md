@@ -1,3 +1,12 @@
+
+> **PARTIALLY RETIRED 2026-09-15 — the P3 sections of this file are superseded by
+> `.lovable/p3-power-step-rule.md`.** P3 is a VOLUNTARY, coached power step. Every
+> statement below that P3 is involuntary, "emerges", or must not be cued is retired
+> and is not enforced. `.lovable/p3-do-not-cue-rule.md`, cited below as active, is
+> also retired. `.lovable/p3-power-step-rule.md` governs. The rest of this overlay
+> (Arakawa pillars, triangles, center-first teaching) remains in force. Preserved
+> unedited for history.
+
 # Hitting Philosophy v2 — Arakawa Integration (Additive Overlay)
 
 **Status:** ADDITIVE OVERLAY. Pure addition. Nothing prior is deleted, replaced,
