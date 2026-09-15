@@ -29,9 +29,10 @@
 
 import { LANDMARK_MODEL_ID, LANDMARK_MODEL_VERSION } from "../versions";
 import {
-  detectDensePose,
+  detectDensePoseCandidates,
   getPoseLandmarkerForDenseCapture,
 } from "./poseRunner";
+import { SubjectTracker, type SubjectLockStats } from "./subjectLock";
 import type { LandmarkSeries, LandmarkSeriesFrame } from "./landmarkSeriesFormat";
 
 /**
@@ -135,6 +136,8 @@ export interface DenseCaptureResult {
   readonly frames_with_pose: number;
   readonly frames_dropped: number;
   readonly mean_visibility: number;
+  /** STEP 3 — how the athlete was picked and how well the lock held. */
+  readonly subject_lock: SubjectLockStats;
 }
 
 function seekTo(video: HTMLVideoElement, t: number): Promise<void> {
@@ -198,6 +201,7 @@ export async function captureDenseLandmarkSeries(
     let dropped = 0;
     let visSum = 0;
 
+    const tracker = new SubjectTracker(input.fps_true);
     const total = window.frame_count;
     for (let i = 0; i < total; i++) {
       const frameIndex = window.start_frame + i;
@@ -205,24 +209,30 @@ export async function captureDenseLandmarkSeries(
       try {
         await seekTo(video, t);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const d = detectDensePose(landmarker, canvas);
-        if (d.pose_detected) {
+        // STEP 3 — every person in frame, then the locked athlete only.
+        const candidates = detectDensePoseCandidates(landmarker, canvas);
+        const step = tracker.step(candidates);
+        const d = step.candidate_index == null ? null : candidates[step.candidate_index];
+        if (d) {
           framesWithPose += 1;
           visSum += d.mean_visibility;
         }
         frames.push({
           frame_index: frameIndex,
           timestamp_seconds: t,
-          pose_detected: d.pose_detected,
-          normalized: d.normalized,
-          world: d.world,
-          visibility: d.visibility,
+          // A frame where the lock could not be held is UNOBSERVED for the
+          // locked subject. It is never filled with a different body.
+          pose_detected: d != null,
+          normalized: d ? d.normalized : [],
+          world: d ? d.world : [],
+          visibility: d ? d.visibility : [],
         });
       } catch {
         // A frame that could not be decoded is recorded as an undetected frame
         // rather than skipped — the series stays index-contiguous, and the gap
         // is honestly visible to every downstream reader.
         dropped += 1;
+        tracker.step([]);
         frames.push({
           frame_index: frameIndex,
           timestamp_seconds: t,
@@ -234,6 +244,8 @@ export async function captureDenseLandmarkSeries(
       }
       input.onProgress?.(i + 1, total);
     }
+
+    const lock = tracker.stats();
 
     const series: LandmarkSeries = {
       header: {
@@ -255,6 +267,16 @@ export async function captureDenseLandmarkSeries(
         inference_width: canvas.width,
         inference_height: canvas.height,
         landmark_count: 33,
+        subjects_detected_min: lock.subjects_detected_min,
+        subjects_detected_median: lock.subjects_detected_median,
+        subjects_detected_max: lock.subjects_detected_max,
+        subject_selection_rule: lock.selection_rule,
+        subject_locked_on_ordinal: lock.locked_on_ordinal,
+        subject_locked_candidate_index: lock.locked_candidate_index,
+        subject_frames_locked: lock.frames_locked,
+        subject_frames_lost: lock.frames_lost,
+        subject_reacquisitions: lock.reacquisitions,
+        subject_track_reliable: lock.track_reliable,
       },
       frames,
     };
@@ -268,6 +290,7 @@ export async function captureDenseLandmarkSeries(
       frames_dropped: dropped,
       mean_visibility:
         framesWithPose > 0 ? round6(visSum / framesWithPose) : 0,
+      subject_lock: lock,
     };
   } finally {
     try {

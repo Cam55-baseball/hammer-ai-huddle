@@ -59,6 +59,30 @@ export interface LandmarkSeriesHeader {
   readonly inference_width: number;
   readonly inference_height: number;
   readonly landmark_count: number;
+
+  /* ---------------- STEP 3 — subject lock provenance ----------------
+   * Optional so series written before subject locking still decode. A reader
+   * MUST treat their absence as "single-subject capture, trustworthiness
+   * unknown" rather than as a clean track.
+   */
+  /** People detected per frame across the window. */
+  readonly subjects_detected_min?: number;
+  readonly subjects_detected_median?: number;
+  readonly subjects_detected_max?: number;
+  /** Identity of the selection rule that chose the athlete. */
+  readonly subject_selection_rule?: string;
+  /** Ordinal within the window at which the lock was taken (0-based). */
+  readonly subject_locked_on_ordinal?: number | null;
+  /** Which candidate index was locked on that frame. */
+  readonly subject_locked_candidate_index?: number | null;
+  /** Frames where the locked subject was matched. */
+  readonly subject_frames_locked?: number;
+  /** Frames where no candidate satisfied the gate — recorded as unobserved. */
+  readonly subject_frames_lost?: number;
+  /** Times the lock was regained after being lost. */
+  readonly subject_reacquisitions?: number;
+  /** False when the track is too broken to be trusted downstream. */
+  readonly subject_track_reliable?: boolean;
 }
 
 export interface LandmarkSeriesFrame {
