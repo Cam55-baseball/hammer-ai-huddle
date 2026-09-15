@@ -54,6 +54,9 @@ const MODEL_ASSET_PATH = "/models/pose_landmarker_full.task";
 const WASM_BASE =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
 
+/** STEP 3 — how many people the detector may report per frame. */
+export const MAX_DETECTED_POSES = 5;
+
 let landmarkerPromise: Promise<PoseLandmarker> | null = null;
 
 async function getLandmarker(): Promise<PoseLandmarker> {
@@ -66,7 +69,11 @@ async function getLandmarker(): Promise<PoseLandmarker> {
           delegate: "GPU",
         },
         runningMode: "IMAGE",
-        numPoses: 1,
+        // STEP 3 — multi-pose. You cannot lock onto the right person while only
+        // seeing one. Every person in frame is detected; `subjectLock.ts`
+        // decides which one is the athlete and holds that lock across frames.
+        // The legacy single-pose consumers below still read index 0.
+        numPoses: MAX_DETECTED_POSES,
         minPoseDetectionConfidence: 0.5,
         minPosePresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
@@ -172,6 +179,14 @@ export interface DensePoseDetection {
   readonly mean_visibility: number;
 }
 
+/** One detected person in a frame, before subject selection. */
+export interface DensePoseCandidate {
+  readonly normalized: number[];
+  readonly world: number[];
+  readonly visibility: number[];
+  readonly mean_visibility: number;
+}
+
 const EMPTY_DETECTION: DensePoseDetection = {
   pose_detected: false,
   normalized: [],
@@ -213,6 +228,41 @@ export function detectDensePose(
     visibility,
     mean_visibility: round6(meanVis),
   };
+}
+
+/**
+ * STEP 3 — return EVERY person detected in the frame, not just index 0.
+ * The dense capture pass feeds these to the subject tracker.
+ */
+export function detectDensePoseCandidates(
+  landmarker: PoseLandmarker,
+  source: HTMLCanvasElement | ImageBitmap,
+): DensePoseCandidate[] {
+  const result = landmarker.detect(source as unknown as HTMLCanvasElement);
+  const out: DensePoseCandidate[] = [];
+  const poses = result.landmarks ?? [];
+  for (let p = 0; p < poses.length; p++) {
+    const norm = poses[p];
+    if (!norm || norm.length === 0) continue;
+    const world = result.worldLandmarks?.[p] ?? [];
+    const normalized: number[] = [];
+    const visibility: number[] = [];
+    for (const l of norm) {
+      normalized.push(l.x ?? 0, l.y ?? 0, l.z ?? 0);
+      visibility.push(l.visibility ?? 0);
+    }
+    const worldFlat: number[] = [];
+    for (const l of world) worldFlat.push(l.x ?? 0, l.y ?? 0, l.z ?? 0);
+    const meanVis =
+      visibility.length > 0 ? visibility.reduce((s, v) => s + v, 0) / visibility.length : 0;
+    out.push({
+      normalized,
+      world: worldFlat,
+      visibility,
+      mean_visibility: round6(meanVis),
+    });
+  }
+  return out;
 }
 
 /** Adapt a dense series frame back into the legacy `PoseFrameRow` shape. */
