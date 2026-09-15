@@ -103,6 +103,16 @@ in all reachable git history. What exists is "hand load behind the head" and
 Clarifying: the P2 load is drawn like a bow — the barrel loads behind the head
 against the already-loaded rear hip, storing the tension P4 releases.
 
+**Voluntary hand load vs involuntary counter-move optics — [owner-supplied 2026-09-15]:**
+
+> "The hand load is voluntary but the optics of a hand counter move happening during
+> P3 is involuntary."
+
+Clarifying: the P2 hand load is a deliberate, coached action — cue it. What looks
+like a *further* hand counter-movement during the stride is not a second action and
+is never cued: the body travels forward while the hands hold their already-loaded
+position, and the relative separation is an optical consequence of that.
+
 ### P3 — Stride / Power Step (score cap 75, not non-negotiable)
 
 Current (v3) doctrine, `src/lib/hittingPhases.ts`:
@@ -149,6 +159,26 @@ Failure symptoms: `not_sideways_at_landing`, `shoulders_not_square`,
 
 Style variants permitted: `short_step`, `no_stride`, `high_pickup`, `toe_tap_only`,
 `slap_running_start`.
+
+**Stride timing trigger — "stride to stride" — [owner-supplied 2026-09-15]:**
+
+> "Stride is to take place prior to pitcher release. I cue hitters to stride after
+> the pitchers stride and before the ball release (We use multiple terms but the term
+> stride to stride is often used but all describing the pitchers stride being our
+> trigger to get going to be ready to stride the ball by the time the ball is released
+> so the hitter can have that second split second pause to judge the ball with
+> confidence)."
+
+Clarifying, three separate points:
+1. **Trigger** — the hitter's stride is triggered by the **pitcher's stride**, not by
+   the pitcher's release.
+2. **Target** — front foot fully down **before ball release**. Unchanged; this matches
+   existing doctrine and the `p3_release_offset_ms` target of 0 ms or earlier.
+3. **Purpose** — landing early buys a split-second pause to judge the ball with
+   confidence. This is the *reason* for the target, not a threshold, and is not to be
+   turned into a number.
+
+"Stride to stride" is the owner's approved coaching term for this trigger.
 
 **Back hip through P3 — [owner-supplied 2026-09-15]** (see also §3):
 
@@ -410,6 +440,23 @@ framing ("the stance sets a line's direction, and the front foot should land wit
 degrees behind or in front of that line") **is not doctrine** and should not be used.
 No code change was required.
 
+**Stride timing trigger — "stride to stride" — [owner-supplied 2026-09-15]** (also
+recorded in §1 P3):
+
+> "Stride is to take place prior to pitcher release. I cue hitters to stride after
+> the pitchers stride and before the ball release (We use multiple terms but the term
+> stride to stride is often used but all describing the pitchers stride being our
+> trigger to get going to be ready to stride the ball by the time the ball is released
+> so the hitter can have that second split second pause to judge the ball with
+> confidence)."
+
+Clarifying: the stride is bounded by two *pitcher* events — initiate after the
+pitcher's stride, be fully down before release. `p3_timing` today measures only the
+second bound (`front_foot_full_plant` against `pitcher_release_frame`); no anchor for
+the pitcher's stride exists, so the initiation bound is currently unmeasured. The
+"split second pause to judge the ball" is the stated purpose of landing early and is
+deliberately not expressed as a threshold.
+
 Other stride constraints, `.lovable/p3-power-step-rule.md`: stride-length ceiling
 ("land inside the marker"), sideways landing, soft-knee landing, no head/weight drift.
 
@@ -627,6 +674,8 @@ is fed by four separate metric keys... 17 tiles is right; 17 metric keys is not.
 | Front vs back hip socket | Front socket may open; back socket must not; pelvis is not the rotating element | **[owner-supplied 2026-09-15]** | This doc §3; not in code |
 | P1 standard | Max voluntary rear hip load sets the hip-socket internal-rotation standard | **[owner-supplied 2026-09-15]** | This doc §1 P1; not in code |
 | P4 trigger | Landing + back elbow forward with hands back → rear knee rotates forward | **[owner-confirmed 2026-09-15]** — matches existing "rule of one" | `src/lib/hittingCausalChains.ts`; this doc §1 P4 |
+| Stride trigger ("stride to stride") | Initiate after the pitcher's stride; down before release | **[owner-supplied 2026-09-15]** — initiation bound not measured; no pitcher-stride anchor exists | This doc §1 P3, §5; `.lovable/p3-power-step-rule.md` |
+| Hand counter-move during P3 | Involuntary optics, never cued; the P2 hand load itself is voluntary | **[owner-supplied 2026-09-15]** | This doc §1 P2; `hittingCausalChains.ts` |
 
 Prior to 2026-09-15 nothing in this table was owner-supplied *in writing within the
 repo*. That is no longer true: the rows marked **[owner-supplied 2026-09-15]** /
