@@ -674,6 +674,8 @@ is fed by four separate metric keys... 17 tiles is right; 17 metric keys is not.
 | Front vs back hip socket | Front socket may open; back socket must not; pelvis is not the rotating element | **[owner-supplied 2026-09-15]** | This doc §3; not in code |
 | P1 standard | Max voluntary rear hip load sets the hip-socket internal-rotation standard | **[owner-supplied 2026-09-15]** | This doc §1 P1; not in code |
 | P4 trigger | Landing + back elbow forward with hands back → rear knee rotates forward | **[owner-confirmed 2026-09-15]** — matches existing "rule of one" | `src/lib/hittingCausalChains.ts`; this doc §1 P4 |
+| Stride trigger ("stride to stride") | Initiate after the pitcher's stride; down before release | **[owner-supplied 2026-09-15]** — initiation bound not measured; no pitcher-stride anchor exists | This doc §1 P3, §5; `.lovable/p3-power-step-rule.md` |
+| Hand counter-move during P3 | Involuntary optics, never cued; the P2 hand load itself is voluntary | **[owner-supplied 2026-09-15]** | This doc §1 P2; `hittingCausalChains.ts` |
 
 Prior to 2026-09-15 nothing in this table was owner-supplied *in writing within the
 repo*. That is no longer true: the rows marked **[owner-supplied 2026-09-15]** /
