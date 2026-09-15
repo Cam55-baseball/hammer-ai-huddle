@@ -160,6 +160,26 @@ Failure symptoms: `not_sideways_at_landing`, `shoulders_not_square`,
 Style variants permitted: `short_step`, `no_stride`, `high_pickup`, `toe_tap_only`,
 `slap_running_start`.
 
+**Stride timing trigger — "stride to stride" — [owner-supplied 2026-09-15]:**
+
+> "Stride is to take place prior to pitcher release. I cue hitters to stride after
+> the pitchers stride and before the ball release (We use multiple terms but the term
+> stride to stride is often used but all describing the pitchers stride being our
+> trigger to get going to be ready to stride the ball by the time the ball is released
+> so the hitter can have that second split second pause to judge the ball with
+> confidence)."
+
+Clarifying, three separate points:
+1. **Trigger** — the hitter's stride is triggered by the **pitcher's stride**, not by
+   the pitcher's release.
+2. **Target** — front foot fully down **before ball release**. Unchanged; this matches
+   existing doctrine and the `p3_release_offset_ms` target of 0 ms or earlier.
+3. **Purpose** — landing early buys a split-second pause to judge the ball with
+   confidence. This is the *reason* for the target, not a threshold, and is not to be
+   turned into a number.
+
+"Stride to stride" is the owner's approved coaching term for this trigger.
+
 **Back hip through P3 — [owner-supplied 2026-09-15]** (see also §3):
 
 > "During P3 the back socket holds it or increases the internal rotation until P4
