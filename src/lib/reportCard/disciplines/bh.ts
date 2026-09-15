@@ -199,7 +199,7 @@ const tiles: ReportCardTileSpec[] = [
       whatWhy:
         "Sequencing is the ORDER the kinetic chain fires in: back hip → torso/shoulders → back elbow → hands → barrel. Each segment loads the next; nothing fires until the segment behind it has done its job. Pass means the order held. Fail means a segment jumped the line — usually shoulders firing with the hips, or hands pushing before the elbow led — which steals power from everything downstream and shortens the contact window. A low score here is the single biggest leak you can have, because every later metric (bat path, on-plane, time to contact, bat speed) is downstream of it.",
       howToImprove:
-        "Pause-pause tee rounds (load → pause → swing — the stride emerges on its own, never voluntary). Load the back hip and let it UNLOAD when P4 fires — bigger early hip load = more swing power. Front-toss with a partner calling out the chain ('hip — shoulder — elbow — hand — barrel') so you feel the order, not just the swing.",
+        "Pause-pause tee rounds (load → pause → power step → pause → swing — the stride is a deliberate, coached move, timed to the pitcher's release). Load the back hip and let it UNLOAD when P4 fires — bigger early hip load = more swing power. Front-toss with a partner calling out the chain ('hip — shoulder — elbow — hand — barrel') so you feel the order, not just the swing.",
       encouragement: "Hip first. Barrel last. The order is the swing.",
     },
     compute: (a) => {
