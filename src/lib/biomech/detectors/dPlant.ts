@@ -65,6 +65,9 @@ const QUIESCENT_FRACTION = 0.15;
 /** Foot must sit within this band of its lowest observed y to be "loaded". */
 const LOAD_BAND_NORMALIZED = 0.012;
 /** Canonical minimum anchor confidence. Below this the anchor is missing. */
+export /** A foot cannot move 15% of frame height in one frame; that is a subject switch. */
+const SUBJECT_JUMP_NORMALIZED = 0.15;
+
 export const D_PLANT_MIN_CONFIDENCE = 0.7;
 
 export type FrontSide = "left" | "right" | "auto";
@@ -89,6 +92,14 @@ export interface DPlantDiagnostics {
   readonly frames_in_window: number;
   readonly frames_observed: number;
   readonly observed_fraction: number;
+  /**
+   * Consecutive-observed-frame steps where the tracked foot jumps further than
+   * SUBJECT_JUMP_NORMALIZED of frame height — physically impossible for a foot,
+   * so it means the single-subject pose track switched people. Diagnostic only;
+   * it does not gate the anchor.
+   */
+  readonly subject_track_jumps?: number;
+  readonly subject_track_jump_fraction?: number;
   readonly min_required_visibility: number;
   readonly peak_descent_frame: number | null;
   readonly peak_descent_velocity_per_sec: number | null;
@@ -334,6 +345,17 @@ export function detectFrontFootPlant(
   const observed = track.filter((s): s is FootSample => s != null);
   const observedFraction = frames.length === 0 ? 0 : observed.length / frames.length;
 
+  // Subject-identity continuity diagnostic (see DPlantDiagnostics).
+  let jumpCount = 0;
+  let jumpSteps = 0;
+  for (let i = 1; i < track.length; i++) {
+    const a = track[i - 1];
+    const b = track[i];
+    if (a == null || b == null) continue;
+    jumpSteps += 1;
+    if (Math.abs(b.y - a.y) > SUBJECT_JUMP_NORMALIZED) jumpCount += 1;
+  }
+
   const baseDiag: DPlantDiagnostics = {
     front_side_used: side,
     fps_true: fps,
@@ -342,6 +364,8 @@ export function detectFrontFootPlant(
     frames_in_window: frames.length,
     frames_observed: observed.length,
     observed_fraction: round4(observedFraction),
+    subject_track_jumps: jumpCount,
+    subject_track_jump_fraction: round4(jumpSteps > 0 ? jumpCount / jumpSteps : 0),
     min_required_visibility: MIN_LANDMARK_VISIBILITY,
     peak_descent_frame: null,
     peak_descent_velocity_per_sec: null,
