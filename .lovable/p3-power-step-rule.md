@@ -28,6 +28,28 @@ Order — both what the camera sees and what the hitter feels:
 - "Beat the ball with your foot."
 - "Land sideways, chest to the plate, weight still back."
 - "Start on his move, down at release."
+- **"Stride to stride."** [owner-supplied 2026-09-15] — the pitcher's stride is the
+  hitter's trigger to get going; be down by the time the ball is released.
+
+### Trigger vs target [owner-supplied 2026-09-15]
+
+> "Stride is to take place prior to pitcher release. I cue hitters to stride after
+> the pitchers stride and before the ball release (We use multiple terms but the term
+> stride to stride is often used but all describing the pitchers stride being our
+> trigger to get going to be ready to stride the ball by the time the ball is released
+> so the hitter can have that second split second pause to judge the ball with
+> confidence)."
+
+Trigger = the pitcher's stride. Target = front foot fully down before ball release
+(unchanged). Purpose = a split-second pause to judge the ball with confidence — a
+reason, not a number.
+
+### Hand load during the stride [owner-supplied 2026-09-15]
+
+> "The hand load is voluntary but the optics of a hand counter move happening during
+> P3 is involuntary."
+
+Cue the P2 hand load. Never cue a hand counter-move during the stride — it is optics.
 
 ## Graded stride faults (fix them with stride work)
 
