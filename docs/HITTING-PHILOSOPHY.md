@@ -440,6 +440,23 @@ framing ("the stance sets a line's direction, and the front foot should land wit
 degrees behind or in front of that line") **is not doctrine** and should not be used.
 No code change was required.
 
+**Stride timing trigger — "stride to stride" — [owner-supplied 2026-09-15]** (also
+recorded in §1 P3):
+
+> "Stride is to take place prior to pitcher release. I cue hitters to stride after
+> the pitchers stride and before the ball release (We use multiple terms but the term
+> stride to stride is often used but all describing the pitchers stride being our
+> trigger to get going to be ready to stride the ball by the time the ball is released
+> so the hitter can have that second split second pause to judge the ball with
+> confidence)."
+
+Clarifying: the stride is bounded by two *pitcher* events — initiate after the
+pitcher's stride, be fully down before release. `p3_timing` today measures only the
+second bound (`front_foot_full_plant` against `pitcher_release_frame`); no anchor for
+the pitcher's stride exists, so the initiation bound is currently unmeasured. The
+"split second pause to judge the ball" is the stated purpose of landing early and is
+deliberately not expressed as a threshold.
+
 Other stride constraints, `.lovable/p3-power-step-rule.md`: stride-length ceiling
 ("land inside the marker"), sideways landing, soft-knee landing, no head/weight drift.
 
