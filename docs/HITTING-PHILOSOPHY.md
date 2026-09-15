@@ -402,11 +402,13 @@ Sign convention (`src/lib/reportCard/contracts/bh.contract.ts`, and mirrored in
 > "Degrees stride deviates from a square line to the pitcher. Positive = stepping
 > out (bucket). Negative = stepping in (across body). |value|<=15° passes."
 
-**Note on the reference line.** The repo defines the line as "a square line to the
-pitcher." The framing "the stance sets a line's direction, and the front foot should
-land within 15 degrees behind or in front of that line" — i.e. a *stance-derived*
-line rather than a square line — is **NOT FOUND IN REPO**. Both formulations use 15°;
-only the reference line differs, and only the square-line version is written down.
+**RESOLVED — the reference line [owner ruling 2026-09-15].** The reference line for
+`stride_dir_deg_off_square` is **a square line to the pitcher**, not a stance-derived
+line. Both formulations use 15°; only the reference line differed. The square-line
+version — what the repo already implements — is confirmed correct. The stance-derived
+framing ("the stance sets a line's direction, and the front foot should land within 15
+degrees behind or in front of that line") **is not doctrine** and should not be used.
+No code change was required.
 
 Other stride constraints, `.lovable/p3-power-step-rule.md`: stride-length ceiling
 ("land inside the marker"), sideways landing, soft-knee landing, no head/weight drift.
@@ -471,7 +473,27 @@ Fixes, same file:
 - **P3** — "Power step: start the stride as the pitcher starts toward release and get the front foot ALL the way down before he lets it go — landed sideways, chest to the plate, weight still back, loaded and ready to strike."
 - **P4** — "Back elbow (or front of your bicep) leads forward FIRST — hands stay back. That elbow turning your body brings the barrel BEHIND the ball, square to fair, on plane. Low-effort velocity comes from staying on plane, not from swinging harder."
 
-### 6.3 Requested mappings not in the repo
+### 6.3 Owner-supplied fault → outcome mappings
+
+**Head forward [owner-supplied 2026-09-15]:**
+
+> "When the head goes forward hitters are usually late on fastballs or swinging and
+> missing chase pitches and fouling off pitches they thought they would hit super well
+> or crush."
+
+**Back hip opens early [owner-supplied 2026-09-15]:**
+
+> "If back hip appears closed upon finishing P3 then P2 was done correctly before P3.
+> If back hip opens prior to P4 starting (Landing and back elbow traveling forward)
+> then P2 was done poorly resulting in a bad position to hit causing users to be bad at
+> hitting the high or away pitch, along with hitting hard pullside groundballs and soft
+> pop ups opposite field, usually not good fastball hitters but can usually crush off
+> speed if they time it up perfectly"
+
+Clarifying: back-hip state at the end of P3 is read as a grade on P2, not on P3. The
+fastball-weak / offspeed-strong split is the signature of this fault.
+
+### 6.4 Requested mappings not found in the repo (superseded by §6.3)
 
 - **"Head forward → late on fastballs, chasing, fouling off hittable pitches"** —
   partially present, not verbatim. The repo has `head_pull_off →
@@ -598,9 +620,17 @@ is fed by four separate metric keys... 17 tiles is right; 17 metric keys is not.
 | Pelvis rotation minimum | 30° | In-code constant, metric disabled | `pelvisRotationEfficiency.ts` |
 | Phase score caps | P1 80 · P2 85 · P3 75 · P4 50 (soft 70, elite +5); 2+ phase violation 65 | In-repo doctrine, "LOCKED 2026" | `src/lib/hittingPhases.ts` |
 | Head at release (pitching) | ≤15° off target line | Wording matches a published Mustard article | `docs/asb/report-card-system-reference.md` |
+| Stride reference line | Square line to the pitcher (not stance-derived) | **[owner ruling 2026-09-15]** — confirms existing code | This doc §5; `bh.contract.ts` |
+| Head forward past centre of body during P3 | ≥6 inches = excessive; centre of body = COM at P2 | **[owner-supplied 2026-09-15] — PROVISIONAL, requires validation** against clips with known outcomes | This doc §4; not in code |
+| Back hip socket at end of P3 | Must read closed | **[owner-supplied 2026-09-15]** | This doc §1 P3, §3; not in code |
+| Back hip socket through P3 | Holds or increases internal rotation; may increase in an elite swing | **[owner-supplied 2026-09-15]** | This doc §1 P3, §3; not in code |
+| Front vs back hip socket | Front socket may open; back socket must not; pelvis is not the rotating element | **[owner-supplied 2026-09-15]** | This doc §3; not in code |
+| P1 standard | Max voluntary rear hip load sets the hip-socket internal-rotation standard | **[owner-supplied 2026-09-15]** | This doc §1 P1; not in code |
+| P4 trigger | Landing + back elbow forward with hands back → rear knee rotates forward | **[owner-confirmed 2026-09-15]** — matches existing "rule of one" | `src/lib/hittingCausalChains.ts`; this doc §1 P4 |
 
-Nothing in this table is owner-supplied *in writing within the repo*; no file marks
-any hitting threshold with an owner attribution or a dated source. That absence is
-itself a finding — the benchmark provenance guard
-(`scripts/check-benchmark-provenance.ts`) covers grading benchmarks, not these
-doctrine thresholds.
+Prior to 2026-09-15 nothing in this table was owner-supplied *in writing within the
+repo*. That is no longer true: the rows marked **[owner-supplied 2026-09-15]** /
+**[owner ruling 2026-09-15]** carry an owner attribution and a date. Everything above
+them remains in-repo doctrine or derived constants with no owner attribution. The
+benchmark provenance guard (`scripts/check-benchmark-provenance.ts`) covers grading
+benchmarks, not these doctrine thresholds.
