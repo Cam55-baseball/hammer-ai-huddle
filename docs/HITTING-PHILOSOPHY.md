@@ -54,10 +54,19 @@ Alternate naming: `src/lib/reportCard/v1/hittingV1Schema.ts` calls P1
 "Hip Load (Pelvic Coil)" — "How you coil the back hip to load the swing before
 anything else moves."
 
-**Requested framing not found:** P1 described as "maximum voluntary rear hip load"
-or as setting a "hip-socket internal rotation standard" — **NOT FOUND IN REPO.**
+**Requested framing not found in code:** P1 described as "maximum voluntary rear hip
+load" or as setting a "hip-socket internal rotation standard" — **NOT FOUND IN REPO.**
 Searched live tree and all reachable git history for "hip socket", "hip_socket",
 "maximum voluntary", and internal-rotation phrasing in a hitting context: zero hits.
+Now supplied by the owner and recorded here:
+
+> "P1 is the max voluntary rear hip load that is setting the hip socket inner
+> rotation standard"
+> — **[owner-supplied 2026-09-15]**
+
+Clarifying: P1 is a deliberate, maximal rear-hip load, and the amount of hip-socket
+internal rotation it reaches is the reference standard the rest of the swing is held
+to. No code currently measures it; see §3 and §9.
 
 ### P2 — Hand Load (score cap 85, not non-negotiable)
 
@@ -83,10 +92,16 @@ Timing rule (tile `p2_timing`, metric `p2_timing_pass`):
 Failure symptoms: `long_stride`, `over_stride`, `head_drift_to_pitcher`,
 `weight_forward`, `front_shoulder_pulls_out`, `chest_not_square_to_plate`.
 
-**Requested framing not found:** the "bow and arrow" barrel-style load behind the
-head — **NOT FOUND IN REPO.** Zero hits for "bow and arrow" in the live tree and in
-all reachable git history. What exists is "hand load behind the head" and
-"scap-pack / knob load".
+**Requested framing not found in code:** the "bow and arrow" barrel-style load behind
+the head — **NOT FOUND IN REPO.** Zero hits for "bow and arrow" in the live tree and
+in all reachable git history. What exists is "hand load behind the head" and
+"scap-pack / knob load". Now supplied by the owner and recorded here:
+
+> "the bow and arrow barrel style load behind the head in P2"
+> — **[owner-supplied 2026-09-15]**
+
+Clarifying: the P2 load is drawn like a bow — the barrel loads behind the head
+against the already-loaded rear hip, storing the tension P4 releases.
 
 ### P3 — Stride / Power Step (score cap 75, not non-negotiable)
 
@@ -135,6 +150,22 @@ Failure symptoms: `not_sideways_at_landing`, `shoulders_not_square`,
 Style variants permitted: `short_step`, `no_stride`, `high_pickup`, `toe_tap_only`,
 `slap_running_start`.
 
+**Back hip through P3 — [owner-supplied 2026-09-15]** (see also §3):
+
+> "During P3 the back socket holds it or increases the internal rotation until P4
+> releases the hip forward by the elbow going forward while the hands stay back which
+> causes the rear knee to rotate forward (Two triangles as described in our
+> philosophy)."
+
+> "The hip internal may increase during P3 in an elite swing due to the nature of the
+> bow and arrow barrel style load behind the head in P2."
+
+> "The back hip must be closed at the end of P3."
+
+Clarifying: the stride itself is voluntary, but the back hip socket does not give
+anything back during it — it holds or deepens, and must still read closed at
+foot-down. Closed-at-end-of-P3 is a pass/fail checkpoint; no metric measures it today.
+
 **CONTRADICTION — retired vs live P3 doctrine.** See §7.1.
 
 ### P4 — Hitter's Move (non-negotiable, hard score cap 50)
@@ -151,6 +182,11 @@ What releases it (`src/lib/hittingCausalChains.ts`, P4 trigger):
 > your back elbow (or the front of your bicep)."
 > Coach note: "Rule of one: elbow / anterior bicep advances first, hands remain
 > posterior — never both simultaneously."
+
+**Owner confirmation [owner-supplied 2026-09-15]:** P4 begins at landing plus the back
+elbow travelling forward while the hands stay back, which causes the rear knee to
+rotate forward. This confirms the existing "rule of one" text above as correct and
+current; nothing in the code needed to change.
 
 Strict order (`src/lib/reportCard/disciplines/bh.ts`, tile `hitters_move`):
 
@@ -218,12 +254,29 @@ Adjacent reminders from the same `HittingDoctrineBlock.tsx` list:
 
 ## 3. Hip and pelvis doctrine
 
-**Hip-socket vs pelvis distinction: NOT FOUND IN REPO.** No file, comment,
-migration, seed row, or reachable commit distinguishes hip *socket* rotation from
-*pelvis* rotation.
+**Owner doctrine [owner-supplied 2026-09-15]:**
 
-**"Back hip socket must not open while the front hip socket may open":
-NOT FOUND IN REPO.** No asymmetric front/back hip rule exists in any form.
+> "Back hip socket is closing, and the front hip socket can open, not the pelvis. The
+> back hip socket must not open."
+
+> "During P3 the back socket holds it or increases the internal rotation until P4
+> releases the hip forward by the elbow going forward while the hands stay back which
+> causes the rear knee to rotate forward (Two triangles as described in our
+> philosophy)."
+
+> "The hip internal may increase during P3 in an elite swing due to the nature of the
+> bow and arrow barrel style load behind the head in P2."
+
+> "The back hip must be closed at the end of P3."
+
+Clarifying: rotation is a *socket* event, not a pelvis event. The front socket is
+allowed to open; the back socket is not, and the pelvis is not the thing being asked
+to turn. The back socket closes through P1–P2, holds or deepens through P3, must read
+closed at foot-down, and is released only by the P4 elbow-forward / hands-back move.
+
+**Status in code: NOT IMPLEMENTED.** The distinction above is recorded doctrine only;
+no file, comment, migration, seed row, or reachable commit distinguishes hip *socket*
+rotation from *pelvis* rotation, and no asymmetric front/back hip rule exists in code.
 
 What the repo does contain on hips:
 
@@ -256,10 +309,32 @@ Measurement cross-reference:
 
 ## 4. Head doctrine
 
-**"Head lowering versus head drifting toward the pitcher" as a stated doctrinal
-distinction: NOT FOUND IN REPO.** **"Head position relative to center of mass":
-NOT FOUND IN REPO** as hitting doctrine (COM appears only in stride-drift coach
-notes, e.g. "COM travelling with the stride limb instead of staying posterior").
+**Owner doctrine [owner-supplied 2026-09-15]:**
+
+> "if your head goes toward the pitcher or lowers toward the plate: If lowering in
+> place or with minimal forward movement then P1 was done correctly. If head travels
+> toward the pitcher excessively then P1 was not done and held through P2 resulting in
+> a bad position to hit."
+
+Clarifying: head *lowering* is not a fault — it is evidence of a correct P1. Head
+*travelling toward the pitcher* is the fault, and it is diagnostic of P1, not of the
+head itself.
+
+**Reference point [owner-supplied 2026-09-15]:** the centre of the body means the
+athlete's **centre of mass at P2**.
+
+> "The head creeping beyond the center of the body during P3 is excessive forward.
+> 6 inches of movement or more is excessive"
+
+**PROVISIONAL — requires validation.** The 6-inch figure is explicitly provisional per
+the owner and must be validated against clips with known outcomes before it is treated
+as a settled threshold or wired into any metric.
+
+**Previously recorded as missing (now supplied above):** "head lowering versus head
+drifting toward the pitcher" as a stated doctrinal distinction, and "head position
+relative to centre of mass", were **NOT FOUND IN REPO** as of the original
+consolidation (COM appeared only in stride-drift coach notes, e.g. "COM travelling
+with the stride limb instead of staying posterior"). They remain absent from code.
 
 What exists:
 
