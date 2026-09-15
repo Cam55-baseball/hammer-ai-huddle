@@ -20,6 +20,13 @@ export const MISSINGNESS_REASONS = {
   PEAK_LEG_LIFT_MISSING: "peak_leg_lift_missing",
   INSUFFICIENT_TEMPORAL_RESOLUTION: "insufficient_temporal_resolution",
   POSE_MODEL_IS_STUB: "pose_model_is_stub",
+  // STEP 2 — canonical reasons from
+  // `.lovable/canonical-measurement-architecture.md §Missingness rules`.
+  // Added verbatim from that enum; no new reason invented here.
+  LANDMARK_OCCLUDED: "landmark_occluded",
+  ANCHOR_NOT_DETECTED: "anchor_not_detected",
+  OUT_OF_FRAME: "out_of_frame",
+  CALIBRATION_UNAVAILABLE: "calibration_unavailable",
 } as const;
 
 export type MissingnessReason =
