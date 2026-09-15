@@ -89,7 +89,7 @@ export const PHASE_CAUSAL_CHAINS: Record<HittingPhaseId, CausalChain> = {
     },
     fix: {
       athlete: 'Load your hands BEFORE you step. Feel the scap pack coil onto the loaded hip — hands slightly back as your foot moves forward.',
-      coach_note: 'Sequence scap-pack / hand load prior to stride initiation; counter-movement of hands is involuntary when stride is back-hip-driven. Preserve the top-triangle prerequisite (elbow-forward-hands-back) that P4 will exploit.',
+      coach_note: 'Sequence scap-pack / hand load prior to stride initiation; the hands hold their counter-position while the athlete takes the coached power step. Preserve the top-triangle prerequisite (elbow-forward-hands-back) that P4 will exploit.',
     },
   },
   P3: {
