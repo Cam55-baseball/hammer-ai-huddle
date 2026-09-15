@@ -103,6 +103,16 @@ in all reachable git history. What exists is "hand load behind the head" and
 Clarifying: the P2 load is drawn like a bow — the barrel loads behind the head
 against the already-loaded rear hip, storing the tension P4 releases.
 
+**Voluntary hand load vs involuntary counter-move optics — [owner-supplied 2026-09-15]:**
+
+> "The hand load is voluntary but the optics of a hand counter move happening during
+> P3 is involuntary."
+
+Clarifying: the P2 hand load is a deliberate, coached action — cue it. What looks
+like a *further* hand counter-movement during the stride is not a second action and
+is never cued: the body travels forward while the hands hold their already-loaded
+position, and the relative separation is an optical consequence of that.
+
 ### P3 — Stride / Power Step (score cap 75, not non-negotiable)
 
 Current (v3) doctrine, `src/lib/hittingPhases.ts`:
