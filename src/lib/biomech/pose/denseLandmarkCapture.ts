@@ -82,13 +82,31 @@ export interface DenseWindow {
   readonly start_sec: number;
   readonly end_sec: number;
   readonly rule: string;
+  /** STEP 4 — how the window was chosen. Absent on the retained v1 placement. */
+  readonly source?: WindowSource;
+}
+
+/**
+ * STEP 4 — thrown when the scout pass cannot establish where the athlete is.
+ * Carries canonical missingness so callers report a reason, never a guess.
+ */
+export class WindowSelectionFailure extends Error {
+  readonly missingness: MissingnessRecord;
+  readonly scout: ScoutFindings;
+  constructor(record: MissingnessRecord, scout: ScoutFindings, detail: string) {
+    super(`dense capture: window selection failed (${record.missing_reason}) — ${detail}`);
+    this.name = "WindowSelectionFailure";
+    this.missingness = record;
+    this.scout = scout;
+  }
 }
 
 function round6(n: number): number {
   return Math.round(n * 1_000_000) / 1_000_000;
 }
 
-/** Pure window selection — unit-testable without a decoder. */
+/** v1 pure window placement. RETAINED FOR REFERENCE AND TESTS ONLY — the
+ *  capture path uses the scout-driven placement in `scoutPass.ts`. */
 export function selectDenseWindow(
   fps_true: number,
   duration_sec: number,
