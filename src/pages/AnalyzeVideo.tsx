@@ -36,7 +36,7 @@ import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
-import { captureDenseLandmarkSeries } from "@/lib/biomech/pose/denseLandmarkCapture";
+import { captureDenseLandmarkSeries, WindowSelectionFailure } from "@/lib/biomech/pose/denseLandmarkCapture";
 import { writeLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
 import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
