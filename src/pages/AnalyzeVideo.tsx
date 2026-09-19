@@ -646,7 +646,19 @@ export default function AnalyzeVideo() {
           tempo: tempoRun,
         };
       } catch (poseErr: any) {
-        console.error('[D-POSE] pose inference failed:', poseErr);
+        // STEP 4 — a window-selection failure is not an inference crash: the
+        // scout pass found no athlete anywhere in the clip, so there is no
+        // honest window to analyse. Logged with its canonical missingness
+        // reason instead of being smoothed into a guessed window.
+        if (poseErr instanceof WindowSelectionFailure) {
+          console.error('[D-POSE] window selection failed:', {
+            missing_reason: poseErr.missingness.missing_reason,
+            emitted_by: poseErr.missingness.emitted_by,
+            scout: poseErr.scout,
+          });
+        } else {
+          console.error('[D-POSE] pose inference failed:', poseErr);
+        }
         // Do not block the rest of the analysis flow — surface honest failure.
         toast.error(UPLOAD_ERRORS.poseFailed);
       }
