@@ -198,14 +198,6 @@ function seekTo(video: HTMLVideoElement, t: number): Promise<void> {
 export async function captureDenseLandmarkSeries(
   input: DenseCaptureInput,
 ): Promise<DenseCaptureResult> {
-  const window = selectDenseWindow(
-    input.fps_true,
-    input.duration_sec,
-    input.landingTimeSec,
-    input.budget ?? MAX_DENSE_FRAMES,
-  );
-  if (!window) throw new Error("dense capture: unusable probe (fps/duration)");
-
   const video = document.createElement("video");
   video.preload = "auto";
   video.muted = true;
