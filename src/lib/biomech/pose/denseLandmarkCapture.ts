@@ -228,6 +228,59 @@ export async function captureDenseLandmarkSeries(
 
     const landmarker = await getPoseLandmarkerForDenseCapture();
 
+    /* ---------------- PASS 1 — scout ---------------- */
+    const scoutIndices = selectScoutFrameIndices(
+      input.fps_true,
+      input.duration_sec,
+      input.scoutBudget ?? SCOUT_SAMPLE_BUDGET,
+    );
+    const scoutTracker = new SubjectTracker(input.fps_true);
+    const observations: ScoutObservation[] = [];
+    let scoutFramesInferred = 0;
+    for (let i = 0; i < scoutIndices.length; i++) {
+      const frameIndex = scoutIndices[i];
+      const t = round6(frameIndex / input.fps_true);
+      let candidates: ReturnType<typeof detectDensePoseCandidates> = [];
+      try {
+        await seekTo(video, t);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        candidates = detectDensePoseCandidates(landmarker, canvas);
+        scoutFramesInferred += 1;
+      } catch {
+        candidates = [];
+      }
+      const step = scoutTracker.step(candidates);
+      const d = step.candidate_index == null ? null : candidates[step.candidate_index];
+      observations.push({
+        frame_index: frameIndex,
+        timestamp_seconds: t,
+        subject_locked: d != null,
+        mean_visibility: d ? d.mean_visibility : 0,
+        normalized: d ? d.normalized : [],
+        candidates_detected: candidates.length,
+      });
+      input.onScoutProgress?.(i + 1, scoutIndices.length);
+    }
+
+    const findings = deriveScoutFindings(observations);
+    const placed = placeDenseWindowFromScout({
+      fps_true: input.fps_true,
+      duration_sec: input.duration_sec,
+      budget: input.budget ?? MAX_DENSE_FRAMES,
+      landingTimeSec: input.landingTimeSec,
+      findings,
+    });
+    if ("failed" in placed) {
+      // No midpoint fallback: refuse honestly rather than analyse a guess.
+      throw new WindowSelectionFailure(
+        missingness(placed.reason, "D-POSE"),
+        findings,
+        placed.detail,
+      );
+    }
+    const window: DenseWindow = placed;
+
+    /* ---------------- PASS 2 — dense ---------------- */
     const frames: LandmarkSeriesFrame[] = [];
     let framesWithPose = 0;
     let dropped = 0;
