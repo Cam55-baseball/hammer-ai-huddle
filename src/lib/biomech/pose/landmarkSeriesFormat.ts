@@ -83,6 +83,28 @@ export interface LandmarkSeriesHeader {
   readonly subject_reacquisitions?: number;
   /** False when the track is too broken to be trusted downstream. */
   readonly subject_track_reliable?: boolean;
+
+  /* ---------------- STEP 4 — window provenance ----------------
+   * How the analysed window was chosen. Optional so earlier series still
+   * decode; their absence means the v1 landing-or-midpoint rule was used and
+   * the window was a guess whenever no landing mark existed.
+   */
+  readonly window_source?:
+    | "landing_mark"
+    | "scout_motion"
+    | "landing_mark_rejected_scout_motion"
+    | "failed";
+  /** Sparse samples taken across the whole clip in the scout pass. */
+  readonly scout_sample_count?: number;
+  /** Of those, how many held a confident subject lock. */
+  readonly scout_samples_with_subject?: number;
+  /** Span in which the locked athlete was confidently present. */
+  readonly scout_present_start_sec?: number | null;
+  readonly scout_present_end_sec?: number | null;
+  /** Frame at the centre of the highest-movement region found by the scout. */
+  readonly scout_motion_centre_frame?: number | null;
+  /** Peak smoothed motion, normalized frame-heights per second. */
+  readonly scout_motion_peak_per_sec?: number;
 }
 
 export interface LandmarkSeriesFrame {
