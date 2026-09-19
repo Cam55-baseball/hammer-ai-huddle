@@ -1,5 +1,5 @@
 /**
- * STEP 1 — Dense pose capture.
+ * STEP 1 — Dense pose capture.  STEP 4 — two-pass window selection.
  *
  * Replaces the 7-frame sample that fed pose inference with a contiguous,
  * native-frame-rate sweep across the movement window. Stride is ALWAYS 1
@@ -7,15 +7,22 @@
  * than the per-clip frame budget allows, the WINDOW shrinks — the sampling
  * rate does not.
  *
- * WINDOW SELECTION RULE (v1)
- *   budget           = MAX_DENSE_FRAMES frames (phone memory / time ceiling)
- *   window_frames    = min(total_frames, budget)
- *   centre           = landing frame when the athlete marked one, else the
- *                      clip midpoint
- *   split            = 60% of the window before the centre, 40% after when a
- *                      landing mark exists (load and stride precede it);
- *                      50/50 when centring on the midpoint
- *   the window is then clamped into [0, total_frames-1] preserving its length
+ * WINDOW SELECTION RULE (v2 — STEP 4)
+ *   PASS 1 (scout): SCOUT_SAMPLE_BUDGET sparse samples across the WHOLE clip,
+ *     multi-pose + subject lock. Yields the span where the athlete is
+ *     confidently present and the region of highest movement inside it.
+ *   PASS 2 (dense): window_frames = min(total_frames, budget), centred on the
+ *     scouted motion region (60/40 pre-split) and clamped inside the presence
+ *     span, then into the clip.
+ *   A landing mark is still honoured when the scout confirms the athlete is
+ *     present at it; a stale mark is rejected and recorded as rejected.
+ *   THERE IS NO MIDPOINT FALLBACK. If the scout finds no confidently locked
+ *     subject anywhere, capture fails with canonical missingness rather than
+ *     analysing a guessed window. See `scoutPass.ts`.
+ *
+ *   `selectDenseWindow` below is the retained v1 pure placement (landing or
+ *   midpoint). It is no longer on the capture path and must not be used to
+ *   choose a window for analysis.
  *
  * fps_true is never read from container metadata — it is passed in from
  * `probeVideoMetadata`, which measures inter-frame deltas with
@@ -23,16 +30,26 @@
  *
  * DETERMINISM: frame indices come from integer arithmetic, each frame is
  * reached by an explicit seek to `index / fps_true`, and no wall-clock or
- * random input takes part. Same file + same probe → same index list → same
- * landmark series.
+ * random input takes part. Same file + same probe → same scout samples → same
+ * window → same landmark series.
  */
 
 import { LANDMARK_MODEL_ID, LANDMARK_MODEL_VERSION } from "../versions";
+import { missingness, type MissingnessRecord } from "../metrics/missingness";
 import {
   detectDensePoseCandidates,
   getPoseLandmarkerForDenseCapture,
 } from "./poseRunner";
 import { SubjectTracker, type SubjectLockStats } from "./subjectLock";
+import {
+  SCOUT_SAMPLE_BUDGET,
+  deriveScoutFindings,
+  placeDenseWindowFromScout,
+  selectScoutFrameIndices,
+  type ScoutFindings,
+  type ScoutObservation,
+  type WindowSource,
+} from "./scoutPass";
 import type { LandmarkSeries, LandmarkSeriesFrame } from "./landmarkSeriesFormat";
 
 /**
@@ -65,13 +82,31 @@ export interface DenseWindow {
   readonly start_sec: number;
   readonly end_sec: number;
   readonly rule: string;
+  /** STEP 4 — how the window was chosen. Absent on the retained v1 placement. */
+  readonly source?: WindowSource;
+}
+
+/**
+ * STEP 4 — thrown when the scout pass cannot establish where the athlete is.
+ * Carries canonical missingness so callers report a reason, never a guess.
+ */
+export class WindowSelectionFailure extends Error {
+  readonly missingness: MissingnessRecord;
+  readonly scout: ScoutFindings;
+  constructor(record: MissingnessRecord, scout: ScoutFindings, detail: string) {
+    super(`dense capture: window selection failed (${record.missing_reason}) — ${detail}`);
+    this.name = "WindowSelectionFailure";
+    this.missingness = record;
+    this.scout = scout;
+  }
 }
 
 function round6(n: number): number {
   return Math.round(n * 1_000_000) / 1_000_000;
 }
 
-/** Pure window selection — unit-testable without a decoder. */
+/** v1 pure window placement. RETAINED FOR REFERENCE AND TESTS ONLY — the
+ *  capture path uses the scout-driven placement in `scoutPass.ts`. */
 export function selectDenseWindow(
   fps_true: number,
   duration_sec: number,
@@ -125,7 +160,10 @@ export interface DenseCaptureInput {
   readonly orientation: "portrait" | "landscape" | "square";
   readonly landingTimeSec: number | null;
   readonly budget?: number;
+  /** STEP 4 — scout sample budget. Defaults to SCOUT_SAMPLE_BUDGET. */
+  readonly scoutBudget?: number;
   readonly onProgress?: (done: number, total: number) => void;
+  readonly onScoutProgress?: (done: number, total: number) => void;
 }
 
 export interface DenseCaptureResult {
@@ -138,6 +176,8 @@ export interface DenseCaptureResult {
   readonly mean_visibility: number;
   /** STEP 3 — how the athlete was picked and how well the lock held. */
   readonly subject_lock: SubjectLockStats;
+  /** STEP 4 — what the scout pass found, and what it cost. */
+  readonly scout: ScoutFindings & { readonly frames_inferred: number };
 }
 
 function seekTo(video: HTMLVideoElement, t: number): Promise<void> {
@@ -158,14 +198,6 @@ function seekTo(video: HTMLVideoElement, t: number): Promise<void> {
 export async function captureDenseLandmarkSeries(
   input: DenseCaptureInput,
 ): Promise<DenseCaptureResult> {
-  const window = selectDenseWindow(
-    input.fps_true,
-    input.duration_sec,
-    input.landingTimeSec,
-    input.budget ?? MAX_DENSE_FRAMES,
-  );
-  if (!window) throw new Error("dense capture: unusable probe (fps/duration)");
-
   const video = document.createElement("video");
   video.preload = "auto";
   video.muted = true;
@@ -196,6 +228,59 @@ export async function captureDenseLandmarkSeries(
 
     const landmarker = await getPoseLandmarkerForDenseCapture();
 
+    /* ---------------- PASS 1 — scout ---------------- */
+    const scoutIndices = selectScoutFrameIndices(
+      input.fps_true,
+      input.duration_sec,
+      input.scoutBudget ?? SCOUT_SAMPLE_BUDGET,
+    );
+    const scoutTracker = new SubjectTracker(input.fps_true);
+    const observations: ScoutObservation[] = [];
+    let scoutFramesInferred = 0;
+    for (let i = 0; i < scoutIndices.length; i++) {
+      const frameIndex = scoutIndices[i];
+      const t = round6(frameIndex / input.fps_true);
+      let candidates: ReturnType<typeof detectDensePoseCandidates> = [];
+      try {
+        await seekTo(video, t);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        candidates = detectDensePoseCandidates(landmarker, canvas);
+        scoutFramesInferred += 1;
+      } catch {
+        candidates = [];
+      }
+      const step = scoutTracker.step(candidates);
+      const d = step.candidate_index == null ? null : candidates[step.candidate_index];
+      observations.push({
+        frame_index: frameIndex,
+        timestamp_seconds: t,
+        subject_locked: d != null,
+        mean_visibility: d ? d.mean_visibility : 0,
+        normalized: d ? d.normalized : [],
+        candidates_detected: candidates.length,
+      });
+      input.onScoutProgress?.(i + 1, scoutIndices.length);
+    }
+
+    const findings = deriveScoutFindings(observations);
+    const placed = placeDenseWindowFromScout({
+      fps_true: input.fps_true,
+      duration_sec: input.duration_sec,
+      budget: input.budget ?? MAX_DENSE_FRAMES,
+      landingTimeSec: input.landingTimeSec,
+      findings,
+    });
+    if ("failed" in placed) {
+      // No midpoint fallback: refuse honestly rather than analyse a guess.
+      throw new WindowSelectionFailure(
+        missingness(placed.reason, "D-POSE"),
+        findings,
+        placed.detail,
+      );
+    }
+    const window: DenseWindow = placed;
+
+    /* ---------------- PASS 2 — dense ---------------- */
     const frames: LandmarkSeriesFrame[] = [];
     let framesWithPose = 0;
     let dropped = 0;
@@ -277,6 +362,13 @@ export async function captureDenseLandmarkSeries(
         subject_frames_lost: lock.frames_lost,
         subject_reacquisitions: lock.reacquisitions,
         subject_track_reliable: lock.track_reliable,
+        window_source: window.source,
+        scout_sample_count: findings.sample_count,
+        scout_samples_with_subject: findings.samples_with_subject,
+        scout_present_start_sec: findings.presence?.start_sec ?? null,
+        scout_present_end_sec: findings.presence?.end_sec ?? null,
+        scout_motion_centre_frame: findings.motion_centre_frame,
+        scout_motion_peak_per_sec: findings.motion_peak_per_sec,
       },
       frames,
     };
@@ -291,6 +383,7 @@ export async function captureDenseLandmarkSeries(
       mean_visibility:
         framesWithPose > 0 ? round6(visSum / framesWithPose) : 0,
       subject_lock: lock,
+      scout: { ...findings, frames_inferred: scoutFramesInferred },
     };
   } finally {
     try {
