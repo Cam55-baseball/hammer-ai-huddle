@@ -362,6 +362,13 @@ export async function captureDenseLandmarkSeries(
         subject_frames_lost: lock.frames_lost,
         subject_reacquisitions: lock.reacquisitions,
         subject_track_reliable: lock.track_reliable,
+        window_source: window.source,
+        scout_sample_count: findings.sample_count,
+        scout_samples_with_subject: findings.samples_with_subject,
+        scout_present_start_sec: findings.presence?.start_sec ?? null,
+        scout_present_end_sec: findings.presence?.end_sec ?? null,
+        scout_motion_centre_frame: findings.motion_centre_frame,
+        scout_motion_peak_per_sec: findings.motion_peak_per_sec,
       },
       frames,
     };
@@ -376,6 +383,7 @@ export async function captureDenseLandmarkSeries(
       mean_visibility:
         framesWithPose > 0 ? round6(visSum / framesWithPose) : 0,
       subject_lock: lock,
+      scout: { ...findings, frames_inferred: scoutFramesInferred },
     };
   } finally {
     try {
