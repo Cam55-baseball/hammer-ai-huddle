@@ -160,7 +160,10 @@ export interface DenseCaptureInput {
   readonly orientation: "portrait" | "landscape" | "square";
   readonly landingTimeSec: number | null;
   readonly budget?: number;
+  /** STEP 4 — scout sample budget. Defaults to SCOUT_SAMPLE_BUDGET. */
+  readonly scoutBudget?: number;
   readonly onProgress?: (done: number, total: number) => void;
+  readonly onScoutProgress?: (done: number, total: number) => void;
 }
 
 export interface DenseCaptureResult {
@@ -173,6 +176,8 @@ export interface DenseCaptureResult {
   readonly mean_visibility: number;
   /** STEP 3 — how the athlete was picked and how well the lock held. */
   readonly subject_lock: SubjectLockStats;
+  /** STEP 4 — what the scout pass found, and what it cost. */
+  readonly scout: ScoutFindings & { readonly frames_inferred: number };
 }
 
 function seekTo(video: HTMLVideoElement, t: number): Promise<void> {
