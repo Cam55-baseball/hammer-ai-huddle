@@ -66,6 +66,7 @@ Why TL-5 works: next-day soreness comes mainly from eccentric (lowering) work [E
 ---
 
 ## 3. Owner decisions — conflicts with approved rules
+**RESOLVED 2026-09-20 — see docs/wic/tissue-cost-scheduler-v1.md §0.** D1: in-season, all athletes lift post-game; in every phase, lift after skill work; rest days calculated (3 full rest days = safe default). D2: calculated on the fly by the Tissue Cost Scheduler. D3: option A.
 
 Nothing in this section is built until the owner answers.
 
@@ -176,6 +177,7 @@ Card copy: "Jumps capped at 40 today — your biggest jump day in the last 4 wee
 | **Not a lift session** | Recovery Flow (mobility, arm care, movement prep) and Primers (primer-only intensity, pre-game elastic micro-dose). No spacing effect; allowed daily |
 
 ### 6.2 Rest days (offseason and post-season)
+Superseded by the Tissue Cost Scheduler (docs/wic/tissue-cost-scheduler-v1.md). These values are now its floors, not fixed gaps.
 - Full rest days required between two lift sessions = the larger requirement of the two. **H = 3 · M = 2** (D2-A; 3 under D2-B) **· L = 2.**
 - "Days between" = calendar days strictly between the two session dates, in the athlete's local time. Mon → Fri = 3. Allowed when (next date − last date) ≥ requirement + 1.
 - The last prescribed session counts as done unless the athlete marks it skipped (fail-safe: an athlete who never logs cannot collect a heavy day every day). A skipped lift moves to the next allowed day; it never stacks.
