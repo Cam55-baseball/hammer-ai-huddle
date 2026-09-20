@@ -39,6 +39,37 @@ type DecisionRow = {
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
+const BLOCK_WORDS: Record<string, string> = {
+  os_q1: "Build the Base",
+  os_q2: "Absorb",
+  os_q3: "Sport Ramp",
+  os_q4: "Speed & Power",
+  pre_season: "Sharpen",
+  in_season: "In-season",
+  post_season: "Post-season",
+};
+
+const blockWord = (b: string | null | undefined) => (b ? (BLOCK_WORDS[b] ?? b) : "—");
+
+const timingWord = (t: string) =>
+  t === "after_skill_work"
+    ? "after skill work"
+    : t === "post_game"
+      ? "after the game"
+      : t.replace(/_/g, " ");
+
+const dayWord = (d: string) => {
+  const dt = new Date(`${d}T12:00:00Z`);
+  return dt.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+};
+
+const tankWord = (v: unknown) => {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return "—";
+  return n <= 1 ? `${Math.round(n * 100)}%` : n.toFixed(1);
+};
+
+
 export default function StaffView() {
   const { user } = useAuth();
   const { isEnabled, loading: switchesLoading } = useFeatureSwitches();
