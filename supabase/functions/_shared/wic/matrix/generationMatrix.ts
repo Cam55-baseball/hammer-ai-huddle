@@ -16,6 +16,9 @@ import { buildSafePlan } from "../safePlan.ts";
 import { checkSafetyGate } from "../domainGate.ts";
 import { blockedClassesFor } from "../schedule/tissueCost/apply.ts";
 import type { AllowedClass } from "../schedule/tissueCost/types.ts";
+import { amountPerSet, type CatalogFact, classify } from "../exposure/ledger.ts";
+import { type GovAlternative, type GovItem, type Rm28 } from "../exposure/types.ts";
+import { type GovernorContext, runGovernor } from "../exposure/governor.ts";
 
 export const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "in_season", "post_season"] as const;
 
