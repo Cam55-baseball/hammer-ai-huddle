@@ -1,6 +1,7 @@
 name: tcs-reliability
 
-# Tissue Cost Scheduler reliability gate (spec §7).
+# Tissue Cost Scheduler reliability gate (v1 spec §7, v1.1 addendum §7).
+# Two tiers: a fast tier on every build (CI-blocking) and a nightly full sweep.
 # Any invariant, golden or chaos failure blocks the build.
 
 on:
@@ -18,25 +19,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  suite:
+  fast-tier:
+    # v1.1 §7 fast tier: goldens, chaos, v1.1 engines and >= 2,000 seasons.
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
+      - uses: oven-sh/setup-bun@v2
       - name: Install deps
         run: npm ci
-      - name: Goldens + chaos + property slice (I1–I9)
+      - name: Goldens, chaos, v1.1 engines, invariant slice
         run: npx vitest run src/test/tissueCost
         env:
           TCS_SEED: '20260920'
-          TCS_SEASONS: '400'
+          TCS_SEASONS: '200'
+      - name: Property sweep — 2,000 athlete-seasons (I1–I9)
+        run: bun scripts/audits/tcs-property-sweep.ts 2000 8 20260920
 
-  full-sweep:
+  full-tier:
+    # v1.1 §7 full tier: nightly, results stored; a failure blocks the next release.
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,4 +51,11 @@ jobs:
       - name: Install deps
         run: npm ci
       - name: 100,000 athlete-seasons
-        run: bun scripts/audits/tcs-property-sweep.ts 100000 4 20260920
+        run: bun scripts/audits/tcs-property-sweep.ts 100000 16 20260920 | tee tcs-full-sweep.json
+      - name: Store results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tcs-full-sweep
+          path: tcs-full-sweep.json
+          retention-days: 90
