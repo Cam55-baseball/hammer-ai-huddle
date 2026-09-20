@@ -16355,6 +16355,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_exposure_daily: {
+        Row: {
+          channel: string
+          created_at: string
+          date: string
+          id: string
+          sources: Json
+          tier: string
+          total: number
+          updated_at: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          date: string
+          id?: string
+          sources?: Json
+          tier?: string
+          total?: number
+          updated_at?: string
+          user_id: string
+          version?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          date?: string
+          id?: string
+          sources?: Json
+          tier?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       wk_fault_signals: {
         Row: {
           confidence: number
