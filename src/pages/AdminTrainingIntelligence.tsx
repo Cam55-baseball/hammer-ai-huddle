@@ -198,6 +198,17 @@ export default function AdminTrainingIntelligence() {
     setSwitches((switchRes.data ?? []) as SwitchRow[]);
     setPending((pendingRes.data ?? []) as unknown as PendingRow[]);
 
+    const { data: reviewRows } = await supabase
+      .from("wk_catalog_review_notes")
+      .select("catalog_id, note, decision, decided_at")
+      .eq("decision", "rejected")
+      .order("decided_at", { ascending: false });
+    const backMap: Record<string, string> = {};
+    for (const r of (reviewRows ?? []) as Array<{ catalog_id: string; note: string | null }>) {
+      if (!(r.catalog_id in backMap)) backMap[r.catalog_id] = r.note ?? "Sent back";
+    }
+    setSentBack(backMap);
+
     const { data: autoRows } = await supabase
       .from("wk_feature_switch_audit")
       .select("feature_key, to_mode, reason, changed_at")
