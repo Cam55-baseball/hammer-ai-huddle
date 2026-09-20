@@ -168,7 +168,15 @@ function fingerprintOf(results: MatrixCell[]): string {
 export function runGenerationMatrix(
   catalog: MatrixCatalogRow[],
   liftingV2 = false,
-  opts?: { tcsClass?: AllowedClass },
+  opts?: {
+    tcsClass?: AllowedClass;
+    /**
+     * Step 14 proof hook. `rm28Fraction` sets each channel's recent max to that
+     * fraction of the day's planned amount (0.6 → a real spike the governor must
+     * trim); `null` runs the cold-start path (nothing logged in 28 days).
+     */
+    spike?: { rm28Fraction: number | null; inSeason?: boolean; growthMode?: boolean };
+  },
 ): MatrixResult {
   const tcsBlocked = opts?.tcsClass ? blockedClassesFor(opts.tcsClass) : null;
   const results: MatrixCell[] = [];
