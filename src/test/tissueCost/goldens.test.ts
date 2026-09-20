@@ -78,11 +78,12 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none"); // Wed — floor
-    // DIVERGENCE (v1.2 §A): the redefined REF-OFF measures the offseason H
-    // threshold on a Friday that carries its practice, so the H limit rose and
-    // Thursday now clears H, not M. The 2-full-rest-day floor is unchanged.
-    // Reported to the owner; NOT tuned away.
-    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H"); // Thu (was "M" pre-v1.2)
+    // Step 6 decision 2: M -> H now needs 3 full rest days, so Thursday is M and
+    // heavy cannot land before Friday.
+    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("M"); // Thu
+    expect(
+      run(ADV17, [...days, practice("2026-01-09")], "2026-01-09").allowedClass,
+    ).toBe("H"); // Fri — 3 full rest days
   });
 
   it("REF-L: L lift Mon → next lift 2 full rest days later (Thursday)", () => {
@@ -93,8 +94,44 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none");
-    // Same v1.2 §A divergence as REF-M above.
+    // OPEN CONFLICT (Step 6 decision 2): the floor table says "previous L ->
+    // next anything: 2", which clears H on Thursday; the golden text for the
+    // same decision says Thursday should be M unless the previous loaded lift
+    // is >= 3 full rest days back. The table is implemented as written and the
+    // conflict is reported to the owner — NOT tuned away.
     expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H");
+  });
+});
+
+describe("TCS goldens — floor table (Step 6 decision 2)", () => {
+  // Offseason / pre-season: H->H/M = 3, H->L = 2, M->H = 3, M->M/L = 2, L->* = 2.
+  const week = (cls: "H" | "M" | "L") => [
+    { ...practice("2026-01-05"), lift: { class: cls } },
+    practice("2026-01-06"),
+    practice("2026-01-07"),
+    practice("2026-01-08"),
+    practice("2026-01-09"),
+  ];
+
+  it("I12: offseason, H never lands within 3 full rest days of an H or M lift", () => {
+    for (const prev of ["H", "M"] as const) {
+      const days = week(prev);
+      // Tue (0), Wed (1), Thu (2 full rest days) must never clear H.
+      for (const [i, date] of ["2026-01-06", "2026-01-07", "2026-01-08"].entries()) {
+        const d = run(ADV17, days.slice(0, i + 2), date);
+        expect(d.allowedClass).not.toBe("H");
+      }
+      // Fri — 3 full rest days — clears H.
+      expect(run(ADV17, days, "2026-01-09").allowedClass).toBe("H");
+    }
+  });
+
+  it("H -> L is not held back by a rest-day floor on day 2", () => {
+    const days = week("H").slice(0, 4);
+    // The floor for H -> L stays at 2 days: no L floor may be recorded on the
+    // Thursday. (Tank state can still hold the day; that is a separate rule.)
+    const d = run(ADV17, days, "2026-01-08");
+    expect(d.floorsApplied.some((f) => f.endsWith("needs_2"))).toBe(false);
   });
 });
 

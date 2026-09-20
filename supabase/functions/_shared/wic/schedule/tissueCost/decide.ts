@@ -171,7 +171,9 @@ function requiredRestDays(
   config: TcsConfig,
 ): number {
   if (phase === "in_season" || phase === "post_season") return config.floors.inSeasonBetweenLifts;
+  // Larger requirement of the two (Step 6 decision 2).
   if (lastClass === "H") return cls === "L" ? config.floors.offseasonAfterML : config.floors.offseasonAfterH;
+  if (lastClass === "M" && cls === "H") return config.floors.offseasonAfterMToH;
   return config.floors.offseasonAfterML;
 }
 

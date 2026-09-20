@@ -41,7 +41,7 @@ If a gate isn't met, or nothing is logged, the athlete gets the regression, labe
 | Push (Base) | 10 strict push-ups | 20 strict push-ups, or bench estimated max ≥ 1.0 × body weight |
 | Row (A) | 10 strict inverted rows | 15 strict inverted rows |
 | Pull-up (B) | 6 strict pull-ups | 10 strict pull-ups (band-assisted versions until then) |
-| Overhead (C) | 4 weeks of landmine pressing with no pain flag | landmine versions for everyone; true vertical barbell versions only for position players, 16+, advanced+ |
+| Overhead (C) | 10 strict push-ups + 4 weeks of landmine pressing with no pain flag | bench estimated max ≥ 1.0 × body weight or 20 strict push-ups, plus landmine press logged ≥ 3×8; landmine versions for everyone; true vertical barbell versions only for position players, 16+, advanced+ |
 | Bench catch (11) | — | bench estimated max ≥ 1.0 × body weight; Smith machine or safety pins required; load 30–40% of estimated max |
 
 ---

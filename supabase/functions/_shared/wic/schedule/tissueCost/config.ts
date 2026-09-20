@@ -66,12 +66,22 @@ export const TCS_CONFIG: TcsConfig = Object.freeze({
     costMultiplierBounds: Object.freeze({ min: 0.9, max: 1.5 }),
   }),
 
+  // Step 6 decision 1 (option c): baseline subtraction stays OFF. The code is
+  // kept in baseline.ts and exercised by TCS_CONFIG_V12, but it is disabled by
+  // config because "more load never gives an earlier lift" (I3) must hold
+  // absolutely. Revisit option (b) — freezing each athlete's normal weekly —
+  // once real logged data exists and the v1.1 personalization engine is live.
   headroom: 1.15,
 
-  // §4 floors (full rest days)
+  // §4 floors (full rest days) — v1.2 Step 6 decision 2 restores the original
+  // doctrine's "larger requirement of the two" rule:
+  //   H -> H/M = 3, H -> L = 2, M -> H = 3, M -> M/L = 2, L -> anything = 2.
+  //   in-season / post-season = 2 for all.
   floors: Object.freeze({
     offseasonAfterH: 3,
     offseasonAfterML: 2,
+    /** M -> H also needs the full 3 days (Step 6 decision 2). */
+    offseasonAfterMToH: 3,
     inSeasonBetweenLifts: 2,
   }),
 

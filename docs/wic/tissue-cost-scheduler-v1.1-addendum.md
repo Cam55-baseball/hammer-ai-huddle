@@ -93,6 +93,7 @@ A tie goes to the 3-day default. The pick is deterministic.
 - Signals feed the scheduler (thresholds and tank multipliers) and today's session: reduce, never remove, or swap the region to a safer variant.
 - Copy stays neutral: "We set today to match your last few sessions." Never "hurt", "weak" or "injury".
 - Reported pain still triggers the existing pain rules.
+- Pain always wins over Silent Signals.
 - Signals are used for programming only. They are never shown to scouts. Coach visibility is a later owner decision.
 
 ## 4. Predictions and correlations — never causation

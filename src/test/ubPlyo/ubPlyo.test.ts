@@ -55,7 +55,8 @@ const ELITE: UbProfile = {
 const STRONG: UbHistory = {
   u1SessionsLast8w: 10, u2SessionsLast10w: 10, u2u3SessionsThisWeek: 0,
   strictPushUps: 25, strictInvertedRows: 20, strictPullUps: 12, benchEstimatedMaxLb: 200,
-  landmineWeeksNoPain: 8, startDayOffsets: [], bullpenDayOffsets: [], highIntentThrowDayOffsets: [],
+  landmineWeeksNoPain: 8, landminePress3x8Logged: true,
+  startDayOffsets: [], bullpenDayOffsets: [], highIntentThrowDayOffsets: [],
 };
 
 describe("UBP catalog shape", () => {
@@ -149,9 +150,35 @@ describe("UBP invariants (§9)", () => {
       const d = resolveUbMovement(m.slug, ELITE, weak, ALL_EQUIPMENT);
       expect(d.tier).toBe("U1");
     }
-    // Overhead U2 still requires four clean landmine weeks.
+    // Overhead U2 needs 10 strict push-ups + four clean landmine weeks.
     for (const m of UB_MOVEMENTS.filter((x) => x.tier === "U2" && x.plane === "overhead")) {
       expect(resolveUbMovement(m.slug, ELITE, weak, ALL_EQUIPMENT).tier).toBe("U1");
+    }
+  });
+
+  // Step 6 decision 5 — the overhead family is no longer open on "no pain" alone.
+  it("overhead U2/U3 require the new strength gates", () => {
+    const overheadU2 = UB_MOVEMENTS.filter((x) => x.tier === "U2" && x.plane === "overhead");
+    // Family 11 is gated by the bench-catch rule (§3), not the overhead gate.
+    const overheadU3 = UB_MOVEMENTS.filter((x) => x.tier === "U3" && x.plane === "overhead" && x.family !== 11);
+
+    // U2: clean landmine weeks but only 9 strict push-ups → regressed.
+    for (const m of overheadU2) {
+      const h: UbHistory = { ...STRONG, strictPushUps: 9 };
+      expect(resolveUbMovement(m.slug, ELITE, h, ALL_EQUIPMENT).tier).toBe("U1");
+      expect(resolveUbMovement(m.slug, ELITE, { ...STRONG, strictPushUps: 10 }, ALL_EQUIPMENT).tier).not.toBe("U1");
+    }
+
+    // U3: strong presser, but the landmine press has never been logged at 3 x 8.
+    for (const m of overheadU3) {
+      const h: UbHistory = { ...STRONG, landminePress3x8Logged: false };
+      expect(resolveUbMovement(m.slug, ELITE, h, ALL_EQUIPMENT).tier).not.toBe("U3");
+    }
+
+    // U3: landmine logged, but neither 20 strict push-ups nor a 1.0 x bodyweight bench.
+    for (const m of overheadU3) {
+      const h: UbHistory = { ...STRONG, strictPushUps: 12, benchEstimatedMaxLb: 100 };
+      expect(resolveUbMovement(m.slug, ELITE, h, ALL_EQUIPMENT).tier).not.toBe("U3");
     }
   });
 

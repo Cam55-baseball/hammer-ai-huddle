@@ -280,8 +280,16 @@ export function checkInvariants(
         ? TCS_CONFIG.floors.inSeasonBetweenLifts
         : lastCls === "H" && d.allowedClass !== "L"
         ? TCS_CONFIG.floors.offseasonAfterH
+        : lastCls === "M" && d.allowedClass === "H"
+        ? TCS_CONFIG.floors.offseasonAfterMToH
         : TCS_CONFIG.floors.offseasonAfterML;
       if (rest < need) push("I1", `rest ${rest} < floor ${need} (last ${lastCls}, class ${d.allowedClass})`);
+
+      // I12 — offseason / pre-season: every H sits at least 3 full rest days
+      // after the previous H or M (Step 6 decision 2).
+      if (!inSeason && d.allowedClass === "H" && (lastCls === "H" || lastCls === "M") && rest < 3) {
+        push("I12", `H only ${rest} full rest days after a ${lastCls} lift`);
+      }
     }
   }
 
