@@ -10,6 +10,8 @@
 // Everything now resolves through `resolveDose`. It is pure, deterministic and
 // version-stamped so a replay reproduces the exact same numbers.
 
+import { type MethodContext, type MethodEnvelope, type MethodKey, methodEnvelope } from "./methods.ts";
+
 export const DOSAGE_DOCTRINE_VERSION = "dosage-doctrine-v1";
 
 export type DoseRange = readonly [number, number];
