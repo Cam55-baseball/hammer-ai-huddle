@@ -377,7 +377,7 @@ export default function StaffView() {
               <CardContent className="space-y-1 text-xs">
                 {next14.map((d) => (
                   <div key={d.date} className="flex gap-2 border-b py-1 last:border-0">
-                    <span className="w-24 shrink-0 font-medium">{d.date}</span>
+                    <span className="w-24 shrink-0 font-medium">{dayWord(d.date)}</span>
                     <span className="text-muted-foreground">
                       {d.items.length === 0
                         ? "nothing on the books"
