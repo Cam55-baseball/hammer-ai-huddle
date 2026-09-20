@@ -351,13 +351,13 @@ export default function StaffView() {
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Block: {block ?? "—"}</Badge>
+                  <Badge variant="outline">Block: {blockWord(block)}</Badge>
                   <Badge variant="secondary">
                     Today: {classWord(todayDecision?.allowed_class ?? null)}
                   </Badge>
-                  {todayDecision?.timing && <Badge variant="outline">{todayDecision.timing}</Badge>}
+                  {todayDecision?.timing && <Badge variant="outline">{timingWord(todayDecision.timing)}</Badge>}
                   {todayDecision?.next_heavy_date && (
-                    <Badge variant="outline">Next heavy: {todayDecision.next_heavy_date}</Badge>
+                    <Badge variant="outline">Next heavy: {dayWord(todayDecision.next_heavy_date)}</Badge>
                   )}
                 </div>
                 {todayDecision &&
