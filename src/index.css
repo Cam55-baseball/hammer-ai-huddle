@@ -659,6 +659,10 @@ All colors MUST be HSL.
     width: 100% !important;
     max-width: none !important;
   }
+  .staff-print [data-slot="card"],
+  .staff-print > div > div {
+    break-inside: avoid;
+  }
   .staff-print {
     margin: 0 !important;
     padding: 0 !important;
