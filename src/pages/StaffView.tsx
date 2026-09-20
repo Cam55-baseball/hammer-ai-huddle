@@ -196,6 +196,58 @@ export default function StaffView() {
           </Button>
         </div>
 
+        <Card className="print:hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">People who can see my training</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-xs">
+            <div className="flex gap-2">
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search a staff member by name"
+                className="h-8 text-xs"
+              />
+              <Button size="sm" variant="outline" onClick={runSearch}>
+                Search
+              </Button>
+            </div>
+            {results.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-2 border-b py-1">
+                <span>{p.full_name ?? "Unnamed"}</span>
+                <Button size="sm" variant="secondary" onClick={() => grantTo(p.id)}>
+                  Give access
+                </Button>
+              </div>
+            ))}
+            {myGrants.length === 0 && <p className="text-muted-foreground">Nobody has access right now.</p>}
+            {myGrants.map((g) => (
+              <div key={g.id} className="flex items-center justify-between gap-2 border-b py-1">
+                <span>
+                  {g.name} — {g.revoked_at ? "access removed" : "can see your training"}
+                </span>
+                {!g.revoked_at && (
+                  <Button size="sm" variant="outline" onClick={() => revoke(g.id)}>
+                    Remove
+                  </Button>
+                )}
+              </div>
+            ))}
+            {accessLog.length > 0 && (
+              <div className="pt-1">
+                <p className="font-medium">Recent views</p>
+                {accessLog.map((l, i) => (
+                  <p key={i} className="text-muted-foreground">
+                    {new Date(l.viewed_at).toLocaleString()} — {l.name}
+                  </p>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+
+
         {athletes.length === 0 && (
           <Card>
             <CardContent className="p-4 text-sm text-muted-foreground">
