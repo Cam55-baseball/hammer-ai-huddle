@@ -667,7 +667,9 @@ All colors MUST be HSL.
     max-width: none !important;
   }
   .staff-print [data-slot="card"],
-  .staff-print > div > div {
+  .staff-print > div > div,
+  .staff-print [class*="border-b"],
+  .staff-print p {
     break-inside: avoid;
   }
   .staff-print {
