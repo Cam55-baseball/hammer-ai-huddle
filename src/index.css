@@ -672,8 +672,12 @@ All colors MUST be HSL.
   .staff-print [data-slot="card"],
   .staff-print > div > div,
   .staff-print [class*="border-b"],
-  .staff-print p {
+  .staff-print p,
+  .staff-print span,
+  .staff-print div {
     break-inside: avoid;
+    orphans: 3;
+    widows: 3;
   }
   .staff-print {
     margin: 0 !important;
