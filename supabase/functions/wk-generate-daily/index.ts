@@ -23,7 +23,10 @@ import { validate as wicValidate } from "../_shared/wic/validator.ts";
 import { buildSafePlan } from "../_shared/wic/safePlan.ts";
 import { resolveExtensiveDose, resolveIntensityMode } from "../_shared/wic/execution/intensityMode.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
-import { runShadowDecision } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
+import { decideFromRaw, fetchShadowData, runShadowDecision } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
+// TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
+import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
+import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal, ECCENTRIC_OVERLOAD_REASON, isEccentricOverloadPhaseIllegal } from "../_shared/wic/season.ts";
 import { applyManualOrder, assignSequenceOrder } from "../_shared/wic/ordering.ts";
@@ -804,8 +807,61 @@ const handler = async (req: Request): Promise<Response> => {
 
 
 
+    // -------- TCS stage S4 — rest-day calculator (switch-gated) --------
+    // Off for everyone by default. When the `rest_day_calculator` switch does
+    // not resolve ON for this athlete, `tcsAdjust` stays null and every line
+    // below behaves exactly as it did before this step. Any failure at all
+    // leaves it null too: the card always ships.
+    let tcsAdjust: TcsApplyResult | null = null;
+    let tcsDiagnostics: Record<string, unknown> | null = null;
+    try {
+      const { data: switchRows } = await admin
+        .from("wk_feature_switches")
+        .select("feature_key, mode, allowlist, updated_by");
+      const features = resolveFeatures(switchRows as any, user.id);
+      if (features.rest_day_calculator === true) {
+        const raw = await fetchShadowData(admin as any, user.id, planDate, "UTC");
+        const result = decideFromRaw(raw);
+        const d = result.decision;
+        const templateClass = phaseTemplateClassFor(phaseRes.phase);
+        const order = { none: 0, L: 1, M: 2, H: 3 } as const;
+        const capped = order[d.allowedClass] > order[templateClass]
+          ? templateClass
+          : d.allowedClass;
+        tcsAdjust = applyDecision({
+          allowedClass: capped,
+          timing: d.timing,
+          nextHeavyDate: d.nextHeavyDate,
+          reasons: d.reasons,
+          fallbackUsed: d.fallbackUsed === true,
+          blockCnsCap: cnsCap,
+          isGameDay,
+          planDate,
+        });
+        tcsDiagnostics = {
+          version: tcsAdjust.version,
+          engine_version: d.version,
+          decided_class: d.allowedClass,
+          phase_template_class: templateClass,
+          applied_class: tcsAdjust.allowedClass,
+          cap_before: cnsCap,
+          cap_after: tcsAdjust.cnsCap,
+          fallback_used: tcsAdjust.fallbackUsed,
+          next_heavy_date: d.nextHeavyDate,
+        };
+        cnsCap = Math.min(cnsCap, tcsAdjust.cnsCap);
+        for (const r of tcsAdjust.reasons) {
+          reductions.push({ reason: "tissue_cost", detail: r });
+        }
+      }
+    } catch (tcsErr) {
+      // Fail silent and inert — the athlete still gets the day they'd have had.
+      console.warn("[wk-generate-daily] rest-day calculator skipped", tcsErr);
+      tcsAdjust = null;
+    }
+
     // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
-    const adaptationDecision: AdaptationDecision = selectAdaptation({
+    const adaptationDecisionRaw: AdaptationDecision = selectAdaptation({
       phase: phaseRes.phase,
       isGameDay,
       isPracticeDay,
@@ -818,6 +874,12 @@ const handler = async (req: Request): Promise<Response> => {
       hoursSinceLift: 9999,
       injuriesActive: injurySlugs.size > 0,
     });
+    // A "none" day from the rest-day calculator becomes the recovery-only day
+    // the engine already builds and certifies — mobility, arm care, movement
+    // prep. It is never an empty card.
+    const adaptationDecision: AdaptationDecision = tcsAdjust?.recoveryOnly
+      ? { ...adaptationDecisionRaw, primary: "recovery_only" }
+      : adaptationDecisionRaw;
     const decision = adaptationDecision;
     // WIC adaptation compatibility (mirrors public.wic_adaptations_compatible SQL helper).
     // Catalog rows carry legacy / shorthand adaptation labels ("strength",
@@ -993,6 +1055,13 @@ const handler = async (req: Request): Promise<Response> => {
         gameProximity.primerOnly &&
         opts?.domain === "lift" &&
         !survivesPrimerOnly((m as any).intensity_class as string | null)
+      ) return false;
+      // TCS stage S4 — never build a lift above today's allowed class. Inert
+      // unless the rest-day calculator switch resolves on for this athlete.
+      if (
+        tcsAdjust &&
+        opts?.domain === "lift" &&
+        tcsAdjust.blockedIntensityClasses.includes(String((m as any).intensity_class ?? ""))
       ) return false;
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       // Competition-level ceiling. Only ever OPENS movements for higher levels
@@ -1471,6 +1540,23 @@ const handler = async (req: Request): Promise<Response> => {
             : null,
 
           reductions,
+          // TCS stage S4 — present only when the rest-day calculator is on for
+          // this athlete. Null-free: absent means the switch was off.
+          ...(tcsAdjust
+            ? {
+                rest_day: {
+                  version: tcsAdjust.version,
+                  allowed_class: tcsAdjust.allowedClass,
+                  timing: tcsAdjust.timing,
+                  timing_note: tcsAdjust.timingNote,
+                  next_heavy_chip: tcsAdjust.nextHeavyChip,
+                  reasons: tcsAdjust.reasons,
+                  recovery_only: tcsAdjust.recoveryOnly,
+                  fallback_used: tcsAdjust.fallbackUsed,
+                  diagnostics: tcsDiagnostics,
+                },
+              }
+            : {}),
           // Schedule enforcement, named. The card must be able to say WHICH
           // game moved the session, not just that "something" did.
           schedule: {

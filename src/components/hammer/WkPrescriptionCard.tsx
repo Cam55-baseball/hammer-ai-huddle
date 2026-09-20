@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
+import { WkOneTapLog } from "@/components/hammer/logging/WkOneTapLog";
 import { MethodBadge, MethodPanel } from "@/components/hammer/MethodPanel";
 import { readTrainingMethod } from "@/lib/wic/methods";
 import { deriveExecutionDisplay, type ExecutionSource } from "@/lib/wic/execution/executionDisplay";
@@ -350,6 +351,7 @@ export function WkPrescriptionCard({
               <LogButton rx={rx} dosageText={dosage} compact />
             </div>
           </div>
+          <WkOneTapLog rx={rx} />
           {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
           {swapAvailable && (
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />

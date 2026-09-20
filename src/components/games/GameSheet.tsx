@@ -578,6 +578,49 @@ function OverviewPanel({
         </div>
       </div>
 
+      {oneTapLogging && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="innings-played">Innings played (optional)</Label>
+            <Input
+              id="innings-played"
+              type="number"
+              min={0}
+              max={30}
+              inputMode="decimal"
+              placeholder="e.g. 7"
+              defaultValue={(game as any).innings_played ?? ""}
+              onBlur={(e) => {
+                const raw = e.target.value.trim();
+                if (raw === "") return onPatch({ innings_played: null });
+                const n = Math.max(0, Math.min(30, Number(raw)));
+                if (Number.isFinite(n)) onPatch({ innings_played: n });
+              }}
+            />
+          </div>
+          {positions.includes("P") && (
+            <div className="space-y-1.5">
+              <Label htmlFor="pitch-count">Pitch count (optional)</Label>
+              <Input
+                id="pitch-count"
+                type="number"
+                min={0}
+                max={200}
+                inputMode="numeric"
+                placeholder="e.g. 65"
+                defaultValue={(game as any).pitch_count ?? ""}
+                onBlur={(e) => {
+                  const raw = e.target.value.trim();
+                  if (raw === "") return onPatch({ pitch_count: null });
+                  const n = Math.max(0, Math.min(200, Math.round(Number(raw))));
+                  if (Number.isFinite(n)) onPatch({ pitch_count: n });
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {oneTapLogging && positions.includes("C") && (
         <div className="space-y-1.5">
           <Label htmlFor="innings-caught">Innings caught (optional)</Label>
