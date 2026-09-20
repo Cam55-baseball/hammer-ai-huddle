@@ -3767,6 +3767,7 @@ const handler = async (req: Request): Promise<Response> => {
         baselineMs: Number((baseRow as any)?.value ?? 0),
         currentMs: generationMs,
         samples: 1,
+        coldStart: WAS_COLD_START,
       });
       if (slow) watchNotes.push(slow);
       await writeNotes(admin as any, watchNotes);

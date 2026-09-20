@@ -315,19 +315,27 @@ export function mixDriftNote(baseline: ClassMix, current: ClassMix): WatchNote |
   };
 }
 
-export function slowdownNote(i: { baselineMs: number; currentMs: number; samples: number }): WatchNote | null {
+export function slowdownNote(
+  i: { baselineMs: number; currentMs: number; samples: number; coldStart?: boolean },
+): WatchNote | null {
   if (i.baselineMs <= 0 || i.samples <= 0) return null;
   const ratio = i.currentMs / i.baselineMs;
   if (ratio <= WATCH.SLOWDOWN_RATIO) return null;
+  // Step 20 C3 — the very first card after a deploy pays for loading the code.
+  // That is not the app getting slower, and it is not comparable with a warm
+  // build, so it is logged for information and never raises an alarm.
   return {
-    severity: "warn",
+    severity: i.coldStart === true ? "info" : "warn",
     category: "generation_speed",
-    title: `Cards are taking ${ratio.toFixed(1)}x longer to build`,
+    title: i.coldStart === true
+      ? `First card after a restart took ${ratio.toFixed(1)}x longer to build`
+      : `Cards are taking ${ratio.toFixed(1)}x longer to build`,
     detail: {
       baseline_ms: Math.round(i.baselineMs),
       current_ms: Math.round(i.currentMs),
       ratio: Number(ratio.toFixed(2)),
       samples: i.samples,
+      cold_start: i.coldStart === true,
       limit: WATCH.SLOWDOWN_RATIO,
     },
   };
