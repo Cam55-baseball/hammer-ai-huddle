@@ -53,9 +53,10 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 
 function capSentence(channel: Channel, cap: number, rm: number): string {
   const unit = CHANNEL_UNIT[channel];
-  return `${CHANNEL_LABEL[channel]} capped at ${Math.floor(cap)} ${unit} today — your biggest ${
-    CHANNEL_LABEL[channel].toLowerCase()
-  } day in the last 4 weeks was ${round1(rm)}.`;
+  const label = CHANNEL_LABEL[channel];
+  const recent = `your biggest ${label.toLowerCase()} day in the last 4 weeks was ${round1(rm)} ${unit}.`;
+  if (cap < 1) return `${label} is on hold today — ${recent}`;
+  return `${label} capped at ${Math.floor(cap)} ${unit} today — ${recent}`;
 }
 
 function coldStartSentence(channel: Channel): string {
