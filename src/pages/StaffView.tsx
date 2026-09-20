@@ -413,10 +413,10 @@ export default function StaffView() {
                 {tanks.length === 0 && <p className="text-muted-foreground">No stored tank readings.</p>}
                 {tanks.slice(-14).map((t) => (
                   <div key={t.date} className="flex gap-2 border-b py-1 last:border-0">
-                    <span className="w-24 shrink-0 font-medium">{t.date}</span>
+                    <span className="w-24 shrink-0 font-medium">{dayWord(t.date)}</span>
                     <span className="text-muted-foreground">
                       {Object.entries(t.tanks)
-                        .map(([k, v]) => `${k} ${v}`)
+                        .map(([k, v]) => `${k} ${tankWord(v)}`)
                         .join(" · ") || "—"}
                     </span>
                   </div>
