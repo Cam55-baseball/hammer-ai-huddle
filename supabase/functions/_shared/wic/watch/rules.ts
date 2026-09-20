@@ -27,6 +27,8 @@ export const WATCH = {
   MIX_DRIFT: 0.10,
   SLOWDOWN_RATIO: 1.5,
   SKIP_RISE: 0.10,
+  /** Share of generated cards the spike governor may trim before it is odd. */
+  GOVERNOR_TRIM_RATE: 0.25,
 } as const;
 
 export const WATCH_CATEGORIES = [
@@ -41,6 +43,7 @@ export const WATCH_CATEGORIES = [
   "skipped_sessions",
   "switch_down",
   "athlete_report",
+  "governor_trim",
 ] as const;
 
 const pct = (n: number) => `${(n * 100).toFixed(2)}%`;
