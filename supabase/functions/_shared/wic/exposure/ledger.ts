@@ -253,6 +253,8 @@ export function wasBuildDay(days: ExposureDay[], date: string, channel: Channel)
   const total = dayTotal(theDay, channel);
   if (!(total > 0)) return false;
   const prior = computeRm28(days, date);
+  // A cold-start day is not a build day: the floor rule governs it instead.
+  if (!(prior.byChannel[channel] > 0)) return false;
   return total > prior.byChannel[channel];
 }
 

@@ -220,7 +220,12 @@ export function runGovernor(input: {
         const tiers = TIER_ORDER[channel];
         const pos = tiers.indexOf(it.tier);
         if (pos < 0 || pos >= tiers.length - 1) continue;
-        const alt = pickAlternative(alternatives, it, channel, tiers[pos + 1]);
+        // One step down; if that tier has no sibling in the family, keep
+        // stepping lighter rather than leaving the spike in place.
+        let alt: GovAlternative | null = null;
+        for (let t = pos + 1; t < tiers.length && !alt; t++) {
+          alt = pickAlternative(alternatives, it, channel, tiers[t]);
+        }
         if (!alt) continue;
         const before = { slug: it.slug, tier: it.tier, sets: it.sets, amount: amount(it) };
         const sets = Math.max(alt.floorSets, Math.min(it.sets, it.sets));
