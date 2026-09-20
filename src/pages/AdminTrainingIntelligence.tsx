@@ -133,6 +133,11 @@ export default function AdminTrainingIntelligence() {
   const [projecting, setProjecting] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fBucket, setFBucket] = useState("all");
+  const [fTier, setFTier] = useState("all");
+  const [fFamily, setFFamily] = useState("all");
+  const [sentBack, setSentBack] = useState<Record<string, string>>({});
+  const [sendNote, setSendNote] = useState<Record<string, string>>({});
   const [autoOff, setAutoOff] = useState<
     { feature_key: string; to_mode: string; reason: string | null; changed_at: string } | null
   >(null);
