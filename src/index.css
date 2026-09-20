@@ -642,3 +642,49 @@ All colors MUST be HSL.
   margin-left: var(--safe-left);
   margin-right: var(--safe-right);
 }
+
+/* Staff View: printing gives a clean training report, no app chrome. */
+@media print {
+  body:has(.staff-print) aside,
+  body:has(.staff-print) nav,
+  body:has(.staff-print) header,
+  body:has(.staff-print) [data-sidebar],
+  body:has(.staff-print) [data-sidebar="sidebar"],
+  body:has(.staff-print) [data-sidebar="trigger"],
+  body:has(.staff-print) .group.peer,
+  body:has(.staff-print) [class*="w-[--sidebar-width]"] {
+    display: none !important;
+  }
+  body:has(.staff-print) main,
+  body:has(.staff-print) .staff-print,
+  body:has(.staff-print) .staff-print *,
+  body:has(.staff-print) .group\/sidebar-wrapper {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body:has(.staff-print) main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .staff-print [data-slot="card"],
+  .staff-print > div > div,
+  .staff-print [class*="border-b"],
+  .staff-print p,
+  .staff-print [class*="border-b"] {
+    break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+  }
+  .staff-print {
+    padding-bottom: 80px !important;
+  }
+  .staff-print {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+}

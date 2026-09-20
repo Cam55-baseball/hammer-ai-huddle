@@ -133,6 +133,11 @@ export default function AdminTrainingIntelligence() {
   const [projecting, setProjecting] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fBucket, setFBucket] = useState("all");
+  const [fTier, setFTier] = useState("all");
+  const [fFamily, setFFamily] = useState("all");
+  const [sentBack, setSentBack] = useState<Record<string, string>>({});
+  const [sendNote, setSendNote] = useState<Record<string, string>>({});
   const [autoOff, setAutoOff] = useState<
     { feature_key: string; to_mode: string; reason: string | null; changed_at: string } | null
   >(null);
@@ -192,6 +197,17 @@ export default function AdminTrainingIntelligence() {
     setMatrix(((matrixRes.data ?? [])[0] as MatrixRun) ?? null);
     setSwitches((switchRes.data ?? []) as SwitchRow[]);
     setPending((pendingRes.data ?? []) as unknown as PendingRow[]);
+
+    const { data: reviewRows } = await supabase
+      .from("wk_catalog_review_notes")
+      .select("catalog_id, note, decision, decided_at")
+      .eq("decision", "rejected")
+      .order("decided_at", { ascending: false });
+    const backMap: Record<string, string> = {};
+    for (const r of (reviewRows ?? []) as Array<{ catalog_id: string; note: string | null }>) {
+      if (!(r.catalog_id in backMap)) backMap[r.catalog_id] = r.note ?? "Sent back";
+    }
+    setSentBack(backMap);
 
     const { data: autoRows } = await supabase
       .from("wk_feature_switch_audit")
@@ -397,6 +413,30 @@ export default function AdminTrainingIntelligence() {
     }
   };
 
+  const sendBack = async (row: PendingRow) => {
+    const text = (sendNote[row.id] ?? "").trim();
+    if (!text) {
+      toast({ title: "Add a note first", description: "Say why it is going back.", variant: "destructive" });
+      return;
+    }
+    const { data, error } = await supabase.functions.invoke("wk-training-intel", {
+      body: { action: "send_back", id: row.id, note: text },
+    });
+    const err = error ?? ((data as { error?: string } | null)?.error ?? null);
+    if (err) {
+      toast({
+        title: "Could not send it back",
+        description: typeof err === "string" ? err : err.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: `${row.name} sent back`, description: "It stays switched off with your note." });
+    setSendNote((s) => ({ ...s, [row.id]: "" }));
+    setSelected((s) => s.filter((x) => x !== row.id));
+    await load();
+  };
+
   if (gateLoading || (allowed && loading)) {
     return (
       <DashboardLayout>
@@ -408,11 +448,26 @@ export default function AdminTrainingIntelligence() {
   }
   if (!allowed) return null;
 
-  const grouped = pending.reduce<Record<string, PendingRow[]>>((acc, r) => {
+  const uniq = (vals: Array<string | null>) =>
+    Array.from(new Set(vals.filter((v): v is string => Boolean(v)))).sort();
+  const bucketOptions = uniq(pending.map((r) => r.bucket));
+  const tierOptions = uniq(pending.map((r) => r.ub_tier));
+  const familyOptions = uniq(pending.map((r) => r.family));
+
+  const visible = pending.filter(
+    (r) =>
+      (fBucket === "all" || r.bucket === fBucket) &&
+      (fTier === "all" || r.ub_tier === fTier) &&
+      (fFamily === "all" || r.family === fFamily),
+  );
+  const sentBackCount = pending.filter((r) => sentBack[r.id]).length;
+
+  const grouped = visible.reduce<Record<string, PendingRow[]>>((acc, r) => {
     const k = `${r.bucket ?? "Unsorted"} · ${r.sub_bucket ?? "—"}${r.ub_tier ? ` · ${r.ub_tier}` : ""}`;
     (acc[k] ??= []).push(r);
     return acc;
   }, {});
+
 
   return (
     <DashboardLayout>
@@ -615,8 +670,40 @@ export default function AdminTrainingIntelligence() {
                 <CardTitle className="text-base">
                   New exercises awaiting review ({pending.length})
                 </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  {pending.length} still switched off · {sentBackCount} sent back · showing {visible.length}
+                </p>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <Select value={fBucket} onValueChange={setFBucket}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Bucket" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All buckets</SelectItem>
+                      {bucketOptions.map((b) => (
+                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={fTier} onValueChange={setFTier}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Tier" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All tiers</SelectItem>
+                      {tierOptions.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={fFamily} onValueChange={setFFamily}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Family" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All families</SelectItem>
+                      {familyOptions.map((f) => (
+                        <SelectItem key={f} value={f}>{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
                     {selected.length} selected (20 max per batch)
@@ -632,34 +719,62 @@ export default function AdminTrainingIntelligence() {
                       {group} ({rows.length})
                     </p>
                     {rows.map((r) => (
-                      <label key={r.id} className="flex gap-2 rounded-md border p-2 text-xs">
-                        <Checkbox
-                          checked={selected.includes(r.id)}
-                          onCheckedChange={(v) =>
-                            setSelected((s) =>
-                              v === true ? [...s, r.id].slice(0, 20) : s.filter((x) => x !== r.id),
-                            )
-                          }
-                        />
-                        <div className="min-w-0 space-y-1">
-                          <p className="font-medium">{r.name}</p>
-                          {r.athlete_cue && <p className="text-muted-foreground">Athlete: {r.athlete_cue}</p>}
-                          {r.coach_cue && <p className="text-muted-foreground">Staff: {r.coach_cue}</p>}
-                          <p className="text-muted-foreground">
-                            Age {r.min_age_years ?? "—"}+ · training age {r.min_training_age_years ?? "—"}+
-                            {r.family ? ` · ${r.family}` : ""}
-                          </p>
-                          <p className="text-muted-foreground">
-                            Phases: {(r.season_eligibility ?? []).join(", ") || "any"} · Equipment:{" "}
-                            {(r.equipment_requirements ?? []).join(", ") || "none"}
-                            {r.regression_slug ? ` · easier version: ${r.regression_slug}` : ""}
-                          </p>
+                      <div key={r.id} className="space-y-2 rounded-md border p-2 text-xs">
+                        <div className="flex gap-2">
+                          <Checkbox
+                            checked={selected.includes(r.id)}
+                            onCheckedChange={(v) =>
+                              setSelected((s) =>
+                                v === true ? [...s, r.id].slice(0, 20) : s.filter((x) => x !== r.id),
+                              )
+                            }
+                          />
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <p className="font-medium">{r.name}</p>
+                            {sentBack[r.id] && (
+                              <p className="rounded bg-destructive/10 p-1 text-destructive">
+                                Sent back: {sentBack[r.id]}
+                              </p>
+                            )}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="rounded bg-muted/40 p-1.5">
+                                <p className="font-semibold">Athlete sees</p>
+                                <p className="text-muted-foreground">{r.athlete_cue || "— none written —"}</p>
+                              </div>
+                              <div className="rounded bg-muted/40 p-1.5">
+                                <p className="font-semibold">Staff sees</p>
+                                <p className="text-muted-foreground">{r.coach_cue || "— none written —"}</p>
+                              </div>
+                            </div>
+                            <p className="text-muted-foreground">
+                              Age {r.min_age_years ?? "—"}+ · training age {r.min_training_age_years ?? "—"}+
+                              {r.family ? ` · ${r.family}` : ""}
+                              {r.ub_tier ? ` · ${r.ub_tier}` : ""}
+                            </p>
+                            <p className="text-muted-foreground">
+                              Phases: {(r.season_eligibility ?? []).join(", ") || "any"} · Equipment:{" "}
+                              {(r.equipment_requirements ?? []).join(", ") || "none"}
+                              {r.regression_slug ? ` · easier version: ${r.regression_slug}` : ""}
+                            </p>
+                          </div>
                         </div>
-                      </label>
+                        <div className="flex gap-2">
+                          <Textarea
+                            value={sendNote[r.id] ?? ""}
+                            onChange={(e) => setSendNote((s) => ({ ...s, [r.id]: e.target.value }))}
+                            placeholder="Why is it going back?"
+                            className="h-8 min-h-8 text-xs"
+                          />
+                          <Button size="sm" variant="outline" onClick={() => sendBack(r)}>
+                            Send back
+                          </Button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ))}
               </CardContent>
+
             </Card>
           </TabsContent>
 
