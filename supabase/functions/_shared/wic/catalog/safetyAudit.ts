@@ -24,7 +24,7 @@ export const EQUIPMENT_TOKENS = new Set([
   "gamer_bat", "overload_bat", "underload_bat", "tee", "ball", "net", "screen",
   "pitching_machine", "weighted_ball", "glove", "catchers_gear", "radar",
   "bat_sensor", "mound", "turf", "wall", "sled", "hill", "overspeed_cord",
-  "bodyweight", "treadmill", "low_bar", "grain_bucket",
+  "bodyweight", "treadmill", "low_bar", "grain_bucket", "strap", "prowler", "smith_machine", "safety_pins", "mini_hurdle",
 ]);
 
 export const CANONICAL_BUCKETS = new Set([

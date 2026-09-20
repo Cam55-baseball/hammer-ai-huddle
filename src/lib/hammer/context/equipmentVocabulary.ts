@@ -64,6 +64,11 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "overspeed_cord", label: "an overspeed tow cord", phrases: ["overspeed cord", "tow cord", "bungee cord", "tow rope", "assisted sprint cord", "sprint cord"] },
   { token: "low_bar", label: "a bar set low (rack or smith)", phrases: ["low bar", "bar set low", "rack bar low", "smith bar low"] },
   { token: "grain_bucket", label: "a bucket of rice or grain", phrases: ["rice bucket", "grain bucket", "bucket of rice", "bucket of grain"] },
+  { token: "strap", label: "a sled strap or harness", phrases: ["sled strap", "strap", "harness"] },
+  { token: "prowler", label: "a push sled (prowler)", phrases: ["push sled", "prowler"] },
+  { token: "smith_machine", label: "a smith machine", phrases: ["smith machine", "smith"] },
+  { token: "safety_pins", label: "rack safety pins", phrases: ["safety pins", "rack pins", "pins"] },
+  { token: "mini_hurdle", label: "a mini hurdle", phrases: ["mini hurdle"] },
   { token: "bodyweight", label: "bodyweight only", phrases: ["bodyweight only", "just bodyweight", "body weight only", "nothing but my body"] },
 
 ];
