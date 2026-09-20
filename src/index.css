@@ -673,11 +673,13 @@ All colors MUST be HSL.
   .staff-print > div > div,
   .staff-print [class*="border-b"],
   .staff-print p,
-  .staff-print span,
-  .staff-print div {
+  .staff-print [class*="border-b"] {
     break-inside: avoid;
-    orphans: 3;
-    widows: 3;
+    orphans: 2;
+    widows: 2;
+  }
+  .staff-print {
+    padding-bottom: 80px !important;
   }
   .staff-print {
     margin: 0 !important;
