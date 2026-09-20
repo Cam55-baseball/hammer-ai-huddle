@@ -707,10 +707,12 @@ export default function AdminTrainingIntelligence() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">
-                  New exercises awaiting review ({pending.length})
+                  Exercises still switched off ({pending.length})
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  {pending.length} still switched off · {sentBackCount} sent back · showing {visible.length}
+                  Read-only. The nightly safety audit switches an exercise on by itself
+                  once it passes every check, so nothing here waits on you.
+                  {pending.length} off · showing {visible.length}
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -743,15 +745,6 @@ export default function AdminTrainingIntelligence() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    {selected.length} selected (20 max per batch)
-                  </p>
-                  <Button size="sm" disabled={selected.length === 0 || busy} onClick={approveBatch}>
-                    {busy ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
-                    Approve batch
-                  </Button>
-                </div>
                 {Object.entries(grouped).map(([group, rows]) => (
                   <div key={group} className="space-y-2">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -760,14 +753,6 @@ export default function AdminTrainingIntelligence() {
                     {rows.map((r) => (
                       <div key={r.id} className="space-y-2 rounded-md border p-2 text-xs">
                         <div className="flex gap-2">
-                          <Checkbox
-                            checked={selected.includes(r.id)}
-                            onCheckedChange={(v) =>
-                              setSelected((s) =>
-                                v === true ? [...s, r.id].slice(0, 20) : s.filter((x) => x !== r.id),
-                              )
-                            }
-                          />
                           <div className="min-w-0 flex-1 space-y-1">
                             <p className="font-medium">{r.name}</p>
                             {sentBack[r.id] && (
@@ -796,17 +781,6 @@ export default function AdminTrainingIntelligence() {
                               {r.regression_slug ? ` · easier version: ${r.regression_slug}` : ""}
                             </p>
                           </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Textarea
-                            value={sendNote[r.id] ?? ""}
-                            onChange={(e) => setSendNote((s) => ({ ...s, [r.id]: e.target.value }))}
-                            placeholder="Why is it going back?"
-                            className="h-8 min-h-8 text-xs"
-                          />
-                          <Button size="sm" variant="outline" onClick={() => sendBack(r)}>
-                            Send back
-                          </Button>
                         </div>
                       </div>
                     ))}
