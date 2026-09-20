@@ -135,6 +135,10 @@ export default function AdminTrainingIntelligence() {
   const [autoOff, setAutoOff] = useState<
     { feature_key: string; to_mode: string; reason: string | null; changed_at: string } | null
   >(null);
+  const [watchNotes, setWatchNotes] = useState<
+    Array<{ id: string; noted_at: string; severity: string; category: string; title: string; auto_action: string | null }>
+  >([]);
+  const [copying, setCopying] = useState(false);
 
 
   useEffect(() => {
@@ -195,6 +199,14 @@ export default function AdminTrainingIntelligence() {
       .order("changed_at", { ascending: false })
       .limit(1);
     setAutoOff(((autoRows ?? [])[0] as typeof autoOff) ?? null);
+
+    const { data: noteRows } = await supabase
+      .from("ti_watch_notes")
+      .select("id, noted_at, severity, category, title, auto_action")
+      .gte("noted_at", new Date(Date.now() - 86400000).toISOString())
+      .order("noted_at", { ascending: false })
+      .limit(50);
+    setWatchNotes((noteRows ?? []) as typeof watchNotes);
 
 
 
@@ -440,6 +452,53 @@ export default function AdminTrainingIntelligence() {
                       : "No card check recorded yet."}
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Watchdog — the app's own notes from the last 24 hours */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">
+                  {watchNotes.length === 0
+                    ? "All clear in the last 24 hours"
+                    : `${watchNotes.filter((n) => n.severity === "critical").length} critical · ${watchNotes.filter((n) => n.severity === "warn").length} warnings`}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {watchNotes.slice(0, 6).map((n) => (
+                  <div key={n.id} className="space-y-0.5">
+                    <p className={n.severity === "critical" ? "font-medium text-destructive" : "font-medium"}>
+                      {n.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {n.category} · {new Date(n.noted_at).toLocaleString()}
+                      {n.auto_action ? ` · ${n.auto_action}` : ""}
+                    </p>
+                  </div>
+                ))}
+                {watchNotes.length > 6 && (
+                  <p className="text-xs text-muted-foreground">…and {watchNotes.length - 6} more</p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={copying}
+                  onClick={async () => {
+                    setCopying(true);
+                    const { data, error } = await supabase.functions.invoke("ti-watchdog", {
+                      body: { mode: "report", days: 7 },
+                    });
+                    setCopying(false);
+                    if (error || !(data as any)?.text) {
+                      toast({ title: "Could not build the report", variant: "destructive" });
+                      return;
+                    }
+                    await navigator.clipboard.writeText((data as any).text as string);
+                    toast({ title: "Report copied — paste it into the chat" });
+                  }}
+                >
+                  {copying ? "Building…" : "Copy report for Claude"}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
