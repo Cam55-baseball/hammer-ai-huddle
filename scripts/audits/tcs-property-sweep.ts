@@ -19,7 +19,7 @@ const dir = mkdtempSync(join(tmpdir(), "tcs-sweep-"));
 const root = process.cwd();
 
 const workerSrc = `
-import { runSweep } from "${root}/src/test/tissueCost/harness.ts";
+import { runSweep } from "${root}/supabase/functions/_shared/wic/schedule/tissueCost/sweep.ts";
 const [seed, seasons, out] = [Number(process.argv[2]), Number(process.argv[3]), process.argv[4]];
 const t = Date.now();
 const r = runSweep({ seed, seasons });
