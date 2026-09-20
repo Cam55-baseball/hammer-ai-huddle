@@ -188,6 +188,16 @@ export default function AdminTrainingIntelligence() {
     setSwitches((switchRes.data ?? []) as SwitchRow[]);
     setPending((pendingRes.data ?? []) as unknown as PendingRow[]);
 
+    const { data: autoRows } = await supabase
+      .from("wk_feature_switch_audit")
+      .select("feature_key, to_mode, reason, changed_at")
+      .eq("automatic", true)
+      .order("changed_at", { ascending: false })
+      .limit(1);
+    setAutoOff(((autoRows ?? [])[0] as typeof autoOff) ?? null);
+
+
+
     const decisions = (decisionRes.data ?? []) as Array<{ user_id: string; allowed_class: string }>;
     const ids = decisions.map((d) => d.user_id);
     let names = new Map<string, string>();
