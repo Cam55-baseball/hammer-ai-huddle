@@ -55,7 +55,7 @@ const values = rows.map((m) => {
   const phases = PHASES[tier];
   const reg = regressionSlug(m);
   return `(
-  ${q(m.slug)}, ${q(m.name)}, ${q("upper_body_plyo")}, ${q(CATEGORY[m.plane])},
+  ${q(m.slug)}, ${q(m.name)}, ${q("upper_body_plyo")}, ${q("upper_body_plyo")}, ${q(CATEGORY[m.plane])},
   ${arr(m.equipment)}, ${arr(m.equipment)},
   ${arr(phases)}, ${arr(phases)}, ${q(JSON.stringify(seasonLegality(tier)))}::jsonb,
   ${q(JSON.stringify(TA_LEGAL[tier]))}::jsonb, ${MIN_AGE[tier]}, ${MIN_TA[tier]},
@@ -68,7 +68,7 @@ const values = rows.map((m) => {
 
 console.log(`-- Upper-Body Plyometric System v1 — ${rows.length} INACTIVE rows
 INSERT INTO public.wk_movement_catalog (
-  slug, name, family, movement_category,
+  slug, name, family, category, movement_category,
   equipment, equipment_requirements,
   phase_allow, season_eligibility, season_legality,
   training_age_legality, min_age_years, min_training_age_years,
