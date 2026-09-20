@@ -50,6 +50,8 @@ export interface UbHistory {
   benchEstimatedMaxLb?: number;
   /** Consecutive weeks of landmine pressing with no pain flag. */
   landmineWeeksNoPain?: number;
+  /** Landmine press logged at 3 x 8 or better (Step 6 decision 5, U3 overhead gate). */
+  landminePress3x8Logged?: boolean;
   /** Days relative to today (0 = today, negative = past, positive = upcoming). */
   startDayOffsets: number[];
   bullpenDayOffsets: number[];
