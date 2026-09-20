@@ -682,6 +682,9 @@ All colors MUST be HSL.
   .staff-print {
     padding-bottom: 80px !important;
   }
+  .staff-print .rules-card {
+    break-before: page;
+  }
   .staff-print {
     margin: 0 !important;
     padding: 0 !important;

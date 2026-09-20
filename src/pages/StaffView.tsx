@@ -478,7 +478,7 @@ export default function StaffView() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="rules-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Rules applied</CardTitle>
               </CardHeader>
