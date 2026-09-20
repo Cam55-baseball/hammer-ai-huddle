@@ -69,6 +69,10 @@ Deno.serve(async (req) => {
 
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = body?.dry_run === true;
+  // One batch per invocation by default: a card check is heavy, and an edge
+  // worker that runs several in a row runs out of compute. The nightly job and
+  // the Control Center simply call again until nothing is left to activate.
+  const maxBatches = Math.max(1, Math.min(4, Number(body?.max_batches ?? 1)));
 
   // A signed-in caller must be the owner or an admin. The nightly job calls
   // with the service key and no user token.
@@ -83,11 +87,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const baseline = await matrixNow(db);
+    const baseline = dryRun ? await matrixNow(db) : null;
     const activated: string[] = [];
     const rolledBack: string[] = [];
     let passes = 0;
-    let lastMatrix = baseline;
+    let lastMatrix: Awaited<ReturnType<typeof matrixNow>> | null = null;
+    let batchesRun = 0;
 
     while (passes < MAX_PASSES) {
       passes++;
@@ -101,13 +106,16 @@ Deno.serve(async (req) => {
           candidates: candidates.length,
           would_activate: passing.length,
           staying_off: failing.map((f) => ({ slug: f.slug, failures: f.failures })),
-          baseline_matrix: { cells: baseline.m.cells, empty: baseline.m.empty_cells, fingerprint: baseline.m.fingerprint },
+          baseline_matrix: baseline
+            ? { cells: baseline.m.cells, empty: baseline.m.empty_cells, fingerprint: baseline.m.fingerprint }
+            : null,
         });
       }
       if (passing.length === 0) break;
 
       let progressed = false;
-      for (let i = 0; i < passing.length; i += BATCH) {
+      for (let i = 0; i < passing.length && batchesRun < maxBatches; i += BATCH) {
+        batchesRun++;
         const batch = passing.slice(i, i + BATCH);
         const ids = batch.map((b) => b.id);
         const { error: upErr } = await db
@@ -142,7 +150,7 @@ Deno.serve(async (req) => {
           notes: { activated: batch.map((b) => b.slug), pass: passes },
         });
       }
-      if (!progressed) break;
+      if (!progressed || batchesRun >= maxBatches) break;
     }
 
     const rows = await page<AuditCatalogRow>(db, AUDIT_COLUMNS);
@@ -156,13 +164,15 @@ Deno.serve(async (req) => {
       activated,
       rolled_back: rolledBack,
       still_off: after.failing.map((f) => ({ slug: f.slug, failures: f.failures })),
-      matrix: {
-        cells: lastMatrix.m.cells,
-        empty_cells: lastMatrix.m.empty_cells,
-        fingerprint: lastMatrix.m.fingerprint,
-        active_rows: lastMatrix.activeRows,
-      },
-      baseline_fingerprint: baseline.m.fingerprint,
+      remaining_candidates: after.passing.length,
+      matrix: lastMatrix
+        ? {
+          cells: lastMatrix.m.cells,
+          empty_cells: lastMatrix.m.empty_cells,
+          fingerprint: lastMatrix.m.fingerprint,
+          active_rows: lastMatrix.activeRows,
+        }
+        : null,
     });
   } catch (e) {
     return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
