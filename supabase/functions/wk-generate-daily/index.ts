@@ -27,6 +27,8 @@ import { decideFromRaw, fetchShadowData, runShadowDecision } from "../_shared/wi
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
+import { cardBuildFailedNote, livePrescriptionViolations, slowdownNote } from "../_shared/wic/watch/rules.ts";
+import { writeNotes } from "../_shared/wic/watch/write.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal, ECCENTRIC_OVERLOAD_REASON, isEccentricOverloadPhaseIllegal } from "../_shared/wic/season.ts";
 import { applyManualOrder, assignSequenceOrder } from "../_shared/wic/ordering.ts";
@@ -3243,6 +3245,18 @@ const handler = async (req: Request): Promise<Response> => {
         dropped: safePlan.droppedSlugs.length,
       });
 
+      // Step 13 Part B — the watchdog takes the note. Never blocks the card.
+      try {
+        await writeNotes(admin as any, [
+          cardBuildFailedNote({
+            userId: user.id,
+            planDate,
+            reason: primaryDetail,
+            fatals: validatorReport.issues.filter((i: any) => i.severity === "fatal"),
+          }),
+        ]);
+      } catch { /* a missing note never costs a card */ }
+
       return json({
         ok: true,
         degraded: true,
@@ -3305,6 +3319,33 @@ const handler = async (req: Request): Promise<Response> => {
       generator_version: (r as any).generator_version ?? WIC_VERSION,
       status: "planned",
     }));
+
+    // Step 13 Part B — the watchdog checks the day that is about to ship:
+    // an empty card, lifts on a rest day, anything above today's ceiling, and
+    // cards taking much longer to build than normal. Notes only; never blocks.
+    try {
+      const watchNotes = livePrescriptionViolations({
+        userId: user.id,
+        planDate,
+        allowedClass: (tcsAdjust?.allowedClass ?? "H") as "none" | "L" | "M" | "H",
+        liftCount: rows.filter((r: any) => r.slot === "lift").length,
+        maxCnsCost: rows.reduce((m: number, r: any) => Math.max(m, Number(r.cns_cost ?? 0)), 0),
+        cnsCap,
+        itemCount: rows.length,
+      });
+      const { data: baseRow } = await admin
+        .from("ti_watch_baselines")
+        .select("value")
+        .eq("metric", "generation_ms")
+        .maybeSingle();
+      const slow = slowdownNote({
+        baselineMs: Number((baseRow as any)?.value ?? 0),
+        currentMs: generationMs,
+        samples: 1,
+      });
+      if (slow) watchNotes.push(slow);
+      await writeNotes(admin as any, watchNotes);
+    } catch { /* a missing note never costs a card */ }
 
     const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {
       p_user: user.id,
