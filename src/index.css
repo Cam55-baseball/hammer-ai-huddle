@@ -653,8 +653,15 @@ All colors MUST be HSL.
   body:has(.staff-print) [data-sidebar="trigger"] {
     display: none !important;
   }
-  body:has(.staff-print) main,
-  body:has(.staff-print) main > div {
+  body:has(.staff-print) main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .staff-print {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
