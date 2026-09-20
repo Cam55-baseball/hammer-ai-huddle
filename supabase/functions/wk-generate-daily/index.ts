@@ -32,6 +32,9 @@ import {
 } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
+// Step 20 C2 — every row resolves an intensity class, stored or derived from
+// the documented mapping, so the ceiling always compares like with like.
+import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
@@ -1245,7 +1248,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (tcsAdjust) {
         if (
           !opts?.ignoreTcsClass &&
-          tcsAdjust.blockedIntensityClasses.includes(String((m as any).intensity_class ?? ""))
+          tcsAdjust.blockedIntensityClasses.includes(String(resolveIntensityClass(m as any) ?? ""))
         ) return false;
       }
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
@@ -1506,6 +1509,12 @@ const handler = async (req: Request): Promise<Response> => {
     const rxs: Prescription[] = [];
     let seq = 0;
     let cnsUsed = 0;
+    // Step 20 C1 — the budget the ceiling actually governs. Total-dose rows
+    // (innings, contacts, seconds, feet) are exempt from clamping by design,
+    // so counting them against the cap and then calling the result an overrun
+    // was comparing two different things. This counter holds only the spend
+    // the cap governs; the watchdog checks THIS against the cap.
+    let cnsUsedGoverned = 0;
 
     const humanizeClass = (c: string | null) => {
       switch (c) {
@@ -1580,6 +1589,7 @@ const handler = async (req: Request): Promise<Response> => {
         (dosageUnitRaw && dosageUnitRaw !== "reps");
       const clamped = !isTotalDose && (cnsUsed + s.movement.cns_cost) > cnsCap;
       cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
+      if (!isTotalDose) cnsUsedGoverned += clamped ? Math.max(0, cnsCap - cnsUsedGoverned) : s.movement.cns_cost;
 
       // Override provenance
       const phaseBlocked = !!(s.movement.phase_allow && s.movement.phase_allow.length > 0 && !s.movement.phase_allow.includes(phaseRes.phase));
@@ -3737,11 +3747,15 @@ const handler = async (req: Request): Promise<Response> => {
         rows: rows.map((r: any) => ({
           slug: String(r.movement_slug ?? ""),
           slot: r.slot ?? null,
-          intensityClass: ((r.why_payload ?? {}) as any).intensity_class ?? null,
+          intensityClass: resolveIntensityClass({
+            intensity_class: ((r.why_payload ?? {}) as any).intensity_class ?? null,
+            category: ((r.why_payload ?? {}) as any).category ?? null,
+            cns_cost: Number(r.cns_cost ?? 0) || null,
+          }),
           cnsCost: Number(r.cns_cost ?? 0),
         })),
         cnsCap: tcsAdjust ? cnsCap : null,
-        cnsUsed: tcsAdjust ? cnsUsed : null,
+        cnsUsed: tcsAdjust ? cnsUsedGoverned : null,
         itemCount: rows.length,
       });
       const { data: baseRow } = await admin
