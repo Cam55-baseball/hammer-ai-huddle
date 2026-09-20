@@ -157,7 +157,9 @@ export function livePrescriptionViolations(i: {
         auto_action: "The switch drops one level tonight and the owner is alerted",
       });
     }
-    const unknown = i.rows.filter((r) => !r.intensityClass);
+    // Only the slots the ceiling governs; a rally drill or a J-band chart
+    // carries no class by design and is not an unchecked row.
+    const unknown = i.rows.filter((r) => !r.intensityClass && r.slot === "lift");
     if (unknown.length > 0) {
       out.push({
         severity: "info",
