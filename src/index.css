@@ -657,8 +657,11 @@ All colors MUST be HSL.
   }
   body:has(.staff-print) main,
   body:has(.staff-print) .staff-print,
-  body:has(.staff-print) .staff-print * {
+  body:has(.staff-print) .staff-print *,
+  body:has(.staff-print) .group\/sidebar-wrapper {
     min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
   body:has(.staff-print) main {
     margin: 0 !important;
