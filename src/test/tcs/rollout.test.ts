@@ -4,6 +4,7 @@ import {
   demote,
   evaluateAutoOff,
   evaluateGate,
+  releasePreflight,
   type SwitchMode,
 } from "../../../supabase/functions/_shared/wic/flags/rollout";
 
@@ -223,5 +224,44 @@ describe("Step 12 automatic safety", () => {
     expect(
       countGreenNights([green, green, { status: "failed", mismatches: 0, fallbackRate: 0 }, green]),
     ).toBe(2);
+  });
+});
+
+// Step 17 item A — the machine check that runs before any widening flip.
+describe("Step 17 release preflight", () => {
+  const now = new Date("2026-09-21T21:00:00Z");
+  const crit = (min: number) => ({
+    id: `n${min}`,
+    noted_at: new Date(now.getTime() - min * 60_000).toISOString(),
+    category: "rule_violation",
+    title: "A movement went above today's ceiling",
+  });
+
+  it("refuses a flip while a critical note is less than an hour old, and lists it", () => {
+    const r = releasePreflight({ mode: "all", criticalNotes: [crit(10)], now });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("critical note");
+    expect(r.blocking.map((b) => b.id)).toEqual(["n10"]);
+  });
+
+  it("refuses a flip while an automatic step-down is waiting", () => {
+    const r = releasePreflight({
+      mode: "all",
+      criticalNotes: [],
+      now,
+      pendingAutoOff: { feature_key: "rest_day_calculator", to_mode: "pilot" },
+    });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("step-down");
+  });
+
+  it("allows the flip once the hour is quiet and nothing is pending", () => {
+    const r = releasePreflight({ mode: "all", criticalNotes: [crit(75)], now });
+    expect(r.ok).toBe(true);
+    expect(r.blocking).toEqual([]);
+  });
+
+  it("never blocks turning something off", () => {
+    expect(releasePreflight({ mode: "off", criticalNotes: [crit(1)], now }).ok).toBe(true);
   });
 });
