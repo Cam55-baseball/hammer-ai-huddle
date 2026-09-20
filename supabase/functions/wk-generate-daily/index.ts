@@ -860,12 +860,13 @@ const handler = async (req: Request): Promise<Response> => {
       tcsAdjust = null;
       // Step 12 A3: the nightly safety job watches this count.
       try {
-        await supabase.from("wk_feature_error_events").insert({
+        await admin.from("wk_feature_error_events").insert({
           feature_key: "rest_day_calculator",
-          user_id: userId,
+          user_id: user.id,
           error_text: String(tcsErr).slice(0, 500),
         });
       } catch { /* never blocks the card */ }
+
     }
 
 
