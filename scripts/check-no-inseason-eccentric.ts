@@ -146,4 +146,43 @@ if (deepFlexion.length > 0) {
   }
 }
 
+// ─── Guard 3 (TI-0a-1): catalog data must match law L0.3 ────────────────────
+// No active eccentric_overload row may claim in-season / post-season legality
+// (season_eligibility or phase_allow), and none may be game-day legal.
+{
+  const { data: overloadRows, error: overloadErr } = await supabase
+    .from("wk_movement_catalog")
+    .select("slug, name, season_eligibility, phase_allow, game_day_legal")
+    .eq("is_active", true)
+    .eq("eccentric_overload", true);
+  if (overloadErr) {
+    console.error("[drift-guard] overload catalog query failed", overloadErr);
+    process.exit(2);
+  }
+  const COMPETITIVE = ["in_season", "post_season"];
+  const badPhase = (overloadRows ?? []).filter((r) =>
+    COMPETITIVE.some(
+      (p) => (r.season_eligibility ?? []).includes(p) || (r.phase_allow ?? []).includes(p),
+    ),
+  );
+  const badGameDay = (overloadRows ?? []).filter((r) => r.game_day_legal === true);
+  if (badPhase.length > 0) {
+    failed = true;
+    console.error(
+      `[drift-guard] ❌ ${badPhase.length} eccentric_overload row(s) still legal in in_season/post_season`,
+      badPhase.map((r) => r.slug),
+    );
+  }
+  if (badGameDay.length > 0) {
+    failed = true;
+    console.error(
+      `[drift-guard] ❌ ${badGameDay.length} eccentric_overload row(s) still game_day_legal`,
+      badGameDay.map((r) => r.slug),
+    );
+  }
+  if (badPhase.length === 0 && badGameDay.length === 0) {
+    console.log("[drift-guard] ✅ catalog: no eccentric_overload row is in-season, post-season or game-day legal");
+  }
+}
+
 process.exit(failed ? 1 : 0);
