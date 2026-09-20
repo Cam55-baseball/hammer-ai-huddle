@@ -397,7 +397,7 @@ export default function StaffView() {
                 {changes.map((c, i) => (
                   <div key={`${c.date}-${i}`} className="border-b py-1 last:border-0">
                     <p className="font-medium">
-                      {c.date} — {c.what}
+                      {dayWord(c.date)} — {c.what}
                     </p>
                     <p className="text-muted-foreground">{c.why}</p>
                   </div>
