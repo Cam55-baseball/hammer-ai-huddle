@@ -653,6 +653,11 @@ All colors MUST be HSL.
   body:has(.staff-print) [data-sidebar="trigger"] {
     display: none !important;
   }
+  body:has(.staff-print) main,
+  body:has(.staff-print) .staff-print,
+  body:has(.staff-print) .staff-print * {
+    min-height: 0 !important;
+  }
   body:has(.staff-print) main {
     margin: 0 !important;
     padding: 0 !important;
