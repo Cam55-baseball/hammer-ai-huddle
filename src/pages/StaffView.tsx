@@ -51,6 +51,73 @@ export default function StaffView() {
   const [buckets, setBuckets] = useState<Record<string, string>>({});
   const [block, setBlock] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<Array<{ id: string; full_name: string | null }>>([]);
+  const [myGrants, setMyGrants] = useState<
+    Array<{ id: string; name: string; revoked_at: string | null }>
+  >([]);
+  const [accessLog, setAccessLog] = useState<Array<{ viewed_at: string; name: string }>>([]);
+
+  const loadMyGrants = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("wk_staff_access")
+      .select("id, staff_user_id, revoked_at")
+      .eq("athlete_user_id", user.id);
+    const rows = (data ?? []) as Array<{ id: string; staff_user_id: string; revoked_at: string | null }>;
+    const ids = rows.map((r) => r.staff_user_id);
+    const { data: profiles } = ids.length
+      ? await supabase.from("profiles").select("id, full_name").in("id", ids)
+      : { data: [] as Array<{ id: string; full_name: string | null }> };
+    const nameOf = (id: string) =>
+      (profiles ?? []).find((p) => p.id === id)?.full_name ?? "Staff member";
+    setMyGrants(rows.map((r) => ({ id: r.id, name: nameOf(r.staff_user_id), revoked_at: r.revoked_at })));
+
+    const { data: logs } = await supabase
+      .from("wk_staff_access_log")
+      .select("viewed_at, staff_user_id")
+      .eq("athlete_user_id", user.id)
+      .order("viewed_at", { ascending: false })
+      .limit(10);
+    setAccessLog(
+      ((logs ?? []) as Array<{ viewed_at: string; staff_user_id: string }>).map((l) => ({
+        viewed_at: l.viewed_at,
+        name: nameOf(l.staff_user_id),
+      })),
+    );
+  }, [user]);
+
+  const runSearch = async () => {
+    if (search.trim().length < 2) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .ilike("full_name", `%${search.trim()}%`)
+      .limit(8);
+    setResults((data ?? []) as Array<{ id: string; full_name: string | null }>);
+  };
+
+  const grantTo = async (staffId: string) => {
+    if (!user) return;
+    await supabase
+      .from("wk_staff_access")
+      .upsert(
+        { staff_user_id: staffId, athlete_user_id: user.id, granted_by: user.id, revoked_at: null },
+        { onConflict: "staff_user_id,athlete_user_id" },
+      );
+    setResults([]);
+    setSearch("");
+    await loadMyGrants();
+  };
+
+  const revoke = async (grantId: string) => {
+    await supabase
+      .from("wk_staff_access")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", grantId);
+    await loadMyGrants();
+  };
+
 
   const loadGrants = useCallback(async () => {
     if (!user) return;
