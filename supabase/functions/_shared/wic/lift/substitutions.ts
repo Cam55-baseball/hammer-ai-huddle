@@ -2,6 +2,8 @@
 // Every prescribed lift exposes a full substitution ladder derived from the
 // canonical exercise governance registry (wk_movement_catalog).
 
+import { isEccentricOverloadPhaseIllegal } from "../season.ts";
+
 export interface CatalogEntry {
   slug: string;
   name: string;
@@ -11,6 +13,7 @@ export interface CatalogEntry {
   regression_slug?: string | null;
   season_legality?: Record<string, boolean> | null;
   training_age_legality?: Record<string, boolean> | null;
+  eccentric_overload?: boolean | null;
   default_sets?: number | null;
   default_reps?: number | null;
 }
@@ -49,6 +52,9 @@ export function resolveSubstitutionLadder(input: SubstitutionResolveInput): Subs
   );
 
   const seasonLegal = (c: CatalogEntry) => {
+    // L0.3 (TI-0a-1) — an eccentric-overload row can never be offered as a
+    // swap in a competitive phase, whatever season_legality says.
+    if (phase && isEccentricOverloadPhaseIllegal(c, phase)) return false;
     if (!phase || !c.season_legality) return true;
     return c.season_legality[phase] !== false;
   };

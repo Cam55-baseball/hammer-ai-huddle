@@ -24,7 +24,7 @@ import { buildSafePlan } from "../_shared/wic/safePlan.ts";
 import { resolveExtensiveDose, resolveIntensityMode } from "../_shared/wic/execution/intensityMode.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
-import { seasonContextFromPhase, isMovementSeasonLegal } from "../_shared/wic/season.ts";
+import { seasonContextFromPhase, isMovementSeasonLegal, ECCENTRIC_OVERLOAD_REASON, isEccentricOverloadPhaseIllegal } from "../_shared/wic/season.ts";
 import { applyManualOrder, assignSequenceOrder } from "../_shared/wic/ordering.ts";
 // WIC engine modules — canonical slug pools per engine.
 import * as StrengthEngine from "../_shared/wic/engines/strength.ts";
@@ -1024,6 +1024,10 @@ const handler = async (req: Request): Promise<Response> => {
       if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
       // Single canonical seasonal legality gate — overrides may unlock.
       const legality = isMovementSeasonLegal(seasonCtx, m);
+      // L0.3 (TI-0a-1) — eccentric overload in a competitive phase is a safety
+      // gate: an athlete override can never unlock it. Every other seasonal
+      // reason keeps its existing override pathway.
+      if (legality.reason === ECCENTRIC_OVERLOAD_REASON) return false;
       if (!legality.legal && !overrideSlugs.has(m.slug)) return false;
       // Session dedupe — no movement twice in a day.
       if (usedThisSession.has(m.slug)) return false;
