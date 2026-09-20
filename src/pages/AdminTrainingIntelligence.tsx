@@ -385,6 +385,19 @@ export default function AdminTrainingIntelligence() {
 
           {/* ── HEALTH ─────────────────────────────────────────────────── */}
           <TabsContent value="health" className="space-y-3 pt-3">
+            {autoOff && (
+              <Card className="border-destructive/40">
+                <CardContent className="p-3 text-sm">
+                  <p className="font-medium">Safety stepped a switch down</p>
+                  <p className="text-xs text-muted-foreground">
+                    {autoOff.feature_key} → {MODE_LABEL[autoOff.to_mode] ?? autoOff.to_mode} ·{" "}
+                    {autoOff.reason ?? "no reason recorded"} ·{" "}
+                    {new Date(autoOff.changed_at).toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">
