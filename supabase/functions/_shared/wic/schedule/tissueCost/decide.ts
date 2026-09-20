@@ -9,6 +9,7 @@ import {
   TCS_VERSION,
   tanksLoadedBy,
   TCS_THRESHOLDS,
+  TCS_THRESHOLDS_V12,
   thresholdFor,
 } from "./config.ts";
 import {
@@ -26,6 +27,9 @@ import {
   zeroTanks,
 } from "./tanks.ts";
 import { buildReasons } from "./reasons.ts";
+import { computeBaseline, judgedLevels } from "./baseline.ts";
+
+const zeroLevels = (): TankLevels => ({ nerve: 0, muscle: 0, connective: 0, arm: 0 });
 import {
   type AllowedClass,
   type CheckIn,
@@ -277,6 +281,21 @@ export function decide(
     config,
   });
 
+  // ---- v1.2 §A: judge every tank on load ABOVE the athlete's own normal.
+  const baselineResult = computeBaseline(
+    pastDays,
+    futureDates.map((d) => byDate.get(d)!),
+    today,
+    config,
+  );
+  const useBaseline = config.baselineSubtraction === true;
+  const baseline = useBaseline ? baselineResult.baseline : zeroLevels();
+  if (useBaseline) {
+    diagnostics.push(`baseline_${baselineResult.source}`);
+    if (baselineResult.capped) diagnostics.push("baseline_capped");
+  }
+  const thresholds = useBaseline ? TCS_THRESHOLDS_V12 : TCS_THRESHOLDS;
+
   const templateCap: AllowedClass =
     profile?.phaseTemplateClass === "none" ||
     profile?.phaseTemplateClass === "L" ||
@@ -299,9 +318,10 @@ export function decide(
   let hardRuleHit: string | null = null;
 
   const tanksOk = (cls: SessionClass, lv: TankLevels, ph: Profile["phase"]): boolean => {
-    const th = thresholdFor(cls, ph);
+    const th = thresholdFor(cls, ph, thresholds);
+    const judged = judgedLevels(lv, baseline);
     for (const t of tanksLoadedBy(cls)) {
-      if (lv[t] > th[t] + EPS) return false;
+      if (judged[t] > th[t] + EPS) return false;
     }
     return true;
   };
@@ -314,8 +334,9 @@ export function decide(
     let projected = addLevels(lv, applyCostMul(liftCost({ date: today, lift: { class: cls } }, config), mods.costMul));
     const gap = Math.max(1, dayDiff(today, nextGameDate));
     for (let i = 0; i < gap; i++) projected = decay(projected, config, mods.halfLifeMul);
+    const judged = judgedLevels(projected, baseline);
     for (const t of TANKS) {
-      if (projected[t] > TCS_THRESHOLDS.gameReadyLine[t] + EPS) return false;
+      if (judged[t] > thresholds.gameReadyLine[t] + EPS) return false;
     }
     return true;
   };
@@ -350,13 +371,15 @@ export function decide(
     }
   }
 
-  // Ceiling — reduce, never remove.
+  // Ceiling — reduce, never remove (v1.2 §A, invariant I10).
+  // The class drops to the HIGHEST allowed lower class, not all the way down.
   if (allowedClass === "none" && ruleLegal.length > 0) {
     const ceiling = phase === "in_season" || phase === "post_season"
       ? config.ceilingRestDays.inSeason
       : config.ceilingRestDays.offseason;
     if (restSinceLastLift >= ceiling) {
-      allowedClass = ruleLegal[ruleLegal.length - 1];
+      // ruleLegal is ordered H, M, L (highest first).
+      allowedClass = useBaseline && ruleLegal.length > 1 ? ruleLegal[1] : ruleLegal[ruleLegal.length - 1];
       loadPatternSignal = true;
     }
   }

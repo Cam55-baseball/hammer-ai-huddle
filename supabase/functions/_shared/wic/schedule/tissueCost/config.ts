@@ -13,6 +13,7 @@ import {
   type TcsConfig,
 } from "./types.ts";
 import { addLevels, applyCostMul, dayModifiers, decay, liftCost, runTanks } from "./tanks.ts";
+import { computeBaseline, judgedLevels } from "./baseline.ts";
 
 export const TCS_VERSION = "tcs_v1";
 
@@ -79,6 +80,17 @@ export const TCS_CONFIG: TcsConfig = Object.freeze({
 
   historyWindowDays: 28,
   nextHeavyHorizonDays: 10,
+
+  // v1.2 §A — "load above your normal"
+  baselineWindowDays: 28,
+  baselineCapPracticeMinutes: 120,
+  baselineSubtraction: false,
+}) as TcsConfig;
+
+/** v1.2 §A calibration: the same config with "load above your normal" ON. */
+export const TCS_CONFIG_V12: TcsConfig = Object.freeze({
+  ...TCS_CONFIG,
+  baselineSubtraction: true,
 }) as TcsConfig;
 
 export const TCS_CONFIG_HASH = fnv1a64Hex(canonicalJson(TCS_CONFIG));
@@ -106,8 +118,34 @@ function gameDay(date: string): DaySchedule {
   return { date, games: { role: "position", count: 1 } };
 }
 
-/** REF-OFF: practice Mon–Thu, H lift Mon after practice. Next H allowed Fri (3 full rest days). */
+/**
+ * v1.2 §A — baseline_k = c/(1−r) is the steady state of the athlete's routine
+ * load, i.e. it assumes the routine has been running for a long time. The
+ * reference cases therefore start from that steady state: 28 routine days run
+ * in before the reference week. Without the run-in the simulated levels are
+ * still climbing from zero, every judged level lands at 0 and the derived
+ * thresholds collapse. This aligns the simulation with the baseline
+ * definition; it does not change any number by hand.
+ */
+function withRunIn(first: string, routine: (d: string) => DaySchedule, history: DaySchedule[]): DaySchedule[] {
+  const run: DaySchedule[] = [];
+  for (let i = TCS_CONFIG.baselineWindowDays; i >= 1; i--) run.push(routine(addDaysIso(first, -i)));
+  return [...run, ...history];
+}
+
+function addDaysIso(date: string, delta: number): string {
+  const t = Date.UTC(+date.slice(0, 4), +date.slice(5, 7) - 1, +date.slice(8, 10)) + delta * 86400000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/**
+ * REF-OFF (v1.2 §A, redefined): 60-min moderate practice every day Mon–Fri,
+ * H lift Monday after practice → next H Friday after practice (3 full rest days).
+ * Friday now carries its practice, so the threshold is measured on a normal
+ * training day instead of a rest day.
+ */
 export const REF_OFF = {
+  __runIn: true as const,
   profile: REF_PROFILE_OFF,
   history: [
     { ...practice("2026-01-05"), lift: { class: "H" as SessionClass, method: "standard" as const } },
@@ -116,11 +154,12 @@ export const REF_OFF = {
     practice("2026-01-08"),
   ],
   today: "2026-01-09",
-  todayDay: null as DaySchedule | null,
+  todayDay: practice("2026-01-09") as DaySchedule | null,
 };
 
 /** REF-IN: daily games, H lift post-game Day 1. Next lift Day 4 post-game (2 full rest days). */
 export const REF_IN = {
+  __runIn: true as const,
   profile: REF_PROFILE_IN,
   history: [
     { ...gameDay("2026-05-04"), lift: { class: "H" as SessionClass, method: "standard" as const } },
@@ -133,6 +172,7 @@ export const REF_IN = {
 
 /** REF-M: offseason, practice Mon–Thu, M lift Mon. Next lift Thu (2 full rest days). */
 export const REF_M = {
+  __runIn: true as const,
   profile: REF_PROFILE_OFF,
   history: [
     { ...practice("2026-01-05"), lift: { class: "M" as SessionClass } },
@@ -145,6 +185,7 @@ export const REF_M = {
 
 /** REF-L: same week with an L session. Next lift 2 full rest days later. */
 export const REF_L = {
+  __runIn: true as const,
   profile: REF_PROFILE_OFF,
   history: [
     { ...practice("2026-01-05"), lift: { class: "L" as SessionClass } },
@@ -155,25 +196,48 @@ export const REF_L = {
   todayDay: practice("2026-01-08") as DaySchedule | null,
 };
 
-function levelsAt(ref: {
+type RefCase = {
   profile: Profile;
   history: DaySchedule[];
   today: string;
   todayDay: DaySchedule | null;
-}): TankLevels {
+};
+
+function refHistory(ref: RefCase): DaySchedule[] {
+  const first = ref.history[0]?.date ?? ref.today;
+  const routine = ref.profile.phase === "in_season" ? gameDay : practice;
+  return withRunIn(first, routine, ref.history);
+}
+
+function rawLevelsAt(ref: RefCase, cfg: TcsConfig): TankLevels {
   return runTanks({
-    days: ref.history,
+    days: cfg.baselineSubtraction ? refHistory(ref) : ref.history,
     today: ref.today,
     todayDay: ref.todayDay,
     profile: ref.profile,
     checkInByDate: NO_CHECKINS,
-    config: TCS_CONFIG,
+    config: cfg,
   }).levels;
 }
 
-function withHeadroom(levels: TankLevels): TankLevels {
+/** v1.2 §A — reference cases are measured on load ABOVE the athlete's own normal. */
+export function refBaseline(ref: RefCase, cfg: TcsConfig = TCS_CONFIG_V12): TankLevels {
+  return computeBaseline(
+    refHistory(ref),
+    ref.todayDay ? [ref.todayDay] : [],
+    ref.today,
+    cfg,
+  ).baseline;
+}
+
+function levelsAt(ref: RefCase, cfg: TcsConfig): TankLevels {
+  const raw = rawLevelsAt(ref, cfg);
+  return cfg.baselineSubtraction ? judgedLevels(raw, refBaseline(ref, cfg)) : raw;
+}
+
+function withHeadroom(levels: TankLevels, cfg: TcsConfig): TankLevels {
   const out = { nerve: 0, muscle: 0, connective: 0, arm: 0 } as TankLevels;
-  for (const t of TANKS) out[t] = levels[t] * TCS_CONFIG.headroom;
+  for (const t of TANKS) out[t] = levels[t] * cfg.headroom;
   return out;
 }
 
@@ -186,30 +250,41 @@ export interface DerivedThresholds {
   gameReadyLine: TankLevels;
 }
 
-function deriveGameReadyLine(): TankLevels {
+function deriveGameReadyLine(cfg: TcsConfig): TankLevels {
   // The REF-IN Day-4 post-game lift is legal by owner law, so the level it
   // produces at the next game start defines the line (plus headroom).
-  const atLift = levelsAt(REF_IN);
-  const mods = dayModifiers(REF_IN.profile, undefined, TCS_CONFIG);
+  const atLift = rawLevelsAt(REF_IN, cfg);
+  const mods = dayModifiers(REF_IN.profile, undefined, cfg);
   const afterLift = addLevels(
     atLift,
     applyCostMul(
-      liftCost({ date: REF_IN.today, lift: { class: "H", method: "standard" } }, TCS_CONFIG),
+      liftCost({ date: REF_IN.today, lift: { class: "H", method: "standard" } }, cfg),
       mods.costMul,
     ),
   );
-  return withHeadroom(decay(afterLift, TCS_CONFIG, mods.halfLifeMul));
+  const projected = decay(afterLift, cfg, mods.halfLifeMul);
+  return withHeadroom(
+    cfg.baselineSubtraction ? judgedLevels(projected, refBaseline(REF_IN, cfg)) : projected,
+    cfg,
+  );
 }
 
-export const TCS_THRESHOLDS: DerivedThresholds = Object.freeze({
-  H: Object.freeze({
-    offseason: Object.freeze(withHeadroom(levelsAt(REF_OFF))),
-    in_season: Object.freeze(withHeadroom(levelsAt(REF_IN))),
-  }),
-  M: Object.freeze(withHeadroom(levelsAt(REF_M))),
-  L: Object.freeze(withHeadroom(levelsAt(REF_L))),
-  gameReadyLine: Object.freeze(deriveGameReadyLine()),
-}) as DerivedThresholds;
+export function deriveThresholds(cfg: TcsConfig): DerivedThresholds {
+  return Object.freeze({
+    H: Object.freeze({
+      offseason: Object.freeze(withHeadroom(levelsAt(REF_OFF, cfg), cfg)),
+      in_season: Object.freeze(withHeadroom(levelsAt(REF_IN, cfg), cfg)),
+    }),
+    M: Object.freeze(withHeadroom(levelsAt(REF_M, cfg), cfg)),
+    L: Object.freeze(withHeadroom(levelsAt(REF_L, cfg), cfg)),
+    gameReadyLine: Object.freeze(deriveGameReadyLine(cfg)),
+  }) as DerivedThresholds;
+}
+
+export const TCS_THRESHOLDS: DerivedThresholds = deriveThresholds(TCS_CONFIG);
+
+/** v1.2 §A calibration thresholds (derived with baseline subtraction ON). */
+export const TCS_THRESHOLDS_V12: DerivedThresholds = deriveThresholds(TCS_CONFIG_V12);
 
 export const TCS_THRESHOLDS_HASH = fnv1a64Hex(canonicalJson(TCS_THRESHOLDS));
 
@@ -224,10 +299,14 @@ export function tanksLoadedBy(cls: SessionClass): readonly ("nerve" | "muscle" |
   return TANKS.filter((t) => (row as unknown as Record<string, number>)[t] > 0);
 }
 
-export function thresholdFor(cls: SessionClass, phase: Profile["phase"]): TankLevels {
-  if (cls === "M") return TCS_THRESHOLDS.M;
-  if (cls === "L") return TCS_THRESHOLDS.L;
+export function thresholdFor(
+  cls: SessionClass,
+  phase: Profile["phase"],
+  thresholds: DerivedThresholds = TCS_THRESHOLDS,
+): TankLevels {
+  if (cls === "M") return thresholds.M;
+  if (cls === "L") return thresholds.L;
   return phase === "in_season" || phase === "post_season"
-    ? TCS_THRESHOLDS.H.in_season
-    : TCS_THRESHOLDS.H.offseason;
+    ? thresholds.H.in_season
+    : thresholds.H.offseason;
 }
