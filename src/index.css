@@ -650,7 +650,9 @@ All colors MUST be HSL.
   body:has(.staff-print) header,
   body:has(.staff-print) [data-sidebar],
   body:has(.staff-print) [data-sidebar="sidebar"],
-  body:has(.staff-print) [data-sidebar="trigger"] {
+  body:has(.staff-print) [data-sidebar="trigger"],
+  body:has(.staff-print) .group.peer,
+  body:has(.staff-print) [class*="w-[--sidebar-width]"] {
     display: none !important;
   }
   body:has(.staff-print) main,
