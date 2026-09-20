@@ -1,0 +1,2 @@
+UPDATE public.wk_movement_catalog SET min_age_years = 14, updated_at = now() WHERE slug IN ('gap_catcher_stance_hold_l1','gap_catcher_stance_rock_l2') AND min_age_years < 14;
+UPDATE public.wk_movement_catalog SET default_duration_seconds = 60, updated_at = now() WHERE slug = 'hwc_grain_bucket_prep' AND default_duration_seconds IS NULL;
