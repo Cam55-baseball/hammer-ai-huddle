@@ -1,0 +1,8 @@
+OK   categories restored: 69 rows (expected 69)
+OK   names restored: 12 rows (expected 12)
+OK   hill/tow rows loosened back: 6 rows (expected 6)
+OK   coverage-gap rows deleted: 48 rows (expected 48)
+OK   sled duplicates restored: 5 rows (expected 5)
+OK   plyo_tier cleared: 62 rows (expected 62)
+post-revert rows: 926 (active 790)
+branded categories back: 8 of 8
