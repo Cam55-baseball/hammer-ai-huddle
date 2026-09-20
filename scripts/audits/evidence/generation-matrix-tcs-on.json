@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T17:50:19.214Z",
+  "generated_at": "2026-09-20T17:51:40.630Z",
   "expected_cells_per_class": 1296,
   "total_cells": 5184,
   "runs": [
@@ -18,8 +18,8 @@
       "empty_cells": 0,
       "fatal_cells": 0,
       "blocked_intensity_classes": [
-        "max_effort_compound",
-        "eccentric_compound"
+        "supra_maximal",
+        "maximal"
       ],
       "fingerprint": "1435a0592f8964b2",
       "passed": true
@@ -30,9 +30,11 @@
       "empty_cells": 0,
       "fatal_cells": 0,
       "blocked_intensity_classes": [
+        "supra_maximal",
+        "maximal",
+        "high",
         "compound",
-        "max_effort_compound",
-        "eccentric_compound"
+        "elastic"
       ],
       "fingerprint": "1435a0592f8964b2",
       "passed": true
@@ -43,11 +45,13 @@
       "empty_cells": 0,
       "fatal_cells": 0,
       "blocked_intensity_classes": [
+        "supra_maximal",
+        "maximal",
+        "high",
         "compound",
-        "max_effort_compound",
-        "eccentric_compound",
-        "unilateral",
-        "carry"
+        "elastic",
+        "moderate",
+        "unilateral"
       ],
       "fingerprint": "1435a0592f8964b2",
       "passed": true

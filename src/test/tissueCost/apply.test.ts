@@ -41,7 +41,7 @@ describe("TCS apply — cap can only come down", () => {
 describe("TCS apply — movement classes", () => {
   it("H allows everything, M blocks heavy, L blocks compounds too", () => {
     expect(blockedClassesFor("H")).toEqual([]);
-    expect(blockedClassesFor("M")).toEqual(["max_effort_compound", "eccentric_compound"]);
+    expect(blockedClassesFor("M")).toEqual(["supra_maximal", "maximal"]);
     expect(blockedClassesFor("L")).toContain("compound");
     expect(blockedClassesFor("M")).toContain("maximal");
     expect(blockedClassesFor("none")).toContain("moderate");
