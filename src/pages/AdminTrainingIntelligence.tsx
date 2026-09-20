@@ -580,16 +580,54 @@ export default function AdminTrainingIntelligence() {
                       body: { mode: "report", days: 7 },
                     });
                     setCopying(false);
-                    if (error || !(data as any)?.text) {
+                    const text = (data as any)?.text as string | undefined;
+                    if (error || !text) {
                       toast({ title: "Could not build the report", variant: "destructive" });
                       return;
                     }
-                    await navigator.clipboard.writeText((data as any).text as string);
-                    toast({ title: "Report copied — paste it into the chat" });
+                    // Always show the text: on a phone the clipboard call is
+                    // often refused, and a button that silently does nothing
+                    // is worse than no button.
+                    setReportText(text);
+                    try {
+                      await navigator.clipboard.writeText(text);
+                      toast({ title: "Report copied — paste it into the chat" });
+                    } catch {
+                      toast({ title: "Report ready below — select it, or use Share" });
+                    }
                   }}
                 >
                   {copying ? "Building…" : "Copy report for Claude"}
                 </Button>
+
+                {reportText && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {typeof navigator !== "undefined" && "share" in navigator && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            (navigator as any)
+                              .share({ title: "Training intelligence report", text: reportText })
+                              .catch(() => {})}
+                        >
+                          Share
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" onClick={() => setReportText(null)}>
+                        Hide
+                      </Button>
+                    </div>
+                    <Textarea
+                      readOnly
+                      value={reportText}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="h-64 font-mono text-[11px]"
+                    />
+                  </div>
+                )}
+
               </CardContent>
             </Card>
           </TabsContent>
