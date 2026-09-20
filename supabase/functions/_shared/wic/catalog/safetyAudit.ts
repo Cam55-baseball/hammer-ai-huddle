@@ -96,7 +96,7 @@ const REP_UNITS = new Set(["reps", "rep", ""]);
 /** One row against every check. Returns the exact failing checks by name. */
 export function auditRow(
   row: AuditCatalogRow,
-  index: { activeSlugs: Set<string>; allSlugs: Set<string> },
+  index: { activeSlugs: Set<string>; allSlugs: Set<string>; liveEquipment: Set<string> },
 ): AuditResult {
   const f: string[] = [];
   const tier = String(row.ub_tier ?? row.plyo_tier ?? "").toUpperCase();
@@ -163,18 +163,26 @@ export function auditRow(
     }
   }
 
-  // 6. dose fields complete and sane for the declared unit
+  // 6. dose fields sane for the declared unit.
+  //
+  // Sets and reps are NOT the catalog's to hold: the dosage doctrine is the
+  // only authority allowed to produce a set or rep number, and the catalog's
+  // default_sets / default_reps are legacy placeholders. So the check here is
+  // the one that actually matters — a row that measures itself in seconds,
+  // feet or total reps must carry that number, and must never hide it in
+  // default_reps (the bug that took every card down once before).
   const unit = String(row.dosage_unit ?? "reps").toLowerCase().trim();
   if (!REP_UNITS.has(unit) && row.default_reps != null) {
     f.push(`unit "${unit}" but the dose is stored in default_reps`);
   }
-  const hasDose =
-    (REP_UNITS.has(unit) && (row.default_reps ?? 0) > 0) ||
-    (row.default_duration_seconds ?? 0) > 0 ||
-    (row.default_distance_feet ?? 0) > 0 ||
-    (row.default_total_reps ?? 0) > 0;
-  if (!hasDose) f.push("no dose for its unit");
-  if (REP_UNITS.has(unit) && (row.default_sets ?? 0) < 1) f.push("no set count");
+  if (!REP_UNITS.has(unit)) {
+    const dose = unit.startsWith("sec") || unit.startsWith("min")
+      ? row.default_duration_seconds
+      : unit.startsWith("yard") || unit.startsWith("feet") || unit.startsWith("dist")
+      ? row.default_distance_feet
+      : row.default_total_reps ?? row.default_duration_seconds ?? row.default_distance_feet;
+    if (!dose || dose <= 0) f.push(`unit "${unit}" but no dose for it`);
+  }
 
   // 7. bucket and sub-bucket set, inside the canonical tree
   if (!row.bucket) f.push("no bucket");
@@ -241,9 +249,14 @@ export function auditCatalog(rows: AuditCatalogRow[]): {
 } {
   const activeSlugs = new Set(rows.filter((r) => r.is_active).map((r) => r.slug));
   const allSlugs = new Set(rows.map((r) => r.slug));
+  const liveEquipment = new Set<string>();
+  for (const r of rows) {
+    if (r.is_active !== true) continue;
+    for (const e of [...(r.equipment_requirements ?? []), ...(r.equipment ?? [])]) liveEquipment.add(String(e));
+  }
   const candidates = rows
     .filter((r) => r.is_active !== true && !r.superseded_by)
-    .map((r) => auditRow(r, { activeSlugs, allSlugs }))
+    .map((r) => auditRow(r, { activeSlugs, allSlugs, liveEquipment }))
     .sort((a, b) => a.slug.localeCompare(b.slug));
   return {
     candidates,
