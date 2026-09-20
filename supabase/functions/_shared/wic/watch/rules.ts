@@ -100,7 +100,7 @@ export function livePrescriptionViolations(i: {
       decision_id: i.decisionId ?? null,
       title: "A rest day was given lifts",
       detail: { plan_date: i.planDate, allowed_class: "none", lifts: i.liftCount },
-      auto_action: null,
+      auto_action: "The switch drops one level tonight and the owner is alerted",
     });
   }
   if (i.maxCnsCost > i.cnsCap) {
@@ -116,7 +116,7 @@ export function livePrescriptionViolations(i: {
         heaviest: i.maxCnsCost,
         ceiling: i.cnsCap,
       },
-      auto_action: null,
+      auto_action: "The switch drops one level tonight and the owner is alerted",
     });
   }
   if (i.itemCount === 0) {

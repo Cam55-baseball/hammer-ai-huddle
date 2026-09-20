@@ -80,6 +80,12 @@ export type AutoOffInputs = {
   errorsToday: number;
   /** The feature's normal error level for a day. */
   baselineErrors: number;
+  /**
+   * Step 15 item 4 — critical watchdog notes recorded for this feature since
+   * the last check (a card that failed to build, an empty card, or a movement
+   * above the day's ceiling). Any one of them drops the switch a level.
+   */
+  criticalNotes?: number;
 };
 
 export type AutoOffResult = {
@@ -87,7 +93,7 @@ export type AutoOffResult = {
   fromMode: SwitchMode;
   toMode: SwitchMode;
   reason: string;
-  trigger: "shadow_check_failed" | "fallback_rate" | "card_errors" | null;
+  trigger: "shadow_check_failed" | "fallback_rate" | "card_errors" | "critical_notes" | null;
 };
 
 export function evaluateAutoOff(i: AutoOffInputs): AutoOffResult {
@@ -110,6 +116,14 @@ export function evaluateAutoOff(i: AutoOffInputs): AutoOffResult {
   if (c && c.fallbackRate > FALLBACK_RATE_LIMIT) {
     const pct = (c.fallbackRate * 100).toFixed(2);
     return hit(i, "fallback_rate", `Backup plan used on ${pct}% of days (limit 0.50%)`);
+  }
+  const criticals = i.criticalNotes ?? 0;
+  if (criticals > 0) {
+    return hit(
+      i,
+      "critical_notes",
+      `${criticals} critical watchdog note(s) since the last check (failed card, empty card or a movement above the day's ceiling)`,
+    );
   }
   if (i.errorsToday > i.baselineErrors) {
     return hit(

@@ -19,6 +19,17 @@ const corsHeaders = {
 /** Switches the rest-day / logging rollout governs. */
 const GOVERNED = ["rest_day_calculator", "one_tap_logging"];
 
+/**
+ * Step 15 item 4 — which switch owns which critical watchdog note. A card that
+ * failed to build, an empty card and a movement above the day's ceiling are all
+ * the rest-day calculator's responsibility, so a critical one of those drops
+ * that switch a level exactly like a failed nightly check does.
+ */
+const CRITICAL_CATEGORIES_BY_FEATURE: Record<string, string[]> = {
+  rest_day_calculator: ["card_build", "empty_card", "rule_violation"],
+  one_tap_logging: [],
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -68,11 +79,24 @@ serve(async (req) => {
         .eq("feature_key", row.feature_key)
         .gte("occurred_at", since);
 
+      const criticalCategories = CRITICAL_CATEGORIES_BY_FEATURE[row.feature_key] ?? [];
+      let criticalNotes = 0;
+      if (criticalCategories.length > 0) {
+        const { count: notes } = await supabase
+          .from("ti_watch_notes")
+          .select("id", { count: "exact", head: true })
+          .eq("severity", "critical")
+          .in("category", criticalCategories)
+          .gte("noted_at", since);
+        criticalNotes = notes ?? 0;
+      }
+
       const verdict = evaluateAutoOff({
         mode,
         shadowCheck,
         errorsToday: count ?? 0,
         baselineErrors: baselines.get(row.feature_key) ?? 0,
+        criticalNotes,
       });
 
       if (!verdict.demoted) {

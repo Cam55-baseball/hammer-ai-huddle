@@ -29,7 +29,7 @@ export interface LiftTemplate {
   adaptation: "strength" | "power" | "force" | "elastic" | "maintenance" | "recovery" | "rtp";
 }
 
-const CORE_FULL_BODY: readonly MovementCategory[] = [
+export const CORE_FULL_BODY: readonly MovementCategory[] = [
   "compound_lower",
   "compound_upper_push",
   "compound_upper_pull",
@@ -163,3 +163,10 @@ export function resolveLiftTemplate(input: TemplateResolutionInput): LiftTemplat
 export function compoundEnvelopeFor(seasonPhase: string) {
   return DOSE_MATRIX[normalizeDoctrinePhase(seasonPhase)].main_compound;
 }
+
+/**
+ * The categories no reducer — class cap, spike governor or any future trimmer —
+ * may ever remove from a lift session. Lowering intensity is legal; deleting a
+ * required category is not.
+ */
+export const REQUIRED_LIFT_CATEGORIES = CORE_FULL_BODY;
