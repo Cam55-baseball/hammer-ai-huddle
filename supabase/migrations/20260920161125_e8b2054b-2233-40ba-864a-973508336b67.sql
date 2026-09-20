@@ -1,0 +1,2 @@
+ALTER TABLE public.tcs_test_runs DROP CONSTRAINT IF EXISTS tcs_test_runs_tier_check;
+ALTER TABLE public.tcs_test_runs ADD CONSTRAINT tcs_test_runs_tier_check CHECK (tier = ANY (ARRAY['fast'::text, 'full'::text, 'gate'::text, 'version'::text]));
