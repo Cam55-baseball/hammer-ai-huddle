@@ -283,7 +283,7 @@ export default function StaffView() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto w-full max-w-4xl space-y-4 p-4 print:max-w-none print:p-0">
+      <div className="mx-auto w-full max-w-4xl staff-print space-y-4 p-4 print:max-w-none print:p-0">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Staff View</h1>

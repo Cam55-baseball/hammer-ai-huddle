@@ -642,3 +642,19 @@ All colors MUST be HSL.
   margin-left: var(--safe-left);
   margin-right: var(--safe-right);
 }
+
+/* Staff View: printing gives a clean training report, no app chrome. */
+@media print {
+  body:has(.staff-print) aside,
+  body:has(.staff-print) nav,
+  body:has(.staff-print) header {
+    display: none !important;
+  }
+  body:has(.staff-print) main,
+  body:has(.staff-print) main > div {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
