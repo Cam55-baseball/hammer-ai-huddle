@@ -24,7 +24,7 @@ const find = (slug: string) => {
 
 const profile = (over: Partial<UbProfile> = {}): UbProfile =>
   ({
-    age: 17,
+    ageYears: 17,
     trainingAge: "intermediate",
     role: "position",
     bodyWeightLb: 170,
@@ -42,7 +42,7 @@ const ctx = (over: Partial<Parameters<typeof resolveHandChain>[3]> = {}) => ({
 
 describe("§C3 — age and surface gates", () => {
   it("13-year-olds get the wall versions only", () => {
-    const p = profile({ age: 13, trainingAge: "beginner" });
+    const p = profile({ ageYears: 13, trainingAge: "beginner" });
     expect(resolveHandChain(find("hwc_wrist_pogo_wall"), p, history(), ctx()).allowed).toBe(true);
     const floor = resolveHandChain(find("hwc_wrist_pogo_floor"), p, history(), ctx());
     expect(floor.allowed).toBe(false);
@@ -50,14 +50,14 @@ describe("§C3 — age and surface gates", () => {
   });
 
   it("under 13 gets nothing", () => {
-    const r = resolveHandChain(find("hwc_wrist_pogo_wall"), profile({ age: 12 }), history(), ctx());
+    const r = resolveHandChain(find("hwc_wrist_pogo_wall"), profile({ ageYears: 12 }), history(), ctx());
     expect(r.blockedBy).toBe("min_age");
   });
 
   it("floor versions need 14+ and intermediate+", () => {
     const young = resolveHandChain(
       find("hwc_finger_pushup_floor"),
-      profile({ age: 14, trainingAge: "developing" }),
+      profile({ ageYears: 14, trainingAge: "developing" }),
       history(),
       ctx(),
     );
@@ -65,7 +65,7 @@ describe("§C3 — age and surface gates", () => {
     expect(
       resolveHandChain(
         find("hwc_finger_pushup_floor"),
-        profile({ age: 14, trainingAge: "intermediate" }),
+        profile({ ageYears: 14, trainingAge: "intermediate" }),
         history(),
         ctx(),
       ).allowed,
