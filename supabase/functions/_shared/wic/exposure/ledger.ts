@@ -63,7 +63,9 @@ export function classify(fact: CatalogFact | undefined | null):
   }
   if (ch === "throwing") {
     const cat2 = (fact.category ?? "").toLowerCase();
-    if (cat2 === "arm_care") return { channel: "THROW", tier: "low" };
+    // Arm care is protective low-load work, not throwing volume. It carries no
+    // spike risk and must never be trimmed away by a throwing cap.
+    if (cat2 === "arm_care") return null;
     return { channel: "THROW", tier: "high" };
   }
   return null; // low_load and anything unmapped carries no spike risk
