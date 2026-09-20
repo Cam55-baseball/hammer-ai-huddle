@@ -5731,6 +5731,7 @@ export type Database = {
           id: string
           ignored_for_training: boolean
           innings_caught: number | null
+          innings_played: number | null
           is_doubleheader: boolean
           is_starting_pitcher: boolean
           lineup_slot: number | null
@@ -5742,6 +5743,7 @@ export type Database = {
           philosophy_post: string | null
           philosophy_pre: string | null
           philosophy_verdict: string | null
+          pitch_count: number | null
           probable_pitcher_dossier_id: string | null
           scheduled_time: string | null
           sport: string
@@ -5763,6 +5765,7 @@ export type Database = {
           id?: string
           ignored_for_training?: boolean
           innings_caught?: number | null
+          innings_played?: number | null
           is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           lineup_slot?: number | null
@@ -5774,6 +5777,7 @@ export type Database = {
           philosophy_post?: string | null
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
+          pitch_count?: number | null
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
           sport: string
@@ -5795,6 +5799,7 @@ export type Database = {
           id?: string
           ignored_for_training?: boolean
           innings_caught?: number | null
+          innings_played?: number | null
           is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           lineup_slot?: number | null
@@ -5806,6 +5811,7 @@ export type Database = {
           philosophy_post?: string | null
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
+          pitch_count?: number | null
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
           sport?: string

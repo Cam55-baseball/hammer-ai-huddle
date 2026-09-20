@@ -14,6 +14,8 @@ import { resolveWaveDose } from "../dosage/wave.ts";
 import { validate } from "../validator.ts";
 import { buildSafePlan } from "../safePlan.ts";
 import { checkSafetyGate } from "../domainGate.ts";
+import { blockedClassesFor } from "../schedule/tissueCost/apply.ts";
+import type { AllowedClass } from "../schedule/tissueCost/types.ts";
 
 export const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "in_season", "post_season"] as const;
 
@@ -74,13 +76,14 @@ export type MatrixCatalogRow = {
   default_distance_feet: number | null;
   default_total_reps: number | null;
   category: string | null;
+  intensity_class?: string | null;
 };
 
 export const MATRIX_CATALOG_COLUMNS =
   "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years," +
   "min_training_age_years,season_eligibility,season_legality,training_age_legality,game_day_legal," +
   "deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet," +
-  "default_total_reps,category";
+  "default_total_reps,category,intensity_class";
 
 export type MatrixCell = {
   phase: string;
@@ -145,7 +148,19 @@ function fingerprintOf(results: MatrixCell[]): string {
   return h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0");
 }
 
-export function runGenerationMatrix(catalog: MatrixCatalogRow[], liftingV2 = false): MatrixResult {
+/**
+ * TCS stage S4 proof hook. When `tcsClass` is supplied the matrix runs as if
+ * the rest-day calculator were on and had allowed exactly that class today:
+ * every movement whose intensity class is blocked at that class is removed
+ * from the pool before selection. Omitted (the default) the matrix behaves
+ * byte-for-byte as it did before Step 11.
+ */
+export function runGenerationMatrix(
+  catalog: MatrixCatalogRow[],
+  liftingV2 = false,
+  opts?: { tcsClass?: AllowedClass },
+): MatrixResult {
+  const tcsBlocked = opts?.tcsClass ? blockedClassesFor(opts.tcsClass) : null;
   const results: MatrixCell[] = [];
 
   for (const phase of PHASES) {
@@ -165,7 +180,10 @@ export function runGenerationMatrix(catalog: MatrixCatalogRow[], liftingV2 = fal
               isRecoveryDay,
             });
 
-            const pool = catalog.filter((c) => eligible(c, cell));
+            const poolAll = catalog.filter((c) => eligible(c, cell));
+            const pool = tcsBlocked
+              ? poolAll.filter((c) => !tcsBlocked.includes(String(c.intensity_class ?? "")))
+              : poolAll;
             const byRole = new Map<string, MatrixCatalogRow>();
             for (const c of [...pool].sort((a, b) => a.slug.localeCompare(b.slug))) {
               const role = ROLE_BY_CATEGORY[c.movement_category ?? ""] ?? null;
