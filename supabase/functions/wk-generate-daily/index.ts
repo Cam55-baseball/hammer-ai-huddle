@@ -23,6 +23,7 @@ import { validate as wicValidate } from "../_shared/wic/validator.ts";
 import { buildSafePlan } from "../_shared/wic/safePlan.ts";
 import { resolveExtensiveDose, resolveIntensityMode } from "../_shared/wic/execution/intensityMode.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
+import { runShadowDecision } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
 import { seasonContextFromPhase, isMovementSeasonLegal, ECCENTRIC_OVERLOAD_REASON, isEccentricOverloadPhaseIllegal } from "../_shared/wic/season.ts";
 import { applyManualOrder, assignSequenceOrder } from "../_shared/wic/ordering.ts";
@@ -3338,6 +3339,18 @@ const handler = async (req: Request): Promise<Response> => {
       units_spent: cnsUsed, units_cap: cnsCap,
       breakdown: cardsProduced,
     }, { onConflict: "user_id,ledger_date" });
+
+    // TCS stage S3 — SHADOW MODE. The card is already built and stored above;
+    // this only records what the scheduler would have said. It can never change
+    // or delay a card: it runs after the fact and swallows every error.
+    try {
+      const shadow = await runShadowDecision(admin, user.id, planDate, "UTC", "daily_generation");
+      if (!shadow.ok && shadow.error) {
+        console.warn("[wk-generate-daily] shadow decision skipped", shadow.error);
+      }
+    } catch (shadowErr) {
+      console.warn("[wk-generate-daily] shadow decision failed", shadowErr);
+    }
 
     console.info("[wk-generate-daily] ok WIC", {
       user_id: user.id, plan_date: planDate, phase: phaseRes.phase, adaptation: adaptationDecision.primary,

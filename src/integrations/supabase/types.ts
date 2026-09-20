@@ -11930,6 +11930,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tcs_shadow_checks: {
+        Row: {
+          athletes: number
+          checked_date: string
+          decisions: number
+          duration_seconds: number | null
+          fallback_rate: number
+          fallbacks: number
+          first_mismatches: Json
+          id: string
+          mismatches: number
+          run_at: string
+          status: string
+        }
+        Insert: {
+          athletes?: number
+          checked_date: string
+          decisions?: number
+          duration_seconds?: number | null
+          fallback_rate?: number
+          fallbacks?: number
+          first_mismatches?: Json
+          id?: string
+          mismatches?: number
+          run_at?: string
+          status?: string
+        }
+        Update: {
+          athletes?: number
+          checked_date?: string
+          decisions?: number
+          duration_seconds?: number | null
+          fallback_rate?: number
+          fallbacks?: number
+          first_mismatches?: Json
+          id?: string
+          mismatches?: number
+          run_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       tcs_test_run_chunks: {
         Row: {
           chunk_index: number
@@ -17087,6 +17129,69 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_schedule_decisions: {
+        Row: {
+          allowed_class: string
+          config_hash: string
+          created_at: string
+          decision_date: string
+          diagnostics: Json
+          fallback_used: boolean
+          floors_applied: Json
+          id: string
+          inputs_hash: string
+          inputs_snapshot: Json
+          next_heavy_date: string | null
+          reasons: Json
+          source: string
+          tank_levels: Json
+          thresholds_hash: string
+          timing: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          allowed_class: string
+          config_hash: string
+          created_at?: string
+          decision_date: string
+          diagnostics?: Json
+          fallback_used?: boolean
+          floors_applied?: Json
+          id?: string
+          inputs_hash: string
+          inputs_snapshot?: Json
+          next_heavy_date?: string | null
+          reasons?: Json
+          source?: string
+          tank_levels?: Json
+          thresholds_hash: string
+          timing: string
+          user_id: string
+          version: string
+        }
+        Update: {
+          allowed_class?: string
+          config_hash?: string
+          created_at?: string
+          decision_date?: string
+          diagnostics?: Json
+          fallback_used?: boolean
+          floors_applied?: Json
+          id?: string
+          inputs_hash?: string
+          inputs_snapshot?: Json
+          next_heavy_date?: string | null
+          reasons?: Json
+          source?: string
+          tank_levels?: Json
+          thresholds_hash?: string
+          timing?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       wk_schedule_overrides: {
         Row: {
           created_at: string
@@ -17187,6 +17292,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wk_shadow_weekly_reports: {
+        Row: {
+          agreements: number
+          created_at: string
+          detail: Json
+          disagreements: number
+          id: string
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          agreements?: number
+          created_at?: string
+          detail?: Json
+          disagreements?: number
+          id?: string
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          agreements?: number
+          created_at?: string
+          detail?: Json
+          disagreements?: number
+          id?: string
+          user_id?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
       }
       wk_standard_attempts: {
         Row: {
