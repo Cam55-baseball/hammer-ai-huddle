@@ -145,6 +145,7 @@ export default function AdminTrainingIntelligence() {
     Array<{ id: string; noted_at: string; severity: string; category: string; title: string; auto_action: string | null }>
   >([]);
   const [copying, setCopying] = useState(false);
+  const [reportText, setReportText] = useState<string | null>(null);
 
 
   useEffect(() => {
