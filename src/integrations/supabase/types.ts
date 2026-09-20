@@ -17039,6 +17039,24 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_ti0a1_backup: {
+        Row: {
+          created_at: string
+          payload: Json
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          payload: Json
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          payload?: Json
+          slug?: string
+        }
+        Relationships: []
+      }
       workout_blocks: {
         Row: {
           block_type: string
