@@ -3644,6 +3644,8 @@ const handler = async (req: Request): Promise<Response> => {
           // Recorded, never acted on: whether today's recovery ack was applied
           // or found spent, and which test retired it.
           recovery_ack: ackDecision,
+          // Step 14 — every spike-governor trim, with its plain reason.
+          load_spike: governorDiagnostics,
         } as any)
         .eq("id", diagId as any);
     }

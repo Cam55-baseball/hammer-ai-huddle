@@ -16599,6 +16599,7 @@ export type Database = {
           lift_full_body_ok: boolean | null
           lift_substitution_completeness: number | null
           lift_template_id: string | null
+          load_spike: Json | null
           metadata_complete: boolean
           missing_context_fields: string[] | null
           ordering_ok: boolean
@@ -16685,6 +16686,7 @@ export type Database = {
           lift_full_body_ok?: boolean | null
           lift_substitution_completeness?: number | null
           lift_template_id?: string | null
+          load_spike?: Json | null
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
@@ -16771,6 +16773,7 @@ export type Database = {
           lift_full_body_ok?: boolean | null
           lift_substitution_completeness?: number | null
           lift_template_id?: string | null
+          load_spike?: Json | null
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
