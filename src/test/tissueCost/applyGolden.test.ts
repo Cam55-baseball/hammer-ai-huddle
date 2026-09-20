@@ -66,7 +66,8 @@ function replay(
     timing: d.timing,
     nextHeavyDate: d.nextHeavyDate,
     reasons: d.reasons,
-    fallbackUsed: d.fallbackUsed === true,
+    // decide() is the raw engine; the fallback marker is added by the guard.
+    fallbackUsed: (d as { fallbackUsed?: boolean }).fallbackUsed === true,
     blockCnsCap: baseCap,
     isGameDay,
     planDate: today,
