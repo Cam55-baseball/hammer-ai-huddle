@@ -36,10 +36,9 @@ const practice = (date: string, min = 60): DaySchedule => ({
   practiceMinutes: min,
   practiceIntensity: "moderate",
 });
-const game = (date: string, extra: Partial<DaySchedule> = {}): DaySchedule => ({
+const game = (date: string, extra: Partial<DaySchedule["games"]> = {}): DaySchedule => ({
   date,
-  games: { count: 1, role: "position" },
-  ...extra,
+  games: { role: "position", count: 1, ...extra },
 });
 
 function replay(
@@ -155,7 +154,7 @@ describe("Step 11 — golden weeks through the real apply layer", () => {
     const p = { ...ADV17, phase: "in_season" as const };
     const days = [
       game("2026-07-10", { tournament: true }),
-      game("2026-07-11", { tournament: true, games: { count: 2, role: "position" } }),
+      game("2026-07-11", { tournament: true, count: 2 }),
       game("2026-07-12", { tournament: true }),
     ];
     for (const d of days) {
