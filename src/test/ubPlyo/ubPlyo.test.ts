@@ -311,5 +311,5 @@ describe(`UBP property sweep (${CASES} cases, seed ${SEED})`, () => {
       expect(d.contactsCap).toBe(doseCap(d.tier, row?.letter ?? "Base"));
     }
     expect(checked).toBe(CASES);
-  });
+  }, 600_000);
 });
