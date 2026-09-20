@@ -33,6 +33,25 @@ import {
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
+// Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
+import {
+  locateInArc,
+  resolveOffseasonArc,
+  type ArcBlockKey,
+} from "../_shared/wic/schedule/timeline/offseasonArc.ts";
+import { BLOCK_CONTENT } from "../_shared/wic/schedule/timeline/blockContent.ts";
+import {
+  isHeavyEligible,
+  methodEnvelope,
+  methodSentence,
+  type MethodContext,
+  type MethodKey,
+} from "../_shared/wic/dosage/methods.ts";
+import {
+  resolveInSeasonPlan,
+  IN_SEASON_LIMITS,
+  type InSeasonPlanResult,
+} from "../_shared/wic/schedule/inSeasonPlan.ts";
 import {
   amountPerSet,
   buildLedger,
