@@ -1619,6 +1619,9 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: clamped,
             capSets: doseCap?.sets ?? null,
             capReps: doseCap?.reps ?? null,
+            method: arcMethod,
+            methodContext,
+
           }, liftingV2Enabled)
         : null;
       const finalSets = resolvedDose
