@@ -164,17 +164,36 @@ export function seasonContextFromPhase(phase: string): SeasonContext {
  * the legacy hard-block slug lists AND the eccentric-dominant rule. If any of
  * these say "no", the movement is illegal for this phase.
  */
+/**
+ * TI-0a-1 safety hotfix — law L0.3. An eccentric-overload movement is never
+ * legal in a competitive phase (in_season / post_season). This is a safety
+ * gate, not a preference: no override, swap or fallback may unlock it.
+ */
+export const ECCENTRIC_OVERLOAD_REASON = "eccentric_overload_off_only";
+
+export function isEccentricOverloadPhaseIllegal(
+  m: { eccentric_overload?: boolean | null },
+  phase: string,
+): boolean {
+  return m?.eccentric_overload === true && (phase === "in_season" || phase === "post_season");
+}
+
 export function isMovementSeasonLegal(
   ctx: SeasonContext,
   m: {
     slug: string;
     is_eccentric_dominant?: boolean | null;
+    eccentric_overload?: boolean | null;
     phase_allow?: string[] | null;
     season_eligibility?: string[] | null;
     substitution_family?: string | null;
     family?: string | null;
   },
 ): { legal: boolean; reason: string | null } {
+  // L0.3 — eccentric overload is off-season only. Checked first, never relaxable.
+  if (isEccentricOverloadPhaseIllegal(m, ctx.phase)) {
+    return { legal: false, reason: ECCENTRIC_OVERLOAD_REASON };
+  }
   if (!ctx.isOffseason && OS_ONLY_ECCENTRIC_SLUGS.has(m.slug)) {
     return { legal: false, reason: "os_only_eccentric" };
   }

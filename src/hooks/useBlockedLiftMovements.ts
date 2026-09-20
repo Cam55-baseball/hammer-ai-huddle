@@ -15,6 +15,7 @@ export interface BlockedMovement {
   source_philosophy: string | null;
   phase_allow: string[] | null;
   is_eccentric_dominant: boolean | null;
+  eccentric_overload: boolean | null;
 }
 
 export function useBlockedLiftMovements(phaseKey: string | null) {
@@ -25,12 +26,17 @@ export function useBlockedLiftMovements(phaseKey: string | null) {
     queryFn: async (): Promise<BlockedMovement[]> => {
       const { data, error } = await supabase
         .from("wk_movement_catalog" as any)
-        .select("slug, name, category, intensity_class, source_philosophy, phase_allow, is_eccentric_dominant")
+        .select("slug, name, category, intensity_class, source_philosophy, phase_allow, is_eccentric_dominant, eccentric_overload")
         .in("category", ["compound", "supplemental", "unilateral"]);
       if (error) throw error;
       const rows = (data ?? []) as unknown as BlockedMovement[];
+      const competitive = phaseKey === "in_season" || phaseKey === "post_season";
       return rows.filter(
-        (m) => Array.isArray(m.phase_allow) && m.phase_allow.length > 0 && !m.phase_allow.includes(phaseKey!),
+        (m) =>
+          // L0.3 (TI-0a-1) — overload rows are a safety block in a competitive
+          // phase, not an overridable preference, so they are never offered.
+          !(competitive && m.eccentric_overload === true) &&
+          Array.isArray(m.phase_allow) && m.phase_allow.length > 0 && !m.phase_allow.includes(phaseKey!),
       );
     },
   });

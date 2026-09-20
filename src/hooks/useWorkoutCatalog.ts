@@ -26,6 +26,7 @@ export interface CatalogMovement {
   default_sets: number | null;
   default_reps: number | null;
   is_eccentric_dominant: boolean | null;
+  eccentric_overload: boolean | null;
   governance_version: string | null;
 }
 
@@ -36,7 +37,7 @@ export function useWorkoutCatalog() {
       const { data, error } = await supabase
         .from("wk_movement_catalog")
         .select(
-          "id,slug,name,category,movement_category,source_philosophy,cue,why_prescribed,primary_adaptation,equipment,phase_allow,season_eligibility,season_legality,training_age_legality,cns_cost,recovery_window_hours,pap_classification,movement_velocity,game_day_legal,practice_day_legal,min_age_years,default_sets,default_reps,is_eccentric_dominant,governance_version",
+          "id,slug,name,category,movement_category,source_philosophy,cue,why_prescribed,primary_adaptation,equipment,phase_allow,season_eligibility,season_legality,training_age_legality,cns_cost,recovery_window_hours,pap_classification,movement_velocity,game_day_legal,practice_day_legal,min_age_years,default_sets,default_reps,is_eccentric_dominant,eccentric_overload,governance_version",
         )
         .order("category", { ascending: true })
         .order("name", { ascending: true });
@@ -60,6 +61,11 @@ export const QUARTER_TABS = [
 export type QuarterKey = (typeof QUARTER_TABS)[number]["key"];
 
 export function isMovementInQuarter(m: CatalogMovement, q: QuarterKey): boolean {
+  // L0.3 (TI-0a-1) — eccentric overload is off-season only, and never
+  // game-day legal. Identical rule to isMovementSeasonLegal() on the server.
+  if (m.eccentric_overload === true && (q === "in_season" || q === "post_season" || q === "game_day")) {
+    return false;
+  }
   if (q === "game_day") return !!m.game_day_legal;
   // Prefer season_legality jsonb when populated
   if (m.season_legality && typeof m.season_legality === "object") {
