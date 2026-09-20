@@ -72,7 +72,7 @@ Nothing in this section is built until the owner answers.
 
 **D1 — In-season lifting after games ("Daily-Games Mode").**
 Conflict: plan-v4 L0.3 (never on a game day; nothing above primer within 48 h of a game; max 2 lifts per week) and game_proximity_v2 (at high density, game days get a primer). Owner's in-season plan: lift post-game only, alternating Lift A / Lift B every 3rd day.
-- **(A) Recommended.** Daily-Games Mode turns on only when all are true: 5+ game days in the past 7 AND 5+ in the next 7 (deduped by game_proximity_v2 — the two-week test keeps a single tournament weekend from triggering it); age 16+; training age advanced, elite or professional; no active pain flag. In the mode: post-game A/B every 3rd day (§9.3), ≤25 min, ≤4 movements + arm care, no eccentric_overload rows, no deep_flexion rows except the short-range split squat (`kot_atg_split_squat`, already in-season legal; low volume; never for catchers), RIR ≥3, no novelty. Up to 3 lifts in any 7 days only in this mode; everyone else keeps max 2. Starting-pitcher protections untouched.
+- **(A) Recommended.** Daily-Games Mode turns on only when all are true: 5+ game days in the past 7 AND 5+ in the next 7 (deduped by game_proximity_v2 — the two-week test keeps a single tournament weekend from triggering it); age 16+; training age advanced, elite or professional; no active pain flag. In the mode: post-game A/B every 3rd day (§9.3), ≤25 min, ≤4 movements + arm care, no eccentric_overload rows, no deep_flexion rows except the short-range split squat (`kot_atg_split_squat`, already in-season legal; low volume; for catchers, dosed by games caught (tissue-cost-scheduler-v1.1 §5)), RIR ≥3, no novelty. Up to 3 lifts in any 7 days only in this mode; everyone else keeps max 2. Starting-pitcher protections untouched.
 - (B) Same, for every in-season athlete regardless of age or training age.
 - (C) Keep current rules (daily-game players get primers on game days and a real session only on off days).
 
@@ -314,7 +314,7 @@ Post-game, every 3rd day, alternating, anchored to the last completed lift. If t
 |---|---|---|
 | 1 | Overcoming isometric 2–3 × 3 × 3 s (pin pull or push; no rack → Wall-Drive Isometric) | Banded speed lift 3 × 3 at about half max + bands (no bands → same lift and load, max speed) |
 | 2 | Heavy triples 3 × 3, concentric-dominant (dead-stop trap bar, pin squat concentric only, block pull) | Light backward sled drag, 3–5 min easy (no sled → backward walk) |
-| 3 | Heavy sled push 2–3 × 15–20 yd (substitutes §8.4) | Low-volume tissue: short-range split squat (`kot_atg_split_squat`, the one deep-flexion exception; never for catchers), knee-forward calf raise, tibialis raise |
+| 3 | Heavy sled push 2–3 × 15–20 yd (substitutes §8.4) | Low-volume tissue: short-range split squat (`kot_atg_split_squat`, the one deep-flexion exception; for catchers, dosed by games caught (tissue-cost-scheduler-v1.1 §5)), knee-forward calf raise, tibialis raise |
 | 4 | Arm care | Short mobility flow + arm care |
 
 - Starting pitchers (5-day rotation): day after a start = Lift A (lower-body emphasis, no heavy pressing); two days later = Lift B; day before a start = primer only; start day = no lift (existing).
