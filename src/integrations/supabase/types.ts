@@ -18343,6 +18343,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      cron_call: { Args: { body?: Json; fn: string }; Returns: number }
       dispatch_standard_match_pings: { Args: never; Returns: Json }
       dispatch_standard_match_pings_v2: {
         Args: { p_message?: string }
