@@ -142,9 +142,11 @@ export default function StaffView() {
   }, [user]);
 
   useEffect(() => {
-    if (on) void loadGrants();
-    else setLoading(false);
-  }, [on, loadGrants]);
+    if (on) {
+      void loadGrants();
+      void loadMyGrants();
+    } else setLoading(false);
+  }, [on, loadGrants, loadMyGrants]);
 
   const openAthlete = async (athleteId: string) => {
     if (!user) return;
