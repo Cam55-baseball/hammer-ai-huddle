@@ -170,6 +170,24 @@ describe("method envelopes — §8.1/§8.3", () => {
     expect(METHOD_ENVELOPES.overcoming_isometric.offseason).toMatchObject({ sets: [2, 4], reps: [3, 5] });
   });
 
+  it("never lets eccentric overload into the season (law L0.3)", () => {
+    // No envelope for the season means the method is simply unavailable — it
+    // must never fall back to the offseason envelope.
+    expect(methodEnvelope("double_eccentric", "in_season")).toBeNull();
+    expect(methodEnvelope("double_eccentric", "offseason")).not.toBeNull();
+    const before = resolveDose({
+      phase: "in_season", role: "compound_lower", category: "compound", trainingAgeYears: 8,
+    });
+    const after = resolveDose({
+      phase: "in_season", role: "compound_lower", category: "compound", trainingAgeYears: 8,
+      method: "double_eccentric", methodContext: "in_season",
+    });
+    expect(after.method).toBeNull();
+    expect({ sets: after.sets, reps: after.reps }).toEqual({ sets: before.sets, reps: before.reps });
+  });
+
+
+
   it("never lets a card show a percentage as the instruction", () => {
     const e = methodEnvelope("heavy_triples", "offseason")!;
     expect(e.loadWords).not.toMatch(/%/);
