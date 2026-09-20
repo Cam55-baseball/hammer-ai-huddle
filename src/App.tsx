@@ -196,6 +196,7 @@ const GameIqLock = lazyWithRetry(() => import("./components/iq/GameIqLock").then
 
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
+const AdminTrainingIntelligence = lazyWithRetry(() => import("./pages/AdminTrainingIntelligence"));
 const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
@@ -504,6 +505,7 @@ const App = () => {
 
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
+              <Route path="/admin/training-intelligence" element={<AdminTrainingIntelligence />} />
               <Route path="/admin/engine-health" element={<EngineHealthDashboard />} />
               <Route path="/coach-compliance" element={<Navigate to="/coach-dashboard" replace />} />
               <Route path="/drill-library" element={<SoftballLock feature="drill_library"><DrillLibraryPlayer /></SoftballLock>} />
