@@ -296,6 +296,7 @@ export function resolveDose(input: ResolveDoseInput): ResolvedDose {
     band,
     notes,
     doctrine_version: DOSAGE_DOCTRINE_VERSION,
+    method,
   };
 }
 
@@ -306,14 +307,20 @@ export function isWithinEnvelope(
   category: string | null | undefined,
   sets: number | null | undefined,
   reps: number | null | undefined,
+  method?: MethodKey | null,
 ): boolean {
   if (sets == null || reps == null) return true; // total-dose row
   const p = normalizeDoctrinePhase(phase);
   const g = doseGroupFor(role, category);
-  const env = DOSE_MATRIX[p][g];
+  const me =
+    g === "main_compound"
+      ? methodEnvelope(method ?? null, p === "in_season" || p === "post_season" ? "in_season" : "offseason")
+      : null;
+  const env = me ?? DOSE_MATRIX[p][g];
   // Deload and safety clamps may only pull BELOW the floor, never above the ceiling.
   return sets <= env.sets[1] && reps <= env.reps[1] && sets >= 1 && reps >= 1;
 }
+
 
 /** Human-readable dose string used in the "why volume" line. */
 export function describeDose(d: ResolvedDose): string {
