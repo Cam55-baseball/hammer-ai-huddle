@@ -103,6 +103,35 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
   });
 });
 
+describe("TCS goldens — floor table (Step 6 decision 2)", () => {
+  // Offseason / pre-season: H->H/M = 3, H->L = 2, M->H = 3, M->M/L = 2, L->* = 2.
+  const week = (cls: "H" | "M" | "L") => [
+    { ...practice("2026-01-05"), lift: { class: cls } },
+    practice("2026-01-06"),
+    practice("2026-01-07"),
+    practice("2026-01-08"),
+    practice("2026-01-09"),
+  ];
+
+  it("I12: offseason, H never lands within 3 full rest days of an H or M lift", () => {
+    for (const prev of ["H", "M"] as const) {
+      const days = week(prev);
+      // Tue (0), Wed (1), Thu (2 full rest days) must never clear H.
+      for (const [i, date] of ["2026-01-06", "2026-01-07", "2026-01-08"].entries()) {
+        const d = run(ADV17, days.slice(0, i + 2), date);
+        expect(d.allowedClass).not.toBe("H");
+      }
+      // Fri — 3 full rest days — clears H.
+      expect(run(ADV17, days, "2026-01-09").allowedClass).toBe("H");
+    }
+  });
+
+  it("H -> L still clears on the 2-day floor", () => {
+    const days = week("H").slice(0, 4);
+    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("L");
+  });
+});
+
 describe("TCS goldens — schedule shapes", () => {
   // v1.2 §A, made precise: REF-OFF (60-min moderate practice every day Mon–Fri,
   // H lift Monday after practice) plus ONE extra 90-min high-intensity practice
