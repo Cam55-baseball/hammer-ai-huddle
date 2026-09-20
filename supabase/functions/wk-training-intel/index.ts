@@ -152,6 +152,62 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "project") {
+      const athleteId = typeof body.userId === "string" ? body.userId : null;
+      if (!athleteId) return json({ error: "no athlete selected" }, 400);
+      const start = new Date();
+      const days: Array<Record<string, unknown>> = [];
+
+      // The prescribed side: what the current engine has on the books.
+      const iso = (d: Date) => d.toISOString().slice(0, 10);
+      const last = new Date(start);
+      last.setUTCDate(last.getUTCDate() + 13);
+      const { data: rx } = await db
+        .from("wk_prescriptions")
+        .select("plan_date, slot, cns_cost, sets, status")
+        .eq("user_id", athleteId)
+        .gte("plan_date", iso(start))
+        .lte("plan_date", iso(last));
+      const prescribedByDate = new Map<string, { cns: number; sets: number }>();
+      for (const r of rx ?? []) {
+        if (r.slot !== "lift") continue;
+        const cur = prescribedByDate.get(r.plan_date) ?? { cns: 0, sets: 0 };
+        cur.cns = Math.max(cur.cns, Number(r.cns_cost ?? 0));
+        cur.sets += Number(r.sets ?? 0);
+        prescribedByDate.set(r.plan_date, cur);
+      }
+      const prescribedClass = (d: string): string => {
+        const p = prescribedByDate.get(d);
+        if (!p) return "none";
+        return p.cns >= 5 ? "H" : p.cns >= 3 ? "M" : "L";
+      };
+
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(start);
+        d.setUTCDate(d.getUTCDate() + i);
+        const date = iso(d);
+        let schedulerClass = "unknown";
+        let reasons: unknown = [];
+        try {
+          const raw = await fetchShadowData(db, athleteId, date, "UTC");
+          const result = decideFromRaw(raw);
+          schedulerClass = result.decision.allowedClass;
+          reasons = result.decision.reasons;
+        } catch (e) {
+          reasons = [e instanceof Error ? e.message : String(e)];
+        }
+        const engineClass = prescribedClass(date);
+        days.push({
+          date,
+          scheduler_class: schedulerClass,
+          engine_class: engineClass,
+          agrees: schedulerClass === engineClass,
+          reasons,
+        });
+      }
+      return json({ ok: true, user_id: athleteId, days });
+    }
+
     return json({ error: "unknown action" }, 400);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : String(e) }, 500);
