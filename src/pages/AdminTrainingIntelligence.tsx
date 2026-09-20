@@ -132,6 +132,10 @@ export default function AdminTrainingIntelligence() {
   const [projecting, setProjecting] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [autoOff, setAutoOff] = useState<
+    { feature_key: string; to_mode: string; reason: string | null; changed_at: string } | null
+  >(null);
+
 
   useEffect(() => {
     if (!gateLoading && !allowed) navigate("/dashboard");
