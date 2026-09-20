@@ -9867,6 +9867,36 @@ export type Database = {
         }
         Relationships: []
       }
+      planned_off_days: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          reason: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          reason?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          reason?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       player_notes: {
         Row: {
           author_id: string
@@ -12627,6 +12657,57 @@ export type Database = {
           title?: string
           updated_at?: string
           video_url?: string
+        }
+        Relationships: []
+      }
+      training_intel_onboarding: {
+        Row: {
+          block_name: string | null
+          created_at: string
+          days_into_phase: number | null
+          days_since_last_loaded_lift: number | null
+          first_game_date: string | null
+          offseason_weeks: number | null
+          phase: string
+          phase_start_date: string | null
+          recent_lifting_days_per_week: number | null
+          recent_overall: string | null
+          recent_practices_per_week: number | null
+          recent_throwing_status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          block_name?: string | null
+          created_at?: string
+          days_into_phase?: number | null
+          days_since_last_loaded_lift?: number | null
+          first_game_date?: string | null
+          offseason_weeks?: number | null
+          phase: string
+          phase_start_date?: string | null
+          recent_lifting_days_per_week?: number | null
+          recent_overall?: string | null
+          recent_practices_per_week?: number | null
+          recent_throwing_status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          block_name?: string | null
+          created_at?: string
+          days_into_phase?: number | null
+          days_since_last_loaded_lift?: number | null
+          first_game_date?: string | null
+          offseason_weeks?: number | null
+          phase?: string
+          phase_start_date?: string | null
+          recent_lifting_days_per_week?: number | null
+          recent_overall?: string | null
+          recent_practices_per_week?: number | null
+          recent_throwing_status?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -16432,8 +16513,10 @@ export type Database = {
           bat_speed_adaptation: string | null
           bat_speed_category: string | null
           bias: string | null
+          bucket: string | null
           category: string
           cns_cost: number
+          coach_cue: string | null
           concentric_profile: string | null
           conditioning_category: string | null
           contacts_per_rep: number | null
@@ -16459,6 +16542,7 @@ export type Database = {
           energy_system: string | null
           equipment: string[] | null
           equipment_requirements: string[] | null
+          evidence_grade: string | null
           evidence_note: string | null
           exposure_channel: string | null
           family: string | null
@@ -16471,6 +16555,7 @@ export type Database = {
           is_active: boolean
           is_eccentric_dominant: boolean
           joint_stress: number | null
+          method: string | null
           min_age_years: number | null
           min_competition_level: string | null
           min_training_age_years: number
@@ -16509,8 +16594,10 @@ export type Database = {
           sport_scope: string
           sport_transfer: Json | null
           sprint_compatible: boolean | null
+          sub_bucket: string | null
           substitution_family: string | null
           superseded_by: string | null
+          surface_hint: string | null
           throw_compatible: boolean | null
           throwing_phase: string | null
           training_age_legality: Json | null
@@ -16532,8 +16619,10 @@ export type Database = {
           bat_speed_adaptation?: string | null
           bat_speed_category?: string | null
           bias?: string | null
+          bucket?: string | null
           category: string
           cns_cost?: number
+          coach_cue?: string | null
           concentric_profile?: string | null
           conditioning_category?: string | null
           contacts_per_rep?: number | null
@@ -16559,6 +16648,7 @@ export type Database = {
           energy_system?: string | null
           equipment?: string[] | null
           equipment_requirements?: string[] | null
+          evidence_grade?: string | null
           evidence_note?: string | null
           exposure_channel?: string | null
           family?: string | null
@@ -16571,6 +16661,7 @@ export type Database = {
           is_active?: boolean
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
+          method?: string | null
           min_age_years?: number | null
           min_competition_level?: string | null
           min_training_age_years?: number
@@ -16609,8 +16700,10 @@ export type Database = {
           sport_scope?: string
           sport_transfer?: Json | null
           sprint_compatible?: boolean | null
+          sub_bucket?: string | null
           substitution_family?: string | null
           superseded_by?: string | null
+          surface_hint?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
           training_age_legality?: Json | null
@@ -16632,8 +16725,10 @@ export type Database = {
           bat_speed_adaptation?: string | null
           bat_speed_category?: string | null
           bias?: string | null
+          bucket?: string | null
           category?: string
           cns_cost?: number
+          coach_cue?: string | null
           concentric_profile?: string | null
           conditioning_category?: string | null
           contacts_per_rep?: number | null
@@ -16659,6 +16754,7 @@ export type Database = {
           energy_system?: string | null
           equipment?: string[] | null
           equipment_requirements?: string[] | null
+          evidence_grade?: string | null
           evidence_note?: string | null
           exposure_channel?: string | null
           family?: string | null
@@ -16671,6 +16767,7 @@ export type Database = {
           is_active?: boolean
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
+          method?: string | null
           min_age_years?: number | null
           min_competition_level?: string | null
           min_training_age_years?: number
@@ -16709,8 +16806,10 @@ export type Database = {
           sport_scope?: string
           sport_transfer?: Json | null
           sprint_compatible?: boolean | null
+          sub_bucket?: string | null
           substitution_family?: string | null
           superseded_by?: string | null
+          surface_hint?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
           training_age_legality?: Json | null
