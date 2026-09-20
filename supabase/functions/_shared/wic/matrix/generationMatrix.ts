@@ -77,13 +77,18 @@ export type MatrixCatalogRow = {
   default_total_reps: number | null;
   category: string | null;
   intensity_class?: string | null;
+  exposure_channel?: string | null;
+  plyo_tier?: number | null;
+  contacts_per_rep?: number | null;
+  substitution_family?: string | null;
 };
 
 export const MATRIX_CATALOG_COLUMNS =
   "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years," +
   "min_training_age_years,season_eligibility,season_legality,training_age_legality,game_day_legal," +
   "deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet," +
-  "default_total_reps,category,intensity_class";
+  "default_total_reps,category,intensity_class,exposure_channel,plyo_tier,contacts_per_rep," +
+  "substitution_family";
 
 export type MatrixCell = {
   phase: string;
