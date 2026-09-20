@@ -16337,34 +16337,67 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_feature_error_events: {
+        Row: {
+          created_at: string
+          error_text: string | null
+          feature_key: string
+          id: string
+          occurred_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_text?: string | null
+          feature_key: string
+          id?: string
+          occurred_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_text?: string | null
+          feature_key?: string
+          id?: string
+          occurred_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       wk_feature_switch_audit: {
         Row: {
+          automatic: boolean
           changed_at: string
           changed_by: string | null
           feature_key: string
           from_allowlist: string[] | null
           from_mode: string | null
           id: string
+          reason: string | null
           to_allowlist: string[] | null
           to_mode: string
         }
         Insert: {
+          automatic?: boolean
           changed_at?: string
           changed_by?: string | null
           feature_key: string
           from_allowlist?: string[] | null
           from_mode?: string | null
           id?: string
+          reason?: string | null
           to_allowlist?: string[] | null
           to_mode: string
         }
         Update: {
+          automatic?: boolean
           changed_at?: string
           changed_by?: string | null
           feature_key?: string
           from_allowlist?: string[] | null
           from_mode?: string | null
           id?: string
+          reason?: string | null
           to_allowlist?: string[] | null
           to_mode?: string
         }
@@ -17249,6 +17282,30 @@ export type Database = {
           superseded_at?: string | null
           superseded_reason?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      wk_rollout_baselines: {
+        Row: {
+          baseline_errors_per_day: number
+          created_at: string
+          feature_key: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          baseline_errors_per_day?: number
+          created_at?: string
+          feature_key: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          baseline_errors_per_day?: number
+          created_at?: string
+          feature_key?: string
+          note?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -18286,6 +18343,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      cron_call: { Args: { body?: Json; fn: string }; Returns: number }
       dispatch_standard_match_pings: { Args: never; Returns: Json }
       dispatch_standard_match_pings_v2: {
         Args: { p_message?: string }
