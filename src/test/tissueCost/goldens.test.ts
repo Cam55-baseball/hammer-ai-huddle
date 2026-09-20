@@ -78,11 +78,12 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none"); // Wed — floor
-    // DIVERGENCE (v1.2 §A): the redefined REF-OFF measures the offseason H
-    // threshold on a Friday that carries its practice, so the H limit rose and
-    // Thursday now clears H, not M. The 2-full-rest-day floor is unchanged.
-    // Reported to the owner; NOT tuned away.
-    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H"); // Thu (was "M" pre-v1.2)
+    // Step 6 decision 2: M -> H now needs 3 full rest days, so Thursday is M and
+    // heavy cannot land before Friday.
+    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("M"); // Thu
+    expect(
+      run(ADV17, [...days, practice("2026-01-09")], "2026-01-09").allowedClass,
+    ).toBe("H"); // Fri — 3 full rest days
   });
 
   it("REF-L: L lift Mon → next lift 2 full rest days later (Thursday)", () => {
@@ -93,7 +94,11 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none");
-    // Same v1.2 §A divergence as REF-M above.
+    // OPEN CONFLICT (Step 6 decision 2): the floor table says "previous L ->
+    // next anything: 2", which clears H on Thursday; the golden text for the
+    // same decision says Thursday should be M unless the previous loaded lift
+    // is >= 3 full rest days back. The table is implemented as written and the
+    // conflict is reported to the owner — NOT tuned away.
     expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H");
   });
 });
