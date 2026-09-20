@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 
 export type CardSnapshotItem = {
   slot?: string | null;
@@ -94,5 +95,22 @@ export function WkSomethingOff({
         </Button>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Card-level placement: pulls today's session straight from the plan provider
+ * so the link can sit anywhere on the day without prop plumbing.
+ */
+export function WkSomethingOffRow() {
+  const { data } = useHammersToday() as unknown as {
+    data?: Array<CardSnapshotItem & { plan_date?: string | null }>;
+  };
+  const items = data ?? [];
+  const planDate = items[0]?.plan_date ?? new Date().toISOString().slice(0, 10);
+  return (
+    <div className="flex justify-end px-1">
+      <WkSomethingOff planDate={planDate} items={items} />
+    </div>
   );
 }

@@ -75,6 +75,7 @@ import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { WkRestDayBanner } from "@/components/hammer/WkRestDayBanner";
+import { WkSomethingOffRow } from "@/components/hammer/WkSomethingOff";
 import {
   WkProgressionNote,
   WkProgressionBadge,
@@ -894,6 +895,7 @@ function HammerDailyPlanBody({
               <WkSafePlanNotice />
 
               <WkRestDayBanner />
+              <WkSomethingOffRow />
               <HammerCheckInCard
                 quizType="morning"
                 completed={vaultQuizzes.hasCompleted("morning")}
