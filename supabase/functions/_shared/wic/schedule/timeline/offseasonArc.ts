@@ -130,7 +130,9 @@ export function scaleArcWeeks(totalWeeks: number): ArcWeeks {
 
   const total = (w: ArcWeeks) => w.B1 + w.B2 + w.B3 + w.B4 + w.B5;
 
-  // Reconcile rounding drift: B3 absorbs first (it is the flexible block), B1 second.
+  // Reconcile rounding drift. Extra weeks go to B3 up to its cap, then to B1.
+  // Missing weeks come out of B1 first (it is the longest block and holds the
+  // §7.1 B3 length fixed), then B3, then the remaining blocks in a fixed order.
   let drift = W - total(weeks);
   if (drift > 0) {
     const room = Math.max(0, cap3 - weeks.B3);
@@ -140,12 +142,17 @@ export function scaleArcWeeks(totalWeeks: number): ArcWeeks {
     weeks.B1 += drift;
     drift = 0;
   } else if (drift < 0) {
-    const take = Math.min(-drift, weeks.B3);
-    weeks.B3 -= take;
-    drift += take;
-    weeks.B1 += drift; // drift ≤ 0 here
-    drift = 0;
+    for (const donor of ["B1", "B3", "B5", "B2", "B4"] as ArcBlockKey[]) {
+      if (drift >= 0) break;
+      const floor = ARC_BLOCK_BY_KEY[donor].minimumWeeks;
+      const spare = weeks[donor] - floor;
+      if (spare <= 0) continue;
+      const take = Math.min(spare, -drift);
+      weeks[donor] -= take;
+      drift += take;
+    }
   }
+
 
   // Enforce minimums. Donors in fixed order: B3, then B1, then the blocks that
   // still sit above their own minimum (B5, B2, B4) so the result is deterministic.
