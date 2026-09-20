@@ -645,6 +645,17 @@ All colors MUST be HSL.
 
 /* Staff View: printing gives a clean training report, no app chrome. */
 @media print {
+  html:has(.staff-print),
+  body:has(.staff-print),
+  body:has(.staff-print) #root {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  body:has(.staff-print) [class*="fixed"] {
+    display: none !important;
+  }
   body:has(.staff-print) aside,
   body:has(.staff-print) nav,
   body:has(.staff-print) header,
@@ -658,7 +669,8 @@ All colors MUST be HSL.
   body:has(.staff-print) main,
   body:has(.staff-print) .staff-print,
   body:has(.staff-print) .staff-print *,
-  body:has(.staff-print) .group\/sidebar-wrapper {
+  body:has(.staff-print) .group\/sidebar-wrapper,
+  body:has(.staff-print) [class*="overflow-x-hidden"] {
     min-height: 0 !important;
     height: auto !important;
     overflow: visible !important;
@@ -680,6 +692,9 @@ All colors MUST be HSL.
   }
   .staff-print {
     padding-bottom: 80px !important;
+  }
+  .staff-print .rules-card {
+    break-before: page;
   }
   .staff-print {
     margin: 0 !important;
