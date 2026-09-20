@@ -210,40 +210,45 @@ export default function AdminTrainingIntelligence() {
 
   // ── health ────────────────────────────────────────────────────────────────
   const lastCheck = checks[0] ?? null;
-  const greenNights = useMemo(() => {
-    let n = 0;
-    for (const c of checks) {
-      if (c.status === "passed" && c.mismatches === 0) n++;
-      else break;
-    }
-    return n;
-  }, [checks]);
+  const normalised = useMemo(
+    () =>
+      checks.map((c) => ({
+        status: c.status,
+        mismatches: c.mismatches,
+        fallbackRate: Number(c.fallback_rate ?? 0),
+      })),
+    [checks],
+  );
+  const greenNights = useMemo(() => countGreenNights(normalised), [normalised]);
+  const lastNightGreen = checkIsGreen(normalised[0] ?? null);
   const gateOk = gateRun?.status === "passed" && (gateRun.violations_count ?? 0) === 0;
   const versionOk = versionRun?.status === "passed" && (versionRun.violations_count ?? 0) === 0;
-  const determinismOk = lastCheck ? lastCheck.mismatches === 0 && Number(lastCheck.fallback_rate ?? 0) < 0.005 : null;
+  const determinismOk = lastCheck ? lastNightGreen : null;
   const matrixOk = matrix ? matrix.status === "passed" && matrix.empty_cells === 0 : null;
   const healthGreen = Boolean(gateOk) && determinismOk === true && matrixOk === true;
 
-  const modeAllowed = (mode: string): { ok: boolean; why: string } => {
-    if (mode === "off") return { ok: true, why: "" };
-    if (!healthGreen) return { ok: false, why: "Health is red" };
-    if (mode === "self" || mode === "pilot") {
-      if (greenNights < 3) return { ok: false, why: `Needs 3 green nights (has ${greenNights})` };
-      if (!gateOk) return { ok: false, why: "Needs a passed test run for this code" };
-      return { ok: true, why: "" };
-    }
-    if (mode === "all") {
-      if (greenNights < 14) return { ok: false, why: `Needs 14 green nights (has ${greenNights})` };
-      if (!versionOk) return { ok: false, why: "Needs the 20,000-season pass for this version" };
-      return { ok: true, why: "" };
-    }
-    return { ok: false, why: "" };
+  const modeAllowed = (mode: string): { ok: boolean; why: string; needsConfirm: boolean } => {
+    if (mode === "off") return { ok: true, why: "", needsConfirm: false };
+    if (!healthGreen) return { ok: false, why: "Health is red", needsConfirm: false };
+    return evaluateGate(mode as SwitchMode, {
+      proofsOk: Boolean(gateOk),
+      versionOk: Boolean(versionOk),
+      greenNights,
+      lastNightGreen,
+      ownerConfirmed: true,
+    });
   };
 
   const setMode = async (row: SwitchRow, mode: string) => {
     const gate = modeAllowed(mode);
     if (!gate.ok) {
       toast({ title: "Not available yet", description: gate.why, variant: "destructive" });
+      return;
+    }
+    if (
+      gate.needsConfirm &&
+      !window.confirm(`Turn ${row.label} on for ${MODE_LABEL[mode]}? This affects other people.`)
+    ) {
       return;
     }
     setBusy(true);
@@ -259,6 +264,8 @@ export default function AdminTrainingIntelligence() {
         from_allowlist: row.allowlist,
         to_allowlist: row.allowlist,
         changed_by: user?.id ?? null,
+        automatic: false,
+        reason: "Changed by hand in the Control Center",
       });
       toast({ title: `${row.label} → ${MODE_LABEL[mode]}` });
       await load();
@@ -267,6 +274,7 @@ export default function AdminTrainingIntelligence() {
     }
     setBusy(false);
   };
+
 
   const project = async (athleteId: string) => {
     setOpenAthlete(athleteId);
