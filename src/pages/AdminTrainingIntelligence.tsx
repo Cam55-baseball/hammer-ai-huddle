@@ -18,6 +18,13 @@ import {
   TCS_CONFIG_HASH,
   TCS_THRESHOLDS_HASH,
 } from "../../supabase/functions/_shared/wic/schedule/tissueCost/config";
+import {
+  checkIsGreen,
+  countGreenNights,
+  evaluateGate,
+  type SwitchMode,
+} from "../../supabase/functions/_shared/wic/flags/rollout";
+
 
 type TestRun = {
   id: string;
