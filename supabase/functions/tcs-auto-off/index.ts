@@ -8,6 +8,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { evaluateAutoOff, type SwitchMode } from "../_shared/wic/flags/rollout.ts";
+import { switchDownNote } from "../_shared/wic/watch/rules.ts";
+import { writeNotes } from "../_shared/wic/watch/write.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -109,6 +111,18 @@ serve(async (req) => {
           },
           minute_bucket: new Date(Math.floor(Date.now() / 60000) * 60000).toISOString(),
         });
+
+        // Step 13 Part B — every automatic switch-down is noted with its trigger.
+        await writeNotes(supabase as any, [
+          switchDownNote({
+            featureKey: row.feature_key,
+            label: row.label ?? row.feature_key,
+            fromMode: verdict.fromMode,
+            toMode: verdict.toMode,
+            trigger: verdict.trigger ?? "unknown",
+            reason: verdict.reason ?? "",
+          }),
+        ]);
       }
 
       actions.push({ feature_key: row.feature_key, ...verdict });

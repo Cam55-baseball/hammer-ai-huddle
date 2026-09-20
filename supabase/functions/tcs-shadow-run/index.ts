@@ -20,6 +20,8 @@ import {
   type ShadowSnapshot,
 } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 import { fallbackRateAlert } from "../_shared/wic/schedule/tissueCost/v11/guard.ts";
+import { determinismNote, fallbackRateNote } from "../_shared/wic/watch/rules.ts";
+import { writeNotes } from "../_shared/wic/watch/write.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -140,6 +142,21 @@ Deno.serve(async (req) => {
         })
         .select("id")
         .maybeSingle();
+      // Step 13 Part B — the watchdog takes the note on any mismatch or a
+      // backup-plan rate above the line.
+      try {
+        const notes = [
+          determinismNote({
+            checkedDate: checked,
+            mismatches: mismatches.length,
+            decisions: rows.length,
+            sample: mismatches.map((m) => m.user_id),
+          }),
+          fallbackRateNote({ checkedDate: checked, rate, decisions: rows.length }),
+        ].filter(Boolean) as any[];
+        await writeNotes(admin as any, notes);
+      } catch { /* never blocks the check */ }
+
       return json({ mode, checked, athletes, decisions: rows.length, mismatches: mismatches.length, fallback_rate: rate, status, row_id: (inserted as any)?.id ?? null });
     }
 

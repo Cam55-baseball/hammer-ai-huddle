@@ -12591,6 +12591,75 @@ export type Database = {
         }
         Relationships: []
       }
+      ti_watch_baselines: {
+        Row: {
+          created_at: string
+          detail: Json
+          metric: string
+          note: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          metric: string
+          note?: string | null
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          metric?: string
+          note?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      ti_watch_notes: {
+        Row: {
+          acknowledged_at: string | null
+          auto_action: string | null
+          category: string
+          created_at: string
+          decision_id: string | null
+          detail: Json
+          id: string
+          noted_at: string
+          severity: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          auto_action?: string | null
+          category: string
+          created_at?: string
+          decision_id?: string | null
+          detail?: Json
+          id?: string
+          noted_at?: string
+          severity: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          auto_action?: string | null
+          category?: string
+          created_at?: string
+          decision_id?: string | null
+          detail?: Json
+          id?: string
+          noted_at?: string
+          severity?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       timeline_schedule_templates: {
         Row: {
           created_at: string | null

@@ -9,7 +9,7 @@ import {
 
 const green = { status: "passed", mismatches: 0, fallbackRate: 0 };
 
-describe("Step 12 rollout gates", () => {
+describe("Step 13 release gates", () => {
   it("lets Just me through on proofs plus one green night", () => {
     const r = evaluateGate("self", {
       proofsOk: true,
@@ -30,21 +30,34 @@ describe("Step 12 rollout gates", () => {
     expect(r.ok).toBe(false);
   });
 
-  it("blocks pilot and everyone under 3 green nights", () => {
+  it("blocks pilot and everyone when last night was not green", () => {
     for (const m of ["pilot", "all"] as SwitchMode[]) {
       const r = evaluateGate(m, {
         proofsOk: true,
         versionOk: true,
-        greenNights: 2,
-        lastNightGreen: true,
+        greenNights: 0,
+        lastNightGreen: false,
         ownerConfirmed: true,
       });
       expect(r.ok).toBe(false);
-      expect(r.why).toContain("3 green nights");
     }
   });
 
-  it("allows pilot and everyone on 3 green nights, the version pass and the owner's press", () => {
+  it("Step 13: releases to everyone on one green night, the version pass and the owner's press", () => {
+    for (const m of ["pilot", "all"] as SwitchMode[]) {
+      const r = evaluateGate(m, {
+        proofsOk: true,
+        versionOk: true,
+        greenNights: 1,
+        lastNightGreen: true,
+        ownerConfirmed: true,
+      });
+      expect(r.ok).toBe(true);
+      expect(r.needsConfirm).toBe(true);
+    }
+  });
+
+  it("allows pilot and everyone on the version pass and the owner's press", () => {
     for (const m of ["pilot", "all"] as SwitchMode[]) {
       const r = evaluateGate(m, {
         proofsOk: true,
@@ -69,11 +82,11 @@ describe("Step 12 rollout gates", () => {
     expect(r.ok).toBe(false);
   });
 
-  it("never asks for more than 3 nights — no 14-day wait", () => {
+  it("never asks for a waiting period — no 3-night or 14-day wait", () => {
     const r = evaluateGate("all", {
       proofsOk: true,
       versionOk: true,
-      greenNights: 3,
+      greenNights: 1,
       lastNightGreen: true,
       ownerConfirmed: true,
     });
