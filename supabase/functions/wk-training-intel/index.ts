@@ -154,6 +154,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "send_back") {
+      const id = typeof body.id === "string" ? body.id : null;
+      const note = typeof body.note === "string" ? body.note.trim() : "";
+      if (!id) return json({ error: "no row selected" }, 400);
+
+      const { data: row, error: readErr } = await db
+        .from("wk_movement_catalog")
+        .select("id, slug, is_active")
+        .eq("id", id)
+        .maybeSingle();
+      if (readErr) return json({ error: readErr.message }, 400);
+      if (!row) return json({ error: "that row no longer exists" }, 404);
+      if (row.is_active === true) return json({ error: "that row is already switched on" }, 400);
+
+      const { error: noteErr } = await db.from("wk_catalog_review_notes").insert({
+        catalog_id: row.id,
+        slug: row.slug,
+        decision: "rejected",
+        note: note || null,
+        decided_by: userId,
+      });
+      if (noteErr) return json({ error: noteErr.message }, 400);
+
+      return json({ ok: true, slug: row.slug, stays_off: true });
+    }
+
+
+
     if (action === "project") {
       const athleteId = typeof body.userId === "string" ? body.userId : null;
       if (!athleteId) return json({ error: "no athlete selected" }, 400);
