@@ -17,7 +17,12 @@ export interface ReasonContext {
   nextHeavyDate: string | null;
   hardRule: string | null;
   loadPatternSignal: boolean;
+  /** v1.2 §B1.5 — easing back in after time off. */
+  onRamp?: boolean;
 }
+
+/** v1.2 §B1.5 on-ramp copy. */
+export const ON_RAMP_TEXT = "Easing back in after time off.";
 
 const WEEKDAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -50,6 +55,7 @@ function countIn(contribs: ContributorInput[], days: number, today: string, pick
 export function buildReasons(ctx: ReasonContext): string[] {
   const out: string[] = [];
   if (ctx.hardRule && HARD_RULE_TEXT[ctx.hardRule]) out.push(HARD_RULE_TEXT[ctx.hardRule]);
+  if (ctx.onRamp) out.push(ON_RAMP_TEXT);
 
   const games = countIn(ctx.contributions, 7, ctx.today, (d) =>
     d.games ? Math.max(1, d.games.count ?? 1) : 0
@@ -82,8 +88,25 @@ export function buildReasons(ctx: ReasonContext): string[] {
     out.push(
       ctx.nextHeavyDate && ctx.nextHeavyDate !== ctx.today
         ? `Next heavy day: ${weekdayName(ctx.nextHeavyDate)}.`
-        : "You're rested — full send today.",
+        : "You're rested — heavy day is on.",
     );
   }
   return out.slice(0, 2);
 }
+
+/**
+ * Every athlete-facing template this module can emit. Used by the copy test
+ * (Step 5 §4): plain, professional, no slang, no banned words.
+ */
+export const ALL_REASON_TEMPLATES: string[] = [
+  ...Object.values(HARD_RULE_TEXT),
+  ON_RAMP_TEXT,
+  "Your last lift was Monday — we keep full rest days between lifts.",
+  "You played 3 games this week — one more day before heavy work.",
+  "2 lifts already this week — today stays lighter.",
+  "3 hours of practice this week — the legs need the day.",
+  "Load has been piling up — we dropped the level instead of skipping the day.",
+  "Next heavy day: Monday.",
+  "You're rested — heavy day is on.",
+  "We don't have today's date yet — recovery and skills only.",
+];

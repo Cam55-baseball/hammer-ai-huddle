@@ -63,6 +63,7 @@ export function fallbackDecision(
     reasons: [FALLBACK_REASON],
     floorsApplied: rested ? [] : ["fallback_3_full_rest_days"],
     loadPatternSignal: false,
+    onRampUntil: null,
     diagnostics: [`fallback:${cause}`, "tcs_circuit_breaker"],
     version: TCS_VERSION,
     configHash: TCS_CONFIG_HASH,

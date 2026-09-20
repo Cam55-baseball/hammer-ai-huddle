@@ -206,6 +206,7 @@ export function decide(
       reasons: ["We don't have today's date yet — recovery and skills only."],
       floorsApplied: [],
       loadPatternSignal: false,
+      onRampUntil: null,
       diagnostics,
       ...base,
     };
@@ -271,6 +272,33 @@ export function decide(
 
   const painToday = (checkInByDate.get(today)?.pain ?? []).some((p) => p?.blocksLoadedWork);
 
+  // ---- on-ramp (v1.2 §B1.5) — evaluated with the floors, before any tank math.
+  // A break of >= triggerGapDays from completed loaded lifting caps the class
+  // for the following window. A long lay-off gets the longer window.
+  const completedLifts = pastDays.filter((d) => d.lift && !d.lift.skipped);
+  const onRampWindowFor = (gap: number): number =>
+    gap >= config.onRamp.longGapDays ? config.onRamp.longWindowDays : config.onRamp.windowDays;
+  let onRampUntil: string | null = null;
+  if (lastLiftEntry) {
+    const openGap = dayDiff(lastLiftEntry.date, today);
+    if (openGap >= config.onRamp.triggerGapDays) {
+      // Still away: the cap runs from today.
+      onRampUntil = addDays(today, onRampWindowFor(openGap));
+    } else {
+      // Back already: the cap runs from the first lift after the lay-off.
+      for (let i = completedLifts.length - 1; i > 0; i--) {
+        const gapBefore = dayDiff(completedLifts[i - 1].date, completedLifts[i].date);
+        if (gapBefore >= config.onRamp.triggerGapDays) {
+          const until = addDays(completedLifts[i].date, onRampWindowFor(gapBefore));
+          if (today <= until) onRampUntil = until;
+          break;
+        }
+      }
+    }
+  }
+  const onRamp = onRampUntil !== null;
+  if (onRamp) diagnostics.push("on_ramp_class_cap");
+
   // ---- tank math up to today's session time (lift comes after skill work / after the game)
   const { levels, contributions } = runTanks({
     days: pastDays,
@@ -307,10 +335,13 @@ export function decide(
   // When the athlete has nothing logged and no plan at all: safe default is
   // 3 full rest days and class M max (§2).
   const noInputs = allDates.length === 0;
-  const effectiveCap: AllowedClass = noInputs
+  let effectiveCap: AllowedClass = noInputs
     ? (CLASS_RANK[templateCap] > CLASS_RANK["M"] ? "M" : templateCap)
     : templateCap;
   if (noInputs) diagnostics.push("class_capped_to_M_no_inputs");
+  if (onRamp && CLASS_RANK[effectiveCap] > CLASS_RANK[config.onRamp.cap]) {
+    effectiveCap = config.onRamp.cap;
+  }
 
   const candidates = CLASS_ORDER.filter((c) => CLASS_RANK[c] <= CLASS_RANK[effectiveCap]);
 
@@ -396,6 +427,7 @@ export function decide(
     let lv = levels;
     for (let i = 1; i <= config.nextHeavyHorizonDays; i++) {
       const date = addDays(today, i);
+      if (onRampUntil && date <= onRampUntil) continue; // I11 — no H on an on-ramp
       const day = byDate.get(date) ?? null;
       const mods = dayModifiers(safeProfile, checkInByDate.get(date), config);
       lv = addLevels(decay(lv, config, mods.halfLifeMul), applyCostMul(sportCost(day, config), mods.costMul));
@@ -417,6 +449,7 @@ export function decide(
     nextHeavyDate,
     hardRule: allowedClass === "none" ? hardRuleHit : null,
     loadPatternSignal,
+    onRamp,
   });
 
   const safeLevels: TankLevels = zeroTanks();
@@ -430,6 +463,7 @@ export function decide(
     reasons,
     floorsApplied,
     loadPatternSignal,
+    onRampUntil,
     diagnostics,
     ...base,
   };

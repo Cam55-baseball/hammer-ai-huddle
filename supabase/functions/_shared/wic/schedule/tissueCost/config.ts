@@ -78,7 +78,19 @@ export const TCS_CONFIG: TcsConfig = Object.freeze({
   // §4 ceiling (full rest days)
   ceilingRestDays: Object.freeze({ offseason: 5, inSeason: 4 }),
 
-  historyWindowDays: 28,
+  // v1.2 §B1.5 on-ramp — easing back in after time off.
+  onRamp: Object.freeze({
+    triggerGapDays: 14,
+    windowDays: 14,
+    longGapDays: 28,
+    longWindowDays: 28,
+    cap: "M" as SessionClass,
+  }),
+
+  // 60 days, not 28: the on-ramp rule (v1.2 §B1.5) has to be able to see a
+  // lay-off of 28 days or more. Tank half-lives are <= 2.5 days, so the extra
+  // history contributes <0.1% to any level.
+  historyWindowDays: 60,
   nextHeavyHorizonDays: 10,
 
   // v1.2 §A — "load above your normal"

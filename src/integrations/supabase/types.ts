@@ -11882,6 +11882,149 @@ export type Database = {
         }
         Relationships: []
       }
+      tcs_runner_auth: {
+        Row: {
+          created_at: string
+          id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      tcs_test_run_chunks: {
+        Row: {
+          chunk_index: number
+          created_at: string
+          days_checked: number
+          deep_checks: number
+          duration_seconds: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          run_id: string
+          seasons: number
+          seed: number
+          started_at: string | null
+          status: string
+          violations: Json
+          violations_count: number
+        }
+        Insert: {
+          chunk_index: number
+          created_at?: string
+          days_checked?: number
+          deep_checks?: number
+          duration_seconds?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          run_id: string
+          seasons: number
+          seed: number
+          started_at?: string | null
+          status?: string
+          violations?: Json
+          violations_count?: number
+        }
+        Update: {
+          chunk_index?: number
+          created_at?: string
+          days_checked?: number
+          deep_checks?: number
+          duration_seconds?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          run_id?: string
+          seasons?: number
+          seed?: number
+          started_at?: string | null
+          status?: string
+          violations?: Json
+          violations_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcs_test_run_chunks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "tcs_test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcs_test_runs: {
+        Row: {
+          chunks_done: number
+          chunks_total: number
+          config_hash: string | null
+          created_at: string
+          days_checked: number
+          deep_checks: number
+          duration_seconds: number | null
+          first_violations: Json
+          git_sha: string | null
+          id: string
+          run_at: string
+          seasons: number
+          seed: number
+          status: string
+          thresholds_hash: string | null
+          tier: string
+          updated_at: string
+          violations_count: number
+        }
+        Insert: {
+          chunks_done?: number
+          chunks_total?: number
+          config_hash?: string | null
+          created_at?: string
+          days_checked?: number
+          deep_checks?: number
+          duration_seconds?: number | null
+          first_violations?: Json
+          git_sha?: string | null
+          id?: string
+          run_at?: string
+          seasons?: number
+          seed: number
+          status?: string
+          thresholds_hash?: string | null
+          tier: string
+          updated_at?: string
+          violations_count?: number
+        }
+        Update: {
+          chunks_done?: number
+          chunks_total?: number
+          config_hash?: string | null
+          created_at?: string
+          days_checked?: number
+          deep_checks?: number
+          duration_seconds?: number | null
+          first_violations?: Json
+          git_sha?: string | null
+          id?: string
+          run_at?: string
+          seasons?: number
+          seed?: number
+          status?: string
+          thresholds_hash?: string | null
+          tier?: string
+          updated_at?: string
+          violations_count?: number
+        }
+        Relationships: []
+      }
       tex_vision_adaptive_difficulty: {
         Row: {
           accuracy_history: Json | null
@@ -17671,6 +17814,32 @@ export type Database = {
         }
       }
       claim_build_purchases: { Args: never; Returns: number }
+      claim_tcs_chunk: {
+        Args: { _run_id: string }
+        Returns: {
+          chunk_index: number
+          created_at: string
+          days_checked: number
+          deep_checks: number
+          duration_seconds: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          run_id: string
+          seasons: number
+          seed: number
+          started_at: string | null
+          status: string
+          violations: Json
+          violations_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tcs_test_run_chunks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
@@ -17774,6 +17943,35 @@ export type Database = {
           to: "live_ab_links"
           isOneToOne: false
           isSetofReturn: true
+        }
+      }
+      finalize_tcs_run: {
+        Args: { _run_id: string }
+        Returns: {
+          chunks_done: number
+          chunks_total: number
+          config_hash: string | null
+          created_at: string
+          days_checked: number
+          deep_checks: number
+          duration_seconds: number | null
+          first_violations: Json
+          git_sha: string | null
+          id: string
+          run_at: string
+          seasons: number
+          seed: number
+          status: string
+          thresholds_hash: string | null
+          tier: string
+          updated_at: string
+          violations_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tcs_test_runs"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       folder_allows_coach_edit: {

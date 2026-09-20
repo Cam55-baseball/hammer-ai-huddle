@@ -105,6 +105,11 @@ export interface Decision {
   floorsApplied: string[];
   /** Ceiling rule fired: tanks would have delayed the lift past the ceiling. */
   loadPatternSignal: boolean;
+  /**
+   * v1.2 §B1.5 on-ramp: the last calendar date (inclusive) on which the class
+   * stays capped after a break from loaded lifting. null = not on an on-ramp.
+   */
+  onRampUntil: string | null;
   diagnostics: string[];
   version: string;
   configHash: string;
@@ -156,6 +161,19 @@ export interface TcsConfig {
     inSeasonBetweenLifts: number;
   };
   readonly ceilingRestDays: { offseason: number; inSeason: number };
+  /** v1.2 §B1.5 — easing back in after time off. */
+  readonly onRamp: {
+    /** Days since the last completed loaded lift that starts an on-ramp. */
+    triggerGapDays: number;
+    /** On-ramp length after a trigger-length gap. */
+    windowDays: number;
+    /** Gap length that counts as a long lay-off. */
+    longGapDays: number;
+    /** On-ramp length after a long lay-off. */
+    longWindowDays: number;
+    /** Highest class allowed while on an on-ramp. */
+    cap: SessionClass;
+  };
   readonly historyWindowDays: number;
   readonly nextHeavyHorizonDays: number;
   /** v1.2 §A — window used for "your normal". */

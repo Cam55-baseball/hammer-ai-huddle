@@ -1,6 +1,10 @@
 // Tissue Cost Scheduler — property-based reliability suite (spec §7, I1–I9).
 //
-// CI runs a fixed, seeded slice on every build (fast enough to gate a PR).
+// This vitest slice is a single-threaded smoke check (default 200 seasons, ~90s).
+// The v1.1 §7 fast tier of >= 2,000 seasons runs in parallel:
+//   bun scripts/audits/tcs-property-sweep.ts 2000 8 20260920   (~146s, 8 workers)
+// and daily inside the project via the tcs-test-runner edge function, which
+// writes its result to public.tcs_test_runs.
 // The full ≥100,000-season sweep runs through scripts/audits/tcs-property-sweep.ts
 // (16 workers, ~20 min) and on the nightly workflow. The seed is printed either
 // way, so any failure can be replayed exactly.
@@ -14,7 +18,7 @@ import {
 import type { Profile } from "../../../supabase/functions/_shared/wic/schedule/tissueCost/types.ts";
 
 const SEED = Number(process.env.TCS_SEED ?? 20260920);
-const SEASONS = Number(process.env.TCS_SEASONS ?? 400);
+const SEASONS = Number(process.env.TCS_SEASONS ?? 200);
 
 describe("TCS property suite (I1–I9)", () => {
   it(`holds every invariant across ${SEASONS} simulated athlete-seasons`, () => {

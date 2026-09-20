@@ -267,11 +267,35 @@ describe("TCS goldens — schedule shapes", () => {
     expect(d.diagnostics).toContain("no_inputs_safe_default");
   });
 
-  it("return after 21 days off: heavy is allowed straight away", () => {
+  // v1.2 §B1.5 on-ramp. Before Step 5 this golden expected H straight away,
+  // which contradicted the on-ramp rule; the rule wins, the golden moves.
+  it("return after 21 days off: class is capped at M for the on-ramp", () => {
     const days = [{ date: "2026-01-05", lift: { class: "H" as const, method: "standard" as const } }];
     const d = run(ADV17, days, "2026-01-26");
-    expect(d.allowedClass).toBe("H");
-    expect(d.nextHeavyDate).toBe("2026-01-26");
+    expect(d.allowedClass).toBe("M");
+    expect(d.onRampUntil).toBe("2026-02-09"); // 14 days, gap was 21
+    expect(d.reasons).toContain("Easing back in after time off.");
+    expect(d.nextHeavyDate).toBe(null); // no heavy inside the 10-day horizon
+  });
+
+  it("return after 40 days off: the on-ramp runs 28 days", () => {
+    const days = [{ date: "2026-01-05", lift: { class: "H" as const, method: "standard" as const } }];
+    const d = run(ADV17, days, "2026-02-14");
+    expect(d.allowedClass).toBe("M");
+    expect(d.onRampUntil).toBe("2026-03-14");
+  });
+
+  it("on-ramp keeps running after the first lift back", () => {
+    const days = [
+      { date: "2026-01-05", lift: { class: "H" as const, method: "standard" as const } },
+      { date: "2026-01-26", lift: { class: "M" as const, method: "standard" as const } },
+    ];
+    const d = run(ADV17, days, "2026-02-02");
+    expect(d.onRampUntil).toBe("2026-02-09");
+    expect(d.allowedClass).not.toBe("H");
+    // and it ends
+    const after = run(ADV17, days.concat([{ date: "2026-02-02", lift: { class: "M" as const, method: "standard" as const } }]), "2026-02-13");
+    expect(after.onRampUntil).toBe(null);
   });
 
   it("missing check-ins behave exactly like neutral check-ins", () => {
