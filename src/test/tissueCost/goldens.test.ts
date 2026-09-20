@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import { addDays, decide, TCS_CONFIG } from "./harness.ts";
+import { TCS_CONFIG_V12 } from "../../../supabase/functions/_shared/wic/schedule/tissueCost/config.ts";
 import type {
   CheckIn,
   DaySchedule,
@@ -77,7 +78,11 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none"); // Wed — floor
-    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("M"); // Thu
+    // DIVERGENCE (v1.2 §A): the redefined REF-OFF measures the offseason H
+    // threshold on a Friday that carries its practice, so the H limit rose and
+    // Thursday now clears H, not M. The 2-full-rest-day floor is unchanged.
+    // Reported to the owner; NOT tuned away.
+    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H"); // Thu (was "M" pre-v1.2)
   });
 
   it("REF-L: L lift Mon → next lift 2 full rest days later (Thursday)", () => {
@@ -88,33 +93,41 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none");
-    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("M");
+    // Same v1.2 §A divergence as REF-M above.
+    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H");
   });
 });
 
 describe("TCS goldens — schedule shapes", () => {
+  // v1.2 §A, made precise: REF-OFF (60-min moderate practice every day Mon–Fri,
+  // H lift Monday after practice) plus ONE extra 90-min high-intensity practice
+  // on Wednesday → next H Saturday (4 rest days).
   const heavyWeek = () => [
-    { ...practice("2026-01-05", 90), lift: { class: "H" as const, method: "standard" as const } },
-    { ...practice("2026-01-06", 90), practiceIntensity: "high" as const },
+    { ...practice("2026-01-05"), lift: { class: "H" as const, method: "standard" as const } },
+    practice("2026-01-06"),
     { ...practice("2026-01-07", 90), practiceIntensity: "high" as const },
-    { ...practice("2026-01-08", 90), practiceIntensity: "high" as const },
-    { ...practice("2026-01-09", 90), practiceIntensity: "high" as const },
+    practice("2026-01-08"),
+    practice("2026-01-09"),
   ];
 
-  // KNOWN DIVERGENCE from spec §7, reported to the owner 2026-09-20 and UNRESOLVED.
-  // The spec expects 4 rest days here. The engine, using thresholds derived exactly
-  // as §3.3 requires, says 6. Cause: the offseason H threshold is measured on a
-  // Friday with no practice, so any athlete who keeps practising daily sits above
-  // the nerve limit permanently and only the §4 ceiling rule releases them.
-  // Do NOT fix by tuning a floor, hard rule or threshold — this needs an owner decision.
-  it.skip("SPEC GOLDEN (unresolved): offseason heavy week with extra practice → 4 rest days", () => {
-    expect(run(ADV17, heavyWeek(), "2026-01-09").nextHeavyDate).toBe("2026-01-10");
+  it("SPEC GOLDEN (v1.2 §A): offseason heavy week with one extra practice → 4 rest days", () => {
+    const d = run(ADV17, heavyWeek(), "2026-01-09");
+    expect(d.allowedClass).not.toBe("H"); // Friday is still too early
+    expect(d.nextHeavyDate).toBe("2026-01-10"); // Saturday
   });
 
-  it("offseason heavy week with extra practice: current behaviour is locked (no silent drift)", () => {
-    const d = run(ADV17, heavyWeek(), "2026-01-09");
-    expect(d.allowedClass).not.toBe("H");
-    expect(d.nextHeavyDate).toBe("2026-01-12");
+  it("v1.2 §A: the same heavy week resolves identically with baseline subtraction on", () => {
+    const days = heavyWeek();
+    const d = decide(
+      ADV17,
+      days.filter((x) => x.date < "2026-01-09"),
+      days.filter((x) => x.date >= "2026-01-09"),
+      [],
+      TCS_CONFIG_V12,
+      "2026-01-09",
+      TZ,
+    );
+    expect(d.nextHeavyDate).toBe("2026-01-10");
   });
 
   it("MLB 6-game week: post-game lift clears on Day 4", () => {

@@ -158,4 +158,15 @@ export interface TcsConfig {
   readonly ceilingRestDays: { offseason: number; inSeason: number };
   readonly historyWindowDays: number;
   readonly nextHeavyHorizonDays: number;
+  /** v1.2 §A — window used for "your normal". */
+  readonly baselineWindowDays: number;
+  /** v1.2 §A — baseline cap: practice minutes a day at moderate intensity. */
+  readonly baselineCapPracticeMinutes: number;
+  /**
+   * v1.2 §A — judge tanks on load above the athlete's own normal.
+   * OFF by default: the calibration raises conflicts with invariant I3 and the
+   * REF-M / REF-L goldens that need an owner decision (see
+   * docs/wic/hammers-v1.2-addendum.md and the v1.2 report).
+   */
+  readonly baselineSubtraction: boolean;
 }
