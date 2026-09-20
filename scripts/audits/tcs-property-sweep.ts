@@ -67,3 +67,38 @@ if (violations.length) {
   console.error(JSON.stringify(violations.slice(0, 20), null, 2));
   process.exit(1);
 }
+
+// ── Record the run (Step 9 §A3/§A4) ────────────────────────────────────────
+// Tier comes from TCS_TIER (default "gate"): "gate" = the 2,000-season run on
+// every scheduler change, "version" = the once-per-engine-version 20,000 run.
+const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (url && key) {
+  const { createClient } = await import("@supabase/supabase-js");
+  const { TCS_CONFIG_HASH, TCS_THRESHOLDS_HASH } = await import(
+    `${root}/supabase/functions/_shared/wic/schedule/tissueCost/config.ts`
+  );
+  const gitSha = (await new Response(
+    Bun.spawn(["git", "rev-parse", "--short", "HEAD"]).stdout,
+  ).text()).trim() || null;
+  const { data, error } = await createClient(url, key)
+    .from("tcs_test_runs")
+    .insert({
+      tier: process.env.TCS_TIER ?? "gate",
+      seasons,
+      days_checked: daysChecked,
+      deep_checks: deepChecks,
+      violations_count: violations.length,
+      first_violations: violations.slice(0, 20),
+      seed: baseSeed,
+      git_sha: gitSha,
+      config_hash: TCS_CONFIG_HASH,
+      thresholds_hash: TCS_THRESHOLDS_HASH,
+      duration_seconds: Math.round((Date.now() - started) / 1000),
+      status: violations.length ? "failed" : "passed",
+    })
+    .select("id")
+    .single();
+  if (error) console.error("[tcs] could not record the run:", error.message);
+  else console.log(`[tcs] recorded run ${data.id}`);
+}

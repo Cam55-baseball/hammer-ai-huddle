@@ -16202,6 +16202,48 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_card_matrix_runs: {
+        Row: {
+          active_rows: number
+          cells: number
+          created_at: string
+          empty_cells: number
+          fingerprint: string | null
+          git_sha: string | null
+          id: string
+          notes: Json
+          run_at: string
+          source: string
+          status: string
+        }
+        Insert: {
+          active_rows: number
+          cells: number
+          created_at?: string
+          empty_cells: number
+          fingerprint?: string | null
+          git_sha?: string | null
+          id?: string
+          notes?: Json
+          run_at?: string
+          source: string
+          status: string
+        }
+        Update: {
+          active_rows?: number
+          cells?: number
+          created_at?: string
+          empty_cells?: number
+          fingerprint?: string | null
+          git_sha?: string | null
+          id?: string
+          notes?: Json
+          run_at?: string
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       wk_cns_ledger: {
         Row: {
           breakdown: Json
@@ -16283,6 +16325,75 @@ export type Database = {
           source?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      wk_feature_switch_audit: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          feature_key: string
+          from_allowlist: string[] | null
+          from_mode: string | null
+          id: string
+          to_allowlist: string[] | null
+          to_mode: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          feature_key: string
+          from_allowlist?: string[] | null
+          from_mode?: string | null
+          id?: string
+          to_allowlist?: string[] | null
+          to_mode: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          feature_key?: string
+          from_allowlist?: string[] | null
+          from_mode?: string | null
+          id?: string
+          to_allowlist?: string[] | null
+          to_mode?: string
+        }
+        Relationships: []
+      }
+      wk_feature_switches: {
+        Row: {
+          allowlist: string[]
+          buildable: boolean
+          created_at: string
+          feature_key: string
+          label: string
+          mode: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowlist?: string[]
+          buildable?: boolean
+          created_at?: string
+          feature_key: string
+          label: string
+          mode?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowlist?: string[]
+          buildable?: boolean
+          created_at?: string
+          feature_key?: string
+          label?: string
+          mode?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -17292,6 +17403,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wk_shadow_review_marks: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          decision_date: string
+          id: string
+          marked_by: string
+          note: string | null
+          updated_at: string
+          verdict: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          decision_date: string
+          id?: string
+          marked_by: string
+          note?: string | null
+          updated_at?: string
+          verdict: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          decision_date?: string
+          id?: string
+          marked_by?: string
+          note?: string | null
+          updated_at?: string
+          verdict?: string
+        }
+        Relationships: []
       }
       wk_shadow_weekly_reports: {
         Row: {
@@ -18349,6 +18493,7 @@ export type Database = {
         Returns: boolean
       }
       is_system_user: { Args: { _uid: string }; Returns: boolean }
+      is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
       manual_archive_scout_applications: {
         Args: never
         Returns: {
