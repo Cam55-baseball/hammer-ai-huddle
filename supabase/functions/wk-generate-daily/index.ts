@@ -320,8 +320,15 @@ interface Prescription {
 // while the canonical authority lives in the shared module.
 import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
 
+// Step 20 C3 — the first request an isolate serves pays for loading the code.
+// That build is not comparable with a warm one, so the watchdog logs it for
+// information instead of raising a slowdown alarm.
+let servedARequest = false;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const WAS_COLD_START = !servedARequest;
+  servedARequest = true;
   const generationStartedAt = Date.now();
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
