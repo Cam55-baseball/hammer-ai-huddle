@@ -581,7 +581,7 @@ export default function AdminTrainingIntelligence() {
                       body: { mode: "report", days: 7 },
                     });
                     setCopying(false);
-                    const text = (data as any)?.text as string | undefined;
+                    const text = (data as { text?: string } | null)?.text;
                     if (error || !text) {
                       toast({ title: "Could not build the report", variant: "destructive" });
                       return;
@@ -609,7 +609,7 @@ export default function AdminTrainingIntelligence() {
                           size="sm"
                           variant="secondary"
                           onClick={() =>
-                            (navigator as any)
+                            (navigator as Navigator & { share: (d: ShareData) => Promise<void> })
                               .share({ title: "Training intelligence report", text: reportText })
                               .catch(() => {})}
                         >
