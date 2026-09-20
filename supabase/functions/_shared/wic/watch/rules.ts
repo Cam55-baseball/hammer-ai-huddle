@@ -178,21 +178,31 @@ export function livePrescriptionViolations(i: {
     }
   }
 
+  // Step 20 C1 — the budget check, now comparing like with like. `cnsUsed`
+  // here is the spend the cap actually governs: total-dose rows (innings,
+  // contacts, seconds, feet) are exempt from clamping by design and are no
+  // longer counted against it. A governed spend above the cap is therefore a
+  // real overrun, and it names the rows.
   if (typeof i.cnsCap === "number" && typeof i.cnsUsed === "number" && i.cnsUsed > i.cnsCap) {
     out.push({
-      severity: "info",
+      severity: "critical",
       category: "rule_violation",
       user_id: i.userId,
       decision_id: i.decisionId ?? null,
-      title: "The day used more of its budget than planned",
+      title: "The day went over its effort budget",
       detail: {
         plan_date: i.planDate,
         allowed_class: i.allowedClass,
         budget_used: i.cnsUsed,
         budget: i.cnsCap,
-        note: "Budget, not a class ceiling — total-dose rows are exempt by design. Information only.",
+        rows: i.rows.map((r) => ({
+          slug: r.slug,
+          slot: r.slot ?? null,
+          intensity_class: r.intensityClass ?? null,
+          cns_cost: r.cnsCost ?? null,
+        })),
       },
-      auto_action: null,
+      auto_action: "The switch drops one level tonight and the owner is alerted",
     });
   }
 
