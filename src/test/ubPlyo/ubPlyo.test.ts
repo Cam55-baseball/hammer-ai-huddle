@@ -139,10 +139,19 @@ describe("UBP invariants (§9)", () => {
   });
 
   it("strength gates are respected", () => {
+    // Rotation has no gate (§3), and the overhead landmine versions are open to
+    // everyone at U3 provided there is no pain flag — both are spec, not drift.
     const weak: UbHistory = { ...STRONG, strictPushUps: 0, strictInvertedRows: 0, strictPullUps: 0, benchEstimatedMaxLb: 0, landmineWeeksNoPain: 0 };
-    for (const m of UB_MOVEMENTS.filter((x) => x.tier !== "U1" && x.plane !== "rotation")) {
+    const gated = UB_MOVEMENTS.filter(
+      (x) => x.tier !== "U1" && (x.plane === "push" || x.plane === "pull_h" || x.plane === "pull_v"),
+    );
+    for (const m of gated) {
       const d = resolveUbMovement(m.slug, ELITE, weak, ALL_EQUIPMENT);
       expect(d.tier).toBe("U1");
+    }
+    // Overhead U2 still requires four clean landmine weeks.
+    for (const m of UB_MOVEMENTS.filter((x) => x.tier === "U2" && x.plane === "overhead")) {
+      expect(resolveUbMovement(m.slug, ELITE, weak, ALL_EQUIPMENT).tier).toBe("U1");
     }
   });
 
