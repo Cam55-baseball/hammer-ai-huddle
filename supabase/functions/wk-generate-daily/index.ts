@@ -858,7 +858,16 @@ const handler = async (req: Request): Promise<Response> => {
       // Fail silent and inert — the athlete still gets the day they'd have had.
       console.warn("[wk-generate-daily] rest-day calculator skipped", tcsErr);
       tcsAdjust = null;
+      // Step 12 A3: the nightly safety job watches this count.
+      try {
+        await supabase.from("wk_feature_error_events").insert({
+          feature_key: "rest_day_calculator",
+          user_id: userId,
+          error_text: String(tcsErr).slice(0, 500),
+        });
+      } catch { /* never blocks the card */ }
     }
+
 
     // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
     const adaptationDecisionRaw: AdaptationDecision = selectAdaptation({
