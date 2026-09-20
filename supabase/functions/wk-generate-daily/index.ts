@@ -2321,6 +2321,17 @@ const handler = async (req: Request): Promise<Response> => {
 
         }
 
+        // §9 — stamp the post-game plan on every row so the next day can
+        // alternate A and B, and so the card can speak the timing.
+        if (inSeasonPlan?.applies && inSeasonPlan.slot) {
+          wp.in_season_slot = inSeasonPlan.slot;
+          wp.in_season_timing = inSeasonPlan.timing;
+          wp.in_season_timing_note = inSeasonPlan.timingNote;
+          wp.reps_in_reserve_min = IN_SEASON_LIMITS.minRir;
+        }
+
+
+
 
 
         if (!wp.session_shape) {
