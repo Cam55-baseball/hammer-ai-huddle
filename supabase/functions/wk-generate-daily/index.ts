@@ -23,7 +23,13 @@ import { validate as wicValidate } from "../_shared/wic/validator.ts";
 import { buildSafePlan } from "../_shared/wic/safePlan.ts";
 import { resolveExtensiveDose, resolveIntensityMode } from "../_shared/wic/execution/intensityMode.ts";
 import { checkAthleteScope, auditMovementIntegrity } from "../_shared/wic/domainGate.ts";
-import { decideFromRaw, fetchShadowData, runShadowDecision } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
+import {
+  decideFromRaw,
+  decisionRow,
+  fetchShadowData,
+  runShadowDecision,
+  SHADOW_VERSION,
+} from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
@@ -69,6 +75,8 @@ import {
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
+import { REQUIRED_LIFT_CATEGORIES } from "../_shared/wic/lift/templates.ts";
+import { MANDATORY_RESCUE_SETS, pickMandatory } from "../_shared/wic/lift/mandatory.ts";
 // Goal Emphasis Authority + Weekly Balance Ledger — bounded, interpretive only.
 import { resolveGoalEmphasis, emphasisFor } from "../_shared/wic/goals/emphasis.ts";
 import {
@@ -829,15 +837,47 @@ const handler = async (req: Request): Promise<Response> => {
     // leaves it null too: the card always ships.
     let tcsAdjust: TcsApplyResult | null = null;
     let tcsDiagnostics: Record<string, unknown> | null = null;
+    // Step 15 item 5 — the switch table is read ONCE per generation and shared
+    // with the spike governor below. It used to be read twice.
+    const { data: switchRows } = await admin
+      .from("wk_feature_switches")
+      .select("feature_key, mode, allowlist, updated_by");
+    const features = resolveFeatures(switchRows as any, user.id);
     try {
-      const { data: switchRows } = await admin
-        .from("wk_feature_switches")
-        .select("feature_key, mode, allowlist, updated_by");
-      const features = resolveFeatures(switchRows as any, user.id);
       if (features.rest_day_calculator === true) {
-        const raw = await fetchShadowData(admin as any, user.id, planDate, "UTC");
-        const result = decideFromRaw(raw);
-        const d = result.decision;
+        // Step 15 item 5 — generation never waits on the scheduler. Tonight's
+        // job already wrote today's decision; we read it. Only when there is no
+        // row yet (a new athlete, or a re-plan before the nightly run) do we
+        // compute one, and we store it so the next card is fast too.
+        let d: any = null;
+        let decisionSource = "cached";
+        const { data: cached } = await admin
+          .from("wk_schedule_decisions")
+          .select("allowed_class, timing, next_heavy_date, reasons, fallback_used, config_hash")
+          .eq("user_id", user.id)
+          .eq("decision_date", planDate)
+          .eq("version", SHADOW_VERSION)
+          .maybeSingle();
+        if (cached) {
+          d = {
+            allowedClass: cached.allowed_class,
+            timing: cached.timing,
+            nextHeavyDate: cached.next_heavy_date,
+            reasons: (cached.reasons ?? []) as string[],
+            fallbackUsed: cached.fallback_used === true,
+            version: cached.config_hash,
+          };
+        } else {
+          decisionSource = "computed";
+          const raw = await fetchShadowData(admin as any, user.id, planDate, "UTC");
+          const result = decideFromRaw(raw);
+          d = result.decision;
+          try {
+            await admin
+              .from("wk_schedule_decisions")
+              .upsert(decisionRow(result, "generation"), { onConflict: "user_id,decision_date,version" });
+          } catch { /* the cache is an optimisation; it never blocks a card */ }
+        }
         const templateClass = phaseTemplateClassFor(phaseRes.phase);
         const order = { none: 0, L: 1, M: 2, H: 3 } as const;
         const capped = order[d.allowedClass] > order[templateClass]
@@ -863,6 +903,7 @@ const handler = async (req: Request): Promise<Response> => {
           cap_after: tcsAdjust.cnsCap,
           fallback_used: tcsAdjust.fallbackUsed,
           next_heavy_date: d.nextHeavyDate,
+          decision_source: decisionSource,
         };
         cnsCap = Math.min(cnsCap, tcsAdjust.cnsCap);
         for (const r of tcsAdjust.reasons) {
@@ -1068,7 +1109,7 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Movement filters --------
     const eligibleWith = (
       m: MovementRow | undefined | null,
-      opts?: { ignoreAdaptation?: boolean; domain?: EngineDomain },
+      opts?: { ignoreAdaptation?: boolean; ignoreTcsClass?: boolean; domain?: EngineDomain },
     ): m is MovementRow => {
       if (!m) return false;
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
@@ -1081,13 +1122,19 @@ const handler = async (req: Request): Promise<Response> => {
         opts?.domain === "lift" &&
         !survivesPrimerOnly((m as any).intensity_class as string | null)
       ) return false;
-      // TCS stage S4 — never build a lift above today's allowed class. Inert
-      // unless the rest-day calculator switch resolves on for this athlete.
-      if (
-        tcsAdjust &&
-        opts?.domain === "lift" &&
-        tcsAdjust.blockedIntensityClasses.includes(String((m as any).intensity_class ?? ""))
-      ) return false;
+      // TCS stage S4 — never build ANYTHING above today's allowed class.
+      // Step 15 item 3: this used to guard the lift slot only, so warm-up,
+      // speed, bat-speed and conditioning rows walked straight past the
+      // ceiling. The gate now covers every path, and the day's CNS ceiling is
+      // a per-movement ceiling too — a single row may never cost more than the
+      // whole day is allowed. Inert unless the rest-day calculator resolves on.
+      if (tcsAdjust) {
+        if (
+          !opts?.ignoreTcsClass &&
+          tcsAdjust.blockedIntensityClasses.includes(String((m as any).intensity_class ?? ""))
+        ) return false;
+        if (Number((m as any).cns_cost ?? 0) > cnsCap) return false;
+      }
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       // Competition-level ceiling. Only ever OPENS movements for higher levels
       // — a null minimum is no gate at all, so nothing an athlete could reach
@@ -1183,6 +1230,19 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const pickFirstRelaxedLift = (slugs: string[]): MovementRow | undefined =>
       pickFirstRelaxed(slugs, "lift");
+    // Step 15 item 2 — last resort for a template-mandatory category on a
+    // capped day. A cap must LOWER INTENSITY, never delete a required
+    // category, so this ladder step also relaxes the allowed-class gate. It
+    // never relaxes the day's CNS ceiling, season legality, injury
+    // contraindications, training age, scope or integrity, and the row it
+    // returns is always dosed down by the caller.
+    const pickFirstClassRelaxedLift = (slugs: string[]): MovementRow | undefined => {
+      for (const s of slugs) {
+        const m = lib.find((x) => x.slug === s);
+        if (eligibleWith(m, { ignoreAdaptation: true, ignoreTcsClass: true, domain: "lift" })) return m;
+      }
+      return undefined;
+    };
 
 
     // ---- Goal Emphasis Authority + Weekly Balance Ledger -------------------
@@ -1780,7 +1840,15 @@ const handler = async (req: Request): Promise<Response> => {
         if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 
-      ensureFullBodyLift(rxs, lib, pickFirstLift, push, isInSeason, pickFirstRelaxedLift);
+      ensureFullBodyLift(
+        rxs,
+        lib,
+        pickFirstLift,
+        push,
+        isInSeason,
+        pickFirstRelaxedLift,
+        pickFirstClassRelaxedLift,
+      );
     }
 
 
@@ -2211,11 +2279,7 @@ const handler = async (req: Request): Promise<Response> => {
     // byte the day it would have been. Any failure leaves the plan untouched.
     let governorDiagnostics: Record<string, unknown> | null = null;
     try {
-      const { data: govSwitchRows } = await admin
-        .from("wk_feature_switches")
-        .select("feature_key, mode, allowlist, updated_by");
-      const govFeatures = resolveFeatures(govSwitchRows as any, user.id);
-      if (govFeatures.load_spike_protection === true) {
+      if (features.load_spike_protection === true) {
         const raw = await fetchShadowData(admin as any, user.id, planDate, "UTC");
         const catalogMap: CatalogMap = {};
         for (const m of lib) catalogMap[m.slug] = m as unknown as CatalogFact;
@@ -2301,11 +2365,27 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (gov.trims.length > 0) {
           const keptBySlug = new Map(gov.items.map((i) => [i.slug, i]));
+          // Step 15 item 2, same law on this path: a trim lowers volume, it
+          // never removes a category the template requires. The single row
+          // holding a required category is kept (at its floor) even when the
+          // governor asked for it to go.
+          const requiredHolders = new Set<string>();
+          for (const cat of REQUIRED_LIFT_CATEGORIES) {
+            const holder = finalRxs.find(
+              (r) => r.slot === "lift" && coerceCanonicalCategory(catalogMap[r.movement_slug] as any) === cat,
+            );
+            if (holder) requiredHolders.add(holder.movement_slug);
+          }
           const droppedFrom = new Set(
-            gov.trims.filter((t) => t.action === "row_dropped" || t.action === "blocked").map((t) => t.slug),
+            gov.trims
+              .filter((t) => t.action === "row_dropped" || t.action === "blocked")
+              .map((t) => t.slug)
+              .filter((slug) => !requiredHolders.has(slug)),
           );
           const steppedFrom = new Map(
-            gov.trims.filter((t) => t.action === "tier_step_down" && t.to).map((t) => [t.slug, t.to!]),
+            gov.trims
+              .filter((t) => t.action === "tier_step_down" && t.to && !requiredHolders.has(t.slug))
+              .map((t) => [t.slug, t.to!]),
           );
           const next: typeof finalRxs = [];
           for (const r of finalRxs) {
@@ -3504,13 +3584,19 @@ const handler = async (req: Request): Promise<Response> => {
     // an empty card, lifts on a rest day, anything above today's ceiling, and
     // cards taking much longer to build than normal. Notes only; never blocks.
     try {
+      // Step 15 item 3 — the ceiling check only means something when the
+      // rest-day calculator actually set a ceiling. With the switch off there
+      // is no allowed class, and comparing one movement's cost against the
+      // whole day's budget was raising criticals for ordinary sprint days.
       const watchNotes = livePrescriptionViolations({
         userId: user.id,
         planDate,
         allowedClass: (tcsAdjust?.allowedClass ?? "H") as "none" | "L" | "M" | "H",
         liftCount: rows.filter((r: any) => r.slot === "lift").length,
-        maxCnsCost: rows.reduce((m: number, r: any) => Math.max(m, Number(r.cns_cost ?? 0)), 0),
-        cnsCap,
+        maxCnsCost: tcsAdjust
+          ? rows.reduce((m: number, r: any) => Math.max(m, Number(r.cns_cost ?? 0)), 0)
+          : 0,
+        cnsCap: tcsAdjust ? cnsCap : Number.MAX_SAFE_INTEGER,
         itemCount: rows.length,
       });
       const { data: baseRow } = await admin
@@ -3791,6 +3877,7 @@ function ensureFullBodyLift(
   ) => boolean,
   isInSeason: boolean,
   pickFirstRelaxed?: (slugs: string[]) => MovementRow | undefined,
+  pickFirstClassRelaxed?: (slugs: string[]) => MovementRow | undefined,
 ) {
   const catalogBySlug = new Map(catalog.map((m) => [m.slug, m] as const));
   const categoryForRx = (rx: Prescription) => coerceCanonicalCategory(catalogBySlug.get(rx.movement_slug) as any);
@@ -3809,40 +3896,35 @@ function ensureFullBodyLift(
   //   3. any catalog row of that category, day-adaptation gate relaxed
   // Safety, season legality, injury, training age and scope always apply.
   const relaxed = pickFirstRelaxed ?? (() => undefined);
+  const classRelaxed = pickFirstClassRelaxed ?? (() => undefined);
   const pickMandatoryCategory = (
     slugs: string[],
     category: string,
-  ): { movement: MovementRow; relaxed: boolean } | undefined => {
-    const strict = pickFirstCategory(slugs, category);
-    if (strict) return { movement: strict, relaxed: false };
-    for (const slug of slugs) {
-      const c = relaxed([slug]);
-      if (c && coerceCanonicalCategory(c as any) === category) return { movement: c, relaxed: true };
+  ): { movement: MovementRow; relaxed: boolean; classRelaxed?: boolean } | undefined =>
+    pickMandatory<MovementRow>(
+      catalog.filter((m) => coerceCanonicalCategory(m as any) === category).map((m) => m.slug),
+      slugs,
+      category,
+      {
+        strict: (ss) => pickFirst(ss),
+        adaptationRelaxed: (ss) => relaxed(ss),
+        classRelaxed: (ss) => classRelaxed(ss),
+        categoryOf: (m) => coerceCanonicalCategory(m as any),
+      },
+    );
+  /** A class-relaxed rescue is always dosed down to the lightest legal dose. */
+  const mandatoryDose = (hit: { classRelaxed?: boolean }): Partial<Prescription> =>
+    hit.classRelaxed ? ({ sets: MANDATORY_RESCUE_SETS } as Partial<Prescription>) : {};
+  const mandatoryWhy = (base: string, wasRelaxed: boolean, classWasRelaxed?: boolean) => {
+    let out = base;
+    if (wasRelaxed) {
+      out += " Selected outside today's primary adaptation because the template requires this category and no same-adaptation option was available — kept at maintenance intent.";
     }
-    const wholeCatalog = catalog
-      .filter((m) => coerceCanonicalCategory(m as any) === category)
-      .map((m) => m.slug);
-    for (const slug of wholeCatalog) {
-      const c = relaxed([slug]);
-      if (c) return { movement: c, relaxed: true };
+    if (classWasRelaxed) {
+      out += " Today's ceiling is low, so this is here at the lightest dose — intensity lowered, category kept.";
     }
-    return undefined;
+    return out;
   };
-  const mandatoryWhy = (base: string, wasRelaxed: boolean) =>
-    wasRelaxed
-      ? `${base} Selected outside today's primary adaptation because the template requires this category and no same-adaptation option was available — kept at maintenance intent.`
-      : base;
-
-  if (!hasLiftRole("arm_care")) {
-    const m = pickFirstCategory(["crossover_symmetry_full", "jband_full_chart", "lift_er_at_90", "lift_band_pullapart"], "arm_care") ??
-      pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
-    if (m) push("lift", "arm_care", m, {}, "Full-body guardrail: arm care is mandatory, not optional.");
-  }
-
-  if (!hasLiftRole("trunk_primer")) {
-    const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl", "lift_deadbug_band_press", "lift_mcgill_big3"]);
-    if (m) push("lift", "trunk_primer", m, {}, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
-  }
 
   if (!hasLiftCategory("core")) {
     const hit = pickMandatoryCategory([
@@ -3857,8 +3939,8 @@ function ensureFullBodyLift(
         "lift",
         hasLiftRole("trunk_primer") ? "trunk_finisher" : "trunk_primer",
         hit.movement,
-        {},
-        mandatoryWhy("Full-body guardrail: core category is mandatory for a complete lift session.", hit.relaxed),
+        mandatoryDose(hit),
+        mandatoryWhy("Full-body guardrail: core category is mandatory for a complete lift session.", hit.relaxed, hit.classRelaxed),
       );
     }
   }
@@ -3879,8 +3961,8 @@ function ensureFullBodyLift(
         "lift",
         "rotation",
         hit.movement,
-        {},
-        mandatoryWhy("Full-body guardrail: rotation category is mandatory in every WIC lift template.", hit.relaxed),
+        mandatoryDose(hit),
+        mandatoryWhy("Full-body guardrail: rotation category is mandatory in every WIC lift template.", hit.relaxed, hit.classRelaxed),
       );
     }
   }
@@ -3890,7 +3972,7 @@ function ensureFullBodyLift(
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
     if (hit) {
-      push("lift", "compound_lower", hit.movement, {}, mandatoryWhy("Full-body guardrail: one legal lower-body compound anchors the session.", hit.relaxed));
+      push("lift", "compound_lower", hit.movement, mandatoryDose(hit), mandatoryWhy("Full-body guardrail: one legal lower-body compound anchors the session.", hit.relaxed, hit.classRelaxed));
     }
   }
 
@@ -3904,7 +3986,7 @@ function ensureFullBodyLift(
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
     if (hit) {
-      push("lift", "upper_push", hit.movement, {}, mandatoryWhy("Full-body guardrail: upper push is required so the day is not lower-body-only.", hit.relaxed));
+      push("lift", "upper_push", hit.movement, mandatoryDose(hit), mandatoryWhy("Full-body guardrail: upper push is required so the day is not lower-body-only.", hit.relaxed, hit.classRelaxed));
     }
   }
 
@@ -3913,9 +3995,25 @@ function ensureFullBodyLift(
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
     if (hit) {
-      push("lift", "upper_pull", hit.movement, {}, mandatoryWhy("Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.", hit.relaxed));
+      push("lift", "upper_pull", hit.movement, mandatoryDose(hit), mandatoryWhy("Full-body guardrail: upper pull is mandatory for throwing decel and shoulder balance.", hit.relaxed, hit.classRelaxed));
     }
   }
+
+  // Step 15 item 2 — the ROLE guardrails run last, after every mandatory
+  // CATEGORY is safe. They used to run first and the trunk primer would claim
+  // the only legal core row on a capped day, leaving the template short of
+  // `core` and failing the whole session.
+  if (!hasLiftRole("arm_care")) {
+    const m = pickFirstCategory(["crossover_symmetry_full", "jband_full_chart", "lift_er_at_90", "lift_band_pullapart"], "arm_care") ??
+      pickFirst(["crossover_symmetry_full", "jband_full_chart"]);
+    if (m) push("lift", "arm_care", m, {}, "Full-body guardrail: arm care is mandatory, not optional.");
+  }
+
+  if (!hasLiftRole("trunk_primer")) {
+    const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl", "lift_deadbug_band_press", "lift_mcgill_big3"]);
+    if (m) push("lift", "trunk_primer", m, {}, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
+  }
+
 }
 
 

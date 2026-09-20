@@ -155,6 +155,47 @@ describe("Step 12 automatic safety", () => {
     expect(r.trigger).toBe("card_errors");
   });
 
+  it("Step 15: a critical card-build note drops the switch one step", () => {
+    const r = evaluateAutoOff({
+      mode: "all",
+      shadowCheck: green,
+      errorsToday: 0,
+      baselineErrors: 0,
+      criticalNotes: 1,
+    });
+    expect(r.demoted).toBe(true);
+    expect(r.trigger).toBe("critical_notes");
+    expect(r.toMode).toBe("pilot");
+  });
+
+  it("Step 15: a ceiling violation walks the ladder down one step at a time", () => {
+    let mode: SwitchMode = "all";
+    const seen: SwitchMode[] = [];
+    for (let i = 0; i < 4; i++) {
+      const r = evaluateAutoOff({
+        mode,
+        shadowCheck: green,
+        errorsToday: 0,
+        baselineErrors: 0,
+        criticalNotes: 2,
+      });
+      mode = r.toMode;
+      seen.push(mode);
+    }
+    expect(seen).toEqual(["pilot", "self", "off", "off"]);
+  });
+
+  it("no critical notes leaves the switch where it is", () => {
+    const r = evaluateAutoOff({
+      mode: "all",
+      shadowCheck: green,
+      errorsToday: 0,
+      baselineErrors: 0,
+      criticalNotes: 0,
+    });
+    expect(r.demoted).toBe(false);
+  });
+
   it("leaves a healthy switch alone", () => {
     const r = evaluateAutoOff({ mode: "all", shadowCheck: green, errorsToday: 0, baselineErrors: 0 });
     expect(r.demoted).toBe(false);

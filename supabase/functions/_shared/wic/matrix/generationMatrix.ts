@@ -14,7 +14,10 @@ import { resolveWaveDose } from "../dosage/wave.ts";
 import { validate } from "../validator.ts";
 import { buildSafePlan } from "../safePlan.ts";
 import { checkSafetyGate } from "../domainGate.ts";
-import { blockedClassesFor } from "../schedule/tissueCost/apply.ts";
+import { blockedClassesFor, capForClass } from "../schedule/tissueCost/apply.ts";
+
+/** Representative block cap for the harness — the ladder itself is the real one. */
+const MATRIX_BLOCK_CNS_CAP = 6;
 import type { AllowedClass } from "../schedule/tissueCost/types.ts";
 import { amountPerSet, type CatalogFact, classify } from "../exposure/ledger.ts";
 import { type GovAlternative, type GovItem, type Rm28 } from "../exposure/types.ts";
@@ -80,6 +83,7 @@ export type MatrixCatalogRow = {
   default_total_reps: number | null;
   category: string | null;
   intensity_class?: string | null;
+  cns_cost?: number | null;
   exposure_channel?: string | null;
   plyo_tier?: number | null;
   contacts_per_rep?: number | null;
@@ -90,7 +94,7 @@ export const MATRIX_CATALOG_COLUMNS =
   "slug,name,movement_category,dosage_unit,equipment_requirements,equipment,min_age_years," +
   "min_training_age_years,season_eligibility,season_legality,training_age_legality,game_day_legal," +
   "deep_flexion,eccentric_overload,default_duration_seconds,default_distance_feet," +
-  "default_total_reps,category,intensity_class,exposure_channel,plyo_tier,contacts_per_rep," +
+  "default_total_reps,category,intensity_class,cns_cost,exposure_channel,plyo_tier,contacts_per_rep," +
   "substitution_family";
 
 export type MatrixCell = {
@@ -179,6 +183,9 @@ export function runGenerationMatrix(
   },
 ): MatrixResult {
   const tcsBlocked = opts?.tcsClass ? blockedClassesFor(opts.tcsClass) : null;
+  // Step 15 item 3 — the day's CNS ceiling is a per-movement ceiling on every
+  // path, so the harness applies it exactly as the generator does.
+  const tcsCap = opts?.tcsClass ? capForClass(opts.tcsClass, MATRIX_BLOCK_CNS_CAP) : null;
   const results: MatrixCell[] = [];
 
   for (const phase of PHASES) {
@@ -200,7 +207,11 @@ export function runGenerationMatrix(
 
             const poolAll = catalog.filter((c) => eligible(c, cell));
             const pool = tcsBlocked
-              ? poolAll.filter((c) => !tcsBlocked.includes(String(c.intensity_class ?? "")))
+              ? poolAll.filter(
+                (c) =>
+                  !tcsBlocked.includes(String(c.intensity_class ?? "")) &&
+                  (tcsCap == null || Number(c.cns_cost ?? 0) <= tcsCap),
+              )
               : poolAll;
             const byRole = new Map<string, MatrixCatalogRow>();
             for (const c of [...pool].sort((a, b) => a.slug.localeCompare(b.slug))) {
