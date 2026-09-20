@@ -926,6 +926,70 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+    // -------- Step 18 — offseason arc (§7) and in-season post-game plan (§9) ----
+    // Both are OFF by default. With the switch off, `arcMethod` stays null and
+    // `inSeasonPlan.applies` stays false, so every dose and every timing string
+    // is byte-identical to today.
+    const athleteAgeYears = Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null;
+    const heavyEligible = isHeavyEligible({
+      ageYears: athleteAgeYears,
+      trainingAgeYears,
+      growthMode: athleteAgeYears != null && athleteAgeYears <= 15,
+      painFlag: injurySlugs.size > 0,
+    });
+
+    let arcBlockKey: ArcBlockKey | null = null;
+    let arcLabel: string | null = null;
+    let arcMethod: MethodKey | null = null;
+    try {
+      if (features.offseason_arc === true && isOffseason && seasonSettings) {
+        const arc = resolveOffseasonArc({
+          offseasonStart: (seasonSettings as any).offseason_start ?? planDate,
+          firstGameDate: (seasonSettings as any).season_start ?? null,
+          preSeasonStart: (seasonSettings as any).preseason_start ?? null,
+          offDays: plannedOffDays ?? [],
+        });
+        const pos = locateInArc(arc, planDate);
+        if (pos) {
+          arcBlockKey = pos.block.key;
+          arcLabel = pos.block.label;
+          const content = BLOCK_CONTENT[pos.block.key];
+          if (heavyEligible) {
+            // B4 alternates the heavy day and the banded speed day.
+            const alternate = content.heavyMethodAlt && pos.dayInBlock % 2 === 0;
+            arcMethod = (alternate ? content.heavyMethodAlt : content.heavyMethod) ?? null;
+          }
+        }
+      }
+    } catch (_arcErr) {
+      arcBlockKey = null;
+      arcLabel = null;
+      arcMethod = null;
+    }
+
+    let inSeasonPlan: InSeasonPlanResult | null = null;
+    try {
+      if (features.in_season_post_game === true && isInSeason) {
+        inSeasonPlan = resolveInSeasonPlan({
+          phase: phaseRes.phase,
+          planDate,
+          isGameDay,
+          gameRole: isCatcherPosition ? "catcher" : isPitcherAthlete ? "starting_pitcher" : "position",
+          startsToday: gameProximity.startingPitcherToday === true,
+          startsTomorrow: gameProximity.startingPitcherTomorrow === true,
+          lastLiftSlot: null,
+          highDensity: gameProximity.highDensity === true,
+        });
+        if (inSeasonPlan.applies && heavyEligible && inSeasonPlan.liftAllowed) {
+          arcMethod = inSeasonPlan.slot === "A" ? "heavy_triples" : "banded_velocity";
+        }
+      }
+    } catch (_isErr) {
+      inSeasonPlan = null;
+    }
+    const methodContext: MethodContext = isInSeason || isPostSeason ? "in_season" : "offseason";
+
+
     // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
     const adaptationDecisionRaw: AdaptationDecision = selectAdaptation({
       phase: phaseRes.phase,
