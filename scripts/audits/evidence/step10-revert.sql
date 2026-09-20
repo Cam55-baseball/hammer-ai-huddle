@@ -43,3 +43,45 @@ from (values
  ('sp_pfaff_hill_long',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":false,"elite":true,"intermediate":true,"professional":true}'),
  ('sp_tow_assisted_fly',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":false,"elite":true,"intermediate":false,"professional":true}')
 ) as v(slug,age,ta,eq,eqr,tal) where wk_movement_catalog.slug = v.slug;
+
+-- ============================================================
+-- Step 10, parts 3 and 4 (coverage-gap rows, unit and metadata cleanup)
+-- ============================================================
+
+-- 3. Remove the 48 inactive coverage-gap rows.
+delete from wk_movement_catalog where source_philosophy = 'coverage_gap_fill';
+
+-- 4a. Sled consolidation — put the five retired duplicates back.
+update wk_movement_catalog set superseded_by = null, is_active = true
+ where slug in ('lift_sled_backward','sp_backwards_sled','sp_prowler_push_10','ws_prowler_sprint','sp_sled_march_heavy');
+
+-- 4b. Unit, category and name fixes on the sprint rows.
+update wk_movement_catalog set category='speed_lab', dosage_unit='feet', default_sets=3, default_reps=null,
+       default_duration_seconds=null, default_distance_feet=60, name='Copenhagen Plank 3×30s' where slug='sp_copenhagen_plank';
+update wk_movement_catalog set category='speed_lab', dosage_unit='feet', default_sets=3, default_reps=null,
+       default_distance_feet=60, name='Nordic Hamstring Curl 3×5' where slug='sp_nordic_hamstring';
+update wk_movement_catalog set category='speed_lab', dosage_unit='feet', default_sets=3, default_duration_seconds=null,
+       default_distance_feet=60, name='Single-Leg RDL Iso 3×20s ea' where slug='sp_sl_rdl_iso';
+update wk_movement_catalog set category='speed_lab', dosage_unit='feet', default_sets=3, default_reps=null,
+       default_distance_feet=60, name='Tibialis Raise 3×20' where slug='sp_tibialis_raise';
+update wk_movement_catalog set dosage_unit='feet', default_sets=3, default_reps=null, default_distance_feet=60,
+       name='Hurdle Hop Series 4×5' where slug='sp_hurdle_hop_series';
+update wk_movement_catalog set dosage_unit='feet', default_sets=3, default_reps=null, default_distance_feet=60,
+       name='Double-Leg Pogo x20' where slug='sp_pogo_double';
+update wk_movement_catalog set dosage_unit='feet', default_sets=3, default_reps=null, default_distance_feet=60,
+       name='Single-Leg Pogo x10ea' where slug='sp_pogo_single';
+update wk_movement_catalog set dosage_unit='feet', default_distance_feet=60
+ where slug in ('sp_altitude_drop','sp_continuous_broad','sp_box_jump_to_sprint','sp_tuck_to_sprint',
+                'sp_medball_scoop_sprint','sp_wall_drive_iso','sp_wall_iso_to_sprint');
+update wk_movement_catalog set name='RDL Cluster (5×2 @ 30s)',
+       coach_cue = nullif(replace(coalesce(coach_cue,''), 'Cluster set: 30 seconds rest between the pairs.', ''), '')
+ where slug='lift_rdl_cluster';
+
+-- 4c. Clear the metadata populated in this step.
+update wk_movement_catalog set plyo_tier = null;
+update wk_movement_catalog set surface_hint = null;
+update wk_movement_catalog set contacts_per_rep = null where exposure_channel <> 'UB_PLYO';
+update wk_movement_catalog set exposure_channel = null where exposure_channel <> 'UB_PLYO';
+
+-- 4d. The plyo_tier column itself (schema), if a full revert is wanted:
+-- alter table public.wk_movement_catalog drop column plyo_tier;
