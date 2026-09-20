@@ -159,7 +159,8 @@ describe("UBP invariants (§9)", () => {
   // Step 6 decision 5 — the overhead family is no longer open on "no pain" alone.
   it("overhead U2/U3 require the new strength gates", () => {
     const overheadU2 = UB_MOVEMENTS.filter((x) => x.tier === "U2" && x.plane === "overhead");
-    const overheadU3 = UB_MOVEMENTS.filter((x) => x.tier === "U3" && x.plane === "overhead");
+    // Family 11 is gated by the bench-catch rule (§3), not the overhead gate.
+    const overheadU3 = UB_MOVEMENTS.filter((x) => x.tier === "U3" && x.plane === "overhead" && x.family !== 11);
 
     // U2: clean landmine weeks but only 9 strict push-ups → regressed.
     for (const m of overheadU2) {

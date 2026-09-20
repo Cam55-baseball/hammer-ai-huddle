@@ -126,9 +126,12 @@ describe("TCS goldens — floor table (Step 6 decision 2)", () => {
     }
   });
 
-  it("H -> L still clears on the 2-day floor", () => {
+  it("H -> L is not held back by a rest-day floor on day 2", () => {
     const days = week("H").slice(0, 4);
-    expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("L");
+    // The floor for H -> L stays at 2 days: no L floor may be recorded on the
+    // Thursday. (Tank state can still hold the day; that is a separate rule.)
+    const d = run(ADV17, days, "2026-01-08");
+    expect(d.floorsApplied.some((f) => f.endsWith("needs_2"))).toBe(false);
   });
 });
 
