@@ -124,8 +124,9 @@ export function decideGuarded(
   }
   const elapsed = now() - started;
   const produced: Decision | null = out;
-  if (!isValidDecision(produced)) {
-    const hash = typeof produced?.inputsHash === "string" ? produced.inputsHash : "unavailable";
+  if (!isValidDecision(produced as unknown)) {
+    const raw = produced as { inputsHash?: unknown } | null;
+    const hash = typeof raw?.inputsHash === "string" ? raw.inputsHash : "unavailable";
     return fallbackDecision(history, today, "invalid_output", hash);
   }
   if (elapsed > budget) {
