@@ -197,6 +197,7 @@ const GameIqLock = lazyWithRetry(() => import("./components/iq/GameIqLock").then
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
 const AdminTrainingIntelligence = lazyWithRetry(() => import("./pages/AdminTrainingIntelligence"));
+const StaffView = lazyWithRetry(() => import("./pages/StaffView"));
 const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
