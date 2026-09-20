@@ -236,7 +236,21 @@ export function decisionsMatch(
   },
   fresh: GuardedDecision,
 ): boolean {
-  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  // jsonb sorts object keys and re-renders numbers, so compare canonically
+  // rather than by raw JSON text.
+  const canon = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(canon);
+    if (v && typeof v === "object") {
+      return Object.fromEntries(
+        Object.keys(v as Record<string, unknown>).sort().map((k) =>
+          [k, canon((v as Record<string, unknown>)[k])]
+        ),
+      );
+    }
+    if (typeof v === "number") return Number(v.toPrecision(12));
+    return v;
+  };
+  const same = (a: unknown, b: unknown) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
   return stored.allowed_class === fresh.allowedClass &&
     stored.timing === fresh.timing &&
     (stored.next_heavy_date ?? null) === (fresh.nextHeavyDate ?? null) &&
