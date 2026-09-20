@@ -60,6 +60,7 @@ const values = rows.map((m) => {
   ${arr(phases)}, ${arr(phases)}, ${q(JSON.stringify(seasonLegality(tier)))}::jsonb,
   ${q(JSON.stringify(TA_LEGAL[tier]))}::jsonb, ${MIN_AGE[tier]}, ${MIN_TA[tier]},
   ${CNS[tier]}, ${q(`${m.cue} ${QUALITY_GATE_CUE}`)},
+  ${q(`${m.familyName} family, ${m.letter} version: ${tier} upper-body elastic work in the ${m.plane} plane.`)},
   ${q(tier)}, ${q(m.plane)}, ${q("UB_PLYO")}, ${m.contactsPerRep},
   ${arr(pitcherFlags(m))}, ${q(reg)}, ${q(`ubp_${m.plane}`)}, ${q("reps")},
   false, ${tier === "U1"}, ${q("gov_v1")}, ${q("both")}, false, false
@@ -72,7 +73,7 @@ INSERT INTO public.wk_movement_catalog (
   equipment, equipment_requirements,
   phase_allow, season_eligibility, season_legality,
   training_age_legality, min_age_years, min_training_age_years,
-  cns_cost, cue,
+  cns_cost, cue, why_prescribed,
   ub_tier, plane, exposure_channel, contacts_per_rep,
   pitcher_flags, regression_slug, substitution_family, dosage_unit,
   is_active, game_day_legal, governance_version, sport_scope,
