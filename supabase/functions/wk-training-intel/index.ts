@@ -13,6 +13,8 @@ import {
   type MatrixCatalogRow,
   runGenerationMatrix,
 } from "../_shared/wic/matrix/generationMatrix.ts";
+import { fetchShadowData } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
+import { decideFromRaw } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 
 const MAX_BATCH = 20;
 
@@ -54,7 +56,7 @@ Deno.serve(async (req) => {
   const { data: allowed } = await db.rpc("is_training_intel_owner", { _user_id: userId });
   if (allowed !== true) return json({ error: "not allowed" }, 403);
 
-  let body: { action?: string; ids?: string[] } = {};
+  let body: { action?: string; ids?: string[]; userId?: string } = {};
   try {
     body = await req.json();
   } catch {
