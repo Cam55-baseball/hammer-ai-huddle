@@ -322,3 +322,18 @@ describe("date maths", () => {
     expect(isoAdd("2026-12-31", 1)).toBe("2027-01-01");
   });
 });
+
+describe("arm care is never governed as throwing volume", () => {
+  it("classifies an arm-care throwing row as ungoverned", () => {
+    expect(
+      classify({
+        slug: "arm_care_band_er",
+        exposure_channel: "throwing",
+        plyo_tier: null,
+        contacts_per_rep: null,
+        category: "arm_care",
+        intensity_class: null,
+      }),
+    ).toBeNull();
+  });
+});

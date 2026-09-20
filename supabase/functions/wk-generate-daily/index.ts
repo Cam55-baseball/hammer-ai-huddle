@@ -2345,6 +2345,8 @@ const handler = async (req: Request): Promise<Response> => {
           trims: gov.trims,
           reasons: gov.reasons,
         };
+        console.log("[wk-generate-daily] spike governor", JSON.stringify(governorDiagnostics));
+
 
         // Persist today's ledger so the client renders it and never recomputes.
         try {
