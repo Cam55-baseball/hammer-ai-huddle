@@ -242,7 +242,115 @@ export function runGenerationMatrix(
               };
             });
 
-            const plan = buildSafePlan({ rxs, phase, isGameDay, validate });
+            let finalRxs = rxs;
+            let spikeTrims: MatrixCell["spike_trims"];
+            if (opts?.spike) {
+              const factOf = (c: MatrixCatalogRow): CatalogFact => ({
+                slug: c.slug,
+                exposure_channel: c.exposure_channel ?? null,
+                plyo_tier: c.plyo_tier ?? null,
+                contacts_per_rep: c.contacts_per_rep ?? null,
+                category: c.category ?? null,
+                intensity_class: c.intensity_class ?? null,
+                default_total_reps: c.default_total_reps ?? null,
+                default_distance_feet: c.default_distance_feet ?? null,
+                substitution_family: c.substitution_family ?? null,
+              });
+              const bySlug = new Map(pool.map((c) => [c.slug, c]));
+              const items: GovItem[] = [];
+              for (const rx of rxs) {
+                const row = bySlug.get(rx.movement_slug);
+                if (!row) continue;
+                const fact = factOf(row);
+                const cl = classify(fact);
+                if (!cl) continue;
+                const per = amountPerSet(fact, cl.channel, rx.reps, rx.distance_feet);
+                if (!(per > 0)) continue;
+                items.push({
+                  slug: rx.movement_slug,
+                  name: rx.movement_name,
+                  channel: cl.channel,
+                  tier: cl.tier,
+                  sets: rx.sets ?? 1,
+                  amountPerSet: per,
+                  floorSets: 1,
+                  substitutionFamily: fact.substitution_family ?? null,
+                });
+              }
+              const alternatives: GovAlternative[] = [];
+              for (const c of pool) {
+                if (items.some((i) => i.slug === c.slug)) continue;
+                const fact = factOf(c);
+                const cl = classify(fact);
+                if (!cl || !fact.substitution_family) continue;
+                const per = amountPerSet(fact, cl.channel, c.default_total_reps ?? 1, c.default_distance_feet);
+                if (!(per > 0)) continue;
+                alternatives.push({
+                  slug: c.slug,
+                  name: c.name,
+                  channel: cl.channel,
+                  tier: cl.tier,
+                  amountPerSet: per,
+                  floorSets: 1,
+                  substitutionFamily: fact.substitution_family,
+                });
+              }
+              const rm28: Rm28 = { byChannel: {}, byTier: {}, onDate: {}, daysObserved: 28 };
+              if (opts.spike.rm28Fraction != null) {
+                for (const it of items) {
+                  const planned = it.sets * it.amountPerSet;
+                  rm28.byChannel[it.channel] = (rm28.byChannel[it.channel] ?? 0) +
+                    planned * opts.spike.rm28Fraction;
+                }
+              }
+              const ctx: GovernorContext = {
+                block: phase === "os_q1"
+                  ? "B1"
+                  : phase === "os_q2"
+                  ? "B2"
+                  : phase === "os_q3"
+                  ? "B3"
+                  : phase === "os_q4"
+                  ? "B4"
+                  : phase === "post_season"
+                  ? "B5"
+                  : null,
+                inSeason: opts.spike.inSeason ?? phase === "in_season",
+                growthMode: opts.spike.growthMode ?? age <= 15,
+              };
+              const gov = runGovernor({ items, rm28, ctx, alternatives });
+              const kept = new Map(gov.items.map((i) => [i.slug, i]));
+              const swapped = new Map(
+                gov.trims
+                  .filter((t) => t.action === "tier_step_down" && t.to)
+                  .map((t) => [t.slug, t.to!]),
+              );
+              finalRxs = rxs
+                .map((rx) => {
+                  const swap = swapped.get(rx.movement_slug);
+                  const keptItem = kept.get(swap ? swap.slug : rx.movement_slug);
+                  if (!keptItem) {
+                    // governed row that was dropped
+                    const governed = items.some((i) => i.slug === rx.movement_slug);
+                    return governed ? null : rx;
+                  }
+                  return {
+                    ...rx,
+                    movement_slug: keptItem.slug,
+                    movement_name: keptItem.name,
+                    sets: keptItem.sets,
+                  };
+                })
+                .filter((rx): rx is typeof rxs[number] => rx !== null);
+              spikeTrims = gov.trims.map((t) => ({
+                slug: t.slug,
+                channel: t.channel,
+                action: t.action,
+                reason: t.reason,
+              }));
+            }
+
+            const plan = buildSafePlan({ rxs: finalRxs, phase, isGameDay, validate });
             results.push({
               phase,
               band: ta.band,
@@ -254,6 +362,7 @@ export function runGenerationMatrix(
               tier: plan.tier,
               validator_ok: plan.report.ok,
               fatal_codes: [...new Set(plan.fatals.map((f) => f.code))],
+              ...(spikeTrims ? { spike_trims: spikeTrims } : {}),
             });
           }
         }
