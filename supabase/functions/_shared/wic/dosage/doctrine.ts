@@ -201,6 +201,13 @@ export interface ResolveDoseInput {
   /** Hard safety ceiling (e.g. ATG in-season durability dose). Applied last. */
   capSets?: number | null;
   capReps?: number | null;
+  /**
+   * §8.3 method envelope for the main compound. Heavy-eligible athletes only —
+   * callers must gate on isHeavyEligible(). Foundation athletes pass nothing and
+   * keep today's DOSE_MATRIX dose exactly.
+   */
+  method?: MethodKey | null;
+  methodContext?: MethodContext | null;
 }
 
 export interface ResolvedDose {
@@ -212,6 +219,8 @@ export interface ResolvedDose {
   band: TrainingAgeBand;
   notes: string[];
   doctrine_version: string;
+  /** Present only when a method envelope replaced the matrix envelope. */
+  method?: MethodEnvelope | null;
 }
 
 /**
@@ -220,13 +229,26 @@ export interface ResolvedDose {
 export function resolveDose(input: ResolveDoseInput): ResolvedDose {
   const phase = normalizeDoctrinePhase(input.phase);
   const group = doseGroupFor(input.role, input.category);
-  const envelope = DOSE_MATRIX[phase][group];
   const band = trainingAgeBand(input.trainingAgeYears);
   const notes: string[] = [];
+
+  // 0) §8.3 — the main compound may ride a method envelope instead of the matrix.
+  const method =
+    group === "main_compound"
+      ? methodEnvelope(
+          input.method ?? null,
+          input.methodContext ?? (phase === "in_season" || phase === "post_season" ? "in_season" : "offseason"),
+        )
+      : null;
+  const envelope: DoseEnvelope = method ?? DOSE_MATRIX[phase][group];
+  if (method) {
+    notes.push(`${method.method.replace(/_/g, " ")} envelope — ${method.loadWords}`);
+  }
 
   // 1) training-age position inside the envelope
   let t = BAND_POSITION[band];
   notes.push(`${band} training age → ${Math.round(t * 100)}% of the ${phase} ${group} envelope`);
+
 
   // 2) week-in-block wave
   const week = Math.min(4, Math.max(1, Number(input.weekInBlock ?? 2)));
