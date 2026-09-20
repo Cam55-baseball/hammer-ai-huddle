@@ -285,6 +285,33 @@ export function skipRiseNotes(i: {
   return out;
 }
 
+// ── warn: the spike governor trimming more days than expected ───────────────
+
+export function governorTrimNote(i: {
+  checkedDate: string;
+  cardsGenerated: number;
+  cardsTrimmed: number;
+  byChannel?: Record<string, number>;
+}): WatchNote | null {
+  if (i.cardsGenerated <= 0) return null;
+  const rate = i.cardsTrimmed / i.cardsGenerated;
+  if (rate <= WATCH.GOVERNOR_TRIM_RATE) return null;
+  return {
+    severity: "warn",
+    category: "governor_trim",
+    title: `Load-spike protection trimmed ${pct(rate)} of cards`,
+    detail: {
+      checked_date: i.checkedDate,
+      cards_generated: i.cardsGenerated,
+      cards_trimmed: i.cardsTrimmed,
+      rate,
+      limit: WATCH.GOVERNOR_TRIM_RATE,
+      by_channel: i.byChannel ?? {},
+    },
+    auto_action: null,
+  };
+}
+
 // ── critical: every automatic switch-down ───────────────────────────────────
 
 export function switchDownNote(i: {
