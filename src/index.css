@@ -647,7 +647,10 @@ All colors MUST be HSL.
 @media print {
   body:has(.staff-print) aside,
   body:has(.staff-print) nav,
-  body:has(.staff-print) header {
+  body:has(.staff-print) header,
+  body:has(.staff-print) [data-sidebar],
+  body:has(.staff-print) [data-sidebar="sidebar"],
+  body:has(.staff-print) [data-sidebar="trigger"] {
     display: none !important;
   }
   body:has(.staff-print) main,
