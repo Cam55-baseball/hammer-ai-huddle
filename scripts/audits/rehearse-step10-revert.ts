@@ -59,7 +59,9 @@ step("sled duplicates restored", sled.length, 5);
 // 6. metadata cleared
 const plyo = kept.filter((r) => r.plyo_tier != null);
 plyo.forEach((r) => (r.plyo_tier = null));
-step("plyo_tier cleared", plyo.length, 78);
+// 78 rows carry plyo_tier live; 16 of them are coverage-gap rows already
+// deleted by the previous statement, so 62 remain to clear here.
+step("plyo_tier cleared", plyo.length, 62);
 
 // post-revert shape
 log.push(`post-revert rows: ${kept.length} (active ${kept.filter((r) => r.is_active).length})`);
