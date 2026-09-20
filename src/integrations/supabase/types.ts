@@ -16355,6 +16355,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_exposure_daily: {
+        Row: {
+          channel: string
+          created_at: string
+          date: string
+          id: string
+          sources: Json
+          tier: string
+          total: number
+          updated_at: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          date: string
+          id?: string
+          sources?: Json
+          tier?: string
+          total?: number
+          updated_at?: string
+          user_id: string
+          version?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          date?: string
+          id?: string
+          sources?: Json
+          tier?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       wk_fault_signals: {
         Row: {
           confidence: number
@@ -16560,6 +16599,7 @@ export type Database = {
           lift_full_body_ok: boolean | null
           lift_substitution_completeness: number | null
           lift_template_id: string | null
+          load_spike: Json | null
           metadata_complete: boolean
           missing_context_fields: string[] | null
           ordering_ok: boolean
@@ -16646,6 +16686,7 @@ export type Database = {
           lift_full_body_ok?: boolean | null
           lift_substitution_completeness?: number | null
           lift_template_id?: string | null
+          load_spike?: Json | null
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean
@@ -16732,6 +16773,7 @@ export type Database = {
           lift_full_body_ok?: boolean | null
           lift_substitution_completeness?: number | null
           lift_template_id?: string | null
+          load_spike?: Json | null
           metadata_complete?: boolean
           missing_context_fields?: string[] | null
           ordering_ok?: boolean

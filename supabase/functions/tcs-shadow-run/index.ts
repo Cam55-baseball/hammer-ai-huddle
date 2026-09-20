@@ -13,6 +13,13 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { addDays } from "../_shared/wic/schedule/tissueCost/tanks.ts";
 import {
+  buildLedger,
+  type CatalogFact,
+  type CatalogMap,
+  ledgerRows,
+} from "../_shared/wic/exposure/ledger.ts";
+import { fetchShadowData } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
+import {
   decideFromSnapshot,
   decisionsMatch,
   runShadowDecision,
@@ -99,6 +106,54 @@ Deno.serve(async (req) => {
         fallbacks,
         fallback_rate: rate,
         errors,
+        duration_seconds: (Date.now() - started) / 1000,
+      });
+    }
+
+    // Step 14 A — the Exposure Ledger, shadow only. It writes
+    // wk_exposure_daily and never touches a card.
+    if (mode === "exposure") {
+      const date = typeof body.date === "string" ? body.date : todayIso();
+      const only = typeof body.user_id === "string" ? [body.user_id] : null;
+      const athletes = only ?? await activeAthletes(admin, addDays(date, -60));
+      const { data: catRows } = await admin
+        .from("wk_movement_catalog")
+        .select(
+          "slug,exposure_channel,plyo_tier,contacts_per_rep,category,intensity_class,default_total_reps,default_distance_feet,substitution_family",
+        )
+        .limit(5000);
+      const catalog: CatalogMap = {};
+      for (const m of (catRows ?? []) as CatalogFact[]) catalog[m.slug] = m;
+
+      let written = 0;
+      let athletesWithRows = 0;
+      let failed = 0;
+      for (const userId of athletes) {
+        try {
+          const raw = await fetchShadowData(admin as any, userId, date, "UTC");
+          const ledger = buildLedger(raw, catalog);
+          const rows = ledger.flatMap((d) => ledgerRows(userId, d));
+          if (rows.length === 0) continue;
+          athletesWithRows += 1;
+          for (let i = 0; i < rows.length; i += 500) {
+            const { error } = await admin
+              .from("wk_exposure_daily")
+              .upsert(rows.slice(i, i + 500), { onConflict: "user_id,date,channel,tier,version" });
+            if (error) throw error;
+          }
+          written += rows.length;
+        } catch (e) {
+          failed += 1;
+          console.warn("[tcs-shadow] exposure failed", userId, e);
+        }
+      }
+      return json({
+        mode,
+        date,
+        athletes: athletes.length,
+        athletes_with_rows: athletesWithRows,
+        rows_written: written,
+        failed,
         duration_seconds: (Date.now() - started) / 1000,
       });
     }

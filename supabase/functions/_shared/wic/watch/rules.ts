@@ -27,6 +27,8 @@ export const WATCH = {
   MIX_DRIFT: 0.10,
   SLOWDOWN_RATIO: 1.5,
   SKIP_RISE: 0.10,
+  /** Share of generated cards the spike governor may trim before it is odd. */
+  GOVERNOR_TRIM_RATE: 0.25,
 } as const;
 
 export const WATCH_CATEGORIES = [
@@ -41,6 +43,7 @@ export const WATCH_CATEGORIES = [
   "skipped_sessions",
   "switch_down",
   "athlete_report",
+  "governor_trim",
 ] as const;
 
 const pct = (n: number) => `${(n * 100).toFixed(2)}%`;
@@ -280,6 +283,33 @@ export function skipRiseNotes(i: {
     }
   }
   return out;
+}
+
+// ── warn: the spike governor trimming more days than expected ───────────────
+
+export function governorTrimNote(i: {
+  checkedDate: string;
+  cardsGenerated: number;
+  cardsTrimmed: number;
+  byChannel?: Record<string, number>;
+}): WatchNote | null {
+  if (i.cardsGenerated <= 0) return null;
+  const rate = i.cardsTrimmed / i.cardsGenerated;
+  if (rate <= WATCH.GOVERNOR_TRIM_RATE) return null;
+  return {
+    severity: "warn",
+    category: "governor_trim",
+    title: `Load-spike protection trimmed ${pct(rate)} of cards`,
+    detail: {
+      checked_date: i.checkedDate,
+      cards_generated: i.cardsGenerated,
+      cards_trimmed: i.cardsTrimmed,
+      rate,
+      limit: WATCH.GOVERNOR_TRIM_RATE,
+      by_channel: i.byChannel ?? {},
+    },
+    auto_action: null,
+  };
 }
 
 // ── critical: every automatic switch-down ───────────────────────────────────

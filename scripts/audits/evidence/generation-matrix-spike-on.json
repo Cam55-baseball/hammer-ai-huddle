@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-09-20T19:15:26.238Z",
+  "expected_cells_per_run": 1296,
+  "runs": [
+    {
+      "scenario": "spike_60pct",
+      "cells": 1296,
+      "empty_cells": 0,
+      "fatal_cells": 0,
+      "cells_trimmed": 1296,
+      "trims_total": 4710,
+      "trims_by_action": {
+        "sets_removed": 4509,
+        "row_dropped": 201
+      },
+      "trims_by_channel": {
+        "LIFT": 3450,
+        "THROW": 1260
+      },
+      "trims_without_reason": 0,
+      "example_reasons": [
+        "Lifting capped at 2 hard sets today — your biggest lifting day in the last 4 weeks was 2.4.",
+        "Throwing capped at 0 throws today — your biggest throwing day in the last 4 weeks was 0.6.",
+        "Throwing capped at 12 throws today — your biggest throwing day in the last 4 weeks was 12.",
+        "Lifting capped at 4 hard sets today — your biggest lifting day in the last 4 weeks was 4.2.",
+        "Throwing capped at 13 throws today — your biggest throwing day in the last 4 weeks was 12.",
+        "Lifting capped at 6 hard sets today — your biggest lifting day in the last 4 weeks was 6."
+      ],
+      "passed": true
+    },
+    {
+      "scenario": "spike_90pct",
+      "cells": 1296,
+      "empty_cells": 0,
+      "fatal_cells": 0,
+      "cells_trimmed": 1296,
+      "trims_total": 2256,
+      "trims_by_action": {
+        "sets_removed": 2148,
+        "row_dropped": 108
+      },
+      "trims_by_channel": {
+        "LIFT": 1284,
+        "THROW": 972
+      },
+      "trims_without_reason": 0,
+      "example_reasons": [
+        "Lifting capped at 3 hard sets today — your biggest lifting day in the last 4 weeks was 3.6.",
+        "Throwing capped at 0 throws today — your biggest throwing day in the last 4 weeks was 0.9.",
+        "Throwing capped at 18 throws today — your biggest throwing day in the last 4 weeks was 18.",
+        "Lifting capped at 6 hard sets today — your biggest lifting day in the last 4 weeks was 6.3.",
+        "Throwing capped at 19 throws today — your biggest throwing day in the last 4 weeks was 18.",
+        "Lifting capped at 9 hard sets today — your biggest lifting day in the last 4 weeks was 9."
+      ],
+      "passed": true
+    },
+    {
+      "scenario": "cold_start",
+      "cells": 1296,
+      "empty_cells": 0,
+      "fatal_cells": 0,
+      "cells_trimmed": 1296,
+      "trims_total": 2940,
+      "trims_by_action": {
+        "sets_removed": 2868,
+        "tier_step_down": 72
+      },
+      "trims_by_channel": {
+        "LIFT": 2076,
+        "THROW": 864
+      },
+      "trims_without_reason": 0,
+      "example_reasons": [
+        "Lifting restart easy — nothing logged in the last 4 weeks, so today starts at the lightest legal version.",
+        "Throwing restart easy — nothing logged in the last 4 weeks, so today starts at the lightest legal version."
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true
+}

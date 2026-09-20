@@ -27,6 +27,19 @@ import { decideFromRaw, fetchShadowData, runShadowDecision } from "../_shared/wi
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
+import {
+  amountPerSet,
+  buildLedger,
+  type CatalogFact,
+  type CatalogMap,
+  classify,
+  computeRm28,
+  isoAdd,
+  ledgerRows,
+  wasBuildDay,
+} from "../_shared/wic/exposure/ledger.ts";
+import { type BlockId, runGovernor } from "../_shared/wic/exposure/governor.ts";
+import { EXPOSURE_VERSION, type GovAlternative, type GovItem } from "../_shared/wic/exposure/types.ts";
 import { cardBuildFailedNote, livePrescriptionViolations, slowdownNote } from "../_shared/wic/watch/rules.ts";
 import { writeNotes } from "../_shared/wic/watch/write.ts";
 // Phase 2 Fix 5 / 6 — canonical shared modules.
@@ -2190,7 +2203,172 @@ const handler = async (req: Request): Promise<Response> => {
     const orderedRxs = assignSequenceOrder(
       applyManualOrder(dedupePrescriptions(rxs), priorOrderRows),
     );
-    const finalRxs = orderedRxs;
+    let finalRxs = orderedRxs;
+
+    // -------- Step 14 — Spike Governor (TI-2, §5.3), switch-gated --------
+    // Off for everyone by default. When `load_spike_protection` does not
+    // resolve on for this athlete nothing below runs and the day is byte-for-
+    // byte the day it would have been. Any failure leaves the plan untouched.
+    let governorDiagnostics: Record<string, unknown> | null = null;
+    try {
+      const { data: govSwitchRows } = await admin
+        .from("wk_feature_switches")
+        .select("feature_key, mode, allowlist, updated_by");
+      const govFeatures = resolveFeatures(govSwitchRows as any, user.id);
+      if (govFeatures.load_spike_protection === true) {
+        const raw = await fetchShadowData(admin as any, user.id, planDate, "UTC");
+        const catalogMap: CatalogMap = {};
+        for (const m of lib) catalogMap[m.slug] = m as unknown as CatalogFact;
+        const ledger = buildLedger(raw, catalogMap);
+        const rm28 = computeRm28(ledger, planDate);
+
+        const govItems: GovItem[] = [];
+        const rowIndex = new Map<string, number>();
+        finalRxs.forEach((r, i) => rowIndex.set(r.movement_slug, i));
+        for (const r of finalRxs) {
+          const fact = catalogMap[r.movement_slug];
+          const cls = classify(fact);
+          if (!cls || !fact) continue;
+          const per = amountPerSet(fact, cls.channel, r.reps, (r as any).distance_feet ?? null);
+          if (!(per > 0)) continue;
+          govItems.push({
+            slug: r.movement_slug,
+            name: r.movement_name,
+            channel: cls.channel,
+            tier: cls.tier,
+            sets: Math.max(1, Number(r.sets ?? 1)),
+            amountPerSet: per,
+            floorSets: 1,
+            substitutionFamily: (fact as any).substitution_family ?? null,
+          });
+        }
+
+        // Step-down siblings: same family, lighter tier, and legal for this
+        // athlete today under the very same eligibility gate the selector used.
+        const alternatives: GovAlternative[] = [];
+        const families = new Set(govItems.map((i) => i.substitutionFamily).filter(Boolean));
+        for (const m of lib) {
+          const fam = (m as any).substitution_family ?? null;
+          if (!fam || !families.has(fam)) continue;
+          if (rowIndex.has(m.slug)) continue;
+          if (!eligibleWith(m)) continue;
+          const cls = classify(m as unknown as CatalogFact);
+          if (!cls) continue;
+          const per = amountPerSet(m as unknown as CatalogFact, cls.channel, null, null);
+          if (!(per > 0)) continue;
+          alternatives.push({
+            slug: m.slug,
+            name: m.name,
+            channel: cls.channel,
+            tier: cls.tier,
+            amountPerSet: per,
+            floorSets: 1,
+            substitutionFamily: fam,
+          });
+        }
+
+        const blockId: BlockId = phaseRes.phase === "os_q1"
+          ? "B1"
+          : phaseRes.phase === "os_q2"
+          ? "B2"
+          : phaseRes.phase === "os_q3"
+          ? "B3"
+          : phaseRes.phase === "os_q4"
+          ? "B4"
+          : phaseRes.phase === "post_season"
+          ? "B5"
+          : null;
+        const govAge = Number(p.age ?? p.age_years ?? p.chronological_age ?? NaN);
+        const buildYesterday = (["LIFT", "JUMP", "UB_PLYO", "SPRINT", "THROW", "SWING"] as const)
+          .filter((c) => wasBuildDay(ledger, isoAdd(planDate, -1), c));
+        const teamLoad = (ledger.find((d) => d.date === planDate)?.entries ?? [])
+          .filter((e) => e.channel === "SPORT")
+          .map((e) => ({ channel: e.channel, amount: e.amount }));
+
+        const gov = runGovernor({
+          items: govItems,
+          teamLoad,
+          rm28,
+          ctx: {
+            block: blockId,
+            inSeason: phaseRes.phase === "in_season",
+            growthMode: Number.isFinite(govAge) && govAge <= 15,
+            buildYesterday: [...buildYesterday],
+            pitchSmartRestDay: false,
+          },
+          alternatives,
+        });
+
+        if (gov.trims.length > 0) {
+          const keptBySlug = new Map(gov.items.map((i) => [i.slug, i]));
+          const droppedFrom = new Set(
+            gov.trims.filter((t) => t.action === "row_dropped" || t.action === "blocked").map((t) => t.slug),
+          );
+          const steppedFrom = new Map(
+            gov.trims.filter((t) => t.action === "tier_step_down" && t.to).map((t) => [t.slug, t.to!]),
+          );
+          const next: typeof finalRxs = [];
+          for (const r of finalRxs) {
+            if (droppedFrom.has(r.movement_slug)) continue;
+            const stepped = steppedFrom.get(r.movement_slug);
+            if (stepped) {
+              const m = lib.find((x) => x.slug === stepped.slug);
+              if (m) {
+                r.substituted_from_slug = r.movement_slug;
+                r.substitution_reason = "load_spike_protection";
+                r.movement_slug = m.slug;
+                r.movement_name = m.name;
+                r.sets = stepped.sets;
+              }
+            } else {
+              const kept = keptBySlug.get(r.movement_slug);
+              if (kept && r.sets != null && kept.sets < r.sets) r.sets = kept.sets;
+            }
+            const why = ((r as any).why_payload ?? {}) as Record<string, unknown>;
+            const mine = gov.trims.filter((t) => t.slug === r.substituted_from_slug || t.slug === r.movement_slug);
+            if (mine.length > 0) {
+              why.load_spike_protection = { version: gov.version, trims: mine };
+              (r as any).why_payload = why;
+            }
+            next.push(r);
+          }
+          finalRxs = assignSequenceOrder(next);
+          for (const reason of gov.reasons) {
+            reductions.push({ reason: "load_spike", detail: reason });
+          }
+        }
+        governorDiagnostics = {
+          version: gov.version,
+          ledger_version: EXPOSURE_VERSION,
+          rm28: rm28.byChannel,
+          channels: gov.diagnostics,
+          trims: gov.trims,
+          reasons: gov.reasons,
+        };
+
+        // Persist today's ledger so the client renders it and never recomputes.
+        try {
+          const today = ledger.find((d) => d.date === planDate);
+          if (today) {
+            await admin.from("wk_exposure_daily").upsert(
+              ledgerRows(user.id, today),
+              { onConflict: "user_id,date,channel,tier,version" },
+            );
+          }
+        } catch { /* the ledger is shadow data; it never blocks a card */ }
+      }
+    } catch (govErr) {
+      console.warn("[wk-generate-daily] spike governor skipped", govErr);
+      finalRxs = orderedRxs;
+      governorDiagnostics = null;
+      try {
+        await admin.from("wk_feature_error_events").insert({
+          feature_key: "load_spike_protection",
+          user_id: user.id,
+          error_text: String(govErr).slice(0, 500),
+        });
+      } catch { /* never blocks the card */ }
+    }
 
 
     // -------- WIC Validation Engine — no publication without a passing report --------
@@ -3466,6 +3644,8 @@ const handler = async (req: Request): Promise<Response> => {
           // Recorded, never acted on: whether today's recovery ack was applied
           // or found spent, and which test retired it.
           recovery_ack: ackDecision,
+          // Step 14 — every spike-governor trim, with its plain reason.
+          load_spike: governorDiagnostics,
         } as any)
         .eq("id", diagId as any);
     }
