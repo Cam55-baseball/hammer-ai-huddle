@@ -133,10 +133,15 @@ export function auditRow(
     f.push("deep-flexion row below age 14");
   }
 
-  // 3. equipment tags exist in the vocabulary
+  // 3. equipment tags exist in the vocabulary. The vocabulary is the onboarding
+  // token list PLUS every tag already carried by a live row — a tag the app has
+  // been matching against for months is in use, and an unknown new tag is the
+  // real risk.
   const equip = [...(row.equipment_requirements ?? []), ...(row.equipment ?? [])];
   for (const e of equip) {
-    if (!EQUIPMENT_TOKENS.has(String(e))) f.push(`equipment tag "${e}" is not in the vocabulary`);
+    if (!EQUIPMENT_TOKENS.has(String(e)) && !index.liveEquipment.has(String(e))) {
+      f.push(`equipment tag "${e}" is not in the vocabulary`);
+    }
   }
 
   // 4. no outside brand or coach name anywhere the athlete can see
