@@ -16322,6 +16322,39 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_catalog_review_notes: {
+        Row: {
+          catalog_id: string
+          created_at: string
+          decided_at: string
+          decided_by: string
+          decision: string
+          id: string
+          note: string | null
+          slug: string
+        }
+        Insert: {
+          catalog_id: string
+          created_at?: string
+          decided_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          note?: string | null
+          slug: string
+        }
+        Update: {
+          catalog_id?: string
+          created_at?: string
+          decided_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
       wk_cns_ledger: {
         Row: {
           breakdown: Json
@@ -17647,6 +17680,66 @@ export type Database = {
           user_id?: string
           week_end?: string
           week_start?: string
+        }
+        Relationships: []
+      }
+      wk_staff_access: {
+        Row: {
+          athlete_user_id: string
+          created_at: string
+          granted_at: string
+          granted_by: string
+          id: string
+          label: string | null
+          revoked_at: string | null
+          staff_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_user_id: string
+          created_at?: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          label?: string | null
+          revoked_at?: string | null
+          staff_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_user_id?: string
+          created_at?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          label?: string | null
+          revoked_at?: string | null
+          staff_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wk_staff_access_log: {
+        Row: {
+          athlete_user_id: string
+          id: string
+          staff_user_id: string
+          surface: string
+          viewed_at: string
+        }
+        Insert: {
+          athlete_user_id: string
+          id?: string
+          staff_user_id: string
+          surface?: string
+          viewed_at?: string
+        }
+        Update: {
+          athlete_user_id?: string
+          id?: string
+          staff_user_id?: string
+          surface?: string
+          viewed_at?: string
         }
         Relationships: []
       }
