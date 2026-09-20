@@ -58,9 +58,12 @@ function json(body: unknown, status = 200) {
   });
 }
 
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
+
 function selfInvoke(payload: unknown) {
-  // fire and forget — the next invocation picks the work up
-  fetch(`${SUPABASE_URL}/functions/v1/tcs-test-runner`, {
+  // The isolate is torn down as soon as the response returns, so the hand-off
+  // request has to be registered as a background task or it never leaves.
+  const p = fetch(`${SUPABASE_URL}/functions/v1/tcs-test-runner`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -69,6 +72,11 @@ function selfInvoke(payload: unknown) {
     },
     body: JSON.stringify(payload),
   }).catch(() => {});
+  try {
+    EdgeRuntime?.waitUntil(p);
+  } catch {
+    /* not available locally */
+  }
 }
 
 async function start(tier: "fast" | "full", overrides: Record<string, number> = {}) {
