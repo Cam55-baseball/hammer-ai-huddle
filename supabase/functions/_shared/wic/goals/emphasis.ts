@@ -170,12 +170,12 @@ export function domainForMovement(m: {
   const pat = String(m.pattern ?? "").toLowerCase();
   const adapt = String(m.primary_adaptation ?? "").toLowerCase();
 
-  if (mc === "arm_care" || cat === "arm_care" || cat === "cressey_sp") return "throwing";
+  if (mc === "arm_care" || cat === "arm_care" || cat === "shoulder_prep" || cat === "cressey_sp") return "throwing";
   if (mc === "rotation" || cat === "bat_speed" || pat === "rotational") return "hitting";
   if (mc === "jump_landing" || pat === "plyometric" || pat === "plyo") return "power";
   if (adapt.includes("power") || adapt.includes("elastic")) return "power";
   if (adapt.includes("speed") || cat === "speed_lab") return "speed";
-  if (mc === "mobility" || cat === "warmup" || cat === "functional_patterning") return "durability";
+  if (mc === "mobility" || cat === "warmup" || cat === "movement_patterning" || cat === "functional_patterning") return "durability";
   if (cat === "conditioning") return "conditioning";
   if (mc === "single_leg" || cat === "unilateral_lower") return "speed";
   return "strength";

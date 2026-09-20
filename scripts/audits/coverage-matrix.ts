@@ -8,10 +8,14 @@
 // are listed here so the owner can correct any mis-assignment.
 
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "node:fs";
 
+// CATALOG_JSON=/path/to/rows.json lets this run from a local dump when the
+// sandbox has no key that can read the catalog through the API.
+const localDump = process.env.CATALOG_JSON;
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
-const db = createClient(url, key);
+const db = localDump ? (null as any) : createClient(url, key);
 
 type Row = Record<string, any>;
 
@@ -78,7 +82,9 @@ function ageLegal(r: Row, band: (typeof AGE_BANDS)[number]): boolean {
   return true;
 }
 
-const { data, error } = await db
+const { data, error } = localDump
+  ? { data: JSON.parse(readFileSync(localDump, "utf8")), error: null }
+  : await db
   .from("wk_movement_catalog")
   .select(
     "slug,name,category,equipment,equipment_requirements,season_eligibility,phase_allow,min_age_years,training_age_legality,deep_flexion,eccentric_overload,is_eccentric_dominant,game_day_legal,pap_compatible,pap_classification,speed_category,sport_scope,is_active,substitution_family,movement_category",

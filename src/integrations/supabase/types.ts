@@ -5730,6 +5730,7 @@ export type Database = {
           home_away: string | null
           id: string
           ignored_for_training: boolean
+          innings_caught: number | null
           is_doubleheader: boolean
           is_starting_pitcher: boolean
           lineup_slot: number | null
@@ -5761,6 +5762,7 @@ export type Database = {
           home_away?: string | null
           id?: string
           ignored_for_training?: boolean
+          innings_caught?: number | null
           is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           lineup_slot?: number | null
@@ -5792,6 +5794,7 @@ export type Database = {
           home_away?: string | null
           id?: string
           ignored_for_training?: boolean
+          innings_caught?: number | null
           is_doubleheader?: boolean
           is_starting_pitcher?: boolean
           lineup_slot?: number | null
@@ -16724,6 +16727,7 @@ export type Database = {
           phase_allow: string[]
           pitcher_flags: string[]
           plane: string | null
+          plyo_tier: number | null
           position_scope: string[] | null
           power_emphasis: boolean | null
           practice_day_legal: boolean | null
@@ -16830,6 +16834,7 @@ export type Database = {
           phase_allow?: string[]
           pitcher_flags?: string[]
           plane?: string | null
+          plyo_tier?: number | null
           position_scope?: string[] | null
           power_emphasis?: boolean | null
           practice_day_legal?: boolean | null
@@ -16936,6 +16941,7 @@ export type Database = {
           phase_allow?: string[]
           pitcher_flags?: string[]
           plane?: string | null
+          plyo_tier?: number | null
           position_scope?: string[] | null
           power_emphasis?: boolean | null
           practice_day_legal?: boolean | null

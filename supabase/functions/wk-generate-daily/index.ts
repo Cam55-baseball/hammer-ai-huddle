@@ -1411,7 +1411,7 @@ const handler = async (req: Request): Promise<Response> => {
         const cat = (s.movement.movement_category ?? s.movement.category ?? "").toLowerCase();
         const isTimeBased = cat.includes("mobility") || cat.includes("warmup") ||
           cat.includes("activation") || cat.includes("recovery") ||
-          cat.includes("functional_patterning") || s.movement.slug.startsWith("frc_");
+          cat.includes("movement_patterning") || cat.includes("functional_patterning") || s.movement.slug.startsWith("frc_");
         if (isTimeBased) {
           durationSeconds = 120;
           dosageUnit = "seconds";

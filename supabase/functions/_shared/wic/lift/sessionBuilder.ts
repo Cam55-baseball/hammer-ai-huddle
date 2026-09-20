@@ -96,12 +96,12 @@ export function coerceCanonicalCategory(cat: Partial<CatalogEntry> | undefined):
   if (category === "unilateral_push") return "compound_upper_push";
   if (category === "carry_antirotation") return "carry";
   if (category === "trunk") return "core";
-  if (category === "warmup" || category === "conditioning" || category === "cross_sport" || category === "functional_patterning") return "mobility";
-  if (category === "kot" || category === "summers") return "single_leg";
-  if (category === "westside" || category === "olympic" || category === "compound" || category === "strength") return "compound_lower";
+  if (category === "warmup" || category === "conditioning" || category === "cross_sport" || category === "movement_patterning" || category === "functional_patterning") return "mobility";
+  if (category === "kot" || category === "posterior_chain" || category === "summers") return "single_leg";
+  if (category === "max_effort_strength" || category === "westside" || category === "olympic" || category === "compound" || category === "strength") return "compound_lower";
   if (category === "strongfirst") return "carry";
-  if (category === "cressey_sp" || category === "driveline") return "arm_care";
-  if (category === "heenan" || category === "ido_portal" || category === "marinovich" || category === "speed_lab") return "mobility";
+  if (category === "shoulder_prep" || category === "throwing_plyo" || category === "cressey_sp" || category === "driveline") return "arm_care";
+  if (category === "rotational_strength" || category === "movement_capacity" || category === "sprint_mechanics" || category === "heenan" || category === "ido_portal" || category === "marinovich" || category === "speed_lab") return "mobility";
   if (category === "pap_bridge" || category === "bat_speed") return "rotation";
   if (category === "supplemental") return "posterior_chain";
 

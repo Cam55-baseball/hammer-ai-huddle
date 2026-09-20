@@ -60,7 +60,10 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "wall", label: "a throwing wall", phrases: ["throwing wall", "brick wall", "wall"] },
   { token: "field", label: "a field", phrases: ["a field", "the field", "diamond", "field"] },
   { token: "open_space", label: "open running space", phrases: ["open space", "open field", "running space", "yard", "park"] },
+  { token: "hill", label: "a hill or ramp", phrases: ["a hill", "hill", "incline", "ramp", "slope", "hill sprints"] },
+  { token: "overspeed_cord", label: "an overspeed tow cord", phrases: ["overspeed cord", "tow cord", "bungee cord", "tow rope", "assisted sprint cord", "sprint cord"] },
   { token: "bodyweight", label: "bodyweight only", phrases: ["bodyweight only", "just bodyweight", "body weight only", "nothing but my body"] },
+
 ];
 
 const LABEL_BY_TOKEN = new Map(EQUIPMENT_VOCABULARY.map((d) => [d.token, d.label]));

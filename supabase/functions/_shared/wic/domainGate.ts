@@ -37,14 +37,18 @@ const CATEGORY_TO_DOMAIN: Record<string, OwningDomain> = {
   bat_speed: "bat_speed",
 
   speed_lab: "speed",
-  marinovich: "speed",
+  sprint_mechanics: "speed",
+  marinovich: "speed", // legacy label, retained so no row can fall through
 
   strength: "lift",
   compound: "lift",
   kot: "lift",
-  westside: "lift",
-  summers: "lift",
-  heenan: "lift",
+  max_effort_strength: "lift",
+  westside: "lift", // legacy label, retained so no row can fall through
+  posterior_chain: "lift",
+  summers: "lift", // legacy label, retained so no row can fall through
+  rotational_strength: "lift",
+  heenan: "lift", // legacy label, retained so no row can fall through
   unilateral_lower: "lift",
   unilateral_push: "lift",
   unilateral_pull: "lift",
@@ -56,13 +60,18 @@ const CATEGORY_TO_DOMAIN: Record<string, OwningDomain> = {
 
   conditioning: "conditioning",
 
-  driveline: "throwing",
+  throwing_plyo: "throwing",
+
+  driveline: "throwing", // legacy label, retained so no row can fall through
   arm_care: "arm_care",
 
   warmup: "warmup",
-  ido_portal: "warmup",
-  functional_patterning: "warmup",
-  cressey_sp: "warmup",
+  movement_capacity: "warmup",
+  ido_portal: "warmup", // legacy label, retained so no row can fall through
+  movement_patterning: "warmup",
+  functional_patterning: "warmup", // legacy label, retained so no row can fall through
+  shoulder_prep: "warmup",
+  cressey_sp: "warmup", // legacy label, retained so no row can fall through
 
   cross_sport: "cross_sport",
 };
