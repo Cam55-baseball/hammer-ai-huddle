@@ -1125,15 +1125,17 @@ const handler = async (req: Request): Promise<Response> => {
       // TCS stage S4 — never build ANYTHING above today's allowed class.
       // Step 15 item 3: this used to guard the lift slot only, so warm-up,
       // speed, bat-speed and conditioning rows walked straight past the
-      // ceiling. The gate now covers every path, and the day's CNS ceiling is
-      // a per-movement ceiling too — a single row may never cost more than the
-      // whole day is allowed. Inert unless the rest-day calculator resolves on.
+      // ceiling. The gate now covers every path.
+      // Step 17 item B: the extra "cns_cost > cnsCap" test that lived here was
+      // a scale mismatch — cns_cost is a per-movement 1–5 cost and cnsCap is
+      // the whole DAY's budget, which the dose loop already spends down. It
+      // over-filtered legal movements (this is what stripped the last trunk
+      // row). The class gate below is the law-bearing one.
       if (tcsAdjust) {
         if (
           !opts?.ignoreTcsClass &&
           tcsAdjust.blockedIntensityClasses.includes(String((m as any).intensity_class ?? ""))
         ) return false;
-        if (Number((m as any).cns_cost ?? 0) > cnsCap) return false;
       }
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
       // Competition-level ceiling. Only ever OPENS movements for higher levels
@@ -3593,10 +3595,17 @@ const handler = async (req: Request): Promise<Response> => {
         planDate,
         allowedClass: (tcsAdjust?.allowedClass ?? "H") as "none" | "L" | "M" | "H",
         liftCount: rows.filter((r: any) => r.slot === "lift").length,
-        maxCnsCost: tcsAdjust
-          ? rows.reduce((m: number, r: any) => Math.max(m, Number(r.cns_cost ?? 0)), 0)
-          : 0,
-        cnsCap: tcsAdjust ? cnsCap : Number.MAX_SAFE_INTEGER,
+        // Step 17 item B — class against class. With the calculator off there
+        // is no ceiling, so nothing is blocked and nothing can be violated.
+        blockedClasses: tcsAdjust ? (tcsAdjust.blockedIntensityClasses ?? []) : [],
+        rows: rows.map((r: any) => ({
+          slug: String(r.movement_slug ?? ""),
+          slot: r.slot ?? null,
+          intensityClass: ((r.why_payload ?? {}) as any).intensity_class ?? null,
+          cnsCost: Number(r.cns_cost ?? 0),
+        })),
+        cnsCap: tcsAdjust ? cnsCap : null,
+        cnsUsed: tcsAdjust ? cnsUsed : null,
         itemCount: rows.length,
       });
       const { data: baseRow } = await admin

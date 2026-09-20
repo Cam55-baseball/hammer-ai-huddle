@@ -58,6 +58,52 @@ export function evaluateGate(mode: SwitchMode, g: GateInputs): GateResult {
   return { ok: true, why: "", needsConfirm: true };
 }
 
+/**
+ * Step 17 item A — the machine check that runs before any flip that widens a
+ * switch. A release is refused while the watchdog is still complaining: any
+ * critical note in the last 60 minutes, or an automatic step-down waiting to
+ * run. The refusal lists the exact rows that blocked it.
+ */
+export const RELEASE_QUIET_MINUTES = 60;
+
+export type BlockingNote = {
+  id: string;
+  noted_at: string;
+  category: string;
+  title: string;
+  user_id?: string | null;
+};
+
+export type PreflightResult = { ok: boolean; why: string; blocking: BlockingNote[] };
+
+export function releasePreflight(i: {
+  mode: SwitchMode;
+  /** Critical notes, any age — filtered here against the quiet window. */
+  criticalNotes: BlockingNote[];
+  now: Date | string;
+  pendingAutoOff?: { feature_key: string; to_mode: string; reason?: string | null } | null;
+}): PreflightResult {
+  if (i.mode === "off") return { ok: true, why: "", blocking: [] };
+  const now = new Date(i.now).getTime();
+  const cutoff = now - RELEASE_QUIET_MINUTES * 60_000;
+  const blocking = (i.criticalNotes ?? []).filter((n) => new Date(n.noted_at).getTime() >= cutoff);
+  if (i.pendingAutoOff) {
+    return {
+      ok: false,
+      why: `An automatic step-down is waiting to run on ${i.pendingAutoOff.feature_key}. Clear it first.`,
+      blocking,
+    };
+  }
+  if (blocking.length > 0) {
+    return {
+      ok: false,
+      why: `${blocking.length} critical note(s) in the last ${RELEASE_QUIET_MINUTES} minutes`,
+      blocking,
+    };
+  }
+  return { ok: true, why: "", blocking: [] };
+}
+
 /** One step down the ladder. Off stays off. */
 export function demote(mode: SwitchMode): SwitchMode {
   switch (mode) {

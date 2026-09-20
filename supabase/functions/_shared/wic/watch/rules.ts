@@ -77,53 +77,129 @@ export function emptyCardNote(i: { userId: string; planDate: string }): WatchNot
   };
 }
 
+export type PrescribedRow = {
+  slug: string;
+  slot?: string | null;
+  intensityClass?: string | null;
+  cnsCost?: number | null;
+};
+
 /**
- * A live prescription is checked against the decision that produced it: no
- * heavier work than the class allows, and a "none" day is never empty.
+ * A live prescription is checked against the decision that produced it.
+ *
+ * Step 17 item B — like with like. The ceiling the rest-day calculator sets is
+ * an *intensity class* (none/L/M/H), which maps to the catalog's intensity
+ * classes. A movement's `cns_cost` is a different scale (1–5) and the day's
+ * `cns_unit_cap` is a whole-day budget; comparing one against the other was a
+ * category error and raised false criticals. The class check below compares
+ * class to class and names every offending row. The budget check is reported
+ * as "info" only: it cannot, on its own, prove a rule was broken, because
+ * total-dose rows (innings, contacts, distance) are budget-exempt by design.
+ *
+ * Rule for the whole watchdog: a check that cannot compare like with like logs
+ * "info", never "critical", and never triggers an auto-off.
  */
 export function livePrescriptionViolations(i: {
   userId: string;
   planDate: string;
   allowedClass: "none" | "L" | "M" | "H";
-  liftCount: number;
-  maxCnsCost: number;
-  cnsCap: number;
+  /** Catalog intensity classes the day's ceiling forbids. Empty on an H day. */
+  blockedClasses: string[];
+  /** Every row about to ship, so a critical can name the exact prescriptions. */
+  rows: PrescribedRow[];
+  /** Whole-day CNS budget, or null when no ceiling was set. */
+  cnsCap: number | null;
+  cnsUsed?: number | null;
   itemCount: number;
   decisionId?: string | null;
 }): WatchNote[] {
   const out: WatchNote[] = [];
-  if (i.allowedClass === "none" && i.liftCount > 0) {
+  const lifts = i.rows.filter((r) => r.slot === "lift");
+
+  if (i.allowedClass === "none" && lifts.length > 0) {
     out.push({
       severity: "critical",
       category: "rule_violation",
       user_id: i.userId,
       decision_id: i.decisionId ?? null,
       title: "A rest day was given lifts",
-      detail: { plan_date: i.planDate, allowed_class: "none", lifts: i.liftCount },
-      auto_action: "The switch drops one level tonight and the owner is alerted",
-    });
-  }
-  if (i.maxCnsCost > i.cnsCap) {
-    out.push({
-      severity: "critical",
-      category: "rule_violation",
-      user_id: i.userId,
-      decision_id: i.decisionId ?? null,
-      title: "A movement went above today's ceiling",
       detail: {
         plan_date: i.planDate,
-        allowed_class: i.allowedClass,
-        heaviest: i.maxCnsCost,
-        ceiling: i.cnsCap,
+        allowed_class: "none",
+        lifts: lifts.length,
+        rows: lifts.map((r) => ({ slug: r.slug, slot: r.slot ?? null, intensity_class: r.intensityClass ?? null })),
       },
       auto_action: "The switch drops one level tonight and the owner is alerted",
     });
   }
+
+  const blocked = new Set(i.blockedClasses.map((c) => String(c)));
+  if (blocked.size > 0) {
+    const over = i.rows.filter((r) => r.intensityClass && blocked.has(String(r.intensityClass)));
+    if (over.length > 0) {
+      out.push({
+        severity: "critical",
+        category: "rule_violation",
+        user_id: i.userId,
+        decision_id: i.decisionId ?? null,
+        title: "A movement went above today's ceiling",
+        detail: {
+          plan_date: i.planDate,
+          allowed_class: i.allowedClass,
+          blocked_classes: [...blocked],
+          rows: over.map((r) => ({
+            slug: r.slug,
+            slot: r.slot ?? null,
+            intensity_class: r.intensityClass ?? null,
+            cns_cost: r.cnsCost ?? null,
+          })),
+        },
+        auto_action: "The switch drops one level tonight and the owner is alerted",
+      });
+    }
+    const unknown = i.rows.filter((r) => !r.intensityClass);
+    if (unknown.length > 0) {
+      out.push({
+        severity: "info",
+        category: "rule_violation",
+        user_id: i.userId,
+        decision_id: i.decisionId ?? null,
+        title: "Some rows carry no intensity class, so the ceiling could not be checked on them",
+        detail: {
+          plan_date: i.planDate,
+          allowed_class: i.allowedClass,
+          rows: unknown.map((r) => ({ slug: r.slug, slot: r.slot ?? null })),
+          note: "Not comparable — logged for information only, no automatic action.",
+        },
+        auto_action: null,
+      });
+    }
+  }
+
+  if (typeof i.cnsCap === "number" && typeof i.cnsUsed === "number" && i.cnsUsed > i.cnsCap) {
+    out.push({
+      severity: "info",
+      category: "rule_violation",
+      user_id: i.userId,
+      decision_id: i.decisionId ?? null,
+      title: "The day used more of its budget than planned",
+      detail: {
+        plan_date: i.planDate,
+        allowed_class: i.allowedClass,
+        budget_used: i.cnsUsed,
+        budget: i.cnsCap,
+        note: "Budget, not a class ceiling — total-dose rows are exempt by design. Information only.",
+      },
+      auto_action: null,
+    });
+  }
+
   if (i.itemCount === 0) {
     out.push(emptyCardNote({ userId: i.userId, planDate: i.planDate }));
   }
   return out;
 }
+
 
 // ── critical: the nightly re-check ──────────────────────────────────────────
 

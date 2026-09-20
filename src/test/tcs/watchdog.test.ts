@@ -32,14 +32,18 @@ describe("Step 13 watchdog triggers", () => {
     expect(n.category).toBe("empty_card");
   });
 
-  it("critical: lifts on a rest day and a movement above the ceiling", () => {
+  it("critical: lifts on a rest day and a movement above the ceiling, with the rows named", () => {
     const notes = livePrescriptionViolations({
       userId: "u1",
       planDate: "2026-09-21",
       allowedClass: "none",
-      liftCount: 2,
-      maxCnsCost: 9,
+      blockedClasses: ["heavy_compound", "compound"],
+      rows: [
+        { slug: "back_squat", slot: "lift", intensityClass: "heavy_compound", cnsCost: 4 },
+        { slug: "goblet_squat", slot: "lift", intensityClass: "light", cnsCost: 1 },
+      ],
       cnsCap: 4,
+      cnsUsed: 3,
       itemCount: 5,
       decisionId: "d1",
     });
@@ -49,6 +53,58 @@ describe("Step 13 watchdog triggers", () => {
     ]);
     expect(notes.every((n) => n.severity === "critical")).toBe(true);
     expect(notes[0].decision_id).toBe("d1");
+    // Step 17 item B4 — a critical must name the exact prescription rows.
+    expect((notes[1].detail as any).rows).toEqual([
+      { slug: "back_squat", slot: "lift", intensity_class: "heavy_compound", cns_cost: 4 },
+    ]);
+  });
+
+  it("a heavy day with a costly movement is legal — no class is blocked", () => {
+    // The 20:42 false criticals: allowed class H, a sprint costing 4, a day
+    // budget of 2. Class against class, nothing is over the ceiling.
+    expect(
+      livePrescriptionViolations({
+        userId: "u1",
+        planDate: "2026-09-21",
+        allowedClass: "H",
+        blockedClasses: [],
+        rows: [{ slug: "flying_10s", slot: "speed", intensityClass: "speed", cnsCost: 4 }],
+        cnsCap: 2,
+        cnsUsed: 2,
+        itemCount: 9,
+      }),
+    ).toEqual([]);
+  });
+
+  it("a row with no intensity class logs info, never critical, and takes no action", () => {
+    const notes = livePrescriptionViolations({
+      userId: "u1",
+      planDate: "2026-09-21",
+      allowedClass: "M",
+      blockedClasses: ["heavy_compound"],
+      rows: [{ slug: "mystery_row", slot: "lift", intensityClass: null, cnsCost: 3 }],
+      cnsCap: 6,
+      cnsUsed: 4,
+      itemCount: 9,
+    });
+    expect(notes).toHaveLength(1);
+    expect(notes[0].severity).toBe("info");
+    expect(notes[0].auto_action).toBeNull();
+  });
+
+  it("going over the day's budget is information only, never critical", () => {
+    const notes = livePrescriptionViolations({
+      userId: "u1",
+      planDate: "2026-09-21",
+      allowedClass: "M",
+      blockedClasses: [],
+      rows: [{ slug: "sled_push", slot: "conditioning", intensityClass: "conditioning", cnsCost: 4 }],
+      cnsCap: 2,
+      cnsUsed: 5,
+      itemCount: 9,
+    });
+    expect(notes.map((n) => n.severity)).toEqual(["info"]);
+    expect(notes[0].auto_action).toBeNull();
   });
 
   it("a legal day writes nothing", () => {
@@ -57,9 +113,10 @@ describe("Step 13 watchdog triggers", () => {
         userId: "u1",
         planDate: "2026-09-21",
         allowedClass: "M",
-        liftCount: 1,
-        maxCnsCost: 4,
+        blockedClasses: ["heavy_compound"],
+        rows: [{ slug: "goblet_squat", slot: "lift", intensityClass: "compound", cnsCost: 2 }],
         cnsCap: 6,
+        cnsUsed: 4,
         itemCount: 9,
       }),
     ).toEqual([]);

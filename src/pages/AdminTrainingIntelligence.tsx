@@ -22,6 +22,7 @@ import {
   checkIsGreen,
   countGreenNights,
   evaluateGate,
+  releasePreflight,
   type SwitchMode,
 } from "../../supabase/functions/_shared/wic/flags/rollout";
 
@@ -270,6 +271,41 @@ export default function AdminTrainingIntelligence() {
     if (!gate.ok) {
       toast({ title: "Not available yet", description: gate.why, variant: "destructive" });
       return;
+    }
+    // Step 17 item A — machine check before any flip that widens a switch.
+    if (mode !== "off") {
+      const sinceIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: crit } = await supabase
+        .from("ti_watch_notes")
+        .select("id, noted_at, category, title, user_id, auto_action, acknowledged_at")
+        .eq("severity", "critical")
+        .gte("noted_at", sinceIso)
+        .order("noted_at", { ascending: false });
+      const rowsCrit = (crit ?? []) as Array<{
+        id: string; noted_at: string; category: string; title: string; user_id: string | null;
+        auto_action: string | null; acknowledged_at: string | null;
+      }>;
+      const pending = rowsCrit.find(
+        (n) => !n.acknowledged_at && (n.auto_action ?? "").toLowerCase().includes("drops one level"),
+      );
+      const pre = releasePreflight({
+        mode: mode as SwitchMode,
+        criticalNotes: rowsCrit.map((n) => ({
+          id: n.id, noted_at: n.noted_at, category: n.category, title: n.title, user_id: n.user_id,
+        })),
+        now: new Date(),
+        pendingAutoOff: pending ? { feature_key: row.feature_key, to_mode: "one level down" } : null,
+      });
+      if (!pre.ok) {
+        toast({
+          title: "Release refused",
+          description: `${pre.why}. Blocking: ${
+            pre.blocking.slice(0, 5).map((b) => `${b.noted_at.slice(11, 16)} ${b.category} — ${b.title}`).join("; ")
+          }`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
     if (
       gate.needsConfirm &&
