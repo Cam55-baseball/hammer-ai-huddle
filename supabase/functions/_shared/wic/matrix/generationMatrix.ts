@@ -104,6 +104,8 @@ export type MatrixCell = {
   tier: string;
   validator_ok: boolean;
   fatal_codes: string[];
+  /** Step 14 proof only — omitted (and outside the fingerprint) when the governor is off. */
+  spike_trims?: Array<{ slug: string; channel: string; action: string; reason: string }>;
 };
 
 export type MatrixResult = {
