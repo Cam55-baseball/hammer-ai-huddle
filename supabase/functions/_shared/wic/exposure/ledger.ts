@@ -46,7 +46,7 @@ export function classify(fact: CatalogFact | undefined | null):
     const heavy = (fact.intensity_class ?? "").toLowerCase();
     return {
       channel: "LIFT",
-      tier: heavy === "max_effort" || heavy === "heavy" ? "main" : "other",
+      tier: heavy === "max_effort" || heavy === "heavy" || heavy === "high" ? "main" : "other",
     };
   }
   if (ch === "ub_plyo") {
