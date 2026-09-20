@@ -158,6 +158,8 @@ export interface TcsConfig {
   readonly floors: {
     offseasonAfterH: number;
     offseasonAfterML: number;
+    /** M -> H needs the same 3 full rest days as H -> H (Step 6 decision 2). */
+    offseasonAfterMToH: number;
     inSeasonBetweenLifts: number;
   };
   readonly ceilingRestDays: { offseason: number; inSeason: number };

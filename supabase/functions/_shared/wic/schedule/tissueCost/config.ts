@@ -68,10 +68,15 @@ export const TCS_CONFIG: TcsConfig = Object.freeze({
 
   headroom: 1.15,
 
-  // §4 floors (full rest days)
+  // §4 floors (full rest days) — v1.2 Step 6 decision 2 restores the original
+  // doctrine's "larger requirement of the two" rule:
+  //   H -> H/M = 3, H -> L = 2, M -> H = 3, M -> M/L = 2, L -> anything = 2.
+  //   in-season / post-season = 2 for all.
   floors: Object.freeze({
     offseasonAfterH: 3,
     offseasonAfterML: 2,
+    /** M -> H also needs the full 3 days (Step 6 decision 2). */
+    offseasonAfterMToH: 3,
     inSeasonBetweenLifts: 2,
   }),
 
