@@ -152,20 +152,19 @@ async function work(runId: string) {
     processed++;
   }
 
-  const { data: left } = await sb
-    .from("tcs_test_run_chunks")
-    .select("id", { count: "exact", head: true })
-    .eq("run_id", runId)
-    .in("status", ["pending", "running"]);
-  void left;
+  // Hand the chain straight on while work remains. finalize_tcs_run locks the
+  // run row, so it runs once at the end rather than after every chunk.
   const { count } = await sb
     .from("tcs_test_run_chunks")
     .select("id", { count: "exact", head: true })
     .eq("run_id", runId)
-    .eq("status", "pending");
+    .in("status", ["pending", "running"]);
 
-  await sb.rpc("finalize_tcs_run", { _run_id: runId });
-  if ((count ?? 0) > 0) selfInvoke({ action: "work", run_id: runId });
+  if ((count ?? 0) > 0) {
+    selfInvoke({ action: "work", run_id: runId });
+  } else {
+    await sb.rpc("finalize_tcs_run", { _run_id: runId });
+  }
 
   return json({ run_id: runId, processed, pending: count ?? 0 });
 }
