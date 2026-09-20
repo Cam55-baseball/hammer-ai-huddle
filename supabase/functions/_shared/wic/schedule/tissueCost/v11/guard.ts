@@ -123,8 +123,10 @@ export function decideGuarded(
     return fallbackDecision(history, today, "exception", "unavailable");
   }
   const elapsed = now() - started;
-  if (!isValidDecision(out)) {
-    return fallbackDecision(history, today, "invalid_output", out?.inputsHash ?? "unavailable");
+  const produced: Decision | null = out;
+  if (!isValidDecision(produced)) {
+    const hash = typeof produced?.inputsHash === "string" ? produced.inputsHash : "unavailable";
+    return fallbackDecision(history, today, "invalid_output", hash);
   }
   if (elapsed > budget) {
     return fallbackDecision(history, today, "timeout", out.inputsHash);
