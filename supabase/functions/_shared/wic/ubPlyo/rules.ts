@@ -117,7 +117,15 @@ export function strengthGateMet(gate: GateFamily, tier: UbTier, p: UbProfile, h:
     case "pullup":
       return tier === "U2" ? (h.strictPullUps ?? 0) >= 6 : (h.strictPullUps ?? 0) >= 10;
     case "overhead":
-      return tier === "U2" ? (h.landmineWeeksNoPain ?? 0) >= 4 && !h.painFlag : !h.painFlag;
+      // Step 6 decision 5 — strength gate on the overhead family.
+      // U2: 10 strict push-ups + 4 weeks pain-free landmine pressing.
+      // U3: bench estimated max >= 1.0 x body weight OR 20 strict push-ups,
+      //     AND landmine press logged at 3 x 8 or better.
+      return tier === "U2"
+        ? (h.strictPushUps ?? 0) >= 10 && (h.landmineWeeksNoPain ?? 0) >= 4 && !h.painFlag
+        : ((h.strictPushUps ?? 0) >= 20 || bwRatio >= 1.0) &&
+            h.landminePress3x8Logged === true &&
+            !h.painFlag;
     case "bench_catch":
       return tier === "U3" ? bwRatio >= 1.0 : true;
     default:
