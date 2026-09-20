@@ -2284,6 +2284,8 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: !!rx.cns_clamped,
             capSets: dd.cap_sets ?? null,
             capReps: dd.cap_reps ?? null,
+            method: arcMethod,
+            methodContext,
           }, liftingV2Enabled);
           const before = { sets: rx.sets, reps: rx.reps };
           rx.sets = rewaved.sets;
@@ -2295,6 +2297,14 @@ const handler = async (req: Request): Promise<Response> => {
           // rather than guessed at.
           dd.dose_authority = liftingV2Enabled ? WAVE_VERSION : DOSAGE_DOCTRINE_VERSION;
           dd.lifting_v2_enabled = liftingV2Enabled;
+          if (rewaved.method) {
+            dd.method = rewaved.method.method;
+            dd.method_context = rewaved.method.context;
+            wp.method_sentence = methodSentence(rewaved.method);
+            if (arcBlockKey) {
+              wp.offseason_block = { key: arcBlockKey, label: arcLabel };
+            }
+          }
           if (before.sets !== rx.sets || before.reps !== rx.reps) {
             dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}`, version: dd.dose_authority };
           }
@@ -2305,9 +2315,10 @@ const handler = async (req: Request): Promise<Response> => {
               reason: "Week 4 deload — envelope floor, quality held.",
             };
           }
-          if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps)) {
+          if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps, arcMethod)) {
             dd.envelope_violation = true;
           }
+
         }
 
 
