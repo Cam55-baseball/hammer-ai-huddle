@@ -10,6 +10,8 @@
 // Everything now resolves through `resolveDose`. It is pure, deterministic and
 // version-stamped so a replay reproduces the exact same numbers.
 
+import { type MethodContext, type MethodEnvelope, type MethodKey, methodEnvelope } from "./methods.ts";
+
 export const DOSAGE_DOCTRINE_VERSION = "dosage-doctrine-v1";
 
 export type DoseRange = readonly [number, number];
@@ -201,6 +203,13 @@ export interface ResolveDoseInput {
   /** Hard safety ceiling (e.g. ATG in-season durability dose). Applied last. */
   capSets?: number | null;
   capReps?: number | null;
+  /**
+   * §8.3 method envelope for the main compound. Heavy-eligible athletes only —
+   * callers must gate on isHeavyEligible(). Foundation athletes pass nothing and
+   * keep today's DOSE_MATRIX dose exactly.
+   */
+  method?: MethodKey | null;
+  methodContext?: MethodContext | null;
 }
 
 export interface ResolvedDose {
@@ -212,6 +221,8 @@ export interface ResolvedDose {
   band: TrainingAgeBand;
   notes: string[];
   doctrine_version: string;
+  /** Present only when a method envelope replaced the matrix envelope. */
+  method?: MethodEnvelope | null;
 }
 
 /**
@@ -220,13 +231,26 @@ export interface ResolvedDose {
 export function resolveDose(input: ResolveDoseInput): ResolvedDose {
   const phase = normalizeDoctrinePhase(input.phase);
   const group = doseGroupFor(input.role, input.category);
-  const envelope = DOSE_MATRIX[phase][group];
   const band = trainingAgeBand(input.trainingAgeYears);
   const notes: string[] = [];
+
+  // 0) §8.3 — the main compound may ride a method envelope instead of the matrix.
+  const method =
+    group === "main_compound"
+      ? methodEnvelope(
+          input.method ?? null,
+          input.methodContext ?? (phase === "in_season" || phase === "post_season" ? "in_season" : "offseason"),
+        )
+      : null;
+  const envelope: DoseEnvelope = method ?? DOSE_MATRIX[phase][group];
+  if (method) {
+    notes.push(`${method.method.replace(/_/g, " ")} envelope — ${method.loadWords}`);
+  }
 
   // 1) training-age position inside the envelope
   let t = BAND_POSITION[band];
   notes.push(`${band} training age → ${Math.round(t * 100)}% of the ${phase} ${group} envelope`);
+
 
   // 2) week-in-block wave
   const week = Math.min(4, Math.max(1, Number(input.weekInBlock ?? 2)));
@@ -272,6 +296,7 @@ export function resolveDose(input: ResolveDoseInput): ResolvedDose {
     band,
     notes,
     doctrine_version: DOSAGE_DOCTRINE_VERSION,
+    method,
   };
 }
 
@@ -282,14 +307,20 @@ export function isWithinEnvelope(
   category: string | null | undefined,
   sets: number | null | undefined,
   reps: number | null | undefined,
+  method?: MethodKey | null,
 ): boolean {
   if (sets == null || reps == null) return true; // total-dose row
   const p = normalizeDoctrinePhase(phase);
   const g = doseGroupFor(role, category);
-  const env = DOSE_MATRIX[p][g];
+  const me =
+    g === "main_compound"
+      ? methodEnvelope(method ?? null, p === "in_season" || p === "post_season" ? "in_season" : "offseason")
+      : null;
+  const env = me ?? DOSE_MATRIX[p][g];
   // Deload and safety clamps may only pull BELOW the floor, never above the ceiling.
   return sets <= env.sets[1] && reps <= env.reps[1] && sets >= 1 && reps >= 1;
 }
+
 
 /** Human-readable dose string used in the "why volume" line. */
 export function describeDose(d: ResolvedDose): string {

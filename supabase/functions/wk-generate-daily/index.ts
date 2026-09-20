@@ -33,6 +33,25 @@ import {
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
+// Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
+import {
+  locateInArc,
+  resolveOffseasonArc,
+  type ArcBlockKey,
+} from "../_shared/wic/schedule/timeline/offseasonArc.ts";
+import { BLOCK_CONTENT } from "../_shared/wic/schedule/timeline/blockContent.ts";
+import {
+  isHeavyEligible,
+  methodEnvelope,
+  methodSentence,
+  type MethodContext,
+  type MethodKey,
+} from "../_shared/wic/dosage/methods.ts";
+import {
+  resolveInSeasonPlan,
+  IN_SEASON_LIMITS,
+  type InSeasonPlanResult,
+} from "../_shared/wic/schedule/inSeasonPlan.ts";
 import {
   amountPerSet,
   buildLedger,
@@ -926,6 +945,98 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+    // -------- Step 18 — offseason arc (§7) and in-season post-game plan (§9) ----
+    // Both are OFF by default. With the switch off, `arcMethod` stays null and
+    // `inSeasonPlan.applies` stays false, so every dose and every timing string
+    // is byte-identical to today.
+    const athleteAgeYears = Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null;
+    const heavyEligible = isHeavyEligible({
+      ageYears: athleteAgeYears,
+      trainingAgeYears,
+      growthMode: athleteAgeYears != null && athleteAgeYears <= 15,
+      painFlag: injurySlugs.size > 0,
+    });
+
+    const isCatcherPosition = athletePositions.some((x) => /catch|^c$/.test(x));
+
+    let arcBlockKey: ArcBlockKey | null = null;
+    let arcLabel: string | null = null;
+    let arcMethod: MethodKey | null = null;
+    let lastLiftSlot: "A" | "B" | null = null;
+    try {
+      if (features.offseason_arc === true && isOffseason && seasonSettings) {
+        const { data: offRows } = await admin
+          .from("planned_off_days")
+          .select("off_date")
+          .eq("user_id", user.id);
+        const arc = resolveOffseasonArc({
+          offseasonStart:
+            (seasonSettings as any).offseason_start ??
+            (seasonSettings as any).post_season_end ??
+            planDate,
+          firstGameDate: (seasonSettings as any).season_start ?? null,
+          preSeasonStart: (seasonSettings as any).preseason_start ?? null,
+          offDays: (offRows ?? []).map((r: any) => r.off_date as string),
+        });
+        const pos = locateInArc(arc, planDate);
+        if (pos) {
+          arcBlockKey = pos.block.key;
+          arcLabel = pos.block.label;
+          const content = BLOCK_CONTENT[pos.block.key];
+          if (heavyEligible) {
+            // B4 alternates the heavy day and the banded speed day.
+            const alternate = content.heavyMethodAlt && pos.dayInBlock % 2 === 0;
+            arcMethod = (alternate ? content.heavyMethodAlt : content.heavyMethod) ?? null;
+          }
+        }
+      }
+    } catch (_arcErr) {
+      arcBlockKey = null;
+      arcLabel = null;
+      arcMethod = null;
+    }
+
+    let inSeasonPlan: InSeasonPlanResult | null = null;
+    try {
+      if (features.in_season_post_game === true && isInSeason) {
+        const { data: lastLift } = await admin
+          .from("wk_prescriptions")
+          .select("why_payload, plan_date")
+          .eq("user_id", user.id)
+          .lt("plan_date", planDate)
+          .order("plan_date", { ascending: false })
+          .limit(40);
+        for (const row of (lastLift ?? []) as any[]) {
+          const slot = (row.why_payload as any)?.in_season_slot;
+          if (slot === "A" || slot === "B") {
+            lastLiftSlot = slot;
+            break;
+          }
+        }
+        // A declared start shows up as the lift being removed on a pitcher's
+        // game day; the day before shows up as primer-only.
+        inSeasonPlan = resolveInSeasonPlan({
+          phase: phaseRes.phase,
+          planDate,
+          isGameDay,
+          gameRole: isCatcherPosition ? "catcher" : isPitcherAthlete ? "starting_pitcher" : "position",
+          startsToday: isPitcherAthlete && isGameDay && gameProximity.removeLift === true,
+          startsTomorrow: isPitcherAthlete && !isGameDay && gameProximity.primerOnly === true,
+          lastLiftSlot,
+          doubleheaderToday: gameProximity.isDoubleheaderToday === true,
+          highDensity: gameProximity.highDensity === true,
+        });
+        if (inSeasonPlan.applies && heavyEligible && inSeasonPlan.liftAllowed) {
+          arcMethod = inSeasonPlan.slot === "A" ? "heavy_triples" : "banded_velocity";
+        }
+      }
+    } catch (_isErr) {
+      inSeasonPlan = null;
+    }
+
+    const methodContext: MethodContext = isInSeason || isPostSeason ? "in_season" : "offseason";
+
+
     // -------- WIC — resolve today's adaptation BEFORE selecting exercises --------
     const adaptationDecisionRaw: AdaptationDecision = selectAdaptation({
       phase: phaseRes.phase,
@@ -1508,6 +1619,9 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: clamped,
             capSets: doseCap?.sets ?? null,
             capReps: doseCap?.reps ?? null,
+            method: arcMethod,
+            methodContext,
+
           }, liftingV2Enabled)
         : null;
       const finalSets = resolvedDose
@@ -2170,6 +2284,8 @@ const handler = async (req: Request): Promise<Response> => {
             cnsClamped: !!rx.cns_clamped,
             capSets: dd.cap_sets ?? null,
             capReps: dd.cap_reps ?? null,
+            method: arcMethod,
+            methodContext,
           }, liftingV2Enabled);
           const before = { sets: rx.sets, reps: rx.reps };
           rx.sets = rewaved.sets;
@@ -2181,6 +2297,14 @@ const handler = async (req: Request): Promise<Response> => {
           // rather than guessed at.
           dd.dose_authority = liftingV2Enabled ? WAVE_VERSION : DOSAGE_DOCTRINE_VERSION;
           dd.lifting_v2_enabled = liftingV2Enabled;
+          if (rewaved.method) {
+            dd.method = rewaved.method.method;
+            dd.method_context = rewaved.method.context;
+            wp.method_sentence = methodSentence(rewaved.method);
+            if (arcBlockKey) {
+              wp.offseason_block = { key: arcBlockKey, label: arcLabel };
+            }
+          }
           if (before.sets !== rx.sets || before.reps !== rx.reps) {
             dd.wave_applied = { from: `${before.sets}×${before.reps}`, to: `${rx.sets}×${rx.reps}`, version: dd.dose_authority };
           }
@@ -2191,10 +2315,22 @@ const handler = async (req: Request): Promise<Response> => {
               reason: "Week 4 deload — envelope floor, quality held.",
             };
           }
-          if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps)) {
+          if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps, arcMethod)) {
             dd.envelope_violation = true;
           }
+
         }
+
+        // §9 — stamp the post-game plan on every row so the next day can
+        // alternate A and B, and so the card can speak the timing.
+        if (inSeasonPlan?.applies && inSeasonPlan.slot) {
+          wp.in_season_slot = inSeasonPlan.slot;
+          wp.in_season_timing = inSeasonPlan.timing;
+          wp.in_season_timing_note = inSeasonPlan.timingNote;
+          wp.reps_in_reserve_min = IN_SEASON_LIMITS.minRir;
+        }
+
+
 
 
 
