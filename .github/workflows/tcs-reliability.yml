@@ -31,7 +31,7 @@ jobs:
       - name: Install deps
         run: npm ci
       - name: Goldens, chaos, v1.1 engines, invariant slice
-        run: npx vitest run src/test/tissueCost
+        run: npx vitest run src/test/tissueCost src/test/ubPlyo
         env:
           TCS_SEED: '20260920'
           TCS_SEASONS: '200'
@@ -52,6 +52,12 @@ jobs:
         run: npm ci
       - name: 100,000 athlete-seasons
         run: bun scripts/audits/tcs-property-sweep.ts 100000 16 20260920 | tee tcs-full-sweep.json
+
+      - name: Upper-body plyo full tier (100,000 cases)
+        env:
+          UBP_CASES: '100000'
+          UBP_SEED: '20260920'
+        run: npx vitest run src/test/ubPlyo
       - name: Store results
         if: always()
         uses: actions/upload-artifact@v4

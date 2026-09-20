@@ -16293,6 +16293,7 @@ export type Database = {
           cns_cost: number
           concentric_profile: string | null
           conditioning_category: string | null
+          contacts_per_rep: number | null
           contraindications: string[] | null
           created_at: string
           cross_sport_category: string | null
@@ -16316,6 +16317,7 @@ export type Database = {
           equipment: string[] | null
           equipment_requirements: string[] | null
           evidence_note: string | null
+          exposure_channel: string | null
           family: string | null
           game_day_eligible: boolean | null
           game_day_legal: boolean | null
@@ -16339,6 +16341,8 @@ export type Database = {
           pap_compatible: boolean | null
           pattern: string | null
           phase_allow: string[]
+          pitcher_flags: string[]
+          plane: string | null
           position_scope: string[] | null
           power_emphasis: boolean | null
           practice_day_legal: boolean | null
@@ -16370,6 +16374,7 @@ export type Database = {
           transfer_group: string | null
           travel_friendly: boolean | null
           troubleshooting_tags: string[]
+          ub_tier: string | null
           unilateral: boolean | null
           updated_at: string
           variant: string | null
@@ -16388,6 +16393,7 @@ export type Database = {
           cns_cost?: number
           concentric_profile?: string | null
           conditioning_category?: string | null
+          contacts_per_rep?: number | null
           contraindications?: string[] | null
           created_at?: string
           cross_sport_category?: string | null
@@ -16411,6 +16417,7 @@ export type Database = {
           equipment?: string[] | null
           equipment_requirements?: string[] | null
           evidence_note?: string | null
+          exposure_channel?: string | null
           family?: string | null
           game_day_eligible?: boolean | null
           game_day_legal?: boolean | null
@@ -16434,6 +16441,8 @@ export type Database = {
           pap_compatible?: boolean | null
           pattern?: string | null
           phase_allow?: string[]
+          pitcher_flags?: string[]
+          plane?: string | null
           position_scope?: string[] | null
           power_emphasis?: boolean | null
           practice_day_legal?: boolean | null
@@ -16465,6 +16474,7 @@ export type Database = {
           transfer_group?: string | null
           travel_friendly?: boolean | null
           troubleshooting_tags?: string[]
+          ub_tier?: string | null
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
@@ -16483,6 +16493,7 @@ export type Database = {
           cns_cost?: number
           concentric_profile?: string | null
           conditioning_category?: string | null
+          contacts_per_rep?: number | null
           contraindications?: string[] | null
           created_at?: string
           cross_sport_category?: string | null
@@ -16506,6 +16517,7 @@ export type Database = {
           equipment?: string[] | null
           equipment_requirements?: string[] | null
           evidence_note?: string | null
+          exposure_channel?: string | null
           family?: string | null
           game_day_eligible?: boolean | null
           game_day_legal?: boolean | null
@@ -16529,6 +16541,8 @@ export type Database = {
           pap_compatible?: boolean | null
           pattern?: string | null
           phase_allow?: string[]
+          pitcher_flags?: string[]
+          plane?: string | null
           position_scope?: string[] | null
           power_emphasis?: boolean | null
           practice_day_legal?: boolean | null
@@ -16560,6 +16574,7 @@ export type Database = {
           transfer_group?: string | null
           travel_friendly?: boolean | null
           troubleshooting_tags?: string[]
+          ub_tier?: string | null
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
