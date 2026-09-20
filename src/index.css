@@ -647,13 +647,14 @@ All colors MUST be HSL.
 @media print {
   html:has(.staff-print),
   body:has(.staff-print),
-  body:has(.staff-print) #root,
-  body:has(.staff-print) #root * {
+  body:has(.staff-print) #root {
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
     overflow: visible !important;
-    position: static !important;
+  }
+  body:has(.staff-print) [class*="fixed"] {
+    display: none !important;
   }
   body:has(.staff-print) aside,
   body:has(.staff-print) nav,
