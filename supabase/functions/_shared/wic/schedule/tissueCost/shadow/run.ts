@@ -136,7 +136,10 @@ export async function fetchShadowData(
 
 /** Pure: snapshot + guarded decision from already-fetched rows. */
 export function decideFromRaw(raw: RawShadowData): ShadowResult {
-  const inputs = buildShadowInputs(raw);
+  // Decide on the exact object that gets stored. A JSON round-trip drops
+  // `undefined` fields, so hashing the pre-storage shape is the only way a
+  // recompute from the snapshot can be byte-identical.
+  const inputs = JSON.parse(JSON.stringify(buildShadowInputs(raw))) as ShadowInputs;
   const decision = decideGuarded(
     inputs.profile,
     inputs.history,
