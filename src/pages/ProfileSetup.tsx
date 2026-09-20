@@ -246,16 +246,21 @@ const ProfileSetup = () => {
 
       if (profileError) throw profileError;
 
-      // 2. Insert role with status (pending for admin, active for others)
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert([{ 
-          user_id: user.id, 
-          role: dbRole,
-          status: dbRole === 'admin' ? 'pending' : 'active'
-        }]);
+      // 2. Insert role. Admin/owner can never be self-assigned (privilege
+      // escalation): an admin signup only records the request, and an owner
+      // grants the role from the admin dashboard.
+      if (dbRole !== 'admin') {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert([{
+            user_id: user.id,
+            role: dbRole,
+            status: 'active'
+          }]);
 
-      if (roleError) throw roleError;
+        if (roleError) throw roleError;
+      }
+
 
       // 3. Insert user progress if module was selected
       if (selectedModule) {
