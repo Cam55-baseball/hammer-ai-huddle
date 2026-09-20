@@ -1,0 +1,38 @@
+┌───────┬───────────────┬──────────────────┬────────────────────────┬────────┬───────┬─────────┐
+│ (idx) │ phase         │ track            │ method                 │ before │ after │ changed │
+├───────┼───────────────┼──────────────────┼────────────────────────┼────────┼───────┼─────────┤
+│     0 │ "off_season"  │ "Foundation"     │ "heavy_triples"        │ "4x5"  │ "4x5" │ false   │
+│     1 │ "off_season"  │ "Foundation"     │ "double_eccentric"     │ "4x5"  │ "4x5" │ false   │
+│     2 │ "off_season"  │ "Foundation"     │ "banded_velocity"      │ "4x5"  │ "4x5" │ false   │
+│     3 │ "off_season"  │ "Foundation"     │ "overcoming_isometric" │ "4x5"  │ "4x5" │ false   │
+│     4 │ "off_season"  │ "heavy-eligible" │ "heavy_triples"        │ "5x6"  │ "3x3" │ true    │
+│     5 │ "off_season"  │ "heavy-eligible" │ "double_eccentric"     │ "5x6"  │ "3x5" │ true    │
+│     6 │ "off_season"  │ "heavy-eligible" │ "banded_velocity"      │ "5x6"  │ "4x5" │ true    │
+│     7 │ "off_season"  │ "heavy-eligible" │ "overcoming_isometric" │ "5x6"  │ "4x5" │ true    │
+│     8 │ "pre_season"  │ "Foundation"     │ "heavy_triples"        │ "3x2"  │ "3x2" │ false   │
+│     9 │ "pre_season"  │ "Foundation"     │ "double_eccentric"     │ "3x2"  │ "3x2" │ false   │
+│    10 │ "pre_season"  │ "Foundation"     │ "banded_velocity"      │ "3x2"  │ "3x2" │ false   │
+│    11 │ "pre_season"  │ "Foundation"     │ "overcoming_isometric" │ "3x2"  │ "3x2" │ false   │
+│    12 │ "pre_season"  │ "heavy-eligible" │ "heavy_triples"        │ "4x3"  │ "3x3" │ true    │
+│    13 │ "pre_season"  │ "heavy-eligible" │ "double_eccentric"     │ "4x3"  │ "3x5" │ true    │
+│    14 │ "pre_season"  │ "heavy-eligible" │ "banded_velocity"      │ "4x3"  │ "4x5" │ true    │
+│    15 │ "pre_season"  │ "heavy-eligible" │ "overcoming_isometric" │ "4x3"  │ "4x5" │ true    │
+│    16 │ "in_season"   │ "Foundation"     │ "heavy_triples"        │ "2x2"  │ "2x2" │ false   │
+│    17 │ "in_season"   │ "Foundation"     │ "double_eccentric"     │ "2x2"  │ "2x2" │ false   │
+│    18 │ "in_season"   │ "Foundation"     │ "banded_velocity"      │ "2x2"  │ "2x2" │ false   │
+│    19 │ "in_season"   │ "Foundation"     │ "overcoming_isometric" │ "2x2"  │ "2x2" │ false   │
+│    20 │ "in_season"   │ "heavy-eligible" │ "heavy_triples"        │ "3x3"  │ "3x3" │ false   │
+│    21 │ "in_season"   │ "heavy-eligible" │ "double_eccentric"     │ "3x3"  │ "3x3" │ false   │
+│    22 │ "in_season"   │ "heavy-eligible" │ "banded_velocity"      │ "3x3"  │ "3x3" │ false   │
+│    23 │ "in_season"   │ "heavy-eligible" │ "overcoming_isometric" │ "3x3"  │ "3x3" │ false   │
+│    24 │ "post_season" │ "Foundation"     │ "heavy_triples"        │ "2x6"  │ "2x6" │ false   │
+│    25 │ "post_season" │ "Foundation"     │ "double_eccentric"     │ "2x6"  │ "2x6" │ false   │
+│    26 │ "post_season" │ "Foundation"     │ "banded_velocity"      │ "2x6"  │ "2x6" │ false   │
+│    27 │ "post_season" │ "Foundation"     │ "overcoming_isometric" │ "2x6"  │ "2x6" │ false   │
+│    28 │ "post_season" │ "heavy-eligible" │ "heavy_triples"        │ "3x7"  │ "3x3" │ true    │
+│    29 │ "post_season" │ "heavy-eligible" │ "double_eccentric"     │ "3x7"  │ "3x7" │ false   │
+│    30 │ "post_season" │ "heavy-eligible" │ "banded_velocity"      │ "3x7"  │ "3x3" │ true    │
+│    31 │ "post_season" │ "heavy-eligible" │ "overcoming_isometric" │ "3x7"  │ "3x3" │ true    │
+└───────┴───────────────┴──────────────────┴────────────────────────┴────────┴───────┴─────────┘
+Foundation changed: 0 of 16
+Heavy changed: 11 of 16
