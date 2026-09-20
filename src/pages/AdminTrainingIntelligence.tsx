@@ -419,15 +419,16 @@ export default function AdminTrainingIntelligence() {
       toast({ title: "Add a note first", description: "Say why it is going back.", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("wk_catalog_review_notes").insert({
-      catalog_id: row.id,
-      slug: row.slug,
-      decision: "rejected",
-      note: text,
-      decided_by: user?.id ?? "",
+    const { data, error } = await supabase.functions.invoke("wk-training-intel", {
+      body: { action: "send_back", id: row.id, note: text },
     });
-    if (error) {
-      toast({ title: "Could not send it back", description: error.message, variant: "destructive" });
+    const err = error ?? ((data as { error?: string } | null)?.error ?? null);
+    if (err) {
+      toast({
+        title: "Could not send it back",
+        description: typeof err === "string" ? err : err.message,
+        variant: "destructive",
+      });
       return;
     }
     toast({ title: `${row.name} sent back`, description: "It stays switched off with your note." });
