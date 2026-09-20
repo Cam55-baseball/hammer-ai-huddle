@@ -413,6 +413,29 @@ export default function AdminTrainingIntelligence() {
     }
   };
 
+  const sendBack = async (row: PendingRow) => {
+    const text = (sendNote[row.id] ?? "").trim();
+    if (!text) {
+      toast({ title: "Add a note first", description: "Say why it is going back.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("wk_catalog_review_notes").insert({
+      catalog_id: row.id,
+      slug: row.slug,
+      decision: "rejected",
+      note: text,
+      decided_by: user?.id ?? "",
+    });
+    if (error) {
+      toast({ title: "Could not send it back", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: `${row.name} sent back`, description: "It stays switched off with your note." });
+    setSendNote((s) => ({ ...s, [row.id]: "" }));
+    setSelected((s) => s.filter((x) => x !== row.id));
+    await load();
+  };
+
   if (gateLoading || (allowed && loading)) {
     return (
       <DashboardLayout>
@@ -424,11 +447,26 @@ export default function AdminTrainingIntelligence() {
   }
   if (!allowed) return null;
 
-  const grouped = pending.reduce<Record<string, PendingRow[]>>((acc, r) => {
+  const uniq = (vals: Array<string | null>) =>
+    Array.from(new Set(vals.filter((v): v is string => Boolean(v)))).sort();
+  const bucketOptions = uniq(pending.map((r) => r.bucket));
+  const tierOptions = uniq(pending.map((r) => r.ub_tier));
+  const familyOptions = uniq(pending.map((r) => r.family));
+
+  const visible = pending.filter(
+    (r) =>
+      (fBucket === "all" || r.bucket === fBucket) &&
+      (fTier === "all" || r.ub_tier === fTier) &&
+      (fFamily === "all" || r.family === fFamily),
+  );
+  const sentBackCount = pending.filter((r) => sentBack[r.id]).length;
+
+  const grouped = visible.reduce<Record<string, PendingRow[]>>((acc, r) => {
     const k = `${r.bucket ?? "Unsorted"} · ${r.sub_bucket ?? "—"}${r.ub_tier ? ` · ${r.ub_tier}` : ""}`;
     (acc[k] ??= []).push(r);
     return acc;
   }, {});
+
 
   return (
     <DashboardLayout>
