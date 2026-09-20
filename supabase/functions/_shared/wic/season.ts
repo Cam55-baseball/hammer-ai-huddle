@@ -90,6 +90,10 @@ export const WARMUP_LEGAL_CATEGORIES: ReadonlySet<string> = new Set([
   "warmup",
   "mobility",
   "activation",
+  "movement_patterning",
+  "movement_capacity",
+  "shoulder_prep",
+  // legacy labels, retained so no row can fall through
   "functional_patterning",
   "ido_portal",
   "cressey_sp",

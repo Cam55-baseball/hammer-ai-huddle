@@ -1,23 +1,7 @@
-# Roadmap
-
-## In progress
-- [ ] Today-plan input integrity: equipment saves now force the live context envelope to refresh; Today's Plan also refetches that envelope whenever it mounts or regains focus; the defense off-day override is visible without expanding the card. Owner-screen verification remains blocked because an owner session could not be authorized.
-- [x] DelayCam v1 for release: own tier-gated sidebar entries (Hitting: 5tool+golden2way, Pitching: pitcher+golden2way), remove "Save & Analyze", full-session record + playback, drawing/angle tools, no metrics.
-- [x] FPS threshold bug: negotiated `track.getSettings().frameRate` is primary; measured frames only a ±10% sanity check; 60fps is a pass, not degraded.
-- [ ] Lockdown verification as a non-staff account: HighFpsCapture record, recruiting standards, combine (athlete + evaluator), defense entry/athlete views, baserunning entry, pitcher Tell Report, /pitch-velocity harness.
-
-## Deferred (per product reframe)
-- Record Now → multi-rep session metrics surface (per-pitch / per-swing), separate from Upload's mechanics report card.
-
-## Lifting Stage 1 — outstanding evidence (owner-required)
-- [ ] Generation matrix: 6 phases × 5 training-age bands × 3 equipment levels × 3 ages × 4 day types, card produced in 100% of cells.
-- [ ] Dose diff: one athlete, one date, before/after — `sets`/`reps` diff must be empty.
-- [ ] Phone-width screenshot of the Safe Session card.
-- [ ] Legacy violation to clear: `sp_atg_split_squat`, 2026-08-12, in_season, `speed` slot (deep_flexion) — pre-existing row, caught by the new flag-driven guard.
-
-## Lifting Pass C — status
-- [x] Section 1 — execution layer: 12 display-only columns, defensive derivation, RPC pure passthrough (proved live), phone screenshot at `scripts/audits/evidence/execution-layer-phone.png`.
-- [x] Section 2 — standards: 265 lb bodyweight cap, per-implement med-ball marks (4/6/10 lb), target disclaimer on every surface.
-- [x] Section 3 — quality tracks: emphasis ordering, never filters, weak-track weekly exposure floor.
-- [x] Section 4 — reload detector: hard/soft signals, guardrails, cold-start wave, plain-English reason.
-- [x] Section 5 — wave: **wired and live**, `lifting_v2_enabled` = true (owner approved; confirmed live with the stamped `wave_v2` proof). Full diff by group in `scripts/audits/evidence/wave-diff.json` — sets never move, only reps in main_compound / unilateral / upper. (Note corrected 2026-09-08: the roadmap said "false / awaiting sign-off"; the flag was right, the note was stale.)
+# Step 10 roadmap
+1. [ ] Position played / innings caught on game logging, behind one_tap_logging switch
+2. [ ] Recategorise 63 branded-category rows -> neutral tree; no-outside-name test covers categories
+3. [ ] Insert INACTIVE rows for the 163 coverage-gap cells (incl. catcher deep-flexion progression, fast eccentrics)
+4. [ ] TI-0a-2 cleanup: F5 sp_* units/categories + dose diff, F7 strip doses from names, sled superseded_by, plyo_tier/contacts_per_rep/exposure_channel/surface_hint, TI-0a-1 age-raise migration file
+5. [ ] Hill/tow/overspeed: equipment tags hill + overspeed_cord, 16+ advanced (tighten only)
+PROOF: before/after tables, 1296 matrix, dose diff, revert script, phone screenshot of a real lift card, coverage table, tcs_test_runs row

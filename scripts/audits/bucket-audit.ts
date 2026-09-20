@@ -9,7 +9,8 @@ const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
 const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
 if (!url || !key) throw new Error("Missing Supabase env");
 
-const BANNED = /driveline|cressey|westside|heenan|marinovich|ido portal|summers|poliquin|triphasic/i;
+const BANNED =
+  /driveline|cressey|westside|heenan|marinovich|ido[ _]?portal|summers|poliquin|triphasic|knees over toes|functional patterns|goata|jaeger|jobes|crossover symmetry|oates|louie simmons|ben patrick|pavel|bosch|cal dietz|seagrave|holler|altis|pfaff/i;
 
 const BUCKETS = new Set([
   "Movement Prep & Tissue",
@@ -28,7 +29,7 @@ const supabase = createClient(url, key);
 
 const { data, error } = await supabase
   .from("wk_movement_catalog")
-  .select("slug,name,is_active,bucket,sub_bucket,method,evidence_grade,regression_slug")
+  .select("slug,name,category,is_active,bucket,sub_bucket,method,evidence_grade,regression_slug")
   .limit(5000);
 if (error) throw error;
 const rows = data ?? [];
@@ -73,6 +74,12 @@ failures += fail(
 failures += fail(
   "displayed names containing an outside name",
   rows.filter((r) => BANNED.test(r.name)).map((r) => `${r.slug}: ${r.name}`),
+);
+failures += fail(
+  "categories containing an outside name",
+  rows
+    .filter((r) => BANNED.test(String(r.category ?? "").replace(/_/g, " ")))
+    .map((r) => `${r.slug}: ${r.category}`),
 );
 
 const counts = new Map<string, number>();

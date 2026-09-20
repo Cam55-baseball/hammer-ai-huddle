@@ -33,6 +33,7 @@ import { Card } from "@/components/ui/card";
 import { Save, X, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFeatureSwitches } from "@/hooks/useFeatureSwitches";
 import { toast } from "sonner";
 import { AtBatLogger } from "./AtBatLogger";
 import { DefenseLogger } from "./DefenseLogger";
@@ -354,6 +355,8 @@ function OverviewPanel({
   onPatch: (p: Record<string, any>) => void;
 }) {
   const [positions, setPositions] = useState<string[]>(game.my_positions ?? []);
+  const { isEnabled } = useFeatureSwitches();
+  const oneTapLogging = isEnabled("one_tap_logging");
   const pitcherDossiers = usePitcherDossiers(game.sport);
   const hitterDossiers = useOpponentHitters(game.sport);
   const [editingPitcher, setEditingPitcher] = useState<any | null>(null);
@@ -574,6 +577,31 @@ function OverviewPanel({
           ))}
         </div>
       </div>
+
+      {oneTapLogging && positions.includes("C") && (
+        <div className="space-y-1.5">
+          <Label htmlFor="innings-caught">Innings caught (optional)</Label>
+          <Input
+            id="innings-caught"
+            type="number"
+            min={0}
+            max={30}
+            inputMode="numeric"
+            placeholder="e.g. 7"
+            defaultValue={game.innings_caught ?? ""}
+            onBlur={(e) => {
+              const raw = e.target.value.trim();
+              if (raw === "") return onPatch({ innings_caught: null });
+              const n = Math.max(0, Math.min(30, Math.round(Number(raw))));
+              if (Number.isFinite(n)) onPatch({ innings_caught: n });
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Squatting innings are their own kind of work. Logging them lets your rest days account for it.
+          </p>
+        </div>
+      )}
+
 
       <div className="space-y-1.5">
         <Label>Status</Label>
