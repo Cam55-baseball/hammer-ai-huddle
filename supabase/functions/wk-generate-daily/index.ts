@@ -938,16 +938,26 @@ const handler = async (req: Request): Promise<Response> => {
       painFlag: injurySlugs.size > 0,
     });
 
+    const isCatcherPosition = athletePositions.some((x) => /catch|^c$/.test(x));
+
     let arcBlockKey: ArcBlockKey | null = null;
     let arcLabel: string | null = null;
     let arcMethod: MethodKey | null = null;
+    let lastLiftSlot: "A" | "B" | null = null;
     try {
       if (features.offseason_arc === true && isOffseason && seasonSettings) {
+        const { data: offRows } = await admin
+          .from("planned_off_days")
+          .select("off_date")
+          .eq("user_id", user.id);
         const arc = resolveOffseasonArc({
-          offseasonStart: (seasonSettings as any).offseason_start ?? planDate,
+          offseasonStart:
+            (seasonSettings as any).offseason_start ??
+            (seasonSettings as any).post_season_end ??
+            planDate,
           firstGameDate: (seasonSettings as any).season_start ?? null,
           preSeasonStart: (seasonSettings as any).preseason_start ?? null,
-          offDays: plannedOffDays ?? [],
+          offDays: (offRows ?? []).map((r: any) => r.off_date as string),
         });
         const pos = locateInArc(arc, planDate);
         if (pos) {
@@ -970,14 +980,31 @@ const handler = async (req: Request): Promise<Response> => {
     let inSeasonPlan: InSeasonPlanResult | null = null;
     try {
       if (features.in_season_post_game === true && isInSeason) {
+        const { data: lastLift } = await admin
+          .from("wk_prescriptions")
+          .select("why_payload, plan_date")
+          .eq("user_id", user.id)
+          .lt("plan_date", planDate)
+          .order("plan_date", { ascending: false })
+          .limit(40);
+        for (const row of (lastLift ?? []) as any[]) {
+          const slot = (row.why_payload as any)?.in_season_slot;
+          if (slot === "A" || slot === "B") {
+            lastLiftSlot = slot;
+            break;
+          }
+        }
+        // A declared start shows up as the lift being removed on a pitcher's
+        // game day; the day before shows up as primer-only.
         inSeasonPlan = resolveInSeasonPlan({
           phase: phaseRes.phase,
           planDate,
           isGameDay,
           gameRole: isCatcherPosition ? "catcher" : isPitcherAthlete ? "starting_pitcher" : "position",
-          startsToday: gameProximity.startingPitcherToday === true,
-          startsTomorrow: gameProximity.startingPitcherTomorrow === true,
-          lastLiftSlot: null,
+          startsToday: isPitcherAthlete && isGameDay && gameProximity.removeLift === true,
+          startsTomorrow: isPitcherAthlete && !isGameDay && gameProximity.primerOnly === true,
+          lastLiftSlot,
+          doubleheaderToday: gameProximity.isDoubleheaderToday === true,
           highDensity: gameProximity.highDensity === true,
         });
         if (inSeasonPlan.applies && heavyEligible && inSeasonPlan.liftAllowed) {
@@ -987,6 +1014,7 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (_isErr) {
       inSeasonPlan = null;
     }
+
     const methodContext: MethodContext = isInSeason || isPostSeason ? "in_season" : "offseason";
 
 
