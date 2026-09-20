@@ -32,6 +32,7 @@ const { data, error } = await supabase
   .limit(5000);
 if (error) throw error;
 const rows = data ?? [];
+if (rows.length === 0) throw new Error('No rows returned — this script needs a key that can read the catalog.');
 const slugs = new Set(rows.map((r) => r.slug));
 
 const fail = (label: string, items: string[]) => {

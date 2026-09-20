@@ -53,10 +53,10 @@ export function resolveHandChain(
   const deny = (blockedBy: string): HandChainDecision => ({ ...base, allowed: false, blockedBy });
 
   if (h.painFlag) return deny("pain_rules");
-  if (p.age < HAND_CHAIN_WALL_MIN_AGE) return deny("min_age");
+  if (p.ageYears < HAND_CHAIN_WALL_MIN_AGE) return deny("min_age");
 
   if (isFloorVersion(m)) {
-    if (p.age < HAND_CHAIN_FLOOR_MIN_AGE) return deny("floor_version_min_age");
+    if (p.ageYears < HAND_CHAIN_FLOOR_MIN_AGE) return deny("floor_version_min_age");
     if (!INTERMEDIATE_PLUS.has(p.trainingAge)) return deny("floor_version_training_age");
   }
 
