@@ -164,6 +164,35 @@ describe("shadow decisions", () => {
     );
   });
 
+  // Regression (Step 9 §B): the first two nightly determinism runs reported 20
+  // of 95 "mismatches". Nothing was non-deterministic — the stored row comes
+  // back from the database with object keys re-sorted and undefined fields
+  // dropped, so a raw text comparison of two identical decisions could differ.
+  // The decision is now taken from the stored snapshot and compared canonically.
+  const throughStorage = <T,>(v: T): T =>
+    JSON.parse(
+      JSON.stringify(v, (_k, val) =>
+        val && typeof val === "object" && !Array.isArray(val)
+          ? Object.fromEntries(
+              Object.keys(val as Record<string, unknown>)
+                .sort()
+                .reverse() // the database gives no guarantee of insertion order
+                .map((k) => [k, (val as Record<string, unknown>)[k]]),
+            )
+          : val,
+      ),
+    ) as T;
+
+  it("does not report a mismatch when storage re-sorts keys and drops undefined", () => {
+    const first = decideFromRaw(raw);
+    const storedRow = throughStorage(decisionRow(first, "nightly"));
+    const recomputed = decideFromSnapshot(
+      (storedRow as { inputs_snapshot: unknown }).inputs_snapshot as never,
+    );
+    expect(decisionsMatch(storedRow as never, recomputed)).toBe(true);
+    expect(storedRow.inputs_hash).toBe(recomputed.inputsHash);
+  });
+
   it("never exceeds M when there is no plan and no calendar", () => {
     const empty = decideFromRaw(base({ mpi: { date_of_birth: "2008-01-01" } }));
     expect(["none", "L", "M"]).toContain(empty.decision.allowedClass);

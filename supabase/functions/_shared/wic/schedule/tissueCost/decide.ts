@@ -20,6 +20,7 @@ import {
   dayModifiers,
   decay,
   fullRestDaysBetween,
+  restDaysExcludingLiftDays,
   isValidDate,
   liftCost,
   runTanks,
@@ -272,6 +273,20 @@ export function decide(
   const restSinceLastLift = lastLiftEntry ? fullRestDaysBetween(lastLiftEntry.date, today) : Infinity;
   const floorsApplied: string[] = [];
 
+  // Step 9 decision C — I12 is a SECOND check, independent of the floor table:
+  // any H needs >= 3 full rest days after the most recent H or M. L sessions
+  // neither count toward that gap nor reset it.
+  const liftDatesDone = new Set(
+    pastDays.filter((d) => d.lift && !d.lift.skipped).map((d) => d.date),
+  );
+  const lastLoadedEntry =
+    [...pastDays].reverse().find((d) => d.lift && !d.lift.skipped && d.lift.class !== "L") ?? null;
+  const i12RestFor = (date: string): number =>
+    lastLoadedEntry ? restDaysExcludingLiftDays(lastLoadedEntry.date, date, liftDatesDone) : Infinity;
+  const i12Need = config.floors.offseasonAfterMToH;
+  const i12Blocks = (cls: SessionClass, date: string): boolean =>
+    cls === "H" && phase !== "in_season" && phase !== "post_season" && i12RestFor(date) < i12Need;
+
   const painToday = (checkInByDate.get(today)?.pain ?? []).some((p) => p?.blocksLoadedWork);
 
   // ---- on-ramp (v1.2 §B1.5) — evaluated with the floors, before any tank math.
@@ -381,6 +396,13 @@ export function decide(
     if (lastLiftEntry && restSinceLastLift < need) {
       return { ok: false, rule: null, floor: `${phase}_after_${lastLiftEntry.lift!.class}_needs_${need}` };
     }
+    if (i12Blocks(cls, today)) {
+      return {
+        ok: false,
+        rule: null,
+        floor: `${phase}_i12_H_after_${lastLoadedEntry!.lift!.class}_needs_${i12Need}`,
+      };
+    }
     if (noInputs && cls !== "L" && restSinceLastLift === Infinity) {
       // no history at all — nothing to space from; cap already applied
     }
@@ -437,6 +459,7 @@ export function decide(
       if (rule) continue;
       const need = lastLiftEntry ? requiredRestDays(phase, lastLiftEntry.lift!.class, "H", config) : 0;
       if (lastLiftEntry && fullRestDaysBetween(lastLiftEntry.date, date) < need) continue;
+      if (i12Blocks("H", date)) continue;
       if (!tanksOk("H", lv, phase)) continue;
       nextHeavyDate = date;
       break;

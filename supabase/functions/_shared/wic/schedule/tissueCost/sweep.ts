@@ -5,7 +5,7 @@
 
 import { decide, classRank } from "./decide.ts";
 import { TCS_CONFIG } from "./config.ts";
-import { addDays, dayDiff, fullRestDaysBetween } from "./tanks.ts";
+import { addDays, dayDiff, fullRestDaysBetween, restDaysExcludingLiftDays } from "./tanks.ts";
 import type {
   CheckIn,
   DaySchedule,
@@ -286,9 +286,19 @@ export function checkInvariants(
       if (rest < need) push("I1", `rest ${rest} < floor ${need} (last ${lastCls}, class ${d.allowedClass})`);
 
       // I12 — offseason / pre-season: every H sits at least 3 full rest days
-      // after the previous H or M (Step 6 decision 2).
-      if (!inSeason && d.allowedClass === "H" && (lastCls === "H" || lastCls === "M") && rest < 3) {
-        push("I12", `H only ${rest} full rest days after a ${lastCls} lift`);
+      // after the most recent H or M (Step 6 decision 2, Step 9 decision C).
+      // L sessions neither count toward that gap nor reset it.
+      if (!inSeason && d.allowedClass === "H") {
+        const liftDates = new Set(
+          history.filter((x) => x.lift && !x.lift.skipped).map((x) => x.date),
+        );
+        const lastLoaded = [...history].reverse().find(
+          (x) => x.lift && !x.lift.skipped && x.lift.class !== "L",
+        );
+        if (lastLoaded) {
+          const r = restDaysExcludingLiftDays(lastLoaded.date, today, liftDates);
+          if (r < 3) push("I12", `H only ${r} full rest days after a ${lastLoaded.lift!.class} lift`);
+        }
       }
     }
   }

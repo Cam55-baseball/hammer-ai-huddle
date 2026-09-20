@@ -69,6 +69,25 @@ export function fullRestDaysBetween(a: string, b: string): number {
 }
 
 /**
+ * Full rest days strictly between two dates, counting only days on which no
+ * lift was completed (Step 9 decision C: an L session is not a rest day, and
+ * it does not reset the count either).
+ */
+export function restDaysExcludingLiftDays(
+  a: string,
+  b: string,
+  liftDates: ReadonlySet<string>,
+): number {
+  const span = dayDiff(a, b) - 1;
+  if (span <= 0) return span;
+  let rest = 0;
+  for (let i = 1; i <= span; i++) {
+    if (!liftDates.has(addDays(a, i))) rest++;
+  }
+  return rest;
+}
+
+/**
  * Athlete-local calendar date for an instant. Used by callers at the boundary;
  * `decide()` itself only ever receives an already-local ISO date.
  */

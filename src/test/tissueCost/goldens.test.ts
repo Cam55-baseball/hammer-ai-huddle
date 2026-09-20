@@ -86,7 +86,14 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
     ).toBe("H"); // Fri — 3 full rest days
   });
 
-  it("REF-L: L lift Mon → next lift 2 full rest days later (Thursday)", () => {
+  // "AFTER L" — settled law (Step 9 decision C). Two checks, BOTH must pass:
+  //   (1) the gap from the most recent session per the floor table
+  //       (previous L → anything = 2 full rest days);
+  //   (2) I12 — any H needs >= 3 full rest days after the most recent H or M.
+  //       L sessions neither count toward that gap nor reset it.
+  // So Monday L with no loaded lift in the prior days → Thursday H is allowed
+  // when the tanks allow it.
+  it("REF-L: L lift Mon, nothing loaded before it → Thursday H allowed (both checks pass)", () => {
     const days = [
       { ...practice("2026-01-05"), lift: { class: "L" as const } },
       practice("2026-01-06"),
@@ -94,12 +101,42 @@ describe("TCS goldens — reference cases (owner law, I6)", () => {
       practice("2026-01-08"),
     ];
     expect(run(ADV17, days.slice(0, 3), "2026-01-07").allowedClass).toBe("none");
-    // OPEN CONFLICT (Step 6 decision 2): the floor table says "previous L ->
-    // next anything: 2", which clears H on Thursday; the golden text for the
-    // same decision says Thursday should be M unless the previous loaded lift
-    // is >= 3 full rest days back. The table is implemented as written and the
-    // conflict is reported to the owner — NOT tuned away.
     expect(run(ADV17, days, "2026-01-08").allowedClass).toBe("H");
+  });
+
+  it("AFTER-L GOLDEN: Sat M, Mon L → Wed H blocked (I12), Thu H allowed", () => {
+    const days = [
+      { ...practice("2026-01-03"), lift: { class: "M" as const } }, // Saturday
+      practice("2026-01-04"),
+      { ...practice("2026-01-05"), lift: { class: "L" as const } }, // Monday
+      practice("2026-01-06"),
+      practice("2026-01-07"),
+      practice("2026-01-08"),
+    ];
+    // Wednesday: rest days after the Saturday M are Sun + Tue = 2 (Monday was
+    // an L session, so it is not a rest day) → I12 blocks H.
+    const wed = run(ADV17, days.slice(0, 4), "2026-01-07");
+    expect(wed.allowedClass).not.toBe("H");
+    expect(wed.floorsApplied.length).toBeGreaterThan(0);
+    // Thursday: Sun + Tue + Wed = 3 rest days → H allowed.
+    expect(run(ADV17, days.slice(0, 5), "2026-01-08").allowedClass).toBe("H");
+  });
+
+  it("AFTER-L GOLDEN (check 2 alone): Sun M, Mon L → Thu H blocked by I12 only", () => {
+    const days = [
+      { ...practice("2026-01-04"), lift: { class: "M" as const } }, // Sunday
+      { ...practice("2026-01-05"), lift: { class: "L" as const } }, // Monday
+      practice("2026-01-06"),
+      practice("2026-01-07"),
+      practice("2026-01-08"),
+    ];
+    // Table check passes (2 rest days after the Monday L); I12 does not —
+    // only Tue + Wed are rest days after the Sunday M, the Monday L is not.
+    const thu = run(ADV17, days.slice(0, 4), "2026-01-08");
+    expect(thu.allowedClass).not.toBe("H");
+    expect(thu.floorsApplied.some((f) => f.includes("i12"))).toBe(true);
+    // Friday — Tue + Wed + Thu = 3 rest days → H allowed.
+    expect(run(ADV17, days, "2026-01-09").allowedClass).toBe("H");
   });
 });
 
