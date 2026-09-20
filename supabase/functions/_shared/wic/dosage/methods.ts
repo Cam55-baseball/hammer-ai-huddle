@@ -164,7 +164,10 @@ export function methodEnvelope(
   if (!method) return null;
   const row = METHOD_ENVELOPES[method];
   if (!row) return null;
-  return row[context] ?? row.offseason ?? null;
+  // Law L0.3 — a method with no envelope for this context is simply not
+  // available here. No falling back to the offseason envelope: that is how
+  // eccentric overload would leak into the season.
+  return row[context] ?? null;
 }
 
 /** The plain-English line the card prints under a method lift. */
