@@ -658,7 +658,8 @@ All colors MUST be HSL.
   body:has(.staff-print) main,
   body:has(.staff-print) .staff-print,
   body:has(.staff-print) .staff-print *,
-  body:has(.staff-print) .group\/sidebar-wrapper {
+  body:has(.staff-print) .group\/sidebar-wrapper,
+  body:has(.staff-print) [class*="overflow-x-hidden"] {
     min-height: 0 !important;
     height: auto !important;
     overflow: visible !important;
