@@ -1,23 +1,24 @@
 /**
- * Step 12 Part A — rollout gates and automatic safety.
+ * Step 13 Part A — release gates (these replace the Step 9 "3 nights / 14
+ * nights" rule and the Step 12 three-green-night wait) and automatic safety.
  *
  * Pure. The same functions answer for the Control Center, for the tests and
  * for the nightly safety job, so the button and the robot can never disagree.
  *
- * Gates (these replace the Step 9 "3 nights / 14 nights" rule):
- *   self            — allowed as soon as the build's proofs passed AND last
- *                     night's shadow check is green.
- *   pilot | all     — allowed after 3 consecutive green nights, the version's
- *                     20,000-season pass, and the owner pressing the button.
+ * Quality gate only, no waiting period:
+ *   self            — the build's proofs passed AND last night's check is green.
+ *   pilot | all     — the same, plus the version's 20,000-season pass. The
+ *                     owner still confirms the change on screen.
  *
- * Automatic safety: a failed nightly shadow check, a fallback rate above 0.5%,
- * or card-build errors above the feature's normal level each drop the switch
- * down exactly one step (all → pilot → self → off).
+ * Automatic safety is unchanged from Step 12: a failed nightly shadow check, a
+ * fallback rate above 0.5%, or card-build errors above the feature's normal
+ * level each drop the switch down exactly one step (all → pilot → self → off).
  */
 
 export type SwitchMode = "off" | "self" | "pilot" | "all";
 
 export const FALLBACK_RATE_LIMIT = 0.005;
+/** Kept for the health readout only — it is no longer a gate. */
 export const GREEN_NIGHTS_FOR_WIDE = 3;
 
 export type GateInputs = {
@@ -41,20 +42,13 @@ export function evaluateGate(mode: SwitchMode, g: GateInputs): GateResult {
   if (!g.proofsOk) {
     return { ok: false, why: "The tests for this build have not passed yet", needsConfirm: false };
   }
-
-  if (mode === "self") {
-    if (!g.lastNightGreen) return { ok: false, why: "Last night's check was not green", needsConfirm: false };
-    return { ok: true, why: "", needsConfirm: false };
+  if (!g.lastNightGreen) {
+    return { ok: false, why: "Last night's check was not green", needsConfirm: false };
   }
 
-  // pilot and all
-  if (g.greenNights < GREEN_NIGHTS_FOR_WIDE) {
-    return {
-      ok: false,
-      why: `Needs ${GREEN_NIGHTS_FOR_WIDE} green nights in a row (has ${g.greenNights})`,
-      needsConfirm: false,
-    };
-  }
+  if (mode === "self") return { ok: true, why: "", needsConfirm: false };
+
+  // pilot and all — quality gate only, no waiting period.
   if (!g.versionOk) {
     return { ok: false, why: "Needs the 20,000-season pass for this version", needsConfirm: false };
   }
