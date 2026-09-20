@@ -507,6 +507,7 @@ const App = () => {
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/admin/training-intelligence" element={<AdminTrainingIntelligence />} />
+              <Route path="/staff/training" element={<StaffView />} />
               <Route path="/admin/engine-health" element={<EngineHealthDashboard />} />
               <Route path="/coach-compliance" element={<Navigate to="/coach-dashboard" replace />} />
               <Route path="/drill-library" element={<SoftballLock feature="drill_library"><DrillLibraryPlayer /></SoftballLock>} />
