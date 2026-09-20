@@ -129,9 +129,9 @@ export function decideGuarded(
     return fallbackDecision(history, today, "invalid_output", hash);
   }
   if (elapsed > budget) {
-    return fallbackDecision(history, today, "timeout", out.inputsHash);
+    return fallbackDecision(history, today, "timeout", produced.inputsHash);
   }
-  return { ...out, fallbackUsed: false, fallbackCause: "none" };
+  return { ...produced, fallbackUsed: false, fallbackCause: "none" };
 }
 
 /** Monitoring helper — §1 alert if the fallback rate exceeds 0.5%. */
