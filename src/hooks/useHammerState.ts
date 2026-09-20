@@ -59,6 +59,27 @@ export function useHammerState() {
     staleTime: 60_000,
   });
 
+  /**
+   * Step 12 B2 — freshness on open.
+   * The background refresh no longer runs when nothing has changed, so when the
+   * app opens with a snapshot older than 30 minutes we recompute it right away.
+   * Once per session, per user.
+   */
+  useEffect(() => {
+    if (!user) return;
+    const snap = query.data;
+    if (query.isLoading) return;
+    const key = `hammer-state-open-refresh:${user.id}`;
+    if (sessionStorage.getItem(key)) return;
+    const computedAt = snap?.computed_at ? new Date(snap.computed_at).getTime() : 0;
+    if (Date.now() - computedAt < 30 * 60_000) return;
+    sessionStorage.setItem(key, '1');
+    supabase.functions
+      .invoke('compute-hammer-state', { body: { user_id: user.id } })
+      .then(() => qc.invalidateQueries({ queryKey: ['hammer-state', user.id] }))
+      .catch((e) => console.warn('[useHammerState] open refresh failed', e));
+  }, [user?.id, query.isLoading, query.data?.computed_at, qc]);
+
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -71,6 +92,7 @@ export function useHammerState() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, qc]);
+
 
   const overall = (query.data?.overall_state ?? 'ready') as HammerOverallState;
   const meta = STATE_META[overall];
