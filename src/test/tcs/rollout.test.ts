@@ -1,0 +1,173 @@
+import { describe, expect, it } from "vitest";
+import {
+  countGreenNights,
+  demote,
+  evaluateAutoOff,
+  evaluateGate,
+  type SwitchMode,
+} from "../../../supabase/functions/_shared/wic/flags/rollout";
+
+const green = { status: "passed", mismatches: 0, fallbackRate: 0 };
+
+describe("Step 12 rollout gates", () => {
+  it("lets Just me through on proofs plus one green night", () => {
+    const r = evaluateGate("self", {
+      proofsOk: true,
+      versionOk: false,
+      greenNights: 1,
+      lastNightGreen: true,
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it("blocks Just me when last night was not green", () => {
+    const r = evaluateGate("self", {
+      proofsOk: true,
+      versionOk: true,
+      greenNights: 0,
+      lastNightGreen: false,
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("blocks pilot and everyone under 3 green nights", () => {
+    for (const m of ["pilot", "all"] as SwitchMode[]) {
+      const r = evaluateGate(m, {
+        proofsOk: true,
+        versionOk: true,
+        greenNights: 2,
+        lastNightGreen: true,
+        ownerConfirmed: true,
+      });
+      expect(r.ok).toBe(false);
+      expect(r.why).toContain("3 green nights");
+    }
+  });
+
+  it("allows pilot and everyone on 3 green nights, the version pass and the owner's press", () => {
+    for (const m of ["pilot", "all"] as SwitchMode[]) {
+      const r = evaluateGate(m, {
+        proofsOk: true,
+        versionOk: true,
+        greenNights: 3,
+        lastNightGreen: true,
+        ownerConfirmed: true,
+      });
+      expect(r.ok).toBe(true);
+      expect(r.needsConfirm).toBe(true);
+    }
+  });
+
+  it("holds pilot and everyone until the version run passes", () => {
+    const r = evaluateGate("all", {
+      proofsOk: true,
+      versionOk: false,
+      greenNights: 9,
+      lastNightGreen: true,
+      ownerConfirmed: true,
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("never asks for more than 3 nights — no 14-day wait", () => {
+    const r = evaluateGate("all", {
+      proofsOk: true,
+      versionOk: true,
+      greenNights: 3,
+      lastNightGreen: true,
+      ownerConfirmed: true,
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it("off is always allowed", () => {
+    expect(evaluateGate("off", { proofsOk: false, versionOk: false, greenNights: 0, lastNightGreen: false }).ok).toBe(true);
+  });
+});
+
+describe("Step 12 automatic safety", () => {
+  it("drops one step when the nightly check fails", () => {
+    const r = evaluateAutoOff({
+      mode: "all",
+      shadowCheck: { status: "failed", mismatches: 0, fallbackRate: 0 },
+      errorsToday: 0,
+      baselineErrors: 0,
+    });
+    expect(r.demoted).toBe(true);
+    expect(r.trigger).toBe("shadow_check_failed");
+    expect(r.toMode).toBe("pilot");
+  });
+
+  it("drops one step on a mismatch", () => {
+    const r = evaluateAutoOff({
+      mode: "pilot",
+      shadowCheck: { status: "passed", mismatches: 2, fallbackRate: 0 },
+      errorsToday: 0,
+      baselineErrors: 0,
+    });
+    expect(r.demoted).toBe(true);
+    expect(r.toMode).toBe("self");
+  });
+
+  it("drops one step when the backup plan is used above 0.5%", () => {
+    const r = evaluateAutoOff({
+      mode: "self",
+      shadowCheck: { status: "passed", mismatches: 0, fallbackRate: 0.006 },
+      errorsToday: 0,
+      baselineErrors: 0,
+    });
+    expect(r.demoted).toBe(true);
+    expect(r.trigger).toBe("fallback_rate");
+    expect(r.toMode).toBe("off");
+  });
+
+  it("stays put at exactly 0.5%", () => {
+    const r = evaluateAutoOff({
+      mode: "all",
+      shadowCheck: { status: "passed", mismatches: 0, fallbackRate: 0.005 },
+      errorsToday: 0,
+      baselineErrors: 0,
+    });
+    expect(r.demoted).toBe(false);
+  });
+
+  it("drops one step when card problems rise above the normal level", () => {
+    const r = evaluateAutoOff({
+      mode: "all",
+      shadowCheck: green,
+      errorsToday: 1,
+      baselineErrors: 0,
+    });
+    expect(r.demoted).toBe(true);
+    expect(r.trigger).toBe("card_errors");
+  });
+
+  it("leaves a healthy switch alone", () => {
+    const r = evaluateAutoOff({ mode: "all", shadowCheck: green, errorsToday: 0, baselineErrors: 0 });
+    expect(r.demoted).toBe(false);
+    expect(r.toMode).toBe("all");
+  });
+
+  it("never touches a switch that is already off", () => {
+    const r = evaluateAutoOff({
+      mode: "off",
+      shadowCheck: { status: "failed", mismatches: 5, fallbackRate: 1 },
+      errorsToday: 99,
+      baselineErrors: 0,
+    });
+    expect(r.demoted).toBe(false);
+  });
+
+  it("walks all the way down one step at a time", () => {
+    expect(demote("all")).toBe("pilot");
+    expect(demote("pilot")).toBe("self");
+    expect(demote("self")).toBe("off");
+    expect(demote("off")).toBe("off");
+  });
+
+  it("counts only the unbroken run of green nights", () => {
+    expect(
+      countGreenNights([green, green, { status: "failed", mismatches: 0, fallbackRate: 0 }, green]),
+    ).toBe(2);
+  });
+});
