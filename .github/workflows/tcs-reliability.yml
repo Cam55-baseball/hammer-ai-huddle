@@ -1,0 +1,48 @@
+name: tcs-reliability
+
+# Tissue Cost Scheduler reliability gate (spec §7).
+# Any invariant, golden or chaos failure blocks the build.
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/_shared/wic/schedule/tissueCost/**'
+      - 'src/test/tissueCost/**'
+      - 'scripts/audits/tcs-property-sweep.ts'
+      - '.github/workflows/tcs-reliability.yml'
+  push:
+    branches: [main]
+  schedule:
+    # nightly full sweep
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Install deps
+        run: npm ci
+      - name: Goldens + chaos + property slice (I1–I9)
+        run: npx vitest run src/test/tissueCost
+        env:
+          TCS_SEED: '20260920'
+          TCS_SEASONS: '400'
+
+  full-sweep:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: oven-sh/setup-bun@v2
+      - name: Install deps
+        run: npm ci
+      - name: 100,000 athlete-seasons
+        run: bun scripts/audits/tcs-property-sweep.ts 100000 4 20260920

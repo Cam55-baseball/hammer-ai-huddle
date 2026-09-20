@@ -17,7 +17,9 @@
     "audit:wk-dedupe": "npx -y tsx scripts/audits/wk-dedupe-check.ts",
     "audit:wk": "npm run audit:wk-inseason && npm run audit:wk-dedupe",
     "verify": "npm run lint:p3 && npm run lint",
-    "audit:families": "npx -y tsx scripts/check-family-coverage.ts"
+    "audit:families": "npx -y tsx scripts/check-family-coverage.ts",
+    "test:tcs": "vitest run src/test/tissueCost",
+    "tcs:sweep": "bun scripts/audits/tcs-property-sweep.ts"
   },
   "dependencies": {
     "@capacitor/cli": "^8.5.1",
