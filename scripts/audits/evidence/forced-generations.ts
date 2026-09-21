@@ -61,7 +61,7 @@ for (const s of athletes) {
   const ms = Date.now() - t0;
 
   const { data: rows } = await admin
-    .from("wk_daily_prescriptions")
+    .from("wk_prescriptions")
     .select("slot, sequence_order, movement_slug")
     .eq("user_id", s.user_id)
     .eq("plan_date", today)
