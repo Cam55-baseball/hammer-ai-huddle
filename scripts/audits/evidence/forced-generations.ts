@@ -38,11 +38,13 @@ for (const s of athletes) {
   const email = u?.user?.email;
   if (!email) {
     results.push({ user_id: s.user_id, built: false, reason: "no email on the account" });
+    console.log(`[forced] ${s.user_id.slice(0, 8)} — SKIPPED: no email on the account`);
     continue;
   }
   const { data: link, error: linkErr } = await admin.auth.admin.generateLink({ type: "magiclink", email });
   if (linkErr || !link?.properties?.email_otp) {
     results.push({ user_id: s.user_id, built: false, reason: `could not mint a session: ${linkErr?.message}` });
+    console.log(`[forced] ${s.user_id.slice(0, 8)} — SKIPPED: could not mint a session (${linkErr?.message})`);
     continue;
   }
   const userClient = createClient(url, anon, { auth: { persistSession: false } });
@@ -53,6 +55,7 @@ for (const s of athletes) {
   });
   if (otpErr || !sess?.session) {
     results.push({ user_id: s.user_id, built: false, reason: `sign-in failed: ${otpErr?.message}` });
+    console.log(`[forced] ${s.user_id.slice(0, 8)} — SKIPPED: sign-in failed (${otpErr?.message})`);
     continue;
   }
 
