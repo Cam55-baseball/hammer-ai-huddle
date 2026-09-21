@@ -8,7 +8,13 @@
  * Run: bun scripts/audits/auto-activation-report.ts
  */
 import { createClient } from "@supabase/supabase-js";
-import { auditCatalog, type AuditCatalogRow } from "../../supabase/functions/_shared/wic/catalog/safetyAudit.ts";
+import {
+  auditActiveRows,
+  auditCatalog,
+  type AuditCatalogRow,
+  intensityClassCoverage,
+} from "../../supabase/functions/_shared/wic/catalog/safetyAudit.ts";
+
 
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
