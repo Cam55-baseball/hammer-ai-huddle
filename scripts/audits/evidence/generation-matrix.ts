@@ -58,6 +58,43 @@ console.log(`[matrix] active catalog rows: ${catalog.length}`);
 
 const m = runGenerationMatrix(catalog, LIFTING_V2);
 
+/**
+ * Step 21C — skill cards must not suffer.
+ *
+ * The same catalog is run with the rest-day calculator OFF and then ON at each
+ * allowed class. Every non-lift row (warm-up, speed, skill work, arm care,
+ * conditioning, recovery) must be byte-identical across all four runs: the
+ * day's strength ceiling may lower the lift and nothing else.
+ */
+const NON_LIFT = (r: { slot?: string | null }) => String(r.slot ?? "") !== "lift";
+const nonLiftShape = (res: ReturnType<typeof runGenerationMatrix>) =>
+  JSON.stringify(
+    res.results.map((c) => ({
+      key: [c.phase, c.age, c.taYears, c.available, c.isGameDay, c.dayType].join("|"),
+      rows: (c.rxs ?? []).filter(NON_LIFT).map((r) => [r.slot, r.sequence_role, r.movement_slug, r.sets, r.reps]),
+    })),
+  );
+
+const baseShape = nonLiftShape(m);
+const parity: Array<{ tcs_class: string; identical: boolean; differing_cells: number }> = [];
+for (const tcsClass of ["H", "M", "L", "none"] as const) {
+  const run = runGenerationMatrix(catalog, LIFTING_V2, { tcsClass });
+  const shape = nonLiftShape(run);
+  let differing = 0;
+  if (shape !== baseShape) {
+    const a = JSON.parse(baseShape) as Array<{ key: string; rows: unknown }>;
+    const b = JSON.parse(shape) as Array<{ key: string; rows: unknown }>;
+    for (let i = 0; i < a.length; i++) {
+      if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) differing++;
+    }
+  }
+  parity.push({ tcs_class: tcsClass, identical: shape === baseShape, differing_cells: differing });
+  console.log(
+    `[matrix] skill-card parity, calculator=${tcsClass}: ${shape === baseShape ? "identical" : `${differing} cells differ`}`,
+  );
+}
+const parityPassed = parity.every((p) => p.identical);
+
 const outPath = join(dirname(fileURLToPath(import.meta.url)), "generation-matrix.json");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(
@@ -69,6 +106,7 @@ writeFileSync(
       empty_cells: m.empty_cells,
       fingerprint: m.fingerprint,
       tiers: m.tiers,
+      skill_card_parity: parity,
       results: m.results,
     },
     null,
@@ -87,7 +125,7 @@ const { data: row, error: recErr } = await db
     fingerprint: m.fingerprint,
     status: m.passed ? "passed" : "failed",
     git_sha: gitSha,
-    notes: { tiers: m.tiers, lifting_v2: LIFTING_V2 },
+    notes: { tiers: m.tiers, lifting_v2: LIFTING_V2, skill_card_parity: parity },
   })
   .select("id")
   .single();
@@ -99,6 +137,10 @@ console.log(`[matrix] tiers:`, m.tiers);
 console.log(`[matrix] cells with no card: ${m.empty_cells}`);
 console.log(`[matrix] fingerprint: ${m.fingerprint}`);
 console.log(`[matrix] evidence → ${outPath}`);
+if (!parityPassed) {
+  console.error("[matrix] ❌ FAILED — the rest-day calculator changed a non-lift card.");
+  process.exit(1);
+}
 if (!m.passed) {
   console.error("[matrix] ❌ FAILED — a cell produced no card, or the axis count is wrong.");
   process.exit(1);
