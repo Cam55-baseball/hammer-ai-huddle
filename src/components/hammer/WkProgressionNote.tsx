@@ -150,7 +150,29 @@ export function WkProgressionNote({
 }
 
 
-/** Session-level header line, e.g. "Block 3 · Week 2 · add work — Maximum Bat Speed". */
+/**
+ * Step 21D2 — strip internal block numbering from a stored session title and
+ * leave athlete words only: "Block 36 · Week 2 · add work — Maximum Bat Speed"
+ * becomes "Build the base · Week 2 — Maximum Bat Speed".
+ */
+export function athleteSessionTitle(title?: string | null): string | null {
+  const raw = String(title ?? "").trim();
+  if (!raw) return null;
+  const cleaned = raw
+    .replace(/^Block\s+\d+\s*·\s*/i, "")
+    .replace(/(Week\s+\d+)\s*·\s*([a-z][\w +-]*)/i, (_m, wk: string, phase: string) => {
+      const key = phase.trim().toLowerCase();
+      const pretty =
+        Object.entries(PHASE_COPY).find(([, v]) => v.toLowerCase() === key)?.[1] ??
+        PHASE_COPY[key] ??
+        phase.trim().charAt(0).toUpperCase() + phase.trim().slice(1);
+      return `${pretty} · ${wk}`;
+    })
+    .trim();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/** Session-level header line, e.g. "Build the base · Week 2 — Maximum Bat Speed". */
 export function WkSessionShapeLine({
   title,
   shape,
@@ -158,10 +180,11 @@ export function WkSessionShapeLine({
   title?: string | null;
   shape?: { min?: number; max?: number; actual?: number } | null;
 }) {
-  if (!title && !shape?.actual) return null;
+  const display = athleteSessionTitle(title);
+  if (!display && !shape?.actual) return null;
   return (
     <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-2">
-      {title && <span className="font-medium text-foreground/80">{title}</span>}
+      {display && <span className="font-medium text-foreground/80">{display}</span>}
       {shape?.actual != null && (
         <span>
           {shape.actual} movement{shape.actual === 1 ? "" : "s"} in sequence
