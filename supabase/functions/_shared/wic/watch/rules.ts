@@ -174,8 +174,12 @@ export function livePrescriptionViolations(i: {
         auto_action: "The switch drops one level tonight and the owner is alerted",
       });
     }
-    // Only the slots the ceiling governs; a rally drill or a J-band chart
-    // carries no class by design and is not an unchecked row.
+    // Step 23 A2 — every active row in the catalog now carries an intensity
+    // class, so the ceiling above is a real check over the whole catalog, not
+    // a third of it. A lift row still arriving without a class means the row
+    // came from outside the catalog: worth telling the owner, but it is still
+    // not a like-with-like comparison, so it stays informational and never
+    // steps a switch down on its own.
     const unknown = i.rows.filter((r) => !r.intensityClass && r.slot === "lift");
     if (unknown.length > 0) {
       out.push({
@@ -188,11 +192,13 @@ export function livePrescriptionViolations(i: {
           plan_date: i.planDate,
           allowed_class: i.allowedClass,
           rows: unknown.map((r) => ({ slug: r.slug, slot: r.slot ?? null })),
+          coverage: "Every active catalog row is classed; a row here came from outside the catalog.",
           note: "Not comparable — logged for information only, no automatic action.",
         },
         auto_action: null,
       });
     }
+
   }
 
   // Step 20 C1 — the budget check, now comparing like with like. `cnsUsed`
