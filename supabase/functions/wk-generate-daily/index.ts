@@ -32,6 +32,9 @@ import {
 } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
+// Step 20 C2 — every row resolves an intensity class, stored or derived from
+// the documented mapping, so the ceiling always compares like with like.
+import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
@@ -317,8 +320,15 @@ interface Prescription {
 // while the canonical authority lives in the shared module.
 import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
 
+// Step 20 C3 — the first request an isolate serves pays for loading the code.
+// That build is not comparable with a warm one, so the watchdog logs it for
+// information instead of raising a slowdown alarm.
+let servedARequest = false;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const WAS_COLD_START = !servedARequest;
+  servedARequest = true;
   const generationStartedAt = Date.now();
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -925,6 +935,14 @@ const handler = async (req: Request): Promise<Response> => {
           decision_source: decisionSource,
         };
         cnsCap = Math.min(cnsCap, tcsAdjust.cnsCap);
+        // Step 20 C — a "none" decision IS a recovery day. Saying so once,
+        // here, is what makes every downstream engine agree: the session
+        // template becomes the recovery template (so it no longer demands
+        // compound categories the day must not contain), and the engines that
+        // already read `day_type` behave as they do on any recovery day.
+        if (tcsAdjust.removeLift) {
+          (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+        }
         for (const r of tcsAdjust.reasons) {
           reductions.push({ reason: "tissue_cost", detail: r });
         }
@@ -1245,7 +1263,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (tcsAdjust) {
         if (
           !opts?.ignoreTcsClass &&
-          tcsAdjust.blockedIntensityClasses.includes(String((m as any).intensity_class ?? ""))
+          tcsAdjust.blockedIntensityClasses.includes(String(resolveIntensityClass(m as any) ?? ""))
         ) return false;
       }
       if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
@@ -1506,6 +1524,12 @@ const handler = async (req: Request): Promise<Response> => {
     const rxs: Prescription[] = [];
     let seq = 0;
     let cnsUsed = 0;
+    // Step 20 C1 — the budget the ceiling actually governs. Total-dose rows
+    // (innings, contacts, seconds, feet) are exempt from clamping by design,
+    // so counting them against the cap and then calling the result an overrun
+    // was comparing two different things. This counter holds only the spend
+    // the cap governs; the watchdog checks THIS against the cap.
+    let cnsUsedGoverned = 0;
 
     const humanizeClass = (c: string | null) => {
       switch (c) {
@@ -1580,6 +1604,7 @@ const handler = async (req: Request): Promise<Response> => {
         (dosageUnitRaw && dosageUnitRaw !== "reps");
       const clamped = !isTotalDose && (cnsUsed + s.movement.cns_cost) > cnsCap;
       cnsUsed += clamped ? Math.max(0, cnsCap - cnsUsed) : s.movement.cns_cost;
+      if (!isTotalDose) cnsUsedGoverned += clamped ? Math.max(0, cnsCap - cnsUsedGoverned) : s.movement.cns_cost;
 
       // Override provenance
       const phaseBlocked = !!(s.movement.phase_allow && s.movement.phase_allow.length > 0 && !s.movement.phase_allow.includes(phaseRes.phase));
@@ -1895,9 +1920,34 @@ const handler = async (req: Request): Promise<Response> => {
         if (armCareRow) push("lift", "arm_care", armCareRow, {}, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
       }
 
-      // 2) Trunk primer — every session
-      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ?? pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
+      // Step 20 C — a full rest day ("none" from the rest-day calculator) is a
+      // recovery day, not a lighter lifting day. Arm care above still ships,
+      // so the card is never empty, but nothing loaded is built: no primer, no
+      // compound, no accessories, and no template back-fill. Building them and
+      // then relying on the class filter let the Step 15 "a required category
+      // must survive a cap" relaxation put a compound lift on a rest day.
+      const restDayToday = tcsAdjust?.removeLift === true;
+
+      // 2) Trunk primer — every session, rest day included. On a rest day the
+      // class filter has already removed everything loaded, so what lands here
+      // is the light trunk/mobility work the recovery template asks for.
+      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ??
+        pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
+
+      // Rest day: the recovery template asks for mobility. Pick the first
+      // legal mobility row the class filter allows so the recovery card is a
+      // real recovery session rather than a template failure.
+      if (restDayToday) {
+        const mobility = lib.find(
+          (m) => eligibleLift(m) && coerceCanonicalCategory(m as any) === "mobility",
+        ) ?? lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "mobility");
+        if (mobility) {
+          push("lift", "mobility", mobility, {}, "Full rest day — easy movement and tissue work only. Nothing loaded today.");
+        }
+      }
+
+      if (!restDayToday) {
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
@@ -1956,6 +2006,13 @@ const handler = async (req: Request): Promise<Response> => {
         if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 
+      } // end of the loaded lift block (skipped entirely on a rest day)
+
+      // The template still has to be satisfied on a rest day — the recovery
+      // template asks only for light categories. What a rest day never gets is
+      // the class-relaxing last resort: on a capped training day that keeps a
+      // required category alive, but on a rest day it is the one path that
+      // could put a loaded lift on the card, so it is withheld.
       ensureFullBodyLift(
         rxs,
         lib,
@@ -1963,7 +2020,8 @@ const handler = async (req: Request): Promise<Response> => {
         push,
         isInSeason,
         pickFirstRelaxedLift,
-        pickFirstClassRelaxedLift,
+        restDayToday ? () => undefined : pickFirstClassRelaxedLift,
+        restDayToday,
       );
     }
 
@@ -3737,11 +3795,15 @@ const handler = async (req: Request): Promise<Response> => {
         rows: rows.map((r: any) => ({
           slug: String(r.movement_slug ?? ""),
           slot: r.slot ?? null,
-          intensityClass: ((r.why_payload ?? {}) as any).intensity_class ?? null,
+          intensityClass: resolveIntensityClass({
+            intensity_class: ((r.why_payload ?? {}) as any).intensity_class ?? null,
+            category: ((r.why_payload ?? {}) as any).category ?? null,
+            cns_cost: Number(r.cns_cost ?? 0) || null,
+          }),
           cnsCost: Number(r.cns_cost ?? 0),
         })),
         cnsCap: tcsAdjust ? cnsCap : null,
-        cnsUsed: tcsAdjust ? cnsUsed : null,
+        cnsUsed: tcsAdjust ? cnsUsedGoverned : null,
         itemCount: rows.length,
       });
       const { data: baseRow } = await admin
@@ -3753,6 +3815,7 @@ const handler = async (req: Request): Promise<Response> => {
         baselineMs: Number((baseRow as any)?.value ?? 0),
         currentMs: generationMs,
         samples: 1,
+        coldStart: WAS_COLD_START,
       });
       if (slow) watchNotes.push(slow);
       await writeNotes(admin as any, watchNotes);
@@ -4023,6 +4086,11 @@ function ensureFullBodyLift(
   isInSeason: boolean,
   pickFirstRelaxed?: (slugs: string[]) => MovementRow | undefined,
   pickFirstClassRelaxed?: (slugs: string[]) => MovementRow | undefined,
+  // Step 20 C — on a full rest day the resolved template is the recovery one,
+  // which requires only core and mobility. The compound / push / pull / single
+  // leg guardrails below belong to the full-body training templates, so they
+  // are skipped rather than back-filling loaded work onto a rest day.
+  restDay = false,
 ) {
   const catalogBySlug = new Map(catalog.map((m) => [m.slug, m] as const));
   const categoryForRx = (rx: Prescription) => coerceCanonicalCategory(catalogBySlug.get(rx.movement_slug) as any);
@@ -4112,7 +4180,7 @@ function ensureFullBodyLift(
     }
   }
 
-  if (!hasLiftCategory("compound_lower")) {
+  if (!restDay && !hasLiftCategory("compound_lower")) {
     const hit = pickMandatoryCategory(isInSeason
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
@@ -4121,12 +4189,12 @@ function ensureFullBodyLift(
     }
   }
 
-  if (!hasLiftRole("unilateral_lower")) {
+  if (!restDay && !hasLiftRole("unilateral_lower")) {
     const m = pickFirst(isInSeason ? ["lateral_db_step_up", "sl_deadlift_fat_grips"] : ["lateral_db_step_up", "kot_lunge", "sl_deadlift_fat_grips"]);
     if (m) push("lift", "unilateral_lower", m, {}, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
   }
 
-  if (!hasLiftCategory("compound_upper_push")) {
+  if (!restDay && !hasLiftCategory("compound_upper_push")) {
     const hit = pickMandatoryCategory(isInSeason
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
@@ -4135,7 +4203,7 @@ function ensureFullBodyLift(
     }
   }
 
-  if (!hasLiftCategory("compound_upper_pull")) {
+  if (!restDay && !hasLiftCategory("compound_upper_pull")) {
     const hit = pickMandatoryCategory(isInSeason
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
@@ -4154,7 +4222,7 @@ function ensureFullBodyLift(
     if (m) push("lift", "arm_care", m, {}, "Full-body guardrail: arm care is mandatory, not optional.");
   }
 
-  if (!hasLiftRole("trunk_primer")) {
+  if (!restDay && !hasLiftRole("trunk_primer")) {
     const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl", "lift_deadbug_band_press", "lift_mcgill_big3"]);
     if (m) push("lift", "trunk_primer", m, {}, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
   }
