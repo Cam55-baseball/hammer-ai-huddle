@@ -5,13 +5,13 @@ import { Trash2, Play, Download, Clock, AlertTriangle, Film, Loader2 } from 'luc
 import {
   usePromoProjects,
   useRenderQueue,
-  useQueueRender,
   useDeleteProject,
   FORMAT_CONFIGS,
   getDurationForVariant,
   type PromoProject,
 } from '@/hooks/usePromoEngine';
 import { usePromoScenes } from '@/hooks/usePromoEngine';
+import { toast } from '@/hooks/use-toast';
 
 const STATUS_BADGES: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
   draft: { variant: 'secondary', label: 'Draft' },
@@ -24,7 +24,6 @@ export const ExportManager = () => {
   const { data: projects = [], isLoading } = usePromoProjects();
   const { data: scenes = [] } = usePromoScenes();
   const { data: renderJobs = [] } = useRenderQueue();
-  const queueRender = useQueueRender();
   const deleteProject = useDeleteProject();
 
   const hasOutdatedScenes = (project: PromoProject) => {
@@ -93,7 +92,6 @@ export const ExportManager = () => {
           const statusConfig = STATUS_BADGES[project.status] || STATUS_BADGES.draft;
           const latestJob = getLatestJob(project.id);
           const seq = (project.scene_sequence || []) as any[];
-          const isRendering = project.status === 'rendering' || latestJob?.status === 'processing';
 
           return (
             <Card key={project.id} className="p-5 space-y-4">
