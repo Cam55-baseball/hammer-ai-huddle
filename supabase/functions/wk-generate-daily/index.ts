@@ -98,6 +98,7 @@ import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/c
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
 import { REQUIRED_LIFT_CATEGORIES } from "../_shared/wic/lift/templates.ts";
+import { planTrims } from "../_shared/wic/exposure/requiredHolders.ts";
 import { MANDATORY_RESCUE_SETS, pickMandatory } from "../_shared/wic/lift/mandatory.ts";
 // Goal Emphasis Authority + Weekly Balance Ledger — bounded, interpretive only.
 import { resolveGoalEmphasis, emphasisFor } from "../_shared/wic/goals/emphasis.ts";
@@ -694,7 +695,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // -------- Phase 6: Personalization Context --------
-    const personalizationContext: PersonalizationContext = resolvePersonalizationContext({
+    let personalizationContext: PersonalizationContext = resolvePersonalizationContext({
       athleteContext,
       trainingAgeContext,
     });
@@ -896,6 +897,24 @@ const handler = async (req: Request): Promise<Response> => {
       .from("wk_feature_switches")
       .select("feature_key, mode, allowlist, updated_by");
     const features = resolveFeatures(switchRows as any, user.id);
+
+    // -------- Step 24 item 7: personalization v1.1 activation gate --------
+    // Personalization is wired into generation behind its own switch, and stays
+    // inert for an athlete until there are enough logged sessions to learn from.
+    {
+      const { data: loggedRows } = await admin
+        .from("wk_session_logs")
+        .select("plan_date")
+        .eq("user_id", user.id)
+        .limit(500);
+      const loggedSessions = new Set((loggedRows ?? []).map((r: any) => r.plan_date)).size;
+      personalizationContext = resolvePersonalizationContext({
+        athleteContext,
+        trainingAgeContext,
+        switchOn: features.personalization === true,
+        loggedSessions,
+      });
+    }
     try {
       if (features.rest_day_calculator === true) {
         // Step 15 item 5 — generation never waits on the scheduler. Tonight's
@@ -1240,6 +1259,12 @@ const handler = async (req: Request): Promise<Response> => {
     const unfillableCategories: { bat_speed: string[]; speed: string[] } = { bat_speed: [], speed: [] };
     /** Required speed categories the selector filled with a near neighbour. */
     const fallbackCoveredSpeedCategories: string[] = [];
+    /**
+     * Step 24 item 8 — rows that hold a category their template REQUIRES.
+     * A load trim may lower these, it may never remove them: dropping the
+     * acceleration row is what made cards fail to build.
+     */
+    const requiredCategoryHolders = new Set<string>();
 
     if (equipmentUnknown) {
       selectionSkips.record({
@@ -2244,7 +2269,13 @@ const handler = async (req: Request): Promise<Response> => {
         spMissingRequired.length === 0 || (isGameDay && speedSelection.picks.length > 0)
           ? speedSelection.picks
           : [];
+      const spRequired = new Set(
+        (speedSelection.template.requiredCategories ?? []).map((c: unknown) => String(c)),
+      );
       for (const pick of spPublishable) {
+        if (spRequired.has(String(pick.category))) {
+          requiredCategoryHolders.add((pick.movement as unknown as MovementRow).slug);
+        }
 
         const m = pick.movement as unknown as MovementRow;
         const metricKey =
@@ -2614,24 +2645,16 @@ const handler = async (req: Request): Promise<Response> => {
           // never removes a category the template requires. The single row
           // holding a required category is kept (at its floor) even when the
           // governor asked for it to go.
-          const requiredHolders = new Set<string>();
+          const requiredHolders = new Set<string>(requiredCategoryHolders);
           for (const cat of REQUIRED_LIFT_CATEGORIES) {
             const holder = finalRxs.find(
               (r) => r.slot === "lift" && coerceCanonicalCategory(catalogMap[r.movement_slug] as any) === cat,
             );
             if (holder) requiredHolders.add(holder.movement_slug);
           }
-          const droppedFrom = new Set(
-            gov.trims
-              .filter((t) => t.action === "row_dropped" || t.action === "blocked")
-              .map((t) => t.slug)
-              .filter((slug) => !requiredHolders.has(slug)),
-          );
-          const steppedFrom = new Map(
-            gov.trims
-              .filter((t) => t.action === "tier_step_down" && t.to && !requiredHolders.has(t.slug))
-              .map((t) => [t.slug, t.to!]),
-          );
+          const trimPlan = planTrims(gov.trims as any, requiredHolders);
+          const droppedFrom = trimPlan.dropped;
+          const steppedFrom = trimPlan.stepped as Map<string, any>;
           const next: typeof finalRxs = [];
           for (const r of finalRxs) {
             if (droppedFrom.has(r.movement_slug)) continue;

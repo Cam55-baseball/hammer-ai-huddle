@@ -96,7 +96,21 @@ export interface Rm28 {
   /** channel → the date that set the channel maximum */
   onDate: Record<string, string | null>;
   daysObserved: number;
+  /**
+   * channel → how many days inside the window carry a real athlete log
+   * (not a prescription assumed delivered). Skill channels need enough of
+   * these before a cap may touch them (Step 24 item 1).
+   */
+  loggedDaysByChannel: Record<string, number>;
 }
+
+/**
+ * Step 24 item 1 — SWING and THROW are skill work. A cap may only touch them
+ * once the athlete has actually logged at least this many days in the window.
+ * Below that, recent max is an artefact of thin data, not real history.
+ */
+export const SKILL_CHANNELS: readonly Channel[] = ["SWING", "THROW"];
+export const SKILL_MIN_LOGGED_DAYS = 8;
 
 /** A single prescribed row the governor may trim. Hammers' own work only. */
 export interface GovItem {

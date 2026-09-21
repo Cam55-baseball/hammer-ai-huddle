@@ -664,7 +664,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             durationMinutes: 30,
             description: "Entry-level strength session.",
             checklist: drillsToChecklist(drills),
-            source: "hammer.daily.strength.conservative",
+            source: "internal",
           },
         };
       }
@@ -728,7 +728,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         : { swaps: [] as ReturnType<typeof selectStrengthSwaps>["swaps"], rationale: null };
       for (const sw of anthroOut.swaps) {
         drills.push({
-          name: `Anthro pick · ${sw.pattern}: ${sw.preferred}`,
+          name: sw.preferred,
           dosage: phaseTemplate.sets,
           cue: sw.cue,
           setup: sw.demote ? `Preferred over: ${sw.demote}` : undefined,
@@ -798,7 +798,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: duration,
           description: `Strength session: ${phaseTemplate.name}.`,
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.strength",
+          source: "internal",
         },
       };
     }
@@ -882,7 +882,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: inSeason ? 20 : offSeason ? 45 : 35,
           description: "Hitting block with tee, toss, and live BP work.",
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.hitting",
+          source: "internal",
         },
       };
     }
@@ -962,7 +962,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       };
       for (const s of thrOut.supplemental) {
         drills.push({
-          name: `Anthro supplemental · ${s.name}`,
+          name: s.name,
           dosage: s.dosage,
           cue: s.cue,
         });
@@ -1110,7 +1110,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: durationMin,
           description: `Defensive block for ${pos} (${defenseSport}).`,
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.defense",
+          source: "internal",
         },
       };
     }
@@ -1150,7 +1150,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             durationMinutes: 10,
             description: "Pickoff reads and footwork at walk pace.",
             checklist: drillsToChecklist(drills),
-            source: "hammer.daily.baserunning.iq",
+            source: "internal",
           },
         };
       }
@@ -1189,7 +1189,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: inSeason ? 10 : 15,
           description: "Baserunning IQ + footwork.",
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.baserunning",
+          source: "internal",
         },
       };
     }
@@ -1256,7 +1256,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: inSeason ? 3 : 5,
           description: "Daily Three B's situational reps (spaced-repetition).",
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.game_iq",
+          source: "internal",
         },
       };
     }
@@ -1307,7 +1307,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: null,
           description: "Today's fueling targets.",
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.fueling",
+          source: "internal",
         },
       };
     }
@@ -1367,7 +1367,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           durationMinutes: elevated ? 30 : 20,
           description: "Recovery block.",
           checklist: drillsToChecklist(drills),
-          source: "hammer.daily.recovery",
+          source: "internal",
         },
       };
     }

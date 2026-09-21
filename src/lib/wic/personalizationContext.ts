@@ -59,8 +59,16 @@ export interface SubstitutionFramework {
   coach_override: SubstitutionSlot;
 }
 
+export interface PersonalizationActivation {
+  readonly active: boolean;
+  readonly reason: "active" | "switch_off" | "learning";
+  readonly logged_sessions: number;
+  readonly required: number;
+}
+
 export interface PersonalizationContext {
   readonly personalization_version: string;
+  readonly activation?: PersonalizationActivation;
   readonly priority_stack: PersonalizationLayer[];
   readonly variable_registry: Record<string, VariableEntry>;
   readonly substitution_framework: SubstitutionFramework;

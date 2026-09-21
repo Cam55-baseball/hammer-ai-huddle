@@ -4,6 +4,7 @@
  * Placed BEFORE lifts so bat-speed exposure happens while CNS is fresh.
  */
 import { useState } from "react";
+import { noticesForSurface } from "@/lib/hammer/notices/noticeRouting";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,9 @@ interface Props {
 }
 
 export function WkBatSpeedCard({ side = null }: Props = {}) {
-  const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
+  const { grouped, reductions: rawReductions, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
+  // Step 24 item 2 — a swing notice belongs here, on the hitting card.
+  const swingNotices = noticesForSurface(rawReductions ?? [], "swing");
   const entry = getCard("bat_speed")!;
   const items = grouped.batSpeedCard;
   const isGameDay = dayKind === "game" || dayKind === "both";
@@ -77,6 +80,13 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="space-y-2">
+            {swingNotices.length > 0 && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs text-amber-900 dark:text-amber-100">
+                <ul className="space-y-0.5">
+                  {swingNotices.map((n, i) => <li key={i}>• {n.detail}</li>)}
+                </ul>
+              </div>
+            )}
             {failed ? (
               <WkCardFailureNotice engine="bat_speed" failure={failureReason} retry={retry} retrying={generating} />
             ) : isLoading || generating ? (

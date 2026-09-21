@@ -5,6 +5,7 @@
  */
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { composeGuide } from "@/lib/hammer/prescription/composeGuide";
 import { guideFor, type MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 
 interface Props {
@@ -16,10 +17,13 @@ interface Props {
   fallbackCue?: string | null;
   fallbackSetup?: string | null;
   fallbackStopIf?: string | null;
+  dosage?: string | null;
+  bucket?: string | null;
 }
 
 export function MovementGuideSheet({
   open, onOpenChange, name, slug, guideOverride, fallbackCue, fallbackSetup, fallbackStopIf,
+  dosage = null, bucket = null,
 }: Props) {
   const guide = guideOverride ?? guideFor(slug) ?? guideFor(name);
 
@@ -75,27 +79,62 @@ export function MovementGuideSheet({
             )}
           </div>
         ) : (
-          <div className="mt-4 space-y-3 text-sm">
-            {fallbackSetup && (
-              <Section title="Setup">{fallbackSetup}</Section>
-            )}
-            {fallbackCue && (
-              <Section title="Cue">{fallbackCue}</Section>
-            )}
-            {fallbackStopIf && (
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 flex items-start gap-2 text-[13px]">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+          (() => {
+            // Step 24 item 3 — a real, structured guide built from this
+            // movement's own stored setup, cue, dose and stop rule.
+            const c = composeGuide({
+              name,
+              slug,
+              setup: fallbackSetup,
+              cue: fallbackCue,
+              stopIf: fallbackStopIf,
+              dosage,
+              bucket,
+            });
+            return (
+              <div className="mt-4 space-y-4 text-sm">
+                <Section title="Setup">{c.setup}</Section>
                 <div>
-                  <div className="font-semibold text-amber-800 dark:text-amber-200">Stop if</div>
-                  <div>{fallbackStopIf}</div>
+                  <SectionTitle>Steps</SectionTitle>
+                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-[13px]">
+                    {c.steps.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ol>
+                </div>
+                <div>
+                  <SectionTitle icon={<CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}>Key cues</SectionTitle>
+                  <ul className="mt-1 space-y-1 rounded-md border border-emerald-500/20 bg-emerald-500/5 p-2">
+                    {c.keyCues.map((s, i) => (
+                      <li key={i} className="flex gap-2 text-[13px]">
+                        <span className="text-emerald-600">•</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <SectionTitle icon={<XCircle className="h-3.5 w-3.5 text-rose-600" />}>Common mistakes</SectionTitle>
+                  <ul className="mt-1 space-y-1 rounded-md border border-rose-500/20 bg-rose-500/5 p-2">
+                    {c.mistakes.map((s, i) => (
+                      <li key={i} className="flex gap-2 text-[13px]">
+                        <span className="text-rose-600">•</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Section title="Easier version">{c.easier}</Section>
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 flex items-start gap-2 text-[13px]">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-semibold text-amber-800 dark:text-amber-200">Stop if</div>
+                    <div className="text-amber-900/90 dark:text-amber-100/90">{c.stopIf}</div>
+                  </div>
                 </div>
               </div>
-            )}
-            <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
-              A full step-by-step guide for this movement is on the way. If anything feels unclear right now,
-              ask Hammer — the assistant can walk you through it in plain language.
-            </p>
-          </div>
+            );
+          })()
         )}
       </SheetContent>
     </Sheet>

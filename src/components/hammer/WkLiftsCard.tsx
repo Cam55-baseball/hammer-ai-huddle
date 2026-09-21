@@ -10,6 +10,7 @@
  * affordance so the athlete can see WHY something was withheld and unlock it
  * for one session if they truly need it.
  */
+import { noticesForSurface } from "@/lib/hammer/notices/noticeRouting";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,12 @@ export function WkLiftsCard() {
     grouped, reductions: rawReductions, data: snapshotRows, schedule, planDate, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
   // Step 21D4 — day-level scheduling statements are not reductions.
-  const reductions = (rawReductions ?? []).filter((r) => !isDayStatementNotAReduction(r?.detail));
+  // Step 24 item 2 — the lift card only carries notices about the lift.
+  // Everything else lives on its own card and in the "Before you start" drawer.
+  const reductions = noticesForSurface(
+    (rawReductions ?? []).filter((r) => !isDayStatementNotAReduction(r?.detail)),
+    "lift",
+  );
   // Step 21A — "Do this after your skill work" appears on the lift card only.
   const liftTimingNote = ((snapshotRows ?? []) as Array<{ why_payload?: Record<string, unknown> | null }>)
     .map((rx) => (rx.why_payload as Record<string, unknown> | null)?.rest_day as { timing_note?: string | null } | undefined)
@@ -178,7 +184,7 @@ export function WkLiftsCard() {
                       {reductions.map((r, i) => <li key={i}>• {r.detail}</li>)}
                     </ul>
                     <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>
-                      Got it — keep today lighter
+                      Got it
                     </Button>
                     {ackOpen && (
                       <div className="mt-2 space-y-2">

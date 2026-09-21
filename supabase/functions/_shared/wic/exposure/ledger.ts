@@ -149,7 +149,9 @@ export function buildLedger(raw: RawShadowData, catalog: CatalogMap): ExposureDa
       channel: cls.channel,
       tier: cls.tier,
       amount: sets * (per || 1),
-      source: "prescribed",
+      // Delivered volume: a prescription counts unless it was skipped. Only
+      // a real athlete log is marked as logged (Step 24 item 1).
+      source: logged.has(key) ? "logged" : "prescribed",
     });
   }
 
@@ -232,21 +234,28 @@ export function computeRm28(days: ExposureDay[], today: string, windowDays = RM2
   const byChannel: Record<string, number> = {};
   const byTier: Record<string, number> = {};
   const onDate: Record<string, string | null> = {};
+  const loggedDaysByChannel: Record<string, number> = {};
   for (const ch of CHANNELS) {
     byChannel[ch] = 0;
     onDate[ch] = null;
+    loggedDaysByChannel[ch] = 0;
     for (const d of window) {
       const t = dayTotal(d, ch);
       if (t > byChannel[ch]) { byChannel[ch] = t; onDate[ch] = d.date; }
-      for (const e of d.entries.filter((x) => x.channel === ch)) {
+      const mine = d.entries.filter((x) => x.channel === ch);
+      if (mine.some((e) => e.source !== "prescribed" && e.amount > 0)) {
+        loggedDaysByChannel[ch] += 1;
+      }
+      for (const e of mine) {
         const key = `${ch}:${e.tier}`;
         const tierTotal = dayTotal(d, ch, e.tier);
         if (tierTotal > (byTier[key] ?? 0)) byTier[key] = tierTotal;
       }
     }
   }
-  return { byChannel, byTier, onDate, daysObserved: window.length };
+  return { byChannel, byTier, onDate, daysObserved: window.length, loggedDaysByChannel };
 }
+
 
 /** True when the given day set a new channel high — a "build day" (§5.3). */
 export function wasBuildDay(days: ExposureDay[], date: string, channel: Channel): boolean {

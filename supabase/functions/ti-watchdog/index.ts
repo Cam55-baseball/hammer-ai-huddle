@@ -100,7 +100,26 @@ async function scan(admin: any) {
   }
   const today = new Date().toISOString().slice(0, 10);
   const cutoff7 = dateDaysAgo(7);
-  const freq = [...byAthlete.entries()].map(([userId, dates]) => {
+  // Step 24 item 9 — lift frequency is only meaningful for athletes who are
+  // actually training. An athlete with nothing in the last 14 days is dormant,
+  // not behind, and must not raise a note.
+  const activeIds = new Set<string>();
+  {
+    const since14 = dateDaysAgo(14);
+    const { data: recentRx } = await admin
+      .from("wk_prescriptions")
+      .select("user_id")
+      .gte("plan_date", since14)
+      .limit(50000);
+    for (const r of recentRx ?? []) activeIds.add(String((r as any).user_id));
+    const { data: recentLogs } = await admin
+      .from("wk_session_logs")
+      .select("user_id")
+      .gte("created_at", isoDaysAgo(14))
+      .limit(50000);
+    for (const r of recentLogs ?? []) activeIds.add(String((r as any).user_id));
+  }
+  const freq = [...byAthlete.entries()].filter(([id]) => activeIds.has(id)).map(([userId, dates]) => {
     const all = [...dates].sort();
     const last = all[all.length - 1];
     const daysSince = last
@@ -123,12 +142,25 @@ async function scan(admin: any) {
   }
 
   // 4. Card build speed.
+  // Step 24 item 9 — speed is judged on warm cards. The first build after a
+  // cold start pays for the runtime booting, not for the plan, so a sample is
+  // only counted when another build ran within the previous 10 minutes.
   const { data: diag } = await admin
     .from("wk_generation_diagnostics")
-    .select("generation_ms")
+    .select("generation_ms, created_at")
     .gte("created_at", isoDaysAgo(1))
+    .order("created_at", { ascending: true })
     .limit(5000);
-  const msSamples = (diag ?? []).map((d: any) => Number(d.generation_ms ?? 0)).filter((n: number) => n > 0);
+  const WARM_WINDOW_MS = 10 * 60 * 1000;
+  const msSamples: number[] = [];
+  let prevAt: number | null = null;
+  for (const d of diag ?? []) {
+    const at = Date.parse(String((d as any).created_at));
+    const ms = Number((d as any).generation_ms ?? 0);
+    const warm = prevAt !== null && at - prevAt <= WARM_WINDOW_MS;
+    if (Number.isFinite(at)) prevAt = at;
+    if (ms > 0 && warm) msSamples.push(ms);
+  }
   const msBase = base.get("generation_ms")?.value ?? 0;
   const s = slowdownNote({ baselineMs: msBase, currentMs: median(msSamples), samples: msSamples.length });
   if (s) notes.push(s);

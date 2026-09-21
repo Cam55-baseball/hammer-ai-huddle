@@ -2526,8 +2526,8 @@
     "activeRecovery": {
       "name": "Actief Herstel",
       "hittingDesc": "Lichte stretching, foam roller of volledige rust. Laat spieren herstellen van krachttraining.",
-      "pitchingDesc": "Lichte stretching, foam roller of volledige rust. Laat spieren en arm herstellen. Licht J-band werk optioneel.",
-      "pitchingDesc2": "Lichte stretching, foam roller of volledige rust. Bereid je voor op volgende krachtsessie. J-band armverzorging aangeraden."
+      "pitchingDesc": "Lichte stretching, foam roller of volledige rust. Laat spieren en arm herstellen. Licht resistance band werk optioneel.",
+      "pitchingDesc2": "Lichte stretching, foam roller of volledige rust. Bereid je voor op volgende krachtsessie. resistance band armverzorging aangeraden."
     },
     "exercises": {
       "trap_bar_deadlift": {
@@ -3060,22 +3060,22 @@
     },
     "armCare": {
       "jband_internal": {
-        "name": "J-Band Interne Rotatie",
+        "name": "resistance band Interne Rotatie",
         "description": "Elleboog op 90°, draai hand naar binnen tegen bandweerstand. Gecontroleerde beweging.",
         "notes": "Elleboog stabiel, 15-20 reps"
       },
       "jband_external": {
-        "name": "J-Band Externe Rotatie",
+        "name": "resistance band Externe Rotatie",
         "description": "Elleboog op 90°, draai hand naar buiten tegen bandweerstand. Versterk externe rotatoren.",
         "notes": "Langzaam en gecontroleerd, 15-20 reps"
       },
       "jband_scap": {
-        "name": "J-Band Scapula Retractie",
+        "name": "resistance band Scapula Retractie",
         "description": "Trek band uit elkaar op borsthoogte. Knijp schouderbladen samen.",
         "notes": "2s knijpen aan einde, 15 reps"
       },
       "jband_high_pulls": {
-        "name": "J-Band Hoge Pulls",
+        "name": "resistance band Hoge Pulls",
         "description": "Armen boven hoofd met band, trek uit elkaar terwijl je spanning houdt.",
         "notes": "Houd armen hoog, 15 reps"
       },
@@ -3280,7 +3280,7 @@
       "pitching": {
         "glove": { "name": "Werper Handschoen", "description": "Wedstrijd-klare werper handschoen" },
         "balls": { "name": "Ballen", "description": "Minimaal 24 ballen voor volume werk" },
-        "jbands": { "name": "J-Bands/Weerstandsbanden", "description": "Voor dagelijkse armverzorging routine" },
+        "jbands": { "name": "resistance bands/Weerstandsbanden", "description": "Voor dagelijkse armverzorging routine" },
         "weighted_balls": { "name": "Verzwaarde Ballen", "description": "Set van 110g, 140g, 200g, 255g, 310g" },
         "plyocare_balls": { "name": "PlyCare Ballen", "description": "PlyCare ball set in verschillende gewichten" },
         "radar_gun": { "name": "Radar Gun", "description": "Snelheid tracking apparaat" },

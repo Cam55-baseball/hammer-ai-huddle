@@ -88,8 +88,8 @@ const EXERCISE_LIBRARY: Record<string, Exercise[]> = {
     { id: 'med-ball-rotational-throws', name: 'Med Ball Rotational Throws', type: 'baseball', sets: 3, reps: 8, rest: 60 },
     // Arm Care
     { id: 'band-pull-aparts', name: 'Band Pull-Aparts', type: 'baseball', sets: 3, reps: 15, rest: 30 },
-    { id: 'external-rotation-jband', name: 'External Rotation (J-Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
-    { id: 'internal-rotation-jband', name: 'Internal Rotation (J-Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
+    { id: 'external-rotation-jband', name: 'External Rotation (Resistance Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
+    { id: 'internal-rotation-jband', name: 'Internal Rotation (Resistance Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
     { id: 'shoulder-circles', name: 'Shoulder Circles', type: 'baseball', sets: 2, reps: 15, rest: 15 },
     { id: 'sleeper-stretch', name: 'Sleeper Stretch', type: 'baseball', duration: 30, rest: 0 },
     { id: 'crossover-stretch', name: 'Crossover Stretch', type: 'baseball', duration: 30, rest: 0 },
