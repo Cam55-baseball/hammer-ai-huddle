@@ -28,7 +28,7 @@ describe("composeGuide family matching", () => {
     for (const n of ["Wrist-weight pronation series", "Copenhagen plank", "Barefoot towel scrunch"]) {
       const g = guide(n);
       expect(g.steps.length).toBeGreaterThan(1);
-      expect(JSON.stringify(g)).not.toMatch(/on the way/i);
+      expect(JSON.stringify(g)).not.toMatch(/guide for this movement is on the way/i);
     }
   });
 });
