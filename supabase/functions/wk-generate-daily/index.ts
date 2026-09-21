@@ -325,6 +325,30 @@ import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic
 // information instead of raising a slowdown alarm.
 let servedARequest = false;
 
+// -------- Movement catalog cache (read-only reference data) ----------------
+// The catalog is ~1,000 rows and identical for every athlete of a sport. It
+// changed only when the owner edits it, so re-reading it on every build cost
+// the same seconds over and over. Cached per sport for 5 minutes, in memory
+// only: nothing athlete-specific is held, and a catalog edit is picked up on
+// the next window. This changes speed only — never what is prescribed.
+const CATALOG_TTL_MS = 5 * 60 * 1000;
+const catalogCache = new Map<string, { at: number; rows: unknown[] }>();
+async function loadMovementCatalog(
+  admin: { from: (t: string) => any },
+  sport: string,
+): Promise<{ data: any[] | null; error: any }> {
+  const hit = catalogCache.get(sport);
+  if (hit && Date.now() - hit.at < CATALOG_TTL_MS) {
+    return { data: hit.rows as any[], error: null };
+  }
+  const res = await admin.from("wk_movement_catalog").select("*")
+    .or(`sport_scope.eq.both,sport_scope.eq.${sport}`);
+  if (!res.error && Array.isArray(res.data)) {
+    catalogCache.set(sport, { at: Date.now(), rows: res.data });
+  }
+  return res as { data: any[] | null; error: any };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const WAS_COLD_START = !servedARequest;
