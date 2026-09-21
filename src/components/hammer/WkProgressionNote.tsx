@@ -52,10 +52,10 @@ export function WkProgressionBadge({
           {stageLabel}
         </Badge>
       )}
-      {progression?.week_in_block != null && (
+      {/* Step 21D2 — no block numbers on movement cards. Athlete words only. */}
+      {progression?.week_in_block != null && progression.block_phase && PHASE_COPY[progression.block_phase] && (
         <Badge variant="secondary" className="text-[10px]">
-          Block {(progression.block_index ?? 0) + 1} · Week {progression.week_in_block}
-          {progression.block_phase ? ` · ${PHASE_COPY[progression.block_phase] ?? progression.block_phase}` : ""}
+          {PHASE_COPY[progression.block_phase]} · Week {progression.week_in_block}
         </Badge>
       )}
       {progression?.test_day && (
