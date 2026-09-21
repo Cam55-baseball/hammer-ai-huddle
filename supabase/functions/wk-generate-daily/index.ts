@@ -1214,6 +1214,9 @@ const handler = async (req: Request): Promise<Response> => {
     const selectionSkips = createSkipLog();
     /** Required template categories with no legal candidate for this athlete today. */
     const unfillableCategories: { bat_speed: string[]; speed: string[] } = { bat_speed: [], speed: [] };
+    /** Required speed categories the selector filled with a near neighbour. */
+    const fallbackCoveredSpeedCategories: string[] = [];
+
     if (equipmentUnknown) {
       selectionSkips.record({
         domain: "session",
