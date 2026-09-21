@@ -15,10 +15,13 @@ import {
   runGenerationMatrix,
 } from "../_shared/wic/matrix/generationMatrix.ts";
 import {
+  auditActiveRows,
   auditCatalog,
   type AuditCatalogRow,
+  intensityClassCoverage,
   SAFETY_AUDIT_VERSION,
 } from "../_shared/wic/catalog/safetyAudit.ts";
+
 
 const BATCH = 20;
 /** A regression chain activates a level at a time; a few passes reach the end. */
