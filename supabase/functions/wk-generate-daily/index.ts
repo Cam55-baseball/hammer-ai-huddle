@@ -1672,7 +1672,7 @@ const handler = async (req: Request): Promise<Response> => {
       const why_v2: WhyV2 = buildWhy({
         why_today: adaptationDecision.reason,
         why_athlete: `${adaptationDecision.reason_athlete} (${trainingAgeYears || 0}-yr training age${isProProspect ? ", pro prospect" : ""}).`,
-        why_exercise: why || s.movement.why_prescribed || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
+        why_exercise: movementWhy || slotContext || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
         why_volume: resolvedDose
           ? describeDose(resolvedDose)
           : `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
