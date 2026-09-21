@@ -316,6 +316,9 @@ export function auditCatalog(rows: AuditCatalogRow[]): {
  * NOT included: they are activation gates, not safety laws, and a live row
  * failing one is a report item, not a reason to pull a working card.
  */
+export type ActiveAuditResult = AuditResult & { blocking: boolean };
+
+
 export function auditActiveRows(rows: AuditCatalogRow[]): ActiveAuditResult[] {
   const out: ActiveAuditResult[] = [];
   for (const row of rows) {
