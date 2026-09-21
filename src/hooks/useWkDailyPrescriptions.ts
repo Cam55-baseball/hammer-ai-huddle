@@ -639,5 +639,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     athleteContext,
     personalizationContext,
     trainingAgeContext,
+    /** Step 21E3 — plain reason for the last season-driven re-plan. */
+    replanReason,
   };
 }
