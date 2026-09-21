@@ -101,6 +101,24 @@ Deno.serve(async (req) => {
       passes++;
       const rows = await page<AuditCatalogRow>(db, AUDIT_COLUMNS);
       const { passing, failing, candidates } = auditCatalog(rows);
+      // Step 23 A1 — the same safety laws, run over rows that are already ON.
+      // A live row that breaks an age floor or a season law is a critical note,
+      // not a silent pass, and it is reported on every run.
+      const activeViolations = auditActiveRows(rows);
+      const coverage = intensityClassCoverage(rows);
+      if (activeViolations.length > 0) {
+        await db.from("ti_watch_notes").insert({
+          severity: "critical",
+          category: "rule_violation",
+          title: "A live exercise breaks a safety floor",
+          detail: {
+            source: "auto_activate_drift_audit",
+            version: SAFETY_AUDIT_VERSION,
+            rows: activeViolations.map((v) => ({ slug: v.slug, failures: v.failures })),
+          },
+          auto_action: "The rows are named for the owner; no row is switched on this run",
+        });
+      }
       if (dryRun) {
         return json({
           ok: true,
@@ -109,11 +127,25 @@ Deno.serve(async (req) => {
           candidates: candidates.length,
           would_activate: passing.length,
           staying_off: failing.map((f) => ({ slug: f.slug, failures: f.failures })),
+          active_violations: activeViolations.map((v) => ({ slug: v.slug, failures: v.failures })),
+          intensity_class_coverage: coverage,
           baseline_matrix: baseline
             ? { cells: baseline.m.cells, empty: baseline.m.empty_cells, fingerprint: baseline.m.fingerprint }
             : null,
         });
       }
+      // A live safety breach blocks activation for the run: nothing new goes on
+      // top of a catalog that is already out of law.
+      if (activeViolations.length > 0) {
+        return json({
+          ok: false,
+          blocked: "active_safety_violation",
+          version: SAFETY_AUDIT_VERSION,
+          active_violations: activeViolations.map((v) => ({ slug: v.slug, failures: v.failures })),
+          intensity_class_coverage: coverage,
+        });
+      }
+
       if (passing.length === 0) break;
 
       let progressed = false;
