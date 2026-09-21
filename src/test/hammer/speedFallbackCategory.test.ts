@@ -25,7 +25,12 @@ const catalog = [
 
 const input = (extra: Record<string, unknown>) =>
   ({
-    prescriptions: [{ movement_slug: "sp_band_resisted_start" }],
+    prescriptions: [{
+      slot: "speed",
+      movement_slug: "sp_band_resisted_start",
+      movement_name: "Band-Resisted Start",
+      sequence_order: 1,
+    }],
     catalog,
     template: { seasonPhase: "in_season", dayType: "training", primaryAdaptation: "speed" },
     ...extra,
