@@ -49,8 +49,14 @@ export function WkLiftsCard() {
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, schedule, planDate, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
+    grouped, reductions: rawReductions, data: snapshotRows, schedule, planDate, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
+  // Step 21D4 — day-level scheduling statements are not reductions.
+  const reductions = (rawReductions ?? []).filter((r) => !isDayStatementNotAReduction(r?.detail));
+  // Step 21A — "Do this after your skill work" appears on the lift card only.
+  const liftTimingNote = ((snapshotRows ?? []) as Array<{ why_payload?: Record<string, unknown> | null }>)
+    .map((rx) => (rx.why_payload as Record<string, unknown> | null)?.rest_day as { timing_note?: string | null } | undefined)
+    .find((p) => p && typeof p.timing_note === "string" && p.timing_note.trim().length > 0)?.timing_note ?? null;
   const entry = getCard("lift")!;
   const { display: phaseDisplay } = useCanonicalPhaseDisplay(serverPhaseDisplay, phaseKey);
   const blocked = useBlockedLiftMovements(phaseKey);
