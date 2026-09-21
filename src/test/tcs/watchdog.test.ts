@@ -92,7 +92,10 @@ describe("Step 13 watchdog triggers", () => {
     expect(notes[0].auto_action).toBeNull();
   });
 
-  it("going over the day's budget is information only, never critical", () => {
+  // Step 20 C1 — `cnsUsed` now carries only the spend the cap governs
+  // (total-dose rows are exempt by design and no longer counted), so a value
+  // above the cap is a real overrun and names the rows involved.
+  it("going over the day's governed budget is a real violation and names the rows", () => {
     const notes = livePrescriptionViolations({
       userId: "u1",
       planDate: "2026-09-21",
@@ -103,8 +106,10 @@ describe("Step 13 watchdog triggers", () => {
       cnsUsed: 5,
       itemCount: 9,
     });
-    expect(notes.map((n) => n.severity)).toEqual(["info"]);
-    expect(notes[0].auto_action).toBeNull();
+    expect(notes.map((n) => n.severity)).toEqual(["critical"]);
+    expect(notes[0].auto_action).not.toBeNull();
+    expect((notes[0].detail as { rows: Array<{ slug: string }> }).rows.map((r) => r.slug))
+      .toEqual(["sled_push"]);
   });
 
   it("a legal day writes nothing", () => {
