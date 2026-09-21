@@ -375,6 +375,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     }
   }, [user?.id, planDate, qc, invokeOnce]);
 
+  // Step 21E3 — plain reason shown in the day header after a season change.
+  const [replanReason, setReplanReason] = useState<string | null>(null);
+
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
     const first = query.data?.[0];
@@ -410,9 +413,27 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       autoTriedKey.current !== refreshKey
     ) {
       autoTriedKey.current = refreshKey;
+      // Step 21E3 — a season change re-plans the next 7 days immediately: the
+      // cached cards for tomorrow through day 7 are dropped so nothing stale
+      // survives the switch, and the change carries a plain reason.
+      if (refreshKey.startsWith("phase:")) {
+        setReplanReason(
+          `Your season changed to ${canonicalPhase.displayName ?? expectedPhase} — Hammer re-planned the next 7 days.`,
+        );
+        if (user?.id) {
+          for (let d = 0; d <= 7; d++) {
+            const dt = new Date(`${planDate}T00:00:00Z`);
+            dt.setUTCDate(dt.getUTCDate() + d);
+            const iso = dt.toISOString().slice(0, 10);
+            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, iso] });
+            qc.invalidateQueries({ queryKey: ["wk-rx-game-day", user.id, iso] });
+            qc.invalidateQueries({ queryKey: ["wk-rx-practice-day", user.id, iso] });
+          }
+        }
+      }
       generate();
     }
-  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, season.isLoading, generate, generating, failed]);
+  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
