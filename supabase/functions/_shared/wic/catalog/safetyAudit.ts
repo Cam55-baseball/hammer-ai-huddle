@@ -303,3 +303,74 @@ export function auditCatalog(rows: AuditCatalogRow[]): {
     failing: candidates.filter((c) => !c.pass),
   };
 }
+
+/**
+ * Step 23 A1 — the drift audit over rows that are ALREADY ON.
+ *
+ * `auditCatalog` only ever looked at switched-off rows, so a live row whose
+ * age floor was wrong from the start was never checked by anything. This runs
+ * the hard safety laws — tier age/training-age floors, the eccentric-overload
+ * season law, the deep-flexion floor, outside names — over every active row.
+ *
+ * Data-completeness checks (missing unit, missing sub-bucket) are deliberately
+ * NOT included: they are activation gates, not safety laws, and a live row
+ * failing one is a report item, not a reason to pull a working card.
+ */
+export function auditActiveRows(rows: AuditCatalogRow[]): AuditResult[] {
+  const out: AuditResult[] = [];
+  for (const row of rows) {
+    if (row.is_active !== true) continue;
+    const f: string[] = [];
+    const tier = normalizeTier(row);
+    if (tier && TIER_AGE_FLOOR[tier]) {
+      const floor = TIER_AGE_FLOOR[tier];
+      if ((row.min_age_years ?? 0) < floor.age) {
+        f.push(`${tier} row is live with a minimum age of ${row.min_age_years ?? "none"}; the ${tier} floor is ${floor.age}`);
+      }
+      if (Number(row.min_training_age_years ?? 0) < floor.trainingAge) {
+        f.push(`${tier} row is live with a training-age floor below the ${tier} minimum of ${floor.trainingAge}`);
+      }
+    }
+    if (row.eccentric_overload === true) {
+      for (const s of row.season_eligibility ?? []) {
+        if (s === "in_season" || s === "post_season") {
+          f.push("eccentric overload is live in season or post-season (law L0.3)");
+        }
+      }
+      if ((row.min_age_years ?? 0) < 16) f.push("eccentric overload live below age 16");
+    }
+    if (row.deep_flexion === true && (row.min_age_years ?? 0) < 14) {
+      f.push("deep-flexion row live below age 14");
+    }
+    for (const [label, text] of [
+      ["name", row.name],
+      ["cue", row.cue ?? ""],
+      ["category", String(row.category ?? "").replace(/_/g, " ")],
+      ["slug", row.slug],
+    ] as const) {
+      if (OUTSIDE_NAMES.test(String(text))) f.push(`outside name in the ${label}`);
+    }
+    if (f.length > 0) out.push({ id: row.id, slug: row.slug, pass: false, failures: f });
+  }
+  return out.sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+/** Step 23 A2 — how much of the live catalog the ceiling check can read. */
+export function intensityClassCoverage(rows: AuditCatalogRow[]): {
+  active: number;
+  stored: number;
+  derived: number;
+  unmapped: string[];
+} {
+  const active = rows.filter((r) => r.is_active === true);
+  const unmapped: string[] = [];
+  let stored = 0;
+  let derived = 0;
+  for (const r of active) {
+    if (String(r.intensity_class ?? "").trim()) stored++;
+    else if (resolveIntensityClass(r)) derived++;
+    else unmapped.push(r.slug);
+  }
+  return { active: active.length, stored, derived, unmapped: unmapped.sort() };
+}
+
