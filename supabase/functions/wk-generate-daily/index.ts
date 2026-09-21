@@ -1757,7 +1757,8 @@ const handler = async (req: Request): Promise<Response> => {
           category: s.movement.category,
           family: s.movement.family,
           source_philosophy: s.movement.source_philosophy,
-          why: why || s.movement.why_prescribed,
+          why: movementWhy || slotContext || null,
+          session_context: slotContext || null,
           cue: s.movement.cue,
           rep_rule: resolvedDose
             ? `${resolvedDose.envelope.sets[0]}-${resolvedDose.envelope.sets[1]} sets × ${resolvedDose.envelope.reps[0]}-${resolvedDose.envelope.reps[1]} reps — ${resolvedDose.phase} ${resolvedDose.group} envelope (${DOSAGE_DOCTRINE_VERSION}).`
