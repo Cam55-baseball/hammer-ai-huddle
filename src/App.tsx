@@ -128,6 +128,7 @@ const EvidenceSafeSession = lazyWithRetry(() => import("./pages/EvidenceSafeSess
 const EvidenceExecution = lazyWithRetry(() => import("./pages/EvidenceExecution"));
 const EvidenceScheduleNotice = lazyWithRetry(() => import("./pages/EvidenceScheduleNotice"));
 const EvidenceArmCare = lazyWithRetry(() => import("./pages/EvidenceArmCare"));
+const EvidenceCardClarity = lazyWithRetry(() => import("./pages/EvidenceCardClarity"));
 const OpsHealth = lazyWithRetry(() => import("./pages/ops/OpsHealth"));
 const OpsReplay = lazyWithRetry(() => import("./pages/ops/OpsReplay"));
 const OpsDrift = lazyWithRetry(() => import("./pages/ops/OpsDrift"));
@@ -299,6 +300,7 @@ const App = () => {
                 <Route path="/__evidence/execution" element={<EvidenceExecution />} />
                 <Route path="/__evidence/schedule-notice" element={<EvidenceScheduleNotice />} />
                 <Route path="/__evidence/arm-care" element={<EvidenceArmCare />} />
+                <Route path="/__evidence/card-clarity" element={<EvidenceCardClarity />} />
                 </>
               )}
 
