@@ -160,13 +160,13 @@ export function athleteSessionTitle(title?: string | null): string | null {
   if (!raw) return null;
   const cleaned = raw
     .replace(/^Block\s+\d+\s*·\s*/i, "")
-    .replace(/(Week\s+\d+)\s*·\s*([a-z][\w +-]*)/i, (_m, wk: string, phase: string) => {
+    .replace(/(Week\s+\d+)\s*·\s*([a-z][a-z +-]*?)\s*(?=—|$)/i, (_m, wk: string, phase: string) => {
       const key = phase.trim().toLowerCase();
       const pretty =
         Object.entries(PHASE_COPY).find(([, v]) => v.toLowerCase() === key)?.[1] ??
         PHASE_COPY[key] ??
         phase.trim().charAt(0).toUpperCase() + phase.trim().slice(1);
-      return `${pretty} · ${wk}`;
+      return `${pretty} · ${wk} `;
     })
     .trim();
   return cleaned.length > 0 ? cleaned : null;

@@ -5,7 +5,6 @@ import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 
 type RestDayPayload = {
   allowed_class?: string | null;
-  timing_note?: string | null;
   next_heavy_chip?: string | null;
   reasons?: string[] | null;
   recovery_only?: boolean | null;
