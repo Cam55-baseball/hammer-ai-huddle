@@ -154,15 +154,15 @@ export const ExportManager = () => {
                   variant="default"
                   size="sm"
                   className="gap-1.5"
-                  onClick={() => queueRender.mutate({ projectId: project.id, format: project.format })}
-                  disabled={queueRender.isPending || isRendering}
+                  onClick={() =>
+                    toast({
+                      title: "Video rendering is unavailable right now.",
+                    })
+                  }
                 >
-                  {isRendering ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Rendering...</>
-                  ) : (
-                    <><Play className="h-3.5 w-3.5" /> Queue Render</>
-                  )}
+                  <Play className="h-3.5 w-3.5" /> Queue Render
                 </Button>
+
 
                 {project.output_url && (
                   <Button variant="outline" size="sm" className="gap-1.5" asChild>
