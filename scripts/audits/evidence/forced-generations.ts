@@ -32,7 +32,9 @@ const { data: subs, error: subErr } = await admin
   .select("user_id, status, subscribed_modules")
   .eq("status", "active");
 if (subErr) throw subErr;
-const athletes = (subs ?? []).filter((s) => (s.subscribed_modules ?? []).length > 0);
+let athletes = (subs ?? []).filter((s) => (s.subscribed_modules ?? []).length > 0);
+const only = (process.env.FORCED_ONLY ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+if (only.length > 0) athletes = athletes.filter((a) => only.some((o) => a.user_id.startsWith(o)));
 console.log(`[forced] athletes with an active prescription: ${athletes.length}`);
 
 const today = new Date().toISOString().slice(0, 10);
@@ -72,6 +74,20 @@ for (const s of athletes) {
 
   const t0 = Date.now();
   const { data, error } = await userClient.functions.invoke("wk-generate-daily", { body: { plan_date: today } });
+  let serverBody = "";
+  if (error && (error as { context?: Response }).context) {
+    try {
+      serverBody = await (error as unknown as { context: Response }).context.clone().text();
+    } catch { /* body already consumed */ }
+  }
+  // Staff accounts (coach / scout / owner) are refused a daily athlete card by
+  // design. They are not card-build failures and must not be counted as such.
+  if (serverBody.includes("not_an_athlete_account")) {
+    results.push({ user_id: s.user_id, built: false, skipped: true, reason: "staff account — no athlete card by design" });
+    console.log(`[forced] ${s.user_id.slice(0, 8)} — SKIPPED: staff account, no athlete card by design`);
+    continue;
+  }
+  if (serverBody) console.log(`[forced] ${s.user_id.slice(0, 8)} — server said: ${serverBody.slice(0, 900)}`);
   const ms = Date.now() - t0;
 
   const { data: rows } = await admin
@@ -103,7 +119,7 @@ for (const s of athletes) {
     error: error?.message ?? null,
   });
   console.log(
-    `[forced] ${s.user_id.slice(0, 8)} — ${!error && (rows ?? []).length > 0 ? "card built" : "FAILED"} · ${(rows ?? []).length} rows · ${ms}ms${ms <= 3200 ? "" : " (over baseline)"} · order ${orderOk ? "ok" : "WRONG"} · ${displayedOrder}`,
+    `[forced] ${s.user_id.slice(0, 8)} — ${!error && (rows ?? []).length > 0 ? "card built" : "FAILED"} · ${(rows ?? []).length} rows · ${ms}ms${ms <= 3200 ? "" : " (over baseline)"} · order ${orderOk ? "ok" : "WRONG"} · ${displayedOrder}${error ? ` · reason: ${error.message}` : (rows ?? []).length === 0 ? " · reason: zero rows returned" : ""}`,
   );
   await userClient.auth.signOut();
   await pause(12_000);
@@ -117,8 +133,9 @@ const { data: notes } = await admin
 const criticals = (notes ?? []).filter((n) => n.severity === "critical");
 
 console.log("");
-console.log(`[forced] cards built: ${results.filter((r) => r.built).length} / ${results.length}`);
-console.log(`[forced] failed: ${results.filter((r) => !r.built).length}`);
+const applicable = results.filter((r) => !r.skipped);
+console.log(`[forced] cards built: ${applicable.filter((r) => r.built).length} / ${applicable.length} athlete accounts (${results.length - applicable.length} staff accounts skipped by design)`);
+console.log(`[forced] failed: ${applicable.filter((r) => !r.built).length}`);
 console.log(`[forced] slowest build: ${Math.max(0, ...results.map((r) => Number(r.ms ?? 0)))}ms (baseline 3200ms)`);
 console.log(`[forced] new watchdog notes in the window: ${(notes ?? []).length} · critical: ${criticals.length}`);
 for (const c of criticals) {
@@ -126,7 +143,7 @@ for (const c of criticals) {
   console.log(`[forced]     rows: ${JSON.stringify((c.detail as { rows?: unknown })?.rows ?? null)}`);
 }
 
-const failed = results.filter((r) => !r.built).length;
+const failed = applicable.filter((r) => !r.built).length;
 const slow = results.filter((r) => r.within_baseline === false).length;
 const misordered = results.filter((r) => r.lift_ordered_last_among_work === false).length;
 if (failed || criticals.length || misordered) {

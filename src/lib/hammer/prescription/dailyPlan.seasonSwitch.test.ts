@@ -53,7 +53,7 @@ const ATHLETE = {
 
 const planFor = (season: string) => buildHammerDailyPlan(ctx({ ...ATHLETE, season_phase: season }));
 const shape = (p: ReturnType<typeof buildHammerDailyPlan>) =>
-  JSON.stringify(p.blocks.map((b) => ({ id: b.id, title: b.title, items: b.items })));
+  JSON.stringify(p.blocks.map((b) => ({ id: b.modality, title: b.title, items: b.drills })));
 
 describe("season switch: in-season → offseason → in-season", () => {
   const inSeason = planFor("in");
@@ -81,10 +81,10 @@ describe("season switch: in-season → offseason → in-season", () => {
 
   it("never carries an offseason block into the in-season plan", () => {
     const offOnly = new Set(
-      offSeason.blocks.map((b) => b.id).filter((id) => !inSeason.blocks.some((b) => b.id === id)),
+      offSeason.blocks.map((b) => b.modality).filter((id) => !inSeason.blocks.some((b) => b.modality === id)),
     );
     for (const id of offOnly) {
-      expect(inSeason.blocks.some((b) => b.id === id)).toBe(false);
+      expect(inSeason.blocks.some((b) => b.modality === id)).toBe(false);
     }
   });
 });

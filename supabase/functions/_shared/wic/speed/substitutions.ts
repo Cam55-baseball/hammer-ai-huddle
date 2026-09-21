@@ -43,6 +43,33 @@ const EMPTY: SpeedSubstitutionLadder = {
 
 function dedupe<T>(a: T[]): T[] { return [...new Set(a)]; }
 
+/**
+ * Step 21 fix — count family alternates the resolver could actually use.
+ *
+ * The session builder previously compared a RAW family count (every catalog
+ * row sharing the family, legal or not) against the ladder, which only ever
+ * contains season-legal and training-age-legal rows. For athletes whose phase
+ * or training-age class rules the alternates out, that mismatch raised a fatal
+ * and refused the whole card. Both sides must count the same thing.
+ */
+export function countLegalSpeedFamilyAlternates(
+  input: SpeedSubstitutionResolveInput,
+): number {
+  const { movement, catalog, phase, trainingAgeClass } = input;
+  return catalog.filter((c) => {
+    if (c.slug === movement.slug) return false;
+    const inFamily =
+      (c.substitution_family && c.substitution_family === movement.substitution_family) ||
+      (c.transfer_group && c.transfer_group === movement.transfer_group);
+    if (!inFamily) return false;
+    const seasonLegal = !phase || !c.season_legality || c.season_legality[phase] !== false;
+    const ageLegal =
+      !trainingAgeClass || !c.training_age_legality ||
+      c.training_age_legality[trainingAgeClass] !== false;
+    return seasonLegal && ageLegal;
+  }).length;
+}
+
 export function resolveSpeedSubstitutionLadder(
   input: SpeedSubstitutionResolveInput,
 ): SpeedSubstitutionLadder {
