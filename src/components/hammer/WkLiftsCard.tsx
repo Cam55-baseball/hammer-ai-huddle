@@ -43,6 +43,7 @@ import { BookOpen } from "lucide-react";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { ScheduleAdjustmentNotice } from "@/components/hammer/ScheduleAdjustmentNotice";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
+import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
@@ -156,6 +157,12 @@ export function WkLiftsCard() {
             {/* Which game changed today's session, said out loud, with a way
                 to disagree. */}
             <ScheduleAdjustmentNotice schedule={schedule} planDate={planDate} onChanged={() => generate()} />
+            {/* Step 21A — timing belongs to the lift and nothing else. */}
+            {liftTimingNote && items.length > 0 && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-2 py-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-200">
+                {liftTimingNote}
+              </div>
+            )}
             {suppressArmCareInLifts && (
               <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
                 Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.
