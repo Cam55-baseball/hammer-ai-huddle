@@ -230,8 +230,11 @@ export function certifySpeed(input: CertifySpeedInput): CertifySpeedResult {
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
   const unfillable = new Set((input.unfillableRequiredCategories ?? []).map(String));
-  const missingBug = missing.filter((c) => !unfillable.has(String(c)));
-  const missingHonest = missing.filter((c) => unfillable.has(String(c)));
+  // A category the selector covered with a near neighbour is filled, not
+  // missing: the selector and this check must count the same thing.
+  const covered = new Set((input.fallbackCoveredCategories ?? []).map(String));
+  const missingBug = missing.filter((c) => !unfillable.has(String(c)) && !covered.has(String(c)));
+  const missingHonest = missing.filter((c) => unfillable.has(String(c)) && !covered.has(String(c)));
   if (missingBug.length > 0) {
     fatal.push({
       code: "speed_unresolved_template",
@@ -241,12 +244,19 @@ export function certifySpeed(input: CertifySpeedInput): CertifySpeedResult {
       fatal.push({ code: "speed_missing_acceleration", message: `Template ${template.id} requires an acceleration slot.` });
     }
   }
+  for (const c of missing.filter((c) => covered.has(String(c)))) {
+    warn.push({
+      code: "speed_category_fallback_covered",
+      message: `Template ${template.id} filled ${c} with the closest legal movement available to this athlete today.`,
+    });
+  }
   for (const c of missingHonest) {
     warn.push({
       code: "speed_template_gap",
       message: `Template ${template.id} could not fill ${c} — no movement in this athlete's legal pool provides it today. Published without it.`,
     });
   }
+
 
   // Duplicate categories — speed sessions may repeat mobility/pap but not the
   // primary intent categories.
