@@ -93,6 +93,20 @@ export interface AuditResult {
 
 const REP_UNITS = new Set(["reps", "rep", ""]);
 
+/**
+ * Step 23 A1 — tier labels arrive in two shapes: upper-body tiers as text
+ * ("U3") and jump tiers as a plain number (3). Both must land on the same
+ * floor table, or a Tier-3 row is silently never age-checked.
+ */
+export function normalizeTier(row: { ub_tier?: string | null; plyo_tier?: string | number | null }): string {
+  const ub = String(row.ub_tier ?? "").trim().toUpperCase();
+  if (ub) return /^\d+$/.test(ub) ? `U${ub}` : ub;
+  const plyo = String(row.plyo_tier ?? "").trim().toUpperCase();
+  if (!plyo) return "";
+  return /^\d+$/.test(plyo) ? `T${plyo}` : plyo;
+}
+
+
 /** One row against every check. Returns the exact failing checks by name. */
 export function auditRow(
   row: AuditCatalogRow,
