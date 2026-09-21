@@ -1928,10 +1928,11 @@ const handler = async (req: Request): Promise<Response> => {
       // must survive a cap" relaxation put a compound lift on a rest day.
       const restDayToday = tcsAdjust?.removeLift === true;
 
-      // 2) Trunk primer — every training session
-      const trunkPrimer = restDayToday
-        ? undefined
-        : pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ?? pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
+      // 2) Trunk primer — every session, rest day included. On a rest day the
+      // class filter has already removed everything loaded, so what lands here
+      // is the light trunk/mobility work the recovery template asks for.
+      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ??
+        pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
       if (!restDayToday) {
@@ -1995,17 +1996,20 @@ const handler = async (req: Request): Promise<Response> => {
 
       } // end of the loaded lift block (skipped entirely on a rest day)
 
-      if (!restDayToday) {
-        ensureFullBodyLift(
-          rxs,
-          lib,
-          pickFirstLift,
-          push,
-          isInSeason,
-          pickFirstRelaxedLift,
-          pickFirstClassRelaxedLift,
-        );
-      }
+      // The template still has to be satisfied on a rest day — the recovery
+      // template asks only for light categories. What a rest day never gets is
+      // the class-relaxing last resort: on a capped training day that keeps a
+      // required category alive, but on a rest day it is the one path that
+      // could put a loaded lift on the card, so it is withheld.
+      ensureFullBodyLift(
+        rxs,
+        lib,
+        pickFirstLift,
+        push,
+        isInSeason,
+        pickFirstRelaxedLift,
+        restDayToday ? () => undefined : pickFirstClassRelaxedLift,
+      );
     }
 
 
