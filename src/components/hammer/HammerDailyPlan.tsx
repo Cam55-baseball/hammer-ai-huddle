@@ -137,6 +137,8 @@ function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | 
   return null;
 }
 import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
+import { doseBullets } from "@/lib/hammer/prescription/doseBullets";
+import { DayNoticesDrawerItem } from "@/components/hammer/DayNoticesDrawerItem";
 import { DefensivePrepVideo } from "@/components/hammer/DefensivePrepVideo";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
@@ -230,7 +232,23 @@ function DrillRow({
           />
           <div className="min-w-0 flex-1">
             <div className={`font-medium ${checked ? "line-through" : ""}`}>{d.name}</div>
-            <div className="text-muted-foreground mt-0.5">{d.dosage}</div>
+            {(() => {
+              // Step 24 item 4 — multi-part details read as bullets, not a comma run-on.
+              const parts = doseBullets(d.dosage);
+              if (parts.bullets.length === 0) {
+                return <div className="text-muted-foreground mt-0.5">{d.dosage}</div>;
+              }
+              return (
+                <div className="text-muted-foreground mt-0.5">
+                  {parts.heading && <div>{parts.heading}</div>}
+                  <ul className="mt-0.5 space-y-0.5">
+                    {parts.bullets.map((b, i) => (
+                      <li key={i}>• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -745,6 +763,10 @@ function HammerDailyPlanBody({
         {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
         <ErrorBoundary>
           <ScheduledPriorityStrip />
+        </ErrorBoundary>
+        {/* 0b. Today's load and volume notices — checked off as read. */}
+        <ErrorBoundary>
+          <DayNoticesDrawerItem />
         </ErrorBoundary>
         {/* 1. Schedule & What Changed */}
         <ScheduleDropdownWrapper />

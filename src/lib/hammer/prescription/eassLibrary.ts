@@ -81,12 +81,12 @@ export interface EassDrill {
 // -------------------------------------------------------------- BAND / NEURAL PREP
 
 const BAND_PREP_BASEBALL: EassDrill[] = [
-  { name: "J-Band series — ER / IR / scap pulls / retractions", category: "band_prep", intensity: "prep",
-    setup: "light J-Band anchored at shoulder height",
+  { name: "Band series — ER / IR / scap pulls / retractions", category: "band_prep", intensity: "prep",
+    setup: "light band anchored at shoulder height",
     dosage: "ER 2x12, IR 2x12, scap pulls 2x12, retractions 2x10, forward flexion 2x10",
     cue: "slow, deliberate, no snap-backs — wake the cuff, do not train it" },
-  { name: "Crossover Symmetry — activation series", category: "band_prep", intensity: "prep",
-    setup: "crossover bands or J-Band, chest-height anchor",
+  { name: "Band activation series", category: "band_prep", intensity: "prep",
+    setup: "activation bands or wrist-anchored bands, chest-height anchor",
     dosage: "full activation set: iron scap 2x10, reverse fly 2x10, external rotation 2x10, Y-T-W 2x8",
     cue: "shoulder blades set first, arms follow" },
   { name: "Wrist + forearm neural prep", category: "band_prep", intensity: "prep",

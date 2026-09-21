@@ -386,16 +386,16 @@ export const CYCLE_4_PITCHING_WORKOUT_D: Exercise[] = [
 // =====================================================================
 
 export const ARM_CARE_EXERCISES: { [key: string]: Exercise } = {
-  // J-Band Series
-  'J-Band Internal Rotation': { name: 'J-Band Internal Rotation', type: 'skill',
+  // Resistance Band Series
+  'Resistance Band Internal Rotation': { name: 'Resistance Band Internal Rotation', type: 'skill',
     description: 'Band anchored at elbow height, internally rotate forearm across body. Strengthens subscapularis for throwing arm health.' },
-  'J-Band External Rotation': { name: 'J-Band External Rotation', type: 'skill',
+  'Resistance Band External Rotation': { name: 'Resistance Band External Rotation', type: 'skill',
     description: 'Band anchored at elbow height, externally rotate forearm away from body. Strengthens infraspinatus and teres minor for arm deceleration.' },
-  'J-Band Scap Retraction': { name: 'J-Band Scap Retraction', type: 'skill',
+  'Resistance Band Scap Retraction': { name: 'Resistance Band Scap Retraction', type: 'skill',
     description: 'Pull band straight back squeezing shoulder blades together. Scapular stability for proper arm path.' },
-  'J-Band High Pulls': { name: 'J-Band High Pulls', type: 'skill',
+  'Resistance Band High Pulls': { name: 'Resistance Band High Pulls', type: 'skill',
     description: 'Band at waist, pull to face height with elbows high. Posterior shoulder and upper back strength.' },
-  'J-Band Throwing Motion': { name: 'J-Band Throwing Motion', type: 'skill',
+  'Resistance Band Throwing Motion': { name: 'Resistance Band Throwing Motion', type: 'skill',
     description: 'Simulate throwing motion against band resistance. Builds arm speed through throwing-specific pattern.' },
 
   // Stretching & Mobility
@@ -525,9 +525,9 @@ export const PITCH_DEV_EXERCISES: { [key: string]: Exercise } = {
 
 // Arm Care Only (Rest Days)
 export const ARM_CARE_DAY: string[] = [
-  'J-Band Internal Rotation',
-  'J-Band External Rotation',
-  'J-Band Scap Retraction',
+  'Resistance Band Internal Rotation',
+  'Resistance Band External Rotation',
+  'Resistance Band Scap Retraction',
   'Sleeper Stretch',
   'Cross-Body Stretch',
   'Wrist Flexion/Extension',
@@ -595,9 +595,9 @@ export const PITCH_DEV_DAY_3: string[] = [
 
 // Strength Day Arm Care (Post-Lift)
 export const STRENGTH_DAY_ARM_CARE: string[] = [
-  'J-Band Internal Rotation',
-  'J-Band External Rotation',
-  'J-Band High Pulls',
+  'Resistance Band Internal Rotation',
+  'Resistance Band External Rotation',
+  'Resistance Band High Pulls',
   'Sleeper Stretch',
 ];
 
@@ -677,7 +677,7 @@ export const PITCHING_EQUIPMENT = [
   { id: 'glove', name: 'Pitching Glove', required: true, description: 'Game-ready pitching glove' },
   { id: 'balls', name: 'Baseballs/Softballs', required: true, description: 'Minimum 24 balls for volume work' },
   { id: 'mound', name: 'Pitching Mound', required: true, description: 'Regulation or portable mound' },
-  { id: 'jbands', name: 'J-Bands/Resistance Bands', required: true, description: 'For daily arm care routine' },
+  { id: 'jbands', name: 'Resistance Bands/Resistance Bands', required: true, description: 'For daily arm care routine' },
   { id: 'target', name: 'Strike Zone Target', required: true, description: 'For command work' },
   { id: 'barbell', name: 'Barbell & Plates', required: true, description: 'For compound lifts' },
   { id: 'dumbbells', name: 'Dumbbells', required: true, description: 'Various weights 10-80+ lbs' },

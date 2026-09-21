@@ -44,7 +44,7 @@ const GROUPS: { title: string; items: { token: string; label: string }[] }[] = [
     items: [
       { token: "bands", label: "Resistance bands" },
       { token: "mini_band", label: "Mini bands" },
-      { token: "jband", label: "J-Bands" },
+      { token: "jband", label: "Resistance Bands" },
       { token: "med_ball", label: "Medicine ball" },
       { token: "plyo_ball", label: "Plyo balls" },
       { token: "ladder", label: "Agility ladder" },

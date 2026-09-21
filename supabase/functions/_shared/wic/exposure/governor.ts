@@ -18,6 +18,8 @@ import {
   type GovItem,
   LOWEST_TIER,
   type Rm28,
+  SKILL_CHANNELS,
+  SKILL_MIN_LOGGED_DAYS,
   TIER_ORDER,
   type Trim,
 } from "./types.ts";
@@ -113,6 +115,25 @@ export function runGovernor(input: {
 
   for (const channel of channels) {
     const rm = input.rm28.byChannel[channel] ?? 0;
+
+    // Step 24 item 1 — skill channels (swings, throws) are only capped once
+    // the athlete has really logged enough days. Thin logs make recent max
+    // meaningless, and a meaningless cap must never cut skill work.
+    if (SKILL_CHANNELS.includes(channel)) {
+      const loggedDays = input.rm28.loggedDaysByChannel?.[channel] ?? 0;
+      if (loggedDays < SKILL_MIN_LOGGED_DAYS) {
+        diagnostics[channel] = {
+          rm28: rm,
+          skipped: "insufficient_logged_days",
+          logged_days: loggedDays,
+          logged_days_required: SKILL_MIN_LOGGED_DAYS,
+          planned_after: items
+            .filter((i) => i.channel === channel)
+            .reduce((s, i) => s + amount(i), 0),
+        };
+        continue;
+      }
+    }
     const teamToday = (input.teamLoad ?? [])
       .filter((t) => t.channel === channel)
       .reduce((s, t) => s + t.amount, 0);
@@ -246,7 +267,9 @@ export function runGovernor(input: {
     }
 
     // 3) Still over — drop the row. The Safe Plan ladder keeps the card.
-    if (planned > cap) {
+    // Skill channels are never dropped: a cap may reduce a skill row toward
+    // the programme's own minimum dose, never below it (Step 24 item 1).
+    if (planned > cap && !SKILL_CHANNELS.includes(channel)) {
       for (const { it } of sortRows().reverse()) {
         if (planned <= cap) break;
         const idx = items.indexOf(it);

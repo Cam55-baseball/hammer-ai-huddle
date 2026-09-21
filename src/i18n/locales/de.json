@@ -3247,8 +3247,8 @@
     "activeRecovery": {
       "name": "Aktive Erholung",
       "hittingDesc": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Lassen Sie die Muskeln vom Krafttraining erholen.",
-      "pitchingDesc": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Lassen Sie Muskeln und Arm erholen. Leichte J-Band-Arbeit optional.",
-      "pitchingDesc2": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Bereiten Sie sich auf die nächste Krafteinheit vor. J-Band-Armpflege empfohlen."
+      "pitchingDesc": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Lassen Sie Muskeln und Arm erholen. Leichte resistance band-Arbeit optional.",
+      "pitchingDesc2": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Bereiten Sie sich auf die nächste Krafteinheit vor. resistance band-Armpflege empfohlen."
     },
     "exercises": {
       "trap_bar_deadlift": {
@@ -3781,22 +3781,22 @@
     },
     "armCare": {
       "jband_internal": {
-        "name": "J-Band Innenrotation",
+        "name": "resistance band Innenrotation",
         "description": "Ellbogen bei 90°, Hand gegen Bandwiderstand nach innen rotieren. Kontrollierte Bewegung.",
         "notes": "Ellbogen stabil, 15-20 Wiederholungen"
       },
       "jband_external": {
-        "name": "J-Band Außenrotation",
+        "name": "resistance band Außenrotation",
         "description": "Ellbogen bei 90°, Hand gegen Bandwiderstand nach außen rotieren. Außenrotatoren stärken.",
         "notes": "Langsam und kontrolliert, 15-20 Wiederholungen"
       },
       "jband_scap": {
-        "name": "J-Band Schulterblatt-Retraktion",
+        "name": "resistance band Schulterblatt-Retraktion",
         "description": "Band auf Brusthöhe auseinanderziehen. Schulterblätter zusammendrücken.",
         "notes": "2s am Ende zusammendrücken, 15 Wiederholungen"
       },
       "jband_high_pulls": {
-        "name": "J-Band Hohe Züge",
+        "name": "resistance band Hohe Züge",
         "description": "Arme über dem Kopf mit Band, auseinanderziehen bei gehaltener Spannung.",
         "notes": "Arme hoch halten, 15 Wiederholungen"
       },
@@ -4056,7 +4056,7 @@
           "description": "Regulation oder tragbarer Hügel"
         },
         "jbands": {
-          "name": "J-Bands/Widerstandsbänder",
+          "name": "resistance bands/Widerstandsbänder",
           "description": "Für tägliche Armpflege-Routine"
         },
         "target": {

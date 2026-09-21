@@ -100,10 +100,10 @@ export const BAT_SPEED_EXERCISE_KEYS: Record<string, string> = {
 
 // Arm care and throwing exercise keys
 export const THROWING_EXERCISE_KEYS: Record<string, string> = {
-  'J-Band Internal Rotation': 'jband_internal',
-  'J-Band External Rotation': 'jband_external',
-  'J-Band Scap Retraction': 'jband_scap',
-  'J-Band High Pulls': 'jband_high_pulls',
+  'Resistance Band Internal Rotation': 'jband_internal',
+  'Resistance Band External Rotation': 'jband_external',
+  'Resistance Band Scap Retraction': 'jband_scap',
+  'Resistance Band High Pulls': 'jband_high_pulls',
   'Sleeper Stretch': 'sleeper_stretch',
   'Cross-Body Stretch': 'crossbody_stretch',
   'Wrist Flexion/Extension': 'wrist_flex_ext',

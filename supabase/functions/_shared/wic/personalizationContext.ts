@@ -31,8 +31,16 @@ export interface SubstitutionFramework {
   coach_override: SubstitutionSlot;
 }
 
+export interface PersonalizationActivation {
+  readonly active: boolean;
+  readonly reason: "active" | "switch_off" | "learning";
+  readonly logged_sessions: number;
+  readonly required: number;
+}
+
 export interface PersonalizationContext {
   readonly personalization_version: string;
+  readonly activation?: PersonalizationActivation;
   readonly priority_stack: PersonalizationLayer[];
   readonly variable_registry: Record<string, VariableEntry>;
   readonly substitution_framework: SubstitutionFramework;
@@ -45,9 +53,31 @@ const EMPTY_SLOT: SubstitutionSlot = Object.freeze({ candidates: Object.freeze([
  * variable registry so every future engine can prove which fields are actually
  * consumed vs merely collected.
  */
+/**
+ * Step 24 item 7 — personalization v1.1 activation gate.
+ *
+ * The engine reads the registry from day one, but personalization only starts
+ * shaping a plan once the switch is on for this athlete AND the athlete has at
+ * least this many logged sessions. Below the gate it stays inert and says so.
+ */
+export const PERSONALIZATION_MIN_LOGGED_SESSIONS = 8;
+
+export function personalizationActivation(input: {
+  switchOn: boolean;
+  loggedSessions: number;
+}): { active: boolean; reason: "active" | "switch_off" | "learning"; logged_sessions: number; required: number } {
+  const logged = Math.max(0, Math.floor(input.loggedSessions || 0));
+  if (!input.switchOn) return { active: false, reason: "switch_off", logged_sessions: logged, required: PERSONALIZATION_MIN_LOGGED_SESSIONS };
+  if (logged < PERSONALIZATION_MIN_LOGGED_SESSIONS)
+    return { active: false, reason: "learning", logged_sessions: logged, required: PERSONALIZATION_MIN_LOGGED_SESSIONS };
+  return { active: true, reason: "active", logged_sessions: logged, required: PERSONALIZATION_MIN_LOGGED_SESSIONS };
+}
+
 export function resolvePersonalizationContext(input: {
   athleteContext: AthleteContext;
   trainingAgeContext: TrainingAgeContext;
+  switchOn?: boolean;
+  loggedSessions?: number;
 }): PersonalizationContext {
   const { athleteContext: ac } = input;
 
@@ -88,8 +118,14 @@ export function resolvePersonalizationContext(input: {
     "season.phase":                  { source: "training_context",     status: "consumed", layer: "season" },
   };
 
+  const activation = personalizationActivation({
+    switchOn: input.switchOn === true,
+    loggedSessions: input.loggedSessions ?? 0,
+  });
+
   return Object.freeze({
     personalization_version: PERSONALIZATION_VERSION,
+    activation: Object.freeze(activation),
     priority_stack: Object.freeze([...PRIORITY_STACK]) as unknown as PersonalizationLayer[],
     variable_registry: Object.freeze(registry),
     substitution_framework: Object.freeze({

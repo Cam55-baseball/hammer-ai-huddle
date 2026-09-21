@@ -98,7 +98,7 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
         day: 'day2',
         titleKey: 'day2RestRecovery',
         title: 'Day 2: Rest & Recovery',
-        exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Allow muscles and arm to recover. Light J-band work optional.' }],
+        exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Allow muscles and arm to recover. Light resistance band work optional.' }],
       },
       {
         day: 'day3',
@@ -110,7 +110,7 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
         day: 'day4',
         titleKey: 'day4RestRecovery',
         title: 'Day 4: Rest & Recovery',
-        exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Prepare for next strength session. J-band arm care encouraged.' }],
+        exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Prepare for next strength session. resistance band arm care encouraged.' }],
       },
       {
         day: 'day5',

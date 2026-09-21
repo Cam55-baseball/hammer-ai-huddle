@@ -32,7 +32,7 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "box", label: "box or step", phrases: ["plyo box", "jump box", "step box", "box"] },
 
   { token: "mini_band", label: "mini bands", phrases: ["mini bands", "mini band", "loop bands"] },
-  { token: "jband", label: "J-Bands", phrases: ["j-bands", "j bands", "jbands", "jaeger bands"] },
+  { token: "jband", label: "Resistance Bands", phrases: ["resistance bands", "j bands", "jbands", "jaeger bands"] },
   { token: "bands", label: "resistance bands", phrases: ["resistance bands", "resistance band", "bands", "band"] },
   { token: "med_ball", label: "medicine ball", phrases: ["medicine ball", "med ball", "med balls", "medballs"] },
   { token: "plyo_ball", label: "plyo balls", phrases: ["plyo balls", "plyo ball", "plyocare"] },

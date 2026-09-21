@@ -173,8 +173,8 @@ const GUIDES: Record<string, MovementGuide> = {
 
   // ============ ARM CARE (owned by throwing block on throwing days) ============
   wu_jband_full: {
-    what: "A full circuit of light elastic-band exercises that wake up the rotator cuff and shoulder-blade muscles. This is the Alan Jaeger 'J-Band' chart — the gold standard of arm care.",
-    setup: "Anchor a light J-Band (or a light resistance band) to a fence, pole, or door hinge at about chest height. Stand facing sideways so the band is level with your throwing arm.",
+    what: "A full circuit of light elastic-band exercises that wake up the rotator cuff and shoulder-blade muscles. This is the full arm-care band chart — the standard daily shoulder-prep circuit.",
+    setup: "Anchor a light arm-care band (or a light resistance band) to a fence, pole, or door hinge at about chest height. Stand facing sideways so the band is level with your throwing arm.",
     goodRep: [
       "Go through the full chart — external rotation, internal rotation, scap pull, retractions, forward flexion.",
       "Every rep is slow, especially on the way back (the eccentric).",
@@ -193,7 +193,7 @@ const GUIDES: Record<string, MovementGuide> = {
   },
 
   wu_crossover_symmetry_full: {
-    what: "A branded chart of band exercises (Crossover Symmetry) that hits the rotator cuff and scap stabilizers in a specific order. Same purpose as J-Band, different pattern.",
+    what: "A branded chart of band exercises (band activation) that hits the rotator cuff and scap stabilizers in a specific order. Same purpose as arm-care band, different pattern.",
     setup: "Crossover bands anchored at chest height. Chest square to the anchor.",
     goodRep: [
       "Shoulder blades set FIRST — you feel them squeeze slightly — then the arms move.",

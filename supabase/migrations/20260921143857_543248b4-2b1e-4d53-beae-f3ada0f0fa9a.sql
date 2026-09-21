@@ -1,0 +1,1 @@
+UPDATE public.wk_feature_switches SET buildable = true WHERE feature_key = 'personalization';

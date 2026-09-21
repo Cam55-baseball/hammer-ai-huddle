@@ -3247,8 +3247,8 @@
     "activeRecovery": {
       "name": "Récupération Active",
       "hittingDesc": "Étirements légers, rouleau de mousse ou repos complet. Permettez aux muscles de récupérer de l'entraînement de force.",
-      "pitchingDesc": "Étirements légers, rouleau de mousse ou repos complet. Permettez aux muscles et au bras de récupérer. Travail léger J-band optionnel.",
-      "pitchingDesc2": "Étirements légers, rouleau de mousse ou repos complet. Préparez-vous pour la prochaine session de force. Soin du bras J-band encouragé."
+      "pitchingDesc": "Étirements légers, rouleau de mousse ou repos complet. Permettez aux muscles et au bras de récupérer. Travail léger resistance band optionnel.",
+      "pitchingDesc2": "Étirements légers, rouleau de mousse ou repos complet. Préparez-vous pour la prochaine session de force. Soin du bras resistance band encouragé."
     },
     "exercises": {
       "trap_bar_deadlift": {
@@ -3781,22 +3781,22 @@
     },
     "armCare": {
       "jband_internal": {
-        "name": "Rotation Interne J-Band",
+        "name": "Rotation Interne resistance band",
         "description": "Coude à 90°, tournez la main vers l'intérieur contre résistance de bande. Mouvement contrôlé.",
         "notes": "Coude stable, 15-20 reps"
       },
       "jband_external": {
-        "name": "Rotation Externe J-Band",
+        "name": "Rotation Externe resistance band",
         "description": "Coude à 90°, tournez la main vers l'extérieur contre résistance de bande. Renforcez rotateurs externes.",
         "notes": "Lent et contrôlé, 15-20 reps"
       },
       "jband_scap": {
-        "name": "Rétraction Scapulaire J-Band",
+        "name": "Rétraction Scapulaire resistance band",
         "description": "Écartez la bande à hauteur de poitrine. Serrez les omoplates ensemble.",
         "notes": "Serrez 2s à la fin, 15 reps"
       },
       "jband_high_pulls": {
-        "name": "Tirages Hauts J-Band",
+        "name": "Tirages Hauts resistance band",
         "description": "Bras au-dessus de la tête avec bande, écartez en maintenant la tension.",
         "notes": "Gardez bras hauts, 15 reps"
       },
@@ -4056,7 +4056,7 @@
           "description": "Monticule réglementaire ou portable"
         },
         "jbands": {
-          "name": "J-Bands/Bandes de Résistance",
+          "name": "resistance bands/Bandes de Résistance",
           "description": "Pour routine quotidienne soin du bras"
         },
         "target": {

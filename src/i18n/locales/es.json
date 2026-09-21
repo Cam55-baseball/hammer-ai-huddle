@@ -3298,8 +3298,8 @@
     "activeRecovery": {
       "name": "Recuperación Activa",
       "hittingDesc": "Estiramientos ligeros, rodillo de espuma o descanso completo. Permite que los músculos se recuperen del entrenamiento de fuerza.",
-      "pitchingDesc": "Estiramientos ligeros, rodillo de espuma o descanso completo. Permite que los músculos y el brazo se recuperen. Trabajo ligero con J-band opcional.",
-      "pitchingDesc2": "Estiramientos ligeros, rodillo de espuma o descanso completo. Prepárate para la próxima sesión de fuerza. Se recomienda cuidado del brazo con J-band."
+      "pitchingDesc": "Estiramientos ligeros, rodillo de espuma o descanso completo. Permite que los músculos y el brazo se recuperen. Trabajo ligero con resistance band opcional.",
+      "pitchingDesc2": "Estiramientos ligeros, rodillo de espuma o descanso completo. Prepárate para la próxima sesión de fuerza. Se recomienda cuidado del brazo con resistance band."
     },
     "exercises": {
       "trap_bar_deadlift": {
@@ -3832,22 +3832,22 @@
     },
     "armCare": {
       "jband_internal": {
-        "name": "Rotación Interna con J-Band",
+        "name": "Rotación Interna con resistance band",
         "description": "Codo a 90°, rota mano hacia adentro contra resistencia de banda. Movimiento controlado.",
         "notes": "Codo estable, 15-20 reps"
       },
       "jband_external": {
-        "name": "Rotación Externa con J-Band",
+        "name": "Rotación Externa con resistance band",
         "description": "Codo a 90°, rota mano hacia afuera contra resistencia de banda. Fortalece rotadores externos.",
         "notes": "Lento y controlado, 15-20 reps"
       },
       "jband_scap": {
-        "name": "Retracción Escapular con J-Band",
+        "name": "Retracción Escapular con resistance band",
         "description": "Separa banda a altura de pecho. Aprieta omóplatos juntos.",
         "notes": "Aprieta 2s al final, 15 reps"
       },
       "jband_high_pulls": {
-        "name": "Jalones Altos con J-Band",
+        "name": "Jalones Altos con resistance band",
         "description": "Brazos sobre cabeza con banda, separa manteniendo tensión.",
         "notes": "Mantén brazos altos, 15 reps"
       },
@@ -4107,7 +4107,7 @@
           "description": "Montículo reglamentario o portátil"
         },
         "jbands": {
-          "name": "J-Bands/Bandas de Resistencia",
+          "name": "resistance bands/Bandas de Resistencia",
           "description": "Para rutina diaria de cuidado del brazo"
         },
         "target": {

@@ -69,7 +69,7 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
       { id: 'tpl-single-leg-rdl', name: 'Single-Leg RDL', type: 'strength', sets: 3, reps: 8, rest: 60 },
       { id: 'tpl-cable-anti-rot', name: 'Anti-Rotation Press', type: 'core', sets: 3, reps: 10, rest: 45 },
       { id: 'tpl-lateral-lunges', name: 'Lateral Lunges', type: 'strength', sets: 3, reps: 10, rest: 60 },
-      { id: 'tpl-band-external', name: 'External Rotation (J-Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
+      { id: 'tpl-band-external', name: 'External Rotation (Resistance Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
     ],
   },
 
@@ -116,16 +116,16 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
   {
     id: 'complete-arm-care',
     name: 'Complete Arm Care Routine',
-    description: 'Comprehensive arm care protocol with J-Band exercises and stretches',
+    description: 'Comprehensive arm care protocol with Resistance Band exercises and stretches',
     category: 'arm-care',
     focus: 'Arm Health',
     duration: 25,
     difficulty: 'beginner',
     sport: 'both',
-    tags: ['arm-care', 'prevention', 'j-band'],
+    tags: ['arm-care', 'prevention', 'resistance band'],
     exercises: [
-      { id: 'tpl-external-rot', name: 'External Rotation (J-Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
-      { id: 'tpl-internal-rot', name: 'Internal Rotation (J-Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
+      { id: 'tpl-external-rot', name: 'External Rotation (Resistance Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
+      { id: 'tpl-internal-rot', name: 'Internal Rotation (Resistance Band)', type: 'baseball', sets: 3, reps: 15, rest: 30 },
       { id: 'tpl-band-pull-apart', name: 'Band Pull-Aparts', type: 'baseball', sets: 3, reps: 15, rest: 30 },
       { id: 'tpl-sleeper', name: 'Sleeper Stretch', type: 'baseball', duration: 30, rest: 0 },
       { id: 'tpl-crossover', name: 'Crossover Stretch', type: 'baseball', duration: 30, rest: 0 },
@@ -143,7 +143,7 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     sport: 'both',
     tags: ['throwing', 'long-toss', 'arm-strength'],
     exercises: [
-      { id: 'tpl-arm-care-warmup', name: 'External Rotation (J-Band)', type: 'baseball', sets: 2, reps: 12, rest: 30 },
+      { id: 'tpl-arm-care-warmup', name: 'External Rotation (Resistance Band)', type: 'baseball', sets: 2, reps: 12, rest: 30 },
       { id: 'tpl-wrist-flick', name: 'Wrist Flicks', type: 'baseball', sets: 2, reps: 15, rest: 15 },
       { id: 'tpl-long-toss', name: 'Long Toss', type: 'baseball', duration: 900, rest: 0, notes: 'Start at 60ft, work up to max distance' },
       { id: 'tpl-pulldown', name: 'Pull-Down Throws', type: 'baseball', sets: 1, reps: 10, rest: 0, notes: 'Max effort throws from max distance' },

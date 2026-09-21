@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -145,6 +145,8 @@ export default function AdminTrainingIntelligence() {
     Array<{ id: string; noted_at: string; severity: string; category: string; title: string; auto_action: string | null }>
   >([]);
   const [copying, setCopying] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
+  const reportRef = useRef<HTMLTextAreaElement | null>(null);
   const [reportText, setReportText] = useState<string | null>(null);
 
 
@@ -273,7 +275,7 @@ export default function AdminTrainingIntelligence() {
 
   const modeAllowed = (mode: string): { ok: boolean; why: string; needsConfirm: boolean } => {
     if (mode === "off") return { ok: true, why: "", needsConfirm: false };
-    if (!healthGreen) return { ok: false, why: "Health is red", needsConfirm: false };
+    if (!healthGreen) return { ok: false, why: "System checks are red", needsConfirm: false };
     return evaluateGate(mode as SwitchMode, {
       proofsOk: Boolean(gateOk),
       versionOk: Boolean(versionOk),
@@ -346,6 +348,14 @@ export default function AdminTrainingIntelligence() {
         automatic: false,
         reason: "Changed by hand in the Control Center",
       });
+      // Step 24 item 9 — an intended release changes what a normal day looks
+      // like, so the day-mix baseline is re-recorded. Otherwise the watchdog
+      // compares the new plan against the old plan and calls it drift.
+      if (mode !== "off") {
+        try {
+          await supabase.functions.invoke("ti-watchdog", { body: { mode: "baseline" } });
+        } catch { /* monitoring only — never blocks a release */ }
+      }
       toast({ title: `${row.label} → ${MODE_LABEL[mode]}` });
       await load();
     } else {
@@ -476,13 +486,13 @@ export default function AdminTrainingIntelligence() {
         <div>
           <h1 className="text-2xl font-bold">Training Intelligence</h1>
           <p className="text-sm text-muted-foreground">
-            Health, review and switches for the new training calculator.
+            System checks, review and switches for the new training calculator.
           </p>
         </div>
 
         <Tabs defaultValue="health">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="health">Health</TabsTrigger>
+            <TabsTrigger value="health">System checks</TabsTrigger>
             <TabsTrigger value="review">Review</TabsTrigger>
             <TabsTrigger value="switches">Switches</TabsTrigger>
           </TabsList>
@@ -590,21 +600,48 @@ export default function AdminTrainingIntelligence() {
                     // often refused, and a button that silently does nothing
                     // is worse than no button.
                     setReportText(text);
+                    let copied = false;
                     try {
                       await navigator.clipboard.writeText(text);
-                      toast({ title: "Report copied — paste it into the chat" });
+                      copied = true;
                     } catch {
-                      toast({ title: "Report ready below — select it, or use Share" });
+                      copied = false;
+                    }
+                    if (copied) {
+                      setJustCopied(true);
+                      window.setTimeout(() => setJustCopied(false), 2500);
+                      toast({ title: "Copied — paste it into the chat" });
+                    } else {
+                      toast({ title: "Report ready below — it's selected, just copy it" });
+                      window.setTimeout(() => reportRef.current?.select(), 50);
                     }
                   }}
                 >
-                  {copying ? "Building…" : "Copy report for Claude"}
+                  {copying ? "Building…" : justCopied ? "Copied" : "Copy report"}
                 </Button>
 
                 {reportText && (
                   <div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
-                      {typeof navigator !== "undefined" && "share" in navigator && (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(reportText);
+                            setJustCopied(true);
+                            window.setTimeout(() => setJustCopied(false), 2500);
+                          } catch {
+                            reportRef.current?.select();
+                            toast({ title: "Clipboard blocked — the text is selected, copy it" });
+                          }
+                        }}
+                      >
+                        {justCopied ? "Copied" : "Copy"}
+                      </Button>
+                      {typeof navigator !== "undefined" &&
+                        "share" in navigator &&
+                        typeof (navigator as Navigator & { canShare?: (d: ShareData) => boolean }).canShare === "function" &&
+                        (navigator as Navigator & { canShare: (d: ShareData) => boolean }).canShare({ text: reportText }) && (
                         <Button
                           size="sm"
                           variant="secondary"
@@ -621,6 +658,7 @@ export default function AdminTrainingIntelligence() {
                       </Button>
                     </div>
                     <Textarea
+                      ref={reportRef}
                       readOnly
                       value={reportText}
                       onFocus={(e) => e.currentTarget.select()}
@@ -796,7 +834,7 @@ export default function AdminTrainingIntelligence() {
             {!healthGreen && (
               <Card className="border-destructive/40">
                 <CardContent className="p-3 text-sm text-muted-foreground">
-                  Health is red, so switches stay off until it is green again.
+                  System checks are red, so switches stay off until they are green again.
                 </CardContent>
               </Card>
             )}
@@ -806,7 +844,11 @@ export default function AdminTrainingIntelligence() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{row.label}</p>
                     <p className="text-xs text-muted-foreground">
-                      {row.buildable ? MODE_LABEL[row.mode] ?? row.mode : "Not built yet"}
+                      {!row.buildable
+                        ? "Not built yet"
+                        : row.feature_key === "personalization" && row.mode !== "off"
+                          ? `${MODE_LABEL[row.mode] ?? row.mode} · Learning — needs 8 logged sessions`
+                          : MODE_LABEL[row.mode] ?? row.mode}
                     </p>
                   </div>
                   <Select

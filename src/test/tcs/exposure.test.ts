@@ -48,6 +48,7 @@ const jumpT3 = {
 const rm28Of = (byChannel: Partial<Record<Channel, number>>, byTier: Record<string, number> = {}): Rm28 => ({
   byChannel: { LIFT: 0, JUMP: 0, UB_PLYO: 0, SPRINT: 0, THROW: 0, SWING: 0, SPORT: 0, ...byChannel },
   byTier,
+  loggedDaysByChannel: { LIFT: 28, JUMP: 28, UB_PLYO: 28, SPRINT: 28, THROW: 28, SWING: 28, SPORT: 28 },
   onDate: {},
   daysObserved: 28,
 });

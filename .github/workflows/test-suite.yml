@@ -1,0 +1,33 @@
+name: test-suite
+
+# Step 24 item 9 — the suite runs automatically on EVERY code or config change,
+# so the Control Center never shows "No run yet for the current settings".
+# No path filter on purpose: a config change is a change.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - uses: oven-sh/setup-bun@v2
+      - name: Install deps
+        run: npm ci
+      - name: Type check
+        run: npx tsgo --noEmit -p tsconfig.app.json
+      - name: Full test suite
+        run: npx vitest run
+      - name: Gate sweep — 2,000 athlete-seasons, recorded against this config
+        env:
+          TCS_TIER: gate
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: bun scripts/audits/tcs-property-sweep.ts 2000 8 20260920
