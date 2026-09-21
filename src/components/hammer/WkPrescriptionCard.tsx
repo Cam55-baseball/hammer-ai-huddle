@@ -357,9 +357,19 @@ export function WkPrescriptionCard({
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
           )}
 
+          {/* Step 21D1 — Cue sits above "Why this movement". */}
+          {why.cue && (
+            <div className="rounded border border-primary/20 p-2">
+              <div className="font-medium mb-0.5">Cue</div>
+              <div className="text-foreground/80">{why.cue}</div>
+            </div>
+          )}
+
           {(() => {
-            const hasWhy = athleteWhy || todayLine;
-            if (!hasWhy) return null;
+            // Step 21D3 — never render a heading with no content.
+            const whyText = String(athleteWhy ?? "").trim();
+            const today = String(todayLine ?? "").trim();
+            if (!whyText && !today) return null;
             return (
               <Collapsible>
                 <CollapsibleTrigger asChild>
@@ -374,10 +384,10 @@ export function WkPrescriptionCard({
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-1 rounded border border-primary/20 bg-primary/5 p-2 space-y-1 text-muted-foreground">
-                  {athleteWhy && <div>{athleteWhy}</div>}
-                  {todayLine && (
+                  {whyText && <div>{whyText}</div>}
+                  {today && (
                     <div>
-                      <span className="text-foreground">Today —</span> {todayLine}
+                      <span className="text-foreground">Today —</span> {today}
                     </div>
                   )}
                 </CollapsibleContent>
@@ -385,12 +395,6 @@ export function WkPrescriptionCard({
             );
           })()}
           <WkProgressionNote progression={progressionPayload} />
-          {why.cue && (
-            <div className="rounded border border-primary/20 p-2">
-              <div className="font-medium mb-0.5">Cue</div>
-              <div className="text-foreground/80">{why.cue}</div>
-            </div>
-          )}
           {why.sequencing_hint && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
           )}
