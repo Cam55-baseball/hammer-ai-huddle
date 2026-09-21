@@ -197,7 +197,10 @@ Deno.serve(async (req) => {
       passes,
       activated_count: activated.length,
       activated,
+      active_violations: auditActiveRows(rows).map((v) => ({ slug: v.slug, failures: v.failures })),
+      intensity_class_coverage: intensityClassCoverage(rows),
       rolled_back: rolledBack,
+
       still_off: after.failing.map((f) => ({ slug: f.slug, failures: f.failures })),
       remaining_candidates: after.passing.length,
       matrix: lastMatrix
