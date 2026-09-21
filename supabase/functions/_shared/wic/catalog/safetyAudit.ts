@@ -198,25 +198,36 @@ export function auditRow(
 }
 
 /**
- * Step 20 C2 — the documented mapping.
+ * Step 20 C2, extended by Step 23 A2 — the documented intensity-class mapping.
  *
  * Every row gets an intensity class so the ceiling check can always compare
  * like with like. A stored `intensity_class` always wins. When it is missing
- * the class is derived from the row's own category and effort cost, which is
- * the same information a human would use:
+ * the class is derived from the row's own category, method family and effort
+ * cost (`cns_cost`) — the same information a human would use. Nothing is
+ * guessed: a row with no category and no effort cost returns null and stays
+ * flagged in the report.
  *
- *   category warmup / shoulder_prep / movement prep         → supplemental
- *   category arm_care                                        → arm_care
- *   speed_lab / sprint_mechanics / throwing_plyo             → elastic
- *   trunk / kot / movement_capacity / posterior_chain        → low
- *   max_effort_strength                                      → maximal
- *   everything else, by effort cost 1..5                     → supplemental,
- *                                                              low, moderate,
- *                                                              high, maximal
+ *   MAPPING v1.1 (Step 23)
+ *   a. stored intensity_class                                  → itself
+ *   b. warmup / shoulder_prep / movement_patterning            → supplemental
+ *   c. hand_wrist_chain                                        → supplemental
+ *   d. arm_care                                                → arm_care
+ *   e. speed_lab / sprint_mechanics / throwing_plyo /
+ *      upper_body_plyo / lower_body_plyo / plyometric          → elastic
+ *   f. trunk / kot / movement_capacity / posterior_chain /
+ *      cross_sport                                             → low
+ *   g. conditioning                                            → moderate
+ *   h. max_effort_strength / pap_bridge (contrast pairs)       → maximal
+ *   i. anything else, by effort cost:
+ *        0 or 1 → supplemental · 2 → low · 3 → moderate
+ *        4 → high · 5 and above → maximal
+ *   j. no category and no effort cost                          → null (flagged)
  *
  * Deriving never widens anything: it can only give a row a class where it had
  * none, and the ceiling only ever removes work.
  */
+export const INTENSITY_MAPPING_VERSION = "intensity_class_mapping_v1_1";
+
 export function resolveIntensityClass(row: {
   intensity_class?: string | null;
   category?: string | null;
@@ -227,19 +238,29 @@ export function resolveIntensityClass(row: {
   const cat = String(row.category ?? "").toLowerCase();
   if (!cat && row.cns_cost == null) return null;
   if (cat === "warmup" || cat === "shoulder_prep" || cat === "movement_patterning") return "supplemental";
+  if (cat === "hand_wrist_chain") return "supplemental";
   if (cat === "arm_care") return "arm_care";
-  if (cat === "speed_lab" || cat === "sprint_mechanics" || cat === "throwing_plyo") return "elastic";
-  if (cat === "trunk" || cat === "kot" || cat === "movement_capacity" || cat === "posterior_chain") return "low";
-  if (cat === "max_effort_strength") return "maximal";
-  switch (Number(row.cns_cost ?? 0)) {
-    case 1: return "supplemental";
-    case 2: return "low";
-    case 3: return "moderate";
-    case 4: return "high";
-    case 5: return "maximal";
-    default: return cat ? "low" : null;
-  }
+  if (
+    cat === "speed_lab" || cat === "sprint_mechanics" || cat === "throwing_plyo" ||
+    cat === "upper_body_plyo" || cat === "lower_body_plyo" || cat === "plyometric"
+  ) return "elastic";
+  if (
+    cat === "trunk" || cat === "kot" || cat === "movement_capacity" ||
+    cat === "posterior_chain" || cat === "cross_sport"
+  ) return "low";
+  if (cat === "conditioning") return "moderate";
+  if (cat === "max_effort_strength" || cat === "pap_bridge") return "maximal";
+  const cns = row.cns_cost;
+  if (cns == null) return cat ? "low" : null;
+  const n = Number(cns);
+  if (!Number.isFinite(n)) return cat ? "low" : null;
+  if (n <= 1) return "supplemental";
+  if (n === 2) return "low";
+  if (n === 3) return "moderate";
+  if (n === 4) return "high";
+  return "maximal";
 }
+
 
 /** Audit a whole catalog. Only inactive, non-superseded rows are candidates. */
 export function auditCatalog(rows: AuditCatalogRow[]): {
