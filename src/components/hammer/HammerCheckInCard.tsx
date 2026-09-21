@@ -27,7 +27,7 @@ const META: Record<
   },
   pre_lift: {
     title: "Pre-workout check-in",
-    subtitle: "CNS, pain, intent — Hammer tunes today's load before you lift.",
+    subtitle: "Freshness, pain, intent — Hammer tunes today's load before you lift.",
     Icon: Dumbbell,
     accent: "text-orange-500",
     slot: "Before training",

@@ -34,7 +34,7 @@ const PHASE_COPY: Record<string, string> = {
   accumulate: "Build the base",
   intensify: "Add work",
   peak: "Peak intent",
-  deload: "Deload + re-test",
+  deload: "Easy week + re-test",
 };
 
 export function WkProgressionBadge({

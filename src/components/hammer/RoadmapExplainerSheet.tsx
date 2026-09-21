@@ -200,7 +200,7 @@ export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
           </section>
 
           <p className="text-[11px] text-muted-foreground">
-            Safety-first floors (injury, parent supremacy, readiness deload) always outrank
+            Safety-first floors (injury, parent supremacy, a readiness-driven easy week) always outrank
             the roadmap. The ladder can only trim or delay — it never overrides your body.
           </p>
         </div>

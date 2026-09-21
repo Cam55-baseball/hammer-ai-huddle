@@ -692,7 +692,7 @@ function HammerDailyPlanBody({
             return {
               ...b,
               phase: "maintain" as const,
-              roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
+              roadmapReason: `${b.roadmapReason} (Today's load is already high — keeping skill work at maintenance.)`,
             };
           }),
         }
