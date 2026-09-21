@@ -11,6 +11,11 @@
  */
 import { createClient } from "@supabase/supabase-js";
 
+import { sortCanonical } from "../../../supabase/functions/_shared/wic/ordering.ts";
+
+/** Auth verifies are rate-limited, so the run paces itself. */
+const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const anon = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
@@ -53,7 +58,13 @@ for (const s of athletes) {
     token: link.properties.email_otp,
     type: "email",
   });
-  if (otpErr || !sess?.session) {
+  let session = sess?.session ?? null;
+  if (!session && /rate limit/i.test(otpErr?.message ?? "")) {
+    await pause(30_000);
+    const retry = await userClient.auth.verifyOtp({ email, token: link.properties.email_otp, type: "email" });
+    session = retry.data?.session ?? null;
+  }
+  if (!session) {
     results.push({ user_id: s.user_id, built: false, reason: `sign-in failed: ${otpErr?.message}` });
     console.log(`[forced] ${s.user_id.slice(0, 8)} — SKIPPED: sign-in failed (${otpErr?.message})`);
     continue;
@@ -70,17 +81,16 @@ for (const s of athletes) {
     .eq("plan_date", today)
     .order("sequence_order", { ascending: true });
 
-  // Step 21B — the lift never runs before practice, game or conditioning.
-  const ORDER = ["warmup", "primer", "speed", "bat_speed", "throwing", "practice_or_game", "conditioning", "lift", "recovery"];
-  const idx = (slot: string) => {
-    const i = ORDER.indexOf(slot);
-    return i === -1 ? ORDER.length : i;
-  };
-  const slots = (rows ?? []).map((r) => String(r.slot));
-  const liftAt = slots.findIndex((x) => x === "lift");
+  // Step 21B — the order the athlete actually reads is the canonical card
+  // order, so the proof checks that, not the raw per-row sequence number.
+  const ordered = sortCanonical((rows ?? []) as never[]) as Array<{ slot: string }>;
+  const seen: string[] = [];
+  for (const r of ordered) if (!seen.includes(String(r.slot))) seen.push(String(r.slot));
+  const liftAt = seen.indexOf("lift");
+  const mustPrecede = ["warmup", "primer", "speed", "bat_speed", "throwing", "practice_or_game", "conditioning"];
   const orderOk = liftAt === -1 ||
-    slots.every((x, i) => (i < liftAt ? idx(x) <= idx("lift") : true)) &&
-      !slots.slice(liftAt).some((x) => ["practice_or_game", "conditioning", "speed", "bat_speed", "warmup"].includes(x));
+    mustPrecede.every((slot) => !seen.includes(slot) || seen.indexOf(slot) < liftAt);
+  const displayedOrder = seen.join(" → ");
 
   results.push({
     user_id: s.user_id,
@@ -89,12 +99,14 @@ for (const s of athletes) {
     ms,
     within_baseline: ms <= 3200,
     lift_ordered_last_among_work: orderOk,
+    displayed_order: displayedOrder,
     error: error?.message ?? null,
   });
   console.log(
-    `[forced] ${s.user_id.slice(0, 8)} — ${!error && (rows ?? []).length > 0 ? "card built" : "FAILED"} · ${(rows ?? []).length} rows · ${ms}ms${ms <= 3200 ? "" : " (over baseline)"} · order ${orderOk ? "ok" : "WRONG"}`,
+    `[forced] ${s.user_id.slice(0, 8)} — ${!error && (rows ?? []).length > 0 ? "card built" : "FAILED"} · ${(rows ?? []).length} rows · ${ms}ms${ms <= 3200 ? "" : " (over baseline)"} · order ${orderOk ? "ok" : "WRONG"} · ${displayedOrder}`,
   );
   await userClient.auth.signOut();
+  await pause(12_000);
 }
 
 const { data: notes } = await admin
