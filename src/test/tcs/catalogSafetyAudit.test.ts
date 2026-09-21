@@ -4,11 +4,15 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  auditActiveRows,
   auditCatalog,
   auditRow,
+  intensityClassCoverage,
+  normalizeTier,
   resolveIntensityClass,
   type AuditCatalogRow,
 } from "../../../supabase/functions/_shared/wic/catalog/safetyAudit.ts";
+
 
 const base = (over: Partial<AuditCatalogRow> = {}): AuditCatalogRow =>
   ({
@@ -103,3 +107,63 @@ describe("Step 20 catalog safety audit", () => {
     expect(result.failing.map((r) => r.slug)).toEqual(["bad_row"]);
   });
 });
+
+describe("Step 23 A — the gaps the audit missed", () => {
+  it("U3 upper-body rows are 16+ and advanced only, even when already active", () => {
+    const row = base({ slug: "u3_row", ub_tier: "U3", min_age_years: 12, min_training_age_years: 2, is_active: true });
+    const [v] = auditActiveRows([row]);
+    expect(v?.slug).toBe("u3_row");
+    expect(v.failures.join(" ")).toMatch(/U3 row is live with a minimum age of 12/);
+  });
+
+  it("U3 rows also need two years of training age", () => {
+    const row = base({ slug: "u3_green", ub_tier: "U3", min_age_years: 16, min_training_age_years: 0, is_active: true });
+    expect(auditActiveRows([row])[0].failures.join(" ")).toMatch(/training-age/i);
+  });
+
+  it("a numeric tier-3 jump lands on the same 16+ floor as a text tier", () => {
+    expect(normalizeTier({ ub_tier: null, plyo_tier: 3 })).toBe("T3");
+    const row = base({ slug: "t3_num", ub_tier: null, plyo_tier: 3 as never, min_age_years: 14, is_active: true });
+    expect(auditActiveRows([row])[0].failures.join(" ")).toMatch(/T3 row is live/);
+  });
+
+  it("a legal live row raises nothing", () => {
+    const row = base({ slug: "fine", ub_tier: "U3", min_age_years: 16, min_training_age_years: 2, is_active: true });
+    expect(auditActiveRows([row])).toEqual([]);
+  });
+
+  it("the documented mapping classes every shape of row in the live catalog", () => {
+    const cases: Array<[Partial<AuditCatalogRow>, string]> = [
+      [{ category: "warmup", cns_cost: 0 }, "supplemental"],
+      [{ category: "hand_wrist_chain", cns_cost: 1 }, "supplemental"],
+      [{ category: "arm_care", cns_cost: 0 }, "arm_care"],
+      [{ category: "upper_body_plyo", cns_cost: 5 }, "elastic"],
+      [{ category: "speed_lab", cns_cost: 8 }, "elastic"],
+      [{ category: "cross_sport", cns_cost: 0 }, "low"],
+      [{ category: "conditioning", cns_cost: 5 }, "moderate"],
+      [{ category: "pap_bridge", cns_cost: 3 }, "maximal"],
+      [{ category: "strength", cns_cost: 7 }, "maximal"],
+      [{ category: "strength", cns_cost: 2 }, "low"],
+      [{ category: "strength", cns_cost: 4 }, "high"],
+    ];
+    for (const [over, expected] of cases) {
+      expect(resolveIntensityClass({ ...over, intensity_class: null })).toBe(expected);
+    }
+  });
+
+  it("a stored class always wins and nothing is guessed without inputs", () => {
+    expect(resolveIntensityClass({ intensity_class: "high", category: "warmup", cns_cost: 1 })).toBe("high");
+    expect(resolveIntensityClass({ intensity_class: null, category: null, cns_cost: null })).toBeNull();
+  });
+
+  it("reports coverage over the live catalog only", () => {
+    const cov = intensityClassCoverage([
+      base({ slug: "a", is_active: true, intensity_class: "high" }),
+      base({ slug: "b", is_active: true, intensity_class: null, category: "warmup", cns_cost: 1 }),
+      base({ slug: "c", is_active: true, intensity_class: null, category: null, cns_cost: null }),
+      base({ slug: "d", is_active: false, intensity_class: null, category: null, cns_cost: null }),
+    ]);
+    expect(cov).toEqual({ active: 3, stored: 1, derived: 1, unmapped: ["c"] });
+  });
+});
+

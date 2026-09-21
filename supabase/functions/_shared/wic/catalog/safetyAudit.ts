@@ -93,15 +93,32 @@ export interface AuditResult {
 
 const REP_UNITS = new Set(["reps", "rep", ""]);
 
+/**
+ * Step 23 A1 — tier labels arrive in two shapes: upper-body tiers as text
+ * ("U3") and jump tiers as a plain number (3). Both must land on the same
+ * floor table, or a Tier-3 row is silently never age-checked.
+ */
+export function normalizeTier(row: { ub_tier?: string | null; plyo_tier?: string | number | null }): string {
+  const ub = String(row.ub_tier ?? "").trim().toUpperCase();
+  if (ub) return /^\d+$/.test(ub) ? `U${ub}` : ub;
+  const plyo = String(row.plyo_tier ?? "").trim().toUpperCase();
+  if (!plyo) return "";
+  return /^\d+$/.test(plyo) ? `T${plyo}` : plyo;
+}
+
+
 /** One row against every check. Returns the exact failing checks by name. */
 export function auditRow(
   row: AuditCatalogRow,
   index: { activeSlugs: Set<string>; allSlugs: Set<string>; liveEquipment: Set<string> },
 ): AuditResult {
   const f: string[] = [];
-  const tier = String(row.ub_tier ?? row.plyo_tier ?? "").toUpperCase();
+  const tier = normalizeTier(row);
 
-  // 1. age and training-age floors match the tier
+  // 1. age and training-age floors match the tier.
+  //    Step 23 A1 — U3 (and T3) are 16+ and advanced only. This is the check
+  //    the two active rows slipped past, because they were never candidates:
+  //    `auditActiveRows` now runs it over live rows too.
   if (tier && TIER_AGE_FLOOR[tier]) {
     const floor = TIER_AGE_FLOOR[tier];
     if ((row.min_age_years ?? 0) < floor.age) {
@@ -112,6 +129,7 @@ export function auditRow(
     }
   }
   if (row.min_age_years == null) f.push("no minimum age set");
+
 
   // 2. phase and season legality consistent with the laws
   const seasons = row.season_eligibility ?? [];
@@ -198,25 +216,36 @@ export function auditRow(
 }
 
 /**
- * Step 20 C2 — the documented mapping.
+ * Step 20 C2, extended by Step 23 A2 — the documented intensity-class mapping.
  *
  * Every row gets an intensity class so the ceiling check can always compare
  * like with like. A stored `intensity_class` always wins. When it is missing
- * the class is derived from the row's own category and effort cost, which is
- * the same information a human would use:
+ * the class is derived from the row's own category, method family and effort
+ * cost (`cns_cost`) — the same information a human would use. Nothing is
+ * guessed: a row with no category and no effort cost returns null and stays
+ * flagged in the report.
  *
- *   category warmup / shoulder_prep / movement prep         → supplemental
- *   category arm_care                                        → arm_care
- *   speed_lab / sprint_mechanics / throwing_plyo             → elastic
- *   trunk / kot / movement_capacity / posterior_chain        → low
- *   max_effort_strength                                      → maximal
- *   everything else, by effort cost 1..5                     → supplemental,
- *                                                              low, moderate,
- *                                                              high, maximal
+ *   MAPPING v1.1 (Step 23)
+ *   a. stored intensity_class                                  → itself
+ *   b. warmup / shoulder_prep / movement_patterning            → supplemental
+ *   c. hand_wrist_chain                                        → supplemental
+ *   d. arm_care                                                → arm_care
+ *   e. speed_lab / sprint_mechanics / throwing_plyo /
+ *      upper_body_plyo / lower_body_plyo / plyometric          → elastic
+ *   f. trunk / kot / movement_capacity / posterior_chain /
+ *      cross_sport                                             → low
+ *   g. conditioning                                            → moderate
+ *   h. max_effort_strength / pap_bridge (contrast pairs)       → maximal
+ *   i. anything else, by effort cost:
+ *        0 or 1 → supplemental · 2 → low · 3 → moderate
+ *        4 → high · 5 and above → maximal
+ *   j. no category and no effort cost                          → null (flagged)
  *
  * Deriving never widens anything: it can only give a row a class where it had
  * none, and the ceiling only ever removes work.
  */
+export const INTENSITY_MAPPING_VERSION = "intensity_class_mapping_v1_1";
+
 export function resolveIntensityClass(row: {
   intensity_class?: string | null;
   category?: string | null;
@@ -227,19 +256,29 @@ export function resolveIntensityClass(row: {
   const cat = String(row.category ?? "").toLowerCase();
   if (!cat && row.cns_cost == null) return null;
   if (cat === "warmup" || cat === "shoulder_prep" || cat === "movement_patterning") return "supplemental";
+  if (cat === "hand_wrist_chain") return "supplemental";
   if (cat === "arm_care") return "arm_care";
-  if (cat === "speed_lab" || cat === "sprint_mechanics" || cat === "throwing_plyo") return "elastic";
-  if (cat === "trunk" || cat === "kot" || cat === "movement_capacity" || cat === "posterior_chain") return "low";
-  if (cat === "max_effort_strength") return "maximal";
-  switch (Number(row.cns_cost ?? 0)) {
-    case 1: return "supplemental";
-    case 2: return "low";
-    case 3: return "moderate";
-    case 4: return "high";
-    case 5: return "maximal";
-    default: return cat ? "low" : null;
-  }
+  if (
+    cat === "speed_lab" || cat === "sprint_mechanics" || cat === "throwing_plyo" ||
+    cat === "upper_body_plyo" || cat === "lower_body_plyo" || cat === "plyometric"
+  ) return "elastic";
+  if (
+    cat === "trunk" || cat === "kot" || cat === "movement_capacity" ||
+    cat === "posterior_chain" || cat === "cross_sport"
+  ) return "low";
+  if (cat === "conditioning") return "moderate";
+  if (cat === "max_effort_strength" || cat === "pap_bridge") return "maximal";
+  const cns = row.cns_cost;
+  if (cns == null) return cat ? "low" : null;
+  const n = Number(cns);
+  if (!Number.isFinite(n)) return cat ? "low" : null;
+  if (n <= 1) return "supplemental";
+  if (n === 2) return "low";
+  if (n === 3) return "moderate";
+  if (n === 4) return "high";
+  return "maximal";
 }
+
 
 /** Audit a whole catalog. Only inactive, non-superseded rows are candidates. */
 export function auditCatalog(rows: AuditCatalogRow[]): {
@@ -264,3 +303,94 @@ export function auditCatalog(rows: AuditCatalogRow[]): {
     failing: candidates.filter((c) => !c.pass),
   };
 }
+
+/**
+ * Step 23 A1 — the drift audit over rows that are ALREADY ON.
+ *
+ * `auditCatalog` only ever looked at switched-off rows, so a live row whose
+ * age floor was wrong from the start was never checked by anything. This runs
+ * the hard safety laws — tier age/training-age floors, the eccentric-overload
+ * season law, the deep-flexion floor, outside names — over every active row.
+ *
+ * Data-completeness checks (missing unit, missing sub-bucket) are deliberately
+ * NOT included: they are activation gates, not safety laws, and a live row
+ * failing one is a report item, not a reason to pull a working card.
+ */
+export type ActiveAuditResult = AuditResult & { blocking: boolean };
+
+
+export function auditActiveRows(rows: AuditCatalogRow[]): ActiveAuditResult[] {
+  const out: ActiveAuditResult[] = [];
+  for (const row of rows) {
+    if (row.is_active !== true) continue;
+    const f: string[] = [];
+    // A breach only blocks the night's run when it is one of the named hard
+    // laws (advanced-tier 16+, eccentric overload, athlete-visible outside
+    // names). Everything else is reported for the owner, never acted on
+    // silently — no threshold is moved to make a check pass.
+    let blocking = false;
+    const tier = normalizeTier(row);
+    if (tier && TIER_AGE_FLOOR[tier]) {
+      const floor = TIER_AGE_FLOOR[tier];
+      const hard = tier === "U3" || tier === "T3";
+      if ((row.min_age_years ?? 0) < floor.age) {
+        f.push(`${tier} row is live with a minimum age of ${row.min_age_years ?? "none"}; the ${tier} floor is ${floor.age}`);
+        blocking ||= hard;
+      }
+      if (Number(row.min_training_age_years ?? 0) < floor.trainingAge) {
+        f.push(`${tier} row is live with a training-age floor below the ${tier} minimum of ${floor.trainingAge}`);
+        blocking ||= hard;
+      }
+    }
+    if (row.eccentric_overload === true) {
+      for (const s of row.season_eligibility ?? []) {
+        if (s === "in_season" || s === "post_season") {
+          f.push("eccentric overload is live in season or post-season (law L0.3)");
+          blocking = true;
+        }
+      }
+      if ((row.min_age_years ?? 0) < 16) {
+        f.push("eccentric overload live below age 16");
+        blocking = true;
+      }
+    }
+    if (row.deep_flexion === true && (row.min_age_years ?? 0) < 14) {
+      f.push("deep-flexion row live below age 14");
+    }
+    for (const [label, text] of [
+      ["name", row.name],
+      ["cue", row.cue ?? ""],
+      ["category", String(row.category ?? "").replace(/_/g, " ")],
+      ["slug", row.slug],
+    ] as const) {
+      if (OUTSIDE_NAMES.test(String(text))) {
+        f.push(`outside name in the ${label}`);
+        // A slug is internal plumbing; only text an athlete can read blocks.
+        blocking ||= label !== "slug";
+      }
+    }
+    if (f.length > 0) out.push({ id: row.id, slug: row.slug, pass: false, failures: f, blocking });
+  }
+  return out.sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+
+/** Step 23 A2 — how much of the live catalog the ceiling check can read. */
+export function intensityClassCoverage(rows: AuditCatalogRow[]): {
+  active: number;
+  stored: number;
+  derived: number;
+  unmapped: string[];
+} {
+  const active = rows.filter((r) => r.is_active === true);
+  const unmapped: string[] = [];
+  let stored = 0;
+  let derived = 0;
+  for (const r of active) {
+    if (String(r.intensity_class ?? "").trim()) stored++;
+    else if (resolveIntensityClass(r)) derived++;
+    else unmapped.push(r.slug);
+  }
+  return { active: active.length, stored, derived, unmapped: unmapped.sort() };
+}
+

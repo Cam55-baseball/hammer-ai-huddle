@@ -325,6 +325,30 @@ import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic
 // information instead of raising a slowdown alarm.
 let servedARequest = false;
 
+// -------- Movement catalog cache (read-only reference data) ----------------
+// The catalog is ~1,000 rows and identical for every athlete of a sport. It
+// changed only when the owner edits it, so re-reading it on every build cost
+// the same seconds over and over. Cached per sport for 5 minutes, in memory
+// only: nothing athlete-specific is held, and a catalog edit is picked up on
+// the next window. This changes speed only — never what is prescribed.
+const CATALOG_TTL_MS = 5 * 60 * 1000;
+const catalogCache = new Map<string, { at: number; rows: unknown[] }>();
+async function loadMovementCatalog(
+  admin: { from: (t: string) => any },
+  sport: string,
+): Promise<{ data: any[] | null; error: any }> {
+  const hit = catalogCache.get(sport);
+  if (hit && Date.now() - hit.at < CATALOG_TTL_MS) {
+    return { data: hit.rows as any[], error: null };
+  }
+  const res = await admin.from("wk_movement_catalog").select("*")
+    .or(`sport_scope.eq.both,sport_scope.eq.${sport}`);
+  if (!res.error && Array.isArray(res.data)) {
+    catalogCache.set(sport, { at: Date.now(), rows: res.data });
+  }
+  return res as { data: any[] | null; error: any };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const WAS_COLD_START = !servedARequest;
@@ -678,7 +702,7 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Load phase block + catalog + feature flags --------
     const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }, { data: liftingFlagRow }] = await Promise.all([
       admin.from("wk_periodization_blocks").select("*").eq("phase", phaseRes.phase).maybeSingle() as unknown as Promise<{ data: BlockRow | null; error: any }>,
-      admin.from("wk_movement_catalog").select("*").or(`sport_scope.eq.both,sport_scope.eq.${sport}`) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
+      loadMovementCatalog(admin as any, sport) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
       admin.from("app_settings").select("setting_value").eq("setting_key", "lifting_v2_enabled").maybeSingle(),
     ]);
     if (blocksErr) throw blocksErr;
@@ -1214,6 +1238,9 @@ const handler = async (req: Request): Promise<Response> => {
     const selectionSkips = createSkipLog();
     /** Required template categories with no legal candidate for this athlete today. */
     const unfillableCategories: { bat_speed: string[]; speed: string[] } = { bat_speed: [], speed: [] };
+    /** Required speed categories the selector filled with a near neighbour. */
+    const fallbackCoveredSpeedCategories: string[] = [];
+
     if (equipmentUnknown) {
       selectionSkips.record({
         domain: "session",
@@ -2194,6 +2221,15 @@ const handler = async (req: Request): Promise<Response> => {
         .filter((w) => w.startsWith("speed_missing_required:"))
         .map((w) => w.split(":")[1]);
       unfillableCategories.speed.push(...spMissingRequired);
+      // A required category filled by its near neighbour is filled; the
+      // certifier is told so it does not read the slot as missing.
+      fallbackCoveredSpeedCategories.push(
+        ...speedSelection.warnings
+          .filter((w) => w.startsWith("speed_category_fallback:"))
+          .map((w) => w.split(":")[1]?.split("->")[0])
+          .filter((c): c is string => Boolean(c)),
+      );
+
       for (const cat of spMissingRequired) {
         selectionSkips.record({
           domain: "speed",
@@ -2799,6 +2835,8 @@ const handler = async (req: Request): Promise<Response> => {
       environment: environmentCtx,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
       unfillableRequiredCategories: unfillableCategories.speed,
+      fallbackCoveredCategories: fallbackCoveredSpeedCategories,
+
     });
     const batSpeedCertification = certifyBatSpeed({
       prescriptions: finalRxs as any,
