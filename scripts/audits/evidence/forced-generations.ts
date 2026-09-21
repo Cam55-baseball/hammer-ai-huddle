@@ -103,7 +103,7 @@ for (const s of athletes) {
     error: error?.message ?? null,
   });
   console.log(
-    `[forced] ${s.user_id.slice(0, 8)} — ${!error && (rows ?? []).length > 0 ? "card built" : "FAILED"} · ${(rows ?? []).length} rows · ${ms}ms${ms <= 3200 ? "" : " (over baseline)"} · order ${orderOk ? "ok" : "WRONG"} · ${displayedOrder}`,
+    `[forced] ${s.user_id.slice(0, 8)} — ${!error && (rows ?? []).length > 0 ? "card built" : "FAILED"} · ${(rows ?? []).length} rows · ${ms}ms${ms <= 3200 ? "" : " (over baseline)"} · order ${orderOk ? "ok" : "WRONG"} · ${displayedOrder}${error ? ` · reason: ${error.message}` : (rows ?? []).length === 0 ? " · reason: zero rows returned" : ""}`,
   );
   await userClient.auth.signOut();
   await pause(12_000);
