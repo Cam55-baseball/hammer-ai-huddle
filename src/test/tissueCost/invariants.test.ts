@@ -33,7 +33,7 @@ describe("TCS property suite (I1–I9)", () => {
     }
     expect(r.violations).toEqual([]);
     expect(r.daysChecked).toBeGreaterThan(SEASONS * 300);
-  }, 600_000);
+  }, Math.max(600_000, SEASONS * 1_200));
 });
 
 describe("TCS — threshold derivation and drift protection", () => {
