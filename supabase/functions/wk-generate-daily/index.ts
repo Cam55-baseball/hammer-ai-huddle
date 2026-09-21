@@ -2021,6 +2021,7 @@ const handler = async (req: Request): Promise<Response> => {
         isInSeason,
         pickFirstRelaxedLift,
         restDayToday ? () => undefined : pickFirstClassRelaxedLift,
+        restDayToday,
       );
     }
 
@@ -4085,6 +4086,11 @@ function ensureFullBodyLift(
   isInSeason: boolean,
   pickFirstRelaxed?: (slugs: string[]) => MovementRow | undefined,
   pickFirstClassRelaxed?: (slugs: string[]) => MovementRow | undefined,
+  // Step 20 C — on a full rest day the resolved template is the recovery one,
+  // which requires only core and mobility. The compound / push / pull / single
+  // leg guardrails below belong to the full-body training templates, so they
+  // are skipped rather than back-filling loaded work onto a rest day.
+  restDay = false,
 ) {
   const catalogBySlug = new Map(catalog.map((m) => [m.slug, m] as const));
   const categoryForRx = (rx: Prescription) => coerceCanonicalCategory(catalogBySlug.get(rx.movement_slug) as any);
@@ -4174,7 +4180,7 @@ function ensureFullBodyLift(
     }
   }
 
-  if (!hasLiftCategory("compound_lower")) {
+  if (!restDay && !hasLiftCategory("compound_lower")) {
     const hit = pickMandatoryCategory(isInSeason
       ? ["goblet_squat", "back_squat_concentric", "lift_atg_split_squat", "lift_anderson_squat", "lift_box_squat_wide"]
       : ["back_squat_double_ecc", "front_squat_double_ecc", "safety_bar_box_squat", "lift_safety_bar_squat", "lift_box_squat_wide", "back_squat_concentric", "goblet_squat"], "compound_lower");
@@ -4183,12 +4189,12 @@ function ensureFullBodyLift(
     }
   }
 
-  if (!hasLiftRole("unilateral_lower")) {
+  if (!restDay && !hasLiftRole("unilateral_lower")) {
     const m = pickFirst(isInSeason ? ["lateral_db_step_up", "sl_deadlift_fat_grips"] : ["lateral_db_step_up", "kot_lunge", "sl_deadlift_fat_grips"]);
     if (m) push("lift", "unilateral_lower", m, {}, "Full-body guardrail: unilateral work covers side-to-side asymmetry without junk volume.");
   }
 
-  if (!hasLiftCategory("compound_upper_push")) {
+  if (!restDay && !hasLiftCategory("compound_upper_push")) {
     const hit = pickMandatoryCategory(isInSeason
       ? ["db_bench", "bench_press_concentric", "push_press_concentric", "sa_db_chest_press", "lift_landmine_press", "lift_hk_landmine_press", "incline_bench_double_ecc"]
       : ["bench_press_double_ecc", "incline_bench_double_ecc", "db_bench", "bench_press_concentric", "push_press_concentric", "lift_floor_press", "lift_swiss_bar_bench"], "compound_upper_push");
@@ -4197,7 +4203,7 @@ function ensureFullBodyLift(
     }
   }
 
-  if (!hasLiftCategory("compound_upper_pull")) {
+  if (!restDay && !hasLiftCategory("compound_upper_pull")) {
     const hit = pickMandatoryCategory(isInSeason
       ? ["sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "lift_1arm_cable_row", "lift_ring_row"]
       : ["weighted_pullup_full", "sa_standing_cable_row", "lat_pulldown", "db_row_bench", "weighted_pullup_concentric", "weighted_pullup_double_ecc", "lift_chest_tbar_row", "lift_meadows_row"], "compound_upper_pull");
@@ -4216,7 +4222,7 @@ function ensureFullBodyLift(
     if (m) push("lift", "arm_care", m, {}, "Full-body guardrail: arm care is mandatory, not optional.");
   }
 
-  if (!hasLiftRole("trunk_primer")) {
+  if (!restDay && !hasLiftRole("trunk_primer")) {
     const m = pickFirst(["paloff_press", "trap_bar_trunk_twist", "contralateral_cross_crawl", "lift_deadbug_band_press", "lift_mcgill_big3"]);
     if (m) push("lift", "trunk_primer", m, {}, "Full-body guardrail: trunk primer keeps the lift from becoming lower-body-only.");
   }
