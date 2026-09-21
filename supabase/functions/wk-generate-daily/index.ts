@@ -1912,9 +1912,21 @@ const handler = async (req: Request): Promise<Response> => {
         if (armCareRow) push("lift", "arm_care", armCareRow, {}, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
       }
 
-      // 2) Trunk primer — every session
-      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ?? pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
+      // Step 20 C — a full rest day ("none" from the rest-day calculator) is a
+      // recovery day, not a lighter lifting day. Arm care above still ships,
+      // so the card is never empty, but nothing loaded is built: no primer, no
+      // compound, no accessories, and no template back-fill. Building them and
+      // then relying on the class filter let the Step 15 "a required category
+      // must survive a cap" relaxation put a compound lift on a rest day.
+      const restDayToday = tcsAdjust?.removeLift === true;
+
+      // 2) Trunk primer — every training session
+      const trunkPrimer = restDayToday
+        ? undefined
+        : pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ?? pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
+
+      if (!restDayToday) {
 
       // 3) Compound A — lower strength primer, phase legal
       const compoundSlugsByPhase = StrengthEngine.compoundSlugsFor(phaseRes.phase, dayOfWeek);
@@ -1973,15 +1985,19 @@ const handler = async (req: Request): Promise<Response> => {
         if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 
-      ensureFullBodyLift(
-        rxs,
-        lib,
-        pickFirstLift,
-        push,
-        isInSeason,
-        pickFirstRelaxedLift,
-        pickFirstClassRelaxedLift,
-      );
+      } // end of the loaded lift block (skipped entirely on a rest day)
+
+      if (!restDayToday) {
+        ensureFullBodyLift(
+          rxs,
+          lib,
+          pickFirstLift,
+          push,
+          isInSeason,
+          pickFirstRelaxedLift,
+          pickFirstClassRelaxedLift,
+        );
+      }
     }
 
 
