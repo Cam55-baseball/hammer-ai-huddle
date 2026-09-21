@@ -7,7 +7,8 @@ import { SPEED_TEMPLATES, resolveSpeedTemplate } from "./templates.ts";
 import type { SpeedCategory } from "./movementCategories.ts";
 import { ALL_SPEED_CATEGORIES, coverageOf, missingCategories } from "./movementCategories.ts";
 import type { SpeedCatalogEntry, SpeedSubstitutionLadder } from "./substitutions.ts";
-import { resolveSpeedSubstitutionLadder, speedLadderCompleteness } from "./substitutions.ts";
+import { resolveSpeedSubstitutionLadder,
+  countLegalSpeedFamilyAlternates, speedLadderCompleteness } from "./substitutions.ts";
 
 export interface SpeedRxLike {
   slot: string;
@@ -148,19 +149,29 @@ export function certifySpeed(input: CertifySpeedInput): CertifySpeedResult {
       phase: input.template.seasonPhase,
       trainingAgeClass: input.trainingAgeClass,
     });
-    // Family size approximation across substitution_family OR transfer_group.
-    const familySize = input.catalog.filter(
-      (c) =>
-        c.slug !== cat.slug &&
-        ((c.substitution_family && c.substitution_family === cat.substitution_family) ||
-          (c.transfer_group && c.transfer_group === cat.transfer_group)),
-    ).length;
+    // Step 21 fix — like-for-like family count. The ladder only ever contains
+    // season-legal / training-age-legal rows, so the comparison count must use
+    // the same filters. A mismatched count previously refused whole cards.
+    const familySize = countLegalSpeedFamilyAlternates({
+      movement: cat,
+      catalog: input.catalog,
+      availableEquipment: input.availableEquipment,
+      environment: input.environment,
+      phase: input.template.seasonPhase,
+      trainingAgeClass: input.trainingAgeClass,
+    });
     const { complete, score } = speedLadderCompleteness(ladder, familySize);
     ladderScores.push(score);
-    if (!complete && familySize > 0) {
+    if (!complete && familySize >= 2) {
       fatal.push({
         code: "speed_unresolved_substitution",
-        message: `${rx.movement_slug} has ${familySize} alternates but resolver produced <2 rungs.`,
+        message: `${rx.movement_slug} has ${familySize} legal alternates but resolver produced <2 rungs.`,
+        slug: rx.movement_slug,
+      });
+    } else if (!complete && familySize === 1) {
+      warn.push({
+        code: "speed_thin_substitution_family",
+        message: `${rx.movement_slug} has only 1 legal alternate today, so no full swap ladder could be built.`,
         slug: rx.movement_slug,
       });
     }
