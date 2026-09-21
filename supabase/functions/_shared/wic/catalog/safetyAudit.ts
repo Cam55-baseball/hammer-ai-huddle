@@ -99,9 +99,12 @@ export function auditRow(
   index: { activeSlugs: Set<string>; allSlugs: Set<string>; liveEquipment: Set<string> },
 ): AuditResult {
   const f: string[] = [];
-  const tier = String(row.ub_tier ?? row.plyo_tier ?? "").toUpperCase();
+  const tier = normalizeTier(row);
 
-  // 1. age and training-age floors match the tier
+  // 1. age and training-age floors match the tier.
+  //    Step 23 A1 — U3 (and T3) are 16+ and advanced only. This is the check
+  //    the two active rows slipped past, because they were never candidates:
+  //    `auditActiveRows` now runs it over live rows too.
   if (tier && TIER_AGE_FLOOR[tier]) {
     const floor = TIER_AGE_FLOOR[tier];
     if ((row.min_age_years ?? 0) < floor.age) {
@@ -112,6 +115,7 @@ export function auditRow(
     }
   }
   if (row.min_age_years == null) f.push("no minimum age set");
+
 
   // 2. phase and season legality consistent with the laws
   const seasons = row.season_eligibility ?? [];
