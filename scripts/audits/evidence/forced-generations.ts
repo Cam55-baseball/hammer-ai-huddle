@@ -133,7 +133,8 @@ const { data: notes } = await admin
 const criticals = (notes ?? []).filter((n) => n.severity === "critical");
 
 console.log("");
-console.log(`[forced] cards built: ${results.filter((r) => r.built).length} / ${results.length}`);
+const applicable = results.filter((r) => !r.skipped);
+console.log(`[forced] cards built: ${applicable.filter((r) => r.built).length} / ${applicable.length} athlete accounts (${results.length - applicable.length} staff accounts skipped by design)`);
 console.log(`[forced] failed: ${results.filter((r) => !r.built).length}`);
 console.log(`[forced] slowest build: ${Math.max(0, ...results.map((r) => Number(r.ms ?? 0)))}ms (baseline 3200ms)`);
 console.log(`[forced] new watchdog notes in the window: ${(notes ?? []).length} · critical: ${criticals.length}`);
@@ -142,7 +143,7 @@ for (const c of criticals) {
   console.log(`[forced]     rows: ${JSON.stringify((c.detail as { rows?: unknown })?.rows ?? null)}`);
 }
 
-const failed = results.filter((r) => !r.built).length;
+const failed = applicable.filter((r) => !r.built).length;
 const slow = results.filter((r) => r.within_baseline === false).length;
 const misordered = results.filter((r) => r.lift_ordered_last_among_work === false).length;
 if (failed || criticals.length || misordered) {
