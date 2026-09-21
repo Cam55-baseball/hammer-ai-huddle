@@ -123,7 +123,7 @@ describe("Step 23 A — the gaps the audit missed", () => {
 
   it("a numeric tier-3 jump lands on the same 16+ floor as a text tier", () => {
     expect(normalizeTier({ ub_tier: null, plyo_tier: 3 })).toBe("T3");
-    const row = base({ slug: "t3_num", ub_tier: null, plyo_tier: 3, min_age_years: 14, is_active: true });
+    const row = base({ slug: "t3_num", ub_tier: null, plyo_tier: 3 as never, min_age_years: 14, is_active: true });
     expect(auditActiveRows([row])[0].failures.join(" ")).toMatch(/T3 row is live/);
   });
 
