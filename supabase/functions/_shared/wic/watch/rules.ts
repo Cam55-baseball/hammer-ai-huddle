@@ -116,7 +116,24 @@ export function livePrescriptionViolations(i: {
   const out: WatchNote[] = [];
   const lifts = i.rows.filter((r) => r.slot === "lift");
 
-  if (i.allowedClass === "none" && lifts.length > 0) {
+  // Step 20 C — like with like again. A full rest day is a recovery day, not an
+  // empty day: arm care, easy mobility and light trunk work are exactly what it
+  // is supposed to contain. Only LOADED work is a violation, and "loaded" means
+  // the same class list the day's ceiling blocks — not "any row in the lift
+  // slot", which flagged a correct recovery card as critical.
+  const RECOVERY_LEGAL_CLASSES = new Set([
+    "arm_care",
+    "supplemental",
+    "mobility",
+    "tissue",
+    "recovery",
+    "conditioning",
+  ]);
+  const loadedOnRestDay = lifts.filter(
+    (r) => !r.intensityClass || !RECOVERY_LEGAL_CLASSES.has(String(r.intensityClass)),
+  );
+
+  if (i.allowedClass === "none" && loadedOnRestDay.length > 0) {
     out.push({
       severity: "critical",
       category: "rule_violation",
@@ -126,8 +143,8 @@ export function livePrescriptionViolations(i: {
       detail: {
         plan_date: i.planDate,
         allowed_class: "none",
-        lifts: lifts.length,
-        rows: lifts.map((r) => ({ slug: r.slug, slot: r.slot ?? null, intensity_class: r.intensityClass ?? null })),
+        lifts: loadedOnRestDay.length,
+        rows: loadedOnRestDay.map((r) => ({ slug: r.slug, slot: r.slot ?? null, intensity_class: r.intensityClass ?? null })),
       },
       auto_action: "The switch drops one level tonight and the owner is alerted",
     });

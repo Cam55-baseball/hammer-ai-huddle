@@ -32,6 +32,25 @@ describe("Step 13 watchdog triggers", () => {
     expect(n.category).toBe("empty_card");
   });
 
+  it("a rest day filled with arm care and easy mobility is not a violation", () => {
+    const notes = livePrescriptionViolations({
+      userId: "u1",
+      planDate: "2026-09-21",
+      allowedClass: "none",
+      blockedClasses: ["heavy_compound", "compound", "high", "moderate"],
+      rows: [
+        { slug: "crossover_symmetry_full", slot: "lift", intensityClass: "arm_care", cnsCost: 1 },
+        { slug: "fp_leg_line_spiral", slot: "lift", intensityClass: "supplemental", cnsCost: 1 },
+        { slug: "paloff_press", slot: "lift", intensityClass: "supplemental", cnsCost: 1 },
+      ],
+      cnsCap: 2,
+      cnsUsed: 1,
+      itemCount: 3,
+      decisionId: "d9",
+    });
+    expect(notes.filter((n) => n.severity === "critical")).toEqual([]);
+  });
+
   it("critical: lifts on a rest day and a movement above the ceiling, with the rows named", () => {
     const notes = livePrescriptionViolations({
       userId: "u1",
