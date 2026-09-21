@@ -46,6 +46,15 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Rendering infrastructure has been decommissioned. Fail fast, never retry.
+  if (!Deno.env.get("AWS_ACCESS_KEY_ID") || !Deno.env.get("AWS_SECRET_ACCESS_KEY")) {
+    return new Response(
+      JSON.stringify({ ok: false, unavailable: true, retry: false, error: "Video rendering is unavailable right now." }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+
   try {
     const { queue_id } = await req.json();
     if (!queue_id) {
