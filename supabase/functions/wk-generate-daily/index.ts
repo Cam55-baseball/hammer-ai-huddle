@@ -2197,6 +2197,15 @@ const handler = async (req: Request): Promise<Response> => {
         .filter((w) => w.startsWith("speed_missing_required:"))
         .map((w) => w.split(":")[1]);
       unfillableCategories.speed.push(...spMissingRequired);
+      // A required category filled by its near neighbour is filled; the
+      // certifier is told so it does not read the slot as missing.
+      fallbackCoveredSpeedCategories.push(
+        ...speedSelection.warnings
+          .filter((w) => w.startsWith("speed_category_fallback:"))
+          .map((w) => w.split(":")[1]?.split("->")[0])
+          .filter((c): c is string => Boolean(c)),
+      );
+
       for (const cat of spMissingRequired) {
         selectionSkips.record({
           domain: "speed",
