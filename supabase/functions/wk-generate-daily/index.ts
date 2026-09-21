@@ -1935,6 +1935,18 @@ const handler = async (req: Request): Promise<Response> => {
         pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
+      // Rest day: the recovery template asks for mobility. Pick the first
+      // legal mobility row the class filter allows so the recovery card is a
+      // real recovery session rather than a template failure.
+      if (restDayToday) {
+        const mobility = lib.find(
+          (m) => eligibleLift(m) && coerceCanonicalCategory(m as any) === "mobility",
+        ) ?? lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "mobility");
+        if (mobility) {
+          push("lift", "mobility", mobility, {}, "Full rest day — easy movement and tissue work only. Nothing loaded today.");
+        }
+      }
+
       if (!restDayToday) {
 
       // 3) Compound A — lower strength primer, phase legal
