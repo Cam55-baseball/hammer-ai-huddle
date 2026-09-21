@@ -1620,8 +1620,14 @@ const handler = async (req: Request): Promise<Response> => {
         : null;
 
       // Plain-English rationale
+      // Step 22 — the athlete-facing "why this movement" must describe the
+      // MOVEMENT, never the session slot it happened to land in. The slot
+      // line (session template name, stage label, placement reason) is
+      // context about the day and is kept separately as `session_context`.
       const cls = humanizeClass(s.movement.intensity_class);
-      const reasonPiece = why || s.movement.why_prescribed || `${cls} pick for today`;
+      const slotContext = (why ?? "").trim();
+      const movementWhy = (s.movement.why_prescribed ?? "").trim();
+      const reasonPiece = movementWhy || slotContext || `${cls} pick for today`;
       const reductionsPiece = reductions.length
         ? ` Volume trimmed today because ${reductions.map((r) => r.detail.toLowerCase()).join(" and ")}.`
         : "";
@@ -1666,7 +1672,7 @@ const handler = async (req: Request): Promise<Response> => {
       const why_v2: WhyV2 = buildWhy({
         why_today: adaptationDecision.reason,
         why_athlete: `${adaptationDecision.reason_athlete} (${trainingAgeYears || 0}-yr training age${isProProspect ? ", pro prospect" : ""}).`,
-        why_exercise: why || s.movement.why_prescribed || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
+        why_exercise: movementWhy || slotContext || `${cls} implementation of the ${adaptationDecision.primary} adaptation.`,
         why_volume: resolvedDose
           ? describeDose(resolvedDose)
           : `${setsRepsStr} — dialed to ${adaptationDecision.primary} demands and today's CNS cap (${cnsCap}).`,
@@ -1751,7 +1757,8 @@ const handler = async (req: Request): Promise<Response> => {
           category: s.movement.category,
           family: s.movement.family,
           source_philosophy: s.movement.source_philosophy,
-          why: why || s.movement.why_prescribed,
+          why: movementWhy || slotContext || null,
+          session_context: slotContext || null,
           cue: s.movement.cue,
           rep_rule: resolvedDose
             ? `${resolvedDose.envelope.sets[0]}-${resolvedDose.envelope.sets[1]} sets × ${resolvedDose.envelope.reps[0]}-${resolvedDose.envelope.reps[1]} reps — ${resolvedDose.phase} ${resolvedDose.group} envelope (${DOSAGE_DOCTRINE_VERSION}).`
