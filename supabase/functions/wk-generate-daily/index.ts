@@ -935,6 +935,14 @@ const handler = async (req: Request): Promise<Response> => {
           decision_source: decisionSource,
         };
         cnsCap = Math.min(cnsCap, tcsAdjust.cnsCap);
+        // Step 20 C — a "none" decision IS a recovery day. Saying so once,
+        // here, is what makes every downstream engine agree: the session
+        // template becomes the recovery template (so it no longer demands
+        // compound categories the day must not contain), and the engines that
+        // already read `day_type` behave as they do on any recovery day.
+        if (tcsAdjust.removeLift) {
+          (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+        }
         for (const r of tcsAdjust.reasons) {
           reductions.push({ reason: "tissue_cost", detail: r });
         }
