@@ -74,12 +74,20 @@ for (const s of athletes) {
 
   const t0 = Date.now();
   const { data, error } = await userClient.functions.invoke("wk-generate-daily", { body: { plan_date: today } });
+  let serverBody = "";
   if (error && (error as { context?: Response }).context) {
     try {
-      const body = await (error as unknown as { context: Response }).context.clone().text();
-      console.log(`[forced] ${s.user_id.slice(0, 8)} — server said: ${body.slice(0, 900)}`);
+      serverBody = await (error as unknown as { context: Response }).context.clone().text();
     } catch { /* body already consumed */ }
   }
+  // Staff accounts (coach / scout / owner) are refused a daily athlete card by
+  // design. They are not card-build failures and must not be counted as such.
+  if (serverBody.includes("not_an_athlete_account")) {
+    results.push({ user_id: s.user_id, built: false, skipped: true, reason: "staff account — no athlete card by design" });
+    console.log(`[forced] ${s.user_id.slice(0, 8)} — SKIPPED: staff account, no athlete card by design`);
+    continue;
+  }
+  if (serverBody) console.log(`[forced] ${s.user_id.slice(0, 8)} — server said: ${serverBody.slice(0, 900)}`);
   const ms = Date.now() - t0;
 
   const { data: rows } = await admin
