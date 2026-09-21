@@ -9,6 +9,7 @@
  *   D3. No empty headings.
  *   D4. "Why reduced today" only when something was actually reduced.
  */
+import { HammersTodayProvider } from "@/components/hammer/HammersTodayProvider";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 
@@ -75,6 +76,7 @@ const skillRow = {
 
 export default function EvidenceCardClarity() {
   return (
+    <HammersTodayProvider planDate="2026-03-02">
     <main className="mx-auto max-w-[390px] space-y-4 p-3">
       <h1 className="text-base font-semibold">Step 21 — card clarity</h1>
 
@@ -88,5 +90,6 @@ export default function EvidenceCardClarity() {
         <WkPrescriptionCard rx={skillRow} phaseDisplay="Build the Base" phaseKey="accumulation" />
       </section>
     </main>
+    </HammersTodayProvider>
   );
 }
