@@ -428,3 +428,20 @@ export function WkPrescriptionCard({
     </Card>
   );
 }
+
+/**
+ * Step 21D4 — a "reduction" must describe something that was actually cut.
+ * These lines are day-level scheduling statements produced by the rest-day
+ * calculator when nothing was reduced; they render in the day header instead.
+ * Function declaration, so it hoists above its use in the component.
+ */
+export function isDayStatementNotAReduction(detail?: string | null): boolean {
+  const s = String(detail ?? "").trim().toLowerCase();
+  if (!s) return true;
+  return (
+    s.startsWith("you're rested") ||
+    s.startsWith("you’re rested") ||
+    s.startsWith("next heavy day") ||
+    s === "standard spacing today."
+  );
+}
