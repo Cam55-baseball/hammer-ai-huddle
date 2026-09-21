@@ -171,7 +171,12 @@ export function WkPrescriptionCard({
   const todayLine = phaseMismatch || (generating && rawMismatch)
     ? null
     : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
-  const reductions = why?.reductions ?? [];
+  // Step 21D4 — "Why reduced today" belongs to real trims only. A scheduling
+  // statement ("You're rested — heavy day is on", "Next heavy day: Monday")
+  // describes the day, not a reduction, and belongs in the day header.
+  const reductions = (why?.reductions ?? []).filter(
+    (r: { detail?: string | null }) => !isDayStatementNotAReduction(r?.detail),
+  );
   // Precise, age-8-readable dosage. Every card must show at least one
   // concrete number (sets/reps, seconds, feet, or total contacts) so athletes
   // know exactly what to execute — no more vague "1 × 1" placeholders.
@@ -357,9 +362,19 @@ export function WkPrescriptionCard({
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
           )}
 
+          {/* Step 21D1 — Cue sits above "Why this movement". */}
+          {why.cue && (
+            <div className="rounded border border-primary/20 p-2">
+              <div className="font-medium mb-0.5">Cue</div>
+              <div className="text-foreground/80">{why.cue}</div>
+            </div>
+          )}
+
           {(() => {
-            const hasWhy = athleteWhy || todayLine;
-            if (!hasWhy) return null;
+            // Step 21D3 — never render a heading with no content.
+            const whyText = String(athleteWhy ?? "").trim();
+            const today = String(todayLine ?? "").trim();
+            if (!whyText && !today) return null;
             return (
               <Collapsible>
                 <CollapsibleTrigger asChild>
@@ -374,10 +389,10 @@ export function WkPrescriptionCard({
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-1 rounded border border-primary/20 bg-primary/5 p-2 space-y-1 text-muted-foreground">
-                  {athleteWhy && <div>{athleteWhy}</div>}
-                  {todayLine && (
+                  {whyText && <div>{whyText}</div>}
+                  {today && (
                     <div>
-                      <span className="text-foreground">Today —</span> {todayLine}
+                      <span className="text-foreground">Today —</span> {today}
                     </div>
                   )}
                 </CollapsibleContent>
@@ -385,12 +400,6 @@ export function WkPrescriptionCard({
             );
           })()}
           <WkProgressionNote progression={progressionPayload} />
-          {why.cue && (
-            <div className="rounded border border-primary/20 p-2">
-              <div className="font-medium mb-0.5">Cue</div>
-              <div className="text-foreground/80">{why.cue}</div>
-            </div>
-          )}
           {why.sequencing_hint && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
           )}
@@ -417,5 +426,22 @@ export function WkPrescriptionCard({
         </CollapsibleContent>
       </Collapsible>
     </Card>
+  );
+}
+
+/**
+ * Step 21D4 — a "reduction" must describe something that was actually cut.
+ * These lines are day-level scheduling statements produced by the rest-day
+ * calculator when nothing was reduced; they render in the day header instead.
+ * Function declaration, so it hoists above its use in the component.
+ */
+export function isDayStatementNotAReduction(detail?: string | null): boolean {
+  const s = String(detail ?? "").trim().toLowerCase();
+  if (!s) return true;
+  return (
+    s.startsWith("you're rested") ||
+    s.startsWith("you’re rested") ||
+    s.startsWith("next heavy day") ||
+    s === "standard spacing today."
   );
 }

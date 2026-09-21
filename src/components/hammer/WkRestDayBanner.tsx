@@ -5,7 +5,6 @@ import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 
 type RestDayPayload = {
   allowed_class?: string | null;
-  timing_note?: string | null;
   next_heavy_chip?: string | null;
   reasons?: string[] | null;
   recovery_only?: boolean | null;
@@ -43,9 +42,8 @@ export function WkRestDayBanner() {
             </Badge>
           )}
         </div>
-        {payload.timing_note && (
-          <p className="text-xs text-muted-foreground">{payload.timing_note}</p>
-        )}
+        {/* Step 21A — "Do this after your skill work" belongs to the lift card
+            only. The day header and today's training load never carry it. */}
         {reasons.length > 0 && (
           <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
             {reasons.map((r, i) => (

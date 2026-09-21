@@ -94,6 +94,8 @@ import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
+import { useGameDayContext } from "@/hooks/useGameDayContext";
+import { WkSeasonReplanNote } from "@/components/hammer/WkSeasonReplanNote";
 import { WkSafePlanNotice } from "@/components/hammer/WkSafePlanNotice";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
@@ -439,6 +441,31 @@ const PHASE_TONE: Record<string, string> = {
   skill: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-300",
 };
 
+/**
+ * Step 21B — the canonical order of the day, in athlete words. The lift is
+ * always last among work: after practice, game and conditioning, and only the
+ * recovery flow follows it. Keep in lockstep with src/lib/wic/cardRegistry.ts
+ * (CARD_REGISTRY displayOrder) — the ordering test asserts both.
+ */
+export const DAY_ORDER_DEFAULT: readonly string[] = [
+  "Warm-up & mobility",
+  "Elastic primer",
+  "Speed & jumps",
+  "Skill work",
+  "Practice or game",
+  "Conditioning",
+  "Lift",
+  "Recovery flow",
+];
+
+/** On a game day there is no lift before the game. */
+export const DAY_ORDER_GAME_DAY: readonly string[] = [
+  "Warm-up & mobility",
+  "Elastic primer",
+  "Short crossover activation",
+  "Game",
+];
+
 function scheduleLine(sched: ReturnType<typeof useScheduleWindow>): string | null {
   if (sched.unknown || sched.loading) return null;
   if (sched.empty) return null;
@@ -665,7 +692,7 @@ function HammerDailyPlanBody({
             return {
               ...b,
               phase: "maintain" as const,
-              roadmapReason: `${b.roadmapReason} (CNS load is high today — keeping skill intensity at maintenance.)`,
+              roadmapReason: `${b.roadmapReason} (Today's load is already high — keeping skill work at maintenance.)`,
             };
           }),
         }
@@ -868,21 +895,29 @@ function HammerDailyPlanBody({
 
         <GpInGameAdvisoryStrip />
 
+        {/* Step 21E3 — the day's reason lives in the header, not on movements. */}
+        <WkSeasonReplanNote />
+
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
           <span className="font-medium text-foreground">Do in this order:</span>{" "}
           {gpSig.gameToday
-            ? "Warm-up → Short crossover activation → Game"
-            : "Warm-up → Speed → Bat Speed → Lifts → Practice → Conditioning → Sport Block"}
+            ? DAY_ORDER_GAME_DAY.join(" \u2192 ")
+            : DAY_ORDER_DEFAULT.join(" \u2192 ")}
         </div>
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup");
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
-          const otherBlocks = plan.blocks.filter(
+          const allOtherBlocks = plan.blocks.filter(
             (b) =>
               b.modality !== "warmup" &&
               !WK_OWNED.has(b.modality) &&
               !PRE_START_MODALITIES.has(b.modality),
           );
+          // Step 21B — skill work runs before practice / conditioning / lift;
+          // the recovery flow is the last thing in the day.
+          const RECOVERY_LAST = new Set(["recovery", "regeneration", "mobility", "sleep"]);
+          const otherBlocks = allOtherBlocks.filter((b) => !RECOVERY_LAST.has(b.modality));
+          const recoveryBlocks = allOtherBlocks.filter((b) => RECOVERY_LAST.has(b.modality));
 
           // Arm-care budget: throwing block owns arm care whenever it's rendered
           // as a real block (ready/awaiting-input). Otherwise the lift card carries it.
@@ -933,9 +968,6 @@ function HammerDailyPlanBody({
                   <WkBatSpeedCard />
                 )}
               </ErrorBoundary>
-              <ErrorBoundary label="wk-lifts">
-                <WkLiftsCard />
-              </ErrorBoundary>
               <ErrorBoundary label="pitching-card">
                 <PitchingCard />
               </ErrorBoundary>
@@ -954,6 +986,21 @@ function HammerDailyPlanBody({
               <ErrorBoundary label="wk-conditioning">
                 <WkConditioningCard />
               </ErrorBoundary>
+              <ErrorBoundary label="wk-lifts">
+                <WkLiftsCard />
+              </ErrorBoundary>
+              {recoveryBlocks.map((b) => {
+                const adj = adaptive.find((a) => a.modality === b.modality);
+                return (
+                  <BlockCard
+                    key={`${b.modality}-${b.side ?? "x"}`}
+                    block={b}
+                    onNavigate={(r) => navigate(r)}
+                    onEngagementChanged={bumpEngagement}
+                    adaptiveNote={adj?.note}
+                  />
+                );
+              })}
               <HammerCheckInCard
                 quizType="night"
                 completed={vaultQuizzes.hasCompleted("night")}
@@ -993,6 +1040,19 @@ function HammerDailyPlanBody({
  * Per-day open state persists in localStorage.
  */
 function ScheduleDropdownWrapper() {
+  // Step 21E1 — the season drives this card: the athlete's current season
+  // state is the headline, and the entry point for changing it lives here.
+  const seasonCtx = useGameDayContext();
+  const seasonWords: Record<string, string> = {
+    in_season: "In season",
+    preseason: "Preseason",
+    post_season: "Postseason",
+    off_season: "Offseason",
+  };
+  const seasonLabel = seasonWords[String(seasonCtx?.seasonPhase ?? "")] ?? null;
+  const seasonLine = seasonLabel
+    ? `${seasonLabel} — games, season dates, cancels/reschedules, and tell Hammer what changed.`
+    : "Games, season dates, cancels/reschedules, and tell Hammer what changed.";
   const dayKey = `hammer.today.schedule.open.${new Date().toISOString().slice(0, 10)}`;
   const [open, setOpen] = useState<boolean>(() => {
     try {
@@ -1022,7 +1082,7 @@ function ScheduleDropdownWrapper() {
               <div className="min-w-0">
                 <div className="text-sm font-semibold leading-tight">Schedule & What Changed</div>
                 <div className="text-[11px] text-muted-foreground leading-tight">
-                  Games, season dates, cancels/reschedules, and tell Hammer what changed.
+                  {seasonLine}
                 </div>
               </div>
             </div>

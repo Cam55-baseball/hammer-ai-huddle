@@ -40,9 +40,10 @@ export const CARD_REGISTRY: readonly CardRegistryEntry[] = [
   { cardType: "warmup",           displayOrder: 2,  responsibility: "Movement preparation only",  slots: ["movement_prep", "warmup"], enabledWhen: () => true },
   { cardType: "speed",            displayOrder: 3,  responsibility: "Running speed only",         slots: ["speed"],                   enabledWhen: (c) => c.hasSpeed },
   { cardType: "bat_speed",        displayOrder: 4,  responsibility: "Rotational velocity only",   slots: ["bat_speed"],               enabledWhen: (c) => c.hasBatSpeed },
-  { cardType: "lift",             displayOrder: 5,  responsibility: "Strength and power only",    slots: ["lift", "supplemental"],    enabledWhen: (c) => c.hasLift },
-  { cardType: "practice_or_game", displayOrder: 6,  responsibility: "Practice / game awareness",  slots: [],                          enabledWhen: (c) => c.dayKind !== "neither" },
-  { cardType: "conditioning",     displayOrder: 7,  responsibility: "Conditioning only",          slots: ["conditioning"],            enabledWhen: (c) => c.hasConditioning },
+  // Step 21B — the lift always sits after practice, game and conditioning.
+  { cardType: "practice_or_game", displayOrder: 5,  responsibility: "Practice / game awareness",  slots: [],                          enabledWhen: (c) => c.dayKind !== "neither" },
+  { cardType: "conditioning",     displayOrder: 6,  responsibility: "Conditioning only",          slots: ["conditioning"],            enabledWhen: (c) => c.hasConditioning },
+  { cardType: "lift",             displayOrder: 7,  responsibility: "Strength and power only",    slots: ["lift", "supplemental"],    enabledWhen: (c) => c.hasLift },
   { cardType: "cross_sport",      displayOrder: 8,  responsibility: "Athletic transfer only",     slots: ["cross_sport"],             enabledWhen: (c) => c.hasCrossSport },
   { cardType: "recovery",         displayOrder: 9,  responsibility: "Recovery only",              slots: ["recovery"],                enabledWhen: () => true },
   { cardType: "nutrition",        displayOrder: 10, responsibility: "Nutrition only",             slots: [],                          enabledWhen: () => true },

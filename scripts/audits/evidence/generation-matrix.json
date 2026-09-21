@@ -1,11 +1,33 @@
 {
-  "generated_at": "2026-09-21T00:26:30.907Z",
+  "generated_at": "2026-09-21T01:40:47.480Z",
   "cells": 1296,
   "empty_cells": 0,
   "fingerprint": "1435a0592f8964b2",
   "tiers": {
     "full": 1296
   },
+  "skill_card_parity": [
+    {
+      "tcs_class": "H",
+      "identical": true,
+      "differing_cells": 0
+    },
+    {
+      "tcs_class": "M",
+      "identical": true,
+      "differing_cells": 0
+    },
+    {
+      "tcs_class": "L",
+      "identical": true,
+      "differing_cells": 0
+    },
+    {
+      "tcs_class": "none",
+      "identical": true,
+      "differing_cells": 0
+    }
+  ],
   "results": [
     {
       "phase": "os_q1",

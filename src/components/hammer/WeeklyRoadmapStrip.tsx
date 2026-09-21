@@ -118,7 +118,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           {SCHEDULED_TODAY_LINE(plan.microcycle.perModality) ||
             "Anchor blocks only — warm-up + fueling + recovery."}{" "}
           <span className="text-muted-foreground/70">
-            (CNS spacing: max-speed and heavy-lift lower are never stacked back-to-back.)
+            (Spacing: max-speed days and heavy lower-body days are never back-to-back.)
           </span>
         </span>
       </div>

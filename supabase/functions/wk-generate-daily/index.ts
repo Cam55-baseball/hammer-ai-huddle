@@ -943,8 +943,14 @@ const handler = async (req: Request): Promise<Response> => {
         if (tcsAdjust.removeLift) {
           (trainingContext as unknown as { day_type: string }).day_type = "recovery";
         }
-        for (const r of tcsAdjust.reasons) {
-          reductions.push({ reason: "tissue_cost", detail: r });
+        // Step 21D4 — "Why reduced today" is for real trims only. When the
+        // calculator left the day at full class and kept the lift, its reasons
+        // describe the day (they render in the day header), not a reduction.
+        const tcsActuallyReduced = tcsAdjust.removeLift === true || tcsAdjust.allowedClass !== "H";
+        if (tcsActuallyReduced) {
+          for (const r of tcsAdjust.reasons) {
+            reductions.push({ reason: "tissue_cost", detail: r });
+          }
         }
       }
     } catch (tcsErr) {

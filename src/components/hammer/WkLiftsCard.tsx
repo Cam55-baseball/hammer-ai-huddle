@@ -43,14 +43,21 @@ import { BookOpen } from "lucide-react";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { ScheduleAdjustmentNotice } from "@/components/hammer/ScheduleAdjustmentNotice";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
+import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
   const {
-    grouped, reductions, schedule, planDate, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
+    grouped, reductions: rawReductions, data: snapshotRows, schedule, planDate, phaseDisplay: serverPhaseDisplay, phaseKey, generate, generating, isLoading, failed, failureReason, retry, overrideMovement, snapshotIdentity,
   } = useHammersToday();
+  // Step 21D4 — day-level scheduling statements are not reductions.
+  const reductions = (rawReductions ?? []).filter((r) => !isDayStatementNotAReduction(r?.detail));
+  // Step 21A — "Do this after your skill work" appears on the lift card only.
+  const liftTimingNote = ((snapshotRows ?? []) as Array<{ why_payload?: Record<string, unknown> | null }>)
+    .map((rx) => (rx.why_payload as Record<string, unknown> | null)?.rest_day as { timing_note?: string | null } | undefined)
+    .find((p) => p && typeof p.timing_note === "string" && p.timing_note.trim().length > 0)?.timing_note ?? null;
   const entry = getCard("lift")!;
   const { display: phaseDisplay } = useCanonicalPhaseDisplay(serverPhaseDisplay, phaseKey);
   const blocked = useBlockedLiftMovements(phaseKey);
@@ -150,6 +157,12 @@ export function WkLiftsCard() {
             {/* Which game changed today's session, said out loud, with a way
                 to disagree. */}
             <ScheduleAdjustmentNotice schedule={schedule} planDate={planDate} onChanged={() => generate()} />
+            {/* Step 21A — timing belongs to the lift and nothing else. */}
+            {liftTimingNote && items.length > 0 && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-2 py-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-200">
+                {liftTimingNote}
+              </div>
+            )}
             {suppressArmCareInLifts && (
               <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-2 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
                 Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.

@@ -34,7 +34,7 @@ const PHASE_COPY: Record<string, string> = {
   accumulate: "Build the base",
   intensify: "Add work",
   peak: "Peak intent",
-  deload: "Deload + re-test",
+  deload: "Easy week + re-test",
 };
 
 export function WkProgressionBadge({
@@ -52,10 +52,10 @@ export function WkProgressionBadge({
           {stageLabel}
         </Badge>
       )}
-      {progression?.week_in_block != null && (
+      {/* Step 21D2 — no block numbers on movement cards. Athlete words only. */}
+      {progression?.week_in_block != null && progression.block_phase && PHASE_COPY[progression.block_phase] && (
         <Badge variant="secondary" className="text-[10px]">
-          Block {(progression.block_index ?? 0) + 1} · Week {progression.week_in_block}
-          {progression.block_phase ? ` · ${PHASE_COPY[progression.block_phase] ?? progression.block_phase}` : ""}
+          {PHASE_COPY[progression.block_phase]} · Week {progression.week_in_block}
         </Badge>
       )}
       {progression?.test_day && (
@@ -150,7 +150,29 @@ export function WkProgressionNote({
 }
 
 
-/** Session-level header line, e.g. "Block 3 · Week 2 · add work — Maximum Bat Speed". */
+/**
+ * Step 21D2 — strip internal block numbering from a stored session title and
+ * leave athlete words only: "Block 36 · Week 2 · add work — Maximum Bat Speed"
+ * becomes "Build the base · Week 2 — Maximum Bat Speed".
+ */
+export function athleteSessionTitle(title?: string | null): string | null {
+  const raw = String(title ?? "").trim();
+  if (!raw) return null;
+  const cleaned = raw
+    .replace(/^Block\s+\d+\s*·\s*/i, "")
+    .replace(/(Week\s+\d+)\s*·\s*([a-z][a-z +-]*?)\s*(?=—|$)/i, (_m, wk: string, phase: string) => {
+      const key = phase.trim().toLowerCase();
+      const pretty =
+        Object.entries(PHASE_COPY).find(([, v]) => v.toLowerCase() === key)?.[1] ??
+        PHASE_COPY[key] ??
+        phase.trim().charAt(0).toUpperCase() + phase.trim().slice(1);
+      return `${pretty} · ${wk} `;
+    })
+    .trim();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/** Session-level header line, e.g. "Build the base · Week 2 — Maximum Bat Speed". */
 export function WkSessionShapeLine({
   title,
   shape,
@@ -158,10 +180,11 @@ export function WkSessionShapeLine({
   title?: string | null;
   shape?: { min?: number; max?: number; actual?: number } | null;
 }) {
-  if (!title && !shape?.actual) return null;
+  const display = athleteSessionTitle(title);
+  if (!display && !shape?.actual) return null;
   return (
     <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-2">
-      {title && <span className="font-medium text-foreground/80">{title}</span>}
+      {display && <span className="font-medium text-foreground/80">{display}</span>}
       {shape?.actual != null && (
         <span>
           {shape.actual} movement{shape.actual === 1 ? "" : "s"} in sequence
