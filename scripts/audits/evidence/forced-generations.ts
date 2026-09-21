@@ -32,7 +32,9 @@ const { data: subs, error: subErr } = await admin
   .select("user_id, status, subscribed_modules")
   .eq("status", "active");
 if (subErr) throw subErr;
-const athletes = (subs ?? []).filter((s) => (s.subscribed_modules ?? []).length > 0);
+let athletes = (subs ?? []).filter((s) => (s.subscribed_modules ?? []).length > 0);
+const only = (process.env.FORCED_ONLY ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+if (only.length > 0) athletes = athletes.filter((a) => only.some((o) => a.user_id.startsWith(o)));
 console.log(`[forced] athletes with an active prescription: ${athletes.length}`);
 
 const today = new Date().toISOString().slice(0, 10);
@@ -72,6 +74,12 @@ for (const s of athletes) {
 
   const t0 = Date.now();
   const { data, error } = await userClient.functions.invoke("wk-generate-daily", { body: { plan_date: today } });
+  if (error && (error as { context?: Response }).context) {
+    try {
+      const body = await (error as unknown as { context: Response }).context.clone().text();
+      console.log(`[forced] ${s.user_id.slice(0, 8)} — server said: ${body.slice(0, 900)}`);
+    } catch { /* body already consumed */ }
+  }
   const ms = Date.now() - t0;
 
   const { data: rows } = await admin
