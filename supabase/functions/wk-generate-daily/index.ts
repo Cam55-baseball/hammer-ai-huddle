@@ -702,7 +702,7 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Load phase block + catalog + feature flags --------
     const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }, { data: liftingFlagRow }] = await Promise.all([
       admin.from("wk_periodization_blocks").select("*").eq("phase", phaseRes.phase).maybeSingle() as unknown as Promise<{ data: BlockRow | null; error: any }>,
-      admin.from("wk_movement_catalog").select("*").or(`sport_scope.eq.both,sport_scope.eq.${sport}`) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
+      loadMovementCatalog(admin as any, sport) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
       admin.from("app_settings").select("setting_value").eq("setting_key", "lifting_v2_enabled").maybeSingle(),
     ]);
     if (blocksErr) throw blocksErr;
