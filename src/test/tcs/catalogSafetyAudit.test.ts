@@ -4,11 +4,15 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  auditActiveRows,
   auditCatalog,
   auditRow,
+  intensityClassCoverage,
+  normalizeTier,
   resolveIntensityClass,
   type AuditCatalogRow,
 } from "../../../supabase/functions/_shared/wic/catalog/safetyAudit.ts";
+
 
 const base = (over: Partial<AuditCatalogRow> = {}): AuditCatalogRow =>
   ({
