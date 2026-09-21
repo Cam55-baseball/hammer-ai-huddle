@@ -1620,8 +1620,14 @@ const handler = async (req: Request): Promise<Response> => {
         : null;
 
       // Plain-English rationale
+      // Step 22 — the athlete-facing "why this movement" must describe the
+      // MOVEMENT, never the session slot it happened to land in. The slot
+      // line (session template name, stage label, placement reason) is
+      // context about the day and is kept separately as `session_context`.
       const cls = humanizeClass(s.movement.intensity_class);
-      const reasonPiece = why || s.movement.why_prescribed || `${cls} pick for today`;
+      const slotContext = (why ?? "").trim();
+      const movementWhy = (s.movement.why_prescribed ?? "").trim();
+      const reasonPiece = movementWhy || slotContext || `${cls} pick for today`;
       const reductionsPiece = reductions.length
         ? ` Volume trimmed today because ${reductions.map((r) => r.detail.toLowerCase()).join(" and ")}.`
         : "";
