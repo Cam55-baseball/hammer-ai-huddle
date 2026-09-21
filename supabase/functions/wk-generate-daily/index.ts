@@ -2811,6 +2811,8 @@ const handler = async (req: Request): Promise<Response> => {
       environment: environmentCtx,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
       unfillableRequiredCategories: unfillableCategories.speed,
+      fallbackCoveredCategories: fallbackCoveredSpeedCategories,
+
     });
     const batSpeedCertification = certifyBatSpeed({
       prescriptions: finalRxs as any,
