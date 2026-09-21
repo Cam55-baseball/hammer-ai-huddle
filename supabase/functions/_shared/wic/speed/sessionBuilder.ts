@@ -35,6 +35,13 @@ export interface CertifySpeedInput {
   trainingAgeClass?: string;
   /** Categories with no legal candidate for this athlete today — warn, not fatal. */
   unfillableRequiredCategories?: readonly string[];
+  /**
+   * Required categories the selector filled with a near neighbour (e.g.
+   * acceleration covered by a resisted start). The slot IS filled, so this is
+   * a note, never a build failure — both sides must count the same thing.
+   */
+  fallbackCoveredCategories?: readonly string[];
+
 }
 
 export interface SpeedGovernanceStamp {
