@@ -171,7 +171,12 @@ export function WkPrescriptionCard({
   const todayLine = phaseMismatch || (generating && rawMismatch)
     ? null
     : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
-  const reductions = why?.reductions ?? [];
+  // Step 21D4 — "Why reduced today" belongs to real trims only. A scheduling
+  // statement ("You're rested — heavy day is on", "Next heavy day: Monday")
+  // describes the day, not a reduction, and belongs in the day header.
+  const reductions = (why?.reductions ?? []).filter(
+    (r: { detail?: string | null }) => !isDayStatementNotAReduction(r?.detail),
+  );
   // Precise, age-8-readable dosage. Every card must show at least one
   // concrete number (sets/reps, seconds, feet, or total contacts) so athletes
   // know exactly what to execute — no more vague "1 × 1" placeholders.
