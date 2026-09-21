@@ -35,17 +35,21 @@ export interface ComposeInput {
 type Family = "arm_care" | "throwing" | "hitting" | "speed" | "jump" | "lift" | "mobility" | "conditioning" | "general";
 
 function familyOf(i: ComposeInput): Family {
-  const t = `${i.name} ${i.slug ?? ""} ${i.bucket ?? ""}`.toLowerCase();
-  if (/arm.?care|cuff|scap|rotator|pronation|forearm|band/.test(t)) return "arm_care";
-  if (/throw|catch|long.?toss|plyo ball|pickoff|pitch/.test(t)) return "throwing";
-  if (/swing|tee|bat|hitting|barrel|toss/.test(t)) return "hitting";
-  if (/sprint|accel|run|skip|wicket|dash|speed/.test(t)) return "speed";
-  if (/jump|hop|bound|pogo|plyo/.test(t)) return "jump";
-  if (/squat|press|deadlift|row|hinge|lunge|carry|curl|lift/.test(t)) return "lift";
-  if (/mobility|stretch|flow|breath|reach|roll/.test(t)) return "mobility";
-  if (/tempo|conditioning|aerobic|circuit/.test(t)) return "conditioning";
+  // Word-boundary matching only. Substring matching used to read "scrunch" as
+  // "run" and hand a foot drill the sprint guide (Step 24 item 3 follow-up).
+  const t = ` ${`${i.name} ${i.slug ?? ""} ${i.bucket ?? ""}`.toLowerCase().replace(/[^a-z0-9]+/g, " ")} `;
+  const has = (...words: string[]) => words.some((w) => t.includes(` ${w} `));
+  if (has("arm", "armcare", "arm care", "cuff", "scap", "scaps", "rotator", "pronation", "supination", "forearm", "band", "bands")) return "arm_care";
+  if (has("throw", "throws", "throwing", "catch", "catching", "toss", "long", "plyo ball", "pickoff", "pitch", "pitching")) return "throwing";
+  if (has("swing", "swings", "tee", "bat", "hitting", "barrel")) return "hitting";
+  if (has("sprint", "sprints", "accel", "acceleration", "run", "runs", "running", "skip", "skips", "wicket", "wickets", "dash", "speed", "sled", "fly")) return "speed";
+  if (has("jump", "jumps", "hop", "hops", "bound", "bounds", "pogo", "pogos", "plyo", "plyos")) return "jump";
+  if (has("squat", "squats", "press", "deadlift", "row", "rows", "hinge", "lunge", "lunges", "carry", "carries", "curl", "curls", "lift", "lifts", "bench", "pull", "chin")) return "lift";
+  if (has("mobility", "stretch", "flow", "breath", "breathing", "reach", "roll", "fascia", "foot", "ankle", "car", "cars", "isometric", "hold", "holds", "scrunch")) return "mobility";
+  if (has("tempo", "conditioning", "aerobic", "circuit", "bike", "row erg")) return "conditioning";
   return "general";
 }
+
 
 const FAMILY: Record<Family, { cues: string[]; mistakes: string[]; easier: string; stopIf: string; open: string }> = {
   arm_care: {
