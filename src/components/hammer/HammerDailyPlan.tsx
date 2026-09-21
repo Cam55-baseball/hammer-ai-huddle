@@ -94,6 +94,8 @@ import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
 import { HammersTodayProvider, useHammersToday } from "@/components/hammer/HammersTodayProvider";
+import { useGameDayContext } from "@/hooks/useGameDayContext";
+import { WkSeasonReplanNote } from "@/components/hammer/WkSeasonReplanNote";
 import { WkSafePlanNotice } from "@/components/hammer/WkSafePlanNotice";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
@@ -893,6 +895,9 @@ function HammerDailyPlanBody({
 
         <GpInGameAdvisoryStrip />
 
+        {/* Step 21E3 — the day's reason lives in the header, not on movements. */}
+        <WkSeasonReplanNote />
+
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
           <span className="font-medium text-foreground">Do in this order:</span>{" "}
           {gpSig.gameToday
@@ -1035,6 +1040,19 @@ function HammerDailyPlanBody({
  * Per-day open state persists in localStorage.
  */
 function ScheduleDropdownWrapper() {
+  // Step 21E1 — the season drives this card: the athlete's current season
+  // state is the headline, and the entry point for changing it lives here.
+  const seasonCtx = useGameDayContext();
+  const seasonWords: Record<string, string> = {
+    in_season: "In season",
+    preseason: "Preseason",
+    post_season: "Postseason",
+    off_season: "Offseason",
+  };
+  const seasonLabel = seasonWords[String(seasonCtx?.seasonPhase ?? "")] ?? null;
+  const seasonLine = seasonLabel
+    ? `${seasonLabel} — games, season dates, cancels/reschedules, and tell Hammer what changed.`
+    : "Games, season dates, cancels/reschedules, and tell Hammer what changed.";
   const dayKey = `hammer.today.schedule.open.${new Date().toISOString().slice(0, 10)}`;
   const [open, setOpen] = useState<boolean>(() => {
     try {
@@ -1064,7 +1082,7 @@ function ScheduleDropdownWrapper() {
               <div className="min-w-0">
                 <div className="text-sm font-semibold leading-tight">Schedule & What Changed</div>
                 <div className="text-[11px] text-muted-foreground leading-tight">
-                  Games, season dates, cancels/reschedules, and tell Hammer what changed.
+                  {seasonLine}
                 </div>
               </div>
             </div>
