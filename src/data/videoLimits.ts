@@ -26,3 +26,25 @@ export function validateVideoFile(file: File): { valid: boolean; error?: string 
 
   return { valid: true };
 }
+
+/** The landing hero is downloaded by every visitor, so it must be a small MP4. */
+export const LANDING_DEMO_MAX_MB = 25;
+
+export function validateLandingDemoFile(file: File): { valid: boolean; error?: string } {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  if (ext !== 'mp4' || (file.type && file.type !== 'video/mp4')) {
+    return {
+      valid: false,
+      error:
+        'The landing page video must be an MP4 (H.264). QuickTime .mov files will not play in many browsers — export or convert the clip to MP4 first.',
+    };
+  }
+  if (file.size > LANDING_DEMO_MAX_MB * 1024 * 1024) {
+    return {
+      valid: false,
+      error: `This clip is ${formatMB(file.size)} MB. Keep the landing video under ${LANDING_DEMO_MAX_MB} MB (720p, about 1.5 Mbps) so it loads on phone data.`,
+    };
+  }
+  return { valid: true };
+}
+

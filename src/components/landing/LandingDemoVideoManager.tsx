@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { validateVideoFile } from "@/data/videoLimits";
+import { validateVideoFile, validateLandingDemoFile } from "@/data/videoLimits";
 import { Loader2, Upload, Trash2, Link as LinkIcon, Eye, EyeOff } from "lucide-react";
 import { DemoCoverPicker } from "@/components/landing/DemoCoverPicker";
 
@@ -44,6 +44,14 @@ export function LandingDemoVideoManager() {
       toast({ title: "Can't use this file", description: check.error, variant: "destructive" });
       return;
     }
+    // The landing page is the first thing a visitor downloads on phone data, so
+    // the hero clip must already be a small, web-ready MP4.
+    const landing = validateLandingDemoFile(file);
+    if (!landing.valid) {
+      toast({ title: "Can't use this file", description: landing.error, variant: "destructive" });
+      return;
+    }
+
     setUploading(true);
     try {
       await uploadFile(file);
