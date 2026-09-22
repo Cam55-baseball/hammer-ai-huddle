@@ -16,6 +16,9 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
   const info = useMemo(() => getEmbedInfo(videoUrl), [videoUrl]);
   // A video that fails to decode/download must say so — never render nothing.
   const [failed, setFailed] = useState(false);
+  /** Self-hosted clips only download once the viewer taps the cover. */
+  const [started, setStarted] = useState(false);
+
 
 
   if (!videoUrl) {
