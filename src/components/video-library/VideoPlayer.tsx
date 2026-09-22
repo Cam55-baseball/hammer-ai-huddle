@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, AlertTriangle } from "lucide-react";
+import { ExternalLink, AlertTriangle, Play } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { getEmbedInfo } from "@/lib/videoEmbed";
 
@@ -71,6 +72,29 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
 
   // Stored as upload — direct video file
   if (videoType === 'upload') {
+    // With a cover set we never download the clip until the athlete asks for it:
+    // the poster paints instantly and phone data is only spent on a real tap.
+    if (posterUrl && (!started || failed)) {
+      return (
+        <button
+          type="button"
+          data-testid="video-poster-play"
+          aria-label={`Play ${title}`}
+          onClick={() => {
+            setFailed(false);
+            setStarted(true);
+          }}
+          className="relative block w-full aspect-video rounded-lg overflow-hidden bg-black group"
+        >
+          <img src={posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full bg-background/85 p-4 shadow-lg transition-transform group-hover:scale-105">
+              <Play className="h-7 w-7 text-foreground" />
+            </span>
+          </span>
+        </button>
+      );
+    }
     if (failed) {
       return (
         <div
@@ -107,6 +131,7 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
           src={videoUrl}
           poster={posterUrl ?? undefined}
           controls
+          autoPlay={started}
           className="w-full h-full object-contain"
           // With a cover set we don't need to pull frames just to fill the box.
           preload={posterUrl ? "none" : "metadata"}
@@ -118,6 +143,7 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
 
     );
   }
+
 
   // Truly unknown external URL — fall back to open-in-new-tab
   return (
