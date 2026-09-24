@@ -51,7 +51,7 @@ describe("undo", () => {
 describe("every tag type", () => {
   it("all ten filter tags plus RESUME describe themselves in plain words", () => {
     for (const tag of [...TIMELINE_TAGS, "RESUME" as const]) {
-      const text = describeEntry(e(tag, T, T, { payload: { text: "x", label: "Combine", which: "starts", regionLabel: "Shoulder", faceLabel: "a little" } }));
+      const text = describeEntry(e(tag, T, T, { payload: { text: "new coach", label: "Combine", which: "starts", regionLabel: "Shoulder", faceLabel: "a little" } }));
       expect(text.length).toBeGreaterThan(2);
       expect(text).not.toMatch(/undefined|null|\bB\d\b|block/i);
     }
