@@ -24,6 +24,13 @@ export function StaffPhaseArc({ userId }: { userId: string }) {
           </p>
         ))}
         {plan.ramp?.days ? <p className="text-muted-foreground">Re-entry ramp: {plan.ramp.days} days</p> : null}
+        <p className="text-muted-foreground">Throwing break: Hammers rule — 4 no-throw days per month of downtime (5–8 under 18 from the athlete's own signals)</p>
+        {plan.throwing?.ramp?.active ? (
+          <p className="text-muted-foreground">
+            Throwing ramp: day {plan.throwing.ramp.dayIndex ?? 0} of {plan.throwing.ramp.days}
+            {typeof plan.throwing.daysOff === "number" ? ` · ${plan.throwing.daysOff} days off taken` : ""}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
