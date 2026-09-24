@@ -76,8 +76,6 @@ export interface BreakPlan {
   bufferDays: number | null;
   shortenedBreak: boolean;
   reason: string | null;
-  /** Young arm owed yearly rest the calendar couldn't give — staff flag. */
-  annualRestOwed: boolean;
   noRoom: boolean;
 }
 
@@ -100,7 +98,6 @@ export function scheduleBreak(args: {
   desiredBreakDays: number;
   nextGame: string | null;
   profile: ArmProfile;
-  annualRestMet: boolean;
 }): BreakPlan {
   const { start, nextGame, profile } = args;
   const mk = (b: number, shortened: boolean, reason: string | null, noRoom = false): BreakPlan => {
@@ -112,7 +109,6 @@ export function scheduleBreak(args: {
       breakDays: b, rampDays: r, breakStart: start, rampStart, rampEnd,
       bufferDays: nextGame ? diff(rampEnd, nextGame) - 1 : null,
       shortenedBreak: shortened, reason, noRoom,
-      annualRestOwed: shortened && young && !args.annualRestMet,
     };
   };
   const want = Math.max(0, Math.round(args.desiredBreakDays));

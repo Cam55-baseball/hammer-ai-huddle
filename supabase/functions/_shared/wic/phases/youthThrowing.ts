@@ -180,7 +180,7 @@ export function overlappingTeams(seasons: TeamSeason[], today: string): { overla
 }
 /** Combined usage across every team — the single stricter limit, never per-team budgets. */
 export function combineUsage(perTeam: Usage[]): Usage {
-  return perTeam.reduce((a, u) => ({ week: a.week + u.week, season: Math.max(a.season, 0) + u.season, year: a.year + u.year, inningsYear: a.inningsYear + u.inningsYear }), { week: 0, season: 0, year: 0, inningsYear: 0 });
+  return perTeam.reduce((a, u) => ({ week: a.week + u.week, season: a.season + u.season, year: a.year + u.year, inningsYear: a.inningsYear + u.inningsYear }), { week: 0, season: 0, year: 0, inningsYear: 0 });
 }
 
 // ── Step 27 B. Hammers offseason-to-off-days ratio (E3) ────────────────────

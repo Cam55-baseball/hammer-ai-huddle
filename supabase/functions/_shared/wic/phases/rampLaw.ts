@@ -1,3 +1,4 @@
+import { offseasonBreakDays, type BreakSignals } from "./youthThrowing.ts";
 /**
  * Ramp Law v1 (docs/wic/ramp-law-v1.md) — every discipline, every athlete.
  * Pure and deterministic. Decides ramp LENGTH, step order, gates and the
@@ -189,19 +190,14 @@ export function advance(current: number, g: Gate, total: number): { step: number
 
 // ---------------------------------------------------------------- throwing break
 
-/** Age-based continuous rest already carried in docs/wic/training-intelligence-v1.md §10.3. */
-export function ageContinuousRestDays(age: number | null): { days: number; known: boolean } {
-  if (age === null) return { days: 0, known: false };
-  if (age >= 13 && age <= 14) return { days: 60, known: true }; // 2–3 months continuous
-  if (age >= 19 && age <= 22) return { days: 28, known: true }; // 4 continuous weeks off all overhead throwing
-  return { days: 0, known: false };
-}
-
-/** §2 — 4 no-throw days per month of downtime, or the age rule, whichever is longer. */
-export function throwingBreakDays(downtimeDays: number, age: number | null): { days: number; rule: "owner" | "age"; ageRuleKnown: boolean } {
-  const owner = Math.ceil(Math.max(0, downtimeDays) / 30 - 1e-9) * 4;
-  const a = ageContinuousRestDays(age);
-  return a.days > owner ? { days: a.days, rule: "age", ageRuleKnown: a.known } : { days: owner, rule: "owner", ageRuleKnown: a.known };
+/**
+ * Step 27 B — Hammers offseason-to-off-days ratio: 4 no-throw days per month of
+ * downtime; under 18 the ratio may rise to 5–8 from the athlete's own signals.
+ * (The fixed annual rest rule was removed by owner order.)
+ */
+export function throwingBreakDays(downtimeDays: number, age: number | null, signals: Omit<BreakSignals, "age"> = {}): { days: number; perMonth: number; rule: string; reasons: string[] } {
+  const b = offseasonBreakDays(downtimeDays, { age, ...signals });
+  return { days: b.days, perMonth: b.perMonth, rule: b.rule, reasons: b.reasons };
 }
 
 // ---------------------------------------------------------------- throwing build calendar

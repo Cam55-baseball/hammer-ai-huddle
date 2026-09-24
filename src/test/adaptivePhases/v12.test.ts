@@ -62,20 +62,19 @@ describe("v1.2 §F", () => {
 
   it("a 30-day throwing break gives a pitcher a ramp of at least 45 days, ending ≥7 days before the game", () => {
     expect(rampDaysFor(30, pitcher).days).toBeGreaterThanOrEqual(45);
-    const b = scheduleBreak({ start: "2026-10-01", desiredBreakDays: 30, nextGame: "2027-01-15", profile: pitcher, annualRestMet: true });
+    const b = scheduleBreak({ start: "2026-10-01", desiredBreakDays: 30, nextGame: "2027-01-15", profile: pitcher });
     expect(b.breakDays).toBe(30);
     expect(b.rampDays).toBeGreaterThanOrEqual(45);
     expect(b.bufferDays!).toBeGreaterThanOrEqual(7);
   });
 
   it("if break + ramp don't fit, the break shortens and the ramp stays whole", () => {
-    const b = scheduleBreak({ start: "2026-10-01", desiredBreakDays: 30, nextGame: "2026-12-01", profile: pitcher, annualRestMet: false });
+    const b = scheduleBreak({ start: "2026-10-01", desiredBreakDays: 30, nextGame: "2026-12-01", profile: pitcher });
     expect(b.shortenedBreak).toBe(true);
     expect(b.breakDays).toBeLessThan(30);
     expect(b.rampDays).toBe(rampDaysFor(b.breakDays, pitcher).days);
     expect(b.bufferDays!).toBeGreaterThanOrEqual(7);
     expect(b.reason).toBeTruthy();
-    expect(b.annualRestOwed).toBe(true);
   });
 
   it("a failed ramp gate repeats the step instead of advancing", () => {
