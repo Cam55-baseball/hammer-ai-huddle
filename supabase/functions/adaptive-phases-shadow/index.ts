@@ -8,6 +8,7 @@ import {
   planAthlete, addDays, type WeekRecord, type Discipline, type PhaseKey, type Goal, type ScheduleAnswer, type SeasonState,
 } from "../_shared/wic/phases/adaptivePhases.ts";
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
+import { RAMP_DISCIPLINES, type RampDiscipline } from "../_shared/wic/phases/rampLaw.ts";
 import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import {
   OUTCOMES_VERSION, METRIC_KEYS, LOWER_IS_BETTER, OUTCOME_METRICS, outcomeLinks, stepFeedback, defaultFeedback, painPatterns,
@@ -91,7 +92,7 @@ function goalOf(ctx: any): Goal {
 async function planOne(admin: any, userId: string, today: string, trigger: string, shares?: Record<"P1" | "P2" | "P3", number>) {
   const since = addDays(today, -26 * 7);
   const [rx, done, mpi, ctx, tl, games, pains, pastGames, pastTl, answers] = await Promise.all([
-    admin.from("wk_prescriptions").select("plan_date,slot,why_payload").eq("user_id", userId).gte("plan_date", since).lte("plan_date", today),
+    admin.from("wk_prescriptions").select("plan_date,slot,why_payload,movement_slug").eq("user_id", userId).gte("plan_date", since).lte("plan_date", today),
     admin.from("hammer_daily_task_completions").select("plan_date").eq("user_id", userId).eq("completed", true).gte("plan_date", since),
     admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", userId).maybeSingle(),
     admin.from("athlete_context").select("goal_summary,category_goals,goal_priority_rank").eq("user_id", userId).maybeSingle(),
@@ -172,7 +173,45 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
   const weeksIntoSeason = iss ? Math.max(0, Math.floor((Date.parse(today) - Date.parse(iss)) / (7 * 86400000))) : 0;
   const likely = iss && iss <= today ? addDays(iss, 364) : null;
 
+  // ---- Ramp Law v1: days off per discipline, from completed training only.
+  const [{ data: prof }, { data: cal }, { data: pain90 }] = await Promise.all([
+    admin.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    admin.from("calendar_events").select("event_date").eq("user_id", userId).is("deleted_at", null).in("event_type", ["game", "tournament", "scrimmage"]).gte("event_date", since).lte("event_date", addDays(today, 120)),
+    admin.from("schedule_timeline_entries").select("payload").eq("user_id", userId).eq("tag", "PAIN").is("undone_at", null).gte("start_date", addDays(today, -90)),
+  ]);
+  const gameDates = [...new Set([...(cal ?? []).map((c: any) => c.event_date), ...(games.data ?? []).map((g: any) => g.game_date), ...(pastGames.data ?? []).map((g: any) => g.game_date)])].sort();
+  const exposure: Record<RampDiscipline, Set<string>> = { throwing: new Set(), lifting: new Set(), speed: new Set(), bat_speed: new Set(), conditioning: new Set(), jumps: new Set() };
+  for (const r of rx.data ?? []) {
+    if (!doneDays.has(r.plan_date)) continue;
+    const d = ({ lift: "lifting", speed: "speed", bat_speed: "bat_speed", conditioning: "conditioning" } as Record<string, RampDiscipline>)[r.slot];
+    if (d) exposure[d].add(r.plan_date);
+    if (r.slot === "lift" && /jump|bound|hop|plyo|skip|pogo|med_ball/i.test(String(r.movement_slug ?? ""))) exposure.jumps.add(r.plan_date);
+  }
+  for (const g of gameDates) if (g <= today) exposure.throwing.add(g);
+  const dayDiff = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+  const rampGap: Partial<Record<RampDiscipline, { daysOff: number; returnedOn: string } | null>> = {};
+  for (const d of RAMP_DISCIPLINES) {
+    const ds = [...exposure[d]].filter((x) => x <= today).sort();
+    if (!ds.length) { rampGap[d] = null; continue; }
+    let found: { daysOff: number; returnedOn: string } | null = null;
+    const last = ds[ds.length - 1];
+    if (last < today && dayDiff(last, today) - 1 > 2) found = { daysOff: dayDiff(last, today) - 1, returnedOn: today };
+    else for (let i = ds.length - 1; i > 0; i--) { const off = dayDiff(ds[i - 1], ds[i]) - 1; if (off > 2) { found = { daysOff: off, returnedOn: ds[i] }; break; } }
+    rampGap[d] = found;
+  }
+  const pf: any = prof ?? {};
+  const age = Number(pf.age ?? pf.age_years ?? pf.chronological_age ?? null) || null;
+  const painArea: Record<string, RampDiscipline> = { shoulder: "throwing", elbow: "throwing", ucl: "throwing", forearm: "throwing", wrist: "bat_speed", hand: "bat_speed", hamstring: "speed", calf: "speed", achilles: "speed", ankle: "jumps", knee: "jumps", back: "lifting", hip: "lifting" };
+  const painLast90: Partial<Record<RampDiscipline, boolean>> = {};
+  for (const p of pain90 ?? []) { const d = painArea[String(p.payload?.region ?? "")]; if (d) painLast90[d] = true; }
+  const rampProfile = {
+    age, isPitcher: /pitch/i.test(String(pf.primary_position ?? pf.position ?? "")), growthMode: age !== null && age <= 15,
+    painLast90, firstTime: {}, // "first time in this discipline" has no reliable source yet — never assumed
+    eliteClean: pf.is_professional === true && (pain90 ?? []).length === 0,
+  };
+
   const plan = planAthlete({
+    rampGap, rampProfile, gameDates,
     today, seasonState: SEASON_MAP[season?.phase ?? "off_season"] ?? "offseason",
     lastGameDate, hardDate: hard?.d ?? null, hardDateLabel: hard?.label ?? null, hardDateIsGame: hard?.game ?? false,
     yearRound: !!yearRound, offDaysInWindow: offDays, holdToday, holds, weeksIntoSeason, records,

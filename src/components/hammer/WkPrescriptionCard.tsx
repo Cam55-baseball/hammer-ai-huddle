@@ -306,6 +306,11 @@ export function WkPrescriptionCard({
             )}
           </div>
           {trainingMethod && <MethodPanel method={trainingMethod} />}
+          {typeof (rx.why_payload as any)?.adaptive_phase?.ramp_line === "string" && (
+            <div className="text-xs text-foreground break-words" data-testid="card-ramp-line">
+              {(rx.why_payload as any).adaptive_phase.ramp_line}
+            </div>
+          )}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0 space-y-1">
               <div className="text-xs text-muted-foreground break-words">{dosage}</div>

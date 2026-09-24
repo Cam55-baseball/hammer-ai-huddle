@@ -82,7 +82,7 @@ import {
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
-import { AdaptivePhaseStrip } from "@/components/hammer/AdaptivePhaseStrip";
+import { RampLines, AdaptivePhaseStrip } from "@/components/hammer/AdaptivePhaseStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { ScheduledPriorityStrip } from "@/components/hammer/ScheduledPriorityStrip";
 
@@ -819,6 +819,7 @@ function HammerDailyPlanBody({
           })}
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan} />
+        <RampLines />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2">

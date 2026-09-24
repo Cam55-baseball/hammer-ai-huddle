@@ -9,6 +9,8 @@
  * onto the existing arc blocks (§3) and the block engine keeps every law.
  */
 
+import { activeRamps, type ActiveRamp, type RampDiscipline, type RampProfile } from "./rampLaw.ts";
+
 export const ADAPTIVE_PHASES_VERSION = "adaptive_phases_v1_1";
 
 export type Discipline = "lifting" | "throwing" | "speed" | "bat_speed";
@@ -307,6 +309,11 @@ export interface DisciplineHold {
 export interface AthletePhaseInput {
   /** Stage C bounded feedback shares — only passed when the phase_feedback switch is on. */
   shares?: Record<BuildPhase, number>;
+  /** Ramp Law v1 — days off per discipline and when the athlete came back. */
+  rampGap?: Partial<Record<RampDiscipline, { daysOff: number; returnedOn: string } | null>>;
+  rampProfile?: RampProfile;
+  /** Known game dates (past and future) — ramps never land on them. */
+  gameDates?: string[];
   today: string;
   /** ONE season state from settings (v1.1 §A). Flowing play can lift it to in_season (§B). */
   seasonState: SeasonState;
@@ -390,6 +397,8 @@ export interface AthletePhasePlan {
   hardDate: string | null;
   why: string;
   disciplines: DisciplinePlan[];
+  /** Ramp Law v1 — ramps running today, one plain line each. */
+  ramps?: ActiveRamp[];
   /** v1.2 §C — offseason arc chosen by days (staff view). */
   arc?: { days: number; tier: ArcTier; lengths: { phase: PhaseKey; block: string; weeks: number }[]; rampDays: number };
 }
@@ -539,6 +548,13 @@ export function arcForDays(days: number, credit: Record<BuildPhase, number>, nee
 }
 
 export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
+  const base = planAthleteCore(input);
+  if (!input.rampGap || !input.rampProfile) return base;
+  const ramps = activeRamps({ today: input.today, gap: input.rampGap, profile: input.rampProfile, gameDates: input.gameDates ?? [] });
+  return ramps.length ? { ...base, ramps } : base;
+}
+
+function planAthleteCore(input: AthletePhaseInput): AthletePhasePlan {
   const ledger = buildCreditLedger(input.records, input.today);
   const credit = unifiedCredit(ledger, input.records);
   const completed = BUILD.filter((p) => credit[p] >= MIN_WEEKS[p]);
