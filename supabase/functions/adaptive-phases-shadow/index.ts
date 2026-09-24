@@ -5,12 +5,19 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
-  planAthlete, addDays, type WeekRecord, type Discipline, type PhaseKey, type Goal,
+  planAthlete, addDays, type WeekRecord, type Discipline, type PhaseKey, type Goal, type ScheduleAnswer, type SeasonState,
 } from "../_shared/wic/phases/adaptivePhases.ts";
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 
 const SLOT_DISC: Record<string, Discipline> = { lift: "lifting", speed: "speed", bat_speed: "bat_speed", throwing: "throwing" };
 const BLOCK_PHASE: Record<string, PhaseKey> = { B1: "P1", B2: "P1", B4: "P2", B5: "P3" };
+const SEASON_MAP: Record<string, SeasonState> = { off_season: "offseason", preseason: "preseason", in_season: "in_season", post_season: "post_season" };
+const REGION_DISC: Record<string, Discipline> = {
+  shoulder: "throwing", ucl: "throwing", elbow: "throwing", forearm: "throwing",
+  wrist: "bat_speed", hand: "bat_speed",
+  hip: "speed", knee: "speed", ankle: "speed", foot: "speed", hamstring: "speed", quad: "speed", groin: "speed", calf: "speed", achilles: "speed",
+  back: "lifting",
+};
 
 function monday(iso: string): string {
   const d = new Date(iso + "T00:00:00Z");
