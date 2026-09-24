@@ -807,6 +807,7 @@ export function VaultFocusQuizDialog({
 
         {/* Tips Section - NOW AT TOP */}
         <div className="space-y-3 mt-4">
+          {(quizType === 'morning' || quizType === 'night') && <CheckInLifeChips />}
           {/* Morning Quiz Tip */}
           {quizType === 'morning' && (
             <Alert className="bg-amber-500/10 border-amber-500/30">
