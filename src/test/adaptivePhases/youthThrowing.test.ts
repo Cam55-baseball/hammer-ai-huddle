@@ -115,7 +115,7 @@ describe("Step 27 C/D — readiness, not birthdays", () => {
 
 describe("Step 26 A — the nightly auto-off", () => {
   it("zero criticals keeps the switch where it is; one critical steps it down", () => {
-    const ok = { mode: "all" as const, shadowCheck: { status: "pass", mismatches: 0, fallbackRate: 0 }, errorsToday: 0, baselineErrors: 0 };
+    const ok = { mode: "all" as const, shadowCheck: { status: "passed", mismatches: 0, fallbackRate: 0 }, errorsToday: 0, baselineErrors: 0 };
     expect(evaluateAutoOff({ ...ok, criticalNotes: 0 }).demoted).toBe(false);
     expect(evaluateAutoOff({ ...ok, criticalNotes: 1 }).demoted).toBe(true);
   });
