@@ -524,7 +524,7 @@ export function arcForDays(days: number, credit: Record<BuildPhase, number>, nee
     // Sport ramp folded into the sharpening week: ramp = sharpen week + 3 days.
     const W = Math.floor((days - 3) / 7);
     const a = allocateWindow({ windowWeeks: W, hardDateLabel: label, credit, need });
-    const segs = a.segments.map((x) => ({ ...x, block: x.phase === "P1" ? "Base" : x.phase === "P2" ? "Power" : "Explosiveness" }));
+    const segs: PhaseSegment[] = a.segments.map((x) => ({ ...x, block: x.phase === "P1" ? "Base" : x.phase === "P2" ? "Power" : "Explosiveness" }));
     const last = [...segs].reverse().find((x) => x.weeks > 0);
     if (last) { last.endsWithSharpen = true; last.foldedIntoRamp = true; }
     return { tier, segments: segs, rampDays: days - (W - 1) * 7, buildWeeks: W };
@@ -532,7 +532,7 @@ export function arcForDays(days: number, credit: Record<BuildPhase, number>, nee
   const rampDays = Math.min(days, 10);
   const W = Math.max(0, Math.floor((days - 10) / 7));
   const a = allocateWindow({ windowWeeks: W, hardDateLabel: label, credit, need });
-  const segs = a.segments.map((x) => ({ ...x, block: tier === "bridge" ? (x.endsWithSharpen ? "Sharpen" : "Capacity") : undefined }));
+  const segs: PhaseSegment[] = a.segments.map((x) => ({ ...x, block: tier === "bridge" ? (x.endsWithSharpen ? "Sharpen" : "Capacity") : undefined }));
   if (W === 0) segs.push(seg("P1", 0, { shortened: true, shortenedReason: `No room for a block before ${label} — the re-entry ramp comes first.` }));
   else for (const x of segs) if (x.shortened && !x.shortenedReason) x.shortenedReason = why(W);
   return { tier, segments: segs, rampDays: days - W * 7 > 0 ? days - W * 7 : rampDays, buildWeeks: W, mode: W === 0 ? "bridge" : a.mode };
