@@ -17,6 +17,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useScheduleTimeline } from "@/hooks/useScheduleTimeline";
+import { cancelledDates, dayEffect } from "../../../supabase/functions/_shared/wic/schedule/timeline";
 
 export type ScheduleKind =
   | "game"
@@ -163,6 +165,10 @@ export function useScheduleWindow(): ScheduleWindow {
     },
   });
 
+  // Tell Hammers timeline — empty (and so a no-op) while the switch is off.
+  const timeline = useScheduleTimeline();
+  const tlEntries = timeline.enabled ? timeline.entries : [];
+
   const loading = games.isLoading || practices.isLoading;
 
   if (!uid) {
@@ -183,7 +189,8 @@ export function useScheduleWindow(): ScheduleWindow {
   }
 
   const slots: ScheduleSlot[] = [];
-  for (const g of games.data ?? []) {
+  const tlCancelled = cancelledDates(tlEntries);
+  for (const g of (games.data ?? []).filter((x) => !tlCancelled.has(x.game_date))) {
     const isTournament = (g.game_type ?? "").toLowerCase() === "tournament";
     slots.push({
       kind: isTournament ? "tournament" : "game",
@@ -277,6 +284,23 @@ export function useScheduleWindow(): ScheduleWindow {
         startTime: p.start_time ?? null,
         recurring: !!p.recurring_active && date !== p.scheduled_date,
       });
+    }
+  }
+
+  if (tlEntries.length) {
+    // Cancelled dates drop every practice slot too.
+    for (let i = slots.length - 1; i >= 0; i--) if (tlCancelled.has(slots[i].date)) slots.splice(i, 1);
+    for (const d of windowDates) {
+      const eff = dayEffect(tlEntries, d);
+      for (const g of eff.games) {
+        slots.push({ kind: g.tag === "TOURNAMENT" ? "tournament" : g.tag === "EVENT" ? "camp" : "game", date: d, daysUntil: daysBetween(d, today), label: g.label });
+      }
+      if (eff.hold) {
+        slots.push({ kind: eff.travel ? "travel" : "other", date: d, daysUntil: daysBetween(d, today), label: eff.travel ? "Travelling" : "Break", practiceKind: eff.travel ? "travel" : "other", intensity: "light" });
+      }
+      if (eff.practice) {
+        slots.push({ kind: "team_practice", date: d, daysUntil: daysBetween(d, today), label: "Practice", practiceKind: "team", intensity: "standard" });
+      }
     }
   }
 
