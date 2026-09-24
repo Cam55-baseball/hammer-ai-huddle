@@ -9,6 +9,7 @@ import {
 } from "../_shared/wic/phases/adaptivePhases.ts";
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 import { RAMP_DISCIPLINES, type RampDiscipline } from "../_shared/wic/phases/rampLaw.ts";
+import { throwingProfile } from "../_shared/wic/phases/armLedger.ts";
 import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import {
   OUTCOMES_VERSION, METRIC_KEYS, LOWER_IS_BETTER, OUTCOME_METRICS, outcomeLinks, stepFeedback, defaultFeedback, painPatterns,
@@ -222,7 +223,15 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
     { user_id: userId, plan_date: today, trigger, engine_version: plan.version, window_weeks: plan.windowWeeks, hard_date: plan.hardDate, plan },
     { onConflict: "user_id,plan_date" },
   );
-  return plan;
+  // v1.4 §2 — every throwing athlete carries the six throwing values.
+  const pos = String(pf.primary_position ?? pf.position ?? "").toLowerCase();
+  const sec = String(pf.secondary_position ?? "").toLowerCase();
+  const pitches = /pitch/.test(pos) || /pitch/.test(sec), catches = /catch/.test(pos) || /catch/.test(sec);
+  const role = pitches && catches ? "pitcher_catcher" : pitches && sec && !/pitch/.test(sec) ? "two_way" : pitches ? "pitcher" : catches ? "catcher" : "position";
+  const tg = rampGap.throwing;
+  const throwing = throwingProfile({ sport: pf.sport === "softball" ? "softball" : "baseball", role, age }, { seasonState: plan.seasonState, phase: plan.phase },
+    tg ? { daysOff: tg.daysOff, dayIndex: plan.ramps?.find((r) => r.discipline === "throwing")?.dayIndex ?? null } : null, rampProfile);
+  return { ...plan, throwing };
 }
 
 Deno.serve(async (req) => {
