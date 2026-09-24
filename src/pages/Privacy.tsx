@@ -1,3 +1,4 @@
+import { BusinessAddressBlock } from "@/constants/businessAddress";
 import { Link } from "react-router-dom";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
 

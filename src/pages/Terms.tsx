@@ -1,3 +1,4 @@
+import { BusinessAddressBlock } from "@/constants/businessAddress";
 import { Link } from "react-router-dom";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
 
@@ -13,8 +14,6 @@ const sections: LegalSection[] = [
           on <strong>June 28, 2025</strong>.
         </p>
         <BusinessAddressBlock className="text-foreground" />
-        <p className="sr-only">
-        </p>
         <p>
           You must be <strong>at least 13</strong> to have an account. If you are{" "}
           <strong>13 to 17</strong>, a parent or guardian must give permission before you use the
