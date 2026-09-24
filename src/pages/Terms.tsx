@@ -1,3 +1,4 @@
+import { BusinessAddressBlock } from "@/constants/businessAddress";
 import { Link } from "react-router-dom";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
 
@@ -8,10 +9,11 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          These terms are an agreement between you and <strong>Hammers Modality LLC</strong>,{" "}
-          <strong>[BUSINESS ADDRESS]</strong>. By using the app, you agree to them. They take effect
+          These terms are an agreement between you and <strong>Hammers Modality LLC</strong> (address
+          below). By using the app, you agree to them. They take effect
           on <strong>June 28, 2025</strong>.
         </p>
+        <BusinessAddressBlock className="text-foreground" />
         <p>
           You must be <strong>at least 13</strong> to have an account. If you are{" "}
           <strong>13 to 17</strong>, a parent or guardian must give permission before you use the

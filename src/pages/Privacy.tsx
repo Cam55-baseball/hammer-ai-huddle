@@ -1,3 +1,4 @@
+import { BusinessAddressBlock } from "@/constants/businessAddress";
 import { Link } from "react-router-dom";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
 
@@ -8,9 +9,9 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          This app is run by <strong>Hammers Modality LLC</strong>. Our address is{" "}
-          <strong>[BUSINESS ADDRESS]</strong>.
+          This app is run by <strong>Hammers Modality LLC</strong>. Our address is:
         </p>
+        <BusinessAddressBlock className="text-foreground" />
         <p>
           For questions about privacy, or for general help, email{" "}
           <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
