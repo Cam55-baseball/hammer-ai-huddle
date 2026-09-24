@@ -99,7 +99,7 @@ export function compoundSlugsFor(phase: WkPhase, dayOfWeek: number = 0): string[
         "lift_hang_power_snatch",
         "lift_trap_bar_jump",
         "lift_box_jump_depth_drop",
-        "lift_triphasic_iso_squat",
+        "lift_iso_squat",
         "front_squat_double_ecc",
       ];
     }
@@ -133,7 +133,7 @@ export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[
     "kot_atg_split_squat",
     "lift_sl_rdl",
     "lift_staggered_rdl",
-    "lift_poliquin_stepup",
+    "lift_stepup",
     "lift_split_squat_iso",
     "lateral_db_step_up",
     "sl_deadlift_fat_grips",
@@ -142,7 +142,7 @@ export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[
   const offSeason = [
     "lift_atg_split_squat",
     "lift_sl_rdl",
-    "lift_poliquin_stepup",
+    "lift_stepup",
     "lift_peterson_stepup",
     "lift_patrick_step",
     "lift_kot_sissy_squat",

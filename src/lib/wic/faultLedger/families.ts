@@ -61,7 +61,7 @@ export const FAULT_FAMILIES: readonly FaultFamily[] = [
     troubleshooting: ["cramps in the front of the hip", "lower back takes over", "can't stay tall"],
     ladder: [
       { slug: "wu_split_stance_iso_hold", tier: 0 },
-      { slug: "cressey_hip_lift_march", tier: 1 },
+      { slug: "hip_lift_march", tier: 1 },
       { slug: "hanging_knee_raise", tier: 2 },
       { slug: "garhammer_raise", tier: 2 },
       { slug: "low_cable_hip_flexor_pull_in", tier: 3 },
@@ -144,10 +144,10 @@ export const FAULT_FAMILIES: readonly FaultFamily[] = [
     troubleshooting: ["front of the shoulder pinches", "neck takes over", "arm dead the next day"],
     ladder: [
       { slug: "wu_scapular_cars", tier: 0 },
-      { slug: "ac_cressey_wall_slide", tier: 1 },
+      { slug: "ac_wall_slide", tier: 1 },
       { slug: "ac_xband_pull_apart", tier: 1 },
-      { slug: "ac_jobes_side_lying_er", tier: 2 },
-      { slug: "ac_jobes_prone_ytw", tier: 2 },
+      { slug: "ac_side_lying_er", tier: 2 },
+      { slug: "ac_prone_ytw", tier: 2 },
       { slug: "powell_raise", tier: 2 },
     ],
   },
@@ -203,7 +203,7 @@ export const FAULT_FAMILIES: readonly FaultFamily[] = [
     troubleshooting: ["lower back does the work", "ribs flare", "can't breathe and brace"],
     ladder: [
       { slug: "wu_pallof_press_iso", tier: 0 },
-      { slug: "heenan_dead_bug_reach", tier: 1 },
+      { slug: "dead_bug_reach", tier: 1 },
       { slug: "bird_dog", tier: 1 },
       { slug: "four_way_plank", tier: 1 },
       { slug: "kneeling_ab_rollout", tier: 2 },
