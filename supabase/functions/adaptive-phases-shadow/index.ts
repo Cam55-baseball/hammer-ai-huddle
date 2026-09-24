@@ -219,10 +219,6 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
     scheduleAnswer, likelyNextGame: likely && likely > today ? likely : null, shares,
     need: { goal: goalOf(ctx.data), benchmarkGapPhase: null, openPain: (pains.data ?? []).length > 0 },
   });
-  await admin.from("adaptive_phase_shadow").upsert(
-    { user_id: userId, plan_date: today, trigger, engine_version: plan.version, window_weeks: plan.windowWeeks, hard_date: plan.hardDate, plan },
-    { onConflict: "user_id,plan_date" },
-  );
   // v1.4 §2 — every throwing athlete carries the six throwing values.
   const pos = String(pf.primary_position ?? pf.position ?? "").toLowerCase();
   const sec = String(pf.secondary_position ?? "").toLowerCase();
@@ -231,7 +227,12 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
   const tg = rampGap.throwing;
   const throwing = throwingProfile({ sport: pf.sport === "softball" ? "softball" : "baseball", role, age }, { seasonState: plan.seasonState, phase: plan.phase },
     tg ? { daysOff: tg.daysOff, dayIndex: plan.ramps?.find((r) => r.discipline === "throwing")?.dayIndex ?? null } : null, rampProfile);
-  return { ...plan, throwing };
+  (plan as any).throwing = throwing;
+  await admin.from("adaptive_phase_shadow").upsert(
+    { user_id: userId, plan_date: today, trigger, engine_version: plan.version, window_weeks: plan.windowWeeks, hard_date: plan.hardDate, plan },
+    { onConflict: "user_id,plan_date" },
+  );
+  return plan;
 }
 
 Deno.serve(async (req) => {
