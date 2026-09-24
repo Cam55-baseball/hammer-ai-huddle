@@ -267,10 +267,14 @@ Deno.serve(async (req) => {
       const { data: lastOwner } = await admin.from("phase_insights").select("report").eq("scope", "owner").order("computed_on", { ascending: false }).limit(1).maybeSingle();
       const fb = lastOwner?.report?.feedback;
       const out: any[] = [];
-      for (const id of ids) {
-        const shares = fb?.enabled && isSwitchOnFor(sw as any, id) ? fb.shares : undefined;
-        try { out.push({ user_id: id, plan: await planOne(admin, id, today, "daily", shares) }); }
-        catch (e) { out.push({ user_id: id, error: String(e) }); }
+      // Six athletes at a time so the whole roster finishes well inside the time limit.
+      const list = [...ids];
+      for (let i = 0; i < list.length; i += 6) {
+        await Promise.all(list.slice(i, i + 6).map(async (id) => {
+          const shares = fb?.enabled && isSwitchOnFor(sw as any, id) ? fb.shares : undefined;
+          try { out.push({ user_id: id, ok: !!(await planOne(admin, id, today, "daily", shares)) }); }
+          catch (e) { out.push({ user_id: id, error: String(e) }); }
+        }));
       }
       let stage_c: any = null;
       try { stage_c = await stageC(admin, today, [...ids]); } catch (e) { stage_c = { error: String(e) }; }
