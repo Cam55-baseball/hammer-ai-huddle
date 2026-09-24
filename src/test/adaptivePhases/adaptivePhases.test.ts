@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   allocateWindow, buildCreditLedger, planAthlete, stripText, windowWeeksFor, rankNeed,
-  MIN_WEEKS, PHASE_BLOCKS, DISCIPLINES, type WeekRecord, type AthletePhaseInput, type BuildPhase,
+  MIN_WEEKS, PHASE_BLOCKS, DISCIPLINES, type WeekRecord, type AthletePhaseInput, type BuildPhase, type PhaseSegment,
 } from "../../../supabase/functions/_shared/wic/phases/adaptivePhases";
 
 const TODAY = "2026-06-01";
@@ -21,7 +21,7 @@ function base(over: Partial<AthletePhaseInput> = {}): AthletePhaseInput {
     offDaysInWindow: 0, holdToday: false, weeksIntoSeason: 0, records: [], need: { ...noNeed }, ...over,
   };
 }
-const live = (segs: { weeks: number }[]) => segs.filter((s) => s.weeks > 0);
+const live = (segs: PhaseSegment[]) => segs.filter((s) => s.weeks > 0);
 
 describe("§4 worked example", () => {
   it("summer ball cancelled, P1 banked → 2 wk P2, 2 wk P3 ending with a sharpening week", () => {
@@ -189,7 +189,7 @@ describe("simulated-season sweep", () => {
         }
         if (d.mode === "full_arc" || d.mode === "two_phase") {
           for (const c of d.completed) expect(live(d.segments).some((s) => s.phase === c && !s.sharpenOnly && !(d.completed.length === 3))).toBe(false);
-          const last = live(d.segments).at(-1);
+          const ls = live(d.segments); const last = ls[ls.length - 1];
           if (d.mode === "two_phase") expect(last?.endsWithSharpen).toBe(true);
         }
         if (d.mode === "bridge") expect(d.segments.every((s) => s.noNewHeavy)).toBe(true);
