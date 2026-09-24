@@ -305,6 +305,8 @@ export interface DisciplineHold {
 }
 
 export interface AthletePhaseInput {
+  /** Stage C bounded feedback shares — only passed when the phase_feedback switch is on. */
+  shares?: Record<BuildPhase, number>;
   today: string;
   /** ONE season state from settings (v1.1 §A). Flowing play can lift it to in_season (§B). */
   seasonState: SeasonState;
