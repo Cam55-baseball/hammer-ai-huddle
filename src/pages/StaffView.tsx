@@ -24,6 +24,7 @@ import {
   type BucketTotal,
 } from "@/lib/hammer/staff/staffData";
 import { decisionSentences, rulesForDecision, type RuleEntry } from "@/lib/hammer/staff/evidence";
+import { StaffPhaseArc } from "@/components/hammer/StaffPhaseArc";
 
 type DecisionRow = {
   decision_date: string;
