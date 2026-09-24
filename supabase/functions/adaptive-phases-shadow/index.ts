@@ -206,7 +206,7 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
   for (const p of pain90 ?? []) { const d = painArea[String(p.payload?.region ?? "")]; if (d) painLast90[d] = true; }
   const rampProfile = {
     age, isPitcher: /pitch/i.test(String(pf.primary_position ?? pf.position ?? "")), growthMode: age !== null && age <= 15,
-    painLast90, firstTime: Object.fromEntries(RAMP_DISCIPLINES.map((d) => [d, exposure[d].size === 0 && false])) as any,
+    painLast90, firstTime: {}, // "first time in this discipline" has no reliable source yet — never assumed
     eliteClean: pf.is_professional === true && (pain90 ?? []).length === 0,
   };
 
