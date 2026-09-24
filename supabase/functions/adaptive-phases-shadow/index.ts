@@ -9,6 +9,7 @@ import {
 } from "../_shared/wic/phases/adaptivePhases.ts";
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 import { RAMP_DISCIPLINES, type RampDiscipline } from "../_shared/wic/phases/rampLaw.ts";
+import { throwingProfile } from "../_shared/wic/phases/armLedger.ts";
 import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import {
   OUTCOMES_VERSION, METRIC_KEYS, LOWER_IS_BETTER, OUTCOME_METRICS, outcomeLinks, stepFeedback, defaultFeedback, painPatterns,
@@ -218,6 +219,15 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
     scheduleAnswer, likelyNextGame: likely && likely > today ? likely : null, shares,
     need: { goal: goalOf(ctx.data), benchmarkGapPhase: null, openPain: (pains.data ?? []).length > 0 },
   });
+  // v1.4 §2 — every throwing athlete carries the six throwing values.
+  const pos = String(pf.primary_position ?? pf.position ?? "").toLowerCase();
+  const sec = String(pf.secondary_position ?? "").toLowerCase();
+  const pitches = /pitch/.test(pos) || /pitch/.test(sec), catches = /catch/.test(pos) || /catch/.test(sec);
+  const role = pitches && catches ? "pitcher_catcher" : pitches && sec && !/pitch/.test(sec) ? "two_way" : pitches ? "pitcher" : catches ? "catcher" : "position";
+  const tg = rampGap.throwing;
+  const throwing = throwingProfile({ sport: pf.sport === "softball" ? "softball" : "baseball", role, age }, { seasonState: plan.seasonState, phase: plan.phase },
+    tg ? { daysOff: tg.daysOff, dayIndex: plan.ramps?.find((r) => r.discipline === "throwing")?.dayIndex ?? null } : null, rampProfile);
+  (plan as any).throwing = throwing;
   await admin.from("adaptive_phase_shadow").upsert(
     { user_id: userId, plan_date: today, trigger, engine_version: plan.version, window_weeks: plan.windowWeeks, hard_date: plan.hardDate, plan },
     { onConflict: "user_id,plan_date" },
@@ -251,16 +261,27 @@ Deno.serve(async (req) => {
       const ids = new Set<string>();
       const { data: a } = await admin.from("athlete_mpi_settings").select("user_id");
       for (const r of a ?? []) ids.add(r.user_id);
-      const { data: b } = await admin.from("wk_prescriptions").select("user_id").gte("plan_date", addDays(today, -60));
-      for (const r of b ?? []) ids.add(r.user_id);
+      // A single read stops at 1,000 rows and silently dropped athletes: page the last week,
+      // and carry forward everyone planned yesterday or today.
+      for (let from = 0; ; from += 1000) {
+        const { data: b } = await admin.from("wk_prescriptions").select("user_id").gte("plan_date", addDays(today, -7)).order("id").range(from, from + 999);
+        for (const r of b ?? []) ids.add(r.user_id);
+        if (!b || b.length < 1000) break;
+      }
+      const { data: prior } = await admin.from("adaptive_phase_shadow").select("user_id").gte("plan_date", addDays(today, -1));
+      for (const r of prior ?? []) ids.add(r.user_id);
       const { data: sw } = await admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "phase_feedback").maybeSingle();
       const { data: lastOwner } = await admin.from("phase_insights").select("report").eq("scope", "owner").order("computed_on", { ascending: false }).limit(1).maybeSingle();
       const fb = lastOwner?.report?.feedback;
       const out: any[] = [];
-      for (const id of ids) {
-        const shares = fb?.enabled && isSwitchOnFor(sw as any, id) ? fb.shares : undefined;
-        try { out.push({ user_id: id, plan: await planOne(admin, id, today, "daily", shares) }); }
-        catch (e) { out.push({ user_id: id, error: String(e) }); }
+      // Six athletes at a time so the whole roster finishes well inside the time limit.
+      const list = [...ids];
+      for (let i = 0; i < list.length; i += 6) {
+        await Promise.all(list.slice(i, i + 6).map(async (id) => {
+          const shares = fb?.enabled && isSwitchOnFor(sw as any, id) ? fb.shares : undefined;
+          try { out.push({ user_id: id, ok: !!(await planOne(admin, id, today, "daily", shares)) }); }
+          catch (e) { out.push({ user_id: id, error: String(e) }); }
+        }));
       }
       let stage_c: any = null;
       try { stage_c = await stageC(admin, today, [...ids]); } catch (e) { stage_c = { error: String(e) }; }

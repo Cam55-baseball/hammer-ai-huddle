@@ -224,6 +224,7 @@ const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
 const BundleStorefront = lazyWithRetry(() => import("./pages/BundleStorefront"));
 const BundlePlayer = lazyWithRetry(() => import("./pages/BundlePlayer"));
+const PresentationDemo = lazyWithRetry(() => import("./pages/owner/PresentationDemo"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
 const DemoTier = lazyWithRetry(() => import("./pages/demo/DemoTier"));
 const DemoCategory = lazyWithRetry(() => import("./pages/demo/DemoCategory"));
@@ -445,6 +446,7 @@ const App = () => {
               <Route path="/owner/iq/situations" element={<IqSituationsAuthoring />} />
               <Route path="/owner/workouts/library" element={<WorkoutLibraryViewer />} />
               <Route path="/owner/landing-demo" element={<LandingDemoManager />} />
+              <Route path="/owner/presentation" element={<StaffOnlyRoute><PresentationDemo /></StaffOnlyRoute>} />
               <Route path="/owner/moderation" element={<StaffOnlyRoute><ModerationQueue /></StaffOnlyRoute>} />
 
 
