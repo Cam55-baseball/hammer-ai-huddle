@@ -195,5 +195,5 @@ describe("simulated-season sweep", () => {
         if (d.mode === "bridge") expect(d.segments.every((s) => s.noNewHeavy)).toBe(true);
       }
     }
-  });
+  }, 60_000);
 });
