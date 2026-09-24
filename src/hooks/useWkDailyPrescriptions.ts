@@ -25,6 +25,7 @@ import type { AthleteContext } from "@/lib/wic/athleteContext";
 import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
 import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 import { resolveWkPhase } from "@/lib/hammer/workout/phaseQuarter";
+import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 
 const WK_GENERATOR_VERSION = "wic_v1.3_google";
 
@@ -269,6 +270,25 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     },
   });
 
+  // Tell Hammers — the newest timeline change. A plan built before it is stale
+  // and re-plans on open. Inert (never runs) while the switch is off.
+  const tellHammersOn = useTellHammersEnabled();
+  const timelineQuery = useQuery({
+    queryKey: ["wk-rx-timeline", user?.id],
+    enabled: !!user?.id && tellHammersOn,
+    staleTime: 15_000,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("schedule_timeline_entries")
+        .select("updated_at")
+        .eq("user_id", user!.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return (data?.updated_at as string | undefined) ?? null;
+    },
+  });
+
   const invokeOnce = useCallback(async () => {
     // Pull the most recent *live* recovery ack so the edge function can bias the
     // next plan (real learning loop instead of one-way personalization).
@@ -378,6 +398,32 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   // Step 21E3 — plain reason shown in the day header after a season change.
   const [replanReason, setReplanReason] = useState<string | null>(null);
 
+  // Tell Hammers — a saved entry re-plans the next 7 days right now, in place,
+  // with the plain "what changed" line. No restart, no navigation.
+  const generateRef = useRef<() => Promise<void>>(async () => undefined);
+  useEffect(() => {
+    if (!tellHammersOn) return;
+    const onChange = (ev: Event) => {
+      const reason = (ev as CustomEvent<{ reason?: string }>).detail?.reason ?? null;
+      if (reason) setReplanReason(reason);
+      if (user?.id) {
+        for (let d = 0; d <= 7; d++) {
+          const dt = new Date(`${planDate}T00:00:00Z`);
+          dt.setUTCDate(dt.getUTCDate() + d);
+          const iso = dt.toISOString().slice(0, 10);
+          qc.invalidateQueries({ queryKey: ["wk-rx", user.id, iso] });
+        }
+      }
+      autoTriedKey.current = `timeline-event:${Date.now()}`;
+      void generateRef.current();
+    };
+    window.addEventListener(SCHEDULE_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(SCHEDULE_CHANGED_EVENT, onChange);
+  }, [tellHammersOn, user?.id, planDate, qc]);
+  useEffect(() => {
+    generateRef.current = generate;
+  }, [generate]);
+
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
     const first = query.data?.[0];
@@ -392,6 +438,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         const storedPhase = rx.why_payload?.phase ?? rx.phase ?? null;
         return !!storedPhase && storedPhase !== expectedPhase;
       });
+    const firstCreated = (first as any)?.created_at as string | undefined;
+    const staleTimeline =
+      tellHammersOn && !!first && !!timelineQuery.data && !!firstCreated && firstCreated < timelineQuery.data;
     const refreshKey = !query.data
       ? null
       : query.data.length === 0
@@ -433,7 +482,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }
       generate();
     }
-  }, [query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
+  }, [tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
