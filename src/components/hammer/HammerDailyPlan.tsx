@@ -770,6 +770,7 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         {/* 1. Schedule & What Changed */}
+        <AdaptivePhaseStrip />
         <ScheduleDropdownWrapper />
 
         {/* 2. Today's Wisdom */}
