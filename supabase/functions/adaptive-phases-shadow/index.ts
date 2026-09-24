@@ -261,8 +261,14 @@ Deno.serve(async (req) => {
       const ids = new Set<string>();
       const { data: a } = await admin.from("athlete_mpi_settings").select("user_id");
       for (const r of a ?? []) ids.add(r.user_id);
-      const { data: b } = await admin.from("wk_prescriptions").select("user_id").gte("plan_date", addDays(today, -60));
-      for (const r of b ?? []) ids.add(r.user_id);
+      // Page through — a single read stops at 1,000 rows and silently dropped athletes.
+      for (let from = 0; ; from += 1000) {
+        const { data: b } = await admin.from("wk_prescriptions").select("user_id").gte("plan_date", addDays(today, -60)).order("id").range(from, from + 999);
+        for (const r of b ?? []) ids.add(r.user_id);
+        if (!b || b.length < 1000) break;
+      }
+      const { data: prior } = await admin.from("adaptive_phase_shadow").select("user_id").eq("plan_date", addDays(today, -1));
+      for (const r of prior ?? []) ids.add(r.user_id);
       const { data: sw } = await admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "phase_feedback").maybeSingle();
       const { data: lastOwner } = await admin.from("phase_insights").select("report").eq("scope", "owner").order("computed_on", { ascending: false }).limit(1).maybeSingle();
       const fb = lastOwner?.report?.feedback;
