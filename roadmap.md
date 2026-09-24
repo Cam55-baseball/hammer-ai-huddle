@@ -7,3 +7,6 @@
 6. [ ] §6 tests
 7. [ ] No-glitch: full suite, sweep, matrix 1,296, watchdog criticals, build errors/speed, phone-width screens, switch-off identical
 8. [ ] Report A, B, C, v1.3 item by item
+- [x] v1.4 throwing coverage: arm ledger, windmill limits, tournament mode, two-way, pitcher-catcher, §2 consistency test
+- [x] v1.4 demo picker (/owner/presentation), phone-width checks, screenshots
+- [ ] Switch on adaptive_phases — waits on owner authorisation
