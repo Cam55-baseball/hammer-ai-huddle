@@ -147,6 +147,8 @@ export interface PhaseSegment {
   shortenedReason: string | null;
   /** Bridge mode: no new heavy methods, no new tiers. */
   noNewHeavy: boolean;
+  /** Pre-game sharpening week only — not a restart of a finished phase. */
+  sharpenOnly?: boolean;
 }
 
 export interface AllocationInput {
@@ -202,18 +204,35 @@ export function allocateWindow(input: AllocationInput): Allocation {
 
   // 4 ≤ W < 7 → two phases, ≥2 weeks each, finish with a sharpening week.
   if (w < 7) {
-    let pick: BuildPhase[];
-    if (pending.length <= 2 && pending.length > 0) {
-      pick = [...pending];
-      if (pick.length === 1) {
-        const other = ranked.find((p) => p !== pick[0])!;
-        pick.push(other);
+    // One (or no) phase left: never re-open a finished phase. Give the
+    // remaining phase the window and close with one sharpening week only.
+    if (pending.length <= 1) {
+      const p = pending[0] ?? "P3";
+      if (p === "P3") {
+        return { mode: "two_phase", completed, segments: [seg("P3", w, { endsWithSharpen: true })] };
       }
+      return {
+        mode: "two_phase",
+        completed,
+        segments: [seg(p, w - 1), seg("P3", 1, { endsWithSharpen: true, sharpenOnly: true })],
+      };
+    }
+    let pick: BuildPhase[];
+    if (pending.length === 2) {
+      pick = [...pending];
     } else {
       pick = ranked.filter((p) => pending.includes(p) || pending.length === 0).slice(0, 2);
     }
     // The run must end sharp: P3 always closes the window.
-    if (!pick.includes("P3")) pick = [pick[0], "P3"];
+    if (!pick.includes("P3") && !completed.includes("P3")) pick = [pick[0], "P3"];
+    if (!pick.includes("P3")) {
+      const [a, b] = pick.sort((x, y) => BUILD.indexOf(x) - BUILD.indexOf(y));
+      const wa = Math.max(2, Math.ceil((w - 1) / 2)), wb = w - 1 - wa;
+      const segs = [seg(a, wa), ...(wb > 0 ? [seg(b, wb)] : []), seg("P3", 1, { endsWithSharpen: true, sharpenOnly: true })];
+      for (const x of segs) if (x.phase !== "P3" && x.weeks < remainingMin(x.phase as BuildPhase, credit)) { x.shortened = true; x.shortenedReason = why(w); }
+      if (wb <= 0) segs.push(seg(b, 0, { shortened: true, shortenedReason: `Skipped this time — ${why(w)}` }));
+      return { mode: "two_phase", completed, segments: segs };
+    }
     pick = [...new Set(pick)].sort((a, b) => BUILD.indexOf(a) - BUILD.indexOf(b));
     const weeks: Record<string, number> = { [pick[0]]: 2, [pick[1]]: 2 };
     let spare = w - 4;

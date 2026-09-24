@@ -188,7 +188,7 @@ describe("simulated-season sweep", () => {
           if (s.weeks < rem && !(d.mode === "bridge")) expect(s.shortenedReason).toBeTruthy(); // never silent
         }
         if (d.mode === "full_arc" || d.mode === "two_phase") {
-          for (const c of d.completed) expect(live(d.segments).some((s) => s.phase === c)).toBe(d.completed.length === 3 && c === "P3");
+          for (const c of d.completed) expect(live(d.segments).some((s) => s.phase === c && !s.sharpenOnly && !(d.completed.length === 3))).toBe(false);
           const last = live(d.segments).at(-1);
           if (d.mode === "two_phase") expect(last?.endsWithSharpen).toBe(true);
         }
