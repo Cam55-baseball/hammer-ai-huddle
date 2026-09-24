@@ -130,6 +130,10 @@ export default function Support() {
             Tell us your account email, what you were doing, and what happened. Screenshots help a
             lot.
           </p>
+          <div className="text-muted-foreground">
+            <p className="font-semibold text-foreground">Mailing address</p>
+            <BusinessAddressBlock />
+          </div>
         </Card>
 
 

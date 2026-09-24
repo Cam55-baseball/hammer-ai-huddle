@@ -202,6 +202,7 @@ const Index = () => {
             <p className="text-sm">
               © 2025 Hammers Modality. Training content only — consult professionals for medical issues.
             </p>
+            <p className="text-xs">{BUSINESS_ADDRESS_ONE_LINE}</p>
           </div>
         </div>
       </footer>
