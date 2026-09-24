@@ -75,7 +75,7 @@ export function canUndo(e: Pick<TimelineEntry, "created_at" | "undone_at">, now 
 /** Dedupe rule (mirrors the database save function): same tag + same source + overlapping dates. */
 export function findMergeTarget(
   existing: ReadonlyArray<TimelineEntry>,
-  next: { tag: TimelineTag; source: TimelineSource; start_date: string; end_date: string },
+  next: { tag: TimelineTag; source: TimelineSource; start_date: string; end_date: string; payload?: Record<string, unknown> },
 ): TimelineEntry | null {
   return (
     existing
@@ -83,7 +83,10 @@ export function findMergeTarget(
         (e) =>
           isActive(e) &&
           e.tag === next.tag &&
-          e.source === next.source &&
+          // v1.2 §A: PAIN merges on the same body part from any screen.
+          (next.tag === "PAIN"
+            ? String((e as any).payload?.region ?? "") === String((next as any).payload?.region ?? "")
+            : e.source === next.source) &&
           e.start_date <= next.end_date &&
           e.end_date >= next.start_date,
       )

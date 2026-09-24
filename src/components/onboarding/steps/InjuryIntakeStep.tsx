@@ -14,7 +14,6 @@ import { writeDraftSlot } from "@/lib/onboarding/draftStore";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import {
   REPORT_INJURY_REGIONS,
-  reportInjury,
   type ReportInjuryRegionKey,
   type ReportInjurySeverity,
 } from "@/lib/hammer/injury/reportInjury";
@@ -36,7 +35,7 @@ export function InjuryIntakeStep({ onContinue, onBack }: Props) {
     if (!user || !region || busy) return;
     setBusy(true);
     try {
-      await reportInjury({ userId: user.id, region, severity, queryClient: qc });
+      await recordPain({ userId: user.id, region, severity, origin: "onboarding", date: getTodayDate(), queryClient: qc });
       writeDraftSlot(user.id, "injury-intake", { answered_at: new Date().toISOString(), state: "reported" });
       toast.success("Logged. Your plan starts protected.");
       onContinue();

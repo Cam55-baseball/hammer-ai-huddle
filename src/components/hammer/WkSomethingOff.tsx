@@ -13,6 +13,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { recordPain } from "@/lib/hammer/injury/recordPain";
+import { REPORT_INJURY_REGIONS, type ReportInjuryRegionKey, type ReportInjurySeverity } from "@/lib/hammer/injury/reportInjury";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 
 export type CardSnapshotItem = {
@@ -36,6 +39,9 @@ export function WkSomethingOff({
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [painRegion, setPainRegion] = useState<ReportInjuryRegionKey | null>(null);
+  const [painSeverity, setPainSeverity] = useState<ReportInjurySeverity>("sore");
+  const qc = useQueryClient();
 
   const send = async () => {
     if (!user?.id) return;
@@ -55,6 +61,11 @@ export function WkSomethingOff({
       title: "An athlete flagged today's card",
       detail: { plan_date: planDate, card: snapshot, athlete_note: text.trim() || null },
     });
+    if (!error && painRegion) {
+      try {
+        await recordPain({ userId: user.id, region: painRegion, severity: painSeverity, origin: "something_off", date: planDate, queryClient: qc });
+      } catch { /* the note still went through */ }
+    }
     setBusy(false);
     if (error) {
       toast({ title: "Could not send that", description: error.message, variant: "destructive" });
@@ -89,6 +100,27 @@ export function WkSomethingOff({
           placeholder="Tell us in a sentence (optional)"
           className="text-sm"
         />
+        <div className="space-y-1">
+          <p className="text-xs font-medium">Does something hurt? (optional)</p>
+          <div className="flex flex-wrap gap-1">
+            {REPORT_INJURY_REGIONS.map((r) => (
+              <button key={r.key} type="button" onClick={() => setPainRegion(painRegion === r.key ? null : r.key)}
+                className={`rounded-full border px-2 py-0.5 text-[11px] ${painRegion === r.key ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+          {painRegion && (
+            <div className="flex gap-1">
+              {(["sore", "limiting", "cannot_train"] as const).map((s) => (
+                <button key={s} type="button" onClick={() => setPainSeverity(s)}
+                  className={`rounded-full border px-2 py-0.5 text-[11px] ${painSeverity === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>
+                  {s === "sore" ? "A little" : s === "limiting" ? "A lot" : "Can't train"}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <Button onClick={send} disabled={busy}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Send

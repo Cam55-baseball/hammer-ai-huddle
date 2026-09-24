@@ -244,9 +244,15 @@ describe("laws", () => {
       for (const k of Object.keys(s)) expect(k).not.toMatch(/sets|reps|load|dose|intensity|age/i);
     }
   });
-  it("switch off is byte-identical: the card builder never reads the phase engine", () => {
+  it("switch off is byte-identical: the card builder only reads the phase plan behind the adaptive_phases switch, and only as a label", () => {
     const gen = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8");
-    expect(gen).not.toMatch(/adaptivePhases|adaptive_phase/);
+    expect(gen).not.toMatch(/adaptivePhases/);
+    const reads = [...gen.matchAll(/adaptive_phase_shadow/g)].length;
+    expect(reads).toBe(1);
+    const i = gen.indexOf("adaptive_phase_shadow");
+    const block = gen.slice(gen.lastIndexOf("if (isSwitchOnFor(", i), gen.indexOf("let contextValidationOutcome", i));
+    expect(block).toMatch(/feature_key === "adaptive_phases"/);
+    expect(block).not.toMatch(/\b(sets|reps|load|dose|movement_slug|intensity)\b/);
     const shadow = readFileSync("supabase/functions/adaptive-phases-shadow/index.ts", "utf8");
     const writes = [...shadow.matchAll(/from\("([a-z_]+)"\)\.(upsert|insert|update|delete)/g)].map((m) => m[1]);
     expect(new Set(writes)).toEqual(new Set(["adaptive_phase_credit", "adaptive_phase_shadow"]));
@@ -288,10 +294,12 @@ describe("simulated-season sweep", () => {
       }
       if (!p.hardDate) expect(p.noNewHeavy || p.seasonState === "in_season").toBe(true);
       if (p.seasonState === "in_season" || p.ramp?.activeToday) expect(p.gameReadyFloor).toEqual(GAME_READY_FLOOR);
-      for (const s of p.segments) {
-        if (s.phase === "P4") continue;
-        const rem = Math.max(0, Math.ceil(MIN_WEEKS[s.phase as BuildPhase] - p.credit[s.phase as BuildPhase] - 1e-9));
-        if (s.weeks < rem && p.mode !== "bridge") expect(s.shortenedReason).toBeTruthy();
+      // v1.2 §C splits a phase into blocks (Absorb + Capacity): the minimum applies to the phase total.
+      for (const ph of ["P1", "P2", "P3"] as BuildPhase[]) {
+        const segsP = p.segments.filter((s) => s.phase === ph);
+        const tot = segsP.reduce((a, s) => a + s.weeks, 0);
+        const rem = Math.max(0, Math.ceil(MIN_WEEKS[ph] - p.credit[ph] - 1e-9));
+        if (segsP.length && tot < rem && p.mode !== "bridge" && !segsP.some((s) => s.shortenedReason)) throw new Error(JSON.stringify({ inp: { ...inp, records: undefined }, mode: p.mode, arc: p.arc, segs: p.segments, credit: p.credit }));
       }
     }
   }, 60_000);

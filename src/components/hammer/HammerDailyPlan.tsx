@@ -761,6 +761,8 @@ function HammerDailyPlanBody({
     <div className="space-y-6">
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
+        {/* v1.2 §E — phase name, weeks left, what's next; one collapsed "why" line. */}
+        <AdaptivePhaseStrip />
         {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
         <ErrorBoundary>
           <ScheduledPriorityStrip />
@@ -770,7 +772,6 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         {/* 1. Schedule & What Changed */}
-        <AdaptivePhaseStrip />
         <ScheduleDropdownWrapper />
 
         {/* 2. Today's Wisdom */}

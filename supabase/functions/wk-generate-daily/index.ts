@@ -35,7 +35,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
-import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
+import { resolveFeatures, isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import { cancelledDates, dayEffect, type TimelineEntry } from "../_shared/wic/schedule/timeline.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
@@ -3187,6 +3187,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Phase 4 — Constitutional TrainingContext validation.
     // Every prescription must reference exactly one identical training_context.
+    // v1.2 §B — when adaptive phases is on for this athlete, every card row of the
+    // day carries the ONE phase from the stored plan (label only: no dose, no
+    // movement, no floor changes). Switch off → nothing is read or written.
+    if (isSwitchOnFor((switchRows as any[] ?? []).find((r: any) => r.feature_key === "adaptive_phases") ?? null, user.id) && finalRxs.length > 0) {
+      const { data: ap } = await admin.from("adaptive_phase_shadow").select("plan").eq("user_id", user.id).lte("plan_date", planDate).order("plan_date", { ascending: false }).limit(1).maybeSingle();
+      const plan: any = (ap as any)?.plan;
+      if (plan?.phase) {
+        for (const r of finalRxs as any[]) {
+          r.why_payload = { ...(r.why_payload ?? {}), adaptive_phase: { phase: plan.phase, season_state: plan.seasonState, version: plan.version } };
+        }
+      }
+    }
     let contextValidationOutcome: "ok" | "missing" | "conflicting" | "row_missing" = "ok";
     if (finalRxs.length > 0) {
       const seenPhases = new Set<string>();
@@ -3195,6 +3207,7 @@ const handler = async (req: Request): Promise<Response> => {
       const seenRecovery = new Set<string>();
       const seenAdaptation = new Set<string>();
       const seenCtxVersion = new Set<string>();
+      const seenAdaptive = new Set<string>();
       let rowMissing = false;
       for (const r of finalRxs) {
         const tc: any = (r as any)?.why_payload?.training_context;
@@ -3205,6 +3218,8 @@ const handler = async (req: Request): Promise<Response> => {
         if (tc.recovery_profile_id) seenRecovery.add(tc.recovery_profile_id);
         if (tc.adaptation_profile_id) seenAdaptation.add(tc.adaptation_profile_id);
         if (tc.context_version) seenCtxVersion.add(tc.context_version);
+        const ap = (r as any)?.why_payload?.adaptive_phase;
+        if (ap) seenAdaptive.add(`${ap.phase}:${ap.season_state}`);
       }
       if (rowMissing) {
         contextValidationOutcome = "row_missing";
@@ -3213,7 +3228,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
       const anyConflict =
         seenPhases.size > 1 || seenDayTypes.size > 1 || seenLegality.size > 1 ||
-        seenRecovery.size > 1 || seenAdaptation.size > 1 || seenCtxVersion.size > 1;
+        seenRecovery.size > 1 || seenAdaptation.size > 1 || seenCtxVersion.size > 1 || seenAdaptive.size > 1;
       if (anyConflict) {
         contextValidationOutcome = "conflicting";
         validatorReport.issues.push({

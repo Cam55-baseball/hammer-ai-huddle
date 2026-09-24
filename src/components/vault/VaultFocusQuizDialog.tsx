@@ -1,4 +1,7 @@
+import { useOptionalAuth } from "@/hooks/useAuth";
 import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
+import { recordPain, bodyAreaToRegion, scaleToSeverity } from "@/lib/hammer/injury/recordPain";
+import { useQueryClient as usePainQc } from "@tanstack/react-query";
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePhysioDailyReport } from '@/hooks/usePhysioDailyReport';
@@ -400,6 +403,8 @@ export function VaultFocusQuizDialog({
   // NEW: Pre-workout Pain section - now with per-area pain scales
   const [painLocations, setPainLocations] = useState<string[]>([]);
   const [painScales, setPainScales] = useState<Record<string, number>>({});
+  const painQc = usePainQc();
+  const { user: painUser } = useOptionalAuth();
   const [painTissueTypes, setPainTissueTypes] = useState<Record<string, string[]>>({});
   const [painIncreasesWithMovement, setPainIncreasesWithMovement] = useState<boolean | null>(null);
   const [painMovementPerArea, setPainMovementPerArea] = useState<Record<string, boolean>>({});
@@ -677,6 +682,16 @@ export function VaultFocusQuizDialog({
 
     const result = await onSubmit(data);
     setLoading(false);
+    // v1.2 §A: body-map pain becomes the same one pain record as every other screen.
+    if (result.success && painUser?.id && painLocations.length > 0) {
+      const today = getTodayDate();
+      for (const areaId of painLocations) {
+        const m = bodyAreaToRegion(areaId);
+        const scale = painScales[areaId] ?? 0;
+        if (!m || scale < 1) continue;
+        void recordPain({ userId: painUser.id, region: m.region, severity: scaleToSeverity(scale), side: m.side, origin: "checkin_body_map", date: today, queryClient: painQc }).catch(() => undefined);
+      }
+    }
     
     if (result.success) {
       // For night check-in, show success screen instead of closing
