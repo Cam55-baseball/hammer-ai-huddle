@@ -68,7 +68,8 @@ export function buildDemo(d: DemoAthlete, postponeDays = 0): DemoView {
     d.throwingDaysOff > 2 ? { daysOff: d.throwingDaysOff, dayIndex: tr?.dayIndex ?? 3 } : null);
   const dayType = d.tournament ? "tournament" : games[0] === DEMO_TODAY ? "game" : "practice";
   return {
-    plan, throwing, today: ledgerDay(d.athlete, estimateThrows(d.athlete, dayType)),
+    plan, throwing,
+    today: ledgerDay(d.athlete, d.tournament ? [{ kind: "pitch", count: 118, intent: "high", estimated: false }] : estimateThrows(d.athlete, dayType)),
     tournament: d.tournament ? { ...tournamentStatus(d.tournament.days, d.tournament.thrown), recoveryDays: tournamentRecoveryDays(d.tournament.thrown) } : null,
     highIntentPositionToday: highIntentPositionAllowed(d.athlete, d.startInDays === undefined ? null : -d.startInDays),
   };

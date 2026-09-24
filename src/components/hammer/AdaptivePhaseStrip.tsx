@@ -70,6 +70,9 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
       {(plan.ramps ?? []).map((r) => (
         <div key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line">{r.line}</div>
       ))}
+      {(plan.rampWarnings ?? []).map((w) => (
+        <div key={w} className="text-xs text-foreground" data-testid="ramp-warning">{w}</div>
+      ))}
       <button type="button" aria-expanded={open} onClick={onToggle} className="mt-1 inline-flex min-h-11 items-center text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
         Why this phase matters
       </button>

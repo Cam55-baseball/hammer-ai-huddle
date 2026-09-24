@@ -399,6 +399,8 @@ export interface AthletePhasePlan {
   disciplines: DisciplinePlan[];
   /** Ramp Law v1 — ramps running today, one plain line each. */
   ramps?: ActiveRamp[];
+  /** A ramp that cannot finish before the next game (it is never shortened). */
+  rampWarnings?: string[];
   /** v1.2 §C — offseason arc chosen by days (staff view). */
   arc?: { days: number; tier: ArcTier; lengths: { phase: PhaseKey; block: string; weeks: number }[]; rampDays: number };
 }
@@ -551,7 +553,13 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
   const base = planAthleteCore(input);
   if (!input.rampGap || !input.rampProfile) return base;
   const ramps = activeRamps({ today: input.today, gap: input.rampGap, profile: input.rampProfile, gameDates: input.gameDates ?? [] });
-  return ramps.length ? { ...base, ramps } : base;
+  if (!ramps.length) return base;
+  // Ramp Law §1: a ramp is never shortened. If it cannot finish before the next game, say so plainly.
+  const next = (input.gameDates ?? []).filter((g) => g > input.today).sort()[0] ?? null;
+  const NAME: Record<string, string> = { throwing: "Throwing", lifting: "Lifting", speed: "Speed", bat_speed: "Bat speed", conditioning: "Conditioning", jumps: "Jumps" };
+  const rampWarnings = next ? ramps.filter((r) => r.placed.dates[r.placed.dates.length - 1] >= next)
+    .map((r) => `${NAME[r.discipline]} build runs past your next game, so game work stays limited until it's done.`) : [];
+  return { ...base, ramps, ...(rampWarnings.length ? { rampWarnings } : {}) };
 }
 
 function planAthleteCore(input: AthletePhaseInput): AthletePhasePlan {
