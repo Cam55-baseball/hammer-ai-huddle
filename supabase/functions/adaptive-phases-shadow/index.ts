@@ -116,7 +116,10 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const today = typeof body.today === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.today) ? body.today : new Date().toISOString().slice(0, 10);
     const auth = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
-    const isService = auth === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // The daily cron calls with the project key; that key may only run the
+    // full shadow recompute (writes shadow tables only, never cards).
+    const isCron = body.all === true && auth === Deno.env.get("SUPABASE_ANON_KEY");
+    const isService = auth === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || isCron;
     let callerId: string | null = null;
     let staff = isService;
     if (!isService) {
