@@ -48,7 +48,7 @@ export interface ScheduledGame {
   ignored?: boolean | null;
   /** Opponent or title, for the card copy. */
   label?: string | null;
-  source: "gp_games" | "calendar_events";
+  source: "gp_games" | "calendar_events" | "timeline";
 }
 
 export interface DrivingGame {

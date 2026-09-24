@@ -36,6 +36,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 // the documented mapping, so the ceiling always compares like with like.
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
 import { resolveFeatures } from "../_shared/wic/flags/featureSwitches.ts";
+import { cancelledDates, dayEffect, type TimelineEntry } from "../_shared/wic/schedule/timeline.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
   locateInArc,
@@ -504,8 +505,33 @@ const handler = async (req: Request): Promise<Response> => {
     const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
+    // -------- Tell Hammers timeline (spec adaptive-phases-and-schedule-v1 §2) --------
+    // Read only when the athlete's switch is on. Off → empty list → every line
+    // below behaves exactly as before. Any read failure also degrades to empty.
+    let timelineEntries: TimelineEntry[] = [];
+    try {
+      const { data: thRows } = await admin
+        .from("wk_feature_switches")
+        .select("feature_key, mode, allowlist, updated_by")
+        .eq("feature_key", "tell_hammers");
+      if (resolveFeatures(thRows as any, user.id).tell_hammers === true) {
+        const { data: tl } = await admin
+          .from("schedule_timeline_entries")
+          .select("id, tag, start_date, end_date, dates, source, payload, summary, created_at, undone_at")
+          .eq("user_id", user.id)
+          .is("undone_at", null)
+          .lte("start_date", isoShift(planDate, 3))
+          .gte("end_date", isoShift(planDate, -3))
+          .limit(200);
+        timelineEntries = (tl ?? []) as TimelineEntry[];
+      }
+    } catch (_tlErr) {
+      timelineEntries = [];
+    }
+    const timelineCancelled = cancelledDates(timelineEntries);
+    const timelineToday = dayEffect(timelineEntries, planDate);
     const gameWindowRows: any[] = ((gamesToday ?? []) as any[]).filter(
-      (g: any) => g.ignored_for_training !== true,
+      (g: any) => g.ignored_for_training !== true && !timelineCancelled.has(String(g.game_date)),
     );
     const gamesOnPlanDate = gameWindowRows.filter((g: any) => String(g.game_date) === planDate);
     const isGameDay = gamesOnPlanDate.length > 0;
@@ -527,7 +553,7 @@ const handler = async (req: Request): Promise<Response> => {
         label: g.opponent_team ?? null,
         source: "gp_games" as const,
       })),
-      ...((calendarGames ?? []) as any[]).map((e: any) => ({
+      ...((calendarGames ?? []) as any[]).filter((e: any) => !timelineCancelled.has(String(e.event_date))).map((e: any) => ({
         id: e.id ?? null,
         date: String(e.event_date),
         time: e.start_time ?? null,
@@ -538,6 +564,20 @@ const handler = async (req: Request): Promise<Response> => {
         label: e.title ?? null,
         source: "calendar_events" as const,
       })),
+      // Timeline games / tournaments / big events inside the ±3-day window.
+      ...[-3, -2, -1, 0, 1, 2, 3].flatMap((n) =>
+        dayEffect(timelineEntries, isoShift(planDate, n)).games.map((g) => ({
+          id: g.id,
+          date: g.date,
+          time: null,
+          isStartingPitcher: false,
+          status: null,
+          declaredDoubleheader: false,
+          ignored: false,
+          label: g.label,
+          source: "timeline" as const,
+        })),
+      ),
     ];
     const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
     // Zero-exposure invariant input: the days in the last week on which the
@@ -587,7 +627,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Practice resolution (exact-date + recurring weekly) --------
     const planDow = new Date(`${planDate}T12:00:00Z`).getUTCDay();
-    const practiceRows: any[] = (practicesToday ?? []).filter((r: any) => {
+    const practiceRows: any[] = (timelineCancelled.has(planDate) ? [] : ((practicesToday ?? []) as any[]).concat(
+      timelineToday.practice ? [{ id: "timeline-practice", scheduled_date: planDate, practice_kind: "team", intensity: "standard", title: "Practice" }] : [],
+      timelineToday.travel ? [{ id: "timeline-travel", scheduled_date: planDate, practice_kind: "travel", intensity: "light", title: "Travel" }] : [],
+    )).filter((r: any) => {
       if (r.scheduled_date === planDate) return true;
       return !!r.recurring_active
         && Array.isArray(r.recurring_days)
@@ -1991,7 +2034,9 @@ const handler = async (req: Request): Promise<Response> => {
       // compound, no accessories, and no template back-fill. Building them and
       // then relying on the class filter let the Step 15 "a required category
       // must survive a cap" relaxation put a compound lift on a rest day.
-      const restDayToday = tcsAdjust?.removeLift === true;
+      // Tell Hammers HOLD ("I need a break" / "I'm travelling") takes the same
+      // recovery-day path — it can only ever make the day lighter.
+      const restDayToday = tcsAdjust?.removeLift === true || timelineToday.hold;
 
       // 2) Trunk primer — every session, rest day included. On a rest day the
       // class filter has already removed everything loaded, so what lands here
