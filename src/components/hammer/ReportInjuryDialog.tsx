@@ -8,6 +8,8 @@
  * text-box-first so athletes know exactly where to write what.
  */
 import { useEffect, useState } from "react";
+import { recordPain } from "@/lib/hammer/injury/recordPain";
+import { getTodayDate } from "@/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,

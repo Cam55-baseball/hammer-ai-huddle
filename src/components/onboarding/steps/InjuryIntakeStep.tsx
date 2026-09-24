@@ -5,6 +5,8 @@
  * missingness preserved per Phase 151 doctrine.
  */
 import { useState } from "react";
+import { recordPain } from "@/lib/hammer/injury/recordPain";
+import { getTodayDate } from "@/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

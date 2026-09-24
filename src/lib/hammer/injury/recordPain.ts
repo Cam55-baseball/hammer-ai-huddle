@@ -98,7 +98,7 @@ export async function recordPain(args: {
   if (worse) {
     const res = await reportInjury({
       userId: args.userId, region: args.region, severity: args.severity, side: args.side,
-      note: args.note, symptoms: args.symptoms, queryClient: args.queryClient,
+      note: args.note, symptoms: args.symptoms as any, queryClient: args.queryClient,
     });
     linkedRef = res.eventId;
   }
