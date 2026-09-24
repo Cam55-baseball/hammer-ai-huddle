@@ -148,7 +148,7 @@ export function TellHammersInbox() {
       setAskError(null);
     } else {
       setAskDraft(null);
-      setAskError(r.reason);
+      setAskError("reason" in r ? r.reason : null);
     }
   }
 
