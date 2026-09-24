@@ -255,7 +255,7 @@ describe("laws", () => {
     expect(block).not.toMatch(/\b(sets|reps|load|dose|movement_slug|intensity)\b/);
     const shadow = readFileSync("supabase/functions/adaptive-phases-shadow/index.ts", "utf8");
     const writes = [...shadow.matchAll(/from\("([a-z_]+)"\)\.(upsert|insert|update|delete)/g)].map((m) => m[1]);
-    expect(new Set(writes)).toEqual(new Set(["adaptive_phase_credit", "adaptive_phase_shadow"]));
+    expect(new Set(writes)).toEqual(new Set(["adaptive_phase_credit", "adaptive_phase_shadow", "phase_insights"]));
   });
 });
 
