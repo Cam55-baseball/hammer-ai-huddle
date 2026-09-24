@@ -82,6 +82,7 @@ import {
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { AdaptivePhaseStrip } from "@/components/hammer/AdaptivePhaseStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { ScheduledPriorityStrip } from "@/components/hammer/ScheduledPriorityStrip";
 

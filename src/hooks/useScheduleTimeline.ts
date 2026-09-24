@@ -176,6 +176,11 @@ export function announceChange(qc: ReturnType<typeof useQueryClient>, userId: st
   ]) {
     qc.invalidateQueries({ queryKey: [k] });
   }
+  // Adaptive phases re-plan on every schedule entry (shadow: stores only, no card change).
+  void supabase.functions
+    .invoke("adaptive-phases-shadow", { body: { trigger: "schedule_entry" } })
+    .then(() => qc.invalidateQueries({ queryKey: ["adaptive-phase-plan", userId] }))
+    .catch(() => undefined);
   if (reason !== null && typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(SCHEDULE_CHANGED_EVENT, { detail: { reason } }));
   }
