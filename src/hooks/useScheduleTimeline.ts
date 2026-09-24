@@ -15,6 +15,7 @@ import {
   type TimelineEntry,
   type TimelineSource,
 } from "../../supabase/functions/_shared/wic/schedule/timeline";
+import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featureSwitches";
 import type { EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { reportInjury } from "@/lib/hammer/injury/reportInjury";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
@@ -38,14 +39,10 @@ export function useTellHammersEnabled(): boolean {
     queryFn: async () => {
       const { data } = await supabase
         .from("wk_feature_switches" as any)
-        .select("mode, allowlist")
+        .select("feature_key, mode, allowlist, updated_by")
         .eq("feature_key", "tell_hammers")
         .maybeSingle();
-      const row = data as any;
-      if (!row || !user?.id) return false;
-      if (row.mode === "all") return true;
-      if ((row.mode === "pilot" || row.mode === "self") && Array.isArray(row.allowlist)) return row.allowlist.includes(user.id);
-      return false;
+      return isSwitchOnFor(data as any, user?.id ?? null);
     },
   });
   return q.data === true;
