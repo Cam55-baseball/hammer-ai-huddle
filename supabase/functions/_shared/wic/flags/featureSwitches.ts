@@ -30,6 +30,7 @@ export const FEATURE_KEYS = [
   "load_spike_protection",
   "tell_hammers",
   "adaptive_phases",
+  "phase_feedback",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];

@@ -24,6 +24,7 @@ import {
   type BucketTotal,
 } from "@/lib/hammer/staff/staffData";
 import { decisionSentences, rulesForDecision, type RuleEntry } from "@/lib/hammer/staff/evidence";
+import { StaffPhaseArc } from "@/components/hammer/StaffPhaseArc";
 
 type DecisionRow = {
   decision_date: string;
@@ -400,6 +401,9 @@ export default function StaffView() {
                 {!todayDecision && <p className="text-muted-foreground">No stored decision for today.</p>}
               </CardContent>
             </Card>
+
+            <StaffPhaseArc userId={openId} />
+
 
             <Card>
               <CardHeader className="pb-2">

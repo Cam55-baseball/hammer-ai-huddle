@@ -9768,6 +9768,39 @@ export type Database = {
         }
         Relationships: []
       }
+      phase_insights: {
+        Row: {
+          computed_on: string
+          created_at: string
+          id: string
+          report: Json
+          scope: string
+          updated_at: string
+          user_id: string | null
+          version: string
+        }
+        Insert: {
+          computed_on?: string
+          created_at?: string
+          id?: string
+          report?: Json
+          scope: string
+          updated_at?: string
+          user_id?: string | null
+          version: string
+        }
+        Update: {
+          computed_on?: string
+          created_at?: string
+          id?: string
+          report?: Json
+          scope?: string
+          updated_at?: string
+          user_id?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       physio_adult_tracking: {
         Row: {
           created_at: string

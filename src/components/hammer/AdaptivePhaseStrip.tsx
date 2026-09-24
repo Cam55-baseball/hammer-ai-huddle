@@ -4,10 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { isSwitchOnFor } from "../../../supabase/functions/_shared/wic/flags/featureSwitches";
 import {
-  PHASE_NAME, WHY_PHASE, GAME_READY_FLOOR, stripText, type AthletePhasePlan,
+  stripText, type AthletePhasePlan,
 } from "../../../supabase/functions/_shared/wic/phases/adaptivePhases";
 
-const DISC_LABEL: Record<string, string> = { lifting: "Lifting", throwing: "Throwing", speed: "Speed", bat_speed: "Bat speed" };
 
 /** §6 + v1.1 — one plain-words strip. Renders nothing unless adaptive_phases is on for this athlete. */
 export function AdaptivePhaseStrip() {
@@ -43,29 +42,18 @@ export function AdaptivePhaseStrip() {
   });
   const p = plan.data;
   if (!on || !p || !p.disciplines || !p.phase) return null;
+  return <PhaseStripView plan={p} open={open} onToggle={() => setOpen((o) => !o)} />;
+}
+
+/** Pure view (tested): the top line, then ONE collapsed "Why this phase matters" line. Nothing else. */
+export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={() => setOpen((o) => !o)}
-      className="w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-foreground"
-    >
-      <div className="font-medium">{stripText(p)}</div>
-      {open && (
-        <div className="mt-2 space-y-2 text-muted-foreground">
-          <p>{p.why}</p>
-          {p.disciplines.map((d) => (
-            <p key={d.discipline}>
-              <span className="font-medium text-foreground">{DISC_LABEL[d.discipline]}:</span> {d.why}
-              {d.hold && <span className="text-foreground"> On hold — {d.hold.reason}.</span>}
-            </p>
-          ))}
-          {p.next && p.next !== p.phase && <p>Next, {PHASE_NAME[p.next]}: {WHY_PHASE[p.next]}</p>}
-          {p.gameReadyFloor && <p>Every week you might play: {GAME_READY_FLOOR.join(", ").toLowerCase()}.</p>}
-          {p.shortened.map((s) => (
-            <p key={s.phase}>{PHASE_NAME[s.phase]} is shorter this time. {s.reason}</p>
-          ))}
-        </div>
-      )}
-    </button>
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" data-testid="phase-strip">
+      <div className="font-medium">{stripText(plan)}</div>
+      <button type="button" aria-expanded={open} onClick={onToggle} className="mt-1 text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
+        Why this phase matters
+      </button>
+      {open && <p className="mt-1 text-muted-foreground" data-testid="phase-why">{plan.why}</p>}
+    </div>
   );
 }

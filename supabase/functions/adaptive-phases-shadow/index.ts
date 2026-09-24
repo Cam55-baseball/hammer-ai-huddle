@@ -8,6 +8,60 @@ import {
   planAthlete, addDays, type WeekRecord, type Discipline, type PhaseKey, type Goal, type ScheduleAnswer, type SeasonState,
 } from "../_shared/wic/phases/adaptivePhases.ts";
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
+import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
+import {
+  OUTCOMES_VERSION, METRIC_KEYS, LOWER_IS_BETTER, OUTCOME_METRICS, outcomeLinks, stepFeedback, defaultFeedback, painPatterns,
+  type OutcomeObs, type PainObs, type FeedbackState, type OutcomeMetric,
+} from "../_shared/wic/phases/outcomes.ts";
+
+/** Stage C — outcome links, bounded feedback and pain patterns. Writes ONLY phase_insights. */
+async function stageC(admin: any, today: string, ids: string[]) {
+  const since = addDays(today, -365);
+  const [tests, credit, pains, shadows, prev] = await Promise.all([
+    admin.from("vault_performance_tests").select("user_id,test_date,results").gte("test_date", since).order("test_date"),
+    admin.from("adaptive_phase_credit").select("user_id,phase,week_start,sessions_done,sessions_prescribed").gte("week_start", since),
+    admin.from("schedule_timeline_entries").select("user_id,start_date,payload").eq("tag", "PAIN").is("undone_at", null).gte("start_date", since),
+    admin.from("adaptive_phase_shadow").select("user_id,plan_date,plan").gte("plan_date", since),
+    admin.from("phase_insights").select("report").eq("scope", "owner").order("computed_on", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const byUser = new Map<string, any[]>();
+  for (const t of tests.data ?? []) byUser.set(t.user_id, [...(byUser.get(t.user_id) ?? []), t]);
+  const obs: OutcomeObs[] = [];
+  for (const [uid, rows] of byUser) {
+    for (let i = 1; i < rows.length; i++) {
+      const a = rows[i - 1], b = rows[i];
+      const cr = (credit.data ?? []).filter((c: any) => c.user_id === uid && c.week_start >= a.test_date && c.week_start < b.test_date);
+      const phaseWeeks = new Set(cr.map((c: any) => c.week_start)).size;
+      const pres = cr.reduce((s: number, c: any) => s + c.sessions_prescribed, 0);
+      const adherence = pres ? cr.reduce((s: number, c: any) => s + c.sessions_done, 0) / pres : 0;
+      const spacingDays = phaseWeeks && pres ? (phaseWeeks * 7) / Math.max(1, pres / Math.max(1, new Set(cr.map((c: any) => c.phase)).size)) : 0;
+      for (const m of OUTCOME_METRICS) {
+        const k = METRIC_KEYS[m].find((key) => typeof a.results?.[key] === "number" && typeof b.results?.[key] === "number" && a.results[key] > 0);
+        if (!k) continue;
+        let pct = ((b.results[k] - a.results[k]) / a.results[k]) * 100;
+        if (LOWER_IS_BETTER[m as OutcomeMetric]) pct = -pct;
+        obs.push({ athlete: uid, metric: m as OutcomeMetric, changePct: pct, phaseWeeks, adherence, spacingDays });
+      }
+    }
+  }
+  const links = outcomeLinks(obs);
+  const prevFb: FeedbackState = prev.data?.report?.feedback ?? defaultFeedback();
+  const isMonday = new Date(today + "T00:00:00Z").getUTCDay() === 1;
+  // Comparison of adjusted vs default needs athletes who actually trained on adjusted shares; none until the switch is on.
+  const feedback = isMonday ? stepFeedback(prevFb, links, { adjustedMeanPct: null, defaultMeanPct: null, n: 0 }, today) : prevFb;
+
+  const phaseOn = (uid: string, d: string) => {
+    const s = (shadows.data ?? []).filter((x: any) => x.user_id === uid && x.plan_date <= d).sort((x: any, y: any) => y.plan_date.localeCompare(x.plan_date))[0];
+    return s?.plan?.phaseName ?? null;
+  };
+  const painObs: PainObs[] = (pains.data ?? []).map((p: any) => ({ athlete: p.user_id, date: p.start_date, region: String(p.payload?.region ?? "unspecified"), severity: String(p.payload?.severity ?? ""), phase: phaseOn(p.user_id, p.start_date) }));
+  const ownerPatterns = painPatterns(painObs, "owner");
+  await admin.from("phase_insights").delete().eq("scope", "owner").eq("computed_on", today);
+  await admin.from("phase_insights").insert({ scope: "owner", user_id: null, computed_on: today, version: OUTCOMES_VERSION, report: { links, feedback, painPatterns: ownerPatterns, observations: obs.length } });
+  const athleteRows = ids.map((uid) => ({ scope: "athlete", user_id: uid, computed_on: today, version: OUTCOMES_VERSION, report: { painPatterns: painPatterns(painObs.filter((p) => p.athlete === uid), "athlete") } }));
+  for (let i = 0; i < athleteRows.length; i += 200) await admin.from("phase_insights").upsert(athleteRows.slice(i, i + 200), { onConflict: "scope,user_id,computed_on" });
+  return { links: links.filter((l) => l.confidence !== "not enough data").length, observations: obs.length, feedbackVersion: feedback.version, feedbackEnabled: feedback.enabled, ownerPatterns: ownerPatterns.length };
+}
 
 const SLOT_DISC: Record<string, Discipline> = { lift: "lifting", speed: "speed", bat_speed: "bat_speed", throwing: "throwing" };
 const BLOCK_PHASE: Record<string, PhaseKey> = { B1: "P1", B2: "P1", B4: "P2", B5: "P3" };
@@ -34,7 +88,7 @@ function goalOf(ctx: any): Goal {
   return null;
 }
 
-async function planOne(admin: any, userId: string, today: string, trigger: string) {
+async function planOne(admin: any, userId: string, today: string, trigger: string, shares?: Record<"P1" | "P2" | "P3", number>) {
   const since = addDays(today, -26 * 7);
   const [rx, done, mpi, ctx, tl, games, pains, pastGames, pastTl, answers] = await Promise.all([
     admin.from("wk_prescriptions").select("plan_date,slot,why_payload").eq("user_id", userId).gte("plan_date", since).lte("plan_date", today),
@@ -122,7 +176,7 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
     today, seasonState: SEASON_MAP[season?.phase ?? "off_season"] ?? "offseason",
     lastGameDate, hardDate: hard?.d ?? null, hardDateLabel: hard?.label ?? null, hardDateIsGame: hard?.game ?? false,
     yearRound: !!yearRound, offDaysInWindow: offDays, holdToday, holds, weeksIntoSeason, records,
-    scheduleAnswer, likelyNextGame: likely && likely > today ? likely : null,
+    scheduleAnswer, likelyNextGame: likely && likely > today ? likely : null, shares,
     need: { goal: goalOf(ctx.data), benchmarkGapPhase: null, openPain: (pains.data ?? []).length > 0 },
   });
   await admin.from("adaptive_phase_shadow").upsert(
@@ -160,12 +214,18 @@ Deno.serve(async (req) => {
       for (const r of a ?? []) ids.add(r.user_id);
       const { data: b } = await admin.from("wk_prescriptions").select("user_id").gte("plan_date", addDays(today, -60));
       for (const r of b ?? []) ids.add(r.user_id);
+      const { data: sw } = await admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "phase_feedback").maybeSingle();
+      const { data: lastOwner } = await admin.from("phase_insights").select("report").eq("scope", "owner").order("computed_on", { ascending: false }).limit(1).maybeSingle();
+      const fb = lastOwner?.report?.feedback;
       const out: any[] = [];
       for (const id of ids) {
-        try { out.push({ user_id: id, plan: await planOne(admin, id, today, "daily") }); }
+        const shares = fb?.enabled && isSwitchOnFor(sw as any, id) ? fb.shares : undefined;
+        try { out.push({ user_id: id, plan: await planOne(admin, id, today, "daily", shares) }); }
         catch (e) { out.push({ user_id: id, error: String(e) }); }
       }
-      return json({ count: out.length, results: out });
+      let stage_c: any = null;
+      try { stage_c = await stageC(admin, today, [...ids]); } catch (e) { stage_c = { error: String(e) }; }
+      return json({ count: out.length, stage_c, results: out });
     }
     const target = staff && body.user_id ? body.user_id : callerId;
     if (!target) return json({ error: "user_id required" }, 400);

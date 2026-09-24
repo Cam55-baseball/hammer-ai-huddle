@@ -151,9 +151,15 @@ export interface PhaseSegment {
   noNewHeavy: boolean;
   /** Pre-game sharpening week only — not a restart of a finished phase. */
   sharpenOnly?: boolean;
+  /** v1.2 §C — what job this block does inside its phase. */
+  block?: string;
+  /** v1.2 §C — the sharpening week that is also the first week of the ramp. */
+  foldedIntoRamp?: boolean;
 }
 
 export interface AllocationInput {
+  /** Stage C bounded feedback shares (only when phase_feedback is on). */
+  shares?: Record<BuildPhase, number>;
   windowWeeks: number | null; // null → no hard date on file
   hardDateLabel: string | null;
   credit: Record<BuildPhase, number>;
@@ -259,9 +265,10 @@ export function allocateWindow(input: AllocationInput): Allocation {
 
   // W ≥ 7 → share, clamp to (remaining) minimums, remainder to priority need.
   const active = pending.length ? pending : (["P3"] as BuildPhase[]);
-  const shareSum = active.reduce((a, p) => a + SHARE[p], 0);
+  const SH = input.shares ?? SHARE;
+  const shareSum = active.reduce((a, p) => a + SH[p], 0);
   const weeks: Record<string, number> = {};
-  for (const p of active) weeks[p] = Math.max(remainingMin(p, credit), Math.floor((SHARE[p] / shareSum) * w));
+  for (const p of active) weeks[p] = Math.max(remainingMin(p, credit), Math.floor((SH[p] / shareSum) * w));
   let used = active.reduce((a, p) => a + weeks[p], 0);
   // Over budget: trim the largest above its remaining minimum.
   while (used > w) {
@@ -298,6 +305,8 @@ export interface DisciplineHold {
 }
 
 export interface AthletePhaseInput {
+  /** Stage C bounded feedback shares — only passed when the phase_feedback switch is on. */
+  shares?: Record<BuildPhase, number>;
   today: string;
   /** ONE season state from settings (v1.1 §A). Flowing play can lift it to in_season (§B). */
   seasonState: SeasonState;
@@ -381,6 +390,8 @@ export interface AthletePhasePlan {
   hardDate: string | null;
   why: string;
   disciplines: DisciplinePlan[];
+  /** v1.2 §C — offseason arc chosen by days (staff view). */
+  arc?: { days: number; tier: ArcTier; lengths: { phase: PhaseKey; block: string; weeks: number }[]; rampDays: number };
 }
 
 const ROTATION = ["strength", "speed", "sharpen"] as const;
@@ -443,6 +454,89 @@ function allocateShortArc(w: number): PhaseSegment[] {
 }
 
 const RAMP_NOTE = " The re-entry ramp keeps its full length, so this phase gave way.";
+
+// ---------------------------------------------------------------- v1.2 §C offseason arc by days
+
+export type ArcTier = "full" | "compressed" | "three_phase" | "two_phase" | "bridge";
+export const ARC_TIER_NAME: Record<ArcTier, string> = {
+  full: "Full arc", compressed: "Full arc, compressed", three_phase: "Three phases", two_phase: "Two phases", bridge: "Bridge",
+};
+export const ABSORB_MIN_WEEKS = 2;
+
+export function arcTierFor(days: number): ArcTier {
+  if (days >= 140) return "full";
+  if (days >= 98) return "compressed";
+  if (days >= 56) return "three_phase";
+  if (days >= 28) return "two_phase";
+  return "bridge";
+}
+
+/**
+ * Different lengths are different jobs (not one shape stretched).
+ * Returns the build segments and the ramp length (days) before the game.
+ * The re-entry ramp never drops below its v1.1 minimum (10 days after 6+ weeks
+ * without play); in the three-phase tier its first week IS the sharpening week.
+ */
+export function arcForDays(days: number, credit: Record<BuildPhase, number>, need: NeedInput, label: string):
+  { tier: ArcTier; segments: PhaseSegment[]; rampDays: number; buildWeeks: number; mode?: PlanMode } {
+  const tier = arcTierFor(days);
+  const done = (p: BuildPhase) => credit[p] >= MIN_WEEKS[p];
+  const why = (w: number) => `Only ${w} week${w === 1 ? "" : "s"} before ${label}.`;
+  if (tier === "full" || tier === "compressed") {
+    const rampDays = tier === "full" ? 14 : 10;
+    const W = Math.floor((days - rampDays) / 7);
+    const segs: PhaseSegment[] = [];
+    if (tier === "full") {
+      // True absorb block and a full explosiveness block.
+      let absorb = done("P1") ? 0 : Math.max(ABSORB_MIN_WEEKS + 1, Math.round(W * 0.2));
+      let cap = done("P1") ? 0 : Math.max(MIN_WEEKS.P1 - ABSORB_MIN_WEEKS, Math.round(W * 0.25));
+      let p2 = done("P2") ? 0 : Math.max(MIN_WEEKS.P2, Math.round(W * 0.25));
+      let p3 = W - absorb - cap - p2;
+      if (p3 < 4) { const give = 4 - p3; p2 = Math.max(MIN_WEEKS.P2, p2 - give); p3 = W - absorb - cap - p2; }
+      if (absorb) segs.push(seg("P1", absorb, { block: "Absorb" }));
+      if (cap) segs.push(seg("P1", cap, { block: "Capacity" }));
+      if (p2) segs.push(seg("P2", p2, { block: "Heavy and banded" }));
+      segs.push(seg("P3", p3, { block: "Full explosiveness", endsWithSharpen: true }));
+    } else {
+      // Absorb and explosiveness keep their minimums; the middle takes the squeeze.
+      const absorb = done("P1") ? 0 : ABSORB_MIN_WEEKS;
+      const p3 = MIN_WEEKS.P3;
+      let rest = W - absorb - p3;
+      const capMin = done("P1") ? 0 : Math.max(1, MIN_WEEKS.P1 - ABSORB_MIN_WEEKS);
+      const p2Min = done("P2") ? 0 : MIN_WEEKS.P2;
+      let cap = capMin, p2 = p2Min;
+      rest -= cap + p2;
+      const prio = rankNeed(need, credit).find((p) => (p === "P1" && capMin) || (p === "P2" && p2Min) || p === "P3") ?? "P2";
+      let p3x = p3;
+      while (rest-- > 0) { if (prio === "P1" && capMin) cap++; else if (prio === "P2" && p2Min) p2++; else p3x++; }
+      if (absorb) segs.push(seg("P1", absorb, { block: "Absorb" }));
+      if (cap) segs.push(seg("P1", cap, { block: "Capacity" }));
+      if (p2) segs.push(seg("P2", p2, { block: "Heavy and banded" }));
+      segs.push(seg("P3", p3x, { block: "Explosiveness", endsWithSharpen: true }));
+    }
+    for (const p of BUILD) {
+      const tot = segs.filter((x) => x.phase === p).reduce((a, x) => a + x.weeks, 0);
+      if (tot > 0 && tot < remainingMin(p, credit)) for (const x of segs) if (x.phase === p) { x.shortened = true; x.shortenedReason = why(W); }
+    }
+    return { tier, segments: segs, rampDays, buildWeeks: W };
+  }
+  if (tier === "three_phase") {
+    // Sport ramp folded into the sharpening week: ramp = sharpen week + 3 days.
+    const W = Math.floor((days - 3) / 7);
+    const a = allocateWindow({ windowWeeks: W, hardDateLabel: label, credit, need });
+    const segs: PhaseSegment[] = a.segments.map((x) => ({ ...x, block: x.phase === "P1" ? "Base" : x.phase === "P2" ? "Power" : "Explosiveness" }));
+    const last = [...segs].reverse().find((x) => x.weeks > 0);
+    if (last) { last.endsWithSharpen = true; last.foldedIntoRamp = true; }
+    return { tier, segments: segs, rampDays: days - (W - 1) * 7, buildWeeks: W };
+  }
+  const rampDays = Math.min(days, 10);
+  const W = Math.max(0, Math.floor((days - 10) / 7));
+  const a = allocateWindow({ windowWeeks: W, hardDateLabel: label, credit, need });
+  const segs: PhaseSegment[] = a.segments.map((x) => ({ ...x, block: tier === "bridge" ? (x.endsWithSharpen ? "Sharpen" : "Capacity") : undefined }));
+  if (W === 0) segs.push(seg("P1", 0, { shortened: true, shortenedReason: `No room for a block before ${label} — the re-entry ramp comes first.` }));
+  else for (const x of segs) if (x.shortened && !x.shortenedReason) x.shortenedReason = why(W);
+  return { tier, segments: segs, rampDays: days - W * 7 > 0 ? days - W * 7 : rampDays, buildWeeks: W, mode: W === 0 ? "bridge" : a.mode };
+}
 
 export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
   const ledger = buildCreditLedger(input.records, input.today);
@@ -539,7 +633,7 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
   // Days available before the game (game day excluded), less planned off days.
   const avail = Math.max(0, untilTarget! - Math.max(0, input.offDaysInWindow));
   const calendarShort = avail < rampRule.min;
-  let weeks = calendarShort ? 0 : Math.floor((avail - rampRule.min) / 7);
+  let weeks: number = calendarShort ? 0 : Math.floor((avail - rampRule.min) / 7);
   let rampDays = calendarShort ? avail : avail - weeks * 7;
   if (rampRule.max !== null && rampDays > rampRule.max) rampDays = rampRule.max; // spare days fall to the week before
   const ramp = buildRamp(today, target, Math.max(0, Math.min(rampDays, untilTarget!)), rampRule.min, calendarShort);
@@ -562,11 +656,22 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
   // ≥ 42 with a known last game (break, injury, postponement) → full short arc
   let segs: PhaseSegment[];
   let mode: PlanMode;
+  let arcInfo: { days: number; tier: ArcTier } | null = null;
+  let rampOut = ramp;
   if (gap! >= 42 && input.lastGameDate && weeks >= 3) {
     segs = allocateShortArc(weeks);
     mode = "short_arc";
+  } else if (gap! >= 42 && !input.lastGameDate && !calendarShort) {
+    // v1.2 §C — a true offseason: the arc's shape is chosen by the days available.
+    const arc = arcForDays(avail, credit, input.need, label);
+    segs = arc.segments;
+    mode = arc.mode ?? "full_arc";
+    weeks = arc.buildWeeks;
+    const rd = arc.segments.some((x) => x.foldedIntoRamp) ? arc.rampDays : Math.max(rampRule.min, avail - arc.buildWeeks * 7 > rampRule.max! ? arc.rampDays : avail - arc.buildWeeks * 7);
+    rampOut = buildRamp(today, target, Math.min(rd, untilTarget!), rampRule.min, false);
+    arcInfo = { days: avail, tier: arc.tier };
   } else {
-    const alloc = allocateWindow({ windowWeeks: weeks, hardDateLabel: label, credit, need: input.need });
+    const alloc = allocateWindow({ windowWeeks: weeks, hardDateLabel: label, credit, need: input.need, shares: input.shares });
     segs = alloc.segments;
     mode = alloc.mode;
     // Weeks the ramp took from the window: say so on anything cut short.
@@ -578,7 +683,8 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
   if (weeks === 0 && !segs.some((s) => s.shortened)) {
     segs = [seg("P1", 0, { shortened: true, shortenedReason: `No room for a block before ${label} — the re-entry ramp comes first.` })];
   }
-  return finish({ mode, segments: segs, after: "P4", ramp, floor: untilTarget! <= 7, windowWeeks: weeks });
+  const out = finish({ mode, segments: segs, after: "P4", ramp: rampOut, floor: untilTarget! <= 7, windowWeeks: weeks });
+  return arcInfo ? { ...out, arc: { days: arcInfo.days, tier: arcInfo.tier, lengths: segs.filter((x) => x.weeks > 0).map((x) => ({ phase: x.phase, block: x.block ?? PHASE_NAME[x.phase], weeks: x.weeks })), rampDays: rampOut.days } } : out;
 }
 
 /** v1.1 §A invariant: no two disciplines in different phases (holds never change the phase). */

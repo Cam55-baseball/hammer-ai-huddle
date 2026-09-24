@@ -17,7 +17,7 @@ import {
 } from "../../supabase/functions/_shared/wic/schedule/timeline";
 import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featureSwitches";
 import type { EntryDraft } from "@/lib/hammer/tellHammers/parse";
-import { reportInjury } from "@/lib/hammer/injury/reportInjury";
+import { recordPain } from "@/lib/hammer/injury/recordPain";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
 
 export const TIMELINE_QUERY_KEY = "schedule-timeline";
@@ -109,20 +109,18 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       const otherGames = await gameDatesOutsideTimeline();
       const heavyBefore = nextHeavyDay(entries, otherGames, today);
 
-      let linkedRef: string | null = null;
       if (draft.tag === "PAIN") {
-        // Pain always runs through the existing pain rules — never a lighter path.
+        // v1.2 §A: every pain goes through the one pain recorder (same record, same rules).
         const face = String(draft.payload.face ?? "little") as keyof typeof FACE_SEVERITY;
-        const res = await reportInjury({
-          userId: user.id,
-          region: draft.payload.region as any,
-          severity: FACE_SEVERITY[face] ?? "sore",
-          note: "Reported through Tell Hammers",
-          queryClient: qc,
+        const r = await recordPain({
+          userId: user.id, region: draft.payload.region as any, severity: FACE_SEVERITY[face] ?? "sore",
+          origin: source === "ask_hammer" ? "tell_hammers" : ((draft.payload.origin as any) ?? "tell_hammers"),
+          date: draft.start_date, note: "Reported through Tell Hammers", queryClient: qc,
         });
-        linkedRef = res.eventId;
+        const message = r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.";
+        return { merged: r.merged, entry: { ...draft, id: r.entryId, source: "inbox", summary: message, created_at: new Date().toISOString(), undone_at: null } as TimelineEntry, message };
       }
-
+      const linkedRef: string | null = null;
       const provisional = { ...draft, id: "new", source, summary: "", created_at: new Date().toISOString(), undone_at: null } as TimelineEntry;
       const heavyAfter = nextHeavyDay([provisional, ...entries], otherGames, today);
       const { data, error } = await (supabase as any).rpc("tell_hammers_save", {

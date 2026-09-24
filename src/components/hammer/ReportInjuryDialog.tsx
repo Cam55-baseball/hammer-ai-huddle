@@ -8,6 +8,8 @@
  * text-box-first so athletes know exactly where to write what.
  */
 import { useEffect, useState } from "react";
+import { recordPain } from "@/lib/hammer/injury/recordPain";
+import { getTodayDate } from "@/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -23,7 +25,6 @@ import { toast } from "sonner";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import {
   REPORT_INJURY_REGIONS,
-  reportInjury,
   type ReportInjuryRegionKey,
   type ReportInjurySeverity,
 } from "@/lib/hammer/injury/reportInjury";
@@ -96,10 +97,12 @@ export function ReportInjuryDialog({
     if (!canSubmit || !user || !region || !severity) return;
     setBusy(true);
     try {
-      const { eventId } = await reportInjury({
+      const { entryId: eventId } = await recordPain({
         userId: user.id,
         region,
         severity,
+        origin: "report_dialog",
+        date: getTodayDate(),
         note: note.trim() || undefined,
         queryClient: qc,
       });
