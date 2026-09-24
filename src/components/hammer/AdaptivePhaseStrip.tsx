@@ -8,10 +8,9 @@ import {
 } from "../../../supabase/functions/_shared/wic/phases/adaptivePhases";
 
 
-/** §6 + v1.1 — one plain-words strip. Renders nothing unless adaptive_phases is on for this athlete. */
-export function AdaptivePhaseStrip() {
+/** The athlete's latest phase plan — null unless adaptive_phases is on for them. */
+export function useAdaptivePlan(): AthletePhasePlan | null {
   const { user } = useOptionalAuth();
-  const [open, setOpen] = useState(false);
   const sw = useQuery({
     queryKey: ["feature-switch", "adaptive_phases", user?.id],
     enabled: !!user?.id,
@@ -41,8 +40,26 @@ export function AdaptivePhaseStrip() {
     },
   });
   const p = plan.data;
-  if (!on || !p || !p.disciplines || !p.phase) return null;
+  return on && p && p.disciplines && p.phase ? p : null;
+}
+
+/** §6 + v1.1 — one plain-words strip. Renders nothing unless adaptive_phases is on for this athlete. */
+export function AdaptivePhaseStrip() {
+  const [open, setOpen] = useState(false);
+  const p = useAdaptivePlan();
+  if (!p) return null;
   return <PhaseStripView plan={p} open={open} onToggle={() => setOpen((o) => !o)} />;
+}
+
+/** Ramp Law §5 — the weekly card's ramp lines. Nothing when no ramp is running. */
+export function RampLines() {
+  const p = useAdaptivePlan();
+  if (!p?.ramps?.length) return null;
+  return (
+    <div className="space-y-0.5 px-1 text-xs text-foreground" data-testid="weekly-ramp-lines">
+      {p.ramps.map((r) => <div key={r.discipline}>{r.line}</div>)}
+    </div>
+  );
 }
 
 /** Pure view (tested): the top line, then ONE collapsed "Why this phase matters" line. Nothing else. */
