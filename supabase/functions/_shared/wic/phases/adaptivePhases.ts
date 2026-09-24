@@ -158,6 +158,8 @@ export interface PhaseSegment {
 }
 
 export interface AllocationInput {
+  /** Stage C bounded feedback shares (only when phase_feedback is on). */
+  shares?: Record<BuildPhase, number>;
   windowWeeks: number | null; // null → no hard date on file
   hardDateLabel: string | null;
   credit: Record<BuildPhase, number>;
@@ -263,9 +265,10 @@ export function allocateWindow(input: AllocationInput): Allocation {
 
   // W ≥ 7 → share, clamp to (remaining) minimums, remainder to priority need.
   const active = pending.length ? pending : (["P3"] as BuildPhase[]);
-  const shareSum = active.reduce((a, p) => a + SHARE[p], 0);
+  const SH = input.shares ?? SHARE;
+  const shareSum = active.reduce((a, p) => a + SH[p], 0);
   const weeks: Record<string, number> = {};
-  for (const p of active) weeks[p] = Math.max(remainingMin(p, credit), Math.floor((SHARE[p] / shareSum) * w));
+  for (const p of active) weeks[p] = Math.max(remainingMin(p, credit), Math.floor((SH[p] / shareSum) * w));
   let used = active.reduce((a, p) => a + weeks[p], 0);
   // Over budget: trim the largest above its remaining minimum.
   while (used > w) {
@@ -666,7 +669,7 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
     rampOut = buildRamp(today, target, Math.min(rd, untilTarget!), rampRule.min, false);
     arcInfo = { days: avail, tier: arc.tier };
   } else {
-    const alloc = allocateWindow({ windowWeeks: weeks, hardDateLabel: label, credit, need: input.need });
+    const alloc = allocateWindow({ windowWeeks: weeks, hardDateLabel: label, credit, need: input.need, shares: input.shares });
     segs = alloc.segments;
     mode = alloc.mode;
     // Weeks the ramp took from the window: say so on anything cut short.
