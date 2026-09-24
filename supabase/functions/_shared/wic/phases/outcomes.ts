@@ -96,7 +96,7 @@ export function linkText(l: Omit<OutcomeLink, "text">): string {
     return `Not enough data yet to link ${FACTOR_NAME[l.factor]} with ${METRIC_NAME[l.metric]} (${l.athletes} athletes, ${l.pairs} test pairs; need ${MIN_ATHLETES} and ${MIN_PAIRS}).`;
   }
   const dir = (l.r ?? 0) > 0.1 ? "tended to go with bigger gains in" : (l.r ?? 0) < -0.1 ? "tended to go with smaller gains in" : "showed no clear link with";
-  return `Among ${l.athletes} athletes, more ${FACTOR_NAME[l.factor]} ${dir} ${METRIC_NAME[l.metric]} (${l.confidence} confidence). This is a pattern in our data, not proof of cause.`;
+  return `Among ${l.athletes} athletes, more ${FACTOR_NAME[l.factor]} ${dir} ${METRIC_NAME[l.metric]} (${l.confidence} confidence). This is a pattern in our data only.`;
 }
 
 export function outcomeLinks(obs: OutcomeObs[]): OutcomeLink[] {
@@ -211,8 +211,8 @@ export function painPatterns(obs: PainObs[], scope: "owner" | "athlete"): PainPa
     const text = !enough
       ? `${rows.length} ${pretty(region)} report${rows.length === 1 ? "" : "s"} so far — not enough to see a pattern.`
       : scope === "athlete"
-        ? `You've reported ${pretty(region)} ${rows.length} times, most often during ${top[0] === "unknown" ? "unlabelled weeks" : top[0]}. This is a pattern, not a diagnosis — tell a coach or parent.`
-        : `${rows.length} ${pretty(region)} reports from ${per.size} athletes (${repeatAthletes} more than once), most often during ${top[0]} (${confidence} confidence). A pattern in reports, not a cause.`;
+        ? `You've reported ${pretty(region)} ${rows.length} times, most often during ${top[0] === "unknown" ? "unlabelled weeks" : top[0]}. This is only a pattern in what you have told us — tell a coach or parent.`
+        : `${rows.length} ${pretty(region)} reports from ${per.size} athletes (${repeatAthletes} more than once), most often during ${top[0]} (${confidence} confidence). A pattern in reports only.`;
     out.push({ region, reports: rows.length, athletes: per.size, repeatAthletes, byPhase, confidence, text });
   }
   return out.sort((a, b) => b.reports - a.reports);
