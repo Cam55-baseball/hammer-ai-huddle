@@ -446,7 +446,7 @@ const App = () => {
               <Route path="/owner/iq/situations" element={<IqSituationsAuthoring />} />
               <Route path="/owner/workouts/library" element={<WorkoutLibraryViewer />} />
               <Route path="/owner/landing-demo" element={<LandingDemoManager />} />
-              <Route path="/owner/presentation" element={<PresentationDemo />} />
+              <Route path="/owner/presentation" element={<StaffOnlyRoute><PresentationDemo /></StaffOnlyRoute>} />
               <Route path="/owner/moderation" element={<StaffOnlyRoute><ModerationQueue /></StaffOnlyRoute>} />
 
 
