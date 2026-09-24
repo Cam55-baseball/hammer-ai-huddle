@@ -18,6 +18,7 @@ import { SeasonScheduleImporterDialog } from "@/components/hammer/SeasonSchedule
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { ManageEventsDialog } from "@/components/hammer/ManageEventsDialog";
 import { AddPracticeDialog } from "@/components/hammer/AddPracticeDialog";
+import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 
 const PHASE_TONE: Record<string, string> = {
   preseason: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
@@ -41,6 +42,7 @@ export function HammerScheduleStrip() {
 
   return (
     <>
+      <TellHammersInbox />
       <Card className="border-border/60">
         <CardContent className="p-3 space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">

@@ -10890,6 +10890,54 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_timeline_entries: {
+        Row: {
+          created_at: string
+          dates: string[] | null
+          end_date: string
+          id: string
+          linked_ref: string | null
+          payload: Json
+          source: string
+          start_date: string
+          summary: string
+          tag: string
+          undone_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dates?: string[] | null
+          end_date: string
+          id?: string
+          linked_ref?: string | null
+          payload?: Json
+          source?: string
+          start_date: string
+          summary?: string
+          tag: string
+          undone_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dates?: string[] | null
+          end_date?: string
+          id?: string
+          linked_ref?: string | null
+          payload?: Json
+          source?: string
+          start_date?: string
+          summary?: string
+          tag?: string
+          undone_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_practice_sessions: {
         Row: {
           assignment_scope: string | null
@@ -18835,6 +18883,20 @@ export type Database = {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
         Returns: number
       }
+      tell_hammers_save: {
+        Args: {
+          p_dates: string[]
+          p_end: string
+          p_linked_ref?: string
+          p_payload: Json
+          p_source: string
+          p_start: string
+          p_summary: string
+          p_tag: string
+        }
+        Returns: Json
+      }
+      tell_hammers_undo: { Args: { p_id: string }; Returns: boolean }
       try_acquire_hie_lock: {
         Args: { p_stale_seconds?: number; p_user_id: string }
         Returns: boolean

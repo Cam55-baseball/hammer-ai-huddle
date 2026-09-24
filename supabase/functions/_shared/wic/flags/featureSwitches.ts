@@ -28,6 +28,7 @@ export const FEATURE_KEYS = [
   "in_season_post_game",
   "personalization",
   "load_spike_protection",
+  "tell_hammers",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
