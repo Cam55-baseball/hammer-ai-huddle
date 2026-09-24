@@ -1,5 +1,7 @@
 /**
- * Adaptive phases v1 — spec docs/wic/adaptive-phases-and-schedule-v1.md §3–§6, §10.
+ * Adaptive phases v1.1 — docs/wic/adaptive-phases-and-schedule-v1.md §3–§6, §10,
+ * amended by docs/wic/adaptive-phases-and-schedule-v1.1.md (one season state,
+ * one phase, season continuity, re-entry ramp, unknown schedule, the why).
  *
  * Pure. No I/O. Deterministic. Shared by the shadow job, the client strip and
  * tests. Decides WHICH phase each discipline sits in and for how long. It never
@@ -7,7 +9,7 @@
  * onto the existing arc blocks (§3) and the block engine keeps every law.
  */
 
-export const ADAPTIVE_PHASES_VERSION = "adaptive_phases_v1";
+export const ADAPTIVE_PHASES_VERSION = "adaptive_phases_v1_1";
 
 export type Discipline = "lifting" | "throwing" | "speed" | "bat_speed";
 export const DISCIPLINES: readonly Discipline[] = ["lifting", "throwing", "speed", "bat_speed"];
@@ -136,7 +138,7 @@ export function rankNeed(need: NeedInput, credit: Record<BuildPhase, number>): B
 
 // ---------------------------------------------------------------- allocation
 
-export type PlanMode = "full_arc" | "two_phase" | "bridge" | "in_season" | "year_round" | "mini_block" | "short_arc";
+export type PlanMode = "full_arc" | "two_phase" | "bridge" | "in_season" | "year_round" | "mini_block" | "short_arc" | "maintenance";
 
 export interface PhaseSegment {
   phase: PhaseKey;
@@ -283,51 +285,99 @@ export function allocateWindow(input: AllocationInput): Allocation {
   return { mode: "full_arc", completed, segments: out };
 }
 
-// ---------------------------------------------------------------- per athlete
+// ---------------------------------------------------------------- v1.1 per athlete
+
+export type SeasonState = "offseason" | "preseason" | "in_season" | "post_season";
+export type ScheduleAnswer = "this_week" | "2_3_weeks" | "month_plus" | "not_sure";
+
+export interface DisciplineHold {
+  discipline: Discipline;
+  reason: string;
+}
 
 export interface AthletePhaseInput {
   today: string;
-  /** First game or big event ahead (the hard date). */
+  /** ONE season state from settings (v1.1 §A). Flowing play can lift it to in_season (§B). */
+  seasonState: SeasonState;
+  /** Most recent game day played (on or before today). */
+  lastGameDate: string | null;
+  /** Next game day, or another hard date (season start, big event). */
   hardDate: string | null;
   hardDateLabel?: string | null;
-  inSeason: boolean;
+  /** The hard date is an actual game (vs. a season start or event). */
+  hardDateIsGame?: boolean;
   yearRound: boolean;
-  /** Days until the next game when in season (null if none on file). */
-  nextGameGapDays: number | null;
+  weeksIntoSeason: number;
   /** Planned off days + holds inside the window. */
   offDaysInWindow: number;
-  /** A hold covers today. */
+  /** A whole-athlete break (HOLD) covers today. */
   holdToday: boolean;
-  /** Weeks since the season/arc anchor, used to rotate year-round micro-phases. */
-  weeksIntoSeason: number;
+  /** Pain/injury holds on single disciplines (v1.1 §A exception). */
+  holds?: readonly DisciplineHold[];
+  /** Check-in answer to "When's your next game?" (v1.1 §D). */
+  scheduleAnswer?: ScheduleAnswer | null;
+  /** Estimate from the athlete's own history. Shown only; never starts a heavy block. */
+  likelyNextGame?: string | null;
   records: readonly WeekRecord[];
   need: NeedInput;
-  /** Throwing may already be in-season while lifting still builds (§3). */
-  disciplinesInSeason?: readonly Discipline[];
 }
+
+export type RampStepKey = "elastic_primers" | "max_velocity" | "sport_speed" | "game_ready_day";
+export const RAMP_STEP_NAME: Record<RampStepKey, string> = {
+  elastic_primers: "Bouncy primers",
+  max_velocity: "Top-speed sprints",
+  sport_speed: "Game-speed throws and swings",
+  game_ready_day: "Game-ready day",
+};
+
+export interface ReentryRamp {
+  minDays: number;
+  days: number;
+  start: string;
+  /** Last ramp day — always the day before the game, never the game itself. */
+  end: string;
+  steps: { step: RampStepKey; from: string; to: string }[];
+  activeToday: boolean;
+  stepToday: RampStepKey | null;
+  /** Only when the calendar itself has fewer days than the minimum. */
+  calendarShortReason: string | null;
+}
+
+export const GAME_READY_FLOOR = ["One elastic primer", "One max-velocity touch", "One sport-intent exposure"] as const;
 
 export interface DisciplinePlan {
   discipline: Discipline;
-  mode: PlanMode;
-  current: PhaseKey;
-  weeksLeft: number;
-  next: PhaseKey | null;
-  nextWeeks: number | null;
-  sharpenWeek: boolean;
-  noNewHeavy: boolean;
-  shortened: { phase: PhaseKey; reason: string }[];
-  completed: BuildPhase[];
+  /** Always equal to the athlete's one phase (v1.1 §A). */
+  phase: PhaseKey;
+  hold: DisciplineHold | null;
   credit: Record<BuildPhase, number>;
-  segments: PhaseSegment[];
-  emphasis: string | null;
-  paused: boolean;
+  content: string;
+  why: string;
 }
 
 export interface AthletePhasePlan {
   version: string;
   today: string;
+  seasonState: SeasonState;
+  mode: PlanMode;
+  phase: PhaseKey;
+  weeksLeft: number;
+  next: PhaseKey | null;
+  nextWeeks: number | null;
+  sharpenWeek: boolean;
+  noNewHeavy: boolean;
+  emphasis: string | null;
+  paused: boolean;
+  segments: PhaseSegment[];
+  shortened: { phase: PhaseKey; reason: string }[];
+  completed: BuildPhase[];
+  credit: Record<BuildPhase, number>;
+  ramp: ReentryRamp | null;
+  gameReadyFloor: readonly string[] | null;
+  schedule: { known: boolean; estimated: boolean; answer: ScheduleAnswer | null; likelyNextGame: string | null; askNextGame: boolean };
   windowWeeks: number | null;
   hardDate: string | null;
+  why: string;
   disciplines: DisciplinePlan[];
 }
 
@@ -339,80 +389,253 @@ export function windowWeeksFor(today: string, hardDate: string | null, offDays: 
   return Math.max(0, Math.floor(days / 7));
 }
 
-export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
-  const ledger = buildCreditLedger(input.records, input.today);
-  const W = input.inSeason ? null : windowWeeksFor(input.today, input.hardDate, input.offDaysInWindow);
-  const disciplines = DISCIPLINES.map((d): DisciplinePlan => {
-    const credit = ledger[d];
-    const inSeasonHere = input.inSeason || (input.disciplinesInSeason ?? []).includes(d);
-    const base = { discipline: d, credit, paused: input.holdToday, completed: BUILD.filter((p) => credit[p] >= MIN_WEEKS[p]) };
+/** v1.1 §B — ramp minimum by the length of the no-play gap. */
+export function rampMinFor(gapDays: number): { min: number; max: number | null } | null {
+  if (gapDays <= 14) return null;
+  if (gapDays <= 27) return { min: 5, max: null };
+  if (gapDays < 42) return { min: 7, max: null };
+  return { min: 10, max: 14 };
+}
 
-    if (inSeasonHere) {
-      const gap = input.nextGameGapDays;
-      // Gaps inside a season become mini blocks (§4 year-round rules).
-      if (gap !== null && gap >= 21) {
-        const alloc = allocateShortArc(Math.floor(gap / 7));
-        return fromSegments({ ...base, mode: "short_arc", emphasis: null }, alloc, "P4");
-      }
-      if (gap !== null && gap >= 10) {
-        const phase: BuildPhase = rankNeed(input.need, credit).find((p) => p !== "P1") ?? "P2";
-        const weeks = Math.max(1, Math.floor(gap / 7));
-        return fromSegments({ ...base, mode: "mini_block", emphasis: null }, [seg(phase, weeks, {
-          endsWithSharpen: phase === "P3",
-          shortened: weeks < remainingMin(phase, credit),
-          shortenedReason: weeks < remainingMin(phase, credit) ? `Short gap between games (${gap} days) — a quick block before play resumes.` : null,
-        })], "P4");
-      }
-      const emphasis = input.yearRound ? ROTATION[Math.floor(Math.max(0, input.weeksIntoSeason) / 3) % 3] : null;
-      const weeksLeft = input.yearRound ? 3 - (Math.max(0, input.weeksIntoSeason) % 3) : 0;
-      return {
-        ...base,
-        mode: input.yearRound ? "year_round" : "in_season",
-        current: "P4",
-        weeksLeft,
-        next: null,
-        nextWeeks: null,
-        sharpenWeek: false,
-        noNewHeavy: false,
-        shortened: [],
-        segments: [seg("P4", weeksLeft)],
-        emphasis,
-      };
-    }
+/**
+ * One credit record for the athlete: per phase, the lowest banked credit among
+ * disciplines that have any history. Unity means the athlete never skips a
+ * phase one of their trained disciplines hasn't done.
+ */
+function unifiedCredit(ledger: CreditLedger, records: readonly WeekRecord[]): Record<BuildPhase, number> {
+  const trained = DISCIPLINES.filter((d) => records.some((r) => r.discipline === d));
+  const src = trained.length ? trained : DISCIPLINES;
+  const out = { P1: Infinity, P2: Infinity, P3: Infinity } as Record<BuildPhase, number>;
+  for (const d of src) for (const p of BUILD) out[p] = Math.min(out[p], ledger[d][p]);
+  for (const p of BUILD) if (!isFinite(out[p])) out[p] = 0;
+  return out;
+}
 
-    const alloc = allocateWindow({ windowWeeks: W, hardDateLabel: input.hardDateLabel ?? input.hardDate, credit, need: input.need });
-    return fromSegments({ ...base, mode: alloc.mode, emphasis: null }, alloc.segments, input.hardDate ? "P4" : null);
-  });
-  return { version: ADAPTIVE_PHASES_VERSION, today: input.today, windowWeeks: W, hardDate: input.hardDate, disciplines };
+function buildRamp(today: string, game: string, days: number, min: number, calendarShort: boolean): ReentryRamp {
+  const start = addDays(game, -days);
+  const end = addDays(game, -1);
+  const body = Math.max(0, days - 1);
+  const a = Math.ceil(body / 3), b = Math.ceil((body - a) / 2), c = body - a - b;
+  const steps: ReentryRamp["steps"] = [];
+  let cur = start;
+  for (const [step, n] of [["elastic_primers", a], ["max_velocity", b], ["sport_speed", c]] as const) {
+    if (n <= 0) continue;
+    steps.push({ step, from: cur, to: addDays(cur, n - 1) });
+    cur = addDays(cur, n);
+  }
+  if (days >= 1) steps.push({ step: "game_ready_day", from: end, to: end });
+  const activeToday = today >= start && today <= end;
+  const stepToday = activeToday ? steps.find((s) => today >= s.from && today <= s.to)?.step ?? null : null;
+  return {
+    minDays: min, days, start, end, steps, activeToday, stepToday,
+    calendarShortReason: calendarShort
+      ? `Only ${days} day${days === 1 ? "" : "s"} before the next game — the ramp starts now and keeps every step.`
+      : null,
+  };
 }
 
 function allocateShortArc(w: number): PhaseSegment[] {
-  // 21+ day gap → short full arc, each phase marked shortened with its reason.
-  const reason = `Short break in the season (${w} weeks) — a quick version of each phase.`;
+  const reason = `Back from a long break (${w} weeks to build) — a quick version of each phase.`;
   const weeks = w >= 5 ? [w - 3, 2, 1] : [1, 1, Math.max(1, w - 2)];
   return BUILD.map((p, i) => seg(p, weeks[i], { shortened: true, shortenedReason: reason, endsWithSharpen: p === "P3" }));
 }
 
-function fromSegments(
-  base: Omit<DisciplinePlan, "current" | "weeksLeft" | "next" | "nextWeeks" | "sharpenWeek" | "noNewHeavy" | "shortened" | "segments">,
-  segments: PhaseSegment[],
-  after: PhaseKey | null,
-): DisciplinePlan {
-  const live = segments.filter((s) => s.weeks > 0);
-  const first = live[0] ?? seg(after ?? "P1", 0, { noNewHeavy: after === null });
-  const second = live[1] ?? null;
-  return {
-    ...base,
-    current: first.phase,
-    weeksLeft: first.weeks,
-    next: second ? second.phase : after,
-    nextWeeks: second ? second.weeks : null,
-    sharpenWeek: first.endsWithSharpen && first.weeks === 1,
-    noNewHeavy: first.noNewHeavy,
-    shortened: segments.filter((s) => s.shortened && s.shortenedReason).map((s) => ({ phase: s.phase, reason: s.shortenedReason! })),
-    segments,
+const RAMP_NOTE = " The re-entry ramp keeps its full length, so this phase gave way.";
+
+export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
+  const ledger = buildCreditLedger(input.records, input.today);
+  const credit = unifiedCredit(ledger, input.records);
+  const completed = BUILD.filter((p) => credit[p] >= MIN_WEEKS[p]);
+  const today = input.today;
+  const answer = input.scheduleAnswer ?? null;
+
+  // ---- target date: a known hard date, else a conservative estimate from the check-in answer
+  let target = input.hardDate && input.hardDate >= today ? input.hardDate : null;
+  let estimated = false;
+  let targetIsGame = target ? input.hardDateIsGame !== false : false;
+  if (!target && input.seasonState !== "in_season" && answer && answer !== "not_sure") {
+    // Earliest plausible day for each answer — never later than the athlete said.
+    target = addDays(today, answer === "this_week" ? 3 : answer === "2_3_weeks" ? 14 : 28);
+    estimated = true;
+    targetIsGame = true;
+  }
+  const untilTarget = target ? daysBetween(today, target) : null;
+
+  // ---- §B season continuity: gap measured between game days
+  const sinceLast = input.lastGameDate ? daysBetween(input.lastGameDate, today) : null;
+  let gap: number | null = null;
+  if (target && targetIsGame && input.lastGameDate) gap = daysBetween(input.lastGameDate, target);
+  else if (target && input.seasonState === "in_season") gap = untilTarget;
+  else if (target) gap = sinceLast !== null ? sinceLast + (untilTarget ?? 0) : Number.POSITIVE_INFINITY; // offseason, no recent play
+  const flowing = gap !== null && gap <= 27 && (input.seasonState === "in_season" || sinceLast !== null || (targetIsGame && gap <= 27));
+  const seasonState: SeasonState = flowing ? "in_season" : input.seasonState;
+
+  const known = !!input.hardDate || input.seasonState === "in_season";
+  const askNextGame = !input.hardDate && (answer === null || answer === "not_sure");
+  const holds: DisciplineHold[] = [...(input.holds ?? [])];
+  if (input.holdToday) for (const d of DISCIPLINES) if (!holds.some((h) => h.discipline === d)) holds.push({ discipline: d, reason: "Taking a break" });
+
+  const finish = (core: {
+    mode: PlanMode; segments: PhaseSegment[]; after: PhaseKey | null; ramp: ReentryRamp | null;
+    emphasis?: string | null; floor: boolean; windowWeeks: number | null;
+  }): AthletePhasePlan => {
+    const liveSegs = core.segments.filter((s) => s.weeks > 0);
+    const rampNow = core.ramp?.activeToday || (core.ramp && liveSegs.length === 0);
+    const first = liveSegs[0] ?? seg(core.after ?? "P4", 0);
+    const phase: PhaseKey = rampNow ? "P4" : first.phase;
+    const second = rampNow ? null : liveSegs[1] ?? null;
+    const disciplines = DISCIPLINES.map((d): DisciplinePlan => ({
+      discipline: d, phase, hold: holds.find((h) => h.discipline === d) ?? null,
+      credit: ledger[d], content: DISCIPLINE_CONTENT[phase][d], why: WHY_BLOCK[phase][d],
+    }));
+    return {
+      version: ADAPTIVE_PHASES_VERSION, today, seasonState, mode: core.mode, phase,
+      weeksLeft: rampNow ? 0 : first.weeks,
+      next: second ? second.phase : rampNow ? null : core.after,
+      nextWeeks: second ? second.weeks : null,
+      sharpenWeek: !rampNow && first.endsWithSharpen && first.weeks === 1,
+      noNewHeavy: first.noNewHeavy || core.mode === "maintenance",
+      emphasis: core.emphasis ?? null,
+      paused: input.holdToday,
+      segments: core.segments,
+      shortened: core.segments.filter((s) => s.shortened && s.shortenedReason).map((s) => ({ phase: s.phase, reason: s.shortenedReason! })),
+      completed, credit, ramp: core.ramp,
+      gameReadyFloor: core.floor || !!core.ramp?.activeToday ? GAME_READY_FLOOR : null,
+      schedule: { known, estimated, answer, likelyNextGame: input.likelyNextGame ?? null, askNextGame },
+      windowWeeks: core.windowWeeks, hardDate: target,
+      why: rampNow ? WHY_RAMP : WHY_PHASE[phase],
+      disciplines,
+    };
   };
+
+  const inSeasonMaintenance = (mode: PlanMode): AthletePhasePlan => {
+    const emphasis = input.yearRound ? ROTATION[Math.floor(Math.max(0, input.weeksIntoSeason) / 3) % 3] : null;
+    const weeksLeft = input.yearRound ? 3 - (Math.max(0, input.weeksIntoSeason) % 3) : 0;
+    return finish({
+      mode: mode === "in_season" && input.yearRound ? "year_round" : mode,
+      segments: [seg("P4", weeksLeft, { noNewHeavy: mode === "maintenance" })],
+      after: null, ramp: null, emphasis, floor: true, windowWeeks: null,
+    });
+  };
+
+  // ---- §D unknown schedule → in-season maintenance + floor, no heavy block on a guess
+  if (!target) {
+    if (seasonState === "in_season") return inSeasonMaintenance("in_season");
+    return inSeasonMaintenance("maintenance");
+  }
+
+  // Game (or hard date) today → game day.
+  if (untilTarget! <= 0) return inSeasonMaintenance("in_season");
+
+  // ---- §B gap ≤ 14 → in-season the whole way through
+  const rampRule = rampMinFor(gap ?? Number.POSITIVE_INFINITY);
+  if (!rampRule) return inSeasonMaintenance("in_season");
+
+  // Days available before the game (game day excluded), less planned off days.
+  const avail = Math.max(0, untilTarget! - Math.max(0, input.offDaysInWindow));
+  const calendarShort = avail < rampRule.min;
+  let weeks = calendarShort ? 0 : Math.floor((avail - rampRule.min) / 7);
+  let rampDays = calendarShort ? avail : avail - weeks * 7;
+  if (rampRule.max !== null && rampDays > rampRule.max) rampDays = rampRule.max; // spare days fall to the week before
+  const ramp = buildRamp(today, target, Math.max(0, Math.min(rampDays, untilTarget!)), rampRule.min, calendarShort);
+  const label = input.hardDateLabel ?? (estimated ? "your next game (estimated)" : target);
+
+  // 15–27 → stay in-season, two-week mini block (P2 or P3 by need) + ramp ≥ 5
+  if (gap! <= 27) {
+    const phase: BuildPhase = rankNeed(input.need, credit).find((p) => p !== "P1") ?? "P2";
+    const mini = Math.min(2, weeks);
+    const segs: PhaseSegment[] = [];
+    if (weeks > mini) segs.push(seg("P4", weeks - mini));
+    if (mini > 0) segs.push(seg(phase, mini, {
+      endsWithSharpen: phase === "P3",
+      shortened: mini < 2, shortenedReason: mini < 2 ? `Shortened so the ${rampRule.min}-day re-entry ramp fits before ${label}.` : null,
+    }));
+    else segs.push(seg(phase, 0, { shortened: true, shortenedReason: `No room for a mini block — the ${rampRule.min}-day re-entry ramp comes first before ${label}.` }));
+    return finish({ mode: "mini_block", segments: segs, after: "P4", ramp, floor: true, windowWeeks: weeks });
+  }
+
+  // ≥ 42 with a known last game (break, injury, postponement) → full short arc
+  let segs: PhaseSegment[];
+  let mode: PlanMode;
+  if (gap! >= 42 && input.lastGameDate && weeks >= 3) {
+    segs = allocateShortArc(weeks);
+    mode = "short_arc";
+  } else {
+    const alloc = allocateWindow({ windowWeeks: weeks, hardDateLabel: label, credit, need: input.need });
+    segs = alloc.segments;
+    mode = alloc.mode;
+    // Weeks the ramp took from the window: say so on anything cut short.
+    const withoutRamp = Math.floor(avail / 7);
+    if (withoutRamp > weeks) for (const s of segs) if (s.shortened && s.shortenedReason) s.shortenedReason += RAMP_NOTE;
+  }
+  if (estimated) for (const s of segs) if (s.phase !== "P4") s.noNewHeavy = true;
+  // Rarely the window is empty — name the phase that gave way.
+  if (weeks === 0 && !segs.some((s) => s.shortened)) {
+    segs = [seg("P1", 0, { shortened: true, shortenedReason: `No room for a block before ${label} — the re-entry ramp comes first.` })];
+  }
+  return finish({ mode, segments: segs, after: "P4", ramp, floor: untilTarget! <= 7, windowWeeks: weeks });
 }
+
+/** v1.1 §A invariant: no two disciplines in different phases (holds never change the phase). */
+export function unityViolations(plan: AthletePhasePlan): string[] {
+  const out: string[] = [];
+  for (const d of plan.disciplines) {
+    if (d.phase !== plan.phase && !d.hold) out.push(`${d.discipline} sits in ${d.phase} while the athlete is in ${plan.phase}`);
+  }
+  const phases = new Set(plan.disciplines.filter((d) => !d.hold).map((d) => d.phase));
+  if (phases.size > 1) out.push(`disciplines split across ${[...phases].join(", ")}`);
+  return out;
+}
+
+// ---------------------------------------------------------------- the why (v1.1 §F)
+// How Hammers trains — never stated as proven science, never a medical claim.
+
+export const WHY_PHASE: Record<PhaseKey, string> = {
+  P1: "We build the tissue that stores and returns energy, and the strength behind it. It's what lets everything later hit harder without breaking you down.",
+  P2: "Now we add force. Heavy work and fast bar speed teach your body to produce more power on demand.",
+  P3: "We turn that force into quickness — short ground contacts, fast hands, snap. This is where power becomes speed.",
+  P4: "We hold everything you built and keep you fresh, so the best version of you shows up on game day.",
+};
+
+export const WHY_RAMP =
+  "Coming back to games is a big step up. We build back to game speed a little at a time — bouncy primers, then fast sprints, then game-speed throws and swings. That way your first game back feels normal.";
+
+export const WHY_BLOCK: Record<PhaseKey, Record<Discipline, string>> = {
+  P1: {
+    lifting: "We lift with control and train the springy tissue around your joints. Solid reps now make heavier work later feel easier.",
+    throwing: "We build an arm that is ready for lots of throws. Easy volume and a clean rhythm come before any hard throwing.",
+    speed: "We practise landing, pushing and bouncing well. Good contact with the ground now is how Hammers builds speed later.",
+    bat_speed: "We build a swing that works as one chain, from the ground up. Hips, trunk and hands learn to move together.",
+  },
+  P2: {
+    lifting: "Heavier lifts and fast bar speed. We teach your body to make more force when you ask for it.",
+    throwing: "We add intent to your throws a little at a time. The strength you built starts moving into the arm.",
+    speed: "Harder pushes and longer accelerations. We turn your strength into drive off the ground.",
+    bat_speed: "We swing with more intent, using heavier and lighter tools. Force from your legs gets carried up to the barrel.",
+  },
+  P3: {
+    lifting: "Lighter, faster lifts and jumps. We keep the strength and make it quick.",
+    throwing: "Throws get closer to game speed, with full rest in between. We sharpen how fast you deliver the ball.",
+    speed: "Short, fast sprints and quick bounces. Quick ground contacts are where power turns into speed.",
+    bat_speed: "Fast, full-intent swings with full rest. We make your hands quick and your swing snappy.",
+  },
+  P4: {
+    lifting: "Short, sharp lifts that hold your strength without leaving you tired for games.",
+    throwing: "We keep your arm fresh around games and only add what it can handle that week.",
+    speed: "One fast sprint touch each week keeps your top speed ready.",
+    bat_speed: "A few full-speed swings keep your bat quick between games.",
+  },
+};
+
+export const DISCIPLINE_CONTENT: Record<PhaseKey, Record<Discipline, string>> = {
+  P1: { lifting: "Strength base and tissue work", throwing: "Easy volume and rhythm", speed: "Landing, pushing, bouncing", bat_speed: "Connected swing patterns" },
+  P2: { lifting: "Heavy and fast-bar work", throwing: "Building throwing intent", speed: "Accelerations and hard pushes", bat_speed: "Overload and underload swings" },
+  P3: { lifting: "Fast lifts and jumps", throwing: "Near game-speed throws", speed: "Max-velocity sprints and quick bounces", bat_speed: "Full-intent swings" },
+  P4: { lifting: "Short maintenance lifts", throwing: "Arm care and game throwing", speed: "Weekly top-speed touch", bat_speed: "Game-speed swings" },
+};
+
+/** Wording guard for the why text (tests use it). */
+export const WHY_BANNED = /\b(proven|prove[sn]?|science|scientific|studies|study shows|research(ers)? (shows?|says)|clinical(ly)?|medical(ly)?|diagnos\w*|cure[sd]?|heal(s|ing)?|treat(s|ment)?|therap\w*|prevents? injur\w*|injury[- ]proof|guarantee[sd]?|fascia (is|does|stores)|collagen)\b/i;
 
 // ---------------------------------------------------------------- athlete strip (§6)
 
@@ -421,16 +644,21 @@ function prettyDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-export function stripText(plan: DisciplinePlan, hardDate: string | null): string {
-  const cur = PHASE_NAME[plan.current];
+export function stripText(plan: AthletePhasePlan): string {
+  const cur = PHASE_NAME[plan.phase];
+  const game = plan.hardDate ? `${plan.schedule.estimated ? "about " : ""}${prettyDate(plan.hardDate)}` : null;
+  if (plan.ramp?.activeToday) {
+    const day = daysBetween(plan.ramp.start, plan.today) + 1;
+    return `Getting game-ready · day ${day} of ${plan.ramp.days}${plan.ramp.stepToday ? ` · ${RAMP_STEP_NAME[plan.ramp.stepToday]}` : ""}${game ? ` → first game ${game}` : ""}`;
+  }
+  if (plan.mode === "maintenance") return `${cur} · staying game-ready until your next game is set`;
   if (plan.mode === "in_season") return `${cur} · in season`;
   if (plan.mode === "year_round") return `${cur} · ${plan.emphasis} focus · ${plan.weeksLeft} week${plan.weeksLeft === 1 ? "" : "s"} left`;
-  if (plan.mode === "bridge" && !hardDate) return `${cur} · building the base until your next dates are set`;
-  const wl = `${plan.weeksLeft} week${plan.weeksLeft === 1 ? "" : "s"} left`;
-  const parts = [`${cur} · ${wl}`];
+  const parts = [`${cur} · ${plan.weeksLeft} week${plan.weeksLeft === 1 ? "" : "s"} left`];
   if (plan.next && plan.next !== "P4" && plan.nextWeeks) {
     parts.push(`next: ${PHASE_NAME[plan.next]} (about ${plan.nextWeeks} week${plan.nextWeeks === 1 ? "" : "s"})`);
   }
-  if (hardDate) parts.push(`Game-Ready by ${prettyDate(hardDate)}`);
+  if (plan.ramp) parts.push(`${plan.ramp.days}-day ramp`);
+  if (game) parts.push(`Game-Ready by ${game}`);
   return parts.join(" → ");
 }
