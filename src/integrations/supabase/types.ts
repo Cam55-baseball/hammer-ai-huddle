@@ -253,6 +253,78 @@ export type Database = {
           },
         ]
       }
+      adaptive_phase_credit: {
+        Row: {
+          created_at: string
+          discipline: string
+          id: string
+          phase: string
+          sessions_done: number
+          sessions_prescribed: number
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          discipline: string
+          id?: string
+          phase: string
+          sessions_done?: number
+          sessions_prescribed?: number
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          discipline?: string
+          id?: string
+          phase?: string
+          sessions_done?: number
+          sessions_prescribed?: number
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      adaptive_phase_shadow: {
+        Row: {
+          created_at: string
+          engine_version: string
+          hard_date: string | null
+          id: string
+          plan: Json
+          plan_date: string
+          trigger: string
+          user_id: string
+          window_weeks: number | null
+        }
+        Insert: {
+          created_at?: string
+          engine_version: string
+          hard_date?: string | null
+          id?: string
+          plan: Json
+          plan_date: string
+          trigger?: string
+          user_id: string
+          window_weeks?: number | null
+        }
+        Update: {
+          created_at?: string
+          engine_version?: string
+          hard_date?: string | null
+          id?: string
+          plan?: Json
+          plan_date?: string
+          trigger?: string
+          user_id?: string
+          window_weeks?: number | null
+        }
+        Relationships: []
+      }
       advisory_feedback_logs: {
         Row: {
           advice_directive: string | null
