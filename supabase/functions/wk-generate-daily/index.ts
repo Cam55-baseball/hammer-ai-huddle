@@ -3195,7 +3195,9 @@ const handler = async (req: Request): Promise<Response> => {
       const plan: any = (ap as any)?.plan;
       if (plan?.phase) {
         for (const r of finalRxs as any[]) {
-          r.why_payload = { ...(r.why_payload ?? {}), adaptive_phase: { phase: plan.phase, season_state: plan.seasonState, version: plan.version } };
+          const rampDisc = ({ lift: "lifting", speed: "speed", bat_speed: "bat_speed", conditioning: "conditioning", throwing: "throwing" } as Record<string, string>)[r.slot];
+          const ramp = (plan.ramps ?? []).find((x: any) => x.discipline === rampDisc);
+          r.why_payload = { ...(r.why_payload ?? {}), adaptive_phase: { phase: plan.phase, season_state: plan.seasonState, version: plan.version, ...(ramp ? { ramp_line: ramp.line, ramp_constraints: ramp.constraints } : {}) } };
         }
       }
     }
