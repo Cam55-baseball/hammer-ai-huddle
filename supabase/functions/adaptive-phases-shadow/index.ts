@@ -5,12 +5,19 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
-  planAthlete, addDays, type WeekRecord, type Discipline, type PhaseKey, type Goal,
+  planAthlete, addDays, type WeekRecord, type Discipline, type PhaseKey, type Goal, type ScheduleAnswer, type SeasonState,
 } from "../_shared/wic/phases/adaptivePhases.ts";
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 
 const SLOT_DISC: Record<string, Discipline> = { lift: "lifting", speed: "speed", bat_speed: "bat_speed", throwing: "throwing" };
 const BLOCK_PHASE: Record<string, PhaseKey> = { B1: "P1", B2: "P1", B4: "P2", B5: "P3" };
+const SEASON_MAP: Record<string, SeasonState> = { off_season: "offseason", preseason: "preseason", in_season: "in_season", post_season: "post_season" };
+const REGION_DISC: Record<string, Discipline> = {
+  shoulder: "throwing", ucl: "throwing", elbow: "throwing", forearm: "throwing",
+  wrist: "bat_speed", hand: "bat_speed",
+  hip: "speed", knee: "speed", ankle: "speed", foot: "speed", hamstring: "speed", quad: "speed", groin: "speed", calf: "speed", achilles: "speed",
+  back: "lifting",
+};
 
 function monday(iso: string): string {
   const d = new Date(iso + "T00:00:00Z");
@@ -29,14 +36,17 @@ function goalOf(ctx: any): Goal {
 
 async function planOne(admin: any, userId: string, today: string, trigger: string) {
   const since = addDays(today, -26 * 7);
-  const [rx, done, mpi, ctx, tl, games, pains] = await Promise.all([
+  const [rx, done, mpi, ctx, tl, games, pains, pastGames, pastTl, answers] = await Promise.all([
     admin.from("wk_prescriptions").select("plan_date,slot,why_payload").eq("user_id", userId).gte("plan_date", since).lte("plan_date", today),
     admin.from("hammer_daily_task_completions").select("plan_date").eq("user_id", userId).eq("completed", true).gte("plan_date", since),
     admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", userId).maybeSingle(),
     admin.from("athlete_context").select("goal_summary,category_goals,goal_priority_rank").eq("user_id", userId).maybeSingle(),
     admin.from("schedule_timeline_entries").select("tag,start_date,end_date,summary").eq("user_id", userId).is("undone_at", null).gte("end_date", today),
     admin.from("gp_games").select("game_date").eq("user_id", userId).gt("game_date", today).order("game_date").limit(1),
-    admin.from("schedule_timeline_entries").select("id").eq("user_id", userId).eq("tag", "PAIN").is("undone_at", null).gte("start_date", addDays(today, -14)),
+    admin.from("schedule_timeline_entries").select("id,payload").eq("user_id", userId).eq("tag", "PAIN").is("undone_at", null).gte("start_date", addDays(today, -14)),
+    admin.from("gp_games").select("game_date").eq("user_id", userId).lte("game_date", today).order("game_date", { ascending: false }).limit(1),
+    admin.from("schedule_timeline_entries").select("end_date").eq("user_id", userId).in("tag", ["GAME", "TOURNAMENT"]).is("undone_at", null).lte("start_date", today).order("start_date", { ascending: false }).limit(5),
+    admin.from("schedule_timeline_entries").select("payload,start_date").eq("user_id", userId).eq("tag", "NOTE").is("undone_at", null).gte("start_date", addDays(today, -6)).order("start_date", { ascending: false }).limit(10),
   ]);
 
   const season = mpi.data ? resolveSeasonPhase(mpi.data as any, today as any) : null;
@@ -70,15 +80,19 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
   const { data: banked } = await admin.from("adaptive_phase_credit").select("discipline,phase,week_start,sessions_done,sessions_prescribed").eq("user_id", userId);
   const records: WeekRecord[] = (banked ?? []).map((b: any) => ({ discipline: b.discipline, phase: b.phase, weekStart: b.week_start, sessionsDone: b.sessions_done, sessionsPrescribed: b.sessions_prescribed }));
 
-  // Hard date = earliest of first game, season start, timeline GAME/TOURNAMENT/EVENT.
+  // Hard date = earliest of next game, season start, timeline GAME/TOURNAMENT/EVENT.
   const entries = tl.data ?? [];
-  const cands: { d: string; label: string }[] = [];
-  if (games.data?.[0]?.game_date) cands.push({ d: games.data[0].game_date, label: "your next game" });
+  const cands: { d: string; label: string; game: boolean }[] = [];
+  if (games.data?.[0]?.game_date) cands.push({ d: games.data[0].game_date, label: "your next game", game: true });
   const iss = (mpi.data as any)?.in_season_start_date;
-  if (iss && iss > today) cands.push({ d: iss, label: "the season starts" });
-  for (const e of entries) if (["GAME", "TOURNAMENT", "EVENT", "SEASON"].includes(e.tag) && e.start_date > today) cands.push({ d: e.start_date, label: e.summary || e.tag.toLowerCase() });
+  if (iss && iss > today) cands.push({ d: iss, label: "the season starts", game: false });
+  for (const e of entries) if (["GAME", "TOURNAMENT", "EVENT", "SEASON"].includes(e.tag) && e.start_date > today) cands.push({ d: e.start_date, label: e.summary || e.tag.toLowerCase(), game: e.tag === "GAME" || e.tag === "TOURNAMENT" });
   cands.sort((a, b) => a.d.localeCompare(b.d));
   const hard = cands[0] ?? null;
+
+  // Last game day played (v1.1 §B measures gaps between game days).
+  const lastCands = [pastGames.data?.[0]?.game_date, ...(pastTl.data ?? []).map((e: any) => (e.end_date <= today ? e.end_date : null))].filter(Boolean) as string[];
+  const lastGameDate = lastCands.sort().reverse()[0] ?? null;
 
   let offDays = 0;
   let holdToday = false;
@@ -91,14 +105,24 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
       if (en >= s) offDays += Math.round((Date.parse(en) - Date.parse(s)) / 86400000) + 1;
     }
   }
-  const nextGameGap = inSeason && hard ? Math.round((Date.parse(hard.d) - Date.parse(today)) / 86400000) : null;
+  // Pain holds one discipline (v1.1 §A); never changes the phase or any pain rule.
+  const holds: { discipline: Discipline; reason: string }[] = [];
+  for (const p of pains.data ?? []) {
+    const disc = REGION_DISC[String(p.payload?.region ?? "")] ?? "lifting";
+    if (!holds.some((h) => h.discipline === disc)) holds.push({ discipline: disc, reason: `${p.payload?.regionLabel ?? "Pain"} reported` });
+  }
+  const answerRow = (answers.data ?? []).find((n: any) => n.payload?.kind === "next_game_answer");
+  const scheduleAnswer = (answerRow?.payload?.answer ?? null) as ScheduleAnswer | null;
   const iend = (mpi.data as any)?.in_season_end_date;
   const yearRound = inSeason && (!iend || (iss && Date.parse(iend) - Date.parse(iss) >= 40 * 7 * 86400000));
   const weeksIntoSeason = iss ? Math.max(0, Math.floor((Date.parse(today) - Date.parse(iss)) / (7 * 86400000))) : 0;
+  const likely = iss && iss <= today ? addDays(iss, 364) : null;
 
   const plan = planAthlete({
-    today, hardDate: hard?.d ?? null, hardDateLabel: hard?.label ?? null, inSeason, yearRound: !!yearRound,
-    nextGameGapDays: nextGameGap, offDaysInWindow: offDays, holdToday, weeksIntoSeason, records,
+    today, seasonState: SEASON_MAP[season?.phase ?? "off_season"] ?? "offseason",
+    lastGameDate, hardDate: hard?.d ?? null, hardDateLabel: hard?.label ?? null, hardDateIsGame: hard?.game ?? false,
+    yearRound: !!yearRound, offDaysInWindow: offDays, holdToday, holds, weeksIntoSeason, records,
+    scheduleAnswer, likelyNextGame: likely && likely > today ? likely : null,
     need: { goal: goalOf(ctx.data), benchmarkGapPhase: null, openPain: (pains.data ?? []).length > 0 },
   });
   await admin.from("adaptive_phase_shadow").upsert(

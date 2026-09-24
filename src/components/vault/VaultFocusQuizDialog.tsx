@@ -1,3 +1,4 @@
+import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePhysioDailyReport } from '@/hooks/usePhysioDailyReport';
@@ -807,6 +808,7 @@ export function VaultFocusQuizDialog({
 
         {/* Tips Section - NOW AT TOP */}
         <div className="space-y-3 mt-4">
+          {(quizType === 'morning' || quizType === 'night') && <CheckInLifeChips />}
           {/* Morning Quiz Tip */}
           {quizType === 'morning' && (
             <Alert className="bg-amber-500/10 border-amber-500/30">

@@ -178,3 +178,33 @@ export const FACE_LABEL: Record<string, string> = {
 };
 /** The three faces map onto the existing pain rules' severity scale. */
 export const FACE_SEVERITY = { little: "sore", lot: "limiting", cant: "cannot_train" } as const;
+
+// ---------------------------------------------------------------- v1.1 §E check-in chips
+// The check-in chips build EXACTLY the drafts the inbox buttons build, so the
+// same dedupe applies and nothing is ever entered twice.
+export type LifeChip = "travel" | "break" | "cancelled" | "resume";
+export function lifeChipDraft(chip: LifeChip, today: string): EntryDraft {
+  switch (chip) {
+    case "travel":
+      return { tag: "HOLD", start_date: today, end_date: today, dates: null, payload: { reason: "travel" } };
+    case "break":
+      return { tag: "HOLD", start_date: today, end_date: today, dates: null, payload: { reason: "break" } };
+    case "cancelled":
+      return { tag: "CANCELLED", start_date: today, end_date: isoShift(today, 6), dates: null, payload: {} };
+    case "resume":
+      return { tag: "RESUME", start_date: today, end_date: today, dates: null, payload: {} };
+  }
+}
+export function painChipDraft(today: string, region: { key: string; label: string }, face: keyof typeof FACE_LABEL): EntryDraft {
+  return { tag: "PAIN", start_date: today, end_date: today, dates: null, payload: { region: region.key, regionLabel: region.label, face, faceLabel: FACE_LABEL[face] } };
+}
+export type NextGameAnswer = "this_week" | "2_3_weeks" | "month_plus" | "not_sure";
+export const NEXT_GAME_ANSWERS: { key: NextGameAnswer; label: string }[] = [
+  { key: "this_week", label: "This week" },
+  { key: "2_3_weeks", label: "2 to 3 weeks" },
+  { key: "month_plus", label: "More than a month" },
+  { key: "not_sure", label: "Not sure" },
+];
+export function nextGameDraft(today: string, answer: NextGameAnswer): EntryDraft {
+  return { tag: "NOTE", start_date: today, end_date: today, dates: null, payload: { kind: "next_game_answer", answer } };
+}
