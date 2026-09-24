@@ -36,14 +36,17 @@ function goalOf(ctx: any): Goal {
 
 async function planOne(admin: any, userId: string, today: string, trigger: string) {
   const since = addDays(today, -26 * 7);
-  const [rx, done, mpi, ctx, tl, games, pains] = await Promise.all([
+  const [rx, done, mpi, ctx, tl, games, pains, pastGames, pastTl, answers] = await Promise.all([
     admin.from("wk_prescriptions").select("plan_date,slot,why_payload").eq("user_id", userId).gte("plan_date", since).lte("plan_date", today),
     admin.from("hammer_daily_task_completions").select("plan_date").eq("user_id", userId).eq("completed", true).gte("plan_date", since),
     admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", userId).maybeSingle(),
     admin.from("athlete_context").select("goal_summary,category_goals,goal_priority_rank").eq("user_id", userId).maybeSingle(),
     admin.from("schedule_timeline_entries").select("tag,start_date,end_date,summary").eq("user_id", userId).is("undone_at", null).gte("end_date", today),
     admin.from("gp_games").select("game_date").eq("user_id", userId).gt("game_date", today).order("game_date").limit(1),
-    admin.from("schedule_timeline_entries").select("id").eq("user_id", userId).eq("tag", "PAIN").is("undone_at", null).gte("start_date", addDays(today, -14)),
+    admin.from("schedule_timeline_entries").select("id,payload").eq("user_id", userId).eq("tag", "PAIN").is("undone_at", null).gte("start_date", addDays(today, -14)),
+    admin.from("gp_games").select("game_date").eq("user_id", userId).lte("game_date", today).order("game_date", { ascending: false }).limit(1),
+    admin.from("schedule_timeline_entries").select("end_date").eq("user_id", userId).in("tag", ["GAME", "TOURNAMENT"]).is("undone_at", null).lte("start_date", today).order("start_date", { ascending: false }).limit(5),
+    admin.from("schedule_timeline_entries").select("payload,start_date").eq("user_id", userId).eq("tag", "NOTE").is("undone_at", null).gte("start_date", addDays(today, -6)).order("start_date", { ascending: false }).limit(10),
   ]);
 
   const season = mpi.data ? resolveSeasonPhase(mpi.data as any, today as any) : null;
