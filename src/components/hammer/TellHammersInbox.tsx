@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { useScheduleTimeline } from "@/hooks/useScheduleTimeline";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
-import { getTodayDate, getLocalDateString, parseLocalDateString } from "@/utils/dateUtils";
+import { getTodayDate, getLocalDateString } from "@/utils/dateUtils";
 import {
   TIMELINE_TAGS, canUndo, describeEntry, isoShift,
   type TimelineFilterTag, type TimelineTag,
@@ -438,4 +438,4 @@ export function TellHammersInbox() {
 
 export default TellHammersInbox;
 // Exposed for tests.
-export { BUTTONS as TELL_HAMMERS_BUTTONS, parseLocalDateString as _parse };
+export { BUTTONS as TELL_HAMMERS_BUTTONS };
