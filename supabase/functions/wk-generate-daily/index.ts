@@ -1053,6 +1053,13 @@ const handler = async (req: Request): Promise<Response> => {
       } catch { /* never blocks the card */ }
 
     }
+    // Tell Hammers HOLD ("I need a break" / "I'm travelling") is a recovery
+    // day, stated once here like the rest-day calculator's "none", so the
+    // session template becomes the recovery template and never demands
+    // compound lifts the day must not contain. Only ever makes the day lighter.
+    if (timelineToday.hold) {
+      (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+    }
 
 
     // -------- Step 18 — offseason arc (§7) and in-season post-game plan (§9) ----
