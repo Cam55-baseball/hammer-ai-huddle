@@ -234,7 +234,7 @@ export function whatChanged(args: {
   const what = describeEntry(args.entry);
   let tail: string;
   if (args.entry.tag === "PAIN") {
-    tail = "Your pain rules are on — today's plan protects that spot.";
+    tail = "Saved to your pain log — tell a coach or parent too.";
   } else if (args.heavyBefore !== args.heavyAfter) {
     tail = args.heavyAfter
       ? `Next heavy day moves to ${plainWeekday(args.heavyAfter)}, ${plainDate(args.heavyAfter)}.`

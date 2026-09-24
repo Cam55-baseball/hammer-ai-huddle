@@ -534,7 +534,10 @@ const handler = async (req: Request): Promise<Response> => {
       (g: any) => g.ignored_for_training !== true && !timelineCancelled.has(String(g.game_date)),
     );
     const gamesOnPlanDate = gameWindowRows.filter((g: any) => String(g.game_date) === planDate);
-    const isGameDay = gamesOnPlanDate.length > 0;
+    // A game told to Hammer (timeline) makes today a game day exactly like a
+    // Game Plan game — otherwise the lift template would still ask for a full
+    // strength session on a game day.
+    const isGameDay = gamesOnPlanDate.length > 0 || timelineToday.games.length > 0;
 
     // -------- Schedule enforcement (Pass B, revised) --------
     // Two sources, one list, de-duplicated inside `resolveGameProximity`: the
@@ -690,7 +693,8 @@ const handler = async (req: Request): Promise<Response> => {
       legacyPhase: phaseRes.phase,
       isGameDay,
       isPracticeDay,
-      isTournamentDay: gamesOnPlanDate.some((g: any) => g.game_type === "tournament"),
+      isTournamentDay: gamesOnPlanDate.some((g: any) => g.game_type === "tournament") ||
+        timelineEntries.some((e) => e.tag === "TOURNAMENT" && dayEffect([e], planDate).games.length > 0),
       isTravelDay,
       isRecoveryDay: false,
       isOffDay: false,
@@ -2370,7 +2374,8 @@ const handler = async (req: Request): Promise<Response> => {
     // defect, not an outcome — surface it in diagnostics instead of quietly
     // emitting `cond.off_day`.
     let conditioningEmptyPool = false;
-    if (!isGameDay && !isPostSeason && !conditioningSuppressed) {
+    // Tell Hammers HOLD is a recovery day: no conditioning is built.
+    if (!isGameDay && !isPostSeason && !conditioningSuppressed && !timelineToday.hold) {
       const conditioning: MovementRow[] = [
         lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
         conditioningForPosition(lib, position, eligible),
