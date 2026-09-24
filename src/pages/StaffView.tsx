@@ -401,6 +401,9 @@ export default function StaffView() {
               </CardContent>
             </Card>
 
+            <StaffPhaseArc userId={openId} />
+
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Next 14 days</CardTitle>
