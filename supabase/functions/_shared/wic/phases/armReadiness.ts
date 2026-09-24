@@ -57,12 +57,11 @@ export function rampDaysFor(breakDays: number, p: ArmProfile): { days: number; r
   const len = rampLength("throwing", Math.max(0, Math.round(breakDays)), {
     age: p.age, isPitcher: p.isPitcher, growthMode: false,
     painLast90: { throwing: p.armPainReports12mo > 0 },
-    firstTime: { throwing: p.priorRamps === 0 && p.priorRampRepeats === 0 && false },
+    firstTime: {},
     eliteClean: false,
   });
-  // Short breaks of 1–2 days carry no ramp under v1.3; v1.2 asked for 3–5 after any break ≤ 7.
-  const days = breakDays > 0 && len.days === 0 ? 3 : len.days;
-  return { days, reasons: len.reasons, missing, ceilingConflict: len.ceilingConflict };
+  // 1–2 days off is a routine non-throw day (Ramp Law §2), not a break: no ramp.
+  return { days: len.days, reasons: len.reasons, missing, ceilingConflict: len.ceilingConflict };
 }
 
 // ---------------------------------------------------------------- break scheduling
