@@ -1,3 +1,4 @@
+import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePhysioDailyReport } from '@/hooks/usePhysioDailyReport';

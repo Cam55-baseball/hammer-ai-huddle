@@ -70,15 +70,19 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
   const { data: banked } = await admin.from("adaptive_phase_credit").select("discipline,phase,week_start,sessions_done,sessions_prescribed").eq("user_id", userId);
   const records: WeekRecord[] = (banked ?? []).map((b: any) => ({ discipline: b.discipline, phase: b.phase, weekStart: b.week_start, sessionsDone: b.sessions_done, sessionsPrescribed: b.sessions_prescribed }));
 
-  // Hard date = earliest of first game, season start, timeline GAME/TOURNAMENT/EVENT.
+  // Hard date = earliest of next game, season start, timeline GAME/TOURNAMENT/EVENT.
   const entries = tl.data ?? [];
-  const cands: { d: string; label: string }[] = [];
-  if (games.data?.[0]?.game_date) cands.push({ d: games.data[0].game_date, label: "your next game" });
+  const cands: { d: string; label: string; game: boolean }[] = [];
+  if (games.data?.[0]?.game_date) cands.push({ d: games.data[0].game_date, label: "your next game", game: true });
   const iss = (mpi.data as any)?.in_season_start_date;
-  if (iss && iss > today) cands.push({ d: iss, label: "the season starts" });
-  for (const e of entries) if (["GAME", "TOURNAMENT", "EVENT", "SEASON"].includes(e.tag) && e.start_date > today) cands.push({ d: e.start_date, label: e.summary || e.tag.toLowerCase() });
+  if (iss && iss > today) cands.push({ d: iss, label: "the season starts", game: false });
+  for (const e of entries) if (["GAME", "TOURNAMENT", "EVENT", "SEASON"].includes(e.tag) && e.start_date > today) cands.push({ d: e.start_date, label: e.summary || e.tag.toLowerCase(), game: e.tag === "GAME" || e.tag === "TOURNAMENT" });
   cands.sort((a, b) => a.d.localeCompare(b.d));
   const hard = cands[0] ?? null;
+
+  // Last game day played (v1.1 §B measures gaps between game days).
+  const lastCands = [pastGames.data?.[0]?.game_date, ...(pastTl.data ?? []).map((e: any) => (e.end_date <= today ? e.end_date : null))].filter(Boolean) as string[];
+  const lastGameDate = lastCands.sort().reverse()[0] ?? null;
 
   let offDays = 0;
   let holdToday = false;
@@ -91,14 +95,24 @@ async function planOne(admin: any, userId: string, today: string, trigger: strin
       if (en >= s) offDays += Math.round((Date.parse(en) - Date.parse(s)) / 86400000) + 1;
     }
   }
-  const nextGameGap = inSeason && hard ? Math.round((Date.parse(hard.d) - Date.parse(today)) / 86400000) : null;
+  // Pain holds one discipline (v1.1 §A); never changes the phase or any pain rule.
+  const holds: { discipline: Discipline; reason: string }[] = [];
+  for (const p of pains.data ?? []) {
+    const disc = REGION_DISC[String(p.payload?.region ?? "")] ?? "lifting";
+    if (!holds.some((h) => h.discipline === disc)) holds.push({ discipline: disc, reason: `${p.payload?.regionLabel ?? "Pain"} reported` });
+  }
+  const answerRow = (answers.data ?? []).find((n: any) => n.payload?.kind === "next_game_answer");
+  const scheduleAnswer = (answerRow?.payload?.answer ?? null) as ScheduleAnswer | null;
   const iend = (mpi.data as any)?.in_season_end_date;
   const yearRound = inSeason && (!iend || (iss && Date.parse(iend) - Date.parse(iss) >= 40 * 7 * 86400000));
   const weeksIntoSeason = iss ? Math.max(0, Math.floor((Date.parse(today) - Date.parse(iss)) / (7 * 86400000))) : 0;
+  const likely = iss && iss <= today ? addDays(iss, 364) : null;
 
   const plan = planAthlete({
-    today, hardDate: hard?.d ?? null, hardDateLabel: hard?.label ?? null, inSeason, yearRound: !!yearRound,
-    nextGameGapDays: nextGameGap, offDaysInWindow: offDays, holdToday, weeksIntoSeason, records,
+    today, seasonState: SEASON_MAP[season?.phase ?? "off_season"] ?? "offseason",
+    lastGameDate, hardDate: hard?.d ?? null, hardDateLabel: hard?.label ?? null, hardDateIsGame: hard?.game ?? false,
+    yearRound: !!yearRound, offDaysInWindow: offDays, holdToday, holds, weeksIntoSeason, records,
+    scheduleAnswer, likelyNextGame: likely && likely > today ? likely : null,
     need: { goal: goalOf(ctx.data), benchmarkGapPhase: null, openPain: (pains.data ?? []).length > 0 },
   });
   await admin.from("adaptive_phase_shadow").upsert(
