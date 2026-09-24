@@ -338,7 +338,11 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
       if (gap !== null && gap >= 10) {
         const phase: BuildPhase = rankNeed(input.need, credit).find((p) => p !== "P1") ?? "P2";
         const weeks = Math.max(1, Math.floor(gap / 7));
-        return fromSegments({ ...base, mode: "mini_block", emphasis: null }, [seg(phase, weeks, { endsWithSharpen: phase === "P3" })], "P4");
+        return fromSegments({ ...base, mode: "mini_block", emphasis: null }, [seg(phase, weeks, {
+          endsWithSharpen: phase === "P3",
+          shortened: weeks < remainingMin(phase, credit),
+          shortenedReason: weeks < remainingMin(phase, credit) ? `Short gap between games (${gap} days) — a quick block before play resumes.` : null,
+        })], "P4");
       }
       const emphasis = input.yearRound ? ROTATION[Math.floor(Math.max(0, input.weeksIntoSeason) / 3) % 3] : null;
       const weeksLeft = input.yearRound ? 3 - (Math.max(0, input.weeksIntoSeason) % 3) : 0;
