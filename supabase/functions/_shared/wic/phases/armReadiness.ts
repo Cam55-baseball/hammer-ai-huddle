@@ -104,7 +104,6 @@ export function scheduleBreak(args: {
     const r = rampDaysFor(b, profile).days;
     const rampStart = add(start, b);
     const rampEnd = add(rampStart, r - 1);
-    const young = profile.age !== null && profile.age < 19;
     return {
       breakDays: b, rampDays: r, breakStart: start, rampStart, rampEnd,
       bufferDays: nextGame ? diff(rampEnd, nextGame) - 1 : null,
