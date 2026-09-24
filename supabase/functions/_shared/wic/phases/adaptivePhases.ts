@@ -196,7 +196,9 @@ export function allocateWindow(input: AllocationInput): Allocation {
   if (w < 4) {
     if (w === 0) return { mode: "bridge", completed, segments: [] };
     const out: PhaseSegment[] = [];
-    if (w > 1) out.push(seg("P1", w - 1, { noNewHeavy: true }));
+    // Never restart a finished phase: capacity work moves to the next unfinished one.
+    const cap: BuildPhase = completed.includes("P1") ? (completed.includes("P2") ? "P3" : "P2") : "P1";
+    if (w > 1) out.push(seg(cap, w - 1, { noNewHeavy: true }));
     out.push(seg("P3", 1, { endsWithSharpen: true, noNewHeavy: true }));
     return { mode: "bridge", completed, segments: out };
   }
@@ -468,7 +470,10 @@ export function planAthlete(input: AthletePhaseInput): AthletePhasePlan {
   else if (target && input.seasonState === "in_season") gap = untilTarget;
   else if (target) gap = sinceLast !== null ? sinceLast + (untilTarget ?? 0) : Number.POSITIVE_INFINITY; // offseason, no recent play
   const flowing = gap !== null && gap <= 27 && (input.seasonState === "in_season" || sinceLast !== null || (targetIsGame && gap <= 27));
-  const seasonState: SeasonState = flowing ? "in_season" : input.seasonState;
+  // A gap of 28+ days is a short offseason window (§B), so the one season state says so.
+  const seasonState: SeasonState = flowing
+    ? "in_season"
+    : input.seasonState === "in_season" && gap !== null && gap >= 28 ? "offseason" : input.seasonState;
 
   const known = !!input.hardDate || input.seasonState === "in_season";
   const askNextGame = !input.hardDate && (answer === null || answer === "not_sure");
