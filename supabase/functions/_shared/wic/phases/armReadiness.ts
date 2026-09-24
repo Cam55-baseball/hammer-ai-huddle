@@ -6,7 +6,9 @@
  * (src/lib/hammer/pitching/restDays.ts stays the single source for those).
  */
 
-export const ARM_READINESS_VERSION = "arm_readiness_v1";
+import { rampLength } from "./rampLaw.ts";
+
+export const ARM_READINESS_VERSION = "arm_readiness_v2";
 
 export interface ArmProfile {
   age: number | null;
@@ -41,30 +43,26 @@ export function baseRampDays(breakDays: number, isPitcher: boolean): { min: numb
 }
 
 /**
- * Case by case: the athlete's own history can only LENGTHEN the ramp, never
- * shorten it below the table. Each factor adds a step of caution; missing data
- * adds nothing and is listed so staff can see it.
+ * Case by case. Since Ramp Law v1 (v1.3) the length comes from rampLength():
+ * v1.3 doubling / structured build with the largest personal factor, never
+ * shorter than the v1.2 table. Missing arm data never shortens a ramp and is
+ * listed so staff can see it.
  */
-export function rampDaysFor(breakDays: number, p: ArmProfile): { days: number; reasons: string[]; missing: string[] } {
-  const base = baseRampDays(breakDays, p.isPitcher);
-  let days = base.min;
-  if (breakDays <= 7) days = base.max; // short breaks: use the top of 3–5 for arms with any flag below
-  const reasons: string[] = [];
+export function rampDaysFor(breakDays: number, p: ArmProfile): { days: number; reasons: string[]; missing: string[]; ceilingConflict: string | null } {
   const missing: string[] = [];
-  let extra = 0;
   if (p.age === null) missing.push("age");
-  else if (p.age < 15) { extra += 0.2; reasons.push("young arm"); }
-  if (p.armPainReports12mo > 0) { extra += 0.2; reasons.push("arm pain in the last year"); }
-  if (p.priorRamps > 0 && p.priorRampRepeats > 0) { extra += 0.15; reasons.push("needed extra time on a past ramp"); }
-  if (p.isPitcher && p.lastSeasonPitches !== null && p.lastSeasonPitches > 1500) { extra += 0.1; reasons.push("heavy pitch count last season"); }
   if (p.lastSeasonPitches === null && p.lastSeasonInnings === null) missing.push("last season's pitch counts");
   if (p.armTank === null) missing.push("arm tank");
-  else if (p.armTank >= 70) { extra += 0.1; reasons.push("arm tank is high"); }
   if (p.velocityTrend === null) missing.push("velocity trend");
-  if (breakDays <= 7 && extra === 0) days = base.min + 1; // 4 of 3–5 with no flags
-  days = Math.ceil(days * (1 + extra));
-  if (breakDays > 56 && p.isPitcher) days = Math.min(Math.max(days, base.min), base.max);
-  return { days: Math.max(days, base.min), reasons, missing };
+  const len = rampLength("throwing", Math.max(0, Math.round(breakDays)), {
+    age: p.age, isPitcher: p.isPitcher, growthMode: false,
+    painLast90: { throwing: p.armPainReports12mo > 0 },
+    firstTime: { throwing: p.priorRamps === 0 && p.priorRampRepeats === 0 && false },
+    eliteClean: false,
+  });
+  // Short breaks of 1–2 days carry no ramp under v1.3; v1.2 asked for 3–5 after any break ≤ 7.
+  const days = breakDays > 0 && len.days === 0 ? 3 : len.days;
+  return { days, reasons: len.reasons, missing, ceilingConflict: len.ceilingConflict };
 }
 
 // ---------------------------------------------------------------- break scheduling
