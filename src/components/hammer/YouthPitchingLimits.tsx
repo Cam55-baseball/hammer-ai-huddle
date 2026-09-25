@@ -55,13 +55,13 @@ export function YouthPitchingLimits({ today }: { today: string }) {
         (supabase as any).from("athlete_height_checks").select("measured_on, inches").eq("user_id", user!.id).order("measured_on").limit(200),
         supabase.from("asb_events").select("payload, occurred_at").eq("athlete_id", user!.id).eq("topic_id", "behavioral.fatigue")
           .gte("occurred_at", `${today}T00:00:00`).order("occurred_at", { ascending: false }).limit(1),
-        supabase.from("profiles").select("competitive_level").eq("id", user!.id).maybeSingle(),
+        supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle(),
       ]);
       return {
         days: toDays(logs.data ?? []),
         heights: ((heights.data ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })),
         fatigue: (fatigue.data?.[0]?.payload as any)?.score ?? null,
-        level: (profile.data as any)?.competitive_level ?? null,
+        level: (profile.data as any)?.competitive_level ?? (profile.data as any)?.competition_level ?? (profile.data as any)?.level ?? null,
       };
     },
   });
