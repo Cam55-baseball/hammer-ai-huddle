@@ -168,7 +168,10 @@ export const PITCHER_CATCHER_LINE =
   "Pitching and catching together is one of the heaviest arm workloads in the game, so we budget it tightly.";
 /** Staff view only — research note with its source (correlation, not a prediction). */
 export const PITCHER_CATCHER_STAFF_NOTE =
-  "Research note: youth pitchers who also catch showed about 2.7 times the rate of serious throwing-arm injury (Fleisig GS et al., Am J Sports Med 2011;39(2):253-257). Correlation, not a prediction.";
+  "Research note: in 384 high school pitchers from 51 teams, those who also played catcher had an upper-extremity injury proportion of 15% vs 5% (rate ratio 2.9, 95% CI 1.03–8.12). Hibberd EE et al., \"Rate of Upper Extremity Injury in High School Baseball Pitchers Who Played Catcher as a Secondary Position,\" Journal of Athletic Training, 2018. Correlation in a high school cohort, not a prediction.";
+/** Staff view only — source for the 100-innings-per-year cap. */
+export const INNINGS_CAP_STAFF_NOTE =
+  "Research note: youth pitchers who threw more than 100 innings in a year were about 3.5 times more likely to be injured (95% CI 1.16–10.44). Fleisig GS et al., Am J Sports Med 2011;39(2):253-257. Correlation, not a prediction.";
 
 // ── C7. Overlapping teams ──────────────────────────────────────────────────
 export interface TeamSeason { team: string; start: string; end: string }
