@@ -50,7 +50,16 @@ Deno.serve(async (req) => {
       if (!latest.has(b.function_name)) latest.set(b.function_name, b);
     }
     const now = Date.now();
+    // hourly-trigger-decay is only invoked while unresolved triggers exist.
+    const { count: openTriggers } = await supabase
+      .from('foundation_trigger_events')
+      .select('id', { count: 'exact', head: true })
+      .is('resolved_at', null);
     for (const fn of beatNames) {
+      if (fn === 'hourly-trigger-decay' && (openTriggers ?? 0) === 0) {
+        evals.push({ key: `cron_missing:${fn}`, fired: false });
+        continue;
+      }
       const b = latest.get(fn);
       const maxAge = CRON_STALE_MIN[fn];
       if (!b) {
@@ -89,12 +98,15 @@ Deno.serve(async (req) => {
     const since24 = new Date(now - 86_400_000).toISOString();
     const { data: tr } = await supabase
       .from('foundation_recommendation_traces')
-      .select('suppressed')
+      .select('suppressed, suppression_reason')
       .neq('user_id', SYSTEM_USER_ID)
       .gte('created_at', since24)
       .limit(20_000);
     const total = (tr ?? []).length;
-    const supp = (tr ?? []).filter((r: any) => r.suppressed).length;
+    // Only holds that point at a problem count; by-design holds (duplicates,
+    // onboarding gate) are the recommender doing its job.
+    const byDesign = (tr ?? []).filter((r: any) => r.suppressed && ALERT.SUPPRESSION_BY_DESIGN.includes(r.suppression_reason)).length;
+    const supp = (tr ?? []).filter((r: any) => r.suppressed && !ALERT.SUPPRESSION_BY_DESIGN.includes(r.suppression_reason)).length;
     if (total >= ALERT.SUPPRESSION_MIN_SAMPLE) {
       const rate = supp / total;
       let sev: AlertSeverity | null = null;
@@ -106,7 +118,7 @@ Deno.serve(async (req) => {
           fired: true,
           severity: sev,
           title: `Suppression rate ${(rate * 100).toFixed(1)}% in last 24h`,
-          detail: { total, suppressed: supp, rate: Number(rate.toFixed(3)) },
+          detail: { total, suppressed: supp, by_design_held: byDesign, rate: Number(rate.toFixed(3)) },
         });
       } else {
         evals.push({ key: 'suppression_rate_high', fired: false });

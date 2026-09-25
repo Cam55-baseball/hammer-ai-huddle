@@ -25,6 +25,10 @@ describe('foundation thresholds parity', () => {
         "STUCK_TRIGGER_CRIT": 25,
         "STUCK_TRIGGER_DAYS": 30,
         "STUCK_TRIGGER_WARN": 5,
+        "SUPPRESSION_BY_DESIGN": [
+          "semantic_duplicate",
+          "onboarding_gate",
+        ],
         "SUPPRESSION_MIN_SAMPLE": 50,
         "SUPPRESSION_RATE_CRIT": 0.75,
         "SUPPRESSION_RATE_WARN": 0.55,
@@ -35,7 +39,8 @@ describe('foundation thresholds parity', () => {
   });
   it('locks cron staleness windows', () => {
     expect(CRON_STALE_MIN['hourly-trigger-decay']).toBe(90);
-    expect(CRON_STALE_MIN['foundation-health-alerts']).toBe(90);
+    // Owner review 2026-09-25: job is scheduled every 4 hours ('5 */4 * * *').
+    expect(CRON_STALE_MIN['foundation-health-alerts']).toBe(270);
     expect(CRON_STALE_MIN['foundation-alert-retention']).toBe(60 * 26);
   });
   it('locks trace inspector + retention constants', () => {
