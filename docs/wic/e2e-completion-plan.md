@@ -85,3 +85,6 @@ generation-path change; this waiver covers the 2026-09-25 launch only.
 Two growth checks inside the card builder still use "age 15 or under" rather
 than the real height-check growth rule. They are more conservative than the
 growth rule, never less safe, so they stay for launch.
+
+### 2026-09-25 19:45 UTC — Demo in-season card-build incident
+Root cause: in-season phase name "regular_season" resolved the off-season full_body_strength template, and within 48 h of a game the schedule law removes loaded lifts, leaving compound_lower empty; the checker marked that fatal. Equipment, softball scope, age, eccentric-overload removal and class cap were not involved (the 4 in-season accounts without a game in 48 h built clean with the same zero equipment rows). Fixed at source; general lighter-template swap added; 648-cell no-fatal test added. Gate 1a is counted from this fix.

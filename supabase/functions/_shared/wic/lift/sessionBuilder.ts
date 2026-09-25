@@ -5,7 +5,7 @@
 // governance metadata (template, category, substitution ladder, reasoning)
 // to each lift row's why_v2 payload and reports fatal issues to the caller.
 
-import type { LiftTemplate, TemplateResolutionInput } from "./templates.ts";
+import type { LiftTemplate, LiftTemplateId, TemplateResolutionInput } from "./templates.ts";
 import { LIFT_TEMPLATES, resolveLiftTemplate } from "./templates.ts";
 import type { MovementCategory } from "./movementCategories.ts";
 import { ALL_CATEGORIES, coverageOf, missingCategories } from "./movementCategories.ts";
@@ -232,8 +232,31 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
   }));
 
   const categoryCoverage = coverageOf(categorized);
-  const missing = missingCategories(template.requiredCategories, categorized);
-  const fullBodyOk = missing.length === 0;
+  let missing = missingCategories(template.requiredCategories, categorized);
+  let fullBodyOk = missing.length === 0;
+  let certifiedTemplate: LiftTemplate = template;
+
+  // General rule for every template: a required category the day's filters
+  // emptied is never a build failure while a template exists whose
+  // requirements the legal rows already meet. Swap to the lighter template and
+  // say so on the card. Legality is never widened — this only re-labels rows
+  // that already passed every gate.
+  if (liftRxs.length > 0 && !fullBodyOk && input.loadedWorkSuppressed !== true) {
+    const swap = pickSatisfiableTemplate(template, categorized);
+    if (swap) {
+      const before = missing;
+      certifiedTemplate = swap;
+      missing = [];
+      fullBodyOk = true;
+      const reason = `Today's limits left no legal ${before.join(", ").replace(/_/g, " ")} option, so this lift uses the ${swap.displayName} plan instead of ${template.displayName}.`;
+      warn.push({ code: "lift_template_swapped", message: reason });
+      for (const st of stamps.values()) {
+        st.template_id = swap.id;
+        st.template_name = swap.displayName;
+        st.why_template = reason;
+      }
+    }
+  }
 
   if (liftRxs.length > 0 && !fullBodyOk) {
     // A day that legally removed loaded work cannot also be required to carry
@@ -284,8 +307,8 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     : 1;
 
   return {
-    templateId: template.id,
-    templateName: template.displayName,
+    templateId: certifiedTemplate.id,
+    templateName: certifiedTemplate.displayName,
     categoryCoverage,
     fullBodyOk,
     missingRequired: missing,
@@ -297,6 +320,29 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     fatal,
     warn,
   };
+}
+
+/**
+ * Lighter templates the certifier may fall back to, safest first after the
+ * in-season maintenance plan. Return-to-play is excluded: it is not activated
+ * by the resolver and needs a human decision.
+ */
+const SWAP_ORDER: readonly LiftTemplateId[] = [
+  "full_body_in_season_maintenance",
+  "full_body_recovery",
+];
+
+export function pickSatisfiableTemplate(
+  current: LiftTemplate,
+  categorized: Array<{ slug: string; movement_category: MovementCategory | null }>,
+): LiftTemplate | null {
+  for (const id of SWAP_ORDER) {
+    if (id === current.id) continue;
+    const t = LIFT_TEMPLATES[id];
+    if (t.cnsShare > current.cnsShare) continue; // never swap UP in intensity
+    if (missingCategories(t.requiredCategories, categorized).length === 0) return t;
+  }
+  return null;
 }
 
 // Re-export for callers that want to reason about templates directly.
