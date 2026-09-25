@@ -142,6 +142,11 @@ export function ArmThrowsPanel({ source, planDate }: { source: EntrySource; plan
           );
         })}
       </ul>
+      {(view.today.overDaily || view.overWeekly) && (
+        <p className="text-xs font-medium text-destructive" data-testid="arm-budget-stop">
+          {view.today.overDaily ? "Today's arm budget is used up — no more throwing today." : "This week's arm budget is used up — keep today to catch play only."}
+        </p>
+      )}
       {view.today.warnings.length > 0 && (
         <p className="text-[11px] text-destructive">{view.today.warnings.join(" ")}</p>
       )}
