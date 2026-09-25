@@ -27,7 +27,7 @@ Why the cap: doubling a 4-month layoff would mean 8 months of ramp. Published pr
 ## 2. Throwing — offseason break and build
 **The break at the start of downtime**
 - Owner rule: 4 days of no throwing per month of downtime, so a 4-month offseason opens with 16 no-throw days.
-- Age rule: the app already carries the age-based annual rest requirements. **Use whichever is longer**, the owner rule or the age requirement. For young athletes the age requirement usually wins and must.
+- Under 18 (Step 27): the ratio may rise to 5 to 8 no-throw days per month, chosen from the athlete's own signals (age and maturity, growth, pain in the last 90 days, last season's load, arm tank, prior break and ramp tolerance). Never a flat number. If break plus ramp won't fit, the break shortens; the ramp never does.
 - Weekly scheduled non-throw days stay exactly as they are, and change only when pain, comfort or tolerance changes.
 
 **The build back**

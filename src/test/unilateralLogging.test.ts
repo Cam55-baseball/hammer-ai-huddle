@@ -30,7 +30,7 @@ describe("unilateral detection", () => {
       "sp_singleleg_bound_alt",
       "wu_hip_cars",
       "kot_atg_split_squat",
-      "cressey_1arm_db_row",
+      "1arm_db_row",
       "lift_side_plank_leg_lift",
     ]) {
       expect(matchesUnilateralSlug(slug), slug).toBe(true);

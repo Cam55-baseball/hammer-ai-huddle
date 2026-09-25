@@ -370,7 +370,7 @@ Girls usually reach their fastest growth about two years before boys, so most fe
 | 17–18 | 105 | 1–30 | 31–45 | 46–60 | 61–75 | 76+ | — |
 | 19–22 | 120 | 1–30 | 31–45 | 46–60 | 61–80 | 81–105 | 106+ |
 
-Plus: never pitch three days in a row; one game per day; ages 13–14 stay under 100 innings in any 12 months and take at least 4 months off throwing a year (2–3 of them continuous); ages 19–22 take at least 3 months off competitive pitching, including 4 continuous weeks off all overhead throwing. The post-season roadmap shows the throwing break for pitchers.
+Plus: never pitch three days in a row; one game per day; high school and younger stay under 100 competitive innings a calendar year. The offseason throwing break follows the Hammers ratio (docs/wic/youth-throwing-v1.md); the fixed annual rest rule was removed by owner order, Step 27. The post-season roadmap shows the throwing break for pitchers.
 
 **Softball.** Sprint distances: 7 yd (acceleration test — owner's combine rule), 20 yd (home to first, 60 ft), 40 yd (two bases). THROW splits windmill pitches from overhand throws. Pitch Smart is baseball-only and never applied to windmill pitching; windmill workload runs on the athlete's own RM28 (§5), never on converted baseball numbers. Windmill pitchers get anterior-shoulder and biceps care in arm care (existing softball windmill rows) and capped heavy pressing in-season. Tournament days = primer + recovery.
 

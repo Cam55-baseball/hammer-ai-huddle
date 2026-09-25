@@ -84,7 +84,7 @@ export const ROOT_PATTERN_FAMILY: Readonly<Record<string, string>> = {
 export const FAMILY_LADDER_SLUGS: Readonly<Record<string, readonly string[]>> = {
   first_step_capacity: [
     "wu_split_stance_iso_hold",
-    "cressey_hip_lift_march",
+    "hip_lift_march",
     "hanging_knee_raise",
     "garhammer_raise",
     "low_cable_hip_flexor_pull_in",
@@ -125,10 +125,10 @@ export const FAMILY_LADDER_SLUGS: Readonly<Record<string, readonly string[]>> = 
   ],
   arm_health: [
     "wu_scapular_cars",
-    "ac_cressey_wall_slide",
+    "ac_wall_slide",
     "ac_xband_pull_apart",
-    "ac_jobes_side_lying_er",
-    "ac_jobes_prone_ytw",
+    "ac_side_lying_er",
+    "ac_prone_ytw",
     "powell_raise",
   ],
   rotational_output: [
@@ -149,7 +149,7 @@ export const FAMILY_LADDER_SLUGS: Readonly<Record<string, readonly string[]>> = 
   ],
   trunk_transfer: [
     "wu_pallof_press_iso",
-    "heenan_dead_bug_reach",
+    "dead_bug_reach",
     "bird_dog",
     "four_way_plank",
     "kneeling_ab_rollout",

@@ -22,12 +22,12 @@ update wk_movement_catalog set name = v.oldname from (values
  ('ac_crossover_plyo','Crossover Symmetry Plyometric'),
  ('ac_crossover_recovery','Crossover Symmetry Recovery Protocol'),
  ('ac_jband_full_chart','J-Band Full Chart (Jaeger Complete)'),
- ('ac_jobes_full_series','Jobes Complete Series'),
- ('ac_oates_shoulder_tube_front','Oates Shoulder Tube — Front'),
- ('ac_oates_shoulder_tube_lateral','Oates Shoulder Tube — Lateral'),
- ('ac_oates_shoulder_tube_overhead','Oates Shoulder Tube — Overhead'),
- ('ac_oates_shoulder_tube_softball','Oates Tube — Windmill Path'),
- ('lift_triphasic_iso_squat','Triphasic Iso Squat 3s')
+ ('ac_full_series','Jobes Complete Series'),
+ ('ac_shoulder_tube_front','Oates Shoulder Tube — Front'),
+ ('ac_shoulder_tube_lateral','Oates Shoulder Tube — Lateral'),
+ ('ac_shoulder_tube_overhead','Oates Shoulder Tube — Overhead'),
+ ('ac_shoulder_tube_softball','Oates Tube — Windmill Path'),
+ ('lift_iso_squat','Triphasic Iso Squat 3s')
 ) as v(slug,oldname) where wk_movement_catalog.slug = v.slug;
 
 -- 3. Hill / tow / overspeed tightening (item 5)
@@ -40,7 +40,7 @@ from (values
  ('sp_downhill_overspeed',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":false,"elite":true,"intermediate":false,"professional":true}'),
  ('sp_hill_contrast',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":true,"elite":true,"intermediate":true,"professional":true}'),
  ('sp_hill_short_10',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":true,"developing":true,"elite":true,"intermediate":true,"professional":true}'),
- ('sp_pfaff_hill_long',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":false,"elite":true,"intermediate":true,"professional":true}'),
+ ('sp_hill_long',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":false,"elite":true,"intermediate":true,"professional":true}'),
  ('sp_tow_assisted_fly',0,0,'{}','{bodyweight}','{"advanced":true,"beginner":false,"developing":false,"elite":true,"intermediate":false,"professional":true}')
 ) as v(slug,age,ta,eq,eqr,tal) where wk_movement_catalog.slug = v.slug;
 

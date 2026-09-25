@@ -34,14 +34,14 @@ step("categories restored", cat.length, 69);
 // 2. names restored
 const NAMES = [
   "crossover_symmetry_full", "wu_crossover_symmetry_full_warmup", "ac_crossover_activation",
-  "ac_crossover_plyo", "ac_crossover_recovery", "ac_jband_full_chart", "ac_jobes_full_series",
-  "ac_oates_shoulder_tube_front", "ac_oates_shoulder_tube_lateral", "ac_oates_shoulder_tube_overhead",
-  "ac_oates_shoulder_tube_softball", "lift_triphasic_iso_squat",
+  "ac_crossover_plyo", "ac_crossover_recovery", "ac_jband_full_chart", "ac_full_series",
+  "ac_shoulder_tube_front", "ac_shoulder_tube_lateral", "ac_shoulder_tube_overhead",
+  "ac_shoulder_tube_softball", "lift_iso_squat",
 ];
 step("names restored", by((r) => NAMES.includes(r.slug)).length, 12);
 
 // 3. hill / tow / overspeed loosened back
-const HILL = ["overspeed_assist", "sp_downhill_overspeed", "sp_hill_contrast", "sp_hill_short_10", "sp_pfaff_hill_long", "sp_tow_assisted_fly"];
+const HILL = ["overspeed_assist", "sp_downhill_overspeed", "sp_hill_contrast", "sp_hill_short_10", "sp_hill_long", "sp_tow_assisted_fly"];
 const hill = by((r) => HILL.includes(r.slug));
 hill.forEach((r) => { r.min_age_years = 0; });
 step("hill/tow rows loosened back", hill.length, 6);

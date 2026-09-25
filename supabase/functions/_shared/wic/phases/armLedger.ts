@@ -33,7 +33,7 @@ export const ARM_DEFAULTS = {
   /** CHOSEN — how much a throw counts toward the tank by intent. */
   intentWeight: { low: 0.25, moderate: 0.5, high: 1 } as Record<Intent, number>,
   /** CHOSEN — a pitcher who also catches is budgeted to this share of the stricter budget. */
-  pitcherCatcherShare: 0.85,
+  pitcherCatcherShare: 0.7,
   /** CHOSEN — softball tournament weekend budget per tournament day (pitches). */
   tournamentPerDay: 140,
   tournamentWarnAt: 0.8,
