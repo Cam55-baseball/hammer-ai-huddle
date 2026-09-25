@@ -181,7 +181,13 @@ import {
 import { filterUbCatalog, trainingAgeBand } from "../_shared/wic/ubPlyo/liveFilter.ts";
 import { doseCap as ubDoseCap } from "../_shared/wic/ubPlyo/rules.ts";
 import { UB_MOVEMENTS } from "../_shared/wic/ubPlyo/families.ts";
-const ubLetterOf = (slug: string): any => (UB_MOVEMENTS as any[]).find((x) => x.slug === slug)?.letter ?? "A";
+const ubLetterOf = (slug: string): any => {
+  const known = (UB_MOVEMENTS as any[]).find((x) => x.slug === slug)?.letter;
+  if (known) return known;
+  const m = /_f\d+_([a-d])_/.exec(slug);
+  // Unknown letter → the stricter B cap (12), never the looser one.
+  return m ? m[1].toUpperCase() : "B";
+};
 import { sessionsFromLogs, silentSignalEffect, type SilentSignalEffect } from "../_shared/wic/schedule/tissueCost/v11/silentSignalsApply.ts";
 import {
   TRAINING_AGE_VERSION,
@@ -293,7 +299,8 @@ type SequenceRole =
   | "speed"
   | "bat_speed"
   | "conditioning"
-  | "cross_sport";
+  | "cross_sport"
+  | "ub_primer";
 
 interface Prescription {
   slot: Slot;
@@ -2141,7 +2148,7 @@ const handler = async (req: Request): Promise<Response> => {
         const contacts = d.dosage_unit === "reps" ? d.sets * (d.reps ?? 0) * Math.max(1, Number(m.contacts_per_rep ?? 1)) : null;
         push(
           "ub_primer",
-          "primer" as SequenceRole,
+          "ub_primer",
           m,
           d as any,
           cat === "upper_body_plyo"
