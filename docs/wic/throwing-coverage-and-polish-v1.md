@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** Arm ledger (phases/armLedger.ts) is SHADOW ONLY: computed nightly for every athlete, shown in Staff View and the presentation demo, not yet enforced on athletes' cards.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** Arm ledger LIVE: one shared ledger fed by one-tap throw entry on Hammer's Today and the pitching card; budget stop lines shown on both throwing panels. Staff View and demo also read it.
 
 # Throwing Coverage & Polish v1
 

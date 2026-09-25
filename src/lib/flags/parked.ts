@@ -11,5 +11,7 @@ export const PARKED_UI = {
   landingComingSoonBox: false,
   /** Landing page teaser cards: motion capture, analytics, rankings. */
   landingTeaserCards: false,
+  /** Progress page "Game IQ 101 · Coming soon" tile. */
+  progressGameIqTile: false,
 } as const;
 export type ParkedUiKey = keyof typeof PARKED_UI;

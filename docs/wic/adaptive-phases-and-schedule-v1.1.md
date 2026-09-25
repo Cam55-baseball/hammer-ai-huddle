@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** Stage A (check-in chips, Tell Hammers timeline) is built; it re-plans only when tell_hammers is on (currently Off). Stage B rules are SHADOW ONLY until adaptive_phases is on.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** Stage A LIVE: tell_hammers ON (all); Tell Hammer entry always visible on Today and saves re-plan the next 7 days. Stage B LIVE with adaptive_phases ON.
 
 # Adaptive Phases v1.1 — Amendment (owner, 2026-09-24)
 

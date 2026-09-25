@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** Circuit breaker and coverage audit LIVE. Personalization LIVE (switch all, learning until 8 logged sessions). Silent Signals: no dedicated module; NOT IMPLEMENTED as a separate rule.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** Circuit breaker and coverage audit LIVE. Personalization LIVE (switch all). Silent Signals LIVE through silentSignalsApply.ts under the personalization switch (≥2 signal weight → one CNS-cap step down; pain wins). Three weight signals cannot fire until target weights exist.
 
 # Tissue Cost Scheduler v1.1 — Addendum
 **Owner direction, 2026-09-20 (second round). Extends `tissue-cost-scheduler-v1.md`. Same stage discipline: pure code + tests first, then shadow, then live.**

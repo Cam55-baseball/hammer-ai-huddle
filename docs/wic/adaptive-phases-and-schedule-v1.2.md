@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** One pain record: LIVE. Arc-by-days and arm readiness: SHADOW ONLY (adaptive_phases Off). Stage C outcome links: built, minimum-data bar not met; phase_feedback Off.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** One pain record LIVE. adaptive_phases ON (all) — arc-by-days, arm readiness and ramps reach cards. phase_feedback ON (all); learned shares are still version 0 (equal to the default split) until outcome links meet the minimum-data bar.
 
 # AMENDMENT v1.2 to adaptive-phases-and-schedule-v1 — owner-directed
 

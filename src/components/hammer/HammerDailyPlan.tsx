@@ -82,6 +82,7 @@ import {
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
+import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 import { RampLines, AdaptivePhaseStrip } from "@/components/hammer/AdaptivePhaseStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { ScheduledPriorityStrip } from "@/components/hammer/ScheduledPriorityStrip";
@@ -760,10 +761,15 @@ function HammerDailyPlanBody({
   return (
     <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
+      {/* Always visible — never inside a collapsed box (Tell Hammers entry point + phase strip). */}
+      <ErrorBoundary>
+        <AdaptivePhaseStrip />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <TellHammersInbox />
+      </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        {/* v1.2 §E — phase name, weeks left, what's next; one collapsed "why" line. */}
-        <AdaptivePhaseStrip />
         {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
         <ErrorBoundary>
           <ScheduledPriorityStrip />

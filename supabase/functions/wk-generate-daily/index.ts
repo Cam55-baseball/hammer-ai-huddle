@@ -211,6 +211,7 @@ import {
   describeDose,
   isRepDosed as doctrineIsRepDosed,
   isWithinEnvelope,
+  resolveUbPrimerDose,
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 
@@ -2134,13 +2135,11 @@ const handler = async (req: Request): Promise<Response> => {
         [...(lib as any[])]
           .filter((m) => m.category === cat && m.ub_tier && eligible(m as any))
           .sort((a, b) => (tierRank[b.ub_tier] ?? 0) - (tierRank[a.ub_tier] ?? 0) || String(a.slug).localeCompare(String(b.slug)))[0] ?? null;
-      const ubDose = (m: any) => {
-        const cpr = Math.max(1, Number(m.contacts_per_rep ?? 1));
-        if (m.dosage_unit === "seconds") return { sets: 2, reps: null, duration_seconds: 15, dosage_unit: "seconds" };
-        const cap = ubDoseCap(m.ub_tier, ubLetterOf(m.slug));
-        const reps = Math.max(1, Math.floor(cap / 2 / cpr));
-        return { sets: 2, reps: Math.min(reps, 10), dosage_unit: "reps" };
-      };
+      const ubDose = (m: any) => resolveUbPrimerDose({
+        dosageUnit: m.dosage_unit,
+        contactCap: ubDoseCap(m.ub_tier, ubLetterOf(m.slug)),
+        contactsPerRep: m.contacts_per_rep,
+      });
       for (const cat of ["upper_body_plyo", "hand_wrist_chain"]) {
         const m = pickUb(cat);
         if (!m) continue;
@@ -4047,9 +4046,19 @@ const handler = async (req: Request): Promise<Response> => {
     const unilateralSlugs = new Set(
       lib.filter((m: any) => m?.unilateral === true).map((m: any) => String(m.slug)),
     );
+    const cprBySlug = new Map<string, number>(
+      lib.map((m: any) => [String(m.slug), Math.max(1, Number(m.contacts_per_rep ?? 1))]),
+    );
     for (const r of finalRxs as any[]) {
       const wp = (r.why_payload ?? {}) as Record<string, unknown>;
       wp.laterality = unilateralSlugs.has(r.movement_slug) ? "unilateral" : "bilateral";
+      // Dose-derived labels are computed HERE, from the final saved dose, after
+      // every trim/clamp/season pass has run. Nothing upstream may set them.
+      if ("ub_contacts" in wp) {
+        wp.ub_contacts = (r.dosage_unit ?? "reps") === "reps"
+          ? Number(r.sets ?? 0) * Number(r.reps ?? 0) * (cprBySlug.get(r.movement_slug) ?? 1)
+          : null;
+      }
       r.why_payload = wp;
     }
 

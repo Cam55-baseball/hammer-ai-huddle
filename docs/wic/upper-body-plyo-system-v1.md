@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** NOT LIVE. Rules in _shared/wic/ubPlyo/* are tested only; the generator does not read them. Catalog rows (bucket, ub_tier, plyo_tier, contacts) and the UB plyo exposure channel ARE live. The unused switch was removed in Step 28.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** LIVE. ub_plyo_hand_wrist ON (all); own primer slot right after the warm-up; live filter removes tiers the athlete is not cleared for; dose from doc contact caps via doctrine.resolveUbPrimerDose, label computed from final saved dose.
 
 # Upper-Body Plyometric System v1 (UBP)
 **Owner-directed, 2026-09-20.** Extends `training-intelligence-v1.md` and the Tissue Cost Scheduler.

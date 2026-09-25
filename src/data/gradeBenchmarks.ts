@@ -39,6 +39,12 @@ export interface BenchmarkProvenance {
    * guard treats undated the same as unverifiable and reports it.
    */
   as_of: string | null;
+  /**
+   * Owner decision 2026-09-25: sourced-but-undated anchors are flagged as
+   * estimates until a dated source is supplied. The original source text is
+   * kept as a lead, never shown as a citation. Listed in parked-features.md.
+   */
+  estimate?: boolean;
 }
 
 export type BenchmarkEntry = BenchmarkProvenance & {
@@ -50,7 +56,8 @@ export type BenchmarkTable = Record<string, BenchmarkEntry>;
 
 /** True when a metric's anchors are interpolated rather than sourced. */
 export function isEstimateBenchmark(metricKey: string): boolean {
-  return GRADE_BENCHMARKS[metricKey]?.source === 'estimate';
+  const e = GRADE_BENCHMARKS[metricKey];
+  return e?.source === 'estimate' || e?.estimate === true;
 }
 
 /**
@@ -61,6 +68,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   ten_yard_dash: {
     source: "PG/PBR event timing data, MLB Combine — baseball only",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 1.85, grade: 20 }, { raw: 1.75, grade: 30 }, { raw: 1.65, grade: 40 },
       { raw: 1.55, grade: 50 }, { raw: 1.467, grade: 60 }, { raw: 1.383, grade: 70 },
@@ -72,6 +80,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   seven_yard_dash: {
     source: "PG/PBR softball event timing — softball acceleration test",
     as_of: null,
+    estimate: true,
     baseball: [],
     softball: [
       { raw: 1.55, grade: 20 }, { raw: 1.473, grade: 30 }, { raw: 1.397, grade: 40 },
@@ -109,6 +118,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   forty_yard_dash: {
     source: "PG/PBR softball event timing — softball top-end speed test",
     as_of: null,
+    estimate: true,
     baseball: [],
     softball: [
       { raw: 5.75, grade: 20 }, { raw: 5.517, grade: 30 }, { raw: 5.283, grade: 40 },
@@ -150,6 +160,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   pro_agility: {
     source: "NFL/MLB Combine cross-reference, PG data",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 4.9, grade: 20 }, { raw: 4.7, grade: 30 }, { raw: 4.5, grade: 40 },
       { raw: 4.3, grade: 50 }, { raw: 4.1, grade: 60 }, { raw: 3.9, grade: 70 },
@@ -195,6 +206,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   sl_broad_jump: {
     source: "NSCA normative tables, PG data",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 55, grade: 20 }, { raw: 62, grade: 30 }, { raw: 69, grade: 40 },
       { raw: 76, grade: 50 }, { raw: 85.667, grade: 60 }, { raw: 95.333, grade: 70 },
@@ -225,6 +237,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   sl_vert_jump: {
     source: "NSCA, PG event data",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 18, grade: 20 }, { raw: 21, grade: 30 }, { raw: 24, grade: 40 },
       { raw: 27, grade: 50 }, { raw: 30.667, grade: 60 }, { raw: 34.333, grade: 70 },
@@ -240,6 +253,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   vertical_jump: {
     source: "NSCA normative tables",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 22, grade: 20 }, { raw: 25, grade: 30 }, { raw: 28, grade: 40 },
       { raw: 31, grade: 50 }, { raw: 34.667, grade: 60 }, { raw: 38.333, grade: 70 },
@@ -255,6 +269,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   standing_broad_jump: {
     source: "NSCA normative tables",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 70, grade: 20 }, { raw: 78.333, grade: 30 }, { raw: 86.667, grade: 40 },
       { raw: 95, grade: 50 }, { raw: 105, grade: 60 }, { raw: 115, grade: 70 },
@@ -375,6 +390,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   avg_exit_velo_bp: {
     source: "Driveline, MLB Combine avg",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 65, grade: 20 }, { raw: 71.667, grade: 30 }, { raw: 78.333, grade: 40 },
       { raw: 85, grade: 50 }, { raw: 91, grade: 60 }, { raw: 97, grade: 70 },
@@ -390,6 +406,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   long_toss_distance: {
     source: "Driveline, PG event data",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 170, grade: 20 }, { raw: 206.667, grade: 30 }, { raw: 243.333, grade: 40 },
       { raw: 280, grade: 50 }, { raw: 326.667, grade: 60 }, { raw: 373.333, grade: 70 },
@@ -495,6 +512,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   sl_balance_eyes_closed: {
     source: "Research - balance norms for athletes",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 10, grade: 20 }, { raw: 18.333, grade: 30 }, { raw: 26.667, grade: 40 },
       { raw: 35, grade: 50 }, { raw: 53.333, grade: 60 }, { raw: 71.667, grade: 70 },
@@ -525,6 +543,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   three_hundred_yd_shuttle: {
     source: "NSCA normative tables",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 68, grade: 20 }, { raw: 63.667, grade: 30 }, { raw: 59.333, grade: 40 },
       { raw: 55, grade: 50 }, { raw: 51.333, grade: 60 }, { raw: 47.667, grade: 70 },
@@ -555,6 +574,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   sl_3x_bound: {
     source: "NSCA bound norms + sport-specific elastic output research",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 23, grade: 20 }, { raw: 26.333, grade: 30 }, { raw: 29.667, grade: 40 },
       { raw: 33, grade: 50 }, { raw: 37.667, grade: 60 }, { raw: 42.333, grade: 70 },
@@ -570,6 +590,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   shoulder_rom_internal: {
     source: "Research - GIRD norms, throwing athlete ROM studies",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 28, grade: 20 }, { raw: 33.667, grade: 30 }, { raw: 39.333, grade: 40 },
       { raw: 45, grade: 50 }, { raw: 52.667, grade: 60 }, { raw: 60.333, grade: 70 },
@@ -585,6 +606,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   shoulder_rom_external: {
     source: "Research - throwing athlete ROM studies",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 65, grade: 20 }, { raw: 72.333, grade: 30 }, { raw: 79.667, grade: 40 },
       { raw: 87, grade: 50 }, { raw: 94.667, grade: 60 }, { raw: 102.333, grade: 70 },
@@ -600,6 +622,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   hip_internal_rotation: {
     source: "Research - hip mobility norms for rotational athletes",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 20, grade: 20 }, { raw: 24.667, grade: 30 }, { raw: 29.333, grade: 40 },
       { raw: 34, grade: 50 }, { raw: 40, grade: 60 }, { raw: 46, grade: 70 },
@@ -615,6 +638,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   ankle_dorsiflexion: {
     source: "Research - knee-to-wall test norms",
     as_of: null,
+    estimate: true,
     baseball: [
       { raw: 2.2, grade: 20 }, { raw: 2.8, grade: 30 }, { raw: 3.4, grade: 40 },
       { raw: 4, grade: 50 }, { raw: 4.667, grade: 60 }, { raw: 5.333, grade: 70 },
