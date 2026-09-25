@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
 const corsHeaders = {
@@ -96,6 +97,12 @@ Deno.serve(async (req) => {
         );
       }
 
+    {
+      const g = await recruitingGate(supabase, user.id, [playerId], 'video');
+      if (g.get(playerId) !== 'visible') {
+        return new Response(JSON.stringify({ error: 'Waiting on guardian consent' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
       // Verify video belongs to player
       const { data: videoData } = await supabase
         .from('videos')
