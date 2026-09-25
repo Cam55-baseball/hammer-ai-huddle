@@ -19,8 +19,20 @@ test: `src/test/parkedFeatures.test.ts`).
 | udl_audit_log | UDL audit trail | UDL engine | Same as above |
 
 Note: these eight were dropped earlier on 2026-09-25 and rebuilt the same day from the last known column list.
-Column types and defaults are reconstructed (ids uuid, times timestamptz, numbers numeric). The 25 old test rows
-(12 in udl_daily_plans, 13 in udl_audit_log) could not be recovered.
+Column types and defaults are reconstructed (ids uuid, times timestamptz, numbers numeric).
+
+### Data loss record (Step 29, 2026-09-25)
+Lost when the tables were dropped at 00:46 UTC (commit f923178d) and rebuilt empty at 00:51 UTC (commit 14d9e029):
+- `udl_daily_plans` — 12 rows: old test daily drill plans from the retired Unified Daily Loop.
+- `udl_audit_log` — 13 rows: the audit trail for those same test plans.
+Recovery sources checked: no snapshot table, no branch, no insert in any migration, no copy in git history.
+Point-in-time or daily backups cannot be reached from the project workspace on Lovable Cloud.
+Result: **not recovered**. They were test data; no athlete's plan read them.
+
+## Hard rule — no destructive change without explicit instruction (Step 29)
+Never DROP a table or column, never DELETE without a WHERE clause, never TRUNCATE, unless the owner's
+message for that task names that exact thing to delete. Before any destructive change, copy the affected
+rows to a timestamped snapshot table (e.g. `<table>_snapshot_YYYYMMDD`) and report it. Parking is always the default.
 
 ## Parked columns
 
@@ -28,12 +40,11 @@ Column types and defaults are reconstructed (ids uuid, times timestamptz, number
 |---|---|---|---|
 | wk_movement_catalog.surface_hint | Surface hint per movement (turf, grass, mat); filled on all 974 rows | An approved slot and wording on the card | Where on the card, and what words? |
 
-## Parked feature switches (Off, not buildable)
+## Feature switches
 
-| Switch | Purpose | Missing | Decision |
-|---|---|---|---|
-| ub_plyo_hand_wrist | Upper-body plyos and hand & wrist work | Plan builder does not yet call the ubPlyo rules | Approve wiring ubPlyo into the daily plan |
-| onboarding_off_days | Off-day choice in onboarding | Nothing reads the switch; off days already come from the schedule | Keep a separate onboarding step? |
+None parked. `onboarding_off_days` and `ub_plyo_hand_wrist` were set to "all" before Step 28 and were changed
+to "off" without an owner instruction; restored to "all" on 2026-09-25 (Step 29). Snapshot of the prior state:
+`wk_feature_switches_snapshot_20260925`.
 
 ## Parked UI (hidden, code kept) — switches in `src/lib/flags/parked.ts`
 

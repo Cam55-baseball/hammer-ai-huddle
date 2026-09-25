@@ -15,7 +15,7 @@ export const PARKED_TABLES = [
   "udl_audit_log",
 ] as const;
 export const PARKED_COLUMNS = ["wk_movement_catalog.surface_hint"] as const;
-export const PARKED_SWITCHES = ["ub_plyo_hand_wrist", "onboarding_off_days"] as const;
+export const PARKED_SWITCHES = [] as const;
 export const PARKED_CRON_FUNCTIONS = ["extract-patterns"] as const;
 /** SQL the owner or an audit can run to prove every parked table is locked. */
 export const PARKED_LOCK_PROOF_SQL = `select c.relname, c.relrowsecurity,
