@@ -210,6 +210,7 @@ Deno.serve(async (req) => {
     const email = p ? p.email : TEST_PITCHER;
 
     let id = await findUser(admin, email);
+    const created = !id;
     if (!id) {
       const { data, error } = await admin.auth.admin.createUser({
         email, password: crypto.randomUUID() + "Aa1!", email_confirm: true,
@@ -218,10 +219,12 @@ Deno.serve(async (req) => {
       if (error) return json({ error: error.message }, 500);
       id = data.user!.id;
     }
-    // Belt and braces: never act on a non-system account.
+    // Never act on an existing account that isn't already a system account.
+    if (!created) {
+      const { data: prof } = await admin.from("profiles").select("is_system_account").eq("id", id).maybeSingle();
+      if (prof?.is_system_account !== true) return json({ error: "Refusing: existing non-system account" }, 409);
+    }
     if (p) await seed(admin, id!, p, u.user.id);
-    const { data: prof } = await admin.from("profiles").select("is_system_account").eq("id", id).maybeSingle();
-    if (prof?.is_system_account !== true) return json({ error: "Refusing: not a system account" }, 409);
 
     if (body?.session) {
       const s = await oneTimeSession(admin, url, email);
