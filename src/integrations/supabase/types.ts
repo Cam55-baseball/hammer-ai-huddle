@@ -1269,6 +1269,33 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_height_checks: {
+        Row: {
+          created_at: string
+          id: string
+          inches: number
+          measured_on: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inches: number
+          measured_on?: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inches?: number
+          measured_on?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_load_tracking: {
         Row: {
           cns_load_total: number | null
