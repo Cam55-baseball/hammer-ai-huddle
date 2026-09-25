@@ -1,3 +1,5 @@
+> **Correction (2026-09-25, owner):** no drops. Every item previously marked removed is now **PARKED** — kept, locked from users, labelled, and listed in `parked-features.md`. Only the unused cron schedule stays off (function code kept).
+
 # Step 28 — Dead-End Audit (2026-09-25)
 
 ## A. Tables and columns
@@ -13,7 +15,7 @@ The owner's 7 empty tables:
 | hie_dirty_users | trigger mark_hie_dirty | hie-refresh-worker (drains it every 15 min) | WIRED: a queue that is normally empty |
 | tcs_test_run_chunks | tcs-test-runner | tcs-test-runner | WIRED (test runner), cleared after each run |
 
-Dropped (no code writes or reads them): game_plan_week_overrides, sprint_analyses, video_pose_analysis, udl_alerts, udl_constraint_overrides, udl_drill_completions, udl_daily_plans (12 old rows), udl_audit_log (13 old rows).
+Parked (no code writes or reads them): game_plan_week_overrides, sprint_analyses, video_pose_analysis, udl_alerts, udl_constraint_overrides, udl_drill_completions, udl_daily_plans (12 old rows), udl_audit_log (13 old rows).
 Kept as undo backups: wk_slug_rename_step26, wk_ti0a1_backup.
 
 New columns (wk_movement_catalog):

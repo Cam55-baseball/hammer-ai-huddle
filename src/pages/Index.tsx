@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PARKED_UI } from "@/lib/flags/parked";
+import { ParkedComingSoonBox, ParkedTeaserCards } from "@/components/parked/ParkedLandingTeasers";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -77,6 +79,8 @@ const Index = () => {
         </div>
       </section>
 
+      {PARKED_UI.landingComingSoonBox && <ParkedComingSoonBox />}
+
       {/* Features Preview */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
@@ -88,6 +92,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {PARKED_UI.landingTeaserCards && <ParkedTeaserCards isOwner={!!isOwner} />}
             <div className="bg-card p-8 rounded-xl shadow-lg border border-border hover:border-primary/50 transition-all duration-300">
               <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-2xl">📅</span>
