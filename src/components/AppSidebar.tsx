@@ -1,3 +1,4 @@
+import { PARKED_UI } from "@/lib/flags/parked";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity } from "lucide-react";
@@ -241,6 +242,7 @@ export function AppSidebar() {
           { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: t('workoutModules.productionStudio.subtitle') || "6-week workout" },
           { title: 'Explosive Conditioning', url: "/explosive-conditioning", icon: Zap, description: "Build elite speed and explosive power" },
           ...(selectedSport === 'baseball' ? [{ title: 'Pick-Off Trainer', url: '/pickoff-trainer', icon: Target, description: 'Pick-off decision training' }] : []),
+          ...(PARKED_UI.sidebarGameIq101 ? [{ title: 'Game IQ 101 (Coming soon)', url: `/iq?lens=pitching&sport=${selectedSport}`, icon: Brain, description: 'Coming soon — under construction' }] : []),
           { title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Read runners and control the run game' },
         ]
       });
@@ -268,6 +270,7 @@ export function AppSidebar() {
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
           ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
           { title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Baserunning decision training' },
+          ...(PARKED_UI.sidebarGameIq101 ? [{ title: 'Game IQ 101 (Coming soon)', url: '/iq', icon: Brain, description: 'Coming soon — under construction' }] : []),
         ]
       });
     }
@@ -295,6 +298,7 @@ export function AppSidebar() {
           ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
           ...(selectedSport === 'baseball' ? [{ title: 'Pick-Off Trainer', url: '/pickoff-trainer', icon: Target, description: 'Pick-off decision training' }] : []),
           { title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Baserunning decision training' },
+          ...(PARKED_UI.sidebarGameIq101 ? [{ title: 'Game IQ 101 (Coming soon)', url: '/iq', icon: Brain, description: 'Coming soon — under construction' }] : []),
         ]
       });
     }
