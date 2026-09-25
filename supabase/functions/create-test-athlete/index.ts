@@ -35,5 +35,20 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500);
     id = data.user!.id;
   }
-  return json({ user_id: id, email: EMAIL });
+  const body = await req.json().catch(() => ({}));
+  if (!body?.generate) return json({ user_id: id, email: EMAIL });
+  // Run the REAL generator as the test athlete: rotate to a one-time password,
+  // sign in, call wk-generate-daily with that athlete's own session.
+  const pw = crypto.randomUUID() + "Aa1!";
+  await admin.auth.admin.updateUserById(id!, { password: pw });
+  const anon = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!);
+  const { data: s, error: se } = await anon.auth.signInWithPassword({ email: EMAIL, password: pw });
+  if (se || !s.session) return json({ error: se?.message ?? "sign-in failed" }, 500);
+  const r = await fetch(`${url}/functions/v1/wk-generate-daily`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${s.session.access_token}`, apikey: Deno.env.get("SUPABASE_ANON_KEY")!, "Content-Type": "application/json" },
+    body: JSON.stringify({ plan_date: body.plan_date }),
+  });
+  await anon.auth.signOut();
+  return json({ user_id: id, status: r.status, result: await r.json().catch(() => null) });
 });
