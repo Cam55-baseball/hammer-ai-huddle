@@ -178,6 +178,7 @@ import {
   resolvePersonalizationContext,
   type PersonalizationContext,
 } from "../_shared/wic/personalizationContext.ts";
+import { filterUbCatalog, trainingAgeBand } from "../_shared/wic/ubPlyo/liveFilter.ts";
 import { sessionsFromLogs, silentSignalEffect, type SilentSignalEffect } from "../_shared/wic/schedule/tissueCost/v11/silentSignalsApply.ts";
 import {
   TRAINING_AGE_VERSION,
@@ -804,7 +805,61 @@ const handler = async (req: Request): Promise<Response> => {
       };
       return [...rows].sort((a, b) => rank(a) - rank(b));
     };
-    const lib = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
+    const libBase = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
+    // -------- Upper-Body Plyo v1 — live legality filter (E2E WP4 item 1) --------
+    // Filter-only, gated by ub_plyo_hand_wrist: removes U2/U3 rows the athlete is
+    // not cleared for today (phase, age, training age, growth, earned history,
+    // 2-a-week cap, pitcher start window, pain). U1 is never removed. Off or any
+    // failure → the catalog is exactly as before.
+    let lib = libBase;
+    let ubFilterRemoved = 0;
+    try {
+      const { data: ubSw } = await admin
+        .from("wk_feature_switches")
+        .select("feature_key, mode, allowlist, updated_by")
+        .eq("feature_key", "ub_plyo_hand_wrist");
+      if (resolveFeatures(ubSw as any, user.id).ub_plyo_hand_wrist === true) {
+        const tierBySlug = new Map<string, string>();
+        for (const m of libBase as any[]) if (m.ub_tier) tierBySlug.set(m.slug, m.ub_tier);
+        const { data: ubLogs } = await admin
+          .from("wk_session_logs")
+          .select("plan_date, movement_slug, sets_completed")
+          .eq("user_id", user.id)
+          .gte("plan_date", isoShift(planDate, -70))
+          .lt("plan_date", planDate)
+          .limit(1000);
+        const days = (tier: string[], from: string) => new Set(
+          (ubLogs ?? []).filter((r: any) => r.plan_date >= from && (r.sets_completed ?? 1) > 0 && tier.includes(tierBySlug.get(r.movement_slug) ?? "")).map((r: any) => r.plan_date),
+        ).size;
+        const dob = (p as any).date_of_birth ? new Date(`${(p as any).date_of_birth}T00:00:00Z`) : null;
+        const ubAge = dob ? Math.floor((new Date(`${planDate}T12:00:00Z`).getTime() - dob.getTime()) / (365.25 * 86400000)) : null;
+        const dayMs = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
+        const startOffsets = [
+          ...(gamesToday ?? []).filter((g: any) => g.is_starting_pitcher).map((g: any) => g.game_date),
+          ...(calendarGames ?? []).filter((g: any) => g.is_starting_pitcher).map((g: any) => g.event_date),
+        ].map((d: string) => Math.round((dayMs(d) - dayMs(planDate)) / 86400000));
+        const isPitcher = athletePositions.some((x) => /pitch|^p$|rhp|lhp|sp|rp/.test(x));
+        const weekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
+        const f = filterUbCatalog(libBase as any[], {
+          phase: phaseRes.phase as any,
+          ageYears: ubAge,
+          trainingAge: trainingAgeKnown ? trainingAgeBand(trainingAgeYears, isProProspect) : null,
+          growthMode: ubAge != null && ubAge <= 15,
+          throwingArmAthlete: isPitcher,
+          startDayOffsets: startOffsets,
+          history: {
+            u1SessionsLast8w: days(["U1"], isoShift(planDate, -56)),
+            u2SessionsLast10w: days(["U2"], isoShift(planDate, -70)),
+            u2u3SessionsThisWeek: days(["U2", "U3"], weekStart),
+          },
+          painFlag: injurySlugs.size > 0,
+        });
+        lib = f.rows as typeof libBase;
+        ubFilterRemoved = f.removed;
+      }
+    } catch (_e) {
+      lib = libBase;
+    }
 
     // -------- Determine reductions --------
     const reductions: { reason: string; detail: string }[] = [];
