@@ -178,7 +178,7 @@ import {
   resolvePersonalizationContext,
   type PersonalizationContext,
 } from "../_shared/wic/personalizationContext.ts";
-import { filterUbCatalog, trainingAgeBand } from "../_shared/wic/ubPlyo/liveFilter.ts";
+import { filterUbCatalog, trainingAgeBand, ubGrowthMode } from "../_shared/wic/ubPlyo/liveFilter.ts";
 import { doseCap as ubDoseCap } from "../_shared/wic/ubPlyo/rules.ts";
 import { UB_MOVEMENTS } from "../_shared/wic/ubPlyo/families.ts";
 const ubLetterOf = (slug: string): any => {

@@ -35,3 +35,22 @@ describe("UB plyo live filter", () => {
     expect(trainingAgeBand(5, true)).toBe("professional");
   });
 });
+
+import { ubGrowthMode } from "../../../supabase/functions/_shared/wic/ubPlyo/liveFilter";
+describe("UB plyo growth mode from real height checks", () => {
+  const kid = { ...base, ageYears: 14, trainingAge: "intermediate" as const, phase: "os_q2" as const };
+  it("14-year-old intermediate, no growth → U2 allowed", () => {
+    const g = ubGrowthMode(14, [{ date: "2026-06-01", inches: 64 }, { date: "2026-09-01", inches: 64.25 }], "2026-09-25");
+    expect(g).toBe(false);
+    expect(ubTierBlocked("U2", { ...kid, growthMode: g })).toBeNull();
+  });
+  it("14-year-old intermediate who grew an inch this month → U2 blocked", () => {
+    const g = ubGrowthMode(14, [{ date: "2026-08-28", inches: 64 }, { date: "2026-09-22", inches: 65 }], "2026-09-25");
+    expect(g).toBe(true);
+    expect(ubTierBlocked("U2", { ...kid, growthMode: g })).toBe("age");
+  });
+  it("unknown height history → not in growth mode", () => {
+    expect(ubGrowthMode(14, [], "2026-09-25")).toBe(false);
+    expect(ubGrowthMode(null, [{ date: "2026-09-01", inches: 60 }], "2026-09-25")).toBe(false);
+  });
+});
