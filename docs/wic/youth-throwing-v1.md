@@ -5,9 +5,9 @@ Code: `supabase/functions/_shared/wic/phases/youthThrowing.ts`. Baseball only; s
 
 ## Kept from Step 26
 - **Weekly / season / annual pitch caps** (owner-tunable): 11–12 → 100 / 1,000 / 2,000–3,000 (warns from 2,000); 13–14 → 125 / 1,000 / 3,000. Warn at 80%; a full cap blocks further pitching.
-- **Innings cap:** 100 competitive innings a calendar year, high school and younger.
+- **Innings cap:** 100 competitive innings a calendar year, high school and younger. Source (staff view): Fleisig GS et al., AJSM 2011;39(2):253-257 — >100 innings/year about 3.5× injury (95% CI 1.16–10.44).
 - **Pitched while fatigued:** check-in "arm tired", a velocity drop of 5%+ or a command drop of 15+ points flags it; the flag stops the outing and feeds the governors.
-- **Pitcher who also catches:** combined budget = stricter of the two × 0.70 (was 0.85). Athlete line (no statistics): "Pitching and catching together is one of the heaviest arm workloads in the game, so we budget it tightly." The research note (about 2.7× serious arm-injury rate, Fleisig et al. 2011, correlation not prediction) shows in the staff view only.
+- **Pitcher who also catches:** combined budget = stricter of the two × 0.70 (was 0.85). Athlete line (no statistics): "Pitching and catching together is one of the heaviest arm workloads in the game, so we budget it tightly." The research note shows in the staff view only: Hibberd EE et al., Journal of Athletic Training 2018 — 384 high school pitchers from 51 teams; injury proportion 15% vs 5%; rate ratio 2.9 (95% CI 1.03–8.12). Correlation, high school cohort. (Correction 2026-09-25: this was previously credited to Fleisig et al. 2011, whose pitcher-catcher trend was not statistically significant.)
 - **Overlapping teams:** all teams' pitches count against one set of limits, with a warning.
 - **Growth-adjusted pitching age (Hammers rule, E3):** ≥1 in in ~30 days → 8 weeks one Pitch Smart band younger (daily max and rest), high-intent capped, volume held at maintain; each extra inch adds 8 weeks and can drop one more band; floor = youngest band. The 8-week figure is our rule, not published science.
 

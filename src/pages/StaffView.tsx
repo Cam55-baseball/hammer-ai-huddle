@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PITCHER_CATCHER_STAFF_NOTE } from "../../supabase/functions/_shared/wic/phases/youthThrowing";
+import { PITCHER_CATCHER_STAFF_NOTE, INNINGS_CAP_STAFF_NOTE } from "../../supabase/functions/_shared/wic/phases/youthThrowing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -506,8 +506,9 @@ export default function StaffView() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Research notes (staff only)</CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-muted-foreground">
+              <CardContent className="space-y-2 text-xs text-muted-foreground">
                 <p><span className="font-medium text-foreground">Pitcher who also catches — </span>{PITCHER_CATCHER_STAFF_NOTE}</p>
+                <p><span className="font-medium text-foreground">100-innings yearly cap — </span>{INNINGS_CAP_STAFF_NOTE}</p>
               </CardContent>
             </Card>
           </div>
