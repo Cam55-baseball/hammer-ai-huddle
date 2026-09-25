@@ -19,12 +19,31 @@ export const PITCH_SMART_BANDS: AgeBand[] = [
   { label: "13–14", minAge: 13, maxAge: 14, dailyMax: 95, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
   { label: "15–16", minAge: 15, maxAge: 16, dailyMax: 95, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [76, 4]] },
   { label: "17–18", minAge: 17, maxAge: 18, dailyMax: 105, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [81, 4]] },
-  { label: "19–22", minAge: 19, maxAge: 200, dailyMax: 120, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [81, 4]] },
+  { label: "19–22", minAge: 19, maxAge: 22, dailyMax: 120, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [81, 4], [106, 5]] },
 ];
 export function bandIndex(age: number): number {
   const i = PITCH_SMART_BANDS.findIndex((b) => age >= b.minAge && age <= b.maxAge);
   return i < 0 ? PITCH_SMART_BANDS.length - 1 : i;
 }
+/** MLB Pitch Smart covers amateurs aged 7–22 only. */
+export const PITCH_SMART_MAX_AGE = 22;
+export const PITCH_SMART_SOURCE_LABEL = "MLB Pitch Smart guideline";
+export const PRO_PITCH_COUNT_STAFF_LINE = "Club protocols govern pro pitch counts; Hammers tracks total arm load.";
+export function isProLevel(level: string | null): boolean {
+  return /\b(pro|professional|free[_ ]?agent|mlb|milb|ausl)\b/i.test(level ?? "");
+}
+export function pitchSmartApplies(age: number | null, level: string | null): boolean {
+  return age != null && age <= PITCH_SMART_MAX_AGE && !isProLevel(level);
+}
+/** Pitch Smart (2018): never pitch in a game three days in a row, regardless of count. */
+export const THIRD_DAY_LINE = "No pitching in a game today — that would be three days in a row.";
+export function thirdConsecutiveGameDay(gameDates: string[], today: string): boolean {
+  const set = new Set(gameDates);
+  const back = (n: number) => new Date(Date.parse(today + "T00:00:00Z") - n * 86_400_000).toISOString().slice(0, 10);
+  return set.has(back(1)) && set.has(back(2));
+}
+/** Pitch Smart: do not pitch in more than one game on the same day. */
+export const TWO_GAMES_LINE = "No pitching in a second game today — Pitch Smart says one game a day. Both outings count together toward today's maximum and rest.";
 export function restDaysFor(band: AgeBand, pitches: number): number {
   let d = 0;
   for (const [min, days] of band.rest) if (pitches >= min) d = days;
