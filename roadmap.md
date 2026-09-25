@@ -1,12 +1,13 @@
-# Roadmap — Ramp Law v1 (amendment v1.3) + no-glitch release
-1. [ ] Save docs/wic/ramp-law-v1.md verbatim
-2. [ ] Ramp engine for all disciplines (§1, §3, §4), throwing break + build (§2)
-3. [ ] Planner carries per-discipline ramps; game days never hold a ramp session; squeeze shortens prior block
-4. [ ] Ramp line in drawer + card label (§5), behind adaptive_phases
-5. [ ] Shadow job computes days-off per discipline
-6. [ ] §6 tests
-7. [ ] No-glitch: full suite, sweep, matrix 1,296, watchdog criticals, build errors/speed, phone-width screens, switch-off identical
-8. [ ] Report A, B, C, v1.3 item by item
-- [x] v1.4 throwing coverage: arm ledger, windmill limits, tournament mode, two-way, pitcher-catcher, §2 consistency test
-- [x] v1.4 demo picker (/owner/presentation), phone-width checks, screenshots
-- [ ] Switch on adaptive_phases — waits on owner authorisation
+# Roadmap — Steps 26–27 release
+- [x] A1 Nightly critical found: safety scan flagged 50 exercises with outside names in slugs (not an athlete)
+- [x] A2 Renamed all 50 (data + code), backup in wk_slug_rename_step26; scan now 0 violations
+- [x] B Growth-adjusted pitching age
+- [x] C Kept limits: weekly/season/annual caps, innings cap, fatigue flag, pitcher-catcher (×0.70), overlapping teams
+- [x] Step 27 A: removed annual rest rule, pitch-type age table, under-14 velocity block
+- [x] Step 27 B/C/D: Hammers break ratio, readiness pitch unlock, readiness velocity gate
+- [x] Tests: full suite 192/1,817 green; 5,000-season run seed 20260925, 0 violations
+- [ ] Wire caps / fatigue flag / growth window into the live pitching plan and check-in (modules + tests done; not yet read by the plan builder)
+- [ ] F1 Three clean nightly cycles (earliest: morning of 28 Sep UTC) — waits on the calendar
+- [ ] F2 rest_day_calculator → all via preflight after F1
+- [ ] F3 tell_hammers, adaptive_phases, phase_feedback → all (after forced generation for all 120 + phone-width pass)
+- [ ] F4 Phone-width sweep of every screen
