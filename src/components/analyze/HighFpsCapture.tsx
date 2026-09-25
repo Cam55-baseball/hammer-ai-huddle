@@ -475,7 +475,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       console.error("[HighFpsCapture] save failed", e);
       toast.error(
         e?.message === "not_enough_frames"
-          ? "Saved, but the clip was too short to analyze."
+          ? UPLOAD_ERRORS.notEnoughFrames
           : "Couldn't finish saving this clip. Try again.",
         { id: toastId },
       );
