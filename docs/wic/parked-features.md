@@ -86,3 +86,9 @@ to "off" without an owner instruction; restored to "all" on 2026-09-25 (Step 29)
 | Job | Function | Purpose | To re-schedule |
 |---|---|---|---|
 | extract-patterns-daily | extract-patterns | Builds anonymized_pattern_library | Only once something reads the library; restore with `select cron.schedule('extract-patterns-daily', ...)` |
+
+## Known simplifications left in for launch (2026-09-25)
+
+| Item | Where | Why it is safe | To finish |
+|---|---|---|---|
+| Two growth checks use "age 15 or under" instead of real height-check growth | Card builder (`wk-generate-daily`) | Always at least as cautious as the real-growth rule, never less safe | Point both at the height-check growth signal after launch |
