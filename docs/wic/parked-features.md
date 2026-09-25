@@ -29,6 +29,12 @@ Recovery sources checked: no snapshot table, no branch, no insert in any migrati
 Point-in-time or daily backups cannot be reached from the project workspace on Lovable Cloud.
 Result: **not recovered**. They were test data; no athlete's plan read them.
 
+Re-check (WP0, 2026-09-25 15:40 UTC): no `udl_*` snapshot table exists (only `wk_feature_switches_snapshot_20260925`);
+no migration inserts rows into either table; git history holds schema only, no row data. No backup or point-in-time
+restore is reachable from the project. Owner request to Lovable support: restore rows of `public.udl_daily_plans`
+(12 rows) and `public.udl_audit_log` (13 rows) as they stood before 2026-09-25 00:46 UTC (drop migration
+`20260925001205`), into a separate schema, touching nothing else.
+
 ## Hard rule — no destructive change without explicit instruction (Step 29)
 Never DROP a table or column, never DELETE without a WHERE clause, never TRUNCATE, unless the owner's
 message for that task names that exact thing to delete. Before any destructive change, copy the affected
