@@ -3,6 +3,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { Skeleton } from '@/components/ui/skeleton';
+import { hasFeatureAccess } from '@/utils/tierAccess';
 
 interface SubscriptionGateProps {
   requiredAccess: 'any' | 'hitting' | 'pitching' | 'throwing';
@@ -38,10 +39,11 @@ export function SubscriptionGate({
     return <>{children}</>;
   }
 
-  // Check access
-  const hasAccess = requiredAccess === 'any' 
-    ? modules.length > 0 
-    : modules.some(m => m.includes(requiredAccess));
+  // Check access — tier-aware (5tool / golden2way / pitcher) with legacy
+  // per-module keys honoured, so old subscribers keep what they had.
+  const hasAccess = requiredAccess === 'any'
+    ? modules.length > 0
+    : hasFeatureAccess(modules, requiredAccess);
 
   if (hasAccess) {
     return <>{children}</>;
