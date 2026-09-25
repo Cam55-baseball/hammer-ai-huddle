@@ -311,7 +311,7 @@ export default function AnalyzeVideo() {
     setAnalysisEnabled(true);
     setLandingTime(null);
     if (module && sport) {
-      toast.info(t('videoAnalysis.switchedModule', `Switched to ${sport} - ${module}. Upload space cleared.`));
+      toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
     }
   }, [module, sport, t]);
 
@@ -1175,7 +1175,7 @@ export default function AnalyzeVideo() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} {t('videoAnalysis.mechanicsEvaluation', 'mechanics evaluation')}</p>
+            <p className="text-sm sm:text-base text-muted-foreground capitalize">{t('videoAnalysis.mechanicsEvaluation', { sport, module, defaultValue: '{{sport}} - {{module}} mechanics evaluation' })}</p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {videoPreview && (
@@ -1191,78 +1191,23 @@ export default function AnalyzeVideo() {
           </div>
         </div>
 
-        {/* Capture method chooser — every analysis entry lands here first. */}
-        {!videoPreview && captureMode === "choose" && (
+        {/* Analysis is upload-only: one clip, deeply analysed. Live recording
+            lives in DelayCam. */}
+        {!videoPreview && (
           <div className="space-y-4">
-            {/* Pre-recording filming guidance for pitching (both sports).
-                Grounded in the real 13/13-missing softball failure: each item
-                prevents one of the three filming gaps that killed the tiles. */}
+            {/* Pre-filming guidance for pitching (both sports). */}
             {module === "pitching" && <PitchingFilmingGuide />}
-            <div className="grid md:grid-cols-2 gap-4">
-            {/* Pre-release gate: in-app high-frame-rate recording is brand new and
-                has not been validated on real devices, so it cannot yet claim
-                "best quality" to athletes. Owner/admin only until device testing
-                confirms it. Everyone keeps Upload (and DelayCam for self-review). */}
-            {(isOwner || isAdmin) && (
-            <button type="button" onClick={() => setCaptureMode("capture")} className="text-left">
-              <Card className="p-4 sm:p-6 h-full border-2 border-primary/40 bg-primary/[0.03] transition-colors hover:border-primary/70 hover:bg-accent/40">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
-                    <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold">
-                    {t('videoAnalysis.chooseCaptureTitle', 'Record now (best results)')}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                    {t('videoAnalysis.chooseCaptureDescription', 'Film the rep right here. We ask your camera for the fastest recording it can do, so the ball stays sharp enough to measure. You get mechanics feedback, drills, and ball speed when the footage supports it.')}
-                  </p>
-                  <span className="text-[11px] font-medium text-primary/80">Staff preview — not released yet</span>
-                </div>
-              </Card>
-            </button>
-            )}
-
-            <button type="button" onClick={() => setCaptureMode("upload")} className="text-left">
-
-              <Card className="p-4 sm:p-6 h-full border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-accent/40">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="p-3 sm:p-4 rounded-full bg-primary/10">
-                    <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.chooseUploadTitle', 'Upload a file I already have')}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                    {t('videoAnalysis.chooseUploadDescription', 'Send in a clip from your phone or camera roll. You get the same mechanics feedback and drills. Ball speed only works if that clip was filmed fast enough.')}
-                  </p>
-                </div>
-              </Card>
-            </button>
-            
-            </div>
-          </div>
-        )}
-
-        {/* Video Upload Section */}
-        {!videoPreview && captureMode === "upload" && (
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setCaptureMode("choose")}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              {t('videoAnalysis.chooseDifferentMethod', 'Choose a different method')}
-            </button>
-            {/* Phase 49: CameraAngleHelper removed with report-card surface. */}
-            <div className="grid md:grid-cols-2 gap-4">
-            {/* Upload Card */}
-            <Card className="p-4 sm:p-6 text-center border-dashed border-2">
+            <Card className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
                 <div className="p-3 sm:p-4 rounded-full bg-primary/10">
                   <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.uploadYourVideo')}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                  {t('videoAnalysis.uploadDescription', { module })}
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
+                  {t('videoAnalysis.uploadOnlyDescription', {
+                    module,
+                    defaultValue: 'Choose one clip of your {{module}} from your phone or camera roll. Hammer analyzes it frame by frame for mechanics feedback and drills. Ball speed only works if the clip was filmed fast enough.',
+                  })}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t('videoAnalysis.maxFileSize')}
@@ -1284,8 +1229,6 @@ export default function AnalyzeVideo() {
                 />
               </div>
             </Card>
-
-            </div>
           </div>
         )}
 
@@ -1603,22 +1546,6 @@ export default function AnalyzeVideo() {
           </div>
         )}
 
-        {!videoPreview && captureMode === "capture" && (isOwner || isAdmin) && (
-          <div className="mt-4 space-y-2">
-            <button
-              type="button"
-              onClick={() => setCaptureMode("choose")}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              {t('videoAnalysis.chooseDifferentMethod', 'Choose a different method')}
-            </button>
-            <HighFpsCapture
-              module={(module as "hitting" | "pitching" | "throwing") || "hitting"}
-              sport={sport as "baseball" | "softball"}
-            />
-          </div>
-        )}
 
 
       </div>
