@@ -16,7 +16,7 @@ function statusFor(beat: { ran_at: string; status: string } | undefined, fn: str
   return 'green';
 }
 
-const FN = 'foundation-health-alerts'; // 90 min window
+const FN = 'hourly-trigger-decay'; // 90 min window (health-alerts is now 270: every-4h schedule)
 const NOW = Date.UTC(2026, 0, 1, 12, 0, 0);
 
 describe('cron heartbeat severity transitions', () => {
