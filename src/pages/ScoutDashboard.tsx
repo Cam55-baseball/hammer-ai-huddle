@@ -34,6 +34,7 @@ interface Player {
   avatar_url: string | null;
   followStatus?: 'none' | 'pending' | 'accepted';
   sport?: 'baseball' | 'softball' | 'both' | null;
+  consentStatus?: 'visible' | 'waiting_on_guardian';
 }
 
 export default function ScoutDashboard() {
@@ -394,7 +395,18 @@ export default function ScoutDashboard() {
               </p>
             ) : (
               <div className="space-y-3">
-                {following.map((player) => (
+                {following.map((player) => player.consentStatus === 'waiting_on_guardian' ? (
+                  <div
+                    key={player.id}
+                    data-testid="waiting-on-guardian"
+                    className="flex items-center gap-3 p-4 border rounded-lg text-muted-foreground"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-6 w-6" />
+                    </div>
+                    <p className="font-medium">Waiting on guardian consent</p>
+                  </div>
+                ) : (
                   <div
                     key={player.id}
                     className="player-profiles flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
