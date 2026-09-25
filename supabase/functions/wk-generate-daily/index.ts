@@ -3023,7 +3023,15 @@ const handler = async (req: Request): Promise<Response> => {
       },
       availableEquipment: equipmentUnknown ? undefined : declaredEquipment,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
-    });
+      // The 48-hour pre-game primer window, a declared rest day and a Tell
+      // Hammers hold all strip loaded work by law. On those days the template's
+      // compound categories are an honest gap, not a failed build.
+      loadedWorkSuppressed:
+        gameProximity.primerOnly === true ||
+        gameProximity.removeLift === true ||
+        tcsAdjust?.removeLift === true ||
+        timelineToday.hold === true,
+
     // Attach governance stamp to each lift row's why_v2 + why_payload.
     for (const rx of finalRxs) {
       if (rx.slot !== "lift") continue;
