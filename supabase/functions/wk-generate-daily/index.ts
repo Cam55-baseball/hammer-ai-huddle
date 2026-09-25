@@ -3031,6 +3031,9 @@ const handler = async (req: Request): Promise<Response> => {
         gameProximity.removeLift === true ||
         tcsAdjust?.removeLift === true ||
         timelineToday.hold === true,
+    });
+
+
 
     // Attach governance stamp to each lift row's why_v2 + why_payload.
     for (const rx of finalRxs) {
