@@ -178,6 +178,7 @@ import {
   resolvePersonalizationContext,
   type PersonalizationContext,
 } from "../_shared/wic/personalizationContext.ts";
+import { sessionsFromLogs, silentSignalEffect, type SilentSignalEffect } from "../_shared/wic/schedule/tissueCost/v11/silentSignalsApply.ts";
 import {
   TRAINING_AGE_VERSION,
   resolveTrainingAge,
@@ -822,6 +823,38 @@ const handler = async (req: Request): Promise<Response> => {
     }
     if (soreness >= 8) {
       reductions.push({ reason: "soreness", detail: `Reported soreness ${soreness}/10 — substituting regressions where possible.` });
+    }
+    // -------- TCS v1.1 §3 — Silent Signals (E2E WP4 item 2) --------
+    // Reads the last 28 days of one-tap logs. Reduce, never remove: at most one
+    // CNS-cap step, neutral copy. Pain always wins (active pain → no signal
+    // effect; the pain rules govern). Gated by the personalization switch (§2–§3
+    // of the same addendum). Any failure → no effect; the card always ships.
+    let silentSignals: SilentSignalEffect | null = null;
+    try {
+      const { data: ssSw } = await admin
+        .from("wk_feature_switches")
+        .select("feature_key, mode, allowlist, updated_by")
+        .eq("feature_key", "personalization");
+      if (resolveFeatures(ssSw as any, user.id).personalization === true) {
+        const { data: logRows } = await admin
+          .from("wk_session_logs")
+          .select("plan_date, movement_slug, load_used, rpe, reps_completed, sets_completed, metrics")
+          .eq("user_id", user.id)
+          .gte("plan_date", isoShift(planDate, -28))
+          .lt("plan_date", planDate)
+          .order("plan_date", { ascending: true })
+          .limit(200);
+        silentSignals = silentSignalEffect({
+          sessions: sessionsFromLogs((logRows ?? []) as any),
+          painActive: injurySlugs.size > 0,
+        });
+        if (silentSignals.applied) {
+          cnsCap = Math.max(1, cnsCap + silentSignals.cnsCapDelta);
+          reductions.push({ reason: "silent_signals", detail: silentSignals.copy ?? "We set today to match your last few sessions." });
+        }
+      }
+    } catch (_e) {
+      silentSignals = null;
     }
     // ---- Recovery acknowledgement — an ack may not outlive its cause. ----
     // An ack is a promise about *a specific condition* ("I'll take the recovery
