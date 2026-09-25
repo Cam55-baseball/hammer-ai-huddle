@@ -1746,6 +1746,14 @@ export default function Profile() {
           {!viewingOtherProfile && <CategoryGoalsCard />}
         </div>
 
+        {/* DelayCam sessions — own profile only. Coach/guardian viewing will go
+            through the recruiting-consent gate, never a broad read. */}
+        {!viewingOtherProfile && user && (
+          <div className="mb-6">
+            <DelayCamSessionsCard userId={user.id} isStaff={isOwner || isAdmin} />
+          </div>
+        )}
+
         {/* People & access — the only discoverable entry point for parent
             invites and per-person access control. */}
         {!viewingOtherProfile && (
