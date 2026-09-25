@@ -503,6 +503,45 @@ export type Database = {
         }
         Relationships: []
       }
+      arm_ledger_entries: {
+        Row: {
+          count: number
+          created_at: string
+          entry_date: string
+          id: string
+          prescribed: number | null
+          source: string
+          status: string
+          throw_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          entry_date: string
+          id?: string
+          prescribed?: number | null
+          source: string
+          status?: string
+          throw_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          prescribed?: number | null
+          source?: string
+          status?: string
+          throw_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       asb_authority_overrides: {
         Row: {
           actor_id: string | null
