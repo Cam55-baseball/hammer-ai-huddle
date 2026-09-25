@@ -65,7 +65,7 @@ describe("Step 26 C6 — pitcher-catcher tightened budget and flag", () => {
     const p = armBudget({ sport: "baseball", role: "pitcher", age: 15 });
     const c = armBudget({ sport: "baseball", role: "catcher", age: 15 });
     expect(pc.daily).toBeLessThanOrEqual(Math.floor(Math.min(p.daily, c.daily) * 0.7) + 1);
-    expect(PITCHER_CATCHER_LINE).toMatch(/three times/);
+    expect(PITCHER_CATCHER_LINE).not.toMatch(/times|rate|injur/i);
   });
 });
 

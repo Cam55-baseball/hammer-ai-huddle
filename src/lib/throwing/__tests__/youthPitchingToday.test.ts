@@ -40,7 +40,7 @@ describe("youth pitching rules on the card", () => {
     expect(v.lines.join(" ")).toMatch(/Stop pitching today/);
   });
   it("pitcher-catcher gets the loud line", () => {
-    expect(youthPitchingToday({ ...base, pitcherCatcher: true }).pitcherCatcherLine).toMatch(/three times/);
+    expect(youthPitchingToday({ ...base, pitcherCatcher: true }).pitcherCatcherLine).toMatch(/heaviest arm workloads/);
   });
   it("softball: none of these numbers apply", () => {
     expect(youthPitchingToday({ ...base, sport: "softball" }).applies).toBe(false);
