@@ -40,6 +40,7 @@ import { resolveRoadmapRung } from "@/lib/hammer/roadmap/roadmapLadder";
 import { resolveSeasonQuarter } from "@/lib/hammer/roadmap/seasonQuarters";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
+import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
   DEFAULT_PITCHER_PROFILE,
@@ -383,6 +384,9 @@ export function PitchingCard() {
                 Log PFP
               </Button>
             </div>
+
+            {/* Step 30 E — warm-up / catch play entered ALONGSIDE pitch counts */}
+            <ArmThrowsPanel source="pitching" planDate={todayIso} />
 
             {/* Weekly rhythm */}
             <div>

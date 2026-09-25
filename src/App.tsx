@@ -8,6 +8,7 @@ import {
 } from "@/utils/lazyWithRetry";
 import { StaffOnlyRoute } from "@/components/auth/StaffOnlyRoute";
 import { SoftballLock } from "@/components/softball/SoftballLock";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 // Re-export for backward compatibility with existing imports.
 export { isChunkLoadError, triggerChunkReload };
 import { Toaster } from "@/components/ui/toaster";
@@ -482,8 +483,8 @@ const App = () => {
               <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/speed-lab" element={<SpeedLab />} />
-              <Route path="/complete-player" element={<CompletePlayer />} />
-              <Route path="/complete-hitter" element={<CompleteHitter />} />
+              <Route path="/complete-player" element={<SubscriptionGate requiredAccess="throwing" featureName="Complete Player" featureDescription="Complete Player is included with 5Tool Player and The Golden 2Way."><CompletePlayer /></SubscriptionGate>} />
+              <Route path="/complete-hitter" element={<SubscriptionGate requiredAccess="hitting" featureName="Complete Hitter" featureDescription="Complete Hitter is included with 5Tool Player and The Golden 2Way."><CompleteHitter /></SubscriptionGate>} />
               <Route path="/complete-pitcher" element={<CompletePitcher />} />
               <Route path="/5tool-player" element={<FiveToolPlayer />} />
               <Route path="/golden-2way" element={<GoldenTwoWay />} />

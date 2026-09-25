@@ -6,6 +6,24 @@ import { Card } from "@/components/ui/card";
 
 const tiles = [
   {
+    key: "complete-hitter",
+    icon: Target,
+    label: "Complete Hitter",
+    description: "Hitting mechanics, strength and vision in one program — included",
+    getRoute: () => "/complete-hitter",
+    baseballOnly: false,
+    softballOnly: false,
+  },
+  {
+    key: "complete-player",
+    icon: Zap,
+    label: "Complete Player",
+    description: "Speed and throwing in one program — included",
+    getRoute: () => "/complete-player",
+    baseballOnly: false,
+    softballOnly: false,
+  },
+  {
     key: "hitting-analysis",
     icon: Target,
     label: "Hitting Analysis",

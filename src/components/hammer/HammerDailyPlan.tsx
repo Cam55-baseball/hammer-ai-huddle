@@ -104,6 +104,7 @@ import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
+import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
 import {
@@ -1445,6 +1446,8 @@ function BlockCard({
           )}
 
           {block.modality === "defense" && <DefensePositionSwap />}
+
+          {block.modality === "throwing" && <ArmThrowsPanel source="position" planDate={planDate} />}
 
           {block.drills.length > 0 && (
             <div className="space-y-1.5">

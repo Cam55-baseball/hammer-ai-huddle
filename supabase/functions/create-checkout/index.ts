@@ -131,6 +131,14 @@ serve(async (req) => {
       checkoutMetadata.tier = tier;
       checkoutMetadata.sport = sport;
     } else if (modules && Array.isArray(modules) && modules.length > 0) {
+      // Per-module products (Hitting / Throwing / Pitching modules) are no
+      // longer sold on their own — Complete Hitter and Complete Player are
+      // included in 5Tool Player and The Golden 2Way. Existing module
+      // subscriptions are untouched; only NEW module-only checkouts stop.
+      return new Response(
+        JSON.stringify({ error: "Single modules are no longer sold separately. Choose 5Tool Player, Complete Pitcher or The Golden 2Way." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+      );
       // LEGACY: Per-module checkout (backward compat)
       logStep("Using legacy per-module pricing", { modules, sport });
       lineItems = modules.map((module: string) => {
