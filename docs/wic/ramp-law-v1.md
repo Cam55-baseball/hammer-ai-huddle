@@ -1,3 +1,5 @@
+> **Live status (Step 28 audit, 2026-09-25):** SHADOW ONLY. Built in supabase/functions/_shared/wic/phases/rampLaw.ts and run nightly by adaptive-phases-shadow. It reaches athletes' cards only when the adaptive_phases switch is on (currently Off).
+
 # Ramp Law v1 — every discipline, every athlete
 **Owner-directed, 2026-09-24.** Safety first, dominance as the goal. Nothing here is cookie-cutter: every number below is a starting point that the athlete's own history, age, maturity, pain record and tolerance adjust.
 

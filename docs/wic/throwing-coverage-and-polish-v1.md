@@ -1,3 +1,5 @@
+> **Live status (Step 28 audit, 2026-09-25):** Arm ledger (phases/armLedger.ts) is SHADOW ONLY: computed nightly for every athlete, shown in Staff View and the presentation demo, not yet enforced on athletes' cards.
+
 # Throwing Coverage & Polish v1
 
 **Owner-directed amendment v1.4, 2026-09-24.** Applies before anything ships. Presented to MLB's youth development program, the 30 MLB club presidents and AUSL representatives.

@@ -1,3 +1,5 @@
+> **Live status (Step 28 audit, 2026-09-25):** Exposure governor, spacing, loading methods, personal gates, dose: LIVE. §7 Offseason Arc: LIVE under the offseason_arc switch (all); the newer adaptive arc is shadow only.
+
 # Hammers Training Intelligence v1
 ### Exposure · Spacing · Phase · Personalization — doctrine for Hammer's Today
 

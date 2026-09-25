@@ -5309,36 +5309,6 @@ export type Database = {
         }
         Relationships: []
       }
-      game_plan_week_overrides: {
-        Row: {
-          created_at: string | null
-          day_of_week: number
-          id: string
-          override_schedule: Json
-          updated_at: string | null
-          user_id: string
-          week_start: string
-        }
-        Insert: {
-          created_at?: string | null
-          day_of_week: number
-          id?: string
-          override_schedule?: Json
-          updated_at?: string | null
-          user_id: string
-          week_start: string
-        }
-        Update: {
-          created_at?: string | null
-          day_of_week?: number
-          id?: string
-          override_schedule?: Json
-          updated_at?: string | null
-          user_id?: string
-          week_start?: string
-        }
-        Relationships: []
-      }
       governance_flags: {
         Row: {
           admin_action: string | null
@@ -11773,83 +11743,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sprint_analyses: {
-        Row: {
-          acceleration_profile: Json | null
-          ai_model: string | null
-          confidence_score: number | null
-          created_at: string | null
-          distance_key: string
-          frame_count: number | null
-          grade_20_80: number | null
-          grade_breakdown: Json | null
-          id: string
-          processing_time_ms: number | null
-          session_id: string | null
-          split_times: Json | null
-          sport: string
-          steps_per_split: Json | null
-          total_steps: number | null
-          total_time_sec: number | null
-          user_id: string
-          validation_reasons: string[] | null
-          validation_status: string
-          video_url: string
-        }
-        Insert: {
-          acceleration_profile?: Json | null
-          ai_model?: string | null
-          confidence_score?: number | null
-          created_at?: string | null
-          distance_key: string
-          frame_count?: number | null
-          grade_20_80?: number | null
-          grade_breakdown?: Json | null
-          id?: string
-          processing_time_ms?: number | null
-          session_id?: string | null
-          split_times?: Json | null
-          sport?: string
-          steps_per_split?: Json | null
-          total_steps?: number | null
-          total_time_sec?: number | null
-          user_id: string
-          validation_reasons?: string[] | null
-          validation_status?: string
-          video_url: string
-        }
-        Update: {
-          acceleration_profile?: Json | null
-          ai_model?: string | null
-          confidence_score?: number | null
-          created_at?: string | null
-          distance_key?: string
-          frame_count?: number | null
-          grade_20_80?: number | null
-          grade_breakdown?: Json | null
-          id?: string
-          processing_time_ms?: number | null
-          session_id?: string | null
-          split_times?: Json | null
-          sport?: string
-          steps_per_split?: Json | null
-          total_steps?: number | null
-          total_time_sec?: number | null
-          user_id?: string
-          validation_reasons?: string[] | null
-          validation_status?: string
-          video_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sprint_analyses_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "speed_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       standard_matches: {
         Row: {
           athlete_user_id: string
@@ -13013,173 +12906,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      udl_alerts: {
-        Row: {
-          alert_type: string
-          created_at: string
-          dismissed_by: string | null
-          id: string
-          message: string
-          metadata: Json | null
-          severity: string
-          target_user_id: string
-        }
-        Insert: {
-          alert_type: string
-          created_at?: string
-          dismissed_by?: string | null
-          id?: string
-          message: string
-          metadata?: Json | null
-          severity?: string
-          target_user_id: string
-        }
-        Update: {
-          alert_type?: string
-          created_at?: string
-          dismissed_by?: string | null
-          id?: string
-          message?: string
-          metadata?: Json | null
-          severity?: string
-          target_user_id?: string
-        }
-        Relationships: []
-      }
-      udl_audit_log: {
-        Row: {
-          action: string
-          created_at: string
-          id: string
-          metadata: Json | null
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          user_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      udl_constraint_overrides: {
-        Row: {
-          constraint_key: string
-          created_by: string
-          enabled: boolean | null
-          id: string
-          prescription_overrides: Json | null
-          threshold_overrides: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          constraint_key: string
-          created_by: string
-          enabled?: boolean | null
-          id?: string
-          prescription_overrides?: Json | null
-          threshold_overrides?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          constraint_key?: string
-          created_by?: string
-          enabled?: boolean | null
-          id?: string
-          prescription_overrides?: Json | null
-          threshold_overrides?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      udl_daily_plans: {
-        Row: {
-          constraints_detected: Json | null
-          feedback_applied: Json | null
-          generated_at: string | null
-          id: string
-          linked_sessions: Json | null
-          plan_date: string
-          player_state: Json | null
-          prescribed_drills: Json | null
-          readiness_adjustments: Json | null
-          user_id: string
-        }
-        Insert: {
-          constraints_detected?: Json | null
-          feedback_applied?: Json | null
-          generated_at?: string | null
-          id?: string
-          linked_sessions?: Json | null
-          plan_date: string
-          player_state?: Json | null
-          prescribed_drills?: Json | null
-          readiness_adjustments?: Json | null
-          user_id: string
-        }
-        Update: {
-          constraints_detected?: Json | null
-          feedback_applied?: Json | null
-          generated_at?: string | null
-          id?: string
-          linked_sessions?: Json | null
-          plan_date?: string
-          player_state?: Json | null
-          prescribed_drills?: Json | null
-          readiness_adjustments?: Json | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      udl_drill_completions: {
-        Row: {
-          completed_at: string | null
-          difficulty_level: number | null
-          drill_key: string
-          id: string
-          plan_id: string
-          result_notes: string | null
-          started_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          difficulty_level?: number | null
-          drill_key: string
-          id?: string
-          plan_id: string
-          result_notes?: string | null
-          started_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          difficulty_level?: number | null
-          drill_key?: string
-          id?: string
-          plan_id?: string
-          result_notes?: string | null
-          started_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "udl_drill_completions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "udl_daily_plans"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       unverified_foods: {
         Row: {
@@ -15676,38 +15402,6 @@ export type Database = {
           },
         ]
       }
-      video_pose_analysis: {
-        Row: {
-          id: string
-          landmark_data: Json | null
-          processed_at: string | null
-          video_id: string
-          violation_timestamps: Json | null
-        }
-        Insert: {
-          id?: string
-          landmark_data?: Json | null
-          processed_at?: string | null
-          video_id: string
-          violation_timestamps?: Json | null
-        }
-        Update: {
-          id?: string
-          landmark_data?: Json | null
-          processed_at?: string | null
-          video_id?: string
-          violation_timestamps?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "video_pose_analysis_video_id_fkey"
-            columns: ["video_id"]
-            isOneToOne: true
-            referencedRelation: "videos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       video_rule_suggestions: {
         Row: {
           avg_improvement: number | null
@@ -17833,6 +17527,27 @@ export type Database = {
           user_id?: string
           week_end?: string
           week_start?: string
+        }
+        Relationships: []
+      }
+      wk_slug_rename_step26: {
+        Row: {
+          new_slug: string
+          old_name: string | null
+          old_slug: string
+          renamed_at: string | null
+        }
+        Insert: {
+          new_slug: string
+          old_name?: string | null
+          old_slug: string
+          renamed_at?: string | null
+        }
+        Update: {
+          new_slug?: string
+          old_name?: string | null
+          old_slug?: string
+          renamed_at?: string | null
         }
         Relationships: []
       }
