@@ -29,7 +29,7 @@ import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useSchedu
 
 const WK_GENERATOR_VERSION = "wic_v1.3_google";
 
-export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
+export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer";
 
 export type WkSequenceRole =
   | "arm_care"
@@ -510,9 +510,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       // available for the Speed card banner on game days; content itself is
       // owned by the cross_sport card. `warmup_integration` placement is
       // rendered inside the Warm-up card (in-season crossover primer).
-      warmupAddons: rxs.filter(
-        (r) => r.slot === "cross_sport" && r.why_payload?.placement === "warmup_integration",
-      ),
+      warmupAddons: [
+        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "warmup_integration"),
+        // Upper-body primer — own slot, right after the warm-up (owner decision 2026-09-25).
+        ...rxs.filter((r) => r.slot === "ub_primer"),
+      ],
       speedCard: [
         ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
         ...rxs.filter((r) => r.slot === "speed"),

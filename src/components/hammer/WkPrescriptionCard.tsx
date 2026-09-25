@@ -36,6 +36,7 @@ const SLOT_TONE: Record<WkRx["slot"], string> = {
   bat_speed: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
   conditioning: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   cross_sport: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  ub_primer: "bg-primary/10 text-primary",
 };
 
 const SLOT_LABEL: Record<WkRx["slot"], string> = {
@@ -45,6 +46,7 @@ const SLOT_LABEL: Record<WkRx["slot"], string> = {
   bat_speed: "Bat-Speed",
   conditioning: "Conditioning",
   cross_sport: "Cross-Sport",
+  ub_primer: "Upper-Body Primer",
 };
 
 function cleanAthleteCopy(value: string | null | undefined): string | null {

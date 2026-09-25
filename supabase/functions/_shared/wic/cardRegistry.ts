@@ -37,7 +37,7 @@ export interface CardRegistryEntry {
 
 export const CARD_REGISTRY: readonly CardRegistryEntry[] = [
   { cardType: "readiness",        displayOrder: 1,  responsibility: "Daily readiness summary",    slots: [],                          enabledWhen: () => true },
-  { cardType: "warmup",           displayOrder: 2,  responsibility: "Movement preparation only",  slots: ["movement_prep", "warmup"], enabledWhen: () => true },
+  { cardType: "warmup",           displayOrder: 2,  responsibility: "Movement preparation only",  slots: ["movement_prep", "warmup", "ub_primer"], enabledWhen: () => true },
   { cardType: "speed",            displayOrder: 3,  responsibility: "Running speed only",         slots: ["speed"],                   enabledWhen: (c) => c.hasSpeed },
   { cardType: "bat_speed",        displayOrder: 4,  responsibility: "Rotational velocity only",   slots: ["bat_speed"],               enabledWhen: (c) => c.hasBatSpeed },
   // Step 21B — the lift always sits after practice, game and conditioning.

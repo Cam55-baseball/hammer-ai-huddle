@@ -30,6 +30,7 @@ export type OwningDomain =
   | "recovery"
   | "warmup"
   | "cross_sport"
+  | "ub_plyo"
   | "unknown";
 
 /** Catalog `category` → the one domain that owns the movement. */
@@ -74,6 +75,10 @@ const CATEGORY_TO_DOMAIN: Record<string, OwningDomain> = {
   cressey_sp: "warmup", // legacy label, retained so no row can fall through
 
   cross_sport: "cross_sport",
+
+  // Upper-Body Plyo v1 — own primer slot (owner decision 2026-09-25). Never lift.
+  upper_body_plyo: "ub_plyo",
+  hand_wrist_chain: "ub_plyo",
 };
 
 export interface GateableMovement {
@@ -113,6 +118,7 @@ export const ENGINE_ALLOWED_DOMAINS: Record<string, readonly OwningDomain[]> = {
   recovery: ["recovery", "warmup"],
   warmup: ["warmup", "recovery", "trunk"],
   cross_sport: ["cross_sport"],
+  ub_primer: ["ub_plyo"],
 };
 
 /** Domain → the subscription module that must be active to prescribe it. */
@@ -127,6 +133,7 @@ export const DOMAIN_MODULE: Record<OwningDomain, string | null> = {
   recovery: null,
   warmup: null,
   cross_sport: null,
+  ub_plyo: null,
   unknown: null,
 };
 

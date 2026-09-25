@@ -179,6 +179,15 @@ import {
   type PersonalizationContext,
 } from "../_shared/wic/personalizationContext.ts";
 import { filterUbCatalog, trainingAgeBand } from "../_shared/wic/ubPlyo/liveFilter.ts";
+import { doseCap as ubDoseCap } from "../_shared/wic/ubPlyo/rules.ts";
+import { UB_MOVEMENTS } from "../_shared/wic/ubPlyo/families.ts";
+const ubLetterOf = (slug: string): any => {
+  const known = (UB_MOVEMENTS as any[]).find((x) => x.slug === slug)?.letter;
+  if (known) return known;
+  const m = /_f\d+_([a-d])_/.exec(slug);
+  // Unknown letter → the stricter B cap (12), never the looser one.
+  return m ? m[1].toUpperCase() : "B";
+};
 import { sessionsFromLogs, silentSignalEffect, type SilentSignalEffect } from "../_shared/wic/schedule/tissueCost/v11/silentSignalsApply.ts";
 import {
   TRAINING_AGE_VERSION,
@@ -274,7 +283,7 @@ interface BlockRow {
   notes: string | null;
 }
 
-type Slot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental";
+type Slot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer";
 
 type SequenceRole =
   | "arm_care"
@@ -290,7 +299,8 @@ type SequenceRole =
   | "speed"
   | "bat_speed"
   | "conditioning"
-  | "cross_sport";
+  | "cross_sport"
+  | "ub_primer";
 
 interface Prescription {
   slot: Slot;
@@ -813,6 +823,7 @@ const handler = async (req: Request): Promise<Response> => {
     // failure → the catalog is exactly as before.
     let lib = libBase;
     let ubFilterRemoved = 0;
+    let ubFilterActive = false;
     try {
       const { data: ubSw } = await admin
         .from("wk_feature_switches")
@@ -855,6 +866,7 @@ const handler = async (req: Request): Promise<Response> => {
           painFlag: injurySlugs.size > 0,
         });
         lib = f.rows as typeof libBase;
+        ubFilterActive = true;
         ubFilterRemoved = f.removed;
       }
     } catch (_e) {
@@ -2106,6 +2118,43 @@ const handler = async (req: Request): Promise<Response> => {
           {},
           "In-season crossover primer — short, low-cost coordination drill folded into the warm-up. Frees CNS from sport patterns without stealing freshness from the day.",
           { placement: "warmup_integration", sequencing_hint: "In-season: finish the warm-up with this before speed / bat speed / lifts.", cross_sport_template_id: xsTemplate.id, cross_sport_required_category: xsRequired[0] ?? null },
+        );
+      }
+    }
+
+    // -------- Upper-Body Plyo primer slot (owner decision 2026-09-25) --------
+    // Own slot, right after the warm-up (warm-up → primer → speed/jumps → skill
+    // → … → lift). Only runs when ub_plyo_hand_wrist resolved ON above (the
+    // live filter already removed tiers the athlete is not cleared for). Dose
+    // comes from the Upper-Body Plyo doc's per-session contact caps (U1 ≤ 40,
+    // U2 ≤ 20, U3 ≤ 15 / 12 for B and C), never from lift dosing.
+    if (ubFilterActive && !isGameDay) {
+      const tierRank: Record<string, number> = { U3: 3, U2: 2, U1: 1 };
+      const pickUb = (cat: string) =>
+        [...(lib as any[])]
+          .filter((m) => m.category === cat && m.ub_tier && eligible(m as any))
+          .sort((a, b) => (tierRank[b.ub_tier] ?? 0) - (tierRank[a.ub_tier] ?? 0) || String(a.slug).localeCompare(String(b.slug)))[0] ?? null;
+      const ubDose = (m: any) => {
+        const cpr = Math.max(1, Number(m.contacts_per_rep ?? 1));
+        if (m.dosage_unit === "seconds") return { sets: 2, reps: null, duration_seconds: 15, dosage_unit: "seconds" };
+        const cap = ubDoseCap(m.ub_tier, ubLetterOf(m.slug));
+        const reps = Math.max(1, Math.floor(cap / 2 / cpr));
+        return { sets: 2, reps: Math.min(reps, 10), dosage_unit: "reps" };
+      };
+      for (const cat of ["upper_body_plyo", "hand_wrist_chain"]) {
+        const m = pickUb(cat);
+        if (!m) continue;
+        const d = ubDose(m);
+        const contacts = d.dosage_unit === "reps" ? d.sets * (d.reps ?? 0) * Math.max(1, Number(m.contacts_per_rep ?? 1)) : null;
+        push(
+          "ub_primer",
+          "ub_primer",
+          m,
+          d as any,
+          cat === "upper_body_plyo"
+            ? "Upper-body primer — short, crisp contacts after the warm-up to wake up the arms before skill work."
+            : "Hand and wrist primer — quick, light contacts to get the grip ready.",
+          { placement: "ub_primer", ub_tier: m.ub_tier, ub_contacts: contacts, ub_contact_cap: d.dosage_unit === "reps" ? ubDoseCap(m.ub_tier, ubLetterOf(m.slug)) : null, sequencing_hint: "Right after the warm-up, before speed, jumps and skill work." },
         );
       }
     }

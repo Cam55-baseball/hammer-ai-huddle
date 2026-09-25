@@ -4,6 +4,7 @@
 export type CanonicalSlot =
   | "movement_prep"
   | "warmup"
+  | "ub_primer"
   | "cross_sport"
   | "speed"
   | "bat_speed"
@@ -41,7 +42,7 @@ import { CARD_REGISTRY } from "./cardRegistry.ts";
 const SLOT_ORDER: readonly CanonicalSlot[] = CARD_REGISTRY
   .flatMap((c) => c.slots as readonly string[])
   .filter((s): s is CanonicalSlot =>
-    ["movement_prep", "warmup", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
+    ["movement_prep", "warmup", "ub_primer", "cross_sport", "speed", "bat_speed", "lift", "supplemental", "conditioning", "recovery"].includes(s),
   );
 
 const LIFT_ROLE_ORDER: readonly CanonicalRole[] = [
