@@ -3354,6 +3354,176 @@ export type Database = {
           },
         ]
       }
+      delaycam_reps: {
+        Row: {
+          anchor_ms: number | null
+          boundary_confidence: number | null
+          boundary_signals: Json
+          created_at: string
+          end_ms: number
+          engine_version: string | null
+          fps_measured: number | null
+          fps_tier: string | null
+          id: string
+          metrics: Json
+          rep_index: number
+          session_id: string
+          splitter_version: string | null
+          start_ms: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anchor_ms?: number | null
+          boundary_confidence?: number | null
+          boundary_signals?: Json
+          created_at?: string
+          end_ms: number
+          engine_version?: string | null
+          fps_measured?: number | null
+          fps_tier?: string | null
+          id?: string
+          metrics?: Json
+          rep_index: number
+          session_id: string
+          splitter_version?: string | null
+          start_ms: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anchor_ms?: number | null
+          boundary_confidence?: number | null
+          boundary_signals?: Json
+          created_at?: string
+          end_ms?: number
+          engine_version?: string | null
+          fps_measured?: number | null
+          fps_tier?: string | null
+          id?: string
+          metrics?: Json
+          rep_index?: number
+          session_id?: string
+          splitter_version?: string | null
+          start_ms?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delaycam_reps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "delaycam_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delaycam_sessions: {
+        Row: {
+          achieved_fps: number | null
+          analyzed_at: string | null
+          boundary_log: Json
+          created_at: string
+          display_metrics_on: boolean
+          duration_sec: number | null
+          ended_at: string | null
+          engine_version: string | null
+          fps_source: string | null
+          fps_tier: string | null
+          id: string
+          landmark_run_id: string | null
+          module: string
+          processing_error: string | null
+          processing_state: string
+          rep_detection_reason: string | null
+          rep_detection_state: string
+          requested_fps: number | null
+          side_stamp: Json
+          splitter_version: string | null
+          sport: string
+          started_at: string
+          summary: Json | null
+          summary_version: string | null
+          updated_at: string
+          user_id: string
+          video_id: string | null
+        }
+        Insert: {
+          achieved_fps?: number | null
+          analyzed_at?: string | null
+          boundary_log?: Json
+          created_at?: string
+          display_metrics_on?: boolean
+          duration_sec?: number | null
+          ended_at?: string | null
+          engine_version?: string | null
+          fps_source?: string | null
+          fps_tier?: string | null
+          id?: string
+          landmark_run_id?: string | null
+          module: string
+          processing_error?: string | null
+          processing_state?: string
+          rep_detection_reason?: string | null
+          rep_detection_state?: string
+          requested_fps?: number | null
+          side_stamp?: Json
+          splitter_version?: string | null
+          sport: string
+          started_at: string
+          summary?: Json | null
+          summary_version?: string | null
+          updated_at?: string
+          user_id: string
+          video_id?: string | null
+        }
+        Update: {
+          achieved_fps?: number | null
+          analyzed_at?: string | null
+          boundary_log?: Json
+          created_at?: string
+          display_metrics_on?: boolean
+          duration_sec?: number | null
+          ended_at?: string | null
+          engine_version?: string | null
+          fps_source?: string | null
+          fps_tier?: string | null
+          id?: string
+          landmark_run_id?: string | null
+          module?: string
+          processing_error?: string | null
+          processing_state?: string
+          rep_detection_reason?: string | null
+          rep_detection_state?: string
+          requested_fps?: number | null
+          side_stamp?: Json
+          splitter_version?: string | null
+          sport?: string
+          started_at?: string
+          summary?: Json | null
+          summary_version?: string | null
+          updated_at?: string
+          user_id?: string
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delaycam_sessions_landmark_run_id_fkey"
+            columns: ["landmark_run_id"]
+            isOneToOne: false
+            referencedRelation: "video_landmark_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delaycam_sessions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_events: {
         Row: {
           created_at: string

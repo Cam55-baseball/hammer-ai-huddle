@@ -18,8 +18,14 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera, CameraOff, SwitchCamera, Download, Play, AlertCircle, Timer,
-  BookMarked, Loader2, Eye, Video, Maximize2, X,
+  BookMarked, Loader2, Eye, Video, Maximize2, X, BarChart3,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useDelayCamSessionGathering } from "@/hooks/useDelayCamSessionGathering";
+import { SessionSummaryView } from "@/components/analyze/delaycam/SessionSummaryView";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
@@ -170,6 +176,17 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   const [notes, setNotes] = useState<SessionNote[]>([]);
   /** Mic stream kept open across voice notes so iOS doesn't re-prompt. */
   const noteMicRef = useRef<MediaStream | null>(null);
+
+  /* ---- Session gathering (always on) + display preference (display only) ---- */
+  const { isOwner } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
+  const gathering = useDelayCamSessionGathering();
+  const { gather: gatherSession, linkVideo: linkSessionVideo, reset: resetGathering } = gathering;
+  const [chooseDisplayOpen, setChooseDisplayOpen] = useState(false);
+  const [displayMetricsOn, setDisplayMetricsOn] = useState(false);
+  const displayMetricsOnRef = useRef(false);
+  useEffect(() => { displayMetricsOnRef.current = displayMetricsOn; }, [displayMetricsOn]);
+  const [analyzeOpen, setAnalyzeOpen] = useState(false);
 
 
   /** Whether this browser can record at all. Checked once so the Record
@@ -498,6 +515,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         withNotes: true,
       });
       savedVideoIdRef.current = videoId;
+      void linkSessionVideo(videoId);
       setSavedVideoId(videoId);
       if (failedNotes.length > 0) {
         toast.error(
@@ -619,6 +637,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         const first = await uploadSessionVideo(original, { variant: "original", withNotes: true });
         parentId = first.videoId;
         savedVideoIdRef.current = parentId;
+        void linkSessionVideo(parentId);
         setSavedVideoId(parentId);
         if (first.failedNotes.length > 0) {
           toast.error(
@@ -907,6 +926,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
   /** Full teardown that also clears any buffered clip. Used when the user
    * starts a fresh session or unmounts. */
   const fullReset = useCallback(() => {
+    resetGathering();
+    setAnalyzeOpen(false);
     cleanup();
     setRunning(false);
     setMode("idle");
@@ -963,6 +984,24 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         const fixed = await repairRecording(raw, mime, durationMs);
         recordedBlobRef.current = fixed;
         setHasStoppedClip(true);
+        // Background gathering starts on every recorded session. The display
+        // preference is stored for audit only and is not passed to the pipeline.
+        if (user) {
+          const endedAt = new Date();
+          void gatherSession(fixed, {
+            user_id: user.id,
+            sport: resolvedSport === "softball" ? "softball" : "baseball",
+            module: resolvedModule,
+            side_stamp: sideStampFor(sideDiscipline) as Record<string, unknown>,
+            started_at: new Date(endedAt.getTime() - durationMs).toISOString(),
+            ended_at: endedAt.toISOString(),
+            duration_sec: Math.round(durationMs) / 1000,
+            requested_fps: FPS_TARGET,
+            achieved_fps: capturedFpsRef.current,
+            fps_source: capturedFpsRef.current != null ? "track_settings" : null,
+            display_metrics_on: displayMetricsOnRef.current,
+          });
+        }
         if (sessionUrlRef.current) URL.revokeObjectURL(sessionUrlRef.current);
         const url = URL.createObjectURL(fixed);
         sessionUrlRef.current = url;
@@ -992,7 +1031,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
       return;
     }
     void finish();
-  }, [cleanup, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleanup, mode, user, resolvedSport, resolvedModule, sideDiscipline]);
 
   useEffect(() => { stopRef.current = stop; }, [stop]);
 
@@ -1050,6 +1090,38 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
   return (
     <Card className="p-4 space-y-4 border-2 border-dashed border-red-500">
+      <Dialog open={chooseDisplayOpen} onOpenChange={setChooseDisplayOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record session</DialogTitle>
+            <DialogDescription>
+              Your movement is measured in the background for the whole session either way. This only
+              changes what you see on screen while you record.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="flex items-center justify-between gap-3 rounded-md border p-3">
+            <span className="text-sm">
+              <span className="font-medium">Show metrics on screen</span>
+              <span className="block text-xs text-muted-foreground">
+                {displayMetricsOn ? "Session info shown while recording." : "Nothing shown while recording."}
+              </span>
+            </span>
+            <Switch checked={displayMetricsOn} onCheckedChange={setDisplayMetricsOn} />
+          </label>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setChooseDisplayOpen(false);
+                fullReset();
+                void start("recording");
+              }}
+              className="gap-1.5"
+            >
+              <Video className="h-4 w-4" /> Start recording
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
@@ -1057,7 +1129,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Live camera that plays back 1–55 seconds behind. Record the whole session, then watch it
-            all back and draw on it. No scores, no report card.
+            all back, draw on it, and tap Analyze Session for a summary across every rep.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -1069,7 +1141,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             <>
               <Button
                 size="sm"
-                onClick={() => { fullReset(); void start("recording"); }}
+                onClick={() => setChooseDisplayOpen(true)}
                 disabled={transitioning || !canRecord}
                 className="gap-1.5"
                 title={canRecord
@@ -1329,6 +1401,41 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
 
 
+      {(hasStoppedClip || gathering.status !== "idle") && user && (
+        <div className="space-y-2 rounded-md border p-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <div className="text-sm font-medium">Session data</div>
+              <p className="text-xs text-muted-foreground">
+                {gathering.status === "done"
+                  ? "Your session has been measured and saved to your profile."
+                  : gathering.status === "failed"
+                    ? `We couldn't measure this session: ${gathering.error}`
+                    : gathering.status === "idle"
+                      ? "Waiting for the recording."
+                      : `Measuring your session… ${Math.round(gathering.progress * 100)}%`}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setAnalyzeOpen((o) => !o)}
+              disabled={gathering.status !== "done"}
+              className="gap-1.5"
+            >
+              <BarChart3 className="h-4 w-4" /> {analyzeOpen ? "Hide analysis" : "Analyze Session"}
+            </Button>
+          </div>
+          {gathering.status !== "done" && gathering.status !== "failed" && gathering.status !== "idle" && (
+            <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
+              <div className="h-full bg-primary transition-all" style={{ width: `${Math.round(gathering.progress * 100)}%` }} />
+            </div>
+          )}
+          {analyzeOpen && gathering.summary && (
+            <SessionSummaryView summary={gathering.summary} isStaff={isOwner || isAdmin} />
+          )}
+        </div>
+      )}
+
       {hasStoppedClip && (
         <div className="space-y-2 rounded-md border p-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -1336,7 +1443,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               <div className="text-sm font-medium">Watch the whole session back</div>
               <p className="text-xs text-muted-foreground">
                 Play it, slow it down, step frame by frame, and draw lines or angles on top to
-                critique yourself. Nothing here is scored or sent anywhere.
+                critique yourself.
               </p>
             </div>
             {!sessionUrl && (
@@ -1426,6 +1533,18 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               ? "Stopped — clip ready"
               : "Idle"}
         </Badge>
+        {/* Live display: only facts measured right now. Per-rep metrics are
+            computed from the saved recording after Stop — never guessed live. */}
+        {displayMetricsOn && running && mode === "recording" && (
+          <>
+            <span className="font-medium text-foreground">
+              Camera {capturedFpsRef.current ? `${Math.round(capturedFpsRef.current)} fps` : "speed unknown"}
+            </span>
+            <span>·</span>
+            <span>Per-rep metrics appear after you stop</span>
+            <span>·</span>
+          </>
+        )}
         <span>Delay {delay}s</span>
         <span>·</span>
         <span>Buffer {bufferedSec.toFixed(1)}s</span>
