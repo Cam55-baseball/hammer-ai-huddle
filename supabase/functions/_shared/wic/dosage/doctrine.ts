@@ -326,3 +326,24 @@ export function isWithinEnvelope(
 export function describeDose(d: ResolvedDose): string {
   return `${d.sets}×${d.reps} — ${d.envelope.intent} envelope for ${d.phase.replace("_", " ")} (${d.envelope.sets[0]}-${d.envelope.sets[1]} sets × ${d.envelope.reps[0]}-${d.envelope.reps[1]} reps), ${d.band} training age.`;
 }
+
+/**
+ * Upper-Body Plyo primer dose (owner decision 2026-09-25). The dose is set by
+ * the UB doc's per-session contact cap for the tier — never by lift dosing.
+ * Two sets; reps fill at most half the cap per set, capped at 10.
+ */
+export const UB_PRIMER_SETS = 2;
+export const UB_PRIMER_MAX_REPS = 10;
+export const UB_PRIMER_HOLD_SECONDS = 15;
+export function resolveUbPrimerDose(input: {
+  dosageUnit: string | null | undefined;
+  contactCap: number;
+  contactsPerRep: number | null | undefined;
+}): { sets: number; reps: number | null; duration_seconds?: number; dosage_unit: "reps" | "seconds" } {
+  if (input.dosageUnit === "seconds") {
+    return { sets: UB_PRIMER_SETS, reps: null, duration_seconds: UB_PRIMER_HOLD_SECONDS, dosage_unit: "seconds" };
+  }
+  const cpr = Math.max(1, Number(input.contactsPerRep ?? 1));
+  const reps = Math.max(1, Math.floor(input.contactCap / UB_PRIMER_SETS / cpr));
+  return { sets: UB_PRIMER_SETS, reps: Math.min(reps, UB_PRIMER_MAX_REPS), dosage_unit: "reps" };
+}

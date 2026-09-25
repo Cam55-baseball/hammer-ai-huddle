@@ -75,6 +75,7 @@ export default function Games() {
   // post-game log prompt can land the user on the logger in one tap.
   const deepLinkGameId = new URLSearchParams(window.location.search).get("game");
   const [openSheet, setOpenSheet] = useState<string | null>(deepLinkGameId);
+  const [sheetTab, setSheetTab] = useState<string | undefined>(undefined);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   useGpRealtime(true);
   const gameDay = useGameDayContext();
@@ -223,7 +224,11 @@ export default function Games() {
           icon={<Sparkles className="h-5 w-5" />}
           title="Hammer document import"
           desc="Drop a Trackman / GameChanger / Rapsodo file or a scorebook photo — Hammer drafts the events, you confirm by inning."
-          onClick={() => toast.info("Open a game, then use the Import tab.")}
+          onClick={() => {
+            const latest = (games.data ?? [])[0] as { id: string } | undefined;
+            if (latest) { setSheetTab("import"); setOpenSheet(latest.id); }
+            else setNewDialogOpen(true);
+          }}
         />
         <HelperTile
           icon={<Users className="h-5 w-5" />}
@@ -322,7 +327,8 @@ export default function Games() {
         <GameSheet
           gameId={openSheet}
           open={!!openSheet}
-          onOpenChange={(o) => !o && setOpenSheet(null)}
+          initialTab={sheetTab}
+          onOpenChange={(o) => { if (!o) { setOpenSheet(null); setSheetTab(undefined); } }}
         />
       )}
     </div>

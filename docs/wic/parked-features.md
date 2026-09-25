@@ -46,6 +46,17 @@ rows to a timestamped snapshot table (e.g. `<table>_snapshot_YYYYMMDD`) and repo
 |---|---|---|---|
 | wk_movement_catalog.surface_hint | Surface hint per movement (turf, grass, mat); filled on all 974 rows | An approved slot and wording on the card | Where on the card, and what words? |
 
+## Estimated benchmarks — awaiting dated sources (owner decision 2026-09-25)
+
+These 17 grading anchors have a source lead but no date. They are flagged `estimate: true` in
+`src/data/gradeBenchmarks.ts`, and athletes see an "estimated benchmark" note next to the grade.
+No values were changed. To finish one: add a dated source (`as_of`), then remove `estimate: true`.
+
+ten_yard_dash, seven_yard_dash, forty_yard_dash, pro_agility, sl_broad_jump, sl_vert_jump,
+vertical_jump, standing_broad_jump, avg_exit_velo_bp, long_toss_distance, sl_balance_eyes_closed,
+three_hundred_yd_shuttle, sl_3x_bound, shoulder_rom_internal, shoulder_rom_external,
+hip_internal_rotation, ankle_dorsiflexion. Full anchors: `docs/audits/undated-benchmarks-2026-09-09.md`.
+
 ## Feature switches
 
 None parked. `onboarding_off_days` and `ub_plyo_hand_wrist` were set to "all" before Step 28 and were changed
@@ -59,6 +70,16 @@ to "off" without an owner instruction; restored to "all" on 2026-09-25 (Step 29)
 | "Game IQ 101 (Coming soon)" menu items (3) | Sidebar (`AppSidebar.tsx`) | `sidebarGameIq101` |
 | "Exciting Updates Coming Soon" box | Landing page (`components/parked/ParkedLandingTeasers.tsx`) | `landingComingSoonBox` |
 | Motion capture / analytics / rankings teaser cards | Landing page (same file) | `landingTeaserCards` |
+| "Game IQ 101 · Coming soon" tile | Progress page (`IqInsightCard.tsx`) | `progressGameIqTile` |
+
+## Locked modules (reachable only by typed address, not linked anywhere)
+
+| Screen | Why it stays locked | To finish |
+|---|---|---|
+| Combine (`/combine/*`) | Results and evaluator paperwork not finished; locked so no partial data is saved | Finish entry + results, then point the routes back at the real pages |
+| Softball versions of locked features | Softball pre-launch lockdown (owner decision); no baseball answers for softball | Softball content per `docs/softball/prelaunch-lock-report.md` |
+| Game IQ 101 (`GameIqComingSoon`) | Module not finished | Finish Game IQ 101 |
+| Old `/coming-soon` page | Not linked; kept, not deleted | Retire or reword when the owner decides |
 
 ## Parked scheduled jobs (unscheduled to save credits, function code kept)
 

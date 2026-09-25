@@ -4,7 +4,7 @@
  */
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Sparkles, Search, Repeat, Lightbulb } from "lucide-react";
+import { Eye, Search, Repeat, Lightbulb } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -53,20 +53,6 @@ export default function PitchTippingEducation() {
           </Card>
         ))}
 
-        <Card className="border-primary/40 bg-primary/5">
-          <CardContent className="flex items-start gap-3 p-4">
-            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-            <div className="space-y-1">
-              <h2 className="text-sm font-bold">Automatic tipping detection is coming soon</h2>
-              <p className="text-sm text-muted-foreground">
-                We're building a tool that checks a pitcher's videos for tells
-                automatically — comparing how their body moves on one pitch type
-                versus another, the same way you'd do it by hand. No date to share
-                yet, but it's on the way.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </DashboardLayout>
   );

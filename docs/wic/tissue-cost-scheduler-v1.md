@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** Built and LIVE only when rest_day_calculator is on (currently Off, awaiting three clean nights). Hard rules in tissueCost/apply.ts are always live.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** Built; LIVE only when rest_day_calculator is on — currently OFF (auto step-down 2026-09-24), waiting on three clean nights (gate 1). Hard rules in tissueCost/apply.ts are always live.
 
 # Tissue Cost Scheduler v1 (TCS)
 ### The on-the-fly rest-day calculator for Hammer's Today

@@ -16829,6 +16829,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_feature_switches_snapshot_20260925b: {
+        Row: {
+          allowlist: string[] | null
+          buildable: boolean | null
+          created_at: string | null
+          feature_key: string | null
+          label: string | null
+          mode: string | null
+          snap_at: string | null
+          sort_order: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          allowlist?: string[] | null
+          buildable?: boolean | null
+          created_at?: string | null
+          feature_key?: string | null
+          label?: string | null
+          mode?: string | null
+          snap_at?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          allowlist?: string[] | null
+          buildable?: boolean | null
+          created_at?: string | null
+          feature_key?: string | null
+          label?: string | null
+          mode?: string | null
+          snap_at?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       wk_generation_diagnostics: {
         Row: {
           adaptation: string | null
@@ -17413,6 +17452,30 @@ export type Database = {
           variant?: string | null
           volume_cost?: number | null
           why_prescribed?: string
+          wic_metadata_complete?: boolean | null
+        }
+        Relationships: []
+      }
+      wk_movement_catalog_ubplyo_snapshot_20260925: {
+        Row: {
+          duplicate_group: string | null
+          pattern: string | null
+          slug: string | null
+          snapshot_at: string | null
+          wic_metadata_complete: boolean | null
+        }
+        Insert: {
+          duplicate_group?: string | null
+          pattern?: string | null
+          slug?: string | null
+          snapshot_at?: string | null
+          wic_metadata_complete?: boolean | null
+        }
+        Update: {
+          duplicate_group?: string | null
+          pattern?: string | null
+          slug?: string | null
+          snapshot_at?: string | null
           wic_metadata_complete?: boolean | null
         }
         Relationships: []

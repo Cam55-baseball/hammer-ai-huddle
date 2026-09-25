@@ -37,7 +37,7 @@ for (const [metric, entry] of Object.entries(GRADE_BENCHMARKS)) {
     missing.push(metric);
     continue;
   }
-  if (source === "estimate") {
+  if (source === "estimate" || (entry as { estimate?: boolean }).estimate === true) {
     estimates.push(metric);
     continue;
   }

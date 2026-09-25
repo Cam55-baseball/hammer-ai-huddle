@@ -53,7 +53,7 @@ export function HammerReportCard({
   if (!spec) {
     return (
       <div className="rounded-2xl border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-        Report card for this analysis type is coming soon.
+        This type of analysis doesn't have a report card. Your findings above are the full result.
       </div>
     );
   }

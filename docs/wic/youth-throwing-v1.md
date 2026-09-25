@@ -1,4 +1,4 @@
-> **Live status (Step 28 audit, 2026-09-25):** NOT LIVE. Only offseasonBreakDays is used (via rampLaw.ts, shadow). Weekly/season/annual caps, innings cap, fatigue flag, pitcher-catcher 70% budget and growth-adjusted pitching age are built and tested in phases/youthThrowing.ts but nothing reads them yet.
+> **Live status (E2E WP6, 2026-09-25 17:45 UTC):** LIVE on the pitching card (baseball): youth caps, growth-adjusted age from height checks, fatigue stop, pitcher-catcher line (youthPitchingToday.ts). Shows only for youth athletes with an age on file. offseasonBreakDays still used via rampLaw.ts.
 
 # Youth throwing v1 — Steps 26 and 27 (owner-directed)
 Code: `supabase/functions/_shared/wic/phases/youthThrowing.ts`. Baseball only; softball windmill limits stay in `armLedger.ts`.

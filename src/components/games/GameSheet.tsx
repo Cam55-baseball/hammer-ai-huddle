@@ -61,10 +61,13 @@ export function GameSheet({
   gameId,
   open,
   onOpenChange,
+  initialTab,
 }: {
   gameId: string;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  /** Open straight on a tab (e.g. "import" from the Games helper tile). */
+  initialTab?: string;
 }) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -173,6 +176,7 @@ export function GameSheet({
             <GameSheetTabs
               gameId={gameId}
               g={g}
+              initialTab={initialTab}
               onPatch={(p) => {
                 update.mutate(p);
                 if (p.status === "final") {
@@ -192,13 +196,15 @@ function GameSheetTabs({
   gameId,
   g,
   onPatch,
+  initialTab,
 }: {
   gameId: string;
   g: any;
   onPatch: (patch: Record<string, any>) => void;
+  initialTab?: string;
 }) {
   const isToday = g.game_date === new Date().toISOString().slice(0, 10);
-  const [tab, setTab] = useState<string>(isToday ? "live" : "overview");
+  const [tab, setTab] = useState<string>(initialTab ?? (isToday ? "live" : "overview"));
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">

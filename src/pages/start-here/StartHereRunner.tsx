@@ -83,7 +83,7 @@ export default function StartHereRunner() {
               {Comp ? <Comp /> : (
                 <Card className="border-dashed">
                   <CardContent className="p-6 text-center text-sm text-muted-foreground">
-                    Interactive preview coming soon for this feature.
+                    This one has no hands-on preview — read the summary above, then tap Next.
                   </CardContent>
                 </Card>
               )}
