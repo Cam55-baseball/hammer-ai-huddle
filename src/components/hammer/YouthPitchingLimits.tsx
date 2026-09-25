@@ -47,7 +47,7 @@ export function YouthPitchingLimits({ today }: { today: string }) {
     staleTime: 60_000,
     queryFn: async () => {
       const yearStart = `${Number(today.slice(0, 4))}-01-01`;
-      const from = new Date(Date.parse(today + "T00:00:00Z") - 130 * 86400000).toISOString().slice(0, 10);
+      const from = new Date(Date.parse(today + "T00:00:00Z") - 400 * 86400000).toISOString().slice(0, 10);
       const start = from < yearStart ? from : yearStart;
       const [logs, heights, fatigue, profile, mpi] = await Promise.all([
         (supabase as any).from("wk_session_logs").select("plan_date, metrics").eq("user_id", user!.id)
