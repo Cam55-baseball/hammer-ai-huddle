@@ -11,3 +11,12 @@
 - [ ] F2 rest_day_calculator → all via preflight after F1
 - [ ] F3 tell_hammers, adaptive_phases, phase_feedback → all (after forced generation for all 120 + phone-width pass)
 - [ ] F4 Phone-width sweep of every screen
+
+## E2E WP4 status (2026-09-25)
+- [x] Silent Signals live (personalization switch), 11/11 synthetic tests
+- [x] Youth throwing rules on pitching card; height history table
+- [x] Arm ledger stop line on throwing + pitching cards
+- [ ] UB plyo reach a card — BLOCKED: owner must pick owning card/slot (domain gate drops upper_body_plyo + hand_wrist_chain today)
+- [ ] Switches tell_hammers → adaptive_phases → phase_feedback — waiting on item above (plan order) and preflight
+- [ ] 17 benchmarks undated — owner to supply dated sources or mark as estimates
+- [ ] WP5, WP6, final 12 gates
