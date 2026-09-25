@@ -1175,7 +1175,7 @@ export default function AnalyzeVideo() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} {t('videoAnalysis.mechanicsEvaluation', 'mechanics evaluation')}</p>
+            <p className="text-sm sm:text-base text-muted-foreground capitalize">{t('videoAnalysis.mechanicsEvaluation', { sport, module, defaultValue: '{{sport}} - {{module}} mechanics evaluation' })}</p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {videoPreview && (
@@ -1229,8 +1229,6 @@ export default function AnalyzeVideo() {
                 />
               </div>
             </Card>
-
-            </div>
           </div>
         )}
 
