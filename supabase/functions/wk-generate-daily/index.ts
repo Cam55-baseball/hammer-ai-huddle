@@ -439,7 +439,29 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
       admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
-      admin.from("athlete_daily_log").select("*").eq("user_id", user.id).eq("log_date", planDate).maybeSingle(),
+      // Step 28: the daily check-in writes readiness / soreness / fatigue / sleep
+      // as asb_events. The old read targeted athlete_daily_log.log_date (no such
+      // column, no writer), so the check-in never reached the plan. Latest
+      // answer per question within the plan day (12h grace for time zones).
+      admin.from("asb_events")
+        .select("topic_id, payload, occurred_at")
+        .eq("athlete_id", user.id)
+        .in("topic_id", ["behavioral.readiness", "behavioral.soreness", "behavioral.fatigue", "behavioral.sleep"])
+        .gte("occurred_at", `${isoShift(planDate, -1)}T12:00:00Z`)
+        .lt("occurred_at", `${isoShift(planDate, 1)}T00:00:00Z`)
+        .order("occurred_at", { ascending: false })
+        .limit(20)
+        .then((r: any) => {
+          const out: Record<string, number> = {};
+          for (const e of r.data ?? []) {
+            const p = e.payload ?? {};
+            if (e.topic_id === "behavioral.readiness" && out.cns_readiness == null && p.score != null) out.cns_readiness = Number(p.score);
+            if (e.topic_id === "behavioral.soreness" && out.soreness == null && p.score != null) out.soreness = Number(p.score);
+            if (e.topic_id === "behavioral.fatigue" && out.fatigue == null && p.score != null) out.fatigue = Number(p.score);
+            if (e.topic_id === "behavioral.sleep" && out.sleep_hours == null && p.hours != null) out.sleep_hours = Number(p.hours);
+          }
+          return { data: Object.keys(out).length ? out : null };
+        }),
       // Window, not a single day: the 48-hour rule needs the next two days,
       // a doubleheader needs every row for a date, and the density model needs
       // the rolling seven days centred on today. Deleted rows never load.

@@ -1,3 +1,5 @@
+> **Live status (Step 28 audit, 2026-09-25):** One pain record: LIVE. Arc-by-days and arm readiness: SHADOW ONLY (adaptive_phases Off). Stage C outcome links: built, minimum-data bar not met; phase_feedback Off.
+
 # AMENDMENT v1.2 to adaptive-phases-and-schedule-v1 — owner-directed
 
 A. One pain record, everywhere. Any body-part pain selection anywhere in the app — the physio screens, the daily check-in, "Something hurts", "Something's off" on a card — writes the SAME timeline entry, with the same tag, body part, severity and date. One record, one source of truth, read by the scheduler, the governors, the watchdog and the pattern report. Reporting the same pain twice updates the existing entry instead of creating a second one. Add a test: the same pain entered from three different screens produces one entry and one plan change.

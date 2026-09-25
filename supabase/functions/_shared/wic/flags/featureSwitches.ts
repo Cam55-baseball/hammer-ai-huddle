@@ -20,8 +20,6 @@ export type FeatureSwitchRow = {
 
 export const FEATURE_KEYS = [
   "rest_day_calculator",
-  "ub_plyo_hand_wrist",
-  "onboarding_off_days",
   "one_tap_logging",
   "staff_view",
   "offseason_arc",

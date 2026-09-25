@@ -1,3 +1,5 @@
+> **Live status (Step 28 audit, 2026-09-25):** NOT LIVE. Rules in _shared/wic/ubPlyo/* are tested only; the generator does not read them. Catalog rows (bucket, ub_tier, plyo_tier, contacts) and the UB plyo exposure channel ARE live. The unused switch was removed in Step 28.
+
 # Upper-Body Plyometric System v1 (UBP)
 **Owner-directed, 2026-09-20.** Extends `training-intelligence-v1.md` and the Tissue Cost Scheduler.
 **Build order:** new catalog rows inserted **inactive** → review → activate in batches of 20 with matrix proof. Rules are built as pure code with tests, then wired in with TCS stage S4 behind `training_intel_v1`.

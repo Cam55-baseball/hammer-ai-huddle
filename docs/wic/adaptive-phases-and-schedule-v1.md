@@ -1,3 +1,5 @@
+> **Live status (Step 28 audit, 2026-09-25):** SHADOW ONLY. phases/adaptivePhases.ts runs in adaptive-phases-shadow; wk-generate-daily reads its plan only when adaptive_phases is on (currently Off). Live cards still use season.ts resolveWkPhase.
+
 # Adaptive Phases & Schedule Communication v1
 **Owner-directed, 2026-09-24.** Extends training-intelligence-v1.md, tissue-cost-scheduler-v1.md and its addenda. Same discipline as always: one timeline, shadow before live, tests before release, fallback to today's behaviour.
 
