@@ -27,6 +27,8 @@ import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
+import fixWebmDuration from "fix-webm-duration";
+import { UPLOAD_ERRORS } from "@/lib/upload/uploadErrorCopy";
 import {
   analysisScopeForFps,
   describeCaptureFps,
@@ -49,6 +51,19 @@ interface HighFpsCaptureProps {
 }
 
 const MAX_RECORD_SEC = 30;
+/** Same floor the upload path uses ("record at least half a second"). */
+const MIN_RECORD_SEC = 0.5;
+
+/**
+ * MediaRecorder writes no duration into its container, so a <video> probe of
+ * the raw blob reads Infinity/NaN (probeVideoMetadata then reports 0). The
+ * wall-clock time between recorder start and stop is exact and always
+ * available, so it is the authority whenever the file can't say.
+ */
+export function resolveRecordedDuration(probedSec: number, recordedSec: number): number {
+  if (Number.isFinite(probedSec) && probedSec > 0) return probedSec;
+  return recordedSec;
+}
 
 function pickRecorderMime(): string {
   const candidates = [
@@ -94,7 +109,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [cap, setCap] = useState<CameraFpsCapability | null>(null);
-  const [clip, setClip] = useState<{ blob: Blob; achievedFps: number | null } | null>(null);
+  const [clip, setClip] = useState<{ blob: Blob; achievedFps: number | null; recordedSec: number } | null>(null);
   const [clipUrl, setClipUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState<null | "club" | "analyze">(null);
 
@@ -246,11 +261,18 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       }).fps ?? cap?.effectiveFps ?? null;
 
       const blob = new Blob(chunksRef.current, { type: mimeRef.current });
+      setRecording(false);
+      // Fail fast: the length check runs the instant recording stops, on the
+      // measured record time — before any repair, upload or processing.
+      if (secs < MIN_RECORD_SEC || blob.size === 0) {
+        console.info("[HighFpsCapture] rejected short clip", { recordedSec: secs, bytes: blob.size });
+        toast.error(UPLOAD_ERRORS.tooShort);
+        return;
+      }
       const url = URL.createObjectURL(blob);
       clipUrlRef.current = url;
       setClipUrl(url);
-      setClip({ blob, achievedFps: measured });
-      setRecording(false);
+      setClip({ blob, achievedFps: measured, recordedSec: secs });
     };
     rec.start(200);
     setRecording(true);
@@ -293,14 +315,51 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       const mime = mimeRef.current;
       const ext = mime.includes("mp4") ? "mp4" : "webm";
       const ts = Date.now();
-      const file = new File([clip.blob], `capture-${ts}.${ext}`, { type: mime });
+      const t0 = performance.now();
+      const timings: Record<string, number> = {};
+      const mark = (k: string, from: number) => { timings[k] = Math.round(performance.now() - from); };
+
+      // Give the recording a real duration + seek index (webm duration patch,
+      // then force the browser to index). Without this the probe reads no
+      // duration and seeking for frames/thumbnail can stall.
+      let repaired: Blob = clip.blob;
+      const tRepair = performance.now();
+      // Only the webm header patch — it is fast. (The DelayCam index-forcing
+      // step waits up to 15 s on clips that already have a duration, which
+      // would re-create the slow failure this path is meant to avoid.)
+      if (mime.includes("webm") && clip.recordedSec > 0) {
+        try {
+          repaired = await fixWebmDuration(clip.blob, Math.round(clip.recordedSec * 1000), { logger: false });
+        } catch (e) {
+          console.warn("[HighFpsCapture] webm duration patch failed, using raw recording", e);
+        }
+      }
+      mark("repair_ms", tRepair);
+      const file = new File([repaired], `capture-${ts}.${ext}`, { type: mime });
       const filePath = `${user.id}/capture/${ts}.${ext}`;
 
       let probed: Awaited<ReturnType<typeof probeVideoMetadata>>;
+      const tProbe = performance.now();
       try {
         probed = await probeVideoMetadata(file);
       } catch {
         toast.error("Couldn't read the recorded clip. Record it again.", { id: toastId });
+        setSaving(null);
+        return;
+      }
+      mark("probe_ms", tProbe);
+      const probedDuration = probed.duration_sec;
+      const durationSec = resolveRecordedDuration(probedDuration, clip.recordedSec);
+      probed = { ...probed, duration_sec: durationSec };
+      console.info("[HighFpsCapture] duration", {
+        probed_duration_sec: probedDuration,
+        recorded_sec: clip.recordedSec,
+        used_duration_sec: durationSec,
+        bytes: file.size,
+        mime,
+      });
+      if (durationSec < MIN_RECORD_SEC) {
+        toast.error(UPLOAD_ERRORS.tooShort, { id: toastId });
         setSaving(null);
         return;
       }
@@ -311,18 +370,39 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       const fpsSource: string = clip.achievedFps != null ? "measured" : "file_probe";
       const scope = analysisScopeForFps(achievedFps);
 
+      // Pull analysis frames BEFORE uploading, so a clip that can't be
+      // analyzed is rejected in seconds instead of after a full upload.
+      let extraction: Awaited<ReturnType<typeof extractKeyFramesDeterministic>> | null = null;
+      if (opts.analyze) {
+        toast.loading("Extracting frames…", { id: toastId });
+        const tExtract = performance.now();
+        extraction = await extractKeyFramesDeterministic({
+          videoFile: file,
+          fps_true: probed.fps_true,
+          duration_sec: probed.duration_sec,
+          landingTime: null,
+        });
+        mark("extract_ms", tExtract);
+        if (extraction.frames.length < 3) throw new Error("not_enough_frames");
+        toast.loading("Uploading your clip…", { id: toastId });
+      }
+
+      const tUpload = performance.now();
       const { error: uploadError } = await supabase.storage
         .from("videos")
         .upload(filePath, file, { contentType: mime, upsert: false });
       if (uploadError) throw uploadError;
+      mark("upload_ms", tUpload);
 
       const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filePath);
 
       let thumbnailUrl: string | null = null;
+      const tThumb = performance.now();
       try {
         const thumbBlob = await generateVideoThumbnail(file, 0.1);
         thumbnailUrl = await uploadVideoThumbnail(thumbBlob, user.id, filePath);
       } catch { /* thumbnails are best-effort */ }
+      mark("thumbnail_ms", tThumb);
 
       // Side is stamped whenever it is known — not only when the picker showed.
       // A righty never sees a picker, but the analysis still has to know which
@@ -371,14 +451,9 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
         return;
       }
 
-      toast.loading("Extracting frames…", { id: toastId });
-      const extraction = await extractKeyFramesDeterministic({
-        videoFile: file,
-        fps_true: probed.fps_true,
-        duration_sec: probed.duration_sec,
-        landingTime: null,
-      });
-      if (extraction.frames.length < 3) throw new Error("not_enough_frames");
+      if (!extraction) throw new Error("not_enough_frames");
+      mark("total_before_analysis_ms", t0);
+      console.info("[HighFpsCapture] timings", { ...timings, bytes: file.size });
 
       toast.loading("Hammer is analyzing your clip…", { id: toastId });
       const { error: fnError } = await supabase.functions.invoke("analyze-video", {
@@ -405,7 +480,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       console.error("[HighFpsCapture] save failed", e);
       toast.error(
         e?.message === "not_enough_frames"
-          ? "Saved, but the clip was too short to analyze."
+          ? UPLOAD_ERRORS.notEnoughFrames
           : "Couldn't finish saving this clip. Try again.",
         { id: toastId },
       );
