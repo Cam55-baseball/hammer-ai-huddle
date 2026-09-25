@@ -41,6 +41,7 @@ import { resolveSeasonQuarter } from "@/lib/hammer/roadmap/seasonQuarters";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
+import { YouthPitchingLimits } from "@/components/hammer/YouthPitchingLimits";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
   DEFAULT_PITCHER_PROFILE,
@@ -367,6 +368,9 @@ export function PitchingCard() {
                 </div>
               )}
             </div>
+
+            {/* E2E WP4 — youth caps, growth-adjusted age, fatigue stop, pitcher-catcher */}
+            <YouthPitchingLimits today={todayIso} />
 
             {/* Log buttons — pitching card owns its own log entry points */}
             <div className="flex flex-wrap gap-2">
