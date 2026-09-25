@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
-import { useHammerAthleteContext } from "@/hooks/useHammerAthleteContext";
+import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { useRecentPitchingLoad } from "@/hooks/useRecentPitchingLoad";
 import { hasFeatureAccess } from "@/utils/tierAccess";
 import {
