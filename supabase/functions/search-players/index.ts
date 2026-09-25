@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
@@ -259,6 +260,10 @@ serve(async (req) => {
         filteredProfiles = filteredProfiles.filter(p => matchingUserIds.has(p.id));
       }
     }
+
+    // Child safety: minors appear in search only when guardian-cleared with profile sharing on.
+    const gate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'profile');
+    filteredProfiles = filteredProfiles.filter(p => gate.get(p.id) === 'visible');
 
     const results = filteredProfiles.map(profile => ({
       id: profile.id,

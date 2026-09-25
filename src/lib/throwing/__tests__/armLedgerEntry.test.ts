@@ -42,9 +42,12 @@ describe("Step 30 E — every thrower logs into ONE arm ledger", () => {
     const pitches = [{ plan_date: D, pitches: 60 }];
     const noWarm = view("pitcher", "P", null, [], pitches);
     const warm = view("pitcher", "P", null, [{ entry_date: D, throw_type: "pitcher_warmup", count: 40, status: "done" }], pitches);
-    expect(noWarm.usedToday).toBe(60);   // budget counted in pitches
-    expect(warm.usedToday).toBe(60);     // pitch count untouched by warm-ups
-    expect(warm.throwsToday).toBe(noWarm.throwsToday + 15); // but the ledger holds the extra warm-up throws
+    // Owner rule (2026-09-25): every throw counts toward the arm total — additive, never either/or.
+    expect(warm.usedToday).toBeGreaterThan(noWarm.usedToday);
+    expect(warm.throwsToday).toBe(noWarm.throwsToday + 15);
+    // Pitch Smart stays pitch-only.
+    expect(warm.pitchesToday).toBe(60);
+    expect(noWarm.pitchesToday).toBe(60);
     expect(warm.today.pitches).toBe(60);
   });
 
@@ -82,7 +85,8 @@ describe("Step 30 E — every thrower logs into ONE arm ledger", () => {
 
   it("softball position player and windmill pitcher use the same entry and ledger", () => {
     const v = view("pitcher", "P", null, [{ entry_date: D, throw_type: "pitcher_catch_play", count: 20, status: "done" }], [{ plan_date: D, pitches: 90 }], "softball");
-    expect(v.usedToday).toBe(90);
+    expect(v.usedToday).toBeGreaterThan(90); // catch play adds on to pitches
+    expect(v.pitchesToday).toBe(90);
     expect(v.budget.daily).toBe(140);
   });
 });

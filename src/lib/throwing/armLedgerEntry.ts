@@ -151,12 +151,16 @@ export interface ArmLedgerView {
   usedToday: number;
   usedWeek: number;
   throwsToday: number;
+  /** Pitch-only count for today — what Pitch Smart's daily maximum measures. */
+  pitchesToday: number;
   overWeekly: boolean;
   line: string;
 }
 
-function used(b: ArmBudget, events: ThrowEvent[]): number {
-  if (b.unit === "pitches") return events.filter((e) => e.kind === "pitch").reduce((s, e) => s + e.count, 0);
+// Owner rule: pitching adds on to every other throw, never either/or. The arm
+// total always includes warm-up, catch play and pitches (pitches at full weight).
+// The Pitch Smart daily maximum stays separate and pitch-only (see pitchesToday).
+function used(_b: ArmBudget, events: ThrowEvent[]): number {
   return Math.round(throwUnits(events) * 10) / 10;
 }
 
@@ -184,9 +188,9 @@ export function armLedgerView(
   }
   usedWeek = Math.round(usedWeek * 10) / 10;
   const throwsToday = evToday.reduce((s, e) => s + e.count, 0);
-  const unit = budget.unit === "pitches" ? "pitches" : "arm units";
-  const line = `Today ${usedToday} of ${budget.daily} ${unit} · this week ${usedWeek} of ${budget.weekly}`;
-  return { role: a.role, budget, today, usedToday, usedWeek, throwsToday, overWeekly: usedWeek > budget.weekly, line };
+  const pitchesToday = evToday.filter((e) => e.kind === "pitch").reduce((s, e) => s + e.count, 0);
+  const line = `Arm total today ${usedToday} of ${budget.daily} arm units · this week ${usedWeek} of ${budget.weekly}`;
+  return { role: a.role, budget, today, usedToday, usedWeek, throwsToday, pitchesToday, overWeekly: usedWeek > budget.weekly, line };
 }
 
 export function ageFrom(dob: string | null | undefined, now = Date.now()): number | null {

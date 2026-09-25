@@ -178,7 +178,7 @@ import {
   resolvePersonalizationContext,
   type PersonalizationContext,
 } from "../_shared/wic/personalizationContext.ts";
-import { filterUbCatalog, trainingAgeBand } from "../_shared/wic/ubPlyo/liveFilter.ts";
+import { filterUbCatalog, trainingAgeBand, ubGrowthMode } from "../_shared/wic/ubPlyo/liveFilter.ts";
 import { doseCap as ubDoseCap } from "../_shared/wic/ubPlyo/rules.ts";
 import { UB_MOVEMENTS } from "../_shared/wic/ubPlyo/families.ts";
 const ubLetterOf = (slug: string): any => {
@@ -852,11 +852,20 @@ const handler = async (req: Request): Promise<Response> => {
         ].map((d: string) => Math.round((dayMs(d) - dayMs(planDate)) / 86400000));
         const isPitcher = athletePositions.some((x) => /pitch|^p$|rhp|lhp|sp|rp/.test(x));
         const weekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
+        // Real growth from height checks (same trigger as growth-adjusted pitching age); unknown = not growing.
+        const { data: ubHeights } = await admin
+          .from("athlete_height_checks")
+          .select("measured_on, inches")
+          .eq("user_id", user.id)
+          .gte("measured_on", isoShift(planDate, -120))
+          .lte("measured_on", planDate)
+          .order("measured_on");
+        const ubGrowth = ubGrowthMode(ubAge, (ubHeights ?? []).map((h: any) => ({ date: h.measured_on, inches: Number(h.inches) })), planDate);
         const f = filterUbCatalog(libBase as any[], {
           phase: phaseRes.phase as any,
           ageYears: ubAge,
           trainingAge: trainingAgeKnown ? trainingAgeBand(trainingAgeYears, isProProspect) : null,
-          growthMode: ubAge != null && ubAge <= 15,
+          growthMode: ubGrowth,
           throwingArmAthlete: isPitcher,
           startDayOffsets: startOffsets,
           history: {

@@ -163,8 +163,12 @@ export function fatigueFlag(s: FatigueSignals): { flagged: boolean; stopOuting: 
 
 // ── C6. Pitcher who also catches ───────────────────────────────────────────
 export const PITCHER_CATCHER_SHARE = 0.7; // tightened from 0.85 (owner-tunable)
+/** Athlete copy — never states an injury statistic. */
 export const PITCHER_CATCHER_LINE =
-  "Pitching and catching both load the same arm. Published work links this combination with about three times the arm-injury rate, so your combined throwing budget is tighter.";
+  "Pitching and catching together is one of the heaviest arm workloads in the game, so we budget it tightly.";
+/** Staff view only — research note with its source (correlation, not a prediction). */
+export const PITCHER_CATCHER_STAFF_NOTE =
+  "Research note: youth pitchers who also catch showed about 2.7 times the rate of serious throwing-arm injury (Fleisig GS et al., Am J Sports Med 2011;39(2):253-257). Correlation, not a prediction.";
 
 // ── C7. Overlapping teams ──────────────────────────────────────────────────
 export interface TeamSeason { team: string; start: string; end: string }

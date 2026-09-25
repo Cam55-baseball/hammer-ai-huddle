@@ -11,3 +11,6 @@
 - [ ] Gate 2: rest_day_calculator → all — only after gate 1
 - [ ] Gate 5: youth pitching box on a real youth athlete's card — needs a youth test account
 - [ ] Gate 10: full 390px sweep of every screen (done: Today, pitching card, phase strip)
+- [x] OPUS review A–J landed 2026-09-25 (consent RLS + 9 functions, plyo row, real growth mode, additive arm total, season start, athlete copy, test pitcher).
+- [ ] K: investor demo has no demo athletes with a daily plan/phase strip/ramp/re-plan — needs owner decision (generation-path freeze until gate 1).
+- [ ] Gate 1 (3 clean nights from tonight), gate 2, gate 9 — calendar-blocked. FREEZE generation path until gate 1 passes.

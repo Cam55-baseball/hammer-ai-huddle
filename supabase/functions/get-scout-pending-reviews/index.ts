@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -81,7 +82,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const playerIds = follows.map(f => f.player_id);
+    const gate = await recruitingGate(supabase, scoutId, follows.map(f => f.player_id), 'video');
+    const playerIds = follows.map(f => f.player_id).filter(id => gate.get(id) === 'visible');
     console.log('[get-scout-pending-reviews] Player IDs:', playerIds);
 
     // Get all videos shared with scouts from followed players

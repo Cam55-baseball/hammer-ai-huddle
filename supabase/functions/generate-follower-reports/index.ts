@@ -285,6 +285,13 @@ async function generateForFollower(
     return { skipped: true, reason: 'invalid_role' };
   }
 
+  // Child safety: no report about a minor is built for a follower until the guardian has cleared metrics sharing.
+  const gate = await recruitingGate(supabase, fi.follower_id, [fi.player_id], 'metrics');
+  if (gate.get(fi.player_id) !== 'visible') {
+    await logResult(supabase, fi, reportType, 'skipped', 'waiting_on_guardian', null, Date.now() - startedAt, false, periodStart);
+    return { skipped: true, reason: 'waiting_on_guardian' };
+  }
+
   const snapshot = snapshotCache.get(fi.player_id) ?? { profile: null, sessions: [], vaultGrades: [], weaknesses: [], games: [] };
 
   // Snapshot validation guard

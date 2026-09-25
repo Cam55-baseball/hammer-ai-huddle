@@ -47,20 +47,24 @@ export function YouthPitchingLimits({ today }: { today: string }) {
     staleTime: 60_000,
     queryFn: async () => {
       const yearStart = `${Number(today.slice(0, 4))}-01-01`;
-      const from = new Date(Date.parse(today + "T00:00:00Z") - 130 * 86400000).toISOString().slice(0, 10);
+      const from = new Date(Date.parse(today + "T00:00:00Z") - 400 * 86400000).toISOString().slice(0, 10);
       const start = from < yearStart ? from : yearStart;
-      const [logs, heights, fatigue, profile] = await Promise.all([
+      const [logs, heights, fatigue, profile, mpi] = await Promise.all([
         (supabase as any).from("wk_session_logs").select("plan_date, metrics").eq("user_id", user!.id)
           .gte("plan_date", start).lte("plan_date", today).in("template_id", ["bullpen_pitching", "pitching_outing"]).limit(1000),
         (supabase as any).from("athlete_height_checks").select("measured_on, inches").eq("user_id", user!.id).order("measured_on").limit(200),
         supabase.from("asb_events").select("payload, occurred_at").eq("athlete_id", user!.id).eq("topic_id", "behavioral.fatigue")
           .gte("occurred_at", `${today}T00:00:00`).order("occurred_at", { ascending: false }).limit(1),
         supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle(),
+        (supabase as any).from("athlete_mpi_settings").select("in_season_start_date").eq("user_id", user!.id).maybeSingle(),
       ]);
+      // Real in-season start when on file and not in the future; otherwise the 120-day fallback applies.
+      const ss = (mpi.data as any)?.in_season_start_date ?? null;
       return {
         days: toDays(logs.data ?? []),
         heights: ((heights.data ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })),
         fatigue: (fatigue.data?.[0]?.payload as any)?.score ?? null,
+        seasonStart: ss && ss <= today ? ss : null,
         level: (profile.data as any)?.competitive_level ?? (profile.data as any)?.competition_level ?? (profile.data as any)?.level ?? null,
       };
     },
@@ -69,7 +73,7 @@ export function YouthPitchingLimits({ today }: { today: string }) {
   if (sport !== "baseball" || age == null || !q.data) return null;
   const v = youthPitchingToday({
     sport, age, level: q.data.level, today, days: q.data.days, heights: q.data.heights,
-    seasonStart: null, checkInFatigue: q.data.fatigue != null ? Number(q.data.fatigue) : null,
+    seasonStart: q.data.seasonStart, checkInFatigue: q.data.fatigue != null ? Number(q.data.fatigue) : null,
     pitcherCatcher: role === "pitcher_catcher",
   });
   if (!v.applies) return null;
@@ -77,7 +81,7 @@ export function YouthPitchingLimits({ today }: { today: string }) {
   return (
     <div className="space-y-1.5 rounded-md border bg-muted/20 p-3" data-testid="youth-pitching-limits">
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Arm limits today</div>
-      <p className="text-xs">Up to {v.dailyMax} pitches today.</p>
+      <p className="text-xs" data-testid="pitch-smart-max">Pitch Smart daily maximum: {v.dailyMax} pitches (pitches only; warm-up and catch play count in the arm total).</p>
       {v.lines.map((l) => (
         <p key={l} className="text-xs font-medium text-destructive" data-testid="youth-pitching-stop">{l}</p>
       ))}

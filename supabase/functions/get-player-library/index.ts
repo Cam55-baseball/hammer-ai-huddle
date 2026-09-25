@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
 const corsHeaders = {
@@ -83,7 +84,15 @@ Deno.serve(async (req) => {
             { status: 403, headers: corsHeaders }
           );
         }
-        
+
+        const gate = await recruitingGate(supabase, user.id, [playerId], 'video');
+        if (gate.get(playerId) !== 'visible') {
+          return new Response(
+            JSON.stringify({ videos: [], practices: [], games: [], consentStatus: 'waiting_on_guardian' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         videoQuery = videoQuery.eq('shared_with_scouts', true);
       }
     } else {

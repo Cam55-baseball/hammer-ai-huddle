@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -65,6 +66,12 @@ Deno.serve(async (req) => {
       );
     }
 
+    {
+      const g = await recruitingGate(supabase, user.id, [playerId], 'video');
+      if (g.get(playerId) !== 'visible') {
+        return new Response(JSON.stringify({ error: 'Waiting on guardian consent' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
     // Insert the review record (upsert to avoid duplicates)
     const { error: insertError } = await supabase
       .from('scout_video_reviews')

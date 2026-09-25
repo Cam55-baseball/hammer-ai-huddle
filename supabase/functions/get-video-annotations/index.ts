@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
 const corsHeaders = {
@@ -32,6 +33,17 @@ Deno.serve(async (req) => {
     const { videoId } = await req.json();
 
     console.log('[get-video-annotations] Request:', { userId: user.id, videoId });
+
+    // Child safety: only the video owner, a real coach, an adult's follower, or a
+    // guardian-cleared (video scope) viewer may read annotations.
+    const { data: vid } = await supabase.from('videos').select('user_id').eq('id', videoId).maybeSingle();
+    if (!vid) {
+      return new Response(JSON.stringify([]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const gate = await recruitingGate(supabase, user.id, [vid.user_id], 'video');
+    if (gate.get(vid.user_id) !== 'visible') {
+      return new Response(JSON.stringify([]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Get annotations for this video
     const { data: annotations, error } = await supabase

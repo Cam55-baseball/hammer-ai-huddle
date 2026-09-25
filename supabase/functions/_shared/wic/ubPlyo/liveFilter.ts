@@ -11,8 +11,19 @@ import {
   tierPhaseLegal, tierAgeLegal, tierHistoryLegal, WEEKLY_U2_U3_SESSION_CAP,
 } from "./rules.ts";
 import type { UbTier } from "./families.ts";
+import { growthAdjustment, type HeightCheck } from "../phases/youthThrowing.ts";
 
 export const UB_LIVE_FILTER_VERSION = "ub_live_filter_v1";
+
+/**
+ * Real growth mode from height checks — the same trigger as growth-adjusted
+ * pitching age (≥1 in within ~30 days, active 8 weeks per inch). Unknown or
+ * empty height history means NOT in growth mode. Age is never a proxy.
+ */
+export function ubGrowthMode(ageYears: number | null, heights: HeightCheck[], today: string): boolean {
+  if (!heights || heights.length < 2) return false;
+  return growthAdjustment(ageYears ?? 14, heights, today).active;
+}
 
 export function trainingAgeBand(years: number | null, proProspect: boolean): TrainingAge | null {
   if (years == null || !Number.isFinite(years)) return null;

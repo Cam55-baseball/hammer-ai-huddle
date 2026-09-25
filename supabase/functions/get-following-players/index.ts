@@ -1,3 +1,4 @@
+import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
@@ -113,15 +114,22 @@ serve(async (req) => {
       followMap.set(f.player_id, { relationship_type: f.relationship_type ?? 'follow', initiated_by: f.initiated_by ?? 'coach' });
     }
 
-    const results = (profiles || []).map(profile => ({
-      id: profile.id,
-      full_name: profile.full_name,
-      avatar_url: profile.avatar_url,
-      followStatus: 'accepted' as const,
-      sport: determineSport(subscriptionMap.get(profile.id) || null),
-      relationship_type: followMap.get(profile.id)?.relationship_type ?? 'follow',
-      initiated_by: followMap.get(profile.id)?.initiated_by ?? 'coach',
-    }));
+    const gate = await recruitingGate(supabaseAdmin, user.id, playerIds, 'profile');
+    const results = (profiles || []).map(profile => {
+      const consentStatus = gate.get(profile.id) ?? 'waiting_on_guardian';
+      const visible = consentStatus === 'visible';
+      return {
+        id: profile.id,
+        // Never name a minor who is waiting on guardian consent.
+        full_name: visible ? profile.full_name : null,
+        avatar_url: visible ? profile.avatar_url : null,
+        followStatus: 'accepted' as const,
+        consentStatus,
+        sport: visible ? determineSport(subscriptionMap.get(profile.id) || null) : null,
+        relationship_type: followMap.get(profile.id)?.relationship_type ?? 'follow',
+        initiated_by: followMap.get(profile.id)?.initiated_by ?? 'coach',
+      };
+    });
 
     return new Response(
       JSON.stringify({ results }),

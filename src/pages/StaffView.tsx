@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PITCHER_CATCHER_STAFF_NOTE } from "../../supabase/functions/_shared/wic/phases/youthThrowing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -498,6 +499,15 @@ export default function StaffView() {
                     </span>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+
+            <Card data-testid="staff-research-notes">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Research notes (staff only)</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground">
+                <p><span className="font-medium text-foreground">Pitcher who also catches — </span>{PITCHER_CATCHER_STAFF_NOTE}</p>
               </CardContent>
             </Card>
           </div>

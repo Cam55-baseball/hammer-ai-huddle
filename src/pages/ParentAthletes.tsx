@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Users, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useParentLinks } from "@/hooks/useParentLink";
+import { GuardianConsentPrompt } from "@/components/recruiting/GuardianConsentPrompt";
 
 export default function ParentAthletes() {
   const { user, loading } = useAuth();
@@ -55,7 +56,7 @@ export default function ParentAthletes() {
                 {links.map((link) => (
                   <li
                     key={link.id}
-                    className="flex items-center justify-between rounded border p-3"
+                    className="flex flex-wrap items-center justify-between rounded border p-3"
                   >
                     <div>
                       <div className="text-sm font-medium">
@@ -86,6 +87,11 @@ export default function ParentAthletes() {
                         </Button>
                       )}
                     </div>
+                    {link.status === "active" && (
+                      <div className="basis-full pt-2">
+                        <GuardianConsentPrompt athleteId={link.athlete_user_id} asParent />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
