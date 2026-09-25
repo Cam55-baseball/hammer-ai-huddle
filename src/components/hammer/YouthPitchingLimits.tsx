@@ -26,7 +26,9 @@ function toDays(rows: any[]): PitchDay[] {
       pitches += num(rd?.pitches ?? rd?.reps);
       innings += num(rd?.innings);
     }
-    const d = by.get(r.plan_date) ?? { date: r.plan_date, pitches: 0, innings: 0 };
+    const d = by.get(r.plan_date) ?? { date: r.plan_date, pitches: 0, innings: 0, gameOutings: 0 };
+    // Each logged game outing counts once; bullpens are not games.
+    if (r.template_id === "pitching_outing") d.gameOutings = (d.gameOutings ?? 0) + 1;
     d.pitches += pitches;
     d.innings += innings;
     by.set(r.plan_date, d);
@@ -50,7 +52,7 @@ export function YouthPitchingLimits({ today }: { today: string }) {
       const from = new Date(Date.parse(today + "T00:00:00Z") - 400 * 86400000).toISOString().slice(0, 10);
       const start = from < yearStart ? from : yearStart;
       const [logs, heights, fatigue, profile, mpi] = await Promise.all([
-        (supabase as any).from("wk_session_logs").select("plan_date, metrics").eq("user_id", user!.id)
+        (supabase as any).from("wk_session_logs").select("plan_date, template_id, metrics").eq("user_id", user!.id)
           .gte("plan_date", start).lte("plan_date", today).in("template_id", ["bullpen_pitching", "pitching_outing"]).limit(1000),
         (supabase as any).from("athlete_height_checks").select("measured_on, inches").eq("user_id", user!.id).order("measured_on").limit(200),
         supabase.from("asb_events").select("payload, occurred_at").eq("athlete_id", user!.id).eq("topic_id", "behavioral.fatigue")
@@ -77,11 +79,18 @@ export function YouthPitchingLimits({ today }: { today: string }) {
     pitcherCatcher: role === "pitcher_catcher",
   });
   if (!v.applies) return null;
+  // Pros / over-22: no Pitch Smart numbers; the arm ledger still shows above. Only render a stop line.
+  if (!v.pitchSmart && v.lines.length === 0 && !v.pitcherCatcherLine) return null;
 
   return (
     <div className="space-y-1.5 rounded-md border bg-muted/20 p-3" data-testid="youth-pitching-limits">
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Arm limits today</div>
-      <p className="text-xs" data-testid="pitch-smart-max">Pitch Smart daily maximum: {v.dailyMax} pitches (pitches only; warm-up and catch play count in the arm total).</p>
+      {v.pitchSmart && (
+        <p className="text-xs" data-testid="pitch-smart-max">MLB Pitch Smart guideline — daily maximum: {v.dailyMax} pitches (pitches only; warm-up and catch play count in the arm total).</p>
+      )}
+      {v.pitchSmart && v.restDaysNeeded != null && (
+        <p className="text-xs" data-testid="pitch-smart-rest">MLB Pitch Smart guideline — {v.pitchesToday} pitches today means {v.restDaysNeeded} rest day{v.restDaysNeeded === 1 ? "" : "s"} before pitching again.</p>
+      )}
       {v.lines.map((l) => (
         <p key={l} className="text-xs font-medium text-destructive" data-testid="youth-pitching-stop">{l}</p>
       ))}
