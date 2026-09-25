@@ -9,10 +9,7 @@
 //     category was reported as FATAL, which failed the card build and served
 //     the safe fallback day instead.
 import { describe, expect, it } from "vitest";
-import {
-  certifyLift,
-  type CatalogEntryLike,
-} from "../../supabase/functions/_shared/wic/lift/sessionBuilder.ts";
+import { certifyLift } from "../../supabase/functions/_shared/wic/lift/sessionBuilder.ts";
 import { resolveLiftTemplate } from "../../supabase/functions/_shared/wic/lift/templates.ts";
 
 const catalog = [
@@ -27,7 +24,7 @@ const catalog = [
     training_age_legality: null,
     equipment_requirements: null,
   },
-] as unknown as readonly CatalogEntryLike[];
+];
 
 const rxs = [
   {
