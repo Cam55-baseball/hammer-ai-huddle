@@ -16709,6 +16709,42 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_feature_switches_snapshot_20260925: {
+        Row: {
+          allowlist: string[] | null
+          buildable: boolean | null
+          created_at: string | null
+          feature_key: string | null
+          label: string | null
+          mode: string | null
+          sort_order: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          allowlist?: string[] | null
+          buildable?: boolean | null
+          created_at?: string | null
+          feature_key?: string | null
+          label?: string | null
+          mode?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          allowlist?: string[] | null
+          buildable?: boolean | null
+          created_at?: string | null
+          feature_key?: string | null
+          label?: string | null
+          mode?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       wk_generation_diagnostics: {
         Row: {
           adaptation: string | null
