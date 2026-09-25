@@ -195,4 +195,4 @@ export function ageFrom(dob: string | null | undefined, now = Date.now()): numbe
   return Number.isFinite(y) ? Math.floor(y) : null;
 }
 
-export const PITCH_LOG_SLUG = /outing|start_pitch|game_pitch|competitive_mound|bullpen|pitching/;
+// Pitch counts come from useRecentPitchingLoad (templates bullpen_pitching / pitching_outing).
