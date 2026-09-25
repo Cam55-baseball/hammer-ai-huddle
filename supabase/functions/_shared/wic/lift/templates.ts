@@ -142,8 +142,23 @@ export function resolveLiftTemplate(input: TemplateResolutionInput): LiftTemplat
   if (input.isRecoveryDay || input.dayType === "recovery") return LIFT_TEMPLATES.full_body_recovery;
 
   const phase = (input.seasonPhase ?? "").toLowerCase();
-  const inSeason = phase === "in_season" || phase.startsWith("in_season");
+  // Accept BOTH the legacy phase ids (`in_season`) and the canonical registry
+  // names the training context emits (`regular_season`, `postseason`,
+  // `tournament`, `preseason`, `spring_training`). Without the canonical names
+  // an in-season athlete resolved the off-season strength template.
+  const IN_SEASON_PHASES = new Set([
+    "in_season",
+    "regular_season",
+    "postseason",
+    "post_season",
+    "tournament",
+    "preseason",
+    "pre_season",
+    "spring_training",
+  ]);
+  const inSeason = phase.startsWith("in_season") || IN_SEASON_PHASES.has(phase);
   if (inSeason || input.isGameDay) return LIFT_TEMPLATES.full_body_in_season_maintenance;
+
 
   // Adaptation-driven selection for training days.
   const adapt = (input.primaryAdaptation ?? "").toLowerCase();

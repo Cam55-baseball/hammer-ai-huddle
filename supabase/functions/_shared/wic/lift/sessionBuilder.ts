@@ -28,7 +28,15 @@ export interface CertifyLiftInput {
   template: TemplateResolutionInput;
   availableEquipment?: readonly string[];
   trainingAgeClass?: string;
+  /**
+   * The day itself removed loaded work (48-hour pre-game primer-only window,
+   * a declared rest day, or a Tell Hammers hold). On those days a missing
+   * required category is an honest gap, never a build failure: the schedule
+   * law already decided nothing loaded may appear.
+   */
+  loadedWorkSuppressed?: boolean;
 }
+
 
 export interface LiftGovernanceStamp {
   template_id: string;
