@@ -36,6 +36,8 @@ export const TIER_CONFIG: Record<string, TierConfig> = {
     price: 300,
     grantedAccess: ['hitting', 'throwing'],
     includes: [
+      'Complete Hitter (included)',
+      'Complete Player: Speed & Throwing (included)',
       'Hitting Analysis',
       'Throwing Analysis',
       'Iron Bambino (Upgraded)',
@@ -54,6 +56,7 @@ export const TIER_CONFIG: Record<string, TierConfig> = {
     includes: [
       'Everything in Complete Pitcher',
       'Everything in 5Tool Player',
+      'Complete Hitter and Complete Player (included)',
       'The Unicorn Workout System',
       'Full 2-Way Development',
     ],

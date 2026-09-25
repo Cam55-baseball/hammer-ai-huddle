@@ -8,6 +8,7 @@ import {
 } from "@/utils/lazyWithRetry";
 import { StaffOnlyRoute } from "@/components/auth/StaffOnlyRoute";
 import { SoftballLock } from "@/components/softball/SoftballLock";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 // Re-export for backward compatibility with existing imports.
 export { isChunkLoadError, triggerChunkReload };
 import { Toaster } from "@/components/ui/toaster";
