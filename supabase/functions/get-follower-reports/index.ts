@@ -33,6 +33,14 @@ Deno.serve(async (req) => {
         .eq('follower_id', user.id)
         .maybeSingle();
       if (error) throw error;
+      if (data?.player_id) {
+        const g = await recruitingGate(supabase, user.id, [data.player_id], 'metrics');
+        if (g.get(data.player_id) !== 'visible') {
+          return new Response(JSON.stringify({ report: null, player: null, consentStatus: 'waiting_on_guardian' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
 
       // Hydrate player profile
       let player = null;
@@ -57,7 +65,10 @@ Deno.serve(async (req) => {
       .limit(100);
     if (error) throw error;
 
-    const playerIds = [...new Set((reports ?? []).map((r: any) => r.player_id))];
+    const allIds = [...new Set((reports ?? []).map((r: any) => r.player_id))] as string[];
+    const gate = await recruitingGate(supabase, user.id, allIds, 'metrics');
+    const visibleReports = (reports ?? []).filter((r: any) => gate.get(r.player_id) === 'visible');
+    const playerIds = [...new Set(visibleReports.map((r: any) => r.player_id))];
     // Only columns that actually exist on `profiles`. Selecting phantom columns
     // (sport / primary_position / hs_grad_year) made PostgREST 400 the whole
     // query, and because the error was swallowed every row rendered as
@@ -69,8 +80,9 @@ Deno.serve(async (req) => {
     const playerMap = new Map((players ?? []).map((p: any) => [p.id, p]));
 
     return new Response(JSON.stringify({
-      reports: (reports ?? []).map((r: any) => ({ ...r, player: playerMap.get(r.player_id) ?? null })),
-      unread_count: (reports ?? []).filter((r: any) => !r.viewed_at).length,
+      reports: visibleReports.map((r: any) => ({ ...r, player: playerMap.get(r.player_id) ?? null })),
+      unread_count: visibleReports.filter((r: any) => !r.viewed_at).length,
+      waiting_on_guardian_count: (reports ?? []).length - visibleReports.length,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'unknown' }), {

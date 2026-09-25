@@ -260,6 +260,10 @@ serve(async (req) => {
       }
     }
 
+    // Child safety: minors appear in search only when guardian-cleared with profile sharing on.
+    const gate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'profile');
+    filteredProfiles = filteredProfiles.filter(p => gate.get(p.id) === 'visible');
+
     const results = filteredProfiles.map(profile => ({
       id: profile.id,
       full_name: profile.full_name,

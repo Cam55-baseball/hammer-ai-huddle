@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const playerIds = follows.map(f => f.player_id);
+    const gate = await recruitingGate(supabase, scoutId, follows.map(f => f.player_id), 'video');
+    const playerIds = follows.map(f => f.player_id).filter(id => gate.get(id) === 'visible');
     console.log('[get-scout-pending-reviews] Player IDs:', playerIds);
 
     // Get all videos shared with scouts from followed players
