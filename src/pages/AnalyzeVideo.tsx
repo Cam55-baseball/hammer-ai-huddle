@@ -311,7 +311,7 @@ export default function AnalyzeVideo() {
     setAnalysisEnabled(true);
     setLandingTime(null);
     if (module && sport) {
-      toast.info(t('videoAnalysis.switchedModule', `Switched to ${sport} - ${module}. Upload space cleared.`));
+      toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
     }
   }, [module, sport, t]);
 
