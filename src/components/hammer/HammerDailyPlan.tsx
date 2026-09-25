@@ -1386,7 +1386,7 @@ function BlockCard({
                 {block.assumption}
               </p>
             )}
-            {block.roadmapReason && (
+            {block.roadmapReason && !block.why.includes(block.roadmapReason) && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5 italic">
                 {block.roadmapReason}
               </p>

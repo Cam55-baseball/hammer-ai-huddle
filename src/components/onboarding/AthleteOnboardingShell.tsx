@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { ArrowLeft, Check, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +49,8 @@ export function AthleteOnboardingShell({
 }: Props) {
 
   const navigate = useNavigate();
+  const stepListRef = useRef<HTMLOListElement>(null);
+  const activeStepRef = useRef<HTMLLIElement>(null);
   const handleExit = async () => {
     try {
       await onSaveAndExit?.();
@@ -61,6 +63,18 @@ export function AthleteOnboardingShell({
   };
 
   const showBack = !!onBack && stepIndex > 0;
+
+  useEffect(() => {
+    const list = stepListRef.current;
+    const activeStep = activeStepRef.current;
+    if (!list || !activeStep) return;
+
+    const left = activeStep.offsetLeft - 12;
+    const right = activeStep.offsetLeft + activeStep.offsetWidth + 12;
+    if (left < list.scrollLeft || right > list.scrollLeft + list.clientWidth) {
+      list.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    }
+  }, [stepIndex]);
 
 
   return (
@@ -94,7 +108,11 @@ export function AthleteOnboardingShell({
           </Button>
         </header>
 
-        <ol className="mb-2 flex items-center gap-2 overflow-x-auto pb-1">
+        <ol
+          ref={stepListRef}
+          className="mb-1 flex w-full items-center gap-2 overflow-x-auto overscroll-x-contain pb-2"
+          aria-label="Onboarding steps"
+        >
           {steps.map((label, i) => {
             const status = stepStatus?.[i];
             const answered = status ? status === "answered" : i < stepIndex;
@@ -115,7 +133,12 @@ export function AthleteOnboardingShell({
               ? label
               : `${label} — ${answered ? "answered" : "not answered yet"}`;
             return (
-              <li key={label} className="flex shrink-0 items-center gap-2" title={chipTitle}>
+              <li
+                key={label}
+                ref={active ? activeStepRef : undefined}
+                className="flex shrink-0 items-center gap-2"
+                title={chipTitle}
+              >
                 {clickable ? (
                   <button
                     type="button"
@@ -154,6 +177,9 @@ export function AthleteOnboardingShell({
             );
           })}
         </ol>
+        <p className="mb-2 text-right text-[11px] text-muted-foreground sm:hidden" aria-hidden="true">
+          Swipe to see all steps →
+        </p>
 
         {stepStatus && (
           <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
