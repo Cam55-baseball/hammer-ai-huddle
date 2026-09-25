@@ -27,7 +27,7 @@ import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
-import { repairRecording } from "@/lib/delaycam/recording";
+import fixWebmDuration from "fix-webm-duration";
 import { UPLOAD_ERRORS } from "@/lib/upload/uploadErrorCopy";
 import {
   analysisScopeForFps,
@@ -324,10 +324,15 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       // duration and seeking for frames/thumbnail can stall.
       let repaired: Blob = clip.blob;
       const tRepair = performance.now();
-      try {
-        repaired = await repairRecording(clip.blob, mime, Math.round(clip.recordedSec * 1000));
-      } catch (e) {
-        console.warn("[HighFpsCapture] repair failed, using raw recording", e);
+      // Only the webm header patch — it is fast. (The DelayCam index-forcing
+      // step waits up to 15 s on clips that already have a duration, which
+      // would re-create the slow failure this path is meant to avoid.)
+      if (mime.includes("webm") && clip.recordedSec > 0) {
+        try {
+          repaired = await fixWebmDuration(clip.blob, Math.round(clip.recordedSec * 1000), { logger: false });
+        } catch (e) {
+          console.warn("[HighFpsCapture] webm duration patch failed, using raw recording", e);
+        }
       }
       mark("repair_ms", tRepair);
       const file = new File([repaired], `capture-${ts}.${ext}`, { type: mime });
