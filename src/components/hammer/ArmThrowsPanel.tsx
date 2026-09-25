@@ -105,7 +105,9 @@ export function ArmThrowsPanel({ source, planDate }: { source: EntrySource; plan
         </div>
       </div>
       {source === "pitching" && (
-        <p className="text-[11px] text-muted-foreground">Counted alongside your pitch count, never instead of it.</p>
+        <p className="text-[11px] text-muted-foreground" data-testid="arm-pitch-only-line">
+          Pitches today: {view.pitchesToday} (Pitch Smart counts pitches only). Warm-up and catch play add on to the arm total above.
+        </p>
       )}
       <ul className="space-y-1.5">
         {types.map((t) => {
