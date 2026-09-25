@@ -225,6 +225,7 @@ export default function CoachAthleteDetail() {
             <CardContent className="space-y-3">
               <RecruitingVisibilityGate
                 athleteId={athleteId}
+                scope="metrics"
                 fallback={
                   <p className="text-xs text-muted-foreground">
                     Hidden. Visibility is controlled by the athlete (and parent, for minors)

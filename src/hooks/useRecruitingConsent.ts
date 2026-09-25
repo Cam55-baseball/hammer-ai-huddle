@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { emitExposureConsentChanged } from "@/lib/asb/topics/exposure";
 
-const ENGINE_VERSION = "rr9-1.0.0";
+const ENGINE_VERSION = "rr9-1.1.0";
 
 export interface RecruitingConsentState {
   athlete_id: string;
@@ -30,6 +30,12 @@ export interface RecruitingConsentState {
   last_changed_by: string | null;
   engine_version: string;
   is_self: boolean;
+  share_profile: boolean;
+  share_metrics: boolean;
+  share_video: boolean;
+  allow_contact: boolean;
+  guardian_consented_by: string | null;
+  guardian_consented_at: string | null;
 }
 
 interface ConsentAuditRow {
@@ -77,7 +83,7 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         supabase
           .from("athlete_recruiting_consent")
           .select(
-            "athlete_id, visibility_enabled, parent_authorized, last_changed_at, last_changed_by, engine_version",
+            "athlete_id, visibility_enabled, parent_authorized, last_changed_at, last_changed_by, engine_version, share_profile, share_metrics, share_video, allow_contact, guardian_consented_by, guardian_consented_at",
           )
           .eq("athlete_id", athleteId)
           .maybeSingle(),
@@ -101,6 +107,12 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         last_changed_by: row?.last_changed_by ?? null,
         engine_version: row?.engine_version ?? ENGINE_VERSION,
         is_self: isSelf,
+        share_profile: (row as any)?.share_profile ?? false,
+        share_metrics: (row as any)?.share_metrics ?? false,
+        share_video: (row as any)?.share_video ?? false,
+        allow_contact: (row as any)?.allow_contact ?? false,
+        guardian_consented_by: (row as any)?.guardian_consented_by ?? null,
+        guardian_consented_at: (row as any)?.guardian_consented_at ?? null,
       };
     },
     staleTime: 30_000,
@@ -146,8 +158,36 @@ export function useRecruitingConsent(athleteId: string | undefined) {
     },
   });
 
+  const setScope = useMutation({
+    mutationFn: async (patch: Partial<Pick<RecruitingConsentState, "share_profile" | "share_metrics" | "share_video" | "allow_contact">>) => {
+      if (!user?.id || !athleteId || user.id !== athleteId) throw new Error("Only you can change this.");
+      const prev = query.data;
+      const { error } = await supabase.from("athlete_recruiting_consent").upsert(
+        {
+          athlete_id: athleteId,
+          visibility_enabled: prev?.visibility_enabled ?? false,
+          parent_authorized: prev?.parent_authorized ?? false,
+          share_profile: prev?.share_profile ?? false,
+          share_metrics: prev?.share_metrics ?? false,
+          share_video: prev?.share_video ?? false,
+          allow_contact: prev?.allow_contact ?? false,
+          ...patch,
+          last_changed_by: user.id,
+          engine_version: ENGINE_VERSION,
+        } as any,
+        { onConflict: "athlete_id" },
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["recruiting-consent", athleteId] });
+      qc.invalidateQueries({ queryKey: ["recruiting-consent-audit", athleteId] });
+    },
+  });
+
   return {
     consent: query.data ?? null,
+    setScope: setScope.mutateAsync,
     isLoading: query.isLoading,
     setVisibility: (next: boolean) => setVisibility.mutateAsync(next),
     isSaving: setVisibility.isPending,

@@ -18,20 +18,34 @@ import { ReactNode, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecruitingConsent } from "@/hooks/useRecruitingConsent";
 import { emitExposureGateBlocked } from "@/lib/asb/topics/exposure";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { ConsentScope } from "@/lib/recruiting/consentStatus";
 
 interface Props {
   athleteId: string;
   children: ReactNode;
   /** Optional fallback for the blocked state. Defaults to null (fail-closed). */
   fallback?: ReactNode;
+  /** v1.1: which consent item this surface shows. Server-checked, fail-closed. */
+  scope?: ConsentScope;
 }
 
-export function RecruitingVisibilityGate({ athleteId, children, fallback = null }: Props) {
+export function RecruitingVisibilityGate({ athleteId, children, fallback = null, scope }: Props) {
   const { user } = useAuth();
   const { consent, isLoading } = useRecruitingConsent(athleteId);
   const lastReasonRef = useRef<string | null>(null);
 
-  const allowed = !!consent?.resolved_visibility;
+  const scopeQ = useQuery({
+    queryKey: ["recruiting-scope", athleteId, scope],
+    enabled: !!scope && !!athleteId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("resolve_recruiting_scope", { _athlete_id: athleteId, _scope: scope });
+      return !error && data === true;
+    },
+    staleTime: 15_000,
+  });
+  const allowed = !!consent?.resolved_visibility && (!scope || scopeQ.data === true);
 
   useEffect(() => {
     if (isLoading || !consent) return;
@@ -56,7 +70,7 @@ export function RecruitingVisibilityGate({ athleteId, children, fallback = null 
     }
   }, [allowed, athleteId, consent, isLoading, user?.id]);
 
-  if (isLoading) return null;
+  if (isLoading || (scope && scopeQ.isLoading)) return null;
   if (!allowed) return <>{fallback}</>;
   return <>{children}</>;
 }

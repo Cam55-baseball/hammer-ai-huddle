@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, LogOut, Pencil, ListChecks } from "lucide-react";
+import { User, Settings, HelpCircle, LogOut, Pencil, ListChecks, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -84,6 +84,10 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
             <span>Manage Subscription</span>
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onClick={() => navigate("/athlete/recruiting-consent")}>
+          <ShieldCheck className="mr-2 h-4 w-4" />
+          <span>Recruiting sharing</span>
+        </DropdownMenuItem>
         <DropdownMenuItem>
           <HelpCircle className="mr-2 h-4 w-4" />
           <span>Help</span>
