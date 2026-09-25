@@ -1533,6 +1533,18 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
               ? "Stopped — clip ready"
               : "Idle"}
         </Badge>
+        {/* Live display: only facts measured right now. Per-rep metrics are
+            computed from the saved recording after Stop — never guessed live. */}
+        {displayMetricsOn && running && mode === "recording" && (
+          <>
+            <span className="font-medium text-foreground">
+              Camera {capturedFpsRef.current ? `${Math.round(capturedFpsRef.current)} fps` : "speed unknown"}
+            </span>
+            <span>·</span>
+            <span>Per-rep metrics appear after you stop</span>
+            <span>·</span>
+          </>
+        )}
         <span>Delay {delay}s</span>
         <span>·</span>
         <span>Buffer {bufferedSec.toFixed(1)}s</span>
