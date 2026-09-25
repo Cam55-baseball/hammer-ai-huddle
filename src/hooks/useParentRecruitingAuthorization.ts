@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { emitExposureConsentChanged } from "@/lib/asb/topics/exposure";
 
-const ENGINE_VERSION = "rr9-1.0.0";
+const ENGINE_VERSION = "rr9-1.1.0";
 
 export interface ParentAuthorizationState {
   athlete_id: string;
