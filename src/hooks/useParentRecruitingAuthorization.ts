@@ -64,6 +64,7 @@ export function useParentRecruitingAuthorization(athleteId: string | undefined) 
       if (!user?.id || !athleteId) throw new Error("not authenticated");
       const prev = stateQuery.data;
 
+      // Guardian consent is recorded as who + when; the resolver requires both.
       const { error } = await supabase
         .from("athlete_recruiting_consent")
         .upsert(
@@ -71,9 +72,11 @@ export function useParentRecruitingAuthorization(athleteId: string | undefined) 
             athlete_id: athleteId,
             visibility_enabled: prev?.visibility_enabled ?? false,
             parent_authorized: next,
+            guardian_consented_at: next ? new Date().toISOString() : null,
+            guardian_consented_by: next ? user.id : null,
             last_changed_by: user.id,
             engine_version: ENGINE_VERSION,
-          },
+          } as any,
           { onConflict: "athlete_id" },
         );
       if (error) throw error;
