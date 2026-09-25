@@ -1556,32 +1556,50 @@ export type Database = {
       }
       athlete_recruiting_consent: {
         Row: {
+          allow_contact: boolean
           athlete_id: string
           created_at: string
           engine_version: string
+          guardian_consented_at: string | null
+          guardian_consented_by: string | null
           last_changed_at: string
           last_changed_by: string
           parent_authorized: boolean
+          share_metrics: boolean
+          share_profile: boolean
+          share_video: boolean
           updated_at: string
           visibility_enabled: boolean
         }
         Insert: {
+          allow_contact?: boolean
           athlete_id: string
           created_at?: string
           engine_version?: string
+          guardian_consented_at?: string | null
+          guardian_consented_by?: string | null
           last_changed_at?: string
           last_changed_by: string
           parent_authorized?: boolean
+          share_metrics?: boolean
+          share_profile?: boolean
+          share_video?: boolean
           updated_at?: string
           visibility_enabled?: boolean
         }
         Update: {
+          allow_contact?: boolean
           athlete_id?: string
           created_at?: string
           engine_version?: string
+          guardian_consented_at?: string | null
+          guardian_consented_by?: string | null
           last_changed_at?: string
           last_changed_by?: string
           parent_authorized?: boolean
+          share_metrics?: boolean
+          share_profile?: boolean
+          share_video?: boolean
           updated_at?: string
           visibility_enabled?: boolean
         }
@@ -19024,6 +19042,10 @@ export type Database = {
           p_video_type?: string
         }
         Returns: string
+      }
+      resolve_recruiting_scope: {
+        Args: { _athlete_id: string; _scope: string }
+        Returns: boolean
       }
       resolve_recruiting_visibility: {
         Args: { _athlete_id: string }
