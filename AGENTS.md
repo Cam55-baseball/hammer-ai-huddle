@@ -1,0 +1,2 @@
+- Any service-role function returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts` (same rule as RLS: self / real coach / adult / guardian-cleared scope) — service role bypasses RLS.
+- `create-test-athlete` is owner-only and is the only way to run the real generator as the gate-5/demo test pitcher (is_system_account=true, no consent row) — no approval-free session mint exists for other users.
