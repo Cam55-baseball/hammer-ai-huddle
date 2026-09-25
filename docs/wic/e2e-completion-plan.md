@@ -61,3 +61,27 @@ If any gate is not green, do not print that line. End instead with:
 NOT COMPLETE — BLOCKERS: <gate numbers and one line each>
 
 Never print the completion line from memory, from a previous run, or on partial evidence.
+
+## 6. Owner waiver — gate 1 (2026-09-25)
+
+Decision-maker: the owner (Hammers Modality LLC). Date: 2026-09-25.
+
+The "zero criticals across three consecutive nightly cycles" requirement in
+gate 1 is **waived** for this release. It is replaced by a same-day readiness
+check, all parts of which must be true:
+
+a. Zero critical watchdog notes since the last fix landed.
+b. The most recent nightly self-check passed with 0 mismatches.
+c. A forced generation today for the owner, the 14-year-old test pitcher and
+   every demo athlete, all building clean, with zero new criticals.
+d. The automatic step-down is live and proven: the nightly auto-off job is
+   scheduled and armed for `rest_day_calculator`, with a past automatic
+   switch-down row showing it fired correctly.
+
+The three-nights rule still applies to any future release of a
+generation-path change; this waiver covers the 2026-09-25 launch only.
+
+### Left as is, revisit after launch
+Two growth checks inside the card builder still use "age 15 or under" rather
+than the real height-check growth rule. They are more conservative than the
+growth rule, never less safe, so they stay for launch.

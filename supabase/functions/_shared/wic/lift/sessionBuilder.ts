@@ -28,7 +28,15 @@ export interface CertifyLiftInput {
   template: TemplateResolutionInput;
   availableEquipment?: readonly string[];
   trainingAgeClass?: string;
+  /**
+   * The day itself removed loaded work (48-hour pre-game primer-only window,
+   * a declared rest day, or a Tell Hammers hold). On those days a missing
+   * required category is an honest gap, never a build failure: the schedule
+   * law already decided nothing loaded may appear.
+   */
+  loadedWorkSuppressed?: boolean;
 }
+
 
 export interface LiftGovernanceStamp {
   template_id: string;
@@ -228,9 +236,14 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
   const fullBodyOk = missing.length === 0;
 
   if (liftRxs.length > 0 && !fullBodyOk) {
-    fatal.push({
+    // A day that legally removed loaded work cannot also be required to carry
+    // a compound lift. Report the gap, never fail the build.
+    const sink = input.loadedWorkSuppressed === true ? warn : fatal;
+    sink.push({
       code: "lift_not_full_body",
-      message: `Missing required categories for template ${template.id}: ${missing.join(", ")}.`,
+      message: input.loadedWorkSuppressed === true
+        ? `Loaded work is suppressed today (pre-game primer window, rest day or hold) — missing categories for template ${template.id}: ${missing.join(", ")}.`
+        : `Missing required categories for template ${template.id}: ${missing.join(", ")}.`,
     });
     // Also emit specific missing-category codes for the audit surface.
     const CODE_MAP: Record<string, string> = {
@@ -242,9 +255,10 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     };
     for (const m of missing) {
       const code = CODE_MAP[m];
-      if (code) fatal.push({ code, message: `Template ${template.id} requires ${m}.` });
+      if (code) sink.push({ code, message: `Template ${template.id} requires ${m}.` });
     }
   }
+
 
   // Duplicate category — only single-slot categories flagged as illegal
   // duplicates (compound lower/push/pull may appear only once).
