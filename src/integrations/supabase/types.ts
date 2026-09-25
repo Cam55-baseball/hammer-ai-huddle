@@ -18966,6 +18966,10 @@ export type Database = {
         Args: { p_coach_id: string; p_folder_id: string }
         Returns: boolean
       }
+      followed_player_consent_status: {
+        Args: { _player_id: string }
+        Returns: string
+      }
       get_athlete_context_envelope: { Args: { p_user: string }; Returns: Json }
       get_athlete_evaluators: {
         Args: { p_athlete_id: string }
