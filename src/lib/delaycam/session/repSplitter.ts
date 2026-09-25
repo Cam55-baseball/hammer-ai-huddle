@@ -205,7 +205,10 @@ export function splitReps(frames: readonly SampledFrame[], module: SessionModule
       }
     }
     if (moveCount === 0) continue; // pure gap region between rests — not movement
-    if (peak < BURST[module]) continue; // small movement (adjusting stance), not a rep
+    // Movement that was partly hidden: the peak may have happened while the
+    // athlete was out of view, so we can't call it "small" — log it as uncertain.
+    const covEarly = obs / (e - s + 1);
+    if (peak < BURST[module] && covEarly >= MIN_COVERAGE) continue; // small movement (adjusting stance), not a rep
 
     const startMs = frames[s].t_ms;
     const endMs = frames[e].t_ms;
